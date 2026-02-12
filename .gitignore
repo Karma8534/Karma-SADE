@@ -1,0 +1,27 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs (rotated, runtime — not source)
+Logs/*.log
+Logs/*.json
+Logs/screenshots/
+
+# Temp debug/test scripts (prefixed with underscore)
+Scripts/_test_*.py
+Scripts/_debug_*.py
+Scripts/_fix_*.py
+Scripts/_check_*.py
+Scripts/_db_*.py
+
+# OS junk
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Editor artifacts
+*.swp
+*.swo
+*~
+.vscode/

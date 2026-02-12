@@ -1,0 +1,336 @@
+{
+  "facts": [
+    {
+      "key": "user_name",
+      "value": "Neo",
+      "updated": "2026-02-10 02:06:00"
+    },
+    {
+      "key": "skill_level",
+      "value": "Self-described novice with computers",
+      "updated": "2026-02-10 02:06:00"
+    },
+    {
+      "key": "machine_name",
+      "value": "PAYBACK",
+      "updated": "2026-02-11 18:59:00"
+    },
+    {
+      "key": "os",
+      "value": "Windows 11",
+      "updated": "2026-02-10 02:06:00"
+    },
+    {
+      "key": "user_profile",
+      "value": "C:\\Users\\raest",
+      "updated": "2026-02-10 02:06:00"
+    },
+    {
+      "key": "project_root",
+      "value": "C:\\Users\\raest\\Documents\\Karma_SADE",
+      "updated": "2026-02-10 02:06:00"
+    },
+    {
+      "key": "open_webui_port",
+      "value": "8080",
+      "updated": "2026-02-11 18:03:36"
+    },
+    {
+      "key": "change_management_steps",
+      "value": "4 steps: Propose > Review > Approve > Execute",
+      "updated": "2026-02-11 18:59:00"
+    },
+    {
+      "key": "cpu",
+      "value": "Intel Core Ultra 9 (Meteor Lake)",
+      "updated": "2026-02-11 16:52:00"
+    },
+    {
+      "key": "ram_gb",
+      "value": "63",
+      "updated": "2026-02-11 16:52:00"
+    },
+    {
+      "key": "gpu",
+      "value": "NVIDIA GeForce RTX 4070 Laptop GPU (Lenovo)",
+      "updated": "2026-02-11 16:52:00"
+    },
+    {
+      "key": "gpu_vram_gb",
+      "value": "8",
+      "updated": "2026-02-12 06:06:00"
+    },
+    {
+      "key": "favorite_color",
+      "value": "purple",
+      "updated": "2026-02-11 18:26:32"
+    },
+    {
+      "key": "role",
+      "value": "SADE Architect",
+      "updated": "2026-02-11 19:28:33",
+      "vault_id": "mem_ec83b189a0e312c8"
+    },
+    {
+      "key": "focus",
+      "value": "reliability, observability, security, cost-efficiency",
+      "updated": "2026-02-11 19:28:33",
+      "vault_id": "mem_3c68849d3620448c"
+    },
+    {
+      "key": "current_project",
+      "value": "PAYBACK",
+      "updated": "2026-02-11 19:28:33",
+      "vault_id": "mem_58f2b2dafd40179a"
+    },
+    {
+      "key": "background_color",
+      "value": "deep, dark purple",
+      "updated": "2026-02-12 04:34:57",
+      "vault_id": "mem_50cc70d19183edbd"
+    },
+    {
+      "key": "windows_version",
+      "value": "Windows 11",
+      "updated": "2026-02-12 05:55:02"
+    },
+    {
+      "key": "reboot_protection_method",
+      "value": "Active Hours",
+      "updated": "2026-02-12 05:55:02"
+    },
+    {
+      "key": "gpu_model",
+      "value": "NVIDIA GeForce RTX 4070 Laptop GPU",
+      "updated": "2026-02-12 06:05:01"
+    },
+    {
+      "key": "operating_system",
+      "value": "Windows 11",
+      "updated": "2026-02-12 06:15:02"
+    },
+    {
+      "key": "processor",
+      "value": "Intel Core Ultra 9 processor",
+      "updated": "2026-02-12 06:15:02"
+    },
+    {
+      "key": "ram",
+      "value": "63 GB of RAM",
+      "updated": "2026-02-12 06:15:02"
+    },
+    {
+      "key": "graphics_card",
+      "value": "NVIDIA GeForce RTX 4070 Laptop GPU",
+      "updated": "2026-02-12 06:15:02"
+    },
+    {
+      "key": "karma_sade_project",
+      "value": "a memory-first, vault-centric, multi-agent AI system",
+      "updated": "2026-02-12 06:35:00"
+    },
+    {
+      "key": "karma_sade_architect",
+      "value": "the default AI persona for the Karma SADE project",
+      "updated": "2026-02-12 06:35:00"
+    },
+    {
+      "key": "knowledge_base",
+      "value": "a knowledge base for memory in the Karma SADE project",
+      "updated": "2026-02-12 06:35:00"
+    },
+    {
+      "key": "last_phase_completed",
+      "value": "SADE rebuild on 2026-02-10",
+      "updated": "2026-02-12 06:54:58",
+      "vault_id": "mem_40aca5feda998ed3"
+    },
+    {
+      "key": "project_components",
+      "value": "['Playwright', 'LangChain', 'Streamlit']",
+      "updated": "2026-02-12 07:10:02"
+    },
+    {
+      "key": "required_packages",
+      "value": "['pip install playwright streamlit langchain openai gitpython']",
+      "updated": "2026-02-12 07:10:02"
+    }
+  ],
+  "preferences": [
+    {
+      "key": "guidance_style",
+      "value": "Step-by-step, one action at a time, with pauses for confirmation",
+      "updated": "2026-02-10 02:06:00"
+    },
+    {
+      "key": "explanation_depth",
+      "value": "Deep-dive with rationale, but concise",
+      "updated": "2026-02-10 02:06:00"
+    },
+    {
+      "key": "decision_making",
+      "value": "Wants assistant to recommend optimal paths, explain why",
+      "updated": "2026-02-10 02:06:00"
+    },
+    {
+      "key": "safety_approach",
+      "value": "No destructive changes without explicit approval",
+      "updated": "2026-02-10 02:06:00"
+    },
+    {
+      "key": "response_style",
+      "value": "Answer in plain language. Never show code, scripts, or tool output unless Neo specifically asks.",
+      "updated": "2026-02-11 18:59:00"
+    },
+    {
+      "key": "sync_frequency",
+      "value": "30 minutes",
+      "updated": "2026-02-11 19:28:33",
+      "vault_id": "mem_0ba56799fc31b20d"
+    },
+    {
+      "key": "save_personal_preferences",
+      "value": "True",
+      "updated": "2026-02-11 19:28:33",
+      "vault_id": "mem_f5cb2a511735aea7"
+    },
+    {
+      "key": "chat_box_color",
+      "value": "black",
+      "updated": "2026-02-12 03:04:57"
+    },
+    {
+      "key": "background_color",
+      "value": "dark deep purple",
+      "updated": "2026-02-12 03:24:58"
+    },
+    {
+      "key": "chat_area_background",
+      "value": "black",
+      "updated": "2026-02-12 03:24:58"
+    },
+    {
+      "key": "chat_bubble_color",
+      "value": "black",
+      "updated": "2026-02-12 03:24:58"
+    },
+    {
+      "key": "favorite_color",
+      "value": "purple",
+      "updated": "2026-02-12 04:34:57",
+      "vault_id": "mem_6e96e930a89010bc"
+    }
+  ],
+  "context": [
+    {
+      "key": "project_name",
+      "value": "Karma SADE - Personal infrastructure and automation environment",
+      "updated": "2026-02-10 02:06:00"
+    },
+    {
+      "key": "ai_stack",
+      "value": "Ollama + Open WebUI. Groq (llama-3.3-70b-versatile) as primary model. Local backup: llama3-groq-tool-use:8b. Memory extractor: qwen2.5-coder:3b. Embeddings: nomic-embed-text.",
+      "updated": "2026-02-12 02:45:00"
+    },
+    {
+      "key": "monitoring",
+      "value": "Sentinel health monitoring system (PowerShell, every 15 min)",
+      "updated": "2026-02-10 02:06:00"
+    },
+    {
+      "key": "coding_tools",
+      "value": "Warp terminal (primary), VS Code + Continue.dev connected to local Ollama",
+      "updated": "2026-02-11 18:59:00"
+    },
+    {
+      "key": "memory_system",
+      "value": "Prompt-First architecture. Source of truth: 05-user-facts.json. Auto-sync every 5 min via KarmaSADE-MemorySync task. Manual sync: run 'chatsync' or 'newchat' in terminal.",
+      "updated": "2026-02-11 18:59:00"
+    },
+    {
+      "key": "backup_destinations",
+      "value": "ArkNexus Vault (https://vault.arknexus.net) and vault-neo droplet (DigitalOcean, via SSH/SCP). Both sync during chatsync/newchat.",
+      "updated": "2026-02-11 18:59:00"
+    },
+    {
+      "key": "cockpit_theme",
+      "value": "dark deep purple",
+      "updated": "2026-02-12 03:29:57"
+    },
+    {
+      "key": "preferred_language",
+      "value": "english",
+      "updated": "2026-02-12 03:34:57"
+    },
+    {
+      "key": "droplet_url",
+      "value": "https://www.digitalocean.com",
+      "updated": "2026-02-12 05:20:00"
+    },
+    {
+      "key": "droplet_name",
+      "value": "arknexus-vault-01",
+      "updated": "2026-02-12 05:20:00"
+    },
+    {
+      "key": "droplet_provider",
+      "value": "DigitalOcean",
+      "updated": "2026-02-12 05:20:00"
+    },
+    {
+      "key": "droplet_region",
+      "value": "NYC3",
+      "updated": "2026-02-12 05:20:00"
+    },
+    {
+      "key": "droplet_specs",
+      "value": "2 GB RAM / 50 GB Disk",
+      "updated": "2026-02-12 05:20:00"
+    },
+    {
+      "key": "droplet_ip",
+      "value": "64.225.13.144",
+      "updated": "2026-02-12 05:20:00"
+    },
+    {
+      "key": "droplet_purpose",
+      "value": "ArkNexus Vault backup server (vault-neo). Receives memory backups via SSH/SCP during chatsync/newchat.",
+      "updated": "2026-02-12 05:20:00"
+    },
+    {
+      "key": "droplet_domain",
+      "value": "arknexus.net (1 CNAME / 3 NS / 1 SOA / 1 TXT)",
+      "updated": "2026-02-12 05:20:00"
+    },
+    {
+      "key": "karma_sade_project",
+      "value": "memory-first, vault-centric, multi-agent AI system",
+      "updated": "2026-02-12 06:30:02"
+    },
+    {
+      "key": "conversation_id",
+      "value": "231a06ef-7023-4439-87ba-a0738b9ec2dc",
+      "updated": "2026-02-12 06:30:02"
+    },
+    {
+      "key": "conversation_history",
+      "value": "the conversation history is organized into conversations tied to sessions [1]",
+      "updated": "2026-02-12 06:35:00"
+    },
+    {
+      "key": "karma_sade_architect_default",
+      "value": "using Karma SADE Architect as the default AI persona",
+      "updated": "2026-02-12 06:35:00"
+    },
+    {
+      "key": "last_phase_completed",
+      "value": "SADE rebuild on 2026-02-10",
+      "updated": "2026-02-12 06:49:58"
+    },
+    {
+      "key": "last_timestamp",
+      "value": "2026-02-12",
+      "updated": "2026-02-12 06:49:58"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+ArkNexus Cockpit — Conversation Summary (sanitized)
+Date: 2026-02-12
+
+Scope
+- Build/stabilize a persistent Chromium browser service (Cockpit) with a pinned Open WebUI tab @_karma
+- Provide Open WebUI tool for browser control (tabs, read, screenshot, links, click/fill with approval)
+- Auto-start services on Windows login
+- Verify agentic loop (chat -> tool calls -> cockpit actions)
+
+Progress to date
+- Cockpit service exists (Flask+Playwright), API http://127.0.0.1:9400
+- Desktop shortcut created: "Karma Cockpit.lnk" launching start_cockpit.vbs
+- Tool installed in Open WebUI DB: karma-browser-control (v2)
+- Memory + prompt updated; capabilities trimmed to avoid bogus tools
+- End-to-end agentic tests added (pending stabilization)
+
+Issues observed
+- Open WebUI occasionally returns 500 /error; requires clean restart
+- Chat editor is Tiptap contenteditable; JS value setting doesn’t submit; must use Playwright typing
+- Intermittent failure to detect/send messages; selection + Enter logic being hardened
+- Health sometimes showed ok while cockpit tab pointed to /error; added explicit ready flag and keepalive
+
+Next actions
+1) Stabilize @_karma life-cycle (auto-reopen, navigate to home, editor readiness)
+2) Fix send path (focus editor -> Enter -> detect response reliably)
+3) Re-run agentic tests and capture logs
+4) Only after all checks pass, proceed to theming/customization tests
+
+Notes
+- Secrets provided in chat have been intentionally omitted here. Store no plaintext secrets in this folder.

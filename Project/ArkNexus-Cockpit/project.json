@@ -1,0 +1,24 @@
+{
+  "name": "ArkNexus Cockpit",
+  "code_name": "karma-cockpit",
+  "created": "2026-02-12T00:21:30Z",
+  "owner": "Neo",
+  "maintainer": "Oz",
+  "paths": {
+    "scripts": "C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts",
+    "logs": "C:\\Users\\raest\\Documents\\Karma_SADE\\Logs",
+    "memory": "C:\\Users\\raest\\Documents\\Karma_SADE\\Memory",
+    "project": "C:\\Users\\raest\\Documents\\Karma_SADE\\Project\\ArkNexus-Cockpit"
+  },
+  "services": {
+    "cockpit_api": "http://127.0.0.1:9400",
+    "open_webui": "http://localhost:8080"
+  },
+  "status": {
+    "desktop_shortcut": true,
+    "cockpit_running": false,
+    "openwebui_running": false,
+    "memory_linked": true
+  },
+  "notes": "This file is the canonical project manifest for structure, paths, and status flags."
+}
