@@ -25,3 +25,8 @@ desktop.ini
 *.swo
 *~
 .vscode/
+
+# Secrets (DPAPI-encrypted, but still shouldn't be in repo)
+# Actual file lives at ~/karma/secrets.json, outside repo tree.
+secrets.json
+
