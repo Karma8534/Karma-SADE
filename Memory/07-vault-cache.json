@@ -1,11 +1,11 @@
 {
-  "pulled_at": "2026-02-12T17:19:57.840513+00:00",
+  "pulled_at": "2026-02-12T17:24:57.851653+00:00",
   "meta": {
     "count": 94,
     "facts_count": 81,
     "preferences_count": 13,
-    "ledger_lines": 782,
-    "generated_at": "2026-02-12T17:19:57.886Z"
+    "ledger_lines": 783,
+    "generated_at": "2026-02-12T17:24:57.900Z"
   },
   "facts_count": 81,
   "preferences_count": 13
