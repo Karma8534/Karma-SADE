@@ -21,6 +21,7 @@ $Config = @{
     # Paths
     OpenWebUIExe   = "C:\openwebui\venv\Scripts\open-webui.exe"
     CockpitScript  = "C:\Users\raest\Documents\Karma_SADE\Scripts\karma_cockpit_service.py"
+    SecretsScript  = "C:\Users\raest\Documents\Karma_SADE\Scripts\karma_secrets.ps1"
     LogDir         = "C:\Users\raest\Documents\Karma_SADE\Logs"
 
     # Endpoints
@@ -140,6 +141,23 @@ function Start-KarmaServices {
     $startTime = Get-Date
     $allHealthy = $true
 
+    # ── Step 0: Load Secrets ──
+    Write-Log "── Step 0/3: Secrets Management ──"
+
+    if (Test-Path $Config.SecretsScript) {
+        try {
+            & $Config.SecretsScript -Action env 2>&1 | Out-Null
+            Write-Log "API keys loaded from encrypted store" "OK"
+        }
+        catch {
+            Write-Log "Secrets script failed: $($_.Exception.Message)" "WARN"
+            Write-Log "Services will use keys from database (if configured)" "WARN"
+        }
+    }
+    else {
+        Write-Log "Secrets script not found — skipping (keys from database)" "WARN"
+    }
+
     # ── Step 1: Ollama ──
     Write-Log "── Step 1/3: Ollama ──"
 
@@ -224,11 +242,26 @@ function Start-KarmaServices {
     catch {}
 
     if (-not $cockpitAlreadyUp) {
-        # Check port isn't held by a zombie process
-        $portInUse = netstat -ano 2>$null | Select-String ":9400\s"
-        if ($portInUse) {
-            Write-Log "Port 9400 in use but Cockpit not healthy — possible zombie. Entries:" "WARN"
-            $portInUse | ForEach-Object { Write-Log "  $_" "WARN" }
+        # Kill any zombie on port 9400
+        $zombies = netstat -ano 2>$null | Select-String ":9400\s+.*LISTEN"
+        if ($zombies) {
+            Write-Log "Port 9400 in use but Cockpit not healthy — killing zombie processes" "WARN"
+            foreach ($line in $zombies) {
+                if ($line -match '\s(\d+)\s*$') {
+                    $pid = [int]$Matches[1]
+                    if ($pid -gt 0) {
+                        try {
+                            Write-Log "Killing zombie PID $pid on port 9400" "WARN"
+                            Stop-Process -Id $pid -Force -ErrorAction Stop
+                            Start-Sleep -Seconds 2
+                            Write-Log "Killed PID $pid" "OK"
+                        }
+                        catch {
+                            Write-Log "Failed to kill PID $pid: $($_.Exception.Message)" "ERROR"
+                        }
+                    }
+                }
+            }
         }
 
         if (-not (Test-Path $Config.CockpitScript)) {
