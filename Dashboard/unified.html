@@ -359,7 +359,7 @@
             <div class="chat-messages" id="chat-messages">
                 <div class="message assistant">
                     <div>Hello! I'm Karma, your agentic AI assistant. I'm using FREE Ollama for most tasks, with Claude as a fallback for complex queries.</div>
-                    <div class="message-meta">System • Just now</div>
+                    <div class="message-meta">System | Just now</div>
                 </div>
             </div>
 
@@ -627,7 +627,7 @@
 
             const metaDiv = document.createElement('div');
             metaDiv.className = 'message-meta';
-            metaDiv.textContent = `${role === 'user' ? 'You' : 'Karma'} • ${new Date().toLocaleTimeString()}`;
+            metaDiv.textContent = `${role === 'user' ? 'You' : 'Karma'} | ${new Date().toLocaleTimeString()}`;
 
             messageDiv.appendChild(contentDiv);
             messageDiv.appendChild(metaDiv);
