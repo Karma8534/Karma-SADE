@@ -56,10 +56,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Claude client
-claude_client = anthropic.Anthropic(
-    api_key=os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("CLAUDE_API_KEY")
-)
+# Claude client (fallback only - Ollama is primary)
+try:
+    claude_client = anthropic.Anthropic(
+        api_key=os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("CLAUDE_API_KEY")
+    )
+    CLAUDE_AVAILABLE = True
+except Exception as e:
+    logger.warning(f"Claude API not configured: {e}. Using Ollama only.")
+    claude_client = None
+    CLAUDE_AVAILABLE = False
+
+# Ollama client (primary - FREE)
+import subprocess
+OLLAMA_AVAILABLE = False
+try:
+    subprocess.run(["ollama", "list"], capture_output=True, check=True, timeout=5)
+    OLLAMA_AVAILABLE = True
+    logger.info("Ollama available - using as primary model")
+except:
+    logger.warning("Ollama not available - will fallback to Claude if configured")
 
 # Active WebSocket connections
 active_connections: List[WebSocket] = []
@@ -81,6 +97,104 @@ class ChatRequest(BaseModel):
 class ConversationResponse(BaseModel):
     conversation_id: str
     messages: List[ChatMessage]
+
+# ============================================================================
+# Smart Model Routing (Ollama First, Claude Fallback)
+# ============================================================================
+
+def detect_task_complexity(message: str) -> str:
+    """Detect if task is simple, medium, or complex"""
+    message_lower = message.lower()
+
+    # Complex keywords - need Claude
+    complex_keywords = ["architect", "design", "refactor", "multi-step", "complex", "integrate"]
+    if any(kw in message_lower for kw in complex_keywords):
+        return "complex"
+
+    # Simple keywords - Ollama can handle
+    simple_keywords = ["what is", "explain", "how to", "list", "show", "check", "status"]
+    if any(kw in message_lower for kw in simple_keywords):
+        return "simple"
+
+    return "medium"
+
+def call_ollama(message: str, model: str = "llama3.1", timeout: int = 60) -> Optional[str]:
+    """Call Ollama directly - FREE"""
+    try:
+        result = subprocess.run(
+            ["ollama", "run", model, message],
+            capture_output=True,
+            text=True,
+            timeout=timeout
+        )
+        if result.returncode == 0:
+            logger.info(f"✅ Ollama response (FREE) - model: {model}")
+            return result.stdout.strip()
+        else:
+            logger.warning(f"Ollama error: {result.stderr}")
+            return None
+    except subprocess.TimeoutExpired:
+        logger.warning(f"Ollama timeout after {timeout}s")
+        return None
+    except Exception as e:
+        logger.error(f"Ollama failed: {e}")
+        return None
+
+async def get_ai_response(message: str, conversation_history: List[Dict] = None) -> str:
+    """
+    Smart routing: Try Ollama first (FREE), fallback to Claude if needed
+    """
+    complexity = detect_task_complexity(message)
+    conversation_history = conversation_history or []
+
+    # Strategy: Always try Ollama first for simple/medium tasks
+    if complexity in ["simple", "medium"] and OLLAMA_AVAILABLE:
+        logger.info(f"📊 Task complexity: {complexity} - Trying Ollama (FREE)")
+
+        # Choose appropriate Ollama model
+        if "code" in message.lower():
+            model = "deepseek-coder:6.7b"
+        else:
+            model = "llama3.1"
+
+        response = call_ollama(message, model=model)
+
+        if response:
+            return f"[Ollama/{model} - $0.00]\n\n{response}"
+        else:
+            logger.info("Ollama failed, falling back to Claude...")
+
+    # Fallback to Claude or force Claude for complex tasks
+    if CLAUDE_AVAILABLE:
+        logger.info(f"🔵 Using Claude API (complexity: {complexity})")
+
+        # Build message history for Claude
+        messages = []
+        for msg in conversation_history[-10:]:  # Last 10 messages for context
+            messages.append({
+                "role": msg["role"],
+                "content": msg["content"]
+            })
+        messages.append({"role": "user", "content": message})
+
+        try:
+            response = claude_client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=4096,
+                messages=messages,
+                system="You are Karma, an agentic AI assistant with full system access. Be concise and helpful."
+            )
+
+            content = response.content[0].text
+            logger.info(f"✅ Claude response - tokens: {response.usage.input_tokens + response.usage.output_tokens}")
+            return f"[Claude Sonnet - Paid]\n\n{content}"
+
+        except Exception as e:
+            logger.error(f"Claude API error: {e}")
+            return f"Error: Could not get response from Claude: {str(e)}"
+
+    # No AI available
+    return "Error: No AI backend available. Please configure ANTHROPIC_API_KEY or ensure Ollama is running."
 
 # ============================================================================
 # Chat Endpoints
@@ -106,22 +220,16 @@ async def chat(request: ChatRequest):
     }
     conversations[conversation_id].append(user_msg)
 
-    # Prepare messages for Claude
-    claude_messages = [
-        {"role": msg["role"], "content": msg["content"]}
-        for msg in conversations[conversation_id]
-    ]
-
     try:
-        # Call Claude
-        response = claude_client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=4096,
-            messages=claude_messages,
-            system="You are Karma, an agentic AI assistant with full system access. You help Neo with coding, system administration, research, and automation. You have access to browser control, file system, and command execution via MCP tools. You are direct, technically precise, and proactive."
+        # Smart routing: Ollama first, Claude fallback
+        response_text = await get_ai_response(
+            request.message,
+            conversation_history=conversations[conversation_id][:-1]  # Exclude current message
         )
 
-        # Extract response
+        # Response generated by smart routing (Ollama or Claude)
+
+        # Store assistant response
         assistant_msg = {
             "role": "assistant",
             "content": response.content[0].text,
