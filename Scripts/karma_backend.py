@@ -128,7 +128,7 @@ def call_ollama(message: str, model: str = "llama3.1", timeout: int = 60) -> Opt
             timeout=timeout
         )
         if result.returncode == 0:
-            logger.info(f"✅ Ollama response (FREE) - model: {model}")
+            logger.info(f"[OK] Ollama response (FREE) - model: {model}")
             return result.stdout.strip()
         else:
             logger.warning(f"Ollama error: {result.stderr}")
@@ -149,7 +149,7 @@ async def get_ai_response(message: str, conversation_history: List[Dict] = None)
 
     # Strategy: Always try Ollama first for simple/medium tasks
     if complexity in ["simple", "medium"] and OLLAMA_AVAILABLE:
-        logger.info(f"📊 Task complexity: {complexity} - Trying Ollama (FREE)")
+        logger.info(f"[ROUTE] Task complexity: {complexity} - Trying Ollama (FREE)")
 
         # Choose appropriate Ollama model
         if "code" in message.lower():
@@ -166,7 +166,7 @@ async def get_ai_response(message: str, conversation_history: List[Dict] = None)
 
     # Fallback to Claude or force Claude for complex tasks
     if CLAUDE_AVAILABLE:
-        logger.info(f"🔵 Using Claude API (complexity: {complexity})")
+        logger.info(f"[CLAUDE] Using Claude API (complexity: {complexity})")
 
         # Build message history for Claude
         messages = []
@@ -186,7 +186,7 @@ async def get_ai_response(message: str, conversation_history: List[Dict] = None)
             )
 
             content = response.content[0].text
-            logger.info(f"✅ Claude response - tokens: {response.usage.input_tokens + response.usage.output_tokens}")
+            logger.info(f"[OK] Claude response - tokens: {response.usage.input_tokens + response.usage.output_tokens}")
             return f"[Claude Sonnet - Paid]\n\n{content}"
 
         except Exception as e:
