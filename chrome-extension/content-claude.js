@@ -18,13 +18,15 @@ function init() {
 
   // Wait for chat container to exist
   const checkContainer = setInterval(() => {
+    // Try multiple selectors
     const chatContainer = document.querySelector('[data-testid="conversation"]') ||
-                          document.querySelector('.font-user-message') ||
-                          document.querySelector('main');
+                          document.querySelector('main[class*="flex"]') ||
+                          document.querySelector('main') ||
+                          document.body;
 
     if (chatContainer) {
       clearInterval(checkContainer);
-      console.log('[UAI Memory] Found chat container, starting observer');
+      console.log('[UAI Memory] Found chat container:', chatContainer.tagName, chatContainer.className);
       startObserver(chatContainer);
       // Also do initial scan
       scanForNewMessages();
@@ -81,70 +83,74 @@ function scanForNewMessages() {
 function extractMessages() {
   const turns = [];
 
-  // Try multiple selector strategies for Claude.ai's evolving DOM
-  // Strategy 1: Look for divs with specific structure patterns
-  const allDivs = document.querySelectorAll('div[class]');
+  // Simpler approach: Find all divs and analyze their position/content
+  const allDivs = Array.from(document.querySelectorAll('div'));
 
   console.log('[UAI Memory] Scanning', allDivs.length, 'divs for messages');
 
-  // Build a list of potential message elements
-  const messageBlocks = [];
+  // Filter to likely message containers
+  const messageCandidates = allDivs.filter(div => {
+    const text = div.innerText?.trim() || '';
+    const textLen = text.length;
 
-  allDivs.forEach(div => {
-    const text = div.innerText?.trim();
+    // Must have substantial text
+    if (textLen < 10 || textLen > 50000) return false;
+
+    // Ignore if it has message children (parent container)
+    const childDivs = div.querySelectorAll('div');
+    if (childDivs.length > 20) return false;
+
+    return true;
+  });
+
+  console.log('[UAI Memory] Found', messageCandidates.length, 'message candidates');
+
+  // Look for alternating pattern based on position
+  // Claude typically renders messages in order: user, assistant, user, assistant...
+  const messages = [];
+
+  messageCandidates.forEach((div, idx) => {
+    const text = div.innerText.trim();
     const classes = div.className || '';
+    const computedStyle = window.getComputedStyle(div);
 
-    // Skip if no text or too short
-    if (!text || text.length < 5) return;
+    // Simple heuristic: alternate between user/assistant based on order
+    // Or detect by class name patterns
+    let type = null;
 
-    // Skip if this div contains other message divs (parent container)
-    const hasChildMessages = div.querySelector('div[class*="font"]') !== null;
-    if (hasChildMessages) return;
+    if (classes.match(/font-user|user.*message/i)) {
+      type = 'user';
+    } else if (classes.match(/font-claude|font-assistant|assistant.*message|claude.*message/i)) {
+      type = 'assistant';
+    }
 
-    // Detect user messages - look for common patterns
-    const isUser = classes.includes('font-user') ||
-                   classes.includes('user-message') ||
-                   div.hasAttribute('data-is-user-message');
-
-    // Detect assistant messages
-    const isAssistant = classes.includes('font-claude') ||
-                        classes.includes('font-assistant') ||
-                        classes.includes('assistant-message') ||
-                        div.hasAttribute('data-is-assistant-message');
-
-    if (isUser || isAssistant) {
-      messageBlocks.push({
-        type: isUser ? 'user' : 'assistant',
-        text: text,
-        element: div
-      });
+    if (type) {
+      messages.push({ type, text, idx });
+      console.log(`[UAI Memory] Message ${messages.length}: ${type} (${text.substring(0, 50)}...)`);
     }
   });
 
-  console.log('[UAI Memory] Found', messageBlocks.length, 'message blocks');
+  console.log('[UAI Memory] Identified', messages.length, 'typed messages');
 
-  // Pair up user and assistant messages
+  // Pair them up
   let currentTurn = { user: null, assistant: null };
 
-  messageBlocks.forEach(block => {
-    if (block.type === 'user') {
-      // Save previous turn if complete
+  messages.forEach(msg => {
+    if (msg.type === 'user') {
       if (currentTurn.user && currentTurn.assistant) {
         turns.push({...currentTurn});
       }
-      // Start new turn
-      currentTurn = { user: block.text, assistant: null };
-    } else if (block.type === 'assistant' && currentTurn.user) {
-      currentTurn.assistant = block.text;
+      currentTurn = { user: msg.text, assistant: null };
+    } else if (msg.type === 'assistant' && currentTurn.user) {
+      currentTurn.assistant = msg.text;
     }
   });
 
-  // Add last turn if complete
   if (currentTurn.user && currentTurn.assistant) {
     turns.push(currentTurn);
   }
 
-  console.log('[UAI Memory] Extracted', turns.length, 'conversation turns');
+  console.log('[UAI Memory] Extracted', turns.length, 'complete turns');
 
   return turns;
 }
