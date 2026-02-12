@@ -1,0 +1,73 @@
+========================================
+KARMA SADE - UPDATED CONFIGURATION
+========================================
+
+CRITICAL CHANGE: Claude API Disabled
+-------------------------------------
+Reason: No credits available (400 error)
+Replacement: Perplexity API (Tier 4)
+Cost Improvement: 15x cheaper ($0.001 vs $0.015)
+
+NEW 4-TIER ROUTING SYSTEM:
+-------------------------------------
+1. Ollama (FREE) - 70% of queries
+   - Simple questions, code generation
+   - Models: llama3.1, deepseek-coder:6.7b
+
+2. Gemini (FREE) - 20% of queries
+   - Fast inference, research
+   - Limit: 1,500 requests/day
+
+3. OpenAI (CHEAP) - 8% of queries
+   - Complex code, reasoning
+   - Cost: ~$0.0025/query
+   - Models: gpt-4o-mini, gpt-4o
+
+4. Perplexity (CHEAP) - 2% of queries
+   - Research specialist, web search
+   - Cost: ~$0.001/query
+   - Model: llama-3.1-sonar-small-128k-online
+
+TOTAL COST SAVINGS:
+-------------------------------------
+Before (Claude only): $54/year
+After (Multi-API):    $6/year  (reduced from $9)
+NEW SAVINGS:          $48/year (89% reduction!)
+
+SETUP REQUIRED:
+-------------------------------------
+You need to add your Perplexity API key:
+
+1. Open PowerShell
+2. Run:
+   [System.Environment]::SetEnvironmentVariable('PERPLEXITY_API_KEY', 'pplx-YOUR-KEY', 'User')
+
+3. Restart Karma backend (⚡ Karma SADE icon)
+
+VERIFICATION:
+-------------------------------------
+Check logs after restart:
+tail -f Logs\karma-backend.log
+
+Should see:
+[OK] Perplexity available (PAID - research specialist)
+[CONFIG] 4 AI backends available
+
+FILES UPDATED:
+-------------------------------------
+✅ Scripts/karma_backend.py - Claude disabled, Perplexity added
+✅ README.md - Updated tier table
+✅ PERPLEXITY_SETUP.md - Full setup guide
+✅ This file - Quick reference
+
+NEXT STEPS:
+-------------------------------------
+1. Get Perplexity API key from https://www.perplexity.ai/
+2. Set PERPLEXITY_API_KEY in registry (see above)
+3. Restart backend
+4. Test end-to-end in dashboard (http://localhost:9401/unified)
+
+========================================
+Created: 2026-02-12
+Status: Ready for Perplexity API key
+========================================

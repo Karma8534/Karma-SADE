@@ -164,7 +164,7 @@ except Exception as e:
     logger.warning(f"[WARN] Claude initialization failed: {e}")
 
 # Log final configuration
-total_backends = sum([OLLAMA_AVAILABLE, GEMINI_AVAILABLE, OPENAI_AVAILABLE, CLAUDE_AVAILABLE])
+total_backends = sum([OLLAMA_AVAILABLE, GEMINI_AVAILABLE, OPENAI_AVAILABLE, PERPLEXITY_AVAILABLE])
 logger.info(f"[CONFIG] {total_backends} AI backends available")
 if total_backends == 0:
     logger.error("[ERROR] No AI backends available! Please configure at least one API key or install Ollama.")
@@ -280,7 +280,7 @@ async def get_ai_response(message: str, conversation_history: List[Dict] = None)
     1. Ollama (FREE - unlimited local)
     2. Gemini (FREE - 1,500/day)
     3. OpenAI (CHEAP - ~$0.0025/query)
-    4. Claude (EXPENSIVE - last resort)
+    4. Perplexity (CHEAP - research specialist, ~$0.001/query)
     """
     complexity = detect_task_complexity(message)
     conversation_history = conversation_history or []
@@ -322,14 +322,14 @@ async def get_ai_response(message: str, conversation_history: List[Dict] = None)
         else:
             logger.info("OpenAI failed, trying next tier...")
 
-    # Tier 4: Claude (EXPENSIVE - last resort)
-    if CLAUDE_AVAILABLE:
-        logger.info(f"[ROUTE] Using Claude (EXPENSIVE - last resort, complexity: {complexity})")
-        response = call_claude(message, conversation_history)
+    # Tier 4: Perplexity (CHEAP - research specialist, good for complex queries)
+    if PERPLEXITY_AVAILABLE:
+        logger.info(f"[ROUTE] Using Perplexity (PAID - research specialist, complexity: {complexity})")
+        response = call_perplexity(message)
         if response:
-            return f"[Claude Sonnet 4 - ~$0.015]\n\n{response}"
+            return f"[Perplexity Llama 3.1 Sonar - ~$0.001]\n\n{response}"
         else:
-            return "Error: Claude API failed"
+            logger.info("Perplexity failed, no more backends available")
 
     # No AI available
     return "Error: No AI backend available. Please configure at least one API key or install Ollama."

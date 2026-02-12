@@ -38,9 +38,11 @@ Karma SADE is an intelligent AI routing system that automatically selects the be
 | 1 | **Ollama** | FREE | 70% - Simple queries, code generation |
 | 2 | **Gemini** | FREE (1,500/day) | 20% - Fast inference, research |
 | 3 | **OpenAI** | ~$0.0025/query | 8% - Complex tasks, better code |
-| 4 | **Claude** | ~$0.015/query | 2% - Architecture, deep reasoning |
+| 4 | **Perplexity** | ~$0.001/query | 2% - Research, web search, analysis |
 
 **Smart Routing**: Automatically tries FREE options first, only uses paid APIs when necessary.
+
+**Note**: Claude API disabled (no credits available). Perplexity provides similar capabilities at 15x lower cost!
 
 ---
 
@@ -80,7 +82,8 @@ Karma SADE is an intelligent AI routing system that automatically selects the be
 All keys stored securely in Windows registry:
 - `GEMINI_API_KEY` - Google Gemini (FREE tier)
 - `OPENAI_API_KEY` - OpenAI GPT-4o/mini
-- `ANTHROPIC_API_KEY` - Claude Sonnet 4
+- `PERPLEXITY_API_KEY` - Perplexity research models
+- ~~`ANTHROPIC_API_KEY`~~ - Claude Sonnet 4 (DISABLED - no credits)
 
 Auto-loaded at backend startup.
 
