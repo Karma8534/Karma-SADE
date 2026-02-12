@@ -57,6 +57,30 @@ app.add_middleware(
 )
 
 # ============================================================================
+# Load API keys from Windows registry (if not in environment)
+# ============================================================================
+def load_api_key_from_registry(key_name: str) -> Optional[str]:
+    """Load API key from Windows registry if not in environment"""
+    if os.environ.get(key_name):
+        return os.environ.get(key_name)
+
+    try:
+        result = subprocess.run(
+            ["powershell", "-Command",
+             f"Get-ItemProperty -Path 'HKCU:\\Environment' -Name {key_name} -ErrorAction SilentlyContinue | Select-Object -ExpandProperty {key_name}"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            key = result.stdout.strip()
+            os.environ[key_name] = key  # Set in environment for this session
+            return key
+    except:
+        pass
+    return None
+
+# ============================================================================
 # Multi-API Client Initialization
 # Priority: Ollama (FREE) → Gemini (FREE) → OpenAI (CHEAP) → Claude (EXPENSIVE)
 # ============================================================================
@@ -76,7 +100,7 @@ GEMINI_AVAILABLE = False
 gemini_client = None
 try:
     import google.generativeai as genai
-    gemini_key = os.environ.get("GEMINI_API_KEY")
+    gemini_key = load_api_key_from_registry("GEMINI_API_KEY")
     if gemini_key:
         genai.configure(api_key=gemini_key)
         gemini_client = genai.GenerativeModel('gemini-1.5-flash')
@@ -94,7 +118,7 @@ OPENAI_AVAILABLE = False
 openai_client = None
 try:
     from openai import OpenAI
-    openai_key = os.environ.get("OPENAI_API_KEY")
+    openai_key = load_api_key_from_registry("OPENAI_API_KEY")
     if openai_key:
         openai_client = OpenAI(api_key=openai_key)
         OPENAI_AVAILABLE = True
@@ -110,7 +134,7 @@ except Exception as e:
 CLAUDE_AVAILABLE = False
 claude_client = None
 try:
-    claude_key = os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("CLAUDE_API_KEY")
+    claude_key = load_api_key_from_registry("ANTHROPIC_API_KEY") or load_api_key_from_registry("CLAUDE_API_KEY")
     if claude_key:
         claude_client = anthropic.Anthropic(api_key=claude_key)
         CLAUDE_AVAILABLE = True
