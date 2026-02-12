@@ -116,31 +116,35 @@
         .chat-messages {
             flex: 1;
             min-height: 0;  /* Critical: allows flex child to shrink and enable scrolling */
-            overflow-y: scroll;
+            overflow-y: auto;  /* Changed from scroll to auto - only shows scrollbar when needed */
             overflow-x: hidden;
             padding: 16px;
             display: flex;
             flex-direction: column;
             gap: 12px;
+            max-height: calc(100vh - 60px - 60px - 150px);  /* Viewport minus header, chat-header, and input area */
         }
 
         /* Custom Scrollbar Styling */
         .chat-messages::-webkit-scrollbar {
-            width: 8px;
+            width: 10px;  /* Made slightly wider for better visibility */
         }
 
         .chat-messages::-webkit-scrollbar-track {
             background: var(--bg-secondary);
-            border-radius: 4px;
+            border-radius: 5px;
+            margin: 4px 0;  /* Add margin to prevent scrollbar from touching edges */
         }
 
         .chat-messages::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 4px;
+            background: var(--accent-purple);  /* Changed to purple for visibility */
+            border-radius: 5px;
+            border: 2px solid var(--bg-secondary);  /* Add border for better definition */
         }
 
         .chat-messages::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-purple);
+            background: var(--accent-blue);  /* Change to blue on hover */
+            border-color: var(--bg-secondary);
         }
 
         .message {
