@@ -159,7 +159,7 @@ This session transformed Karma SADE from a Claude-only system with no quota mana
   - Logs saved to `Logs/karma-startup.log`
 
 **Files Modified**:
-- `Dashboard/unified.html` - Removed all emojis and special chars
+- `Dashboard/unified.html` - Removed all emojis and special chars, added custom scrollbar styling
 - `Scripts/karma_backend.py` - Fixed WebSocket routing (lines 644-671)
 
 **Files Created**:

@@ -115,11 +115,31 @@
 
         .chat-messages {
             flex: 1;
-            overflow-y: auto;
+            overflow-y: scroll;
+            overflow-x: hidden;
             padding: 16px;
             display: flex;
             flex-direction: column;
             gap: 12px;
+        }
+
+        /* Custom Scrollbar Styling */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-purple);
         }
 
         .message {
