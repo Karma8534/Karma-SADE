@@ -38,7 +38,8 @@ def main():
     steps = [
         "karma_chat_extractor.py",
         "generate_karma_prompt.py",
-        "karma_vault_sync.py"
+        "karma_vault_sync.py",
+        "git_sync.py"
     ]
     completed = 0
     for idx, script in enumerate(steps, 1):
