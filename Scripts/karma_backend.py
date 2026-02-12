@@ -130,15 +130,34 @@ except ImportError:
 except Exception as e:
     logger.warning(f"[WARN] OpenAI initialization failed: {e}")
 
-# 4. Claude (PAID - expensive, last resort)
+# 4. Perplexity (PAID - good for research, ~$0.001/query)
+PERPLEXITY_AVAILABLE = False
+perplexity_client = None
+try:
+    from openai import OpenAI  # Perplexity uses OpenAI-compatible API
+    perplexity_key = load_api_key_from_registry("PERPLEXITY_API_KEY")
+    if perplexity_key:
+        perplexity_client = OpenAI(
+            api_key=perplexity_key,
+            base_url="https://api.perplexity.ai"
+        )
+        PERPLEXITY_AVAILABLE = True
+        logger.info("[OK] Perplexity available (PAID - research specialist)")
+    else:
+        logger.info("[INFO] PERPLEXITY_API_KEY not set - skipping Perplexity")
+except Exception as e:
+    logger.warning(f"[WARN] Perplexity initialization failed: {e}")
+
+# 5. Claude (PAID - expensive, DISABLED due to no credits)
 CLAUDE_AVAILABLE = False
 claude_client = None
 try:
     claude_key = load_api_key_from_registry("ANTHROPIC_API_KEY") or load_api_key_from_registry("CLAUDE_API_KEY")
     if claude_key:
-        claude_client = anthropic.Anthropic(api_key=claude_key)
-        CLAUDE_AVAILABLE = True
-        logger.info("[OK] Claude available (PAID - last resort)")
+        # DISABLED: No credits available
+        # claude_client = anthropic.Anthropic(api_key=claude_key)
+        # CLAUDE_AVAILABLE = True
+        logger.info("[DISABLED] Claude API - no credits available")
     else:
         logger.info("[INFO] ANTHROPIC_API_KEY not set - skipping Claude")
 except Exception as e:
@@ -179,8 +198,8 @@ def detect_task_complexity(message: str) -> str:
     """Detect if task is simple, medium, or complex"""
     message_lower = message.lower()
 
-    # Complex keywords - need Claude
-    complex_keywords = ["architect", "design", "refactor", "multi-step", "complex", "integrate"]
+    # Complex keywords - need research/deep reasoning (Perplexity or OpenAI)
+    complex_keywords = ["architect", "design", "refactor", "multi-step", "complex", "integrate", "research", "compare", "analyze"]
     if any(kw in message_lower for kw in complex_keywords):
         return "complex"
 
@@ -237,25 +256,23 @@ def call_openai(message: str, model: str = "gpt-4o-mini") -> Optional[str]:
         logger.warning(f"OpenAI error: {e}")
         return None
 
-def call_claude(message: str, conversation_history: List[Dict] = None) -> Optional[str]:
-    """Call Claude API - EXPENSIVE (last resort)"""
+def call_perplexity(message: str, model: str = "llama-3.1-sonar-small-128k-online") -> Optional[str]:
+    """Call Perplexity API - CHEAP, great for research with web search"""
     try:
-        messages = []
-        for msg in (conversation_history or [])[-10:]:
-            messages.append({"role": msg["role"], "content": msg["content"]})
-        messages.append({"role": "user", "content": message})
-
-        response = claude_client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=4096,
-            messages=messages,
-            system="You are Karma, an agentic AI assistant with full system access. Be concise and helpful."
+        response = perplexity_client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": message}]
         )
-        logger.info(f"[OK] Claude response - tokens: {response.usage.input_tokens + response.usage.output_tokens}")
-        return response.content[0].text
+        logger.info(f"[OK] Perplexity response (PAID - {model})")
+        return response.choices[0].message.content
     except Exception as e:
-        logger.error(f"Claude error: {e}")
+        logger.warning(f"Perplexity error: {e}")
         return None
+
+def call_claude(message: str, conversation_history: List[Dict] = None) -> Optional[str]:
+    """Call Claude API - DISABLED (no credits available)"""
+    logger.warning("[DISABLED] Claude API called but is disabled due to no credits")
+    return None
 
 async def get_ai_response(message: str, conversation_history: List[Dict] = None) -> str:
     """
