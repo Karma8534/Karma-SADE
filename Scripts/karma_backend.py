@@ -641,33 +641,16 @@ async def websocket_chat(websocket: WebSocket, conversation_id: str):
                 "timestamp": datetime.now().isoformat()
             })
 
-            # Prepare messages for Claude
-            claude_messages = [
-                {"role": msg["role"], "content": msg["content"]}
-                for msg in conversations[conversation_id]
-            ]
+            # Get AI response using smart routing
+            full_response = await get_ai_response(
+                user_message,
+                conversation_history=conversations[conversation_id][:-1]  # Exclude the just-added user message
+            )
 
-            # Stream response from Claude
-            full_response = ""
-
-            with claude_client.messages.stream(
-                model="claude-sonnet-4-20250514",
-                max_tokens=4096,
-                messages=claude_messages,
-                system="You are Karma, an agentic AI assistant with full system access. You help Neo with coding, system administration, research, and automation. You have access to browser control, file system, and command execution via MCP tools. You are direct, technically precise, and proactive."
-            ) as stream:
-                for text in stream.text_stream:
-                    full_response += text
-                    # Send chunk to client
-                    await websocket.send_json({
-                        "type": "chunk",
-                        "content": text
-                    })
-
-            # Send completion signal
+            # Send complete response to client
             await websocket.send_json({
-                "type": "complete",
-                "full_response": full_response
+                "type": "response",
+                "content": full_response
             })
 
             # Save assistant response

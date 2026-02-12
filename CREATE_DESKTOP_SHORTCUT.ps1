@@ -7,11 +7,12 @@ $ShortcutPath = "$DesktopPath\⚡ Karma SADE.lnk"
 
 # Create the shortcut
 $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
-$Shortcut.TargetPath = "C:\Users\raest\Documents\Karma_SADE\START_KARMA.bat"
+$Shortcut.TargetPath = "C:\Windows\System32\wscript.exe"
+$Shortcut.Arguments = '"C:\Users\raest\Documents\Karma_SADE\START_KARMA_HIDDEN.vbs"'
 $Shortcut.WorkingDirectory = "C:\Users\raest\Documents\Karma_SADE"
-$Shortcut.Description = "Launch Karma SADE Unified Dashboard with Multi-API Backend"
+$Shortcut.Description = "Launch Karma SADE Unified Dashboard (Hidden Backend)"
 $Shortcut.IconLocation = "C:\Windows\System32\shell32.dll,277"  # Lightning bolt icon
-$Shortcut.WindowStyle = 1  # Normal window
+$Shortcut.WindowStyle = 7  # Minimized window
 $Shortcut.Save()
 
 Write-Host "========================================" -ForegroundColor Cyan
