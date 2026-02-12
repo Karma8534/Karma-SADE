@@ -454,9 +454,9 @@ def call_claude(message: str, conversation_history: List[Dict] = None) -> Option
 async def get_ai_response(message: str, conversation_history: List[Dict] = None) -> str:
     """
     7-Tier Smart Routing (with Quota Management):
-    1. Ollama (FREE - unlimited local)
+    1. Gemini 1.5 Flash (FREE - 1,500/day, 2024 knowledge, BEST FREE MODEL)
     2. Z.ai GLM-4-Flash (FREE - cloud backup)
-    3. Gemini (FREE - 1,500/day)
+    3. Ollama (FREE - unlimited local, 2023 knowledge - fallback only)
     4. Z.ai GLM-5 (PAID - $0.004/query, quota: 250/day)
     5. OpenAI (PAID - $0.0025/query, quota: 150/day)
     6. Perplexity (PAID - $0.001/query, quota: 100/day)
@@ -465,9 +465,27 @@ async def get_ai_response(message: str, conversation_history: List[Dict] = None)
     complexity = detect_task_complexity(message)
     conversation_history = conversation_history or []
 
-    # Tier 1: Always try Ollama first (FREE, unlimited)
+    # Tier 1: Gemini 1.5 Flash (FREE, 1,500/day, UP-TO-DATE KNOWLEDGE - 2024)
+    if GEMINI_AVAILABLE and complexity in ["simple", "medium"]:
+        logger.info(f"[ROUTE] Task complexity: {complexity} - Trying Gemini 1.5 Flash (FREE, 2024 knowledge)")
+        response = call_gemini(message)
+        if response:
+            return f"[Gemini 1.5 Flash - $0.00]\n\n{response}"
+        else:
+            logger.info("Gemini failed, trying next tier...")
+
+    # Tier 2: Try Z.ai GLM-4-Flash (FREE, unlimited)
+    if ZAI_AVAILABLE and complexity in ["simple", "medium"]:
+        logger.info(f"[ROUTE] Trying Z.ai GLM-4-Flash (FREE)")
+        response = call_zai(message, model="GLM-4-Flash", complexity=complexity)
+        if response:
+            return f"[Z.ai GLM-4-Flash - $0.00]\n\n{response}"
+        else:
+            logger.info("Z.ai Flash failed, trying next tier...")
+
+    # Tier 3: Ollama LOCAL FALLBACK (FREE, unlimited, but 2023 knowledge)
     if complexity in ["simple", "medium"] and OLLAMA_AVAILABLE:
-        logger.info(f"[ROUTE] Task complexity: {complexity} - Trying Ollama (FREE)")
+        logger.info(f"[ROUTE] Trying Ollama (FREE local fallback - 2023 knowledge)")
 
         # Choose appropriate Ollama model
         if "code" in message.lower():
@@ -481,24 +499,6 @@ async def get_ai_response(message: str, conversation_history: List[Dict] = None)
             return f"[Ollama/{model} - $0.00]\n\n{response}"
         else:
             logger.info("Ollama failed, trying next tier...")
-
-    # Tier 2: Try Z.ai GLM-4-Flash (FREE, unlimited)
-    if ZAI_AVAILABLE and complexity in ["simple", "medium"]:
-        logger.info(f"[ROUTE] Trying Z.ai GLM-4-Flash (FREE)")
-        response = call_zai(message, model="GLM-4-Flash", complexity=complexity)
-        if response:
-            return f"[Z.ai GLM-4-Flash - $0.00]\n\n{response}"
-        else:
-            logger.info("Z.ai Flash failed, trying next tier...")
-
-    # Tier 3: Try Gemini (FREE, 1,500/day)
-    if GEMINI_AVAILABLE and complexity in ["simple", "medium"]:
-        logger.info(f"[ROUTE] Trying Gemini (FREE - 1,500/day)")
-        response = call_gemini(message)
-        if response:
-            return f"[Gemini 1.5 Flash - $0.00]\n\n{response}"
-        else:
-            logger.info("Gemini failed, trying next tier...")
 
     # Tier 4: Try Z.ai GLM-5 (PAID but cheap, excellent for complex tasks)
     if ZAI_AVAILABLE and complexity in ["complex", "premium"]:
