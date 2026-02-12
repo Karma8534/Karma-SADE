@@ -8,21 +8,41 @@ import time
 import urllib.request
 import urllib.error
 import sys
+from pathlib import Path
 
 BASE = "http://127.0.0.1:9400"
+TOKEN_FILE = Path.home() / "karma" / "cockpit-token.txt"
 PASS = 0
 FAIL = 0
 RESULTS = []
 
 
+def _load_token() -> str:
+    try:
+        return TOKEN_FILE.read_text(encoding="utf-8").strip()
+    except Exception:
+        return ""
+
+
+_TOKEN = _load_token()
+if not _TOKEN:
+    print(f"[WARN] Cockpit token not found at {TOKEN_FILE}. Only /health will work.", file=sys.stderr)
+
+
 def req(method, endpoint, data=None):
     """Make an HTTP request to the cockpit service."""
     url = f"{BASE}{endpoint}"
+    headers = {}
+    if _TOKEN:
+        headers["Authorization"] = f"Bearer {_TOKEN}"
+
     if data is not None:
         body = json.dumps(data).encode("utf-8")
-        r = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"}, method=method)
+        headers["Content-Type"] = "application/json"
+        r = urllib.request.Request(url, data=body, headers=headers, method=method)
     else:
-        r = urllib.request.Request(url, method=method)
+        r = urllib.request.Request(url, headers=headers, method=method)
+
     try:
         with urllib.request.urlopen(r, timeout=20) as resp:
             return resp.status, json.loads(resp.read().decode("utf-8"))

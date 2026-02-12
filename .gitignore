@@ -30,3 +30,5 @@ desktop.ini
 # Actual file lives at ~/karma/secrets.json, outside repo tree.
 secrets.json
 
+# Vault token file (local-only)
+.vault_token

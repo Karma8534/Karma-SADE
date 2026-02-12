@@ -1,11 +1,25 @@
 import sys, json, urllib.request, urllib.error
+from pathlib import Path
 
 BASE = "http://127.0.0.1:9400"
+TOKEN_FILE = Path.home() / "karma" / "cockpit-token.txt"
+
+
+def _load_token() -> str:
+    try:
+        return TOKEN_FILE.read_text(encoding="utf-8").strip()
+    except Exception:
+        return ""
+
 
 def req(endpoint, payload, timeout=30):
     url = f"{BASE}{endpoint}"
     body = json.dumps(payload).encode("utf-8")
-    r = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"}, method="POST")
+    headers = {"Content-Type": "application/json"}
+    token = _load_token()
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    r = urllib.request.Request(url, data=body, headers=headers, method="POST")
     try:
         with urllib.request.urlopen(r, timeout=timeout) as resp:
             return resp.status, json.loads(resp.read().decode("utf-8"))
