@@ -22,8 +22,8 @@ def ask_karma_ollama(question: str, model: str = "llama3.1"):
         model: Which Ollama model to use (llama3.1, deepseek-coder, etc.)
     """
 
-    print(f"💬 Asking Karma (using {model} - FREE)...")
-    print(f"❓ Question: {question}\n")
+    print(f"[*] Asking Karma (using {model} - FREE)...")
+    print(f"[?] Question: {question}\n")
 
     try:
         # Call Ollama directly
@@ -36,22 +36,22 @@ def ask_karma_ollama(question: str, model: str = "llama3.1"):
 
         if result.returncode == 0:
             response = result.stdout.strip()
-            print(f"🤖 Karma's Response:\n{response}\n")
-            print(f"💰 Cost: $0.00 (Local Ollama)")
+            print(f"[KARMA] Response:\n{response}\n")
+            print(f"[COST] $0.00 (Local Ollama)")
             return response
         else:
-            print(f"❌ Error: {result.stderr}")
+            print(f"[ERROR] {result.stderr}")
             return None
 
     except subprocess.TimeoutExpired:
-        print("⏱️  Timeout: Task took too long (>60s)")
+        print("[TIMEOUT] Task took too long (>60s)")
         return None
     except FileNotFoundError:
-        print("❌ Ollama not found. Is it installed and running?")
+        print("[ERROR] Ollama not found. Is it installed and running?")
         print("   Check with: ollama list")
         return None
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"[ERROR] {e}")
         return None
 
 
@@ -63,8 +63,8 @@ def ask_karma_openwebui(question: str, model: str = "llama3.1"):
     """
     import requests
 
-    print(f"💬 Asking Karma via Open WebUI (using {model})...")
-    print(f"❓ Question: {question}\n")
+    print(f"[*] Asking Karma via Open WebUI (using {model})...")
+    print(f"[?] Question: {question}\n")
 
     try:
         response = requests.post(
@@ -82,19 +82,19 @@ def ask_karma_openwebui(question: str, model: str = "llama3.1"):
         if response.status_code == 200:
             result = response.json()
             karma_response = result["choices"][0]["message"]["content"]
-            print(f"🤖 Karma's Response:\n{karma_response}\n")
-            print(f"💰 Cost: $0.00 (Local Ollama via Open WebUI)")
+            print(f"[KARMA] Response:\n{karma_response}\n")
+            print(f"[COST] $0.00 (Local Ollama via Open WebUI)")
             return karma_response
         else:
-            print(f"❌ Error: {response.status_code} - {response.text}")
+            print(f"[ERROR] {response.status_code} - {response.text}")
             return None
 
     except requests.exceptions.ConnectionError:
-        print("❌ Can't connect to Open WebUI. Is it running on port 8080?")
+        print("[ERROR] Can't connect to Open WebUI. Is it running on port 8080?")
         print("   Falling back to direct Ollama...")
         return ask_karma_ollama(question, model)
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"[ERROR] {e}")
         return None
 
 

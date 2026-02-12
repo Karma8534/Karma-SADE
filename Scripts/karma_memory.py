@@ -22,8 +22,8 @@ try:
     CHROMADB_AVAILABLE = True
 except ImportError:
     CHROMADB_AVAILABLE = False
-    print("⚠️  ChromaDB not installed. Semantic search disabled.")
-    print("   Install with: pip install chromadb")
+    print("[WARNING] ChromaDB not installed. Semantic search disabled.")
+    print("          Install with: pip install chromadb")
 
 
 class KarmaMemory:
@@ -111,7 +111,7 @@ class KarmaMemory:
                     ids=[msg_id]
                 )
             except Exception as e:
-                print(f"⚠️  ChromaDB storage failed: {e}")
+                print(f"[WARNING] ChromaDB storage failed: {e}")
 
         return msg_id
 
@@ -152,7 +152,7 @@ class KarmaMemory:
                 })
             return formatted
         except Exception as e:
-            print(f"⚠️  Semantic search failed: {e}")
+            print(f"[WARNING] Semantic search failed: {e}")
             return []
 
     def get_conversation(self, session_id: str) -> List[Dict]:
@@ -246,15 +246,15 @@ if __name__ == "__main__":
 
     # Search memory
     results = memory.search_memory("dashboard")
-    print("\n🔍 Search Results:")
+    print("\n[SEARCH] Results:")
     for r in results:
-        print(f"  • {r.get('content', 'N/A')[:80]}...")
+        print(f"  - {r.get('content', 'N/A')[:80]}...")
 
     # Store knowledge
     memory.store_knowledge("dashboard_auth_fix", "Add routes to _PUBLIC_ROUTES set")
 
-    print("\n✅ Memory system initialized!")
-    print(f"📁 Database: {memory.db_path}")
-    print(f"📁 Tool log: {memory.tool_log}")
+    print("\n[SUCCESS] Memory system initialized!")
+    print(f"[DB] Database: {memory.db_path}")
+    print(f"[DB] Tool log: {memory.tool_log}")
 
     memory.close()
