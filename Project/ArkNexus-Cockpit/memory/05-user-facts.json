@@ -157,8 +157,13 @@
     },
     {
       "key": "preferred_language",
-      "value": "Python",
-      "updated": "2026-02-12 17:55:02"
+      "value": "English",
+      "updated": "2026-02-12 17:59:58"
+    },
+    {
+      "key": "system_os",
+      "value": "Windows 11",
+      "updated": "2026-02-12 17:59:58"
     }
   ],
   "preferences": [

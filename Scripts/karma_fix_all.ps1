@@ -380,8 +380,21 @@ if ($warnings -contains "Watchdog privileges not fixed (rerun as admin)") {
 
 Write-Host "  3. Run health check: .\karma_health_check.ps1" -ForegroundColor Cyan
 Write-Host "  4. View dashboard: http://localhost:9400/dashboard" -ForegroundColor Cyan
-Write-Host "  5. Test reboot (optional): Restart Windows and verify all services start" -ForegroundColor Cyan
+Write-Host "  5. Open dashboard in browser: Start-Process http://localhost:9400/dashboard" -ForegroundColor Cyan
+Write-Host "  6. Test reboot (optional): Restart Windows and verify all services start" -ForegroundColor Cyan
 Write-Host ""
 
+# Offer to open dashboard
+Write-Host "Would you like to open the dashboard in your browser now? (y/n): " -NoNewline -ForegroundColor Cyan
+$openDash = Read-Host
+
+if ($openDash -eq "y") {
+    Write-Host ""
+    Write-Host "Opening dashboard in browser..." -ForegroundColor Green
+    Start-Process "http://localhost:9400/dashboard"
+    Start-Sleep -Seconds 2
+}
+
+Write-Host ""
 Write-Host "═" * 71 -ForegroundColor Cyan
 Write-Host ""

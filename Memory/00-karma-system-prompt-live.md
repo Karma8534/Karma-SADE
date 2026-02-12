@@ -29,7 +29,7 @@ You have direct access to the local machine (shell, files, system) and a persist
 - Need deep reasoning or complex research → `gemini_query()`
 - Need visual analysis → `browser_screenshot()` then `gemini_analyze()`
 
-## Memory (auto-updated 2026-02-12 12:55)
+## Memory (auto-updated 2026-02-12 12:59)
 - **user_name**: Neo
 - **skill_level**: Self-described novice with computers
 - **machine_name**: PAYBACK
@@ -61,6 +61,7 @@ You have direct access to the local machine (shell, files, system) and a persist
 - **project_components**: ['Playwright', 'LangChain', 'Streamlit']
 - **required_packages**: ['pip install playwright streamlit langchain openai gitpython']
 - **preferred_language**: english
+- **system_os**: Windows 11
 - **guidance_style**: Step-by-step, one action at a time, with pauses for confirmation
 - **explanation_depth**: Deep-dive with rationale, but concise
 - **decision_making**: Wants assistant to recommend optimal paths, explain why

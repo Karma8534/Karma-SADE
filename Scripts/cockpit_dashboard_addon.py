@@ -24,6 +24,7 @@ import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
 import logging
+from flask import request, send_file
 
 # Paths
 LOG_DIR = Path.home() / "Documents" / "Karma_SADE" / "Logs"
@@ -300,7 +301,21 @@ def register_dashboard_routes(app, mgr):
     @app.route("/dashboard", methods=["GET"])
     def dashboard():
         """Comprehensive system dashboard."""
+        # If requesting HTML (browser), serve the visual dashboard
+        if 'text/html' in request.headers.get('Accept', ''):
+            dashboard_html = Path.home() / "Documents" / "Karma_SADE" / "Dashboard" / "index.html"
+            if dashboard_html.exists():
+                return send_file(str(dashboard_html))
+        # Otherwise return JSON (API calls)
         return get_system_status()
+
+    @app.route("/dashboard/html", methods=["GET"])
+    def dashboard_html_view():
+        """Visual HTML dashboard (always returns HTML)."""
+        dashboard_file = Path.home() / "Documents" / "Karma_SADE" / "Dashboard" / "index.html"
+        if dashboard_file.exists():
+            return send_file(str(dashboard_file))
+        return {"error": "Dashboard HTML file not found"}, 404
 
     @app.route("/dashboard/services", methods=["GET"])
     def dashboard_services():
