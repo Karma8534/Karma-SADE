@@ -503,11 +503,19 @@ cockpit_dashboard_addon.register_dashboard_routes(app, None)
 # Serve dashboard HTML
 @app.get("/", response_class=HTMLResponse)
 async def serve_dashboard():
-    """Serve the enhanced dashboard with chat panel."""
+    """Serve the original dashboard."""
     dashboard_file = DASHBOARD_DIR / "index.html"
     if dashboard_file.exists():
         return HTMLResponse(content=dashboard_file.read_text())
     return HTMLResponse(content="<h1>Dashboard not found</h1>", status_code=404)
+
+@app.get("/unified", response_class=HTMLResponse)
+async def serve_unified_dashboard():
+    """Serve the unified 3-panel dashboard with chat."""
+    dashboard_file = DASHBOARD_DIR / "unified.html"
+    if dashboard_file.exists():
+        return HTMLResponse(content=dashboard_file.read_text())
+    return HTMLResponse(content="<h1>Unified dashboard not found</h1>", status_code=404)
 
 
 # ============================================================================
@@ -554,24 +562,29 @@ async def get_status():
 if __name__ == "__main__":
     import uvicorn
 
-    print("=" * 70)
-    print("Karma SADE Backend v2.0")
-    print("=" * 70)
-    print(f"Dashboard: http://localhost:9400")
-    print(f"API Docs: http://localhost:9400/docs")
-    print(f"WebSocket: ws://localhost:9400/ws/chat/{{conversation_id}}")
-    print("=" * 70)
+    PORT = 9401  # Use 9401 to avoid conflict with Cockpit on 9400
 
-    # Check for API key
-    if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("CLAUDE_API_KEY")):
-        print("⚠️  WARNING: No Claude API key found!")
-        print("   Set ANTHROPIC_API_KEY or CLAUDE_API_KEY environment variable")
-        print("=" * 70)
+    print("=" * 70)
+    print("Karma SADE Backend v2.0 - Multi-API Edition")
+    print("=" * 70)
+    print(f"Unified Dashboard: http://localhost:{PORT}/unified")
+    print(f"API Docs: http://localhost:{PORT}/docs")
+    print(f"WebSocket: ws://localhost:{PORT}/ws/chat/{{conversation_id}}")
+    print(f"\nAI Backends Available: {total_backends}")
+    if OLLAMA_AVAILABLE:
+        print("  - Ollama (FREE - unlimited)")
+    if GEMINI_AVAILABLE:
+        print("  - Gemini (FREE - 1,500/day)")
+    if OPENAI_AVAILABLE:
+        print("  - OpenAI (CHEAP - ~$0.0025/query)")
+    if CLAUDE_AVAILABLE:
+        print("  - Claude (EXPENSIVE - last resort)")
+    print("=" * 70)
 
     uvicorn.run(
         app,
         host="127.0.0.1",
-        port=9400,
+        port=PORT,
         log_level="info",
         access_log=True
     )
