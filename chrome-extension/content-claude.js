@@ -81,33 +81,61 @@ function scanForNewMessages() {
 function extractMessages() {
   const turns = [];
 
-  // Claude uses font-user-message and font-claude-message classes
-  // Or data-testid attributes
-  const messageElements = document.querySelectorAll('.font-user-message, .font-claude-message, [class*="Message"]');
+  // Try multiple selector strategies for Claude.ai's evolving DOM
+  // Strategy 1: Look for divs with specific structure patterns
+  const allDivs = document.querySelectorAll('div[class]');
 
+  console.log('[UAI Memory] Scanning', allDivs.length, 'divs for messages');
+
+  // Build a list of potential message elements
+  const messageBlocks = [];
+
+  allDivs.forEach(div => {
+    const text = div.innerText?.trim();
+    const classes = div.className || '';
+
+    // Skip if no text or too short
+    if (!text || text.length < 5) return;
+
+    // Skip if this div contains other message divs (parent container)
+    const hasChildMessages = div.querySelector('div[class*="font"]') !== null;
+    if (hasChildMessages) return;
+
+    // Detect user messages - look for common patterns
+    const isUser = classes.includes('font-user') ||
+                   classes.includes('user-message') ||
+                   div.hasAttribute('data-is-user-message');
+
+    // Detect assistant messages
+    const isAssistant = classes.includes('font-claude') ||
+                        classes.includes('font-assistant') ||
+                        classes.includes('assistant-message') ||
+                        div.hasAttribute('data-is-assistant-message');
+
+    if (isUser || isAssistant) {
+      messageBlocks.push({
+        type: isUser ? 'user' : 'assistant',
+        text: text,
+        element: div
+      });
+    }
+  });
+
+  console.log('[UAI Memory] Found', messageBlocks.length, 'message blocks');
+
+  // Pair up user and assistant messages
   let currentTurn = { user: null, assistant: null };
 
-  messageElements.forEach((elem) => {
-    const text = elem.innerText.trim();
-    if (!text) return;
-
-    const isUser = elem.classList.contains('font-user-message') ||
-                   elem.querySelector('[data-testid="user-message"]') ||
-                   elem.classList.contains('user-message');
-
-    const isAssistant = elem.classList.contains('font-claude-message') ||
-                        elem.querySelector('[data-testid="assistant-message"]') ||
-                        elem.classList.contains('assistant-message');
-
-    if (isUser) {
-      // If we have a previous turn, save it
+  messageBlocks.forEach(block => {
+    if (block.type === 'user') {
+      // Save previous turn if complete
       if (currentTurn.user && currentTurn.assistant) {
         turns.push({...currentTurn});
       }
       // Start new turn
-      currentTurn = { user: text, assistant: null };
-    } else if (isAssistant && currentTurn.user) {
-      currentTurn.assistant = text;
+      currentTurn = { user: block.text, assistant: null };
+    } else if (block.type === 'assistant' && currentTurn.user) {
+      currentTurn.assistant = block.text;
     }
   });
 
@@ -115,6 +143,8 @@ function extractMessages() {
   if (currentTurn.user && currentTurn.assistant) {
     turns.push(currentTurn);
   }
+
+  console.log('[UAI Memory] Extracted', turns.length, 'conversation turns');
 
   return turns;
 }
