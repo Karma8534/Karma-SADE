@@ -21,10 +21,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import anthropic
 
-# Import existing dashboard addon
+# Import existing dashboard addon and quota manager
 import sys
 sys.path.append(str(Path(__file__).parent))
 import cockpit_dashboard_addon
+from karma_quota_manager import quota_manager
 
 # Configuration
 LOG_DIR = Path.home() / "Documents" / "Karma_SADE" / "Logs"
@@ -166,24 +167,34 @@ try:
 except Exception as e:
     logger.warning(f"[WARN] Perplexity initialization failed: {e}")
 
-# 6. Claude (PAID - expensive, DISABLED due to no credits)
+# 6. Claude (PAID - expensive, QUOTA MANAGED - 30 queries/day)
 CLAUDE_AVAILABLE = False
 claude_client = None
 try:
     claude_key = load_api_key_from_registry("ANTHROPIC_API_KEY") or load_api_key_from_registry("CLAUDE_API_KEY")
     if claude_key:
-        # DISABLED: No credits available
-        # claude_client = anthropic.Anthropic(api_key=claude_key)
-        # CLAUDE_AVAILABLE = True
-        logger.info("[DISABLED] Claude API - no credits available")
+        claude_client = anthropic.Anthropic(api_key=claude_key)
+        CLAUDE_AVAILABLE = True
+        logger.info("[OK] Claude available (PAID - QUOTA: 30/day, premium tier)")
     else:
         logger.info("[INFO] ANTHROPIC_API_KEY not set - skipping Claude")
 except Exception as e:
     logger.warning(f"[WARN] Claude initialization failed: {e}")
 
 # Log final configuration
-total_backends = sum([OLLAMA_AVAILABLE, GEMINI_AVAILABLE, OPENAI_AVAILABLE, ZAI_AVAILABLE, PERPLEXITY_AVAILABLE])
+total_backends = sum([OLLAMA_AVAILABLE, GEMINI_AVAILABLE, OPENAI_AVAILABLE, ZAI_AVAILABLE, PERPLEXITY_AVAILABLE, CLAUDE_AVAILABLE])
 logger.info(f"[CONFIG] {total_backends} AI backends available")
+
+# Log quota status
+if CLAUDE_AVAILABLE or OPENAI_AVAILABLE or ZAI_AVAILABLE or PERPLEXITY_AVAILABLE:
+    logger.info("[QUOTA] Paid API quota management enabled")
+    daily_stats = {
+        "claude": quota_manager.get_daily_usage("claude")[0],
+        "openai": quota_manager.get_daily_usage("openai")[0],
+        "zai_paid": quota_manager.get_daily_usage("zai_paid")[0],
+        "perplexity": quota_manager.get_daily_usage("perplexity")[0]
+    }
+    logger.info(f"[QUOTA] Today's usage: Claude={daily_stats['claude']}/30, OpenAI={daily_stats['openai']}/100, GLM-5={daily_stats['zai_paid']}/200, Perplexity={daily_stats['perplexity']}/50")
 if total_backends == 0:
     logger.error("[ERROR] No AI backends available! Please configure at least one API key or install Ollama.")
 
@@ -213,11 +224,16 @@ class ConversationResponse(BaseModel):
 # ============================================================================
 
 def detect_task_complexity(message: str) -> str:
-    """Detect if task is simple, medium, or complex"""
+    """Detect if task is simple, medium, complex, or premium"""
     message_lower = message.lower()
 
-    # Complex keywords - need research/deep reasoning (Perplexity or OpenAI)
-    complex_keywords = ["architect", "design", "refactor", "multi-step", "complex", "integrate", "research", "compare", "analyze"]
+    # Premium keywords - need Claude's best reasoning (architecture, system design)
+    premium_keywords = ["architect", "design system", "refactor everything", "deep analysis", "system design", "evaluate approach"]
+    if any(kw in message_lower for kw in premium_keywords):
+        return "premium"
+
+    # Complex keywords - need good reasoning (GLM-5, OpenAI, or Claude)
+    complex_keywords = ["design", "refactor", "multi-step", "complex", "integrate", "research", "compare", "analyze"]
     if any(kw in message_lower for kw in complex_keywords):
         return "complex"
 
@@ -261,74 +277,190 @@ def call_gemini(message: str, timeout: int = 30) -> Optional[str]:
         return None
 
 def call_openai(message: str, model: str = "gpt-4o-mini") -> Optional[str]:
-    """Call OpenAI API - CHEAP (~$0.0025/query)"""
+    """Call OpenAI API - PAID (~$0.0025/query, quota: 100/day)"""
+    # Check quota
+    can_use, reason = quota_manager.check_quota("openai")
+    if not can_use:
+        logger.warning(f"[QUOTA] OpenAI blocked: {reason}")
+        return None
+
     try:
         response = openai_client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": message}],
             max_tokens=1000
         )
-        logger.info(f"[OK] OpenAI response (PAID - {model}) - tokens: {response.usage.total_tokens}")
+
+        # Calculate cost (rough estimate)
+        total_tokens = response.usage.total_tokens
+        cost = total_tokens / 1_000_000 * 0.15 if model == "gpt-4o-mini" else total_tokens / 1_000_000 * 2.5
+
+        # Record usage
+        quota_manager.record_usage(
+            "openai",
+            cost=cost,
+            tokens_input=response.usage.prompt_tokens,
+            tokens_output=response.usage.completion_tokens,
+            model=model,
+            success=True
+        )
+
+        logger.info(f"[OK] OpenAI {model} - tokens: {total_tokens}, cost: ${cost:.4f}")
         return response.choices[0].message.content
     except Exception as e:
         logger.warning(f"OpenAI error: {e}")
+        quota_manager.record_usage("openai", cost=0, success=False)
         return None
 
 def call_zai(message: str, model: str = "GLM-4-Flash", complexity: str = "simple") -> Optional[str]:
-    """Call Z.ai GLM API - FREE Flash models or PAID GLM-5"""
-    try:
-        # Smart model selection based on complexity
-        if complexity == "simple":
-            model = "GLM-4-Flash"  # FREE
-        elif complexity == "medium" and "code" in message.lower():
-            model = "GLM-4-Flash"  # FREE, good for basic code
-        elif complexity == "complex" and "code" in message.lower():
-            model = "GLM-5-Code"  # PAID, excellent for complex code
-        elif complexity == "complex":
-            model = "GLM-5"  # PAID, best reasoning
-        else:
-            model = "GLM-4-FlashX"  # CHEAP fallback
+    """Call Z.ai GLM API - FREE Flash models or PAID GLM-5 (quota: 200/day)"""
+    # Smart model selection based on complexity
+    if complexity == "simple":
+        model = "GLM-4-Flash"  # FREE
+        is_paid = False
+    elif complexity == "medium" and "code" in message.lower():
+        model = "GLM-4-Flash"  # FREE, good for basic code
+        is_paid = False
+    elif complexity == "complex" and "code" in message.lower():
+        model = "GLM-5-Code"  # PAID, excellent for complex code
+        is_paid = True
+    elif complexity == "complex":
+        model = "GLM-5"  # PAID, best reasoning
+        is_paid = True
+    else:
+        model = "GLM-4-FlashX"  # CHEAP fallback
+        is_paid = True
 
+    # Check quota for paid models
+    if is_paid:
+        can_use, reason = quota_manager.check_quota("zai_paid")
+        if not can_use:
+            logger.warning(f"[QUOTA] Z.ai GLM-5 blocked: {reason}")
+            return None
+
+    try:
         response = zai_client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": message}],
             max_tokens=2000
         )
 
-        cost = "FREE" if "Flash" in model and "X" not in model else "PAID"
-        logger.info(f"[OK] Z.ai {model} response ({cost})")
+        # Record usage for paid models
+        if is_paid:
+            # Estimate cost
+            if "GLM-5-Code" in model:
+                cost = 0.006  # Rough estimate
+            elif "GLM-5" in model:
+                cost = 0.004
+            else:
+                cost = 0.0005  # FlashX
+
+            quota_manager.record_usage(
+                "zai_paid",
+                cost=cost,
+                tokens_input=0,  # Z.ai doesn't return token counts
+                tokens_output=0,
+                model=model,
+                success=True
+            )
+            logger.info(f"[OK] Z.ai {model} (PAID) - cost: ${cost:.4f}")
+        else:
+            logger.info(f"[OK] Z.ai {model} (FREE)")
+
         return response.choices[0].message.content
     except Exception as e:
         logger.warning(f"Z.ai error: {e}")
+        if is_paid:
+            quota_manager.record_usage("zai_paid", cost=0, success=False)
         return None
 
 def call_perplexity(message: str, model: str = "llama-3.1-sonar-small-128k-online") -> Optional[str]:
-    """Call Perplexity API - CHEAP, great for research with web search"""
+    """Call Perplexity API - CHEAP, great for research with web search (quota: 100/day)"""
+    # Check quota
+    can_use, reason = quota_manager.check_quota("perplexity")
+    if not can_use:
+        logger.warning(f"[QUOTA] Perplexity blocked: {reason}")
+        return None
+
     try:
         response = perplexity_client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": message}]
         )
-        logger.info(f"[OK] Perplexity response (PAID - {model})")
+
+        # Estimate cost
+        cost = 0.001  # Average cost per query
+
+        # Record usage
+        quota_manager.record_usage(
+            "perplexity",
+            cost=cost,
+            tokens_input=0,
+            tokens_output=0,
+            model=model,
+            success=True
+        )
+
+        logger.info(f"[OK] Perplexity {model} - cost: ${cost:.4f}")
         return response.choices[0].message.content
     except Exception as e:
         logger.warning(f"Perplexity error: {e}")
+        quota_manager.record_usage("perplexity", cost=0, success=False)
         return None
 
 def call_claude(message: str, conversation_history: List[Dict] = None) -> Optional[str]:
-    """Call Claude API - DISABLED (no credits available)"""
-    logger.warning("[DISABLED] Claude API called but is disabled due to no credits")
-    return None
+    """Call Claude API - PREMIUM TIER (quota managed, 30/day)"""
+    # Check quota first
+    can_use, reason = quota_manager.check_quota("claude")
+    if not can_use:
+        logger.warning(f"[QUOTA] Claude blocked: {reason}")
+        return None
+
+    try:
+        messages = []
+        for msg in (conversation_history or [])[-10:]:
+            messages.append({"role": msg["role"], "content": msg["content"]})
+        messages.append({"role": "user", "content": message})
+
+        response = claude_client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=4096,
+            messages=messages,
+            system="You are Karma, an agentic AI assistant with full system access. Be concise and helpful."
+        )
+
+        # Calculate actual cost
+        input_tokens = response.usage.input_tokens
+        output_tokens = response.usage.output_tokens
+        cost = (input_tokens / 1_000_000 * 3.0) + (output_tokens / 1_000_000 * 15.0)
+
+        # Record usage
+        quota_manager.record_usage(
+            "claude",
+            cost=cost,
+            tokens_input=input_tokens,
+            tokens_output=output_tokens,
+            model="claude-sonnet-4",
+            success=True
+        )
+
+        logger.info(f"[OK] Claude response - tokens: {input_tokens + output_tokens}, cost: ${cost:.4f}")
+        return response.content[0].text
+    except Exception as e:
+        logger.error(f"Claude error: {e}")
+        quota_manager.record_usage("claude", cost=0, success=False)
+        return None
 
 async def get_ai_response(message: str, conversation_history: List[Dict] = None) -> str:
     """
-    5-Tier Smart Routing:
+    7-Tier Smart Routing (with Quota Management):
     1. Ollama (FREE - unlimited local)
     2. Z.ai GLM-4-Flash (FREE - cloud backup)
     3. Gemini (FREE - 1,500/day)
-    4. Z.ai GLM-5 (PAID - $0.004/query, excellent for code)
-    5. OpenAI (PAID - $0.0025/query, fallback)
-    6. Perplexity (PAID - $0.001/query, research specialist)
+    4. Z.ai GLM-5 (PAID - $0.004/query, quota: 250/day)
+    5. OpenAI (PAID - $0.0025/query, quota: 150/day)
+    6. Perplexity (PAID - $0.001/query, quota: 100/day)
+    7. Claude (PREMIUM - $0.015/query, quota: 71/day - SAVE FOR CRITICAL TASKS!)
     """
     complexity = detect_task_complexity(message)
     conversation_history = conversation_history or []
@@ -368,9 +500,9 @@ async def get_ai_response(message: str, conversation_history: List[Dict] = None)
         else:
             logger.info("Gemini failed, trying next tier...")
 
-    # Tier 4: Try Z.ai GLM-5 (PAID but CHEAPER than OpenAI, excellent for complex tasks)
-    if ZAI_AVAILABLE and complexity == "complex":
-        logger.info(f"[ROUTE] Trying Z.ai GLM-5 (PAID - ~$0.004/query)")
+    # Tier 4: Try Z.ai GLM-5 (PAID but cheap, excellent for complex tasks)
+    if ZAI_AVAILABLE and complexity in ["complex", "premium"]:
+        logger.info(f"[ROUTE] Trying Z.ai GLM-5 (PAID - ~$0.004/query, quota: 250/day)")
         response = call_zai(message, model="GLM-5", complexity=complexity)
         if response:
             model_used = "GLM-5-Code" if "code" in message.lower() else "GLM-5"
@@ -379,27 +511,45 @@ async def get_ai_response(message: str, conversation_history: List[Dict] = None)
             logger.info("Z.ai GLM-5 failed, trying next tier...")
 
     # Tier 5: Try OpenAI (PAID, good for code)
-    if OPENAI_AVAILABLE:
-        logger.info(f"[ROUTE] Trying OpenAI (PAID - ~$0.0025/query)")
-        # Use cheaper model for simple/medium, GPT-4o for complex
-        model = "gpt-4o-mini" if complexity != "complex" else "gpt-4o"
+    if OPENAI_AVAILABLE and complexity in ["complex", "premium"]:
+        logger.info(f"[ROUTE] Trying OpenAI (PAID - ~$0.0025/query, quota: 150/day)")
+        # Use cheaper model for complex, GPT-4o for premium
+        model = "gpt-4o-mini" if complexity != "premium" else "gpt-4o"
         response = call_openai(message, model=model)
         if response:
             return f"[OpenAI {model} - ~$0.0025]\n\n{response}"
         else:
             logger.info("OpenAI failed, trying next tier...")
 
-    # Tier 6: Perplexity (PAID - research specialist, good for web search)
-    if PERPLEXITY_AVAILABLE:
-        logger.info(f"[ROUTE] Using Perplexity (PAID - research specialist, complexity: {complexity})")
+    # Tier 6: Try Perplexity (CHEAPEST PAID - research specialist)
+    if PERPLEXITY_AVAILABLE and "research" in message.lower():
+        logger.info(f"[ROUTE] Trying Perplexity (PAID - research, quota: 100/day)")
         response = call_perplexity(message)
         if response:
             return f"[Perplexity Llama 3.1 Sonar - ~$0.001]\n\n{response}"
         else:
-            logger.info("Perplexity failed, no more backends available")
+            logger.info("Perplexity failed, trying Claude...")
+
+    # Tier 7: Claude (PREMIUM - use ONLY for critical architecture/design tasks)
+    if CLAUDE_AVAILABLE and complexity == "premium":
+        logger.info(f"[ROUTE] PREMIUM TASK - Using Claude (quota: 71/day, $15 budget)")
+        response = call_claude(message, conversation_history)
+        if response:
+            return f"[Claude Sonnet 4 - PREMIUM - ~$0.015]\n\n{response}"
+        else:
+            logger.warning("Claude failed or quota exceeded")
+
+    # Final fallback - if we have quota remaining, try any available paid API
+    if complexity in ["complex", "premium"]:
+        # Try any remaining APIs with quota
+        if OPENAI_AVAILABLE:
+            logger.info("[FALLBACK] Trying OpenAI as final fallback")
+            response = call_openai(message, model="gpt-4o-mini")
+            if response:
+                return f"[OpenAI gpt-4o-mini - FALLBACK]\n\n{response}"
 
     # No AI available
-    return "Error: No AI backend available. Please configure at least one API key or install Ollama."
+    return "Error: No AI backend available or all quotas exceeded. Please check quota status."
 
 # ============================================================================
 # Chat Endpoints
@@ -566,6 +716,31 @@ async def get_conversation(conversation_id: str):
         "conversation_id": conversation_id,
         "messages": conversations[conversation_id]
     }
+
+
+@app.get("/api/quota/stats")
+async def get_quota_stats():
+    """Get quota usage statistics for all paid APIs."""
+    return quota_manager.get_all_usage_stats()
+
+
+@app.get("/api/quota/report")
+async def get_quota_report():
+    """Get formatted quota usage report."""
+    return {
+        "report": quota_manager.get_usage_report(),
+        "stats": quota_manager.get_all_usage_stats()
+    }
+
+
+@app.post("/api/quota/update")
+async def update_quota(api_name: str, daily_limit: int = None, monthly_limit: int = None):
+    """Update quota limits for a specific API."""
+    try:
+        quota_manager.update_quota(api_name, daily_limit, monthly_limit)
+        return {"status": "success", "message": f"Updated quota for {api_name}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.delete("/api/conversations/{conversation_id}")
