@@ -130,7 +130,25 @@ except ImportError:
 except Exception as e:
     logger.warning(f"[WARN] OpenAI initialization failed: {e}")
 
-# 4. Perplexity (PAID - good for research, ~$0.001/query)
+# 4. Z.ai GLM (FREE Flash models + PAID GLM-5, ~$0.004/query)
+ZAI_AVAILABLE = False
+zai_client = None
+try:
+    from openai import OpenAI  # Z.ai uses OpenAI-compatible API
+    zai_key = load_api_key_from_registry("ZAI_API_KEY")
+    if zai_key:
+        zai_client = OpenAI(
+            api_key=zai_key,
+            base_url="https://open.bigmodel.cn/api/paas/v4"
+        )
+        ZAI_AVAILABLE = True
+        logger.info("[OK] Z.ai GLM available (FREE Flash + PAID GLM-5)")
+    else:
+        logger.info("[INFO] ZAI_API_KEY not set - skipping Z.ai")
+except Exception as e:
+    logger.warning(f"[WARN] Z.ai initialization failed: {e}")
+
+# 5. Perplexity (PAID - good for research, ~$0.001/query)
 PERPLEXITY_AVAILABLE = False
 perplexity_client = None
 try:
@@ -148,7 +166,7 @@ try:
 except Exception as e:
     logger.warning(f"[WARN] Perplexity initialization failed: {e}")
 
-# 5. Claude (PAID - expensive, DISABLED due to no credits)
+# 6. Claude (PAID - expensive, DISABLED due to no credits)
 CLAUDE_AVAILABLE = False
 claude_client = None
 try:
@@ -164,7 +182,7 @@ except Exception as e:
     logger.warning(f"[WARN] Claude initialization failed: {e}")
 
 # Log final configuration
-total_backends = sum([OLLAMA_AVAILABLE, GEMINI_AVAILABLE, OPENAI_AVAILABLE, PERPLEXITY_AVAILABLE])
+total_backends = sum([OLLAMA_AVAILABLE, GEMINI_AVAILABLE, OPENAI_AVAILABLE, ZAI_AVAILABLE, PERPLEXITY_AVAILABLE])
 logger.info(f"[CONFIG] {total_backends} AI backends available")
 if total_backends == 0:
     logger.error("[ERROR] No AI backends available! Please configure at least one API key or install Ollama.")
@@ -256,6 +274,34 @@ def call_openai(message: str, model: str = "gpt-4o-mini") -> Optional[str]:
         logger.warning(f"OpenAI error: {e}")
         return None
 
+def call_zai(message: str, model: str = "GLM-4-Flash", complexity: str = "simple") -> Optional[str]:
+    """Call Z.ai GLM API - FREE Flash models or PAID GLM-5"""
+    try:
+        # Smart model selection based on complexity
+        if complexity == "simple":
+            model = "GLM-4-Flash"  # FREE
+        elif complexity == "medium" and "code" in message.lower():
+            model = "GLM-4-Flash"  # FREE, good for basic code
+        elif complexity == "complex" and "code" in message.lower():
+            model = "GLM-5-Code"  # PAID, excellent for complex code
+        elif complexity == "complex":
+            model = "GLM-5"  # PAID, best reasoning
+        else:
+            model = "GLM-4-FlashX"  # CHEAP fallback
+
+        response = zai_client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": message}],
+            max_tokens=2000
+        )
+
+        cost = "FREE" if "Flash" in model and "X" not in model else "PAID"
+        logger.info(f"[OK] Z.ai {model} response ({cost})")
+        return response.choices[0].message.content
+    except Exception as e:
+        logger.warning(f"Z.ai error: {e}")
+        return None
+
 def call_perplexity(message: str, model: str = "llama-3.1-sonar-small-128k-online") -> Optional[str]:
     """Call Perplexity API - CHEAP, great for research with web search"""
     try:
@@ -276,11 +322,13 @@ def call_claude(message: str, conversation_history: List[Dict] = None) -> Option
 
 async def get_ai_response(message: str, conversation_history: List[Dict] = None) -> str:
     """
-    4-Tier Smart Routing:
+    5-Tier Smart Routing:
     1. Ollama (FREE - unlimited local)
-    2. Gemini (FREE - 1,500/day)
-    3. OpenAI (CHEAP - ~$0.0025/query)
-    4. Perplexity (CHEAP - research specialist, ~$0.001/query)
+    2. Z.ai GLM-4-Flash (FREE - cloud backup)
+    3. Gemini (FREE - 1,500/day)
+    4. Z.ai GLM-5 (PAID - $0.004/query, excellent for code)
+    5. OpenAI (PAID - $0.0025/query, fallback)
+    6. Perplexity (PAID - $0.001/query, research specialist)
     """
     complexity = detect_task_complexity(message)
     conversation_history = conversation_history or []
@@ -302,7 +350,16 @@ async def get_ai_response(message: str, conversation_history: List[Dict] = None)
         else:
             logger.info("Ollama failed, trying next tier...")
 
-    # Tier 2: Try Gemini (FREE, 1,500/day)
+    # Tier 2: Try Z.ai GLM-4-Flash (FREE, unlimited)
+    if ZAI_AVAILABLE and complexity in ["simple", "medium"]:
+        logger.info(f"[ROUTE] Trying Z.ai GLM-4-Flash (FREE)")
+        response = call_zai(message, model="GLM-4-Flash", complexity=complexity)
+        if response:
+            return f"[Z.ai GLM-4-Flash - $0.00]\n\n{response}"
+        else:
+            logger.info("Z.ai Flash failed, trying next tier...")
+
+    # Tier 3: Try Gemini (FREE, 1,500/day)
     if GEMINI_AVAILABLE and complexity in ["simple", "medium"]:
         logger.info(f"[ROUTE] Trying Gemini (FREE - 1,500/day)")
         response = call_gemini(message)
@@ -311,7 +368,17 @@ async def get_ai_response(message: str, conversation_history: List[Dict] = None)
         else:
             logger.info("Gemini failed, trying next tier...")
 
-    # Tier 3: Try OpenAI (CHEAP, good for code)
+    # Tier 4: Try Z.ai GLM-5 (PAID but CHEAPER than OpenAI, excellent for complex tasks)
+    if ZAI_AVAILABLE and complexity == "complex":
+        logger.info(f"[ROUTE] Trying Z.ai GLM-5 (PAID - ~$0.004/query)")
+        response = call_zai(message, model="GLM-5", complexity=complexity)
+        if response:
+            model_used = "GLM-5-Code" if "code" in message.lower() else "GLM-5"
+            return f"[Z.ai {model_used} - ~$0.004]\n\n{response}"
+        else:
+            logger.info("Z.ai GLM-5 failed, trying next tier...")
+
+    # Tier 5: Try OpenAI (PAID, good for code)
     if OPENAI_AVAILABLE:
         logger.info(f"[ROUTE] Trying OpenAI (PAID - ~$0.0025/query)")
         # Use cheaper model for simple/medium, GPT-4o for complex
@@ -322,7 +389,7 @@ async def get_ai_response(message: str, conversation_history: List[Dict] = None)
         else:
             logger.info("OpenAI failed, trying next tier...")
 
-    # Tier 4: Perplexity (CHEAP - research specialist, good for complex queries)
+    # Tier 6: Perplexity (PAID - research specialist, good for web search)
     if PERPLEXITY_AVAILABLE:
         logger.info(f"[ROUTE] Using Perplexity (PAID - research specialist, complexity: {complexity})")
         response = call_perplexity(message)

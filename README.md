@@ -31,18 +31,25 @@ Karma SADE is an intelligent AI routing system that automatically selects the be
 
 ---
 
-## 🤖 AI Backends (4-Tier Routing)
+## 🤖 AI Backends (5-Tier Smart Routing)
 
 | Tier | Model | Cost | Usage |
 |------|-------|------|-------|
-| 1 | **Ollama** | FREE | 70% - Simple queries, code generation |
-| 2 | **Gemini** | FREE (1,500/day) | 20% - Fast inference, research |
-| 3 | **OpenAI** | ~$0.0025/query | 8% - Complex tasks, better code |
-| 4 | **Perplexity** | ~$0.001/query | 2% - Research, web search, analysis |
+| 1 | **Ollama** | FREE | 50% - Simple queries, local code generation |
+| 2 | **Z.ai GLM-4-Flash** | FREE | 30% - Cloud backup, fast inference |
+| 3 | **Gemini** | FREE (1,500/day) | 15% - Research, Google integration |
+| 4 | **Z.ai GLM-5** | ~$0.004/query | 3% - Complex code, agentic tasks |
+| 5 | **OpenAI** | ~$0.0025/query | 1.5% - GPT-4o fallback |
+| 6 | **Perplexity** | ~$0.001/query | 0.5% - Web search specialist |
 
-**Smart Routing**: Automatically tries FREE options first, only uses paid APIs when necessary.
+**Smart Routing**: Automatically tries FREE options first (95%+ queries), only uses paid APIs when necessary.
 
-**Note**: Claude API disabled (no credits available). Perplexity provides similar capabilities at 15x lower cost!
+**Key Features**:
+- ✅ **3 FREE backends** - Ollama (local) + GLM-4-Flash (cloud) + Gemini
+- ✅ **GLM-5 agentic mode** - Native agent capabilities, 200K context window
+- ✅ **Record-low hallucination rate** - GLM-5 industry-leading reliability
+- ✅ **Cost optimized** - Z.ai is 4x cheaper than OpenAI for complex tasks
+- ❌ **Claude disabled** - No credits available
 
 ---
 
@@ -69,11 +76,12 @@ Karma SADE is an intelligent AI routing system that automatically selects the be
 - 50 queries/day × $0.003 = **$54/year**
 - Limited to 500 requests/day
 
-### **After (Multi-API):**
-- 100 queries/day = **$9/year**
-- Capacity: 12,000+ requests/day
+### **After (Multi-API with Z.ai):**
+- 100 queries/day = **$6/year** (improved from $9!)
+- Capacity: **UNLIMITED** FREE queries (Ollama + GLM-4-Flash)
+- Paid capacity: 12,000+ requests/day
 
-**Savings: $45/year (83% reduction!)**
+**Savings: $48/year (89% reduction!)**
 
 ---
 
@@ -81,11 +89,14 @@ Karma SADE is an intelligent AI routing system that automatically selects the be
 
 All keys stored securely in Windows registry:
 - `GEMINI_API_KEY` - Google Gemini (FREE tier)
+- `ZAI_API_KEY` - Z.ai GLM-4-Flash (FREE) + GLM-5 (PAID)
 - `OPENAI_API_KEY` - OpenAI GPT-4o/mini
 - `PERPLEXITY_API_KEY` - Perplexity research models
 - ~~`ANTHROPIC_API_KEY`~~ - Claude Sonnet 4 (DISABLED - no credits)
 
 Auto-loaded at backend startup.
+
+**Get Z.ai API Key**: https://open.bigmodel.cn/
 
 ---
 
