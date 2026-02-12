@@ -115,6 +115,7 @@
 
         .chat-messages {
             flex: 1;
+            min-height: 0;  /* Critical: allows flex child to shrink and enable scrolling */
             overflow-y: scroll;
             overflow-x: hidden;
             padding: 16px;
