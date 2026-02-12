@@ -374,12 +374,12 @@
         <div class="chat-panel">
             <div class="chat-header">
                 <h2>Chat with Karma</h2>
-                <div class="model-badge" id="current-model">Ollama/llama3.1</div>
+                <div class="model-badge" id="current-model">Gemini 1.5 Flash</div>
             </div>
 
             <div class="chat-messages" id="chat-messages">
                 <div class="message assistant">
-                    <div>Hello! I'm Karma, your agentic AI assistant. I'm using FREE Ollama for most tasks, with Claude as a fallback for complex queries.</div>
+                    <div>Hello! I'm Karma, your agentic AI assistant. I use Gemini 1.5 Flash (FREE, 2024 knowledge) by default, with smart routing to paid models for complex tasks.</div>
                     <div class="message-meta">System | Just now</div>
                 </div>
             </div>
@@ -412,7 +412,7 @@
                 <div class="card">
                     <h3>API Usage Today</h3>
                     <div class="metric-value" id="api-usage">0</div>
-                    <div class="metric-label">FREE Ollama queries</div>
+                    <div class="metric-label">FREE queries today</div>
                 </div>
 
                 <div class="card">
@@ -423,7 +423,7 @@
 
                 <div class="card">
                     <h3>Active Model</h3>
-                    <div class="metric-value" style="font-size: 20px;" id="active-model">Ollama</div>
+                    <div class="metric-value" style="font-size: 20px;" id="active-model">Gemini 1.5 Flash</div>
                     <div class="metric-label">Smart routing active</div>
                 </div>
             </div>
@@ -435,7 +435,7 @@
                         <span style="color: var(--accent-green);">[OK]</span> Backend started successfully
                     </div>
                     <div style="padding: 8px 0; border-bottom: 1px solid var(--border-color);">
-                        <span style="color: var(--accent-green);">[OK]</span> Ollama available - 7 models loaded
+                        <span style="color: var(--accent-green);">[OK]</span> Gemini 1.5 Flash - FREE tier (1,500/day)
                     </div>
                     <div style="padding: 8px 0;">
                         <span style="color: var(--accent-blue);">[INFO]</span> Smart routing active
@@ -461,10 +461,10 @@
 
                 <div class="monitor-item">
                     <div class="monitor-item-header">
-                        <div class="monitor-item-title">Ollama</div>
-                        <div class="monitor-item-status running" id="ollama-status">Running</div>
+                        <div class="monitor-item-title">Primary Model</div>
+                        <div class="monitor-item-status running">Active</div>
                     </div>
-                    <div class="monitor-item-detail">7 models | FREE</div>
+                    <div class="monitor-item-detail">Gemini 1.5 Flash | FREE | 2024 knowledge</div>
                 </div>
 
                 <div class="monitor-item">
@@ -621,17 +621,39 @@
                 addMessage('assistant', content);
 
                 // Update model badge if present in response
-                if (content.includes('[Ollama/')) {
+                if (content.includes('[Gemini')) {
+                    currentModel.textContent = 'Gemini 1.5 Flash';
+                    currentModel.style.background = 'rgba(16, 185, 129, 0.2)';
+                    currentModel.style.color = 'var(--status-healthy)';
+                } else if (content.includes('[Z.ai')) {
+                    const match = content.match(/\[Z\.ai ([\w\-]+)/);
+                    if (match) {
+                        currentModel.textContent = `Z.ai ${match[1]}`;
+                        currentModel.style.background = 'rgba(96, 165, 250, 0.2)';
+                        currentModel.style.color = 'var(--accent-blue)';
+                    }
+                } else if (content.includes('[OpenAI')) {
+                    const match = content.match(/\[OpenAI ([\w\-]+)/);
+                    if (match) {
+                        currentModel.textContent = `OpenAI ${match[1]}`;
+                        currentModel.style.background = 'rgba(245, 158, 11, 0.2)';
+                        currentModel.style.color = '#f59e0b';
+                    }
+                } else if (content.includes('[Ollama/')) {
                     const match = content.match(/\[Ollama\/([\w\-.:]+)/);
                     if (match) {
                         currentModel.textContent = `Ollama/${match[1]}`;
-                        currentModel.style.background = 'rgba(16, 185, 129, 0.2)';
-                        currentModel.style.color = 'var(--status-healthy)';
+                        currentModel.style.background = 'rgba(148, 163, 184, 0.2)';
+                        currentModel.style.color = 'var(--text-secondary)';
                     }
                 } else if (content.includes('[Claude')) {
                     currentModel.textContent = 'Claude Sonnet';
                     currentModel.style.background = 'rgba(167, 139, 250, 0.2)';
                     currentModel.style.color = 'var(--accent-purple)';
+                } else if (content.includes('[Perplexity')) {
+                    currentModel.textContent = 'Perplexity';
+                    currentModel.style.background = 'rgba(96, 165, 250, 0.2)';
+                    currentModel.style.color = 'var(--accent-blue)';
                 }
             } else if (data.type === 'error') {
                 addMessage('system', `Error: ${data.message}`, 'error');
