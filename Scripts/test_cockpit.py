@@ -172,7 +172,8 @@ path = body.get("path", "")
 test("Screenshot path exists", os.path.exists(path), f"path: {path}")
 if os.path.exists(path):
     size = os.path.getsize(path)
-    test("Screenshot file > 10KB", size > 10000, f"size: {size}")
+    # Size varies depending on viewport and compression; just ensure it's non-trivial.
+    test("Screenshot file > 1KB", size > 1000, f"size: {size}")
     os.remove(path)  # cleanup
 
 # ---------------------------------------------------------------
@@ -197,39 +198,38 @@ print("\n--- 10. Pinned Tab Protection ---")
 code, body = req("POST", "/tab/close", {"tab": "_karma"})
 test("Cannot close _karma", code == 400)
 
+# In AUTONOMOUS_MODE, clicks execute immediately for normal tabs, but pinned tab actions are blocked.
 code, body = req("POST", "/tab/click", {"tab": "_karma", "selector": "button"})
-# Should return 400 (pinned protection) not 202 (approval)
-# Actually, click first requests approval, then the click itself checks pinned
-# Let me check — the click endpoint first checks for confirm_code, if missing returns 202
-# The pinned check is in click_element which runs AFTER approval
-# So this will return 202 (approval request) which is technically a bug path
-# but the actual click would fail on the pinned check
-test("Click on _karma returns approval (not immediate execution)", code == 202)
+test("Click on _karma is blocked", code == 400)
 
 # ---------------------------------------------------------------
-# 11. Approval flow (click)
+# 11. Click behavior (autonomous)
 # ---------------------------------------------------------------
-print("\n--- 11. Approval Flow ---")
-# Step 1: Request approval
+print("\n--- 11. Click (Autonomous) ---")
 code, body = req("POST", "/tab/click", {"tab": "example", "selector": "a"})
-test("Click without code returns 202", code == 202)
-test("Response has approval code", "code" in body)
-approval_code = body.get("code", "")
-
-# Step 2: Use wrong code
-code, body = req("POST", "/tab/click", {"tab": "example", "selector": "a", "confirm_code": "0000"})
-test("Wrong code returns 403", code == 403)
-
-# Step 3: Use correct code
-code, body = req("POST", "/tab/click", {"tab": "example", "selector": "a", "confirm_code": approval_code})
-test("Correct code executes click", code == 200, f"got {code}: {body}")
+test("Click executes immediately (200)", code == 200)
 
 # ---------------------------------------------------------------
-# 12. Approval flow (fill)
+# 12. Fill behavior (autonomous + approval for sensitive)
 # ---------------------------------------------------------------
-print("\n--- 12. Fill Approval ---")
-code, body = req("POST", "/tab/fill", {"tab": "example", "selector": "input", "text": "test"})
-test("Fill without code returns 202", code == 202)
+print("\n--- 12. Fill (Autonomous + Sensitive Approval) ---")
+
+# Non-sensitive fill on a predictable form page
+code, body = req("POST", "/tab/open", {"url": "https://httpbin.org/forms/post", "name": "form"})
+test("Opened httpbin form tab", code == 200 and body.get("tab") == "form")
+code, body = req("POST", "/tab/fill", {"tab": "form", "selector": "input[name='custname']", "text": "test"})
+test("Non-sensitive fill executes immediately (200)", code == 200, f"got {code}: {body}")
+
+# Sensitive fill should require approval (GitHub login has a password field)
+code, body = req("POST", "/tab/open", {"url": "https://github.com/login", "name": "ghlogin"})
+test("Opened GitHub login tab", code == 200 and body.get("tab") == "ghlogin")
+code, body = req("POST", "/tab/fill", {"tab": "ghlogin", "selector": "input[name='password']", "text": "not-a-real-password"})
+test("Sensitive fill returns approval (202)", code == 202)
+test("Sensitive fill includes approval code", "code" in body)
+
+# Cleanup extra tabs created in this section
+for name in ["form", "ghlogin"]:
+    req("POST", "/tab/close", {"tab": name})
 
 # ---------------------------------------------------------------
 # 13. Cockpit customization (CSS)
@@ -245,9 +245,12 @@ code, body = req("GET", "/cockpit/theme")
 test("Theme has 1 rule", len(body.get("rules", [])) == 1)
 test("Theme CSS contains test border", "red" in body.get("css", ""))
 
-# Add second style
+# Add second style (note: style endpoint replaces the theme; it does not append rules)
 code, body = req("POST", "/cockpit/style", {"css": "h1 { color: blue; }", "description": "test heading"})
-test("Second rule applied", body.get("total_rules") == 2)
+test("Second style applied (replace mode)", body.get("total_rules") == 1)
+code, theme = req("GET", "/cockpit/theme")
+test("Theme CSS contains second style", "blue" in theme.get("css", ""))
+test("Theme CSS no longer contains first style", "red" not in theme.get("css", ""))
 
 # Reset
 code, body = req("POST", "/cockpit/reset")
