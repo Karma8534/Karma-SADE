@@ -42,9 +42,22 @@ PAYBACK (Windows 11, Intel Core Ultra 9, 63GB RAM, RTX 4070 8GB)
 │   ├── Deploy key: ~/.ssh/karma_deploy_key (read-only)
 │   └── Pull script: ~/karma-sade-pull.sh
 │
+├── Monitoring ─── KarmaSADE-Sentinel scheduled task (every 15 min)
+│   └── C:\Users\raest\Documents\Karma_SADE\Scripts\sentinel.ps1 (v1.1.0; includes Cockpit HTTP health)
+│
+├── Watchdog ─── KarmaSADE-Watchdog scheduled task (every 5 min)
+│   └── C:\Users\raest\Documents\Karma_SADE\Scripts\karma_watchdog.ps1
+│
+├── DB Backup ─── KarmaSADE-BackupDB scheduled task (daily 3:00 AM)
+│   └── C:\Users\raest\Documents\Karma_SADE\Scripts\karma_backup_webui.ps1
+│
+├── Secrets (DPAPI) ─── local encrypted store
+│   ├── Tool: C:\Users\raest\Documents\Karma_SADE\Scripts\karma_secrets.ps1
+│   └── Store: %USERPROFILE%\karma\secrets.json (gitignored)
+│
 └── Startup (Windows login)
-    ├── start_openwebui.vbs (Startup folder — has API keys in process env)
-    └── start_cockpit.vbs (Startup folder — launches cockpit)
+    └── karma_startup.vbs → karma_startup.ps1 (ordered orchestrator; health-gated)
+        Path: %APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\karma_startup.vbs
 ```
 
 ---
@@ -79,15 +92,54 @@ PAYBACK (Windows 11, Intel Core Ultra 9, 63GB RAM, RTX 4070 8GB)
 - Deprecated sync_docs_to_droplet.py (SCP replaced by git)
 - End-to-end tested: local → GitHub → droplet ✓
 
+### 6. Resilience Gaps #2–#5 Implemented (code)
+- Added: startup orchestrator: `Scripts/karma_startup.ps1` + `Scripts/karma_startup.vbs`
+- Added: watchdog auto-restart: `Scripts/karma_watchdog.ps1`
+- Added: Open WebUI DB backups: `Scripts/karma_backup_webui.ps1`
+- Added: DPAPI secrets manager: `Scripts/karma_secrets.ps1`
+- Added: deployment helper (WhatIf-capable): `Scripts/deploy_resilience.ps1`
+- Updated: `Scripts/sentinel.ps1` → v1.1.0 (adds Cockpit HTTP health; overall status driven by HTTP + disk)
+- Updated: `.gitignore` to ignore `secrets.json` and `.vault_token`
+
+### 7. Cockpit Token + Test Harness Fixes
+- Cockpit requires `Authorization: Bearer <token>` for all routes except `/health`.
+- Updated helper/test scripts to automatically read the token from: `~\karma\cockpit-token.txt`
+  - `Scripts/exec_js.py`, `Scripts/send_msg.py`, `Scripts/send_msg_debug.py`
+  - `Scripts/test_cockpit.py`, `Scripts/test_cockpit_agentic.py`
+  - `_test_*` scripts
+- Tests:
+  - `test_cockpit.py`: 60/60 passing
+  - `test_cockpit_agentic.py`: passes with skips when Open WebUI tool-call UI/side-effects are not reliably detectable
+
+### 8. Resilience Deployed on PAYBACK (system changes)
+Startup folder
+- Removed old launchers:
+  - `start_openwebui.vbs`
+  - `start_cockpit.vbs`
+- Installed unified launcher:
+  - `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\karma_startup.vbs`
+
+Scheduled tasks
+- `KarmaSADE-Watchdog` (every 5 min)
+  - Note: Creating it with "highest privileges" failed (Access denied), so it was created without `/rl highest`.
+- `KarmaSADE-BackupDB` (daily 03:00)
+- Backup ran once successfully; logs at: `C:\Users\raest\Documents\Karma_SADE\Logs\karma-backup.log`
+  - Note: `sqlite3` CLI not found in PATH, so backup fell back to file copy (still usable, but less ideal during concurrent writes).
+- Watchdog ran once; logs at: `C:\Users\raest\Documents\Karma_SADE\Logs\karma-watchdog.log`
+
+Sentinel scheduled task fix
+- `KarmaSADE-Sentinel` was failing when run under Windows PowerShell (`powershell.exe`).
+- Updated task to run under PowerShell 7 (`pwsh.exe`) and verified it now exits 0 and logs Cockpit status to `sentinel-runtime.log`.
+
 ---
 
 ## Resilience Plan Status
 
 1. Git version control — DONE (GitHub repo + auto-push every 30 min)
-2. Startup ordering — PENDING (two VBS scripts in Startup folder race)
-3. Auto-restart on failure — PENDING (no watchdog)
-4. API keys in plaintext — PENDING (keys in Startup VBS file, not in repo)
-5. webui.db backup — PENDING (no backup of Open WebUI database)
+2. Startup ordering — DONE (karma_startup.vbs → karma_startup.ps1 orchestrator)
+3. Auto-restart on failure — DONE (KarmaSADE-Watchdog scheduled task)
+4. API keys encrypted-at-rest option — DONE (karma_secrets.ps1 DPAPI store; startup scripts no longer need plaintext keys)
+5. webui.db backup — DONE (KarmaSADE-BackupDB scheduled task)
 
 ---
 
@@ -103,6 +155,18 @@ PAYBACK (Windows 11, Intel Core Ultra 9, 63GB RAM, RTX 4070 8GB)
 - `Memory/00-karma-system-prompt-live.md` — Current generated system prompt
 
 Startup folder: `C:\Users\raest\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\`
+- Installed launcher: `karma_startup.vbs`
+
+Scheduled tasks:
+- Watchdog: `KarmaSADE-Watchdog` (every 5 min)
+- Backup: `KarmaSADE-BackupDB` (daily 03:00)
+- Sentinel: `KarmaSADE-Sentinel` (every 15 min; runs `pwsh.exe`)
+
+Logs:
+- Watchdog log: `C:\Users\raest\Documents\Karma_SADE\Logs\karma-watchdog.log`
+- Backup log: `C:\Users\raest\Documents\Karma_SADE\Logs\karma-backup.log`
+- Sentinel log: `C:\Users\raest\Documents\Karma_SADE\Logs\sentinel-runtime.log`
+
 Open WebUI DB: `C:\openwebui\venv\Lib\site-packages\open_webui\data\webui.db`
 
 ---
