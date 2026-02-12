@@ -1121,8 +1121,8 @@ class BrowserManager:
 app = Flask(__name__)
 mgr = BrowserManager()
 
-# Unauthenticated routes (health check for monitoring)
-_PUBLIC_ROUTES = {"/health"}
+# Unauthenticated routes (health check for monitoring + dashboard HTML)
+_PUBLIC_ROUTES = {"/health", "/dashboard", "/dashboard/html"}
 
 
 @app.before_request
