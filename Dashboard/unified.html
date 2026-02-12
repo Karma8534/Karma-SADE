@@ -374,12 +374,12 @@
         <div class="chat-panel">
             <div class="chat-header">
                 <h2>Chat with Karma</h2>
-                <div class="model-badge" id="current-model">Gemini 1.5 Flash</div>
+                <div class="model-badge" id="current-model">Gemini 3 Flash</div>
             </div>
 
             <div class="chat-messages" id="chat-messages">
                 <div class="message assistant">
-                    <div>Hello! I'm Karma, your agentic AI assistant. I use Gemini 1.5 Flash (FREE, 2024 knowledge) by default, with smart routing to paid models for complex tasks.</div>
+                    <div>Hello! I'm Karma, your agentic AI assistant. I use Gemini 3 Flash (FREE, Feb 2026 latest) by default, with smart routing to paid models for complex tasks.</div>
                     <div class="message-meta">System | Just now</div>
                 </div>
             </div>
@@ -423,7 +423,7 @@
 
                 <div class="card">
                     <h3>Active Model</h3>
-                    <div class="metric-value" style="font-size: 20px;" id="active-model">Gemini 1.5 Flash</div>
+                    <div class="metric-value" style="font-size: 20px;" id="active-model">Gemini 3 Flash</div>
                     <div class="metric-label">Smart routing active</div>
                 </div>
             </div>
@@ -435,7 +435,7 @@
                         <span style="color: var(--accent-green);">[OK]</span> Backend started successfully
                     </div>
                     <div style="padding: 8px 0; border-bottom: 1px solid var(--border-color);">
-                        <span style="color: var(--accent-green);">[OK]</span> Gemini 1.5 Flash - FREE tier (1,500/day)
+                        <span style="color: var(--accent-green);">[OK]</span> Gemini 3 Flash - FREE tier (1,500/day)
                     </div>
                     <div style="padding: 8px 0;">
                         <span style="color: var(--accent-blue);">[INFO]</span> Smart routing active
@@ -464,7 +464,7 @@
                         <div class="monitor-item-title">Primary Model</div>
                         <div class="monitor-item-status running">Active</div>
                     </div>
-                    <div class="monitor-item-detail">Gemini 1.5 Flash | FREE | 2024 knowledge</div>
+                    <div class="monitor-item-detail">Gemini 3 Flash | FREE | 2024 knowledge</div>
                 </div>
 
                 <div class="monitor-item">
@@ -622,7 +622,7 @@
 
                 // Update model badge if present in response
                 if (content.includes('[Gemini')) {
-                    currentModel.textContent = 'Gemini 1.5 Flash';
+                    currentModel.textContent = 'Gemini 3 Flash';
                     currentModel.style.background = 'rgba(16, 185, 129, 0.2)';
                     currentModel.style.color = 'var(--status-healthy)';
                 } else if (content.includes('[Z.ai')) {

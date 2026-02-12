@@ -104,7 +104,7 @@ try:
     gemini_key = load_api_key_from_registry("GEMINI_API_KEY")
     if gemini_key:
         genai.configure(api_key=gemini_key)
-        gemini_client = genai.GenerativeModel('gemini-1.5-flash')
+        gemini_client = genai.GenerativeModel('gemini-3-flash')  # Latest model - Feb 2026
         GEMINI_AVAILABLE = True
         logger.info("[OK] Gemini available (FREE - 1,500/day)")
     else:
@@ -267,10 +267,10 @@ def call_ollama(message: str, model: str = "llama3.1", timeout: int = 60) -> Opt
         return None
 
 def call_gemini(message: str, timeout: int = 30) -> Optional[str]:
-    """Call Gemini API - FREE (1,500 requests/day)"""
+    """Call Gemini 3 Flash API - FREE (1,500 requests/day) - Latest Feb 2026 model"""
     try:
         response = gemini_client.generate_content(message)
-        logger.info("[OK] Gemini response (FREE - 1,500/day)")
+        logger.info("[OK] Gemini 3 Flash response (FREE - 1,500/day)")
         return response.text
     except Exception as e:
         logger.warning(f"Gemini error: {e}")
@@ -465,12 +465,12 @@ async def get_ai_response(message: str, conversation_history: List[Dict] = None)
     complexity = detect_task_complexity(message)
     conversation_history = conversation_history or []
 
-    # Tier 1: Gemini 1.5 Flash (FREE, 1,500/day, UP-TO-DATE KNOWLEDGE - 2024)
+    # Tier 1: Gemini 3 Flash (FREE, 1,500/day, LATEST Feb 2026 model)
     if GEMINI_AVAILABLE and complexity in ["simple", "medium"]:
-        logger.info(f"[ROUTE] Task complexity: {complexity} - Trying Gemini 1.5 Flash (FREE, 2024 knowledge)")
+        logger.info(f"[ROUTE] Task complexity: {complexity} - Trying Gemini 3 Flash (FREE, Feb 2026)")
         response = call_gemini(message)
         if response:
-            return f"[Gemini 1.5 Flash - $0.00]\n\n{response}"
+            return f"[Gemini 3 Flash - $0.00]\n\n{response}"
         else:
             logger.info("Gemini failed, trying next tier...")
 
