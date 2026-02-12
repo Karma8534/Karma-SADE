@@ -56,26 +56,75 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Claude client (fallback only - Ollama is primary)
-try:
-    claude_client = anthropic.Anthropic(
-        api_key=os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("CLAUDE_API_KEY")
-    )
-    CLAUDE_AVAILABLE = True
-except Exception as e:
-    logger.warning(f"Claude API not configured: {e}. Using Ollama only.")
-    claude_client = None
-    CLAUDE_AVAILABLE = False
+# ============================================================================
+# Multi-API Client Initialization
+# Priority: Ollama (FREE) → Gemini (FREE) → OpenAI (CHEAP) → Claude (EXPENSIVE)
+# ============================================================================
 
-# Ollama client (primary - FREE)
+# 1. Ollama (FREE - local, unlimited)
 import subprocess
 OLLAMA_AVAILABLE = False
 try:
     subprocess.run(["ollama", "list"], capture_output=True, check=True, timeout=5)
     OLLAMA_AVAILABLE = True
-    logger.info("Ollama available - using as primary model")
+    logger.info("[OK] Ollama available (FREE - unlimited local)")
 except:
-    logger.warning("Ollama not available - will fallback to Claude if configured")
+    logger.warning("[WARN] Ollama not available")
+
+# 2. Gemini (FREE - 1,500 requests/day)
+GEMINI_AVAILABLE = False
+gemini_client = None
+try:
+    import google.generativeai as genai
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    if gemini_key:
+        genai.configure(api_key=gemini_key)
+        gemini_client = genai.GenerativeModel('gemini-1.5-flash')
+        GEMINI_AVAILABLE = True
+        logger.info("[OK] Gemini available (FREE - 1,500/day)")
+    else:
+        logger.info("[INFO] GEMINI_API_KEY not set - skipping Gemini")
+except ImportError:
+    logger.warning("[WARN] google-generativeai not installed: pip install google-generativeai")
+except Exception as e:
+    logger.warning(f"[WARN] Gemini initialization failed: {e}")
+
+# 3. OpenAI (PAID - cheap, ~$0.0025/query)
+OPENAI_AVAILABLE = False
+openai_client = None
+try:
+    from openai import OpenAI
+    openai_key = os.environ.get("OPENAI_API_KEY")
+    if openai_key:
+        openai_client = OpenAI(api_key=openai_key)
+        OPENAI_AVAILABLE = True
+        logger.info("[OK] OpenAI available (PAID - ~$0.0025/query)")
+    else:
+        logger.info("[INFO] OPENAI_API_KEY not set - skipping OpenAI")
+except ImportError:
+    logger.warning("[WARN] openai not installed: pip install openai")
+except Exception as e:
+    logger.warning(f"[WARN] OpenAI initialization failed: {e}")
+
+# 4. Claude (PAID - expensive, last resort)
+CLAUDE_AVAILABLE = False
+claude_client = None
+try:
+    claude_key = os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("CLAUDE_API_KEY")
+    if claude_key:
+        claude_client = anthropic.Anthropic(api_key=claude_key)
+        CLAUDE_AVAILABLE = True
+        logger.info("[OK] Claude available (PAID - last resort)")
+    else:
+        logger.info("[INFO] ANTHROPIC_API_KEY not set - skipping Claude")
+except Exception as e:
+    logger.warning(f"[WARN] Claude initialization failed: {e}")
+
+# Log final configuration
+total_backends = sum([OLLAMA_AVAILABLE, GEMINI_AVAILABLE, OPENAI_AVAILABLE, CLAUDE_AVAILABLE])
+logger.info(f"[CONFIG] {total_backends} AI backends available")
+if total_backends == 0:
+    logger.error("[ERROR] No AI backends available! Please configure at least one API key or install Ollama.")
 
 # Active WebSocket connections
 active_connections: List[WebSocket] = []
@@ -140,14 +189,62 @@ def call_ollama(message: str, model: str = "llama3.1", timeout: int = 60) -> Opt
         logger.error(f"Ollama failed: {e}")
         return None
 
+def call_gemini(message: str, timeout: int = 30) -> Optional[str]:
+    """Call Gemini API - FREE (1,500 requests/day)"""
+    try:
+        response = gemini_client.generate_content(message)
+        logger.info("[OK] Gemini response (FREE - 1,500/day)")
+        return response.text
+    except Exception as e:
+        logger.warning(f"Gemini error: {e}")
+        return None
+
+def call_openai(message: str, model: str = "gpt-4o-mini") -> Optional[str]:
+    """Call OpenAI API - CHEAP (~$0.0025/query)"""
+    try:
+        response = openai_client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": message}],
+            max_tokens=1000
+        )
+        logger.info(f"[OK] OpenAI response (PAID - {model}) - tokens: {response.usage.total_tokens}")
+        return response.choices[0].message.content
+    except Exception as e:
+        logger.warning(f"OpenAI error: {e}")
+        return None
+
+def call_claude(message: str, conversation_history: List[Dict] = None) -> Optional[str]:
+    """Call Claude API - EXPENSIVE (last resort)"""
+    try:
+        messages = []
+        for msg in (conversation_history or [])[-10:]:
+            messages.append({"role": msg["role"], "content": msg["content"]})
+        messages.append({"role": "user", "content": message})
+
+        response = claude_client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=4096,
+            messages=messages,
+            system="You are Karma, an agentic AI assistant with full system access. Be concise and helpful."
+        )
+        logger.info(f"[OK] Claude response - tokens: {response.usage.input_tokens + response.usage.output_tokens}")
+        return response.content[0].text
+    except Exception as e:
+        logger.error(f"Claude error: {e}")
+        return None
+
 async def get_ai_response(message: str, conversation_history: List[Dict] = None) -> str:
     """
-    Smart routing: Try Ollama first (FREE), fallback to Claude if needed
+    4-Tier Smart Routing:
+    1. Ollama (FREE - unlimited local)
+    2. Gemini (FREE - 1,500/day)
+    3. OpenAI (CHEAP - ~$0.0025/query)
+    4. Claude (EXPENSIVE - last resort)
     """
     complexity = detect_task_complexity(message)
     conversation_history = conversation_history or []
 
-    # Strategy: Always try Ollama first for simple/medium tasks
+    # Tier 1: Always try Ollama first (FREE, unlimited)
     if complexity in ["simple", "medium"] and OLLAMA_AVAILABLE:
         logger.info(f"[ROUTE] Task complexity: {complexity} - Trying Ollama (FREE)")
 
@@ -162,39 +259,39 @@ async def get_ai_response(message: str, conversation_history: List[Dict] = None)
         if response:
             return f"[Ollama/{model} - $0.00]\n\n{response}"
         else:
-            logger.info("Ollama failed, falling back to Claude...")
+            logger.info("Ollama failed, trying next tier...")
 
-    # Fallback to Claude or force Claude for complex tasks
+    # Tier 2: Try Gemini (FREE, 1,500/day)
+    if GEMINI_AVAILABLE and complexity in ["simple", "medium"]:
+        logger.info(f"[ROUTE] Trying Gemini (FREE - 1,500/day)")
+        response = call_gemini(message)
+        if response:
+            return f"[Gemini 1.5 Flash - $0.00]\n\n{response}"
+        else:
+            logger.info("Gemini failed, trying next tier...")
+
+    # Tier 3: Try OpenAI (CHEAP, good for code)
+    if OPENAI_AVAILABLE:
+        logger.info(f"[ROUTE] Trying OpenAI (PAID - ~$0.0025/query)")
+        # Use cheaper model for simple/medium, GPT-4o for complex
+        model = "gpt-4o-mini" if complexity != "complex" else "gpt-4o"
+        response = call_openai(message, model=model)
+        if response:
+            return f"[OpenAI {model} - ~$0.0025]\n\n{response}"
+        else:
+            logger.info("OpenAI failed, trying next tier...")
+
+    # Tier 4: Claude (EXPENSIVE - last resort)
     if CLAUDE_AVAILABLE:
-        logger.info(f"[CLAUDE] Using Claude API (complexity: {complexity})")
-
-        # Build message history for Claude
-        messages = []
-        for msg in conversation_history[-10:]:  # Last 10 messages for context
-            messages.append({
-                "role": msg["role"],
-                "content": msg["content"]
-            })
-        messages.append({"role": "user", "content": message})
-
-        try:
-            response = claude_client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=4096,
-                messages=messages,
-                system="You are Karma, an agentic AI assistant with full system access. Be concise and helpful."
-            )
-
-            content = response.content[0].text
-            logger.info(f"[OK] Claude response - tokens: {response.usage.input_tokens + response.usage.output_tokens}")
-            return f"[Claude Sonnet - Paid]\n\n{content}"
-
-        except Exception as e:
-            logger.error(f"Claude API error: {e}")
-            return f"Error: Could not get response from Claude: {str(e)}"
+        logger.info(f"[ROUTE] Using Claude (EXPENSIVE - last resort, complexity: {complexity})")
+        response = call_claude(message, conversation_history)
+        if response:
+            return f"[Claude Sonnet 4 - ~$0.015]\n\n{response}"
+        else:
+            return "Error: Claude API failed"
 
     # No AI available
-    return "Error: No AI backend available. Please configure ANTHROPIC_API_KEY or ensure Ollama is running."
+    return "Error: No AI backend available. Please configure at least one API key or install Ollama."
 
 # ============================================================================
 # Chat Endpoints
