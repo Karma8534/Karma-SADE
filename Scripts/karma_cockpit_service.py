@@ -2295,6 +2295,19 @@ def main():
     # Cleanup old screenshots
     cleanup_old_screenshots()
 
+    # Register dashboard routes
+    try:
+        import cockpit_dashboard_addon
+        cockpit_dashboard_addon.register_dashboard_routes(app, mgr)
+        print("[OK] Dashboard enabled at http://{HOST}:{PORT}/dashboard")
+        logging.info("[main] Dashboard routes registered")
+    except ImportError as e:
+        print(f"[WARN] Dashboard addon not found: {e}")
+        logging.warning("[main] Dashboard addon not available")
+    except Exception as e:
+        print(f"[ERROR] Dashboard registration failed: {e}")
+        logging.error("[main] Dashboard registration failed: %s", e)
+
     # Start browser
     mgr.start()
 
