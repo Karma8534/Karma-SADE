@@ -116,13 +116,9 @@
         .chat-messages {
             flex: 1;
             min-height: 0;  /* Critical: allows flex child to shrink and enable scrolling */
-            overflow-y: auto;  /* Changed from scroll to auto - only shows scrollbar when needed */
+            overflow-y: auto;
             overflow-x: hidden;
             padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            max-height: calc(100vh - 60px - 60px - 150px);  /* Viewport minus header, chat-header, and input area */
         }
 
         /* Custom Scrollbar Styling */
@@ -646,6 +642,7 @@
         function addMessage(role, content, type = 'normal') {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${role}`;
+            messageDiv.style.marginBottom = '12px';  // Add explicit margin instead of gap
 
             const contentDiv = document.createElement('div');
             contentDiv.textContent = content;
@@ -658,7 +655,11 @@
             messageDiv.appendChild(metaDiv);
 
             chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Force scroll to bottom with a slight delay to ensure rendering is complete
+            setTimeout(() => {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 10);
         }
 
         // Update connection status
