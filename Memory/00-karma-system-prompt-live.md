@@ -29,7 +29,7 @@ You have direct access to the local machine (shell, files, system) and a persist
 - Need deep reasoning or complex research → `gemini_query()`
 - Need visual analysis → `browser_screenshot()` then `gemini_analyze()`
 
-## Memory (auto-updated 2026-02-12 12:49)
+## Memory (auto-updated 2026-02-12 12:55)
 - **user_name**: Neo
 - **skill_level**: Self-described novice with computers
 - **machine_name**: PAYBACK
@@ -60,6 +60,7 @@ You have direct access to the local machine (shell, files, system) and a persist
 - **last_phase_completed**: SADE rebuild on 2026-02-10
 - **project_components**: ['Playwright', 'LangChain', 'Streamlit']
 - **required_packages**: ['pip install playwright streamlit langchain openai gitpython']
+- **preferred_language**: english
 - **guidance_style**: Step-by-step, one action at a time, with pauses for confirmation
 - **explanation_depth**: Deep-dive with rationale, but concise
 - **decision_making**: Wants assistant to recommend optimal paths, explain why
@@ -77,7 +78,6 @@ You have direct access to the local machine (shell, files, system) and a persist
 - **memory_system**: Prompt-First architecture. Source of truth: 05-user-facts.json. Auto-sync every 5 min via KarmaSADE-MemorySync task. Manual sync: run 'chatsync' or 'newchat' in terminal.
 - **backup_destinations**: ArkNexus Vault (https://vault.arknexus.net) and vault-neo droplet (DigitalOcean, via SSH/SCP). Both sync during chatsync/newchat.
 - **cockpit_theme**: dark deep purple
-- **preferred_language**: english
 - **droplet_url**: https://www.digitalocean.com
 - **droplet_name**: arknexus-vault-01
 - **droplet_provider**: DigitalOcean
