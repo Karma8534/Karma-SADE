@@ -1,4 +1,10 @@
-"""Sync documentation to vault-neo droplet."""
+"""DEPRECATED — Replaced by git_sync.py (2026-02-12).
+
+The vault-neo droplet now pulls from GitHub via cron instead of receiving
+SCP pushes. This file is kept for reference only.
+
+Replacement: git_sync.py (step 4 of karma_memory_sync.py pipeline)
+"""
 import subprocess, os, json
 from datetime import datetime, timezone
 
