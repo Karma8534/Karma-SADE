@@ -113,9 +113,12 @@ function formatContext(results) {
 function injectIntoInput(text) {
   // Platform-specific injection
   const platform = detectPlatform();
+  console.log('[Vault] Platform detected:', platform);
 
   if (platform === 'claude') {
     const editor = document.querySelector('div[contenteditable="true"]');
+    console.log('[Vault] Looking for Claude input element...');
+    console.log('[Vault] Element found:', !!editor);
     if (!editor) return false;
     editor.textContent = text + editor.textContent;
     editor.dispatchEvent(new Event('input', { bubbles: true }));
@@ -123,21 +126,30 @@ function injectIntoInput(text) {
   }
 
   if (platform === 'chatgpt') {
-    const textarea = document.querySelector('#prompt-textarea');
-    if (!textarea) return false;
-    textarea.value = text + textarea.value;
-    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    // ChatGPT uses a ProseMirror contenteditable div, not a textarea
+    const editor = document.querySelector('#prompt-textarea');
+    console.log('[Vault] Looking for ChatGPT input element...');
+    console.log('[Vault] Element found:', !!editor, editor?.tagName, editor?.contentEditable);
+    if (!editor) return false;
+    // Build ProseMirror-compatible paragraph nodes
+    const lines = text.split('\n');
+    const html = lines.map(line => `<p>${line || '<br>'}</p>`).join('');
+    editor.innerHTML = html + editor.innerHTML;
+    editor.dispatchEvent(new InputEvent('input', { bubbles: true }));
     return true;
   }
 
   if (platform === 'gemini') {
     const input = document.querySelector('rich-textarea[aria-label*="prompt"]');
+    console.log('[Vault] Looking for Gemini input element...');
+    console.log('[Vault] Element found:', !!input);
     if (!input) return false;
     input.textContent = text + input.textContent;
     input.dispatchEvent(new Event('input', { bubbles: true }));
     return true;
   }
 
+  console.log('[Vault] Unknown platform, cannot inject');
   return false;
 }
 
