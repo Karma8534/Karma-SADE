@@ -140,12 +140,19 @@ function injectIntoInput(text) {
   }
 
   if (platform === 'gemini') {
-    const input = document.querySelector('rich-textarea[aria-label*="prompt"]');
+    // Gemini uses Quill editor — target the ql-editor div inside rich-textarea
+    const editor = document.querySelector('.ql-editor[aria-label*="prompt"]')
+      || document.querySelector('rich-textarea .ql-editor')
+      || document.querySelector('div[contenteditable="true"][role="textbox"]');
     console.log('[Vault] Looking for Gemini input element...');
-    console.log('[Vault] Element found:', !!input);
-    if (!input) return false;
-    input.textContent = text + input.textContent;
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    console.log('[Vault] Element found:', !!editor, editor?.className?.substring(0, 60));
+    if (!editor) return false;
+    // Build Quill-compatible paragraph nodes
+    const lines = text.split('\n');
+    const html = lines.map(line => `<p>${line || '<br>'}</p>`).join('');
+    editor.innerHTML = html + editor.innerHTML;
+    editor.classList.remove('ql-blank');
+    editor.dispatchEvent(new InputEvent('input', { bubbles: true }));
     return true;
   }
 
