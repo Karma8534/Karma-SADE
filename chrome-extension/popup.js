@@ -8,9 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Load configuration from storage
 function loadConfig() {
-  chrome.storage.sync.get(['vaultToken', 'enabled'], (config) => {
+  chrome.storage.sync.get(['vaultToken', 'enabled', 'autoInjectEnabled'], (config) => {
     document.getElementById('vaultToken').value = config.vaultToken || '';
     document.getElementById('enableToggle').checked = config.enabled || false;
+    document.getElementById('autoInjectToggle').checked = config.autoInjectEnabled || false;
   });
 }
 
@@ -75,6 +76,19 @@ function showStatus(message, type) {
     statusEl.className = 'status';
   }, 3000);
 }
+
+// Auto-inject toggle
+document.getElementById('autoInjectToggle').addEventListener('change', (e) => {
+  const autoInjectEnabled = e.target.checked;
+
+  chrome.storage.sync.set({ autoInjectEnabled }, () => {
+    if (autoInjectEnabled) {
+      showStatus('Auto-inject enabled (Beta)', 'success');
+    } else {
+      showStatus('Auto-inject disabled', 'error');
+    }
+  });
+});
 
 // Context injection button handler
 const injectBtn = document.getElementById('inject-context-btn');
