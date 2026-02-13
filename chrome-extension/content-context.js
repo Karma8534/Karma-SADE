@@ -36,7 +36,7 @@ async function handleContextInjection(query, limit) {
   // Step 3: Inject into chat input
   const injected = injectIntoInput(formatContext(results));
 
-  return { success: injected, count: results.length };
+  return { success: injected, count: results.length || 0 };
 }
 
 async function searchVault(query, limit) {
@@ -71,9 +71,9 @@ function showPreviewModal(results) {
           ${results.map((r, i) => `
             <div style="padding: 10px; margin: 8px 0; background: #f5f5f5; border-radius: 4px;">
               <div style="font-size: 12px; color: #666; margin-bottom: 5px;">
-                ${r.metadata?.provider || 'unknown'} • Relevance: ${(r.score * 100).toFixed(0)}%
+                ${r.platform || 'unknown'} • Relevance: ${((r.similarity_score || 0) * 100).toFixed(0)}%
               </div>
-              <div style="font-size: 14px;">${truncate(r.content, 200)}</div>
+              <div style="font-size: 14px;">${truncate(r.content_preview || '', 200)}</div>
             </div>
           `).join('')}
         </div>
@@ -104,7 +104,7 @@ function showPreviewModal(results) {
 
 function formatContext(results) {
   const context = results.map(r =>
-    `[Previous context from ${r.metadata?.provider || 'chat'}]\n${r.content}`
+    `[Previous context from ${r.platform || 'chat'}]\n${r.content_preview || ''}`
   ).join('\n\n');
 
   return `${context}\n\n---\n\n`;
@@ -150,5 +150,6 @@ function detectPlatform() {
 }
 
 function truncate(text, length) {
+  if (!text) return '';
   return text.length > length ? text.substring(0, length) + '...' : text;
 }

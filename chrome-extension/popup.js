@@ -93,7 +93,14 @@ if (injectBtn && queryInput) {
     injectBtn.textContent = 'Searching...';
 
     // Send message to active tab's content script
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tabs || tabs.length === 0) {
+      injectBtn.disabled = false;
+      injectBtn.textContent = 'Inject Context';
+      showStatus('No active tab found', 'error');
+      return;
+    }
+    const tab = tabs[0];
 
     chrome.tabs.sendMessage(tab.id, {
       type: 'INJECT_CONTEXT',
