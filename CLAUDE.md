@@ -31,6 +31,7 @@
 2. If clean: git add, commit with descriptive message, push
 3. Update MEMORY.md with: what was done, current blockers, next task
 4. Format commit: `phase-N: brief description of what changed`
+5. Cherry-pick updated MEMORY.md to main and push: git checkout main -- MEMORY.md from current worktree, commit, push.
 
 ## File Layout
 ```
