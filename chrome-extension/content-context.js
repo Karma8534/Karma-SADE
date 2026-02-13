@@ -93,9 +93,86 @@ function initAutoInject() {
   setupInputMonitor(); // Step 3 will implement this
 }
 
-// Placeholder for Step 3 — input monitor with debounce
+// ─── Step 3: Input Monitor with Debounce ─────────────────────────────
+
+let autoInjectDebounceTimer = null;
+let autoInjectResults = null; // Stash results for inline preview / keyboard handler
+
+function getInputElement() {
+  const platform = detectPlatform();
+  if (platform === 'claude') return document.querySelector('div[contenteditable="true"]');
+  if (platform === 'chatgpt') return document.querySelector('#prompt-textarea');
+  if (platform === 'gemini') {
+    return document.querySelector('.ql-editor[aria-label*="prompt"]')
+      || document.querySelector('rich-textarea .ql-editor')
+      || document.querySelector('div[contenteditable="true"][role="textbox"]');
+  }
+  return null;
+}
+
+function extractQuery(text, maxWords) {
+  // Take first N words, trim whitespace
+  return text.trim().split(/\s+/).slice(0, maxWords).join(' ');
+}
+
 function setupInputMonitor() {
-  console.log('[UAI Memory] Input monitor placeholder — will be implemented in Step 3');
+  const inputEl = getInputElement();
+  if (!inputEl) {
+    console.log('[UAI Memory] Input element not found — retrying in 2s');
+    setTimeout(setupInputMonitor, 2000);
+    return;
+  }
+
+  console.log('[UAI Memory] Input monitor attached to', inputEl.tagName, inputEl.id || inputEl.className?.substring(0, 30));
+
+  const onInput = () => {
+    // Guard: already injected this conversation
+    if (sessionStorage.getItem('uai-conversation-injected') === 'true') {
+      console.log('[UAI Memory] Already injected, removing input monitor');
+      inputEl.removeEventListener('input', onInput);
+      return;
+    }
+
+    // Clear previous debounce
+    if (autoInjectDebounceTimer) clearTimeout(autoInjectDebounceTimer);
+
+    autoInjectDebounceTimer = setTimeout(async () => {
+      const text = inputEl.textContent?.trim() || inputEl.value?.trim() || '';
+      console.log('[UAI Memory] Debounce fired, text length:', text.length);
+
+      // Minimum length guard
+      if (text.length < 10) {
+        console.log('[UAI Memory] Text too short (<10 chars), skipping');
+        return;
+      }
+
+      // Extract first 50 words as query
+      const query = extractQuery(text, 50);
+      console.log('[UAI Memory] Auto-inject triggered, query:', query);
+
+      try {
+        const results = await searchVault(query, 3);
+        if (!results || results.length === 0) {
+          console.log('[UAI Memory] No results found, skipping preview');
+          return;
+        }
+
+        console.log('[UAI Memory] Found', results.length, 'results — showing inline preview');
+        autoInjectResults = results;
+        showInlinePreview(results); // Step 4 will build the real UI
+      } catch (err) {
+        console.error('[UAI Memory] Auto-inject search failed:', err.message);
+      }
+    }, 1500); // 1.5s debounce
+  };
+
+  inputEl.addEventListener('input', onInput);
+}
+
+// Placeholder for Step 4 — inline preview UI
+function showInlinePreview(results) {
+  console.log('[UAI Memory] Inline preview placeholder — will be implemented in Step 4');
+  console.log('[UAI Memory] Results to show:', results.map(r => truncate(r.content_preview || '', 60)));
 }
 
 // Initialize auto-inject after DOM is ready
