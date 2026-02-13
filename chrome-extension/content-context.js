@@ -1,11 +1,29 @@
 // Universal AI Memory - Context Injection
 // Listens for injection requests from popup, fetches relevant context, displays preview
+// Also handles Phase 4 auto-injection on new conversations
 const SEARCH_ENDPOINT = 'https://hub.arknexus.net/v1/search';
 let vaultToken = null;
+let autoInjectEnabled = false;
 
-// Get token from storage
-chrome.storage.sync.get(['vaultToken'], (result) => {
+// Get token and settings from storage
+chrome.storage.sync.get(['vaultToken', 'autoInjectEnabled'], (result) => {
   vaultToken = result.vaultToken;
+  autoInjectEnabled = result.autoInjectEnabled || false;
+  console.log('[UAI Memory] Context script loaded. autoInject:', autoInjectEnabled);
+});
+
+// Listen for settings changes in real-time
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'sync') {
+    if (changes.autoInjectEnabled) {
+      autoInjectEnabled = changes.autoInjectEnabled.newValue;
+      console.log('[UAI Memory] autoInject toggled:', autoInjectEnabled);
+      if (autoInjectEnabled) initAutoInject();
+    }
+    if (changes.vaultToken) {
+      vaultToken = changes.vaultToken.newValue;
+    }
+  }
 });
 
 // Listen for injection trigger from popup
@@ -17,6 +35,81 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // Keep channel open for async response
   }
 });
+
+// ─── Phase 4: Auto-Injection ─────────────────────────────────────────
+
+function detectNewConversation() {
+  const platform = detectPlatform();
+
+  if (platform === 'claude') {
+    // div[data-test-render-count] wraps each message turn
+    // A fresh /new page has 0; a conversation with the welcome prompt may have 1
+    const turns = document.querySelectorAll('[data-test-render-count]');
+    const isNew = turns.length <= 1;
+    console.log('[UAI Memory] Claude turns:', turns.length, '→ new:', isNew);
+    return isNew;
+  }
+
+  if (platform === 'chatgpt') {
+    // data-message-author-role appears on each message bubble
+    const messages = document.querySelectorAll('[data-message-author-role]');
+    const isNew = messages.length === 0;
+    console.log('[UAI Memory] ChatGPT messages:', messages.length, '→ new:', isNew);
+    return isNew;
+  }
+
+  if (platform === 'gemini') {
+    // model-response elements appear once the assistant has replied
+    const responses = document.querySelectorAll('model-response');
+    const queries = document.querySelectorAll('user-query');
+    const isNew = responses.length === 0 && queries.length === 0;
+    console.log('[UAI Memory] Gemini queries:', queries.length, 'responses:', responses.length, '→ new:', isNew);
+    return isNew;
+  }
+
+  return false;
+}
+
+function initAutoInject() {
+  if (!autoInjectEnabled) {
+    console.log('[UAI Memory] Auto-inject disabled, skipping init');
+    return;
+  }
+
+  // Don't re-init if already injected this conversation
+  if (sessionStorage.getItem('uai-conversation-injected') === 'true') {
+    console.log('[UAI Memory] Already injected this conversation, skipping');
+    return;
+  }
+
+  const isNew = detectNewConversation();
+  if (!isNew) {
+    console.log('[UAI Memory] Existing conversation, auto-inject skipped');
+    return;
+  }
+
+  console.log('[UAI Memory] New conversation detected — setting up input monitor');
+  sessionStorage.setItem('uai-conversation-injected', 'false');
+  setupInputMonitor(); // Step 3 will implement this
+}
+
+// Placeholder for Step 3 — input monitor with debounce
+function setupInputMonitor() {
+  console.log('[UAI Memory] Input monitor placeholder — will be implemented in Step 3');
+}
+
+// Initialize auto-inject after DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    // Small delay to let platform JS render initial elements
+    setTimeout(initAutoInject, 1500);
+  });
+} else {
+  // Already loaded (content scripts run at document_idle)
+  setTimeout(initAutoInject, 1500);
+}
+
+// ─── Manual Injection (Phase 3) ──────────────────────────────────────
 
 async function handleContextInjection(query, limit) {
   // Step 1: Search for relevant context
