@@ -5,6 +5,17 @@ console.log('[UAI Memory] ChatGPT content script loaded');
 
 let lastProcessedMessageCount = 0;
 let observerActive = false;
+let capturedTurns = new Set();
+
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return hash;
+}
 
 // Start observing after page load
 if (document.readyState === 'loading') {
@@ -88,7 +99,9 @@ function extractMessages() {
 
   messageElements.forEach((elem) => {
     const role = elem.getAttribute('data-message-author-role');
-    const text = elem.innerText.trim();
+    // Use textContent instead of innerText — assistant messages may be
+    // lazy-rendered with display:none, causing innerText to return empty
+    const text = elem.textContent.trim();
     if (!text) return;
 
     if (role === 'user') {
@@ -112,6 +125,13 @@ function extractMessages() {
 }
 
 function captureConversationTurn(turn) {
+  // Deduplicate using hash of user message
+  const turnHash = hashString(turn.user.substring(0, 100));
+  if (capturedTurns.has(turnHash)) {
+    console.log('[UAI Memory] Skipping duplicate turn (already captured)');
+    return;
+  }
+
   // Extract thread ID from URL
   const urlMatch = window.location.pathname.match(/\/c\/([a-f0-9-]+)/);
   const threadId = urlMatch ? urlMatch[1] : null;
@@ -147,6 +167,7 @@ function captureConversationTurn(turn) {
 
     if (response.success) {
       console.log('[UAI Memory] Turn captured successfully');
+      capturedTurns.add(turnHash);
     } else {
       console.error('[UAI Memory] Capture failed:', response.error);
     }

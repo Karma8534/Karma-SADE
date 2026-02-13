@@ -5,6 +5,17 @@ console.log('[UAI Memory] Claude content script loaded');
 
 let lastProcessedMessageCount = 0;
 let observerActive = false;
+let capturedTurns = new Set();
+
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return hash;
+}
 
 // Start observing after page load
 if (document.readyState === 'loading') {
@@ -18,15 +29,14 @@ function init() {
 
   // Wait for chat container to exist
   const checkContainer = setInterval(() => {
-    // Try multiple selectors
-    const chatContainer = document.querySelector('[data-testid="conversation"]') ||
-                          document.querySelector('main[class*="flex"]') ||
+    // Look for the scrollable conversation area
+    const chatContainer = document.querySelector('.overflow-y-scroll') ||
                           document.querySelector('main') ||
                           document.body;
 
     if (chatContainer) {
       clearInterval(checkContainer);
-      console.log('[UAI Memory] Found chat container:', chatContainer.tagName, chatContainer.className);
+      console.log('[UAI Memory] Found chat container:', chatContainer.tagName, chatContainer.className?.substring(0, 60));
       startObserver(chatContainer);
       // Also do initial scan
       scanForNewMessages();
@@ -83,56 +93,42 @@ function scanForNewMessages() {
 function extractMessages() {
   const turns = [];
 
-  // Simpler approach: Find all divs and analyze their position/content
-  const allDivs = Array.from(document.querySelectorAll('div'));
+  // Claude.ai renders messages inside div[data-test-render-count] containers
+  // User messages contain a div.bg-bg-300 bubble
+  // Assistant messages contain a div[data-is-streaming] with div.font-claude-response
+  const renderDivs = document.querySelectorAll('[data-test-render-count]');
 
-  console.log('[UAI Memory] Scanning', allDivs.length, 'divs for messages');
+  console.log('[UAI Memory] Found', renderDivs.length, 'render containers');
 
-  // Filter to likely message containers
-  const messageCandidates = allDivs.filter(div => {
-    const text = div.innerText?.trim() || '';
-    const textLen = text.length;
-
-    // Must have substantial text
-    if (textLen < 10 || textLen > 50000) return false;
-
-    // Ignore if it has message children (parent container)
-    const childDivs = div.querySelectorAll('div');
-    if (childDivs.length > 20) return false;
-
-    return true;
-  });
-
-  console.log('[UAI Memory] Found', messageCandidates.length, 'message candidates');
-
-  // Look for alternating pattern based on position
-  // Claude typically renders messages in order: user, assistant, user, assistant...
   const messages = [];
 
-  messageCandidates.forEach((div, idx) => {
-    const text = div.innerText.trim();
-    const classes = div.className || '';
-    const computedStyle = window.getComputedStyle(div);
-
-    // Simple heuristic: alternate between user/assistant based on order
-    // Or detect by class name patterns
-    let type = null;
-
-    if (classes.match(/font-user|user.*message/i)) {
-      type = 'user';
-    } else if (classes.match(/font-claude|font-assistant|assistant.*message|claude.*message/i)) {
-      type = 'assistant';
+  renderDivs.forEach((div) => {
+    // Check if this is a user message (has bg-bg-300 bubble)
+    const userBubble = div.querySelector('.bg-bg-300');
+    if (userBubble) {
+      const text = userBubble.textContent.trim();
+      if (text.length > 0) {
+        messages.push({ type: 'user', text });
+        return;
+      }
     }
 
-    if (type) {
-      messages.push({ type, text, idx });
-      console.log(`[UAI Memory] Message ${messages.length}: ${type} (${text.substring(0, 50)}...)`);
+    // Check if this is an assistant message (has data-is-streaming or font-claude-response)
+    const assistantBlock = div.querySelector('[data-is-streaming]');
+    if (assistantBlock) {
+      // Prefer font-claude-response for cleaner text (excludes action buttons)
+      const responseEl = assistantBlock.querySelector('.font-claude-response') || assistantBlock;
+      const text = responseEl.textContent.trim();
+      if (text.length > 0) {
+        messages.push({ type: 'assistant', text });
+        return;
+      }
     }
   });
 
   console.log('[UAI Memory] Identified', messages.length, 'typed messages');
 
-  // Pair them up
+  // Pair user + assistant messages into turns
   let currentTurn = { user: null, assistant: null };
 
   messages.forEach(msg => {
@@ -156,6 +152,13 @@ function extractMessages() {
 }
 
 function captureConversationTurn(turn) {
+  // Deduplicate using hash of user message
+  const turnHash = hashString(turn.user.substring(0, 100));
+  if (capturedTurns.has(turnHash)) {
+    console.log('[UAI Memory] Skipping duplicate turn (already captured)');
+    return;
+  }
+
   // Extract thread ID from URL
   const urlMatch = window.location.pathname.match(/\/chat\/([a-f0-9-]+)/);
   const threadId = urlMatch ? urlMatch[1] : null;
@@ -191,6 +194,7 @@ function captureConversationTurn(turn) {
 
     if (response.success) {
       console.log('[UAI Memory] Turn captured successfully');
+      capturedTurns.add(turnHash);
     } else {
       console.error('[UAI Memory] Capture failed:', response.error);
     }

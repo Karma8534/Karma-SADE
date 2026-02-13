@@ -97,84 +97,70 @@ function scanForNewMessages() {
 function extractMessages() {
   const turns = [];
 
-  // Gemini DOM structure scan - try multiple approaches
-  console.log('[UAI Memory] Starting message extraction...');
+  // Gemini uses custom web components:
+  // <user-query> for user messages, with clean text in p.query-text-line
+  // <model-response> for assistant messages, with clean text in <message-content>
+  const userQueries = document.querySelectorAll('user-query');
+  const modelResponses = document.querySelectorAll('model-response');
 
-  // Get all potential message containers
-  const allDivs = Array.from(document.querySelectorAll('div')).filter(div => {
-    const text = div.innerText?.trim() || '';
-    const textLen = text.length;
+  console.log('[UAI Memory] Found', userQueries.length, 'user queries and', modelResponses.length, 'model responses');
 
-    // Must have text content
-    if (textLen < 10) return false;
+  // Build ordered message list by walking the DOM in order
+  // user-query and model-response alternate as siblings inside the conversation
+  const allMessages = [];
 
-    // Check if it's a leaf message container (not too many children)
-    const directChildren = Array.from(div.children);
-    const divChildren = directChildren.filter(c => c.tagName === 'DIV');
-
-    // Should have some structure but not be a massive container
-    return textLen > 10 && textLen < 50000 && divChildren.length < 15;
-  });
-
-  console.log('[UAI Memory] Scanning', allDivs.length, 'divs for messages');
-
-  // Identify messages by attributes and structure
-  const messages = [];
-
-  allDivs.forEach((div, idx) => {
-    const text = div.innerText.trim();
-    const dataset = div.dataset || {};
-    const classes = div.className || '';
-    const attributes = {};
-
-    // Collect all data-* attributes
-    for (let attr of div.attributes) {
-      if (attr.name.startsWith('data-')) {
-        attributes[attr.name] = attr.value;
-      }
+  // Collect user messages with their text
+  userQueries.forEach((uq) => {
+    // Prefer p.query-text-line for clean text (excludes "You said" prefix and file attachments)
+    const queryLines = uq.querySelectorAll('p.query-text-line');
+    let text = '';
+    if (queryLines.length > 0) {
+      text = Array.from(queryLines).map(p => p.textContent.trim()).join('\n');
+    } else {
+      // Fallback: use user-query-content
+      const uqc = uq.querySelector('user-query-content');
+      text = uqc ? uqc.textContent.trim() : uq.textContent.trim();
+      // Strip common prefixes
+      text = text.replace(/^\s*You said\s*/i, '');
     }
-
-    let type = null;
-
-    // Check for Gemini-specific markers
-    // Gemini uses different structures - try to detect patterns
-    if (classes.includes('user') || dataset.role === 'user' || attributes['data-message-author'] === 'user') {
-      type = 'user';
-    } else if (classes.includes('model') || classes.includes('assistant') || dataset.role === 'model' || attributes['data-message-author'] === 'model') {
-      type = 'assistant';
-    }
-
-    // Fallback: Check parent elements for indicators
-    if (!type && text.length > 20) {
-      let parent = div.parentElement;
-      for (let i = 0; i < 3 && parent; i++) {
-        const parentClasses = parent.className || '';
-        const parentDataset = parent.dataset || {};
-
-        if (parentClasses.includes('user') || parentDataset.role === 'user') {
-          type = 'user';
-          break;
-        } else if (parentClasses.includes('model') || parentClasses.includes('assistant') || parentDataset.role === 'model') {
-          type = 'assistant';
-          break;
-        }
-
-        parent = parent.parentElement;
-      }
-    }
-
-    if (type) {
-      messages.push({ type, text, idx });
-      console.log(`[UAI Memory] Message ${messages.length}: ${type} (${text.substring(0, 50)}...)`);
+    if (text.length > 0) {
+      allMessages.push({ type: 'user', text, el: uq });
     }
   });
 
-  console.log('[UAI Memory] Identified', messages.length, 'typed messages');
+  // Collect assistant messages with their text
+  modelResponses.forEach((mr) => {
+    // Prefer message-content for clean text (excludes "Gemini said", "Show thinking", action buttons)
+    const messageContent = mr.querySelector('message-content');
+    let text = '';
+    if (messageContent) {
+      text = messageContent.textContent.trim();
+    } else {
+      // Fallback: use .markdown class
+      const markdown = mr.querySelector('.markdown');
+      text = markdown ? markdown.textContent.trim() : mr.textContent.trim();
+      // Strip common prefixes
+      text = text.replace(/^\s*(Show thinking\s*)?(Gemini said\s*)?/i, '');
+    }
+    if (text.length > 0) {
+      allMessages.push({ type: 'assistant', text, el: mr });
+    }
+  });
 
-  // Pair them up
+  // Sort by DOM order using compareDocumentPosition
+  allMessages.sort((a, b) => {
+    const pos = a.el.compareDocumentPosition(b.el);
+    if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
+    if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1;
+    return 0;
+  });
+
+  console.log('[UAI Memory] Identified', allMessages.length, 'typed messages (sorted)');
+
+  // Pair user + assistant messages into turns
   let currentTurn = { user: null, assistant: null };
 
-  messages.forEach(msg => {
+  allMessages.forEach(msg => {
     if (msg.type === 'user') {
       if (currentTurn.user && currentTurn.assistant) {
         turns.push({...currentTurn});
@@ -203,9 +189,8 @@ function captureConversationTurn(turn) {
     return;
   }
 
-  // Extract thread ID from URL (Gemini format varies)
-  const urlMatch = window.location.pathname.match(/\/app\/([a-f0-9-]+)/) ||
-                   window.location.search.match(/[?&]thread=([a-f0-9-]+)/);
+  // Extract thread ID from URL (Gemini format: /app/[hex])
+  const urlMatch = window.location.pathname.match(/\/app\/([a-f0-9]+)/);
   const threadId = urlMatch ? urlMatch[1] : null;
 
   const data = {
