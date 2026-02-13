@@ -1,0 +1,24 @@
+GEMINI FIX - RELOAD INSTRUCTIONS
+================================
+
+The Gemini duplicate capture issue has been fixed.
+
+TO APPLY THE FIX:
+1. Open Chrome
+2. Go to: chrome://extensions
+3. Find "Universal AI Memory" extension
+4. Click the RELOAD button (circular arrow icon)
+5. Done!
+
+WHAT WAS FIXED:
+- Gemini was capturing the same message 4 times
+- Now uses deduplication to capture each message only once
+- Even if Gemini regenerates the response multiple times
+
+TO TEST:
+1. Open new tab: https://gemini.google.com
+2. Send a test message
+3. Wait for response
+4. Check Vault: ssh vault-neo "tail -5 /opt/seed-vault/memory_v1/ledger/memory.jsonl | jq -r '.content | select(.provider==\"gemini\") | {user: .user_message[:60]}'"
+
+EXPECTED: Only 1 capture per unique user message (not 4)

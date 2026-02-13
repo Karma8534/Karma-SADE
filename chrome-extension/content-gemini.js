@@ -5,6 +5,18 @@ console.log('[UAI Memory] Gemini content script loaded');
 
 let lastProcessedMessageCount = 0;
 let observerActive = false;
+let capturedTurns = new Set(); // Track captured turn hashes to prevent duplicates
+
+// Simple hash function for deduplication
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash;
+}
 
 // Start observing after page load
 if (document.readyState === 'loading') {
@@ -66,8 +78,12 @@ function scanForNewMessages() {
       // Process new messages
       for (let i = lastProcessedMessageCount; i < messages.length; i++) {
         const turn = messages[i];
+        console.log('[UAI Memory] Processing turn', i + 1, '- has user:', !!turn.user, 'has assistant:', !!turn.assistant);
         if (turn.user && turn.assistant) {
+          console.log('[UAI Memory] Capturing turn', i + 1);
           captureConversationTurn(turn);
+        } else {
+          console.log('[UAI Memory] Skipping incomplete turn', i + 1);
         }
       }
 
@@ -81,30 +97,112 @@ function scanForNewMessages() {
 function extractMessages() {
   const turns = [];
 
-  // Gemini uses message-content with data-test-id or similar
-  // Try multiple selectors
-  const userMessages = document.querySelectorAll('[data-test-id*="user"], .user-message, [class*="user-query"]');
-  const assistantMessages = document.querySelectorAll('[data-test-id*="model"], .model-response, [class*="model-response"]');
+  // Gemini DOM structure scan - try multiple approaches
+  console.log('[UAI Memory] Starting message extraction...');
 
-  // Match them pairwise
-  const maxPairs = Math.min(userMessages.length, assistantMessages.length);
+  // Get all potential message containers
+  const allDivs = Array.from(document.querySelectorAll('div')).filter(div => {
+    const text = div.innerText?.trim() || '';
+    const textLen = text.length;
 
-  for (let i = 0; i < maxPairs; i++) {
-    const userText = userMessages[i].innerText.trim();
-    const assistantText = assistantMessages[i].innerText.trim();
+    // Must have text content
+    if (textLen < 10) return false;
 
-    if (userText && assistantText) {
-      turns.push({
-        user: userText,
-        assistant: assistantText
-      });
+    // Check if it's a leaf message container (not too many children)
+    const directChildren = Array.from(div.children);
+    const divChildren = directChildren.filter(c => c.tagName === 'DIV');
+
+    // Should have some structure but not be a massive container
+    return textLen > 10 && textLen < 50000 && divChildren.length < 15;
+  });
+
+  console.log('[UAI Memory] Scanning', allDivs.length, 'divs for messages');
+
+  // Identify messages by attributes and structure
+  const messages = [];
+
+  allDivs.forEach((div, idx) => {
+    const text = div.innerText.trim();
+    const dataset = div.dataset || {};
+    const classes = div.className || '';
+    const attributes = {};
+
+    // Collect all data-* attributes
+    for (let attr of div.attributes) {
+      if (attr.name.startsWith('data-')) {
+        attributes[attr.name] = attr.value;
+      }
     }
+
+    let type = null;
+
+    // Check for Gemini-specific markers
+    // Gemini uses different structures - try to detect patterns
+    if (classes.includes('user') || dataset.role === 'user' || attributes['data-message-author'] === 'user') {
+      type = 'user';
+    } else if (classes.includes('model') || classes.includes('assistant') || dataset.role === 'model' || attributes['data-message-author'] === 'model') {
+      type = 'assistant';
+    }
+
+    // Fallback: Check parent elements for indicators
+    if (!type && text.length > 20) {
+      let parent = div.parentElement;
+      for (let i = 0; i < 3 && parent; i++) {
+        const parentClasses = parent.className || '';
+        const parentDataset = parent.dataset || {};
+
+        if (parentClasses.includes('user') || parentDataset.role === 'user') {
+          type = 'user';
+          break;
+        } else if (parentClasses.includes('model') || parentClasses.includes('assistant') || parentDataset.role === 'model') {
+          type = 'assistant';
+          break;
+        }
+
+        parent = parent.parentElement;
+      }
+    }
+
+    if (type) {
+      messages.push({ type, text, idx });
+      console.log(`[UAI Memory] Message ${messages.length}: ${type} (${text.substring(0, 50)}...)`);
+    }
+  });
+
+  console.log('[UAI Memory] Identified', messages.length, 'typed messages');
+
+  // Pair them up
+  let currentTurn = { user: null, assistant: null };
+
+  messages.forEach(msg => {
+    if (msg.type === 'user') {
+      if (currentTurn.user && currentTurn.assistant) {
+        turns.push({...currentTurn});
+      }
+      currentTurn = { user: msg.text, assistant: null };
+    } else if (msg.type === 'assistant' && currentTurn.user) {
+      currentTurn.assistant = msg.text;
+    }
+  });
+
+  if (currentTurn.user && currentTurn.assistant) {
+    turns.push(currentTurn);
   }
+
+  console.log('[UAI Memory] Extracted', turns.length, 'complete turns');
 
   return turns;
 }
 
 function captureConversationTurn(turn) {
+  // Create a hash of user message to detect duplicates
+  const turnHash = hashString(turn.user.substring(0, 100));
+
+  if (capturedTurns.has(turnHash)) {
+    console.log('[UAI Memory] Skipping duplicate turn (already captured)');
+    return;
+  }
+
   // Extract thread ID from URL (Gemini format varies)
   const urlMatch = window.location.pathname.match(/\/app\/([a-f0-9-]+)/) ||
                    window.location.search.match(/[?&]thread=([a-f0-9-]+)/);
@@ -141,6 +239,8 @@ function captureConversationTurn(turn) {
 
     if (response.success) {
       console.log('[UAI Memory] Turn captured successfully');
+      // Mark this turn as captured to prevent duplicates
+      capturedTurns.add(turnHash);
     } else {
       console.error('[UAI Memory] Capture failed:', response.error);
     }
