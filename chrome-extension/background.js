@@ -18,6 +18,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return true;
   }
+
+  if (message.type === 'RESET_STATS') {
+    chrome.storage.local.set({ stats: { captured: 0, failed: 0 } }, () => {
+      console.log('[UAI Memory] Stats reset');
+      sendResponse({ success: true });
+    });
+    return true;
+  }
 });
 
 // Handle conversation capture and send to Hub
@@ -90,6 +98,15 @@ async function updateStats(type) {
   currentStats[type] = (currentStats[type] || 0) + 1;
   await chrome.storage.local.set({ stats: currentStats });
 }
+
+// Keep-alive: MV3 service workers die after 30s of inactivity.
+// A periodic alarm wakes it back up so content script messages always have a listener.
+chrome.alarms.create('keepalive', { periodInMinutes: 0.4 });
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'keepalive') {
+    // no-op — just waking up the service worker
+  }
+});
 
 // Installation handler
 chrome.runtime.onInstalled.addListener((details) => {
