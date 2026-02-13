@@ -37,6 +37,15 @@
       ],
       "js": ["content-gemini.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://claude.ai/*",
+        "https://chatgpt.com/*",
+        "https://gemini.google.com/*"
+      ],
+      "js": ["content-context.js"],
+      "run_at": "document_idle"
     }
   ],
   "action": {

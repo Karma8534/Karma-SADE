@@ -75,3 +75,45 @@ function showStatus(message, type) {
     statusEl.className = 'status';
   }, 3000);
 }
+
+// Context injection button handler
+const injectBtn = document.getElementById('inject-context-btn');
+const queryInput = document.getElementById('context-query');
+
+if (injectBtn && queryInput) {
+  injectBtn.addEventListener('click', async () => {
+    const query = queryInput.value.trim();
+
+    if (!query) {
+      showStatus('Enter a search query first', 'error');
+      return;
+    }
+
+    injectBtn.disabled = true;
+    injectBtn.textContent = 'Searching...';
+
+    // Send message to active tab's content script
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    chrome.tabs.sendMessage(tab.id, {
+      type: 'INJECT_CONTEXT',
+      query: query,
+      limit: 3
+    }, (response) => {
+      injectBtn.disabled = false;
+      injectBtn.textContent = 'Inject Context';
+
+      if (chrome.runtime.lastError) {
+        showStatus('Failed: ' + chrome.runtime.lastError.message, 'error');
+        return;
+      }
+
+      if (response && response.success) {
+        showStatus(`Injected ${response.count} contexts`, 'success');
+        queryInput.value = '';
+      } else {
+        showStatus(response?.error || 'Injection failed', 'error');
+      }
+    });
+  });
+}
