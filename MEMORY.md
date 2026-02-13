@@ -15,14 +15,12 @@ Phase 4: Context Injection — Testing
 | 7 | 📋 Not started | Full autonomous agent |
 
 ## Current Task
-Debug Chrome extension content scripts — MutationObserver detects message candidates
-but message typing logic fails to classify them as user/assistant. Extension popup
-shows 0 captured / 0 failed. Backend is proven (test captures exist in ledger).
-Root cause: CSS selectors in content-claude.js don't match current claude.ai DOM structure.
+Phase 1 capture pipeline operational — all 3 content scripts updated, CORS fixed,
+keep-alive added. 25+ captures verified. Next: accumulate to 100 captures across
+all 3 platforms, then begin Phase 2.
 
 ## Blockers
-- content-claude.js selectors need updating to match current claude.ai frontend DOM
-- Same likely true for content-openai.js and content-gemini.js
+None
 
 ## Infrastructure
 - Server: arknexus.net (vault-neo), Docker running, ledger operational
@@ -30,4 +28,4 @@ Root cause: CSS selectors in content-claude.js don't match current claude.ai DOM
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 
 ## Last Updated
-2026-02-13 — Session: CLAUDE.md optimization and GitHub MCP setup
+2026-02-13 — Session: Fixed content scripts, CORS, keep-alive, RESET_STATS
