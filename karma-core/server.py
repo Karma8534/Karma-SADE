@@ -561,16 +561,30 @@ app = FastAPI(title="Karma Chat Server", version="0.1.0")
 active_conversations: dict[str, ConversationManager] = {}
 
 
+_POLICY_STYLE = '<style>body{font-family:system-ui,sans-serif;max-width:600px;margin:2rem auto;padding:0 1rem;color:#e0e0e0;background:#1a1a2e}h1{color:#fff}p{line-height:1.6}</style>'
+
+
 @app.get("/privacy", response_class=HTMLResponse)
 async def privacy():
     """Privacy policy for Twilio SMS compliance."""
-    return """<!DOCTYPE html>
+    return f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Karma AI — Privacy Policy</title>
-<style>body{font-family:system-ui,sans-serif;max-width:600px;margin:2rem auto;padding:0 1rem;color:#e0e0e0;background:#1a1a2e}h1{color:#fff}p{line-height:1.6}</style>
+<title>Karma AI — Privacy Policy</title>{_POLICY_STYLE}
 </head><body>
 <h1>Karma AI Privacy Policy</h1>
 <p>Your SMS messages are processed by your personal AI assistant. No data is shared with third parties. Messages are stored locally on your private server. You can opt-out anytime by texting STOP.</p>
+</body></html>"""
+
+
+@app.get("/terms", response_class=HTMLResponse)
+async def terms():
+    """Terms of service for Twilio SMS compliance."""
+    return f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Karma AI — Terms of Service</title>{_POLICY_STYLE}
+</head><body>
+<h1>Karma AI Terms of Service</h1>
+<p>This is a personal AI assistant service. Standard SMS rates apply. Service provided as-is. You retain all rights to your data. Text STOP to cancel anytime.</p>
 </body></html>"""
 
 
