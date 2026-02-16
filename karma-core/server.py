@@ -14,7 +14,7 @@ from typing import Optional
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, Response, HTMLResponse
 import uvicorn
 
 import config
@@ -559,6 +559,19 @@ app = FastAPI(title="Karma Chat Server", version="0.1.0")
 
 # Active conversations (one per WebSocket)
 active_conversations: dict[str, ConversationManager] = {}
+
+
+@app.get("/privacy", response_class=HTMLResponse)
+async def privacy():
+    """Privacy policy for Twilio SMS compliance."""
+    return """<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Karma AI — Privacy Policy</title>
+<style>body{font-family:system-ui,sans-serif;max-width:600px;margin:2rem auto;padding:0 1rem;color:#e0e0e0;background:#1a1a2e}h1{color:#fff}p{line-height:1.6}</style>
+</head><body>
+<h1>Karma AI Privacy Policy</h1>
+<p>Your SMS messages are processed by your personal AI assistant. No data is shared with third parties. Messages are stored locally on your private server. You can opt-out anytime by texting STOP.</p>
+</body></html>"""
 
 
 @app.get("/health")
