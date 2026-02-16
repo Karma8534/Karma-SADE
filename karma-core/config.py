@@ -21,9 +21,22 @@ DATABASE_URL = os.getenv(
     f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 )
 
-# LLM for analysis (OpenAI gpt-4o-mini)
+# LLM — OpenAI (default fallback + consciousness analysis)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 ANALYSIS_MODEL = os.getenv("ANALYSIS_MODEL", "gpt-4o-mini")
+
+# LLM — Groq (speed: Llama on custom silicon, ~100ms responses)
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+
+# LLM — MiniMax M2.5 (coding: 80.2% SWE-Bench, OpenAI-compatible)
+MINIMAX_API_KEY = os.getenv("MINIMAX_API_KEY", "")
+MINIMAX_MODEL = os.getenv("MINIMAX_MODEL", "MiniMax-M2.5")
+
+# LLM — GLM-5 (reasoning: deep analysis, complex problem-solving)
+GLM_API_KEY = os.getenv("GLM_API_KEY", "")
+GLM_MODEL = os.getenv("GLM_MODEL", "glm-5")
+GLM_BASE_URL = os.getenv("GLM_BASE_URL", "https://open.bigmodel.cn/api/paas/v4/")
 
 # Ledger path (mounted read-only from host)
 LEDGER_PATH = os.getenv("LEDGER_PATH", "/ledger/memory.jsonl")

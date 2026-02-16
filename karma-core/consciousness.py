@@ -32,12 +32,13 @@ class ConsciousnessLoop:
     """Karma's background awareness — observes, thinks, decides, acts, reflects."""
 
     def __init__(self, get_falkor_fn, get_graph_stats_fn, get_openai_client_fn,
-                 active_conversations_ref: dict):
+                 active_conversations_ref: dict, router=None):
         # Injected dependencies from server.py (no circular imports)
         self._get_falkor = get_falkor_fn
         self._get_graph_stats = get_graph_stats_fn
         self._get_openai_client = get_openai_client_fn
         self._active_conversations = active_conversations_ref
+        self._router = router  # Optional: use model router for THINK phase
 
         # State
         self._running = False
@@ -246,14 +247,27 @@ Rules:
 - Empty lists are fine — don't force patterns that aren't there"""
 
         try:
-            client = self._get_openai_client()
-            response = client.chat.completions.create(
-                model=config.ANALYSIS_MODEL,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=200,
-                temperature=0.3,
-            )
-            raw = response.choices[0].message.content.strip()
+            messages = [{"role": "user", "content": prompt}]
+
+            # Use router if available (routes to analysis model), else direct client
+            if self._router:
+                from router import TaskType
+                raw, model = self._router.complete(
+                    messages=messages,
+                    task_type=TaskType.ANALYSIS,
+                    max_tokens=200,
+                    temperature=0.3,
+                )
+            else:
+                client = self._get_openai_client()
+                response = client.chat.completions.create(
+                    model=config.ANALYSIS_MODEL,
+                    messages=messages,
+                    max_tokens=200,
+                    temperature=0.3,
+                )
+                raw = response.choices[0].message.content.strip()
+
             # Strip markdown fences if the model wraps anyway
             if raw.startswith("```"):
                 raw = raw.split("\n", 1)[-1].rsplit("```", 1)[0].strip()

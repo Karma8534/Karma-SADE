@@ -435,8 +435,11 @@ class ConversationManager:
 
 # ─── Chat Engine ──────────────────────────────────────────────────────────
 
-async def generate_response(user_message: str, conversation: ConversationManager) -> str:
-    """Generate Karma's response using knowledge graph context + LLM."""
+async def generate_response(user_message: str, conversation: ConversationManager) -> tuple[str, str]:
+    """Generate Karma's response using knowledge graph context + routed LLM.
+    Returns (reply_text, model_used)."""
+    from router import classify_task
+
     # Build context from knowledge graph
     context = build_karma_context(user_message)
     system_prompt = KARMA_SYSTEM_PROMPT.format(context=context)
@@ -444,28 +447,40 @@ async def generate_response(user_message: str, conversation: ConversationManager
     # Add user message to history
     conversation.add_message("user", user_message)
 
-    # Generate response
-    client = get_openai_client()
+    # Classify and route
+    task_type = classify_task(user_message)
+
     try:
         messages = conversation.get_openai_messages(system_prompt)
-        response = client.chat.completions.create(
-            model=config.ANALYSIS_MODEL,
-            messages=messages,
-            max_tokens=1024,
-            temperature=0.7,
-        )
-        reply = response.choices[0].message.content
+
+        # Use router if available, else fall back to direct OpenAI
+        if hasattr(app.state, "router") and app.state.router:
+            reply, model_used = app.state.router.complete(
+                messages=messages,
+                task_type=task_type,
+            )
+        else:
+            client = get_openai_client()
+            response = client.chat.completions.create(
+                model=config.ANALYSIS_MODEL,
+                messages=messages,
+                max_tokens=1024,
+                temperature=0.7,
+            )
+            reply = response.choices[0].message.content
+            model_used = f"openai/{config.ANALYSIS_MODEL}"
+
         conversation.add_message("assistant", reply)
-        return reply
+        return reply, model_used
     except Exception as e:
         error_msg = f"[Error generating response: {e}]"
         conversation.add_message("assistant", error_msg)
-        return error_msg
+        return error_msg, "error"
 
 
 # ─── Log Conversations to Ledger ──────────────────────────────────────────
 
-def log_to_ledger(user_msg: str, assistant_msg: str):
+def log_to_ledger(user_msg: str, assistant_msg: str, model_used: str = "unknown"):
     """Append conversation to the JSONL ledger for future learning."""
     try:
         entry = {
@@ -478,7 +493,7 @@ def log_to_ledger(user_msg: str, assistant_msg: str):
                 "thread_id": "karma-terminal-session",
                 "user_message": user_msg,
                 "assistant_message": assistant_msg,
-                "metadata": {"interface": "terminal"},
+                "metadata": {"interface": "terminal", "model": model_used},
                 "captured_at": datetime.now(timezone.utc).isoformat(),
             },
             "source": {"kind": "tool", "ref": "karma-terminal-chat"},
@@ -537,6 +552,14 @@ async def status():
     else:
         consciousness_data = {"state": "disabled"}
 
+    # Model routing stats
+    routing_data = {}
+    if hasattr(app.state, "router") and app.state.router:
+        routing_data = {
+            "models": app.state.router.get_model_info(),
+            "stats": app.state.router.get_stats(),
+        }
+
     return JSONResponse({
         "karma": {
             "state": "awake",
@@ -544,6 +567,7 @@ async def status():
             "uptime_seconds": int(time.time() - app.state.start_time) if hasattr(app.state, "start_time") else 0,
         },
         "consciousness": consciousness_data,
+        "routing": routing_data,
         "knowledge_graph": graph_stats,
         "preferences": {
             "total": len(prefs),
@@ -561,8 +585,8 @@ async def ask(q: str):
         return JSONResponse({"error": "Empty question"}, status_code=400)
 
     conversation = ConversationManager(max_history=2)
-    reply = await generate_response(q, conversation)
-    log_to_ledger(q, reply)
+    reply, model_used = await generate_response(q, conversation)
+    log_to_ledger(q, reply, model_used=model_used)
 
     # Ingest into knowledge graph in background — but only for substantive messages
     # Skip single questions that are just queries (they don't contain new knowledge)
@@ -571,7 +595,7 @@ async def ask(q: str):
     if not is_query:
         asyncio.create_task(ingest_episode(q, reply, "karma-terminal-ask"))
 
-    return JSONResponse({"question": q, "answer": reply})
+    return JSONResponse({"question": q, "answer": reply, "model": model_used})
 
 
 @app.websocket("/chat")
@@ -615,14 +639,18 @@ async def websocket_chat(ws: WebSocket):
             # Send thinking indicator
             await ws.send_json({"type": "thinking", "message": ""})
 
-            # Generate response
-            reply = await generate_response(user_message, conversation)
+            # Generate response (routed to best model)
+            reply, model_used = await generate_response(user_message, conversation)
 
             # Log to ledger
-            log_to_ledger(user_message, reply)
+            log_to_ledger(user_message, reply, model_used=model_used)
 
-            # Send response immediately — don't wait for graph update
-            await ws.send_json({"type": "response", "message": reply})
+            # Send response with model attribution
+            await ws.send_json({
+                "type": "response",
+                "message": reply,
+                "model": model_used,
+            })
 
             # Ingest into knowledge graph in background (non-blocking)
             asyncio.create_task(ingest_episode(user_message, reply, "karma-terminal"))
@@ -692,6 +720,22 @@ def handle_command(command: str) -> str:
             lines.append(f"  {r['source']} --[{r['relationship']}]--> {r['target']}")
         return "\n".join(lines)
 
+    elif cmd == "models" or cmd == "routing":
+        if hasattr(app.state, "router") and app.state.router:
+            lines = ["Model Router:"]
+            for p in app.state.router.get_model_info():
+                status = "ON" if p["enabled"] else "OFF"
+                tasks = ", ".join(p["task_types"])
+                lines.append(f"  [{status}] {p['name']}/{p['model']} → {tasks}")
+            stats = app.state.router.get_stats()
+            if stats:
+                lines.append("")
+                lines.append("  Usage Stats:")
+                for name, s in stats.items():
+                    lines.append(f"    {name}: {s['calls']} calls, avg {s['avg_ms']}ms, {s['errors']} errors")
+            return "\n".join(lines)
+        return "Model router not initialized."
+
     elif cmd == "consciousness" or cmd == "conscious":
         if hasattr(app.state, "consciousness") and app.state.consciousness:
             cm = app.state.consciousness.get_metrics()
@@ -711,7 +755,7 @@ def handle_command(command: str) -> str:
 
     else:
         return (
-            "Commands: status, goals, graph, reflect, consciousness, know <topic>, rel <entity>\n"
+            "Commands: status, goals, graph, reflect, consciousness, models, know <topic>, rel <entity>\n"
             "Or just chat naturally."
         )
 
@@ -811,6 +855,12 @@ async def startup():
     else:
         print("  Graphiti: FAILED (knowledge graph updates disabled)")
 
+    # Initialize model router (multi-model intelligence)
+    from router import ModelRouter
+    app.state.router = ModelRouter()
+    registered = [p.name for p in app.state.router.providers]
+    print(f"  Router: {len(registered)} models ({', '.join(registered) or 'none'})")
+
     # Start consciousness loop
     if config.CONSCIOUSNESS_ENABLED:
         from consciousness import ConsciousnessLoop
@@ -819,6 +869,7 @@ async def startup():
             get_graph_stats_fn=get_graph_stats,
             get_openai_client_fn=get_openai_client,
             active_conversations_ref=active_conversations,
+            router=app.state.router,
         )
         app.state.consciousness.start()
         print(f"  Consciousness: ACTIVE (every {config.CONSCIOUSNESS_INTERVAL}s)")
