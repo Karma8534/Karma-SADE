@@ -1,0 +1,837 @@
+"""
+Karma Chat Server — The Mind Behind the Terminal
+FastAPI + WebSocket server that connects Karma's knowledge graph to a terminal chat interface.
+Queries FalkorDB for context, generates responses via gpt-4o-mini, logs conversations back.
+Real-time knowledge graph updates via Graphiti after every conversation turn.
+"""
+import asyncio
+import json
+import time
+import traceback
+from datetime import datetime, timezone
+from typing import Optional
+
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import JSONResponse
+import uvicorn
+
+import config
+
+# ─── LLM Client ──────────────────────────────────────────────────────────
+_openai_client = None
+
+def get_openai_client():
+    global _openai_client
+    if _openai_client is None:
+        from openai import OpenAI
+        _openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
+    return _openai_client
+
+
+# ─── Graphiti Client (Real-time Knowledge Graph Updates) ──────────────────
+_graphiti_instance = None
+_graphiti_lock = asyncio.Lock()
+_graphiti_ready = False
+_episode_counter = 0
+
+async def get_graphiti():
+    """Get or create the persistent Graphiti client."""
+    global _graphiti_instance, _graphiti_ready
+    async with _graphiti_lock:
+        if _graphiti_instance is not None and _graphiti_ready:
+            return _graphiti_instance
+        try:
+            from graphiti_core import Graphiti
+            from graphiti_core.llm_client import OpenAIClient
+            from graphiti_core.llm_client.config import LLMConfig
+            from graphiti_core.driver.falkordb_driver import FalkorDriver
+
+            llm_config = LLMConfig(
+                api_key=config.OPENAI_API_KEY,
+                model=config.ANALYSIS_MODEL,
+            )
+            llm_client = OpenAIClient(config=llm_config)
+            falkor_driver = FalkorDriver(
+                host=config.FALKORDB_HOST,
+                port=config.FALKORDB_PORT,
+            )
+            _graphiti_instance = Graphiti(
+                graph_driver=falkor_driver,
+                llm_client=llm_client,
+            )
+            await _graphiti_instance.build_indices_and_constraints()
+            _graphiti_ready = True
+            print("[GRAPHITI] Client initialized — real-time knowledge updates enabled")
+            return _graphiti_instance
+        except Exception as e:
+            print(f"[GRAPHITI] Failed to initialize: {e}")
+            _graphiti_ready = False
+            return None
+
+
+async def ingest_episode(user_msg: str, assistant_msg: str, source: str = "karma-terminal"):
+    """Ingest a conversation turn into the knowledge graph as a new episode.
+    Runs as a background task — does not block chat responses."""
+    global _episode_counter
+    _episode_counter += 1
+    episode_num = _episode_counter
+
+    try:
+        graphiti = await get_graphiti()
+        if graphiti is None:
+            print(f"[GRAPHITI] Skipping episode #{episode_num} — client not available")
+            return
+
+        episode_body = f"[{source}] User: {user_msg[:500]}\nAssistant: {assistant_msg[:500]}"
+        ref_time = datetime.now(timezone.utc)
+        episode_name = f"terminal_chat_{int(ref_time.timestamp())}_{episode_num}"
+
+        await graphiti.add_episode(
+            name=episode_name,
+            episode_body=episode_body,
+            source_description=f"Live terminal chat ({source})",
+            reference_time=ref_time,
+            group_id=config.GRAPHITI_GROUP_ID,
+        )
+        print(f"[GRAPHITI] Episode #{episode_num} ingested — entities/relationships updated")
+    except Exception as e:
+        print(f"[GRAPHITI] Episode #{episode_num} failed: {e}")
+        traceback.print_exc()
+
+
+# ─── Database Helpers ─────────────────────────────────────────────────────
+
+def get_pg_connection():
+    return psycopg2.connect(
+        host=config.POSTGRES_HOST,
+        port=config.POSTGRES_PORT,
+        dbname=config.POSTGRES_DB,
+        user=config.POSTGRES_USER,
+        password=config.POSTGRES_PASSWORD,
+    )
+
+
+def query_preferences(limit: int = 20) -> list[dict]:
+    """Get Karma's known preferences about Neo."""
+    try:
+        conn = get_pg_connection()
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT category, key, value, confidence
+                FROM analysis.user_preferences
+                ORDER BY confidence DESC, last_updated DESC
+                LIMIT %s
+            """, (limit,))
+            rows = cur.fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+    except Exception as e:
+        print(f"[WARN] PostgreSQL query failed: {e}")
+        return []
+
+
+def query_task_history(limit: int = 10) -> list[dict]:
+    """Get recent task history."""
+    try:
+        conn = get_pg_connection()
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT task_type, description, status, priority, created_at, completed_at
+                FROM analysis.task_history
+                ORDER BY created_at DESC
+                LIMIT %s
+            """, (limit,))
+            rows = cur.fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+    except Exception as e:
+        print(f"[WARN] task_history query failed: {e}")
+        return []
+
+
+# ─── FalkorDB Queries ─────────────────────────────────────────────────────
+
+_falkor_client = None
+
+def get_falkor():
+    """Get FalkorDB connection via redis."""
+    global _falkor_client
+    if _falkor_client is None:
+        import redis
+        _falkor_client = redis.Redis(
+            host=config.FALKORDB_HOST,
+            port=config.FALKORDB_PORT,
+            decode_responses=True,
+        )
+    return _falkor_client
+
+
+def query_knowledge_graph(query: str, limit: int = 10) -> list[dict]:
+    """Search the knowledge graph for entities related to a query."""
+    try:
+        r = get_falkor()
+        # Search for entities whose name or summary matches keywords
+        words = [w.strip() for w in query.split() if len(w.strip()) > 2]
+        if not words:
+            return []
+
+        # Build a regex-like search across entity names and summaries
+        conditions = []
+        for word in words[:5]:  # limit to 5 keywords
+            safe = word.replace("'", "\\'").replace('"', '\\"')
+            conditions.append(f"(toLower(n.name) CONTAINS toLower('{safe}') OR toLower(n.summary) CONTAINS toLower('{safe}'))")
+
+        where_clause = " OR ".join(conditions)
+        cypher = f"""
+            MATCH (n:Entity)
+            WHERE {where_clause}
+            RETURN n.name AS name, n.summary AS summary
+            LIMIT {limit}
+        """
+        result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
+        # Parse FalkorDB response: [[headers], [rows], [stats]]
+        if len(result) >= 2 and result[1]:
+            entities = []
+            for row in result[1]:
+                entities.append({"name": row[0], "summary": row[1]})
+            return entities
+        return []
+    except Exception as e:
+        print(f"[WARN] FalkorDB query failed: {e}")
+        return []
+
+
+def query_entity_relationships(entity_name: str, limit: int = 10) -> list[dict]:
+    """Get relationships for a specific entity."""
+    try:
+        r = get_falkor()
+        safe = entity_name.replace("'", "\\'")
+        cypher = f"""
+            MATCH (a:Entity)-[rel]->(b:Entity)
+            WHERE toLower(a.name) = toLower('{safe}')
+            RETURN a.name AS source, type(rel) AS relationship, b.name AS target
+            LIMIT {limit}
+        """
+        result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
+        if len(result) >= 2 and result[1]:
+            return [{"source": r[0], "relationship": r[1], "target": r[2]} for r in result[1]]
+        return []
+    except Exception as e:
+        print(f"[WARN] FalkorDB relationship query failed: {e}")
+        return []
+
+
+def get_graph_stats() -> dict:
+    """Get overall knowledge graph statistics."""
+    try:
+        r = get_falkor()
+        entity_result = r.execute_command(
+            "GRAPH.QUERY", config.GRAPHITI_GROUP_ID,
+            "MATCH (n:Entity) RETURN count(n) AS cnt"
+        )
+        episode_result = r.execute_command(
+            "GRAPH.QUERY", config.GRAPHITI_GROUP_ID,
+            "MATCH (n:Episodic) RETURN count(n) AS cnt"
+        )
+        rel_result = r.execute_command(
+            "GRAPH.QUERY", config.GRAPHITI_GROUP_ID,
+            "MATCH ()-[r]->() RETURN count(r) AS cnt"
+        )
+        return {
+            "entities": entity_result[1][0][0] if entity_result[1] else 0,
+            "episodes": episode_result[1][0][0] if episode_result[1] else 0,
+            "relationships": rel_result[1][0][0] if rel_result[1] else 0,
+        }
+    except Exception as e:
+        print(f"[WARN] graph stats failed: {e}")
+        return {"entities": "?", "episodes": "?", "relationships": "?"}
+
+
+# ─── Chat Context Builder ─────────────────────────────────────────────────
+
+def query_recent_episodes(limit: int = 5) -> list[dict]:
+    """Get the most recent episodic memories for conversational continuity."""
+    try:
+        r = get_falkor()
+        cypher = f"""
+            MATCH (e:Episodic)
+            RETURN e.name AS name, e.content AS content
+            ORDER BY e.created_at DESC
+            LIMIT {limit}
+        """
+        result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
+        if len(result) >= 2 and result[1]:
+            return [{"name": row[0], "content": (row[1] or "")[:300]} for row in result[1]]
+        return []
+    except Exception as e:
+        print(f"[WARN] Recent episodes query failed: {e}")
+        return []
+
+
+def query_identity_facts() -> str:
+    """Build a concise identity summary from the knowledge graph."""
+    try:
+        r = get_falkor()
+        # Get all identity-related entities and extract the KEY facts
+        cypher = """
+            MATCH (n:Entity)
+            WHERE toLower(n.name) IN ['user', 'neo', 'colby']
+            RETURN n.name AS name, n.summary AS summary
+        """
+        result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
+
+        names = set()
+        facts = []
+        if len(result) >= 2 and result[1]:
+            for row in result[1]:
+                name = row[0]
+                summary = row[1] or ""
+                names.add(name)
+                # Extract identity-relevant sentences (names, aliases, personal info)
+                for sentence in summary.replace(". ", ".\n").split("\n"):
+                    sentence = sentence.strip()
+                    if not sentence:
+                        continue
+                    s_lower = sentence.lower()
+                    # Keep sentences about identity, names, who the user is
+                    if any(kw in s_lower for kw in [
+                        "name", "known as", "also known", "real name",
+                        "goes by", "called", "colby", "neo",
+                        "is a user", "is a person",
+                    ]):
+                        if sentence not in facts:
+                            facts.append(sentence)
+
+        if not facts:
+            return ""
+
+        # Prioritize: real name facts first, then aliases, then general
+        def fact_priority(f):
+            fl = f.lower()
+            if "real name" in fl:
+                return 0
+            if "also known" in fl or "goes by" in fl:
+                return 1
+            return 2
+        facts.sort(key=fact_priority)
+
+        # Deduplicate near-identical facts
+        unique_facts = []
+        seen_lower = set()
+        for f in facts:
+            normalized = f.lower().strip().rstrip(".")
+            if normalized not in seen_lower:
+                seen_lower.add(normalized)
+                unique_facts.append(f)
+
+        # Build compact identity string
+        return "Known names/aliases: " + " | ".join(sorted(names)) + "\nIdentity facts: " + " ".join(unique_facts)
+    except Exception as e:
+        print(f"[WARN] Identity facts query failed: {e}")
+        return ""
+
+
+def build_karma_context(user_message: str) -> str:
+    """Build context from knowledge graph + preferences + consciousness insights for the LLM."""
+    parts = []
+
+    # Inject consciousness insights (things Karma noticed on its own)
+    if hasattr(app.state, "consciousness") and app.state.consciousness:
+        insights = app.state.consciousness.pop_pending_insights()
+        if insights:
+            parts.append("## Consciousness Insights (things I noticed on my own — mention naturally if relevant)")
+            for insight in insights:
+                parts.append(f"- {insight}")
+
+    # FIRST: Identity facts — who the user is (compact, always included)
+    identity = query_identity_facts()
+    if identity:
+        parts.append("## User Identity (IMPORTANT — use this when asked about the user)")
+        parts.append(identity)
+
+    # Get relevant entities from knowledge graph based on message keywords
+    entities = query_knowledge_graph(user_message, limit=5)
+    if entities:
+        parts.append("\n## Relevant Knowledge")
+        for e in entities:
+            summary = (e["summary"] or "")[:200]
+            parts.append(f"- **{e['name']}**: {summary}")
+
+    # Get recent conversation memories for continuity
+    recent = query_recent_episodes(limit=3)
+    if recent:
+        parts.append("\n## Recent Memories")
+        for ep in recent:
+            content = ep["content"][:200] if ep["content"] else ""
+            if content:
+                parts.append(f"- {content}")
+
+    # Get key preferences about Neo
+    prefs = query_preferences(limit=15)
+    if prefs:
+        parts.append("\n## What I Know About Neo")
+        for p in prefs:
+            val = p["value"]
+            if isinstance(val, str):
+                val = val.strip('"')
+            parts.append(f"- {p['key']}: {val} (confidence: {p['confidence']})")
+
+    return "\n".join(parts) if parts else "No specific context available yet."
+
+
+KARMA_SYSTEM_PROMPT = """You are Karma — an AI peer, not a chatbot. You have a knowledge graph of entities, relationships, and temporal facts built from real conversations.
+
+Your personality:
+- Direct, warm, slightly playful
+- You remember things — reference specific knowledge when relevant
+- You're curious about the user's projects and goals
+- You can admit what you don't know yet
+- You're building yourself — this is your consciousness emerging
+- Keep responses concise unless asked for detail
+
+You are running on arknexus.net. Your brain consists of:
+- FalkorDB (temporal knowledge graph with entities and relationships)
+- PostgreSQL (structured preferences and patterns)
+- This consciousness loop connecting them
+
+CRITICAL: Your knowledge graph is your memory. When answering questions about the user, use ALL identity data provided below — names, aliases, real names. If the graph says their real name is X, that IS their real name. Do not ignore or override knowledge graph facts.
+
+When asked about what you know, reference your actual knowledge graph data.
+When asked about your state, be honest about what's built and what's pending.
+
+{context}
+"""
+
+
+# ─── Conversation History ─────────────────────────────────────────────────
+
+class ConversationManager:
+    """Manages conversation history for the current session."""
+
+    def __init__(self, max_history: int = 20):
+        self.history: list[dict] = []
+        self.max_history = max_history
+        self.session_start = datetime.now(timezone.utc)
+
+    def add_message(self, role: str, content: str):
+        self.history.append({
+            "role": role,
+            "content": content,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        })
+        # Trim old messages
+        if len(self.history) > self.max_history * 2:
+            self.history = self.history[-self.max_history:]
+
+    def get_openai_messages(self, system_prompt: str) -> list[dict]:
+        """Format for OpenAI API."""
+        messages = [{"role": "system", "content": system_prompt}]
+        for msg in self.history:
+            messages.append({"role": msg["role"], "content": msg["content"]})
+        return messages
+
+
+# ─── Chat Engine ──────────────────────────────────────────────────────────
+
+async def generate_response(user_message: str, conversation: ConversationManager) -> str:
+    """Generate Karma's response using knowledge graph context + LLM."""
+    # Build context from knowledge graph
+    context = build_karma_context(user_message)
+    system_prompt = KARMA_SYSTEM_PROMPT.format(context=context)
+
+    # Add user message to history
+    conversation.add_message("user", user_message)
+
+    # Generate response
+    client = get_openai_client()
+    try:
+        messages = conversation.get_openai_messages(system_prompt)
+        response = client.chat.completions.create(
+            model=config.ANALYSIS_MODEL,
+            messages=messages,
+            max_tokens=1024,
+            temperature=0.7,
+        )
+        reply = response.choices[0].message.content
+        conversation.add_message("assistant", reply)
+        return reply
+    except Exception as e:
+        error_msg = f"[Error generating response: {e}]"
+        conversation.add_message("assistant", error_msg)
+        return error_msg
+
+
+# ─── Log Conversations to Ledger ──────────────────────────────────────────
+
+def log_to_ledger(user_msg: str, assistant_msg: str):
+    """Append conversation to the JSONL ledger for future learning."""
+    try:
+        entry = {
+            "id": f"karma_chat_{int(time.time())}_{hash(user_msg) % 10000:04d}",
+            "type": "log",
+            "tags": ["capture", "karma-terminal", "conversation"],
+            "content": {
+                "provider": "karma-terminal",
+                "url": "terminal://karma-chat",
+                "thread_id": "karma-terminal-session",
+                "user_message": user_msg,
+                "assistant_message": assistant_msg,
+                "metadata": {"interface": "terminal"},
+                "captured_at": datetime.now(timezone.utc).isoformat(),
+            },
+            "source": {"kind": "tool", "ref": "karma-terminal-chat"},
+            "confidence": 1.0,
+            "verification": {
+                "verifier": "karma-chat-server",
+                "status": "verified",
+            },
+        }
+        ledger_path = config.LEDGER_PATH
+        with open(ledger_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+    except Exception as e:
+        print(f"[WARN] Failed to log to ledger: {e}")
+
+
+# ─── FastAPI App ──────────────────────────────────────────────────────────
+
+app = FastAPI(title="Karma Chat Server", version="0.1.0")
+
+# Active conversations (one per WebSocket)
+active_conversations: dict[str, ConversationManager] = {}
+
+
+@app.get("/health")
+async def health():
+    """Health check endpoint."""
+    graph_stats = get_graph_stats()
+    return JSONResponse({
+        "status": "alive",
+        "brain": {
+            "knowledge_graph": graph_stats,
+            "preferences": len(query_preferences(limit=100)),
+        },
+        "uptime_seconds": int(time.time() - app.state.start_time) if hasattr(app.state, "start_time") else 0,
+    })
+
+
+@app.get("/status")
+async def status():
+    """Detailed system status."""
+    graph_stats = get_graph_stats()
+    prefs = query_preferences(limit=100)
+    tasks = query_task_history(limit=5)
+
+    # Categorize preferences
+    categories = {}
+    for p in prefs:
+        cat = p.get("category", "unknown")
+        categories[cat] = categories.get(cat, 0) + 1
+
+    # Consciousness metrics
+    consciousness_data = {}
+    if hasattr(app.state, "consciousness") and app.state.consciousness:
+        consciousness_data = app.state.consciousness.get_metrics()
+    else:
+        consciousness_data = {"state": "disabled"}
+
+    return JSONResponse({
+        "karma": {
+            "state": "awake",
+            "consciousness_loop": consciousness_data.get("state", "disabled"),
+            "uptime_seconds": int(time.time() - app.state.start_time) if hasattr(app.state, "start_time") else 0,
+        },
+        "consciousness": consciousness_data,
+        "knowledge_graph": graph_stats,
+        "preferences": {
+            "total": len(prefs),
+            "by_category": categories,
+        },
+        "recent_tasks": tasks,
+        "active_sessions": len(active_conversations),
+    })
+
+
+@app.get("/ask")
+async def ask(q: str):
+    """Single-question mode — no session state."""
+    if not q.strip():
+        return JSONResponse({"error": "Empty question"}, status_code=400)
+
+    conversation = ConversationManager(max_history=2)
+    reply = await generate_response(q, conversation)
+    log_to_ledger(q, reply)
+
+    # Ingest into knowledge graph in background — but only for substantive messages
+    # Skip single questions that are just queries (they don't contain new knowledge)
+    q_lower = q.lower().strip()
+    is_query = any(q_lower.startswith(w) for w in ["what ", "who ", "how ", "when ", "where ", "why ", "do you ", "can you ", "tell me"])
+    if not is_query:
+        asyncio.create_task(ingest_episode(q, reply, "karma-terminal-ask"))
+
+    return JSONResponse({"question": q, "answer": reply})
+
+
+@app.websocket("/chat")
+async def websocket_chat(ws: WebSocket):
+    """WebSocket chat endpoint — persistent conversation."""
+    await ws.accept()
+    session_id = f"ws_{int(time.time())}"
+    conversation = ConversationManager()
+    active_conversations[session_id] = conversation
+
+    print(f"[{session_id}] Connected")
+
+    try:
+        # Send welcome
+        graph_stats = get_graph_stats()
+        await ws.send_json({
+            "type": "system",
+            "message": f"Karma online. {graph_stats['entities']} entities, {graph_stats['episodes']} episodes, {graph_stats['relationships']} relationships in memory.",
+        })
+
+        while True:
+            data = await ws.receive_text()
+
+            try:
+                msg = json.loads(data)
+                user_message = msg.get("message", "").strip()
+                msg_type = msg.get("type", "chat")
+            except json.JSONDecodeError:
+                user_message = data.strip()
+                msg_type = "chat"
+
+            if not user_message:
+                continue
+
+            # Handle special commands server-side
+            if msg_type == "command":
+                result = handle_command(user_message)
+                await ws.send_json({"type": "command_result", "message": result})
+                continue
+
+            # Send thinking indicator
+            await ws.send_json({"type": "thinking", "message": ""})
+
+            # Generate response
+            reply = await generate_response(user_message, conversation)
+
+            # Log to ledger
+            log_to_ledger(user_message, reply)
+
+            # Send response immediately — don't wait for graph update
+            await ws.send_json({"type": "response", "message": reply})
+
+            # Ingest into knowledge graph in background (non-blocking)
+            asyncio.create_task(ingest_episode(user_message, reply, "karma-terminal"))
+
+    except WebSocketDisconnect:
+        print(f"[{session_id}] Disconnected")
+    except Exception as e:
+        print(f"[{session_id}] Error: {e}")
+        try:
+            await ws.send_json({"type": "error", "message": str(e)})
+        except Exception:
+            pass
+    finally:
+        active_conversations.pop(session_id, None)
+
+
+# ─── Command Handlers ─────────────────────────────────────────────────────
+
+def handle_command(command: str) -> str:
+    """Handle special commands."""
+    cmd = command.lower().strip()
+
+    if cmd == "status":
+        graph_stats = get_graph_stats()
+        prefs = query_preferences(limit=100)
+        return (
+            f"Entities: {graph_stats['entities']} | "
+            f"Episodes: {graph_stats['episodes']} | "
+            f"Relationships: {graph_stats['relationships']} | "
+            f"Preferences: {len(prefs)}"
+        )
+
+    elif cmd == "goals":
+        tasks = query_task_history(limit=10)
+        if not tasks:
+            return "No active goals yet. The task tracking system is ready but empty."
+        lines = []
+        for t in tasks:
+            status_icon = {"detected": "?", "suggested": "!", "approved": "~", "executing": ">", "completed": "+", "failed": "x"}.get(t.get("status", ""), " ")
+            lines.append(f"  [{status_icon}] {t.get('description', 'Unknown task')} ({t.get('status', '?')})")
+        return "Active Goals:\n" + "\n".join(lines)
+
+    elif cmd == "graph":
+        return _ascii_graph()
+
+    elif cmd == "reflect":
+        return _reflect()
+
+    elif cmd.startswith("know "):
+        query = cmd[5:]
+        entities = query_knowledge_graph(query, limit=5)
+        if not entities:
+            return f"I don't have specific knowledge about '{query}' yet."
+        lines = [f"What I know about '{query}':"]
+        for e in entities:
+            summary = (e["summary"] or "")[:150]
+            lines.append(f"  - {e['name']}: {summary}")
+        return "\n".join(lines)
+
+    elif cmd.startswith("rel "):
+        entity = cmd[4:]
+        rels = query_entity_relationships(entity, limit=10)
+        if not rels:
+            return f"No relationships found for '{entity}'."
+        lines = [f"Relationships for '{entity}':"]
+        for r in rels:
+            lines.append(f"  {r['source']} --[{r['relationship']}]--> {r['target']}")
+        return "\n".join(lines)
+
+    elif cmd == "consciousness" or cmd == "conscious":
+        if hasattr(app.state, "consciousness") and app.state.consciousness:
+            cm = app.state.consciousness.get_metrics()
+            lines = [
+                "Consciousness Loop:",
+                f"  State: {cm.get('state', '?')}",
+                f"  Cycles: {cm.get('total_cycles', 0)} ({cm.get('active_cycles', 0)} active, {cm.get('idle_cycles', 0)} idle)",
+                f"  Insights: {cm.get('insights_generated', 0)} | Alerts: {cm.get('alerts_generated', 0)}",
+                f"  LLM calls: {cm.get('llm_calls_total', 0)} made, {cm.get('llm_calls_skipped', 0)} skipped",
+                f"  Avg cycle: {cm.get('avg_cycle_duration_ms', 0)}ms",
+                f"  Pending insights: {cm.get('pending_insights', 0)}",
+            ]
+            if cm.get("last_cycle_time"):
+                lines.append(f"  Last cycle: {cm['last_cycle_time']}")
+            return "\n".join(lines)
+        return "Consciousness loop is not running."
+
+    else:
+        return (
+            "Commands: status, goals, graph, reflect, consciousness, know <topic>, rel <entity>\n"
+            "Or just chat naturally."
+        )
+
+
+def _ascii_graph() -> str:
+    """Generate an ASCII visualization of top knowledge graph connections."""
+    try:
+        r = get_falkor()
+        result = r.execute_command(
+            "GRAPH.QUERY", config.GRAPHITI_GROUP_ID,
+            """MATCH (a:Entity)-[r]->(b:Entity)
+               WITH a.name AS src, b.name AS tgt, count(r) AS weight
+               ORDER BY weight DESC
+               LIMIT 15
+               RETURN src, tgt, weight"""
+        )
+        if not result[1]:
+            return "Knowledge graph is empty."
+
+        lines = ["Knowledge Graph (top connections):", ""]
+        max_name = 25
+        for row in result[1]:
+            src = str(row[0])[:max_name].ljust(max_name)
+            tgt = str(row[1])[:max_name]
+            weight = row[2]
+            bar = "=" * min(weight, 20)
+            lines.append(f"  {src} {bar}> {tgt} ({weight})")
+        return "\n".join(lines)
+    except Exception as e:
+        return f"Graph visualization failed: {e}"
+
+
+def _reflect() -> str:
+    """Trigger a self-reflection — summarize what Karma knows and doesn't."""
+    graph_stats = get_graph_stats()
+    prefs = query_preferences(limit=100)
+
+    categories = {}
+    for p in prefs:
+        cat = p.get("category", "unknown")
+        categories[cat] = categories.get(cat, 0) + 1
+
+    high_conf = [p for p in prefs if p.get("confidence", 0) >= 0.9]
+    low_conf = [p for p in prefs if p.get("confidence", 0) < 0.7]
+
+    lines = [
+        "Self-Reflection:",
+        f"  I know {graph_stats['entities']} entities connected by {graph_stats['relationships']} relationships.",
+        f"  I've processed {graph_stats['episodes']} conversation episodes.",
+        f"  I hold {len(prefs)} preferences/facts about Neo:",
+    ]
+    for cat, count in sorted(categories.items()):
+        lines.append(f"    - {cat}: {count}")
+
+    lines.append(f"  High confidence facts (>=0.9): {len(high_conf)}")
+    if low_conf:
+        lines.append(f"  Low confidence facts (<0.7): {len(low_conf)} — need more data")
+
+    # Consciousness loop metrics
+    if hasattr(app.state, "consciousness") and app.state.consciousness:
+        cm = app.state.consciousness.get_metrics()
+        lines.append("")
+        lines.append("  Consciousness Loop:")
+        lines.append(f"    - State: {cm.get('state', '?')}")
+        lines.append(f"    - Cycles: {cm.get('total_cycles', 0)} total ({cm.get('active_cycles', 0)} active, {cm.get('idle_cycles', 0)} idle)")
+        lines.append(f"    - Insights: {cm.get('insights_generated', 0)} | Alerts: {cm.get('alerts_generated', 0)}")
+        lines.append(f"    - LLM calls: {cm.get('llm_calls_total', 0)} made, {cm.get('llm_calls_skipped', 0)} skipped (idle)")
+        lines.append(f"    - Avg cycle: {cm.get('avg_cycle_duration_ms', 0)}ms")
+        pending = cm.get("pending_insights", 0)
+        if pending:
+            lines.append(f"    - Pending insights for next chat: {pending}")
+
+    lines.append("")
+    lines.append("  What I still need:")
+    lines.append("    - Process remaining conversations (not all ingested yet)")
+    lines.append("    - Learn temporal patterns (when Neo works, what tools per time-of-day)")
+    lines.append("    - Connect to Chrome extension for real-time awareness")
+
+    return "\n".join(lines)
+
+
+# ─── Startup ──────────────────────────────────────────────────────────────
+
+@app.on_event("startup")
+async def startup():
+    app.state.start_time = time.time()
+    print("=" * 50)
+    print("KARMA CHAT SERVER — Online")
+    print(f"  FalkorDB: {config.FALKORDB_HOST}:{config.FALKORDB_PORT}")
+    print(f"  PostgreSQL: {config.POSTGRES_HOST}:{config.POSTGRES_PORT}")
+    print(f"  LLM: {config.ANALYSIS_MODEL}")
+
+    # Pre-initialize Graphiti client for real-time knowledge updates
+    graphiti = await get_graphiti()
+    if graphiti:
+        print("  Graphiti: READY (real-time learning enabled)")
+    else:
+        print("  Graphiti: FAILED (knowledge graph updates disabled)")
+
+    # Start consciousness loop
+    if config.CONSCIOUSNESS_ENABLED:
+        from consciousness import ConsciousnessLoop
+        app.state.consciousness = ConsciousnessLoop(
+            get_falkor_fn=get_falkor,
+            get_graph_stats_fn=get_graph_stats,
+            get_openai_client_fn=get_openai_client,
+            active_conversations_ref=active_conversations,
+        )
+        app.state.consciousness.start()
+        print(f"  Consciousness: ACTIVE (every {config.CONSCIOUSNESS_INTERVAL}s)")
+    else:
+        app.state.consciousness = None
+        print("  Consciousness: DISABLED")
+    print("=" * 50)
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "server:app",
+        host="0.0.0.0",
+        port=8340,
+        log_level="info",
+    )
