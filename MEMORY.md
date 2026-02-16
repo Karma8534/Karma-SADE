@@ -1,7 +1,7 @@
 # Universal AI Memory — Current State
 
 ## Active Phase
-Karma Brain Stack — Foundation installed, bootstrap complete
+Karma Brain Stack — Terminal chat server live, Karma is talking
 
 ## Phase Status
 | Phase | Status | Summary |
@@ -13,7 +13,7 @@ Karma Brain Stack — Foundation installed, bootstrap complete
 | Karma | 🔧 In progress | Brain stack foundation — FalkorDB + Graphiti + PostgreSQL analysis |
 
 ## Current Task
-Karma bootstrap complete. Next: Process remaining 387 captures, build LangGraph consciousness loop, connect to Chrome extension for real-time awareness.
+Terminal chat server deployed and tested. Next: Expose port 8340 via Caddy for remote CLI access, process remaining 387 captures, build LangGraph consciousness loop.
 
 ## Blockers
 None
@@ -40,7 +40,14 @@ None
 - **PostgreSQL**: analysis schema with 94 records (83 facts + 13 preferences, deduped to 86+5+3)
 - **karma-core**: Docker image built, bootstrap.py completed successfully
 - **Knowledge extracted**: Entities (Neo, Claude Code, Chrome Extension, Docker, FalkorDB, etc.), 475 MENTIONS + 222 RELATES_TO relationships
-- **Files**: karma-core/Dockerfile, requirements.txt, config.py, bootstrap.py
+- **Chat Server**: FastAPI + WebSocket on port 8340 (karma-server container)
+  - GET /health, GET /status, GET /ask?q=..., WebSocket /chat
+  - Commands: /status, /goals, /graph, /reflect, /know, /rel
+  - Logs conversations to JSONL ledger
+  - Queries FalkorDB for context, PostgreSQL for preferences
+  - Responds via gpt-4o-mini with knowledge graph context injection
+- **CLI Client**: karma-core/cli.py (karma chat, karma status, karma ask)
+- **Files**: karma-core/Dockerfile, requirements.txt, config.py, bootstrap.py, server.py, cli.py
 - **Architecture doc**: KARMA-ARCHITECTURE.md
 
 ## Infrastructure
@@ -50,4 +57,4 @@ None
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 
 ## Last Updated
-2026-02-16 — Karma Brain Stack foundation installed: FalkorDB + Graphiti + PostgreSQL analysis engine, bootstrap complete (100 episodes processed, 94 facts/preferences seeded)
+2026-02-16 — Terminal chat server deployed: Karma responds with knowledge graph context, logs to ledger, all 7 Docker containers running on vault-neo
