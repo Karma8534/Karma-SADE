@@ -12,7 +12,7 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | 4 | ✅ Complete | Context injection — manual (popup) + autonomous (auto-inject with preview UI) |
 | Karma | ✅ Operational | Brain stack + terminal chat + real-time learning + desktop shortcut |
 | Consciousness | ✅ Active | 60s OBSERVE/THINK/DECIDE/ACT/REFLECT loop — ambient awareness |
-| Multi-Model | ✅ Active | Groq (speed), MiniMax (coding), GLM-5 (reasoning), OpenAI (fallback) |
+| Multi-Model | ✅ Active | MiniMax M2.5 (primary — all tasks), Groq (fallback), OpenAI (final fallback). GLM-5 disabled (no balance). |
 
 ## Current Task
 Identity prioritization fix deployed. Next: fund GLM-5 account, process remaining ~380 captures, expose port 8340 via Caddy for remote CLI.
@@ -36,13 +36,14 @@ Identity prioritization fix deployed. Next: fund GLM-5 account, process remainin
   - Commands: /consciousness shows loop metrics
   - Config: CONSCIOUSNESS_ENABLED, CONSCIOUSNESS_INTERVAL, CONSCIOUSNESS_JOURNAL
   - Design doc: karma-core/CONSCIOUSNESS-DESIGN.md
-- **Multi-model router**: Task-based routing to best model per message
-  - Groq (llama-3.3-70b-versatile): speed/simple chat, ~700ms
-  - MiniMax M2.5: coding/technical tasks, 80.2% SWE-Bench
-  - GLM-5 (Z.ai/BigModel): reasoning/analysis — **NEEDS BALANCE** (falls back to OpenAI)
-  - OpenAI gpt-4o-mini: fallback for all task types, consciousness analysis
+- **Multi-model router**: MiniMax M2.5 as primary for ALL tasks until credits deplete
+  - MiniMax M2.5: PRIMARY for coding, reasoning, speed, analysis, general (80.2% SWE-Bench)
+  - Groq (llama-3.3-70b-versatile): fallback for speed/general
+  - OpenAI gpt-4o-mini: final fallback + consciousness analysis
+  - GLM-5 (Z.ai/BigModel): DISABLED (insufficient balance, re-enable when funded)
+  - `<think>` CoT tags auto-stripped from MiniMax responses
   - Classification: keyword-based (zero LLM cost), deterministic
-  - Automatic fallback on provider failure
+  - Automatic fallback chain: MiniMax → Groq → OpenAI
   - Commands: /models shows providers + usage stats
   - Ledger logs which model handled each message
   - File: karma-core/router.py
@@ -56,7 +57,7 @@ Identity prioritization fix deployed. Next: fund GLM-5 account, process remainin
   - Commands: /status, /goals, /graph, /reflect, /consciousness, /models, /know, /rel
   - Logs conversations to JSONL ledger
   - Queries FalkorDB for context, PostgreSQL for preferences
-  - Multi-model routing: Groq (speed), MiniMax (code), GLM-5 (reasoning), OpenAI (fallback)
+  - Multi-model routing: MiniMax M2.5 (primary), Groq (fallback), OpenAI (final fallback)
   - Real-time Graphiti ingestion after every chat turn (non-blocking background task)
 - **CLI Client**: karma-core/cli.py (karma chat, karma status, karma ask)
 - **Desktop Shortcut**: karma-chat.ps1 → SSH → docker exec → cli.py chat
@@ -87,4 +88,4 @@ Identity prioritization fix deployed. Next: fund GLM-5 account, process remainin
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 
 ## Last Updated
-2026-02-16 — Identity prioritization fix: Karma now greets as "Colby" (real name) instead of "Neo" (alias). Structured identity context in system prompt.
+2026-02-16 — Router update: MiniMax M2.5 now primary for ALL tasks. GLM-5 disabled. CoT tags stripped from output.
