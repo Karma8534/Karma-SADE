@@ -15,9 +15,10 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | Multi-Model | ✅ Active | MiniMax M2.5 (primary — all tasks), Groq (fallback), OpenAI (final fallback). GLM-5 disabled (no balance). |
 
 ## Current Task
-Remote access + SMS deployed. Next: fund GLM-5 account, configure Twilio webhook URL in console, test two-way SMS chat.
+Test SMS end-to-end when Twilio A2P campaign is approved. Add proactive notification triggers.
 
 ## Blockers
+- Twilio A2P campaign under review — SMS delivery blocked until approved
 - GLM-5 (Z.ai) account has insufficient balance — reasoning tasks fall back to OpenAI. Need to fund the BigModel account.
 
 ## Karma Core Status (2026-02-16)
@@ -60,7 +61,7 @@ Remote access + SMS deployed. Next: fund GLM-5 account, configure Twilio webhook
   - GET /health, GET /status, GET /ask?q=..., WebSocket /chat, POST /sms/webhook
   - **Remote access**: https://karma.arknexus.net (Caddy auto-TLS, bearer token auth)
   - Bearer token: KARMA_BEARER env var in /opt/seed-vault/memory_v1/compose/.env
-  - Public endpoints: /health, /sms/webhook (Twilio needs unauthenticated access)
+  - Public endpoints: /health, /privacy, /terms, /sms/webhook
   - Commands: /status, /goals, /graph, /reflect, /consciousness, /models, /know, /rel
   - Logs conversations to JSONL ledger
   - Queries FalkorDB for context, PostgreSQL for preferences
@@ -101,4 +102,4 @@ Remote access + SMS deployed. Next: fund GLM-5 account, configure Twilio webhook
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 
 ## Last Updated
-2026-02-16 — Remote access (karma.arknexus.net) + SMS notifications + consciousness→graph ingestion deployed. All tested.
+2026-02-16 — Remote access (karma.arknexus.net) + SMS + consciousness→graph ingestion + /privacy + /terms deployed. Twilio A2P campaign pending approval.
