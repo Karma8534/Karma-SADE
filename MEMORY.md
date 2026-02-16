@@ -1,7 +1,7 @@
 # Universal AI Memory — Current State
 
 ## Active Phase
-Karma Core — OPERATIONAL. Real-time knowledge updates working, desktop shortcut live.
+Karma Core — OPERATIONAL. Consciousness loop active. Real-time knowledge updates + ambient awareness.
 
 ## Phase Status
 | Phase | Status | Summary |
@@ -11,22 +11,30 @@ Karma Core — OPERATIONAL. Real-time knowledge updates working, desktop shortcu
 | 3 | ✅ Complete | Auto-reindexing on new entries |
 | 4 | ✅ Complete | Context injection — manual (popup) + autonomous (auto-inject with preview UI) |
 | Karma | ✅ Operational | Brain stack + terminal chat + real-time learning + desktop shortcut |
+| Consciousness | ✅ Active | 60s OBSERVE/THINK/DECIDE/ACT/REFLECT loop — ambient awareness |
 
 ## Current Task
-Next phase: Consciousness loop (OBSERVE → THINK → DECIDE → ACT → REFLECT). Also: process remaining ~380 captures, expose port 8340 via Caddy for remote CLI.
+Consciousness loop deployed and tested. Next: process remaining ~380 captures, expose port 8340 via Caddy for remote CLI, temporal pattern learning.
 
 ## Blockers
 None
 
 ## Karma Core Status (2026-02-16)
-- **State**: OPERATIONAL — Karma learns from every conversation in real time
-- **Stats**: 104 entities, 103 episodes, 707 relationships in FalkorDB
+- **State**: OPERATIONAL + CONSCIOUS — Karma learns in real time and thinks autonomously
+- **Stats**: 116 entities, 128 episodes, 786 relationships in FalkorDB
 - **Test passed**: Tell Karma "My name is Colby" → quit → new session → "What is my real name?" → "Colby"
 - **Test passed**: "Adopted a cat named Luna" → quit → new session → "Do I have pets?" → "Luna"
 - **Desktop shortcut**: `C:\Users\raest\Desktop\Talk to Karma.lnk` — one-click terminal chat
 - **Real-time learning**: Every chat turn → background Graphiti ingest → entities/relationships updated in ~5-8s
 - **Identity system**: Extracts and prioritizes real names > aliases, deduplicates facts
 - **Query filter**: Read-only questions (/ask with "what/who/how...") skip graph ingestion to prevent self-reinforcing loops
+- **Consciousness loop**: 60s background cycle — OBSERVE/THINK/DECIDE/ACT/REFLECT
+  - Idle cycles: 0 LLM calls, ~2ms, $0 cost
+  - Active cycles: gpt-4o-mini analysis, ~443ms, logs insights to consciousness.jsonl
+  - Insights surface naturally in next chat via context injection
+  - Commands: /consciousness shows loop metrics
+  - Config: CONSCIOUSNESS_ENABLED, CONSCIOUSNESS_INTERVAL, CONSCIOUSNESS_JOURNAL
+  - Design doc: karma-core/CONSCIOUSNESS-DESIGN.md
 
 ## Karma Brain Stack
 - **FalkorDB**: Running on vault-neo (Docker, port 3000/7687), temporal knowledge graph
@@ -34,14 +42,14 @@ None
 - **PostgreSQL**: analysis schema with 94 records (facts + preferences)
 - **Chat Server**: FastAPI + WebSocket on port 8340 (karma-server container)
   - GET /health, GET /status, GET /ask?q=..., WebSocket /chat
-  - Commands: /status, /goals, /graph, /reflect, /know, /rel
+  - Commands: /status, /goals, /graph, /reflect, /consciousness, /know, /rel
   - Logs conversations to JSONL ledger
   - Queries FalkorDB for context, PostgreSQL for preferences
   - Responds via gpt-4o-mini with knowledge graph context injection
   - Real-time Graphiti ingestion after every chat turn (non-blocking background task)
 - **CLI Client**: karma-core/cli.py (karma chat, karma status, karma ask)
 - **Desktop Shortcut**: karma-chat.ps1 → SSH → docker exec → cli.py chat
-- **Files**: karma-core/Dockerfile, requirements.txt, config.py, bootstrap.py, server.py, cli.py, karma-chat.ps1, create-shortcut.ps1, karma-icon.ico
+- **Files**: karma-core/Dockerfile, requirements.txt, config.py, bootstrap.py, server.py, consciousness.py, cli.py, karma-chat.ps1, create-shortcut.ps1, karma-icon.ico
 - **Architecture doc**: KARMA-ARCHITECTURE.md
 
 ## Phase 4 Completion Notes (Autonomous Context Injection)
@@ -68,4 +76,4 @@ None
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 
 ## Last Updated
-2026-02-16 — Karma OPERATIONAL: real-time knowledge graph updates, desktop shortcut, identity recall tested (Colby, Luna)
+2026-02-16 — Consciousness loop deployed and tested. Karma now thinks autonomously every 60s.
