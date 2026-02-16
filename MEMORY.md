@@ -1,7 +1,7 @@
 # Universal AI Memory — Current State
 
 ## Active Phase
-Karma Core — OPERATIONAL. Consciousness loop active. Real-time knowledge updates + ambient awareness.
+Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM providers active.
 
 ## Phase Status
 | Phase | Status | Summary |
@@ -12,16 +12,17 @@ Karma Core — OPERATIONAL. Consciousness loop active. Real-time knowledge updat
 | 4 | ✅ Complete | Context injection — manual (popup) + autonomous (auto-inject with preview UI) |
 | Karma | ✅ Operational | Brain stack + terminal chat + real-time learning + desktop shortcut |
 | Consciousness | ✅ Active | 60s OBSERVE/THINK/DECIDE/ACT/REFLECT loop — ambient awareness |
+| Multi-Model | ✅ Active | Groq (speed), MiniMax (coding), GLM-5 (reasoning), OpenAI (fallback) |
 
 ## Current Task
-Consciousness loop deployed and tested. Next: process remaining ~380 captures, expose port 8340 via Caddy for remote CLI, temporal pattern learning.
+Multi-model router deployed. GLM-5 has insufficient balance (falls back to OpenAI). Next: fund GLM-5 account, process remaining ~380 captures, expose port 8340 via Caddy for remote CLI.
 
 ## Blockers
-None
+- GLM-5 (Z.ai) account has insufficient balance — reasoning tasks fall back to OpenAI. Need to fund the BigModel account.
 
 ## Karma Core Status (2026-02-16)
-- **State**: OPERATIONAL + CONSCIOUS — Karma learns in real time and thinks autonomously
-- **Stats**: 116 entities, 128 episodes, 786 relationships in FalkorDB
+- **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL — 4 LLM providers, task-based routing
+- **Stats**: 126 entities, 134 episodes, 819 relationships in FalkorDB
 - **Test passed**: Tell Karma "My name is Colby" → quit → new session → "What is my real name?" → "Colby"
 - **Test passed**: "Adopted a cat named Luna" → quit → new session → "Do I have pets?" → "Luna"
 - **Desktop shortcut**: `C:\Users\raest\Desktop\Talk to Karma.lnk` — one-click terminal chat
@@ -35,6 +36,16 @@ None
   - Commands: /consciousness shows loop metrics
   - Config: CONSCIOUSNESS_ENABLED, CONSCIOUSNESS_INTERVAL, CONSCIOUSNESS_JOURNAL
   - Design doc: karma-core/CONSCIOUSNESS-DESIGN.md
+- **Multi-model router**: Task-based routing to best model per message
+  - Groq (llama-3.3-70b-versatile): speed/simple chat, ~700ms
+  - MiniMax M2.5: coding/technical tasks, 80.2% SWE-Bench
+  - GLM-5 (Z.ai/BigModel): reasoning/analysis — **NEEDS BALANCE** (falls back to OpenAI)
+  - OpenAI gpt-4o-mini: fallback for all task types, consciousness analysis
+  - Classification: keyword-based (zero LLM cost), deterministic
+  - Automatic fallback on provider failure
+  - Commands: /models shows providers + usage stats
+  - Ledger logs which model handled each message
+  - File: karma-core/router.py
 
 ## Karma Brain Stack
 - **FalkorDB**: Running on vault-neo (Docker, port 3000/7687), temporal knowledge graph
@@ -42,14 +53,14 @@ None
 - **PostgreSQL**: analysis schema with 94 records (facts + preferences)
 - **Chat Server**: FastAPI + WebSocket on port 8340 (karma-server container)
   - GET /health, GET /status, GET /ask?q=..., WebSocket /chat
-  - Commands: /status, /goals, /graph, /reflect, /consciousness, /know, /rel
+  - Commands: /status, /goals, /graph, /reflect, /consciousness, /models, /know, /rel
   - Logs conversations to JSONL ledger
   - Queries FalkorDB for context, PostgreSQL for preferences
-  - Responds via gpt-4o-mini with knowledge graph context injection
+  - Multi-model routing: Groq (speed), MiniMax (code), GLM-5 (reasoning), OpenAI (fallback)
   - Real-time Graphiti ingestion after every chat turn (non-blocking background task)
 - **CLI Client**: karma-core/cli.py (karma chat, karma status, karma ask)
 - **Desktop Shortcut**: karma-chat.ps1 → SSH → docker exec → cli.py chat
-- **Files**: karma-core/Dockerfile, requirements.txt, config.py, bootstrap.py, server.py, consciousness.py, cli.py, karma-chat.ps1, create-shortcut.ps1, karma-icon.ico
+- **Files**: karma-core/Dockerfile, requirements.txt, config.py, bootstrap.py, server.py, consciousness.py, router.py, cli.py, karma-chat.ps1, create-shortcut.ps1, karma-icon.ico
 - **Architecture doc**: KARMA-ARCHITECTURE.md
 
 ## Phase 4 Completion Notes (Autonomous Context Injection)
@@ -76,4 +87,4 @@ None
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 
 ## Last Updated
-2026-02-16 — Consciousness loop deployed and tested. Karma now thinks autonomously every 60s.
+2026-02-16 — Multi-model router deployed: Groq + MiniMax + GLM-5 + OpenAI. Task-based routing live.
