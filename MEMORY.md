@@ -1,7 +1,7 @@
 # Universal AI Memory — Current State
 
 ## Active Phase
-Karma Brain Stack — Terminal chat server live, Karma is talking
+Karma Core — OPERATIONAL. Real-time knowledge updates working, desktop shortcut live.
 
 ## Phase Status
 | Phase | Status | Summary |
@@ -10,13 +10,39 @@ Karma Brain Stack — Terminal chat server live, Karma is talking
 | 2 | ✅ Complete | Embeddings & semantic search via ChromaDB (verified operational) |
 | 3 | ✅ Complete | Auto-reindexing on new entries |
 | 4 | ✅ Complete | Context injection — manual (popup) + autonomous (auto-inject with preview UI) |
-| Karma | 🔧 In progress | Brain stack foundation — FalkorDB + Graphiti + PostgreSQL analysis |
+| Karma | ✅ Operational | Brain stack + terminal chat + real-time learning + desktop shortcut |
 
 ## Current Task
-Terminal chat server deployed and tested. Next: Expose port 8340 via Caddy for remote CLI access, process remaining 387 captures, build LangGraph consciousness loop.
+Next phase: Consciousness loop (OBSERVE → THINK → DECIDE → ACT → REFLECT). Also: process remaining ~380 captures, expose port 8340 via Caddy for remote CLI.
 
 ## Blockers
 None
+
+## Karma Core Status (2026-02-16)
+- **State**: OPERATIONAL — Karma learns from every conversation in real time
+- **Stats**: 104 entities, 103 episodes, 707 relationships in FalkorDB
+- **Test passed**: Tell Karma "My name is Colby" → quit → new session → "What is my real name?" → "Colby"
+- **Test passed**: "Adopted a cat named Luna" → quit → new session → "Do I have pets?" → "Luna"
+- **Desktop shortcut**: `C:\Users\raest\Desktop\Talk to Karma.lnk` — one-click terminal chat
+- **Real-time learning**: Every chat turn → background Graphiti ingest → entities/relationships updated in ~5-8s
+- **Identity system**: Extracts and prioritizes real names > aliases, deduplicates facts
+- **Query filter**: Read-only questions (/ask with "what/who/how...") skip graph ingestion to prevent self-reinforcing loops
+
+## Karma Brain Stack
+- **FalkorDB**: Running on vault-neo (Docker, port 3000/7687), temporal knowledge graph
+- **Graphiti**: graphiti-core[falkordb] — entity/relationship extraction, real-time episode ingestion
+- **PostgreSQL**: analysis schema with 94 records (facts + preferences)
+- **Chat Server**: FastAPI + WebSocket on port 8340 (karma-server container)
+  - GET /health, GET /status, GET /ask?q=..., WebSocket /chat
+  - Commands: /status, /goals, /graph, /reflect, /know, /rel
+  - Logs conversations to JSONL ledger
+  - Queries FalkorDB for context, PostgreSQL for preferences
+  - Responds via gpt-4o-mini with knowledge graph context injection
+  - Real-time Graphiti ingestion after every chat turn (non-blocking background task)
+- **CLI Client**: karma-core/cli.py (karma chat, karma status, karma ask)
+- **Desktop Shortcut**: karma-chat.ps1 → SSH → docker exec → cli.py chat
+- **Files**: karma-core/Dockerfile, requirements.txt, config.py, bootstrap.py, server.py, cli.py, karma-chat.ps1, create-shortcut.ps1, karma-icon.ico
+- **Architecture doc**: KARMA-ARCHITECTURE.md
 
 ## Phase 4 Completion Notes (Autonomous Context Injection)
 - **Step 1**: Auto-inject toggle in popup (chrome.storage.sync, real-time listener)
@@ -34,27 +60,12 @@ None
 - Platform-specific injection: Claude (contenteditable), ChatGPT (ProseMirror div), Gemini (Quill ql-editor)
 - Fixed field name mismatches (similarity_score, content_preview, platform)
 
-## Karma Brain Stack (Installed 2026-02-16)
-- **FalkorDB**: Running on vault-neo (Docker, port 3000/7687), 101 entities + 100 episodes
-- **Graphiti**: graphiti-core[falkordb] for entity/relationship extraction from conversations
-- **PostgreSQL**: analysis schema with 94 records (83 facts + 13 preferences, deduped to 86+5+3)
-- **karma-core**: Docker image built, bootstrap.py completed successfully
-- **Knowledge extracted**: Entities (Neo, Claude Code, Chrome Extension, Docker, FalkorDB, etc.), 475 MENTIONS + 222 RELATES_TO relationships
-- **Chat Server**: FastAPI + WebSocket on port 8340 (karma-server container)
-  - GET /health, GET /status, GET /ask?q=..., WebSocket /chat
-  - Commands: /status, /goals, /graph, /reflect, /know, /rel
-  - Logs conversations to JSONL ledger
-  - Queries FalkorDB for context, PostgreSQL for preferences
-  - Responds via gpt-4o-mini with knowledge graph context injection
-- **CLI Client**: karma-core/cli.py (karma chat, karma status, karma ask)
-- **Files**: karma-core/Dockerfile, requirements.txt, config.py, bootstrap.py, server.py, cli.py
-- **Architecture doc**: KARMA-ARCHITECTURE.md
-
 ## Infrastructure
-- Server: arknexus.net (vault-neo), Docker running, ledger operational
+- Server: arknexus.net (vault-neo), 7 Docker containers running
+- Containers: karma-server, falkordb, anr-vault-search, anr-vault-api, anr-hub-bridge, anr-vault-db, anr-vault-caddy
 - FalkorDB: ~150-300MB RAM, Redis protocol on 6379 internal / 7687 external
 - Cost: ~$26/mo (droplet $24 + OpenAI ~$1-2 for analysis)
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 
 ## Last Updated
-2026-02-16 — Terminal chat server deployed: Karma responds with knowledge graph context, logs to ledger, all 7 Docker containers running on vault-neo
+2026-02-16 — Karma OPERATIONAL: real-time knowledge graph updates, desktop shortcut, identity recall tested (Colby, Luna)
