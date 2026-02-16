@@ -15,14 +15,16 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | Multi-Model | ✅ Active | MiniMax M2.5 (primary — all tasks), Groq (fallback), OpenAI (final fallback). GLM-5 disabled (no balance). |
 
 ## Current Task
-Identity prioritization fix deployed. Next: fund GLM-5 account, process remaining ~380 captures, expose port 8340 via Caddy for remote CLI.
+Batch ingest complete — 605 episodes in graph. Next: fund GLM-5 account, expose port 8340 via Caddy for remote CLI.
 
 ## Blockers
 - GLM-5 (Z.ai) account has insufficient balance — reasoning tasks fall back to OpenAI. Need to fund the BigModel account.
 
 ## Karma Core Status (2026-02-16)
-- **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL — 4 LLM providers, task-based routing
-- **Stats**: 126 entities, 134 episodes, 819 relationships in FalkorDB
+- **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL — 3 LLM providers, task-based routing
+- **Stats**: 479 entities, 605 episodes, 4169 relationships in FalkorDB
+- **Batch ingest**: 359/366 episodes processed (7 errors — RediSearch syntax + timeouts). Script: karma-core/batch_ingest.py
+- **FalkorDB tuning**: TIMEOUT raised from 1s→5s (graph grew 3x, queries need more time). MAX_QUEUED=25.
 - **Test passed**: Tell Karma "My name is Colby" → quit → new session → "What is my real name?" → "Colby"
 - **Test passed**: "Adopted a cat named Luna" → quit → new session → "Do I have pets?" → "Luna"
 - **Desktop shortcut**: `C:\Users\raest\Desktop\Talk to Karma.lnk` — one-click terminal chat
@@ -88,4 +90,4 @@ Identity prioritization fix deployed. Next: fund GLM-5 account, process remainin
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 
 ## Last Updated
-2026-02-16 — Router update: MiniMax M2.5 now primary for ALL tasks. GLM-5 disabled. CoT tags stripped from output.
+2026-02-16 — Batch ingest complete: 605 episodes, 479 entities, 4169 relationships. All ledger conversations processed.
