@@ -2,10 +2,10 @@
 Karma Model Router — Multi-Model Intelligence
 
 Routes requests to the best model for each task type:
-  - MiniMax M2.5: Coding, technical tasks, structured output
-  - GLM-5: Deep reasoning, analysis, complex problem-solving
-  - Groq (Llama): Speed-critical responses, simple chat, quick answers
-  - OpenAI gpt-4o-mini: Default fallback, consciousness analysis
+  - MiniMax M2.5: Primary model for ALL tasks (coding, reasoning, speed, general)
+  - Groq (Llama): Fallback for speed-critical responses
+  - OpenAI gpt-4o-mini: Final fallback, consciousness analysis
+  - GLM-5: Disabled (insufficient balance — re-enable when funded)
 
 All providers expose OpenAI-compatible /v1/chat/completions endpoints,
 so we use the OpenAI Python SDK with different base_url + api_key per provider.
@@ -143,7 +143,23 @@ class ModelRouter:
 
     def _init_providers(self):
         """Initialize all configured model providers."""
-        # Groq — speed demon (Llama on custom silicon)
+        # MiniMax M2.5 — PRIMARY for ALL tasks until credits deplete
+        # Top benchmark scores: 80.2% SWE-Bench, strong reasoning + speed
+        if config.MINIMAX_API_KEY:
+            self.providers.append(ModelProvider(
+                name="minimax",
+                model=config.MINIMAX_MODEL,
+                base_url="https://api.minimax.io/v1",
+                api_key=config.MINIMAX_API_KEY,
+                task_types=[TaskType.CODING, TaskType.REASONING, TaskType.SPEED,
+                            TaskType.ANALYSIS, TaskType.GENERAL],
+                max_tokens=2048,
+                temperature=0.7,
+                priority=0,  # Highest priority — primary for everything
+            ))
+            print(f"[ROUTER] MiniMax registered: {config.MINIMAX_MODEL} (PRIMARY — all tasks)")
+
+        # Groq — secondary fallback for speed tasks (Llama on custom silicon)
         if config.GROQ_API_KEY:
             self.providers.append(ModelProvider(
                 name="groq",
@@ -153,41 +169,16 @@ class ModelRouter:
                 task_types=[TaskType.SPEED, TaskType.GENERAL],
                 max_tokens=1024,
                 temperature=0.7,
-                priority=0,
+                priority=5,  # Fallback behind MiniMax
             ))
-            print(f"[ROUTER] Groq registered: {config.GROQ_MODEL}")
+            print(f"[ROUTER] Groq registered: {config.GROQ_MODEL} (fallback)")
 
-        # MiniMax M2.5 — coding specialist
-        if config.MINIMAX_API_KEY:
-            self.providers.append(ModelProvider(
-                name="minimax",
-                model=config.MINIMAX_MODEL,
-                base_url="https://api.minimax.io/v1",
-                api_key=config.MINIMAX_API_KEY,
-                task_types=[TaskType.CODING],
-                max_tokens=2048,
-                temperature=0.4,  # Lower temp for code
-                priority=0,
-            ))
-            print(f"[ROUTER] MiniMax registered: {config.MINIMAX_MODEL}")
-
-        # GLM-5 — reasoning powerhouse
-        # Supports both Chinese (open.bigmodel.cn) and international (api.z.ai) endpoints
+        # GLM-5 — DISABLED (insufficient balance, re-enable when funded)
+        # Config still loaded but not registered as a provider
         if config.GLM_API_KEY:
-            glm_base = config.GLM_BASE_URL
-            self.providers.append(ModelProvider(
-                name="glm",
-                model=config.GLM_MODEL,
-                base_url=glm_base,
-                api_key=config.GLM_API_KEY,
-                task_types=[TaskType.REASONING],
-                max_tokens=2048,
-                temperature=0.5,
-                priority=0,
-            ))
-            print(f"[ROUTER] GLM-5 registered: {config.GLM_MODEL} ({glm_base})")
+            print(f"[ROUTER] GLM-5 skipped: disabled until account is funded")
 
-        # OpenAI gpt-4o-mini — reliable default + consciousness analysis
+        # OpenAI gpt-4o-mini — final fallback + consciousness analysis
         if config.OPENAI_API_KEY:
             self.providers.append(ModelProvider(
                 name="openai",
@@ -198,9 +189,9 @@ class ModelRouter:
                             TaskType.REASONING, TaskType.SPEED],
                 max_tokens=1024,
                 temperature=0.7,
-                priority=10,  # Low priority — fallback for everything
+                priority=10,  # Lowest priority — final fallback
             ))
-            print(f"[ROUTER] OpenAI registered: {config.ANALYSIS_MODEL}")
+            print(f"[ROUTER] OpenAI registered: {config.ANALYSIS_MODEL} (final fallback)")
 
         if not self.providers:
             print("[ROUTER] WARNING: No model providers configured!")
@@ -248,6 +239,11 @@ class ModelRouter:
                 )
                 elapsed_ms = (time.monotonic() - start) * 1000
                 reply = response.choices[0].message.content
+
+                # Strip <think>...</think> reasoning blocks (MiniMax M2.5 exposes CoT)
+                if reply and "<think>" in reply:
+                    import re
+                    reply = re.sub(r"<think>.*?</think>\s*", "", reply, flags=re.DOTALL).strip()
 
                 # Track stats
                 self._track(p.name, elapsed_ms, success=True)
