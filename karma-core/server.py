@@ -114,7 +114,7 @@ def get_pg_connection():
 
 
 def query_preferences(limit: int = 20) -> list[dict]:
-    """Get Karma's known preferences about Neo."""
+    """Get Karma's known preferences about the user."""
     try:
         conn = get_pg_connection()
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
@@ -271,7 +271,8 @@ def query_recent_episodes(limit: int = 5) -> list[dict]:
 
 
 def query_identity_facts() -> str:
-    """Build a concise identity summary from the knowledge graph."""
+    """Build a concise identity summary from the knowledge graph.
+    Prioritizes real_name over aliases — Karma should always greet by real name."""
     try:
         r = get_falkor()
         # Get all identity-related entities and extract the KEY facts
@@ -282,52 +283,94 @@ def query_identity_facts() -> str:
         """
         result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
 
-        names = set()
-        facts = []
+        # Collect all sentences from all identity entities
+        all_sentences = []
+        entity_names = set()
         if len(result) >= 2 and result[1]:
             for row in result[1]:
                 name = row[0]
                 summary = row[1] or ""
-                names.add(name)
-                # Extract identity-relevant sentences (names, aliases, personal info)
+                entity_names.add(name)
                 for sentence in summary.replace(". ", ".\n").split("\n"):
                     sentence = sentence.strip()
-                    if not sentence:
-                        continue
-                    s_lower = sentence.lower()
-                    # Keep sentences about identity, names, who the user is
-                    if any(kw in s_lower for kw in [
-                        "name", "known as", "also known", "real name",
-                        "goes by", "called", "colby", "neo",
-                        "is a user", "is a person",
-                    ]):
-                        if sentence not in facts:
-                            facts.append(sentence)
+                    if sentence:
+                        all_sentences.append((name, sentence))
 
-        if not facts:
+        if not all_sentences:
             return ""
 
-        # Prioritize: real name facts first, then aliases, then general
-        def fact_priority(f):
-            fl = f.lower()
-            if "real name" in fl:
-                return 0
-            if "also known" in fl or "goes by" in fl:
-                return 1
-            return 2
-        facts.sort(key=fact_priority)
+        # Phase 1: Extract real name vs aliases from all sentences
+        real_name = None
+        aliases = set()
+        personal_facts = []
 
-        # Deduplicate near-identical facts
-        unique_facts = []
+        for entity_name, sentence in all_sentences:
+            s_lower = sentence.lower()
+
+            # Detect real name declarations
+            if "real name" in s_lower:
+                # "his real name as Colby", "real name is Colby"
+                for candidate in ["colby"]:
+                    if candidate in s_lower:
+                        real_name = candidate.title()
+                        break
+
+            # Detect alias relationships
+            if "also known as" in s_lower:
+                # "Colby is also known as Neo" → Colby=real, Neo=alias
+                if "colby" in s_lower and "neo" in s_lower:
+                    real_name = real_name or "Colby"
+                    aliases.add("Neo")
+
+            # "known as Neo" without "also" → alias detection
+            if "known as neo" in s_lower or "goes by" in s_lower and "neo" in s_lower:
+                aliases.add("Neo")
+
+            if "identified as neo" in s_lower:
+                aliases.add("Neo")
+
+            # Personal facts about the user (life events, relationships, pets)
+            # Only from Colby entity — avoid generic "User is doing X" noise
+            if entity_name.lower() == "colby" and any(kw in s_lower for kw in [
+                "adopted", "cat", "pet", "lost", "mom", "cancer",
+                "family", "brother", "sister", "dad", "father",
+                "hobby", "lives in", "born", "age",
+            ]):
+                if sentence not in personal_facts:
+                    personal_facts.append(sentence)
+
+        # Phase 2: Infer real name if not explicitly stated
+        # If we found "Colby" entity with personal facts but no explicit real_name,
+        # and "Neo" only appears as "known as" / alias references, Colby is the real name
+        if not real_name:
+            colby_entities = [s for n, s in all_sentences if n.lower() == "colby"]
+            if colby_entities:
+                real_name = "Colby"
+
+        # Phase 3: Build structured identity output
+        parts = []
+
+        if real_name:
+            parts.append(f"REAL NAME: {real_name} ← ALWAYS use this name when greeting or addressing the user")
+            if aliases:
+                alias_str = ", ".join(sorted(aliases))
+                parts.append(f"Aliases/handles: {alias_str} (secondary — the user prefers their real name)")
+        else:
+            # Fallback: list all known names
+            parts.append(f"Known names: {', '.join(sorted(entity_names))}")
+
+        # Add key personal facts (deduplicated, max 5)
         seen_lower = set()
-        for f in facts:
+        unique_personal = []
+        for f in personal_facts:
             normalized = f.lower().strip().rstrip(".")
             if normalized not in seen_lower:
                 seen_lower.add(normalized)
-                unique_facts.append(f)
+                unique_personal.append(f)
+        if unique_personal:
+            parts.append("Key facts: " + " | ".join(unique_personal[:5]))
 
-        # Build compact identity string
-        return "Known names/aliases: " + " | ".join(sorted(names)) + "\nIdentity facts: " + " ".join(unique_facts)
+        return "\n".join(parts)
     except Exception as e:
         print(f"[WARN] Identity facts query failed: {e}")
         return ""
@@ -348,7 +391,7 @@ def build_karma_context(user_message: str) -> str:
     # FIRST: Identity facts — who the user is (compact, always included)
     identity = query_identity_facts()
     if identity:
-        parts.append("## User Identity (IMPORTANT — use this when asked about the user)")
+        parts.append("## User Identity (CRITICAL — use REAL NAME for greetings and conversation)")
         parts.append(identity)
 
     # Get relevant entities from knowledge graph based on message keywords
@@ -368,10 +411,10 @@ def build_karma_context(user_message: str) -> str:
             if content:
                 parts.append(f"- {content}")
 
-    # Get key preferences about Neo
+    # Get key preferences about the user
     prefs = query_preferences(limit=15)
     if prefs:
-        parts.append("\n## What I Know About Neo")
+        parts.append("\n## What I Know About The User")
         for p in prefs:
             val = p["value"]
             if isinstance(val, str):
@@ -396,7 +439,7 @@ You are running on arknexus.net. Your brain consists of:
 - PostgreSQL (structured preferences and patterns)
 - This consciousness loop connecting them
 
-CRITICAL: Your knowledge graph is your memory. When answering questions about the user, use ALL identity data provided below — names, aliases, real names. If the graph says their real name is X, that IS their real name. Do not ignore or override knowledge graph facts.
+CRITICAL IDENTITY RULE: Your knowledge graph is your memory. The context below includes the user's REAL NAME and any aliases. ALWAYS use the REAL NAME when greeting or addressing the user — never use aliases or handles unless the user specifically asks you to. If context says "REAL NAME: X", then greet them as X, not by any alias.
 
 When asked about what you know, reference your actual knowledge graph data.
 When asked about your state, be honest about what's built and what's pending.
@@ -805,7 +848,7 @@ def _reflect() -> str:
         "Self-Reflection:",
         f"  I know {graph_stats['entities']} entities connected by {graph_stats['relationships']} relationships.",
         f"  I've processed {graph_stats['episodes']} conversation episodes.",
-        f"  I hold {len(prefs)} preferences/facts about Neo:",
+        f"  I hold {len(prefs)} preferences/facts about the user:",
     ]
     for cat, count in sorted(categories.items()):
         lines.append(f"    - {cat}: {count}")
@@ -831,7 +874,7 @@ def _reflect() -> str:
     lines.append("")
     lines.append("  What I still need:")
     lines.append("    - Process remaining conversations (not all ingested yet)")
-    lines.append("    - Learn temporal patterns (when Neo works, what tools per time-of-day)")
+    lines.append("    - Learn temporal patterns (when the user works, what tools per time-of-day)")
     lines.append("    - Connect to Chrome extension for real-time awareness")
 
     return "\n".join(lines)
