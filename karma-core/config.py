@@ -38,6 +38,12 @@ GLM_API_KEY = os.getenv("GLM_API_KEY", "")
 GLM_MODEL = os.getenv("GLM_MODEL", "glm-5")
 GLM_BASE_URL = os.getenv("GLM_BASE_URL", "https://open.bigmodel.cn/api/paas/v4/")
 
+# Twilio SMS (outbound notifications + two-way chat)
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
+TWILIO_FROM_NUMBER = os.getenv("TWILIO_FROM_NUMBER", "")
+SMS_TO_NUMBER = os.getenv("SMS_TO_NUMBER", "+14845165322")
+
 # Ledger path (mounted read-only from host)
 LEDGER_PATH = os.getenv("LEDGER_PATH", "/ledger/memory.jsonl")
 

@@ -15,7 +15,7 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | Multi-Model | ✅ Active | MiniMax M2.5 (primary — all tasks), Groq (fallback), OpenAI (final fallback). GLM-5 disabled (no balance). |
 
 ## Current Task
-Batch ingest complete — 605 episodes in graph. Next: fund GLM-5 account, expose port 8340 via Caddy for remote CLI.
+Remote access + SMS deployed. Next: fund GLM-5 account, configure Twilio webhook URL in console, test two-way SMS chat.
 
 ## Blockers
 - GLM-5 (Z.ai) account has insufficient balance — reasoning tasks fall back to OpenAI. Need to fund the BigModel account.
@@ -35,6 +35,8 @@ Batch ingest complete — 605 episodes in graph. Next: fund GLM-5 account, expos
   - Idle cycles: 0 LLM calls, ~2ms, $0 cost
   - Active cycles: gpt-4o-mini analysis, ~443ms, logs insights to consciousness.jsonl
   - Insights surface naturally in next chat via context injection
+  - **Journal → Graph ingestion**: Active reflections auto-ingest into FalkorDB as episodes (source: karma-consciousness)
+  - **SMS alerts**: High-confidence insights (>0.8) trigger SMS to Colby via Twilio. Throttle: 3/hr, 10/day.
   - Commands: /consciousness shows loop metrics
   - Config: CONSCIOUSNESS_ENABLED, CONSCIOUSNESS_INTERVAL, CONSCIOUSNESS_JOURNAL
   - Design doc: karma-core/CONSCIOUSNESS-DESIGN.md
@@ -55,15 +57,24 @@ Batch ingest complete — 605 episodes in graph. Next: fund GLM-5 account, expos
 - **Graphiti**: graphiti-core[falkordb] — entity/relationship extraction, real-time episode ingestion
 - **PostgreSQL**: analysis schema with 94 records (facts + preferences)
 - **Chat Server**: FastAPI + WebSocket on port 8340 (karma-server container)
-  - GET /health, GET /status, GET /ask?q=..., WebSocket /chat
+  - GET /health, GET /status, GET /ask?q=..., WebSocket /chat, POST /sms/webhook
+  - **Remote access**: https://karma.arknexus.net (Caddy auto-TLS, bearer token auth)
+  - Bearer token: KARMA_BEARER env var in /opt/seed-vault/memory_v1/compose/.env
+  - Public endpoints: /health, /sms/webhook (Twilio needs unauthenticated access)
   - Commands: /status, /goals, /graph, /reflect, /consciousness, /models, /know, /rel
   - Logs conversations to JSONL ledger
   - Queries FalkorDB for context, PostgreSQL for preferences
   - Multi-model routing: MiniMax M2.5 (primary), Groq (fallback), OpenAI (final fallback)
   - Real-time Graphiti ingestion after every chat turn (non-blocking background task)
+- **SMS**: Twilio-powered via karma-core/sms.py
+  - Outbound: breakthrough insights, problem prevention, cross-platform synthesis, timing-sensitive, self-improvement
+  - Throttle: 3/hr, 10/day, confidence >= 0.8
+  - Two-way: Colby texts back → Karma generates response → TwiML reply
+  - Webhook: POST /sms/webhook (configure in Twilio console → https://karma.arknexus.net/sms/webhook)
+  - FROM: +14848061591 → TO: +14845165322
 - **CLI Client**: karma-core/cli.py (karma chat, karma status, karma ask)
 - **Desktop Shortcut**: karma-chat.ps1 → SSH → docker exec → cli.py chat
-- **Files**: karma-core/Dockerfile, requirements.txt, config.py, bootstrap.py, server.py, consciousness.py, router.py, cli.py, karma-chat.ps1, create-shortcut.ps1, karma-icon.ico
+- **Files**: karma-core/Dockerfile, requirements.txt, config.py, bootstrap.py, server.py, consciousness.py, router.py, sms.py, cli.py, karma-chat.ps1, create-shortcut.ps1, karma-icon.ico
 - **Architecture doc**: KARMA-ARCHITECTURE.md
 
 ## Phase 4 Completion Notes (Autonomous Context Injection)
@@ -90,4 +101,4 @@ Batch ingest complete — 605 episodes in graph. Next: fund GLM-5 account, expos
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 
 ## Last Updated
-2026-02-16 — Batch ingest complete: 605 episodes, 479 entities, 4169 relationships. All ledger conversations processed.
+2026-02-16 — Remote access (karma.arknexus.net) + SMS notifications + consciousness→graph ingestion deployed. All tested.

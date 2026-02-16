@@ -12,3 +12,7 @@ uvicorn[standard]>=0.34
 websockets>=14.0
 openai>=1.60
 redis>=5.0
+python-multipart>=0.0.9
+
+# SMS Notifications
+twilio>=9.0

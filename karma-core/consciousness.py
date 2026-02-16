@@ -32,13 +32,16 @@ class ConsciousnessLoop:
     """Karma's background awareness — observes, thinks, decides, acts, reflects."""
 
     def __init__(self, get_falkor_fn, get_graph_stats_fn, get_openai_client_fn,
-                 active_conversations_ref: dict, router=None):
+                 active_conversations_ref: dict, router=None,
+                 ingest_episode_fn=None, sms_notify_fn=None):
         # Injected dependencies from server.py (no circular imports)
         self._get_falkor = get_falkor_fn
         self._get_graph_stats = get_graph_stats_fn
         self._get_openai_client = get_openai_client_fn
         self._active_conversations = active_conversations_ref
         self._router = router  # Optional: use model router for THINK phase
+        self._ingest_episode = ingest_episode_fn  # Optional: feed reflections into graph
+        self._sms_notify = sms_notify_fn  # Optional: SMS notification for high-value insights
 
         # State
         self._running = False
@@ -55,6 +58,8 @@ class ConsciousnessLoop:
             "idle_cycles": 0,
             "insights_generated": 0,
             "alerts_generated": 0,
+            "journal_ingested": 0,
+            "sms_sent": 0,
             "errors": 0,
             "llm_calls_total": 0,
             "llm_calls_skipped": 0,
@@ -323,7 +328,7 @@ Rules:
 
     def _act(self, cycle_num: int, action: str, reason: str,
              observations: dict, analysis: Optional[dict]):
-        """Execute the decided action — log to journal, queue insights."""
+        """Execute the decided action — log to journal, queue insights, ingest to graph, SMS notify."""
 
         # Write to consciousness journal
         entry = {
@@ -353,6 +358,48 @@ Rules:
             # Cap queue at 5 to avoid overwhelming chat context
             if len(self._pending_insights) > 5:
                 self._pending_insights = self._pending_insights[-5:]
+
+        # Ingest reflection into knowledge graph (non-blocking)
+        if self._ingest_episode and action != Action.NO_ACTION:
+            try:
+                # Build a reflection episode for the graph
+                reflection_body = f"[karma-consciousness] Cycle #{cycle_num} ({action}): {reason}"
+                if analysis:
+                    patterns = analysis.get("patterns", [])
+                    insights = analysis.get("insights", [])
+                    if patterns:
+                        reflection_body += f"\nPatterns: {'; '.join(patterns[:3])}"
+                    if insights:
+                        reflection_body += f"\nInsights: {'; '.join(insights[:3])}"
+
+                # Schedule as async task (ingest_episode is async)
+                loop = asyncio.get_event_loop()
+                loop.create_task(self._ingest_episode(
+                    reflection_body, f"Karma's self-reflection (cycle {cycle_num})",
+                    source="karma-consciousness"
+                ))
+                self.metrics["journal_ingested"] += 1
+            except Exception as e:
+                print(f"[CONSCIOUSNESS] Graph ingest failed: {e}")
+
+        # SMS notify for high-value insights
+        if self._sms_notify and action in (Action.LOG_ALERT, Action.LOG_INSIGHT, Action.LOG_GROWTH):
+            try:
+                confidence = 0.0
+                if analysis:
+                    urgency = analysis.get("urgency", "none")
+                    confidence = {"none": 0.3, "low": 0.5, "medium": 0.8, "high": 1.0}.get(urgency, 0.3)
+                # SMS module handles throttling and confidence filtering
+                sms_category = "breakthrough_insight"
+                if action == Action.LOG_ALERT:
+                    sms_category = "problem_prevention"
+                elif action == Action.LOG_GROWTH:
+                    sms_category = "self_improvement"
+                loop = asyncio.get_event_loop()
+                loop.create_task(self._sms_notify(reason, category=sms_category, confidence=confidence))
+                self.metrics["sms_sent"] += 1
+            except Exception as e:
+                print(f"[CONSCIOUSNESS] SMS notify failed: {e}")
 
         # Update counters
         if action == Action.LOG_INSIGHT:

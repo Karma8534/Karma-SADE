@@ -13,8 +13,8 @@ from typing import Optional
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
+from fastapi.responses import JSONResponse, Response
 import uvicorn
 
 import config
@@ -603,6 +603,13 @@ async def status():
             "stats": app.state.router.get_stats(),
         }
 
+    # SMS stats
+    sms_data = {}
+    if hasattr(app.state, "sms") and app.state.sms:
+        sms_data = app.state.sms.get_stats()
+    else:
+        sms_data = {"enabled": False}
+
     return JSONResponse({
         "karma": {
             "state": "awake",
@@ -611,6 +618,7 @@ async def status():
         },
         "consciousness": consciousness_data,
         "routing": routing_data,
+        "sms": sms_data,
         "knowledge_graph": graph_stats,
         "preferences": {
             "total": len(prefs),
@@ -619,6 +627,34 @@ async def status():
         "recent_tasks": tasks,
         "active_sessions": len(active_conversations),
     })
+
+
+@app.post("/sms/webhook")
+async def sms_webhook(request: Request):
+    """Twilio inbound SMS webhook — two-way chat via text."""
+    try:
+        form = await request.form()
+        from_number = form.get("From", "")
+        body = form.get("Body", "").strip()
+
+        if not body:
+            return Response(content='<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
+                           media_type="text/xml")
+
+        if hasattr(app.state, "sms") and app.state.sms:
+            reply = await app.state.sms.handle_inbound(from_number, body)
+            if reply:
+                # Escape XML special chars
+                safe_reply = reply[:1600].replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+                twiml = f'<?xml version="1.0" encoding="UTF-8"?><Response><Message>{safe_reply}</Message></Response>'
+                return Response(content=twiml, media_type="text/xml")
+
+        return Response(content='<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
+                       media_type="text/xml")
+    except Exception as e:
+        print(f"[SMS] Webhook error: {e}")
+        return Response(content='<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
+                       media_type="text/xml")
 
 
 @app.get("/ask")
@@ -904,6 +940,14 @@ async def startup():
     registered = [p.name for p in app.state.router.providers]
     print(f"  Router: {len(registered)} models ({', '.join(registered) or 'none'})")
 
+    # Initialize SMS manager
+    from sms import SMSManager
+    app.state.sms = SMSManager(generate_response_fn=generate_response)
+    if app.state.sms.enabled:
+        print(f"  SMS: ACTIVE (→ {config.SMS_TO_NUMBER[-4:]})")
+    else:
+        print("  SMS: DISABLED (credentials not configured)")
+
     # Start consciousness loop
     if config.CONSCIOUSNESS_ENABLED:
         from consciousness import ConsciousnessLoop
@@ -913,9 +957,14 @@ async def startup():
             get_openai_client_fn=get_openai_client,
             active_conversations_ref=active_conversations,
             router=app.state.router,
+            ingest_episode_fn=ingest_episode,
+            sms_notify_fn=app.state.sms.notify if app.state.sms.enabled else None,
         )
         app.state.consciousness.start()
         print(f"  Consciousness: ACTIVE (every {config.CONSCIOUSNESS_INTERVAL}s)")
+        print(f"    → Journal ingestion: ENABLED (reflections feed into graph)")
+        if app.state.sms.enabled:
+            print(f"    → SMS alerts: ENABLED (high-confidence insights → SMS)")
     else:
         app.state.consciousness = None
         print("  Consciousness: DISABLED")
