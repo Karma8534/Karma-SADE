@@ -1,7 +1,7 @@
 # Universal AI Memory — Current State
 
 ## Active Phase
-Phase 4 (Autonomous Context Injection) — COMPLETE
+Karma Brain Stack — Foundation installed, bootstrap complete
 
 ## Phase Status
 | Phase | Status | Summary |
@@ -10,12 +10,10 @@ Phase 4 (Autonomous Context Injection) — COMPLETE
 | 2 | ✅ Complete | Embeddings & semantic search via ChromaDB (verified operational) |
 | 3 | ✅ Complete | Auto-reindexing on new entries |
 | 4 | ✅ Complete | Context injection — manual (popup) + autonomous (auto-inject with preview UI) |
-| 5 | 📋 Not started | Cross-platform memory sync |
-| 6 | 📋 Not started | Agent autonomy framework |
-| 7 | 📋 Not started | Full autonomous agent |
+| Karma | 🔧 In progress | Brain stack foundation — FalkorDB + Graphiti + PostgreSQL analysis |
 
 ## Current Task
-Phase 4 complete. Next: Phase 5 scoping (cross-platform memory sync) or further Phase 4 polish.
+Karma bootstrap complete. Next: Process remaining 387 captures, build LangGraph consciousness loop, connect to Chrome extension for real-time awareness.
 
 ## Blockers
 None
@@ -36,10 +34,20 @@ None
 - Platform-specific injection: Claude (contenteditable), ChatGPT (ProseMirror div), Gemini (Quill ql-editor)
 - Fixed field name mismatches (similarity_score, content_preview, platform)
 
+## Karma Brain Stack (Installed 2026-02-16)
+- **FalkorDB**: Running on vault-neo (Docker, port 3000/7687), 101 entities + 100 episodes
+- **Graphiti**: graphiti-core[falkordb] for entity/relationship extraction from conversations
+- **PostgreSQL**: analysis schema with 94 records (83 facts + 13 preferences, deduped to 86+5+3)
+- **karma-core**: Docker image built, bootstrap.py completed successfully
+- **Knowledge extracted**: Entities (Neo, Claude Code, Chrome Extension, Docker, FalkorDB, etc.), 475 MENTIONS + 222 RELATES_TO relationships
+- **Files**: karma-core/Dockerfile, requirements.txt, config.py, bootstrap.py
+- **Architecture doc**: KARMA-ARCHITECTURE.md
+
 ## Infrastructure
 - Server: arknexus.net (vault-neo), Docker running, ledger operational
-- Cost: $24/mo (Phase 1-4), $29-34/mo projected at Phase 5+
+- FalkorDB: ~150-300MB RAM, Redis protocol on 6379 internal / 7687 external
+- Cost: ~$26/mo (droplet $24 + OpenAI ~$1-2 for analysis)
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 
 ## Last Updated
-2026-02-13 — Phase 4 (Autonomous Context Injection) complete, all 5 steps tested on all 3 platforms
+2026-02-16 — Karma Brain Stack foundation installed: FalkorDB + Graphiti + PostgreSQL analysis engine, bootstrap complete (100 episodes processed, 94 facts/preferences seeded)
