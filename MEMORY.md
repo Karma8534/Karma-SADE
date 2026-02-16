@@ -15,7 +15,7 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | Multi-Model | ✅ Active | Groq (speed), MiniMax (coding), GLM-5 (reasoning), OpenAI (fallback) |
 
 ## Current Task
-Multi-model router deployed. GLM-5 has insufficient balance (falls back to OpenAI). Next: fund GLM-5 account, process remaining ~380 captures, expose port 8340 via Caddy for remote CLI.
+Identity prioritization fix deployed. Next: fund GLM-5 account, process remaining ~380 captures, expose port 8340 via Caddy for remote CLI.
 
 ## Blockers
 - GLM-5 (Z.ai) account has insufficient balance — reasoning tasks fall back to OpenAI. Need to fund the BigModel account.
@@ -27,7 +27,7 @@ Multi-model router deployed. GLM-5 has insufficient balance (falls back to OpenA
 - **Test passed**: "Adopted a cat named Luna" → quit → new session → "Do I have pets?" → "Luna"
 - **Desktop shortcut**: `C:\Users\raest\Desktop\Talk to Karma.lnk` — one-click terminal chat
 - **Real-time learning**: Every chat turn → background Graphiti ingest → entities/relationships updated in ~5-8s
-- **Identity system**: Extracts and prioritizes real names > aliases, deduplicates facts
+- **Identity system**: Structured real_name/alias extraction from FalkorDB. Context outputs `REAL NAME: Colby` with explicit instruction to use it for greetings. Aliases labeled as secondary. Personal facts filtered to Colby entity only (pets, family, life events).
 - **Query filter**: Read-only questions (/ask with "what/who/how...") skip graph ingestion to prevent self-reinforcing loops
 - **Consciousness loop**: 60s background cycle — OBSERVE/THINK/DECIDE/ACT/REFLECT
   - Idle cycles: 0 LLM calls, ~2ms, $0 cost
@@ -87,4 +87,4 @@ Multi-model router deployed. GLM-5 has insufficient balance (falls back to OpenA
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 
 ## Last Updated
-2026-02-16 — Multi-model router deployed: Groq + MiniMax + GLM-5 + OpenAI. Task-based routing live.
+2026-02-16 — Identity prioritization fix: Karma now greets as "Colby" (real name) instead of "Neo" (alias). Structured identity context in system prompt.
