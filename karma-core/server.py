@@ -8,6 +8,7 @@ import asyncio
 import json
 import time
 import traceback
+import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -702,6 +703,93 @@ async def ask(q: str):
         asyncio.create_task(ingest_episode(q, reply, "karma-terminal-ask"))
 
     return JSONResponse({"question": q, "answer": reply, "model": model_used})
+
+
+@app.post("/v1/chat/completions")
+async def openai_proxy_completions(request: Request):
+    """
+    OpenAI-compatible chat completions endpoint.
+    Routes requests through Karma's intelligent router.
+
+    Designed for Claude Code integration - passes task_type="coding"
+    to ensure GLM-5 is preferred via priority-based routing.
+    """
+    try:
+        body = await request.json()
+
+        # Extract OpenAI-compatible format
+        messages = body.get("messages", [])
+        max_tokens = body.get("max_tokens")
+        temperature = body.get("temperature", 0.7)
+
+        if not messages:
+            return JSONResponse(
+                {"error": "messages field is required"},
+                status_code=400
+            )
+
+        # Route through Karma's router with task_type="coding"
+        # This ensures GLM-5 (priority -1) is selected via intelligent routing
+        if hasattr(app.state, "router") and app.state.router:
+            reply, model_used = app.state.router.complete(
+                messages=messages,
+                task_type="coding",  # Force routing optimization for Claude Code
+                max_tokens=max_tokens,
+                temperature=temperature,
+            )
+        else:
+            # Fallback if router not initialized
+            return JSONResponse(
+                {"error": "Router not initialized"},
+                status_code=503
+            )
+
+        # Log to ledger for tracking
+        if messages:
+            last_user_msg = ""
+            for msg in reversed(messages):
+                if msg.get("role") == "user":
+                    last_user_msg = msg.get("content", "")[:100]
+                    break
+            try:
+                log_to_ledger(last_user_msg, reply, model_used=model_used, source="openai-proxy")
+            except Exception as e:
+                print(f"[OpenAI Proxy] Ledger logging failed: {e}")
+
+        # Return OpenAI-compatible format
+        return JSONResponse({
+            "id": f"chatcmpl-{str(uuid.uuid4())}",
+            "object": "chat.completion",
+            "created": int(time.time()),
+            "model": model_used,
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": reply
+                    },
+                    "finish_reason": "stop"
+                }
+            ],
+            "usage": {
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "total_tokens": 0
+            }
+        })
+
+    except json.JSONDecodeError:
+        return JSONResponse(
+            {"error": "Invalid JSON in request body"},
+            status_code=400
+        )
+    except Exception as e:
+        print(f"[OpenAI Proxy] Error: {e}")
+        return JSONResponse(
+            {"error": f"Internal server error: {str(e)}"},
+            status_code=500
+        )
 
 
 @app.websocket("/chat")
