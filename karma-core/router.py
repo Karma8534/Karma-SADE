@@ -2,10 +2,10 @@
 Karma Model Router — Multi-Model Intelligence
 
 Routes requests to the best model for each task type:
-  - MiniMax M2.5: Primary model for ALL tasks (coding, reasoning, speed, general)
+  - MiniMax M2.5: Primary model for coding, speed, general
+  - GLM-5: Reasoning + analysis (priority 1 — deep thinking tasks)
   - Groq (Llama): Fallback for speed-critical responses
   - OpenAI gpt-4o-mini: Final fallback, consciousness analysis
-  - GLM-5: Disabled (insufficient balance — re-enable when funded)
 
 All providers expose OpenAI-compatible /v1/chat/completions endpoints,
 so we use the OpenAI Python SDK with different base_url + api_key per provider.
@@ -143,21 +143,21 @@ class ModelRouter:
 
     def _init_providers(self):
         """Initialize all configured model providers."""
-        # MiniMax M2.5 — PRIMARY for ALL tasks until credits deplete
-        # Top benchmark scores: 80.2% SWE-Bench, strong reasoning + speed
+        # MiniMax M2.5 — PRIMARY for coding, speed, general
+        # Top benchmark scores: 80.2% SWE-Bench, strong coding + speed
         if config.MINIMAX_API_KEY:
             self.providers.append(ModelProvider(
                 name="minimax",
                 model=config.MINIMAX_MODEL,
                 base_url="https://api.minimax.io/v1",
                 api_key=config.MINIMAX_API_KEY,
-                task_types=[TaskType.CODING, TaskType.REASONING, TaskType.SPEED,
-                            TaskType.ANALYSIS, TaskType.GENERAL],
+                task_types=[TaskType.CODING, TaskType.SPEED, TaskType.GENERAL,
+                            TaskType.REASONING, TaskType.ANALYSIS],
                 max_tokens=2048,
                 temperature=0.7,
-                priority=0,  # Highest priority — primary for everything
+                priority=0,  # Highest priority for coding/speed/general; fallback for reasoning/analysis
             ))
-            print(f"[ROUTER] MiniMax registered: {config.MINIMAX_MODEL} (PRIMARY — all tasks)")
+            print(f"[ROUTER] MiniMax registered: {config.MINIMAX_MODEL} (PRIMARY — coding/speed/general)")
 
         # Groq — secondary fallback for speed tasks (Llama on custom silicon)
         if config.GROQ_API_KEY:
@@ -173,10 +173,20 @@ class ModelRouter:
             ))
             print(f"[ROUTER] Groq registered: {config.GROQ_MODEL} (fallback)")
 
-        # GLM-5 — DISABLED (insufficient balance, re-enable when funded)
-        # Config still loaded but not registered as a provider
+        # GLM-5 — Reasoning + analysis specialist (BigModel / Z.ai, OpenAI-compatible)
+        # Priority -1 beats MiniMax (0) for reasoning/analysis tasks
         if config.GLM_API_KEY:
-            print(f"[ROUTER] GLM-5 skipped: disabled until account is funded")
+            self.providers.append(ModelProvider(
+                name="glm5",
+                model=config.GLM_MODEL,
+                base_url=config.GLM_BASE_URL,
+                api_key=config.GLM_API_KEY,
+                task_types=[TaskType.REASONING, TaskType.ANALYSIS],
+                max_tokens=2048,
+                temperature=0.7,
+                priority=-1,  # Highest priority for reasoning/analysis — beats MiniMax
+            ))
+            print(f"[ROUTER] GLM-5 registered: {config.GLM_MODEL} (reasoning + analysis, priority -1)")
 
         # OpenAI gpt-4o-mini — final fallback + consciousness analysis
         if config.OPENAI_API_KEY:
@@ -221,11 +231,17 @@ class ModelRouter:
         if provider is None:
             return "[No model providers available]", "none"
 
-        # Try primary provider, fall back to OpenAI on failure
+        # Build fallback chain: primary → other providers that support this task → any enabled
         providers_to_try = [provider]
-        fallback = self.get_provider(TaskType.ANALYSIS)  # OpenAI is always analysis fallback
-        if fallback and fallback.name != provider.name:
-            providers_to_try.append(fallback)
+        # Add other providers for same task type (sorted by priority)
+        for p in sorted(self.providers, key=lambda x: x.priority):
+            if p.enabled and p.name != provider.name and p not in providers_to_try:
+                if task_type in p.task_types:
+                    providers_to_try.append(p)
+        # Final fallback: OpenAI (always available for everything)
+        for p in sorted(self.providers, key=lambda x: x.priority):
+            if p.enabled and p not in providers_to_try:
+                providers_to_try.append(p)
 
         for p in providers_to_try:
             try:
