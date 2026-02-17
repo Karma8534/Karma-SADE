@@ -7,12 +7,15 @@ surfaces insights proactively during chat without being asked.
 """
 import asyncio
 import json
+import logging
 import time
 import traceback
 from datetime import datetime, timezone
 from typing import Optional
 
 import config
+
+logger = logging.getLogger(__name__)
 
 
 # ─── Action Types ─────────────────────────────────────────────────────────
@@ -69,6 +72,7 @@ class ConsciousnessLoop:
             "started_at": None,
         }
         self._cycle_durations: list[float] = []  # Last 100 durations for avg
+        self.last_cycle_time = time.time()  # Track when last cycle ran
 
     # ─── Lifecycle ────────────────────────────────────────────────────
 
@@ -125,75 +129,81 @@ class ConsciousnessLoop:
         # 1. OBSERVE
         observations = self._observe()
 
-        # 2. THINK (skip LLM if idle)
-        is_idle = (
-            observations["new_episodes"] == 0
-            and observations["new_entities"] == 0
-            and observations["new_relationships"] == 0
-        )
-
-        if is_idle:
+        # If observation is None (idle cycle - no new episodes), skip rest
+        if observations is None:
             self.metrics["idle_cycles"] += 1
             self.metrics["consecutive_idle"] += 1
             self.metrics["llm_calls_skipped"] += 1
             analysis = None
+            is_idle = True
+            action = Action.NO_ACTION
         else:
+            is_idle = False
             self.metrics["active_cycles"] += 1
             self.metrics["consecutive_idle"] = 0
+
+            # 2. THINK (run LLM for non-idle observations)
             analysis = await self._think(observations)
 
-        # 3. DECIDE
-        action, reason = self._decide(observations, analysis)
+            # 3. DECIDE
+            action, reason = self._decide(observations, analysis)
 
-        # 4. ACT
-        if action != Action.NO_ACTION:
-            self._act(cycle_num, action, reason, observations, analysis)
+            # 4. ACT
+            if action != Action.NO_ACTION:
+                self._act(cycle_num, action, reason, observations, analysis)
 
         # 5. REFLECT
         cycle_ms = (time.monotonic() - cycle_start) * 1000
         self._reflect(cycle_num, cycle_ms, is_idle, action)
 
-        # Update tick timestamp and snapshot
+        # Update tick timestamp
         self._last_tick = datetime.now(timezone.utc).isoformat()
-        self._last_graph_stats = {
-            "entities": observations["graph_stats"].get("entities", 0),
-            "episodes": observations["graph_stats"].get("episodes", 0),
-            "relationships": observations["graph_stats"].get("relationships", 0),
-        }
 
     # ─── Phase 1: OBSERVE ─────────────────────────────────────────────
 
-    def _observe(self) -> dict:
-        """Gather data from FalkorDB and system state."""
-        current_stats = self._get_graph_stats()
-        prev = self._last_graph_stats or {"entities": 0, "episodes": 0, "relationships": 0}
+    def _observe(self) -> Optional[dict]:
+        """Observe ONLY what changed since last cycle (delta mode)"""
 
-        # Safely compute deltas (handle "?" from failed queries)
-        def safe_delta(key):
-            cur = current_stats.get(key, 0)
-            prv = prev.get(key, 0)
-            if isinstance(cur, str) or isinstance(prv, str):
-                return 0
-            return max(0, cur - prv)
+        # Calculate time since last cycle
+        current_time = time.time()
+        time_delta = current_time - self.last_cycle_time
 
-        new_episodes = safe_delta("episodes")
-        new_entities = safe_delta("entities")
-        new_relationships = safe_delta("relationships")
+        # Query ONLY new episodes since last cycle
+        # Note: FalkorDB timestamp is Unix epoch (seconds)
+        try:
+            falkor = self._get_falkor()
 
-        # Get recent episode content if there are new ones
-        recent_content = []
-        if new_episodes > 0:
-            recent_content = self._get_recent_episode_content(min(new_episodes, 5))
+            # Delta query - only episodes newer than last_cycle_time
+            # Use execute_command for FalkorDB Redis client
+            cypher = f"""
+                MATCH (e:Episodic)
+                WHERE e.created_at > {self.last_cycle_time}
+                RETURN e
+                ORDER BY e.created_at DESC
+                LIMIT 20
+            """
+            result = falkor.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
 
+            # FalkorDB returns [["e"], [[...], [...]], ...]
+            # Extract episode objects from result
+            episodes = result[1] if len(result) >= 2 and result[1] else []
+
+        except Exception as e:
+            logger.error(f"Delta query failed: {e}")
+            episodes = []
+
+        # Update cycle time AFTER successful query
+        self.last_cycle_time = current_time
+
+        # If nothing changed, return None (triggers idle cycle)
+        if not episodes or len(episodes) == 0:
+            return None
+
+        # Return delta observation
         return {
-            "graph_stats": current_stats,
-            "new_episodes": new_episodes,
-            "new_entities": new_entities,
-            "new_relationships": new_relationships,
-            "recent_content": recent_content,
-            "active_sessions": len(self._active_conversations),
-            "consecutive_idle": self.metrics["consecutive_idle"],
-            "cycle_number": self.metrics["total_cycles"],
+            'new_episodes': episodes,
+            'time_delta_seconds': time_delta,
+            'episode_count': len(episodes)
         }
 
     def _get_recent_episode_content(self, limit: int) -> list[str]:
@@ -215,79 +225,87 @@ class ConsciousnessLoop:
 
     # ─── Phase 2: THINK ───────────────────────────────────────────────
 
-    async def _think(self, observations: dict) -> Optional[dict]:
-        """Analyze observations via gpt-4o-mini. Returns structured analysis."""
-        self.metrics["llm_calls_total"] += 1
+    async def _think(self, observation: Optional[dict]) -> Optional[dict]:
+        """Reason about observations using GLM-5 (skip if None)"""
 
-        # Build a compact observation summary for the LLM
-        obs_summary = (
-            f"New episodes: {observations['new_episodes']}, "
-            f"New entities: {observations['new_entities']}, "
-            f"New relationships: {observations['new_relationships']}, "
-            f"Total graph: {observations['graph_stats']}, "
-            f"Active chat sessions: {observations['active_sessions']}"
-        )
-
-        # Include recent content snippets
-        content_section = ""
-        if observations["recent_content"]:
-            snippets = [s[:150] for s in observations["recent_content"][:3]]
-            content_section = "\nRecent conversation topics:\n" + "\n".join(f"- {s}" for s in snippets)
-
-        prompt = f"""You are Karma's analytical mind. Analyze these observations from the last {config.CONSCIOUSNESS_INTERVAL} seconds and identify patterns or insights. Be extremely concise.
-
-Observations: {obs_summary}{content_section}
-
-Previous cycle notes: {self._last_reflection or 'First active cycle'}
-
-Respond with ONLY valid JSON (no markdown, no code fences):
-{{"patterns": ["..."], "anomalies": ["..."], "insights": ["..."], "urgency": "none"}}
-
-Rules:
-- patterns: Notable recurring themes (empty list if none)
-- anomalies: Anything unusual (empty list if none)
-- insights: Connections or inferences worth mentioning to the user (empty list if none)
-- urgency: "none", "low", "medium", or "high"
-- Keep each item under 50 words
-- Empty lists are fine — don't force patterns that aren't there"""
-
-        try:
-            messages = [{"role": "user", "content": prompt}]
-
-            # Use router if available (routes to analysis model), else direct client
-            if self._router:
-                from router import TaskType
-                raw, model = self._router.complete(
-                    messages=messages,
-                    task_type=TaskType.ANALYSIS,
-                    max_tokens=200,
-                    temperature=0.3,
-                )
-            else:
-                client = self._get_openai_client()
-                response = client.chat.completions.create(
-                    model=config.ANALYSIS_MODEL,
-                    messages=messages,
-                    max_tokens=200,
-                    temperature=0.3,
-                )
-                raw = response.choices[0].message.content.strip()
-
-            # Strip markdown fences if the model wraps anyway
-            if raw.startswith("```"):
-                raw = raw.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-            return json.loads(raw)
-        except (json.JSONDecodeError, Exception) as e:
-            print(f"[CONSCIOUSNESS] Think phase failed: {e}")
+        # Skip LLM call if nothing changed (idle cycle)
+        if observation is None:
+            self.metrics["llm_calls_skipped"] += 1
             return None
+
+        # Build lightweight context from delta
+        context = self._build_delta_context(observation)
+
+        # Route to GLM-5 for reasoning
+        try:
+            if self._router:
+                response = await self._router.complete(
+                    messages=[
+                        {"role": "system", "content": "You are Karma's consciousness analyzing new activity."},
+                        {"role": "user", "content": context}
+                    ],
+                    task_type="reasoning"  # Routes to GLM-5
+                )
+
+                self.metrics["llm_calls_total"] += 1
+                return {"insight": response.get("content", ""), "observation": observation}
+            else:
+                logger.warning("No router configured, skipping LLM call")
+                return None
+
+        except Exception as e:
+            logger.error(f"Consciousness _think() failed: {e}")
+            self.metrics["errors"] += 1
+            return None
+
+    def _build_delta_context(self, observation: dict) -> str:
+        """Build lightweight context from delta only"""
+
+        new_episodes = observation.get('new_episodes', [])
+        time_delta = observation.get('time_delta_seconds', 0)
+        episode_count = observation.get('episode_count', 0)
+
+        context = f"""TIME ELAPSED: {time_delta:.0f} seconds since last observation
+NEW ACTIVITY:
+{episode_count} new episodes detected
+EPISODE SUMMARIES:
+"""
+
+        # Limit to first 10 episodes for context size
+        for i, ep in enumerate(new_episodes[:10]):
+            # Extract episode content (adjust based on your Episode node structure)
+            content = ""
+            if hasattr(ep, 'properties'):
+                props = ep.properties
+                content = props.get('content', props.get('name', 'Unknown'))
+            elif isinstance(ep, dict):
+                content = ep.get('content', ep.get('name', 'Unknown'))
+
+            # Truncate to 200 chars
+            content_preview = str(content)[:200]
+            context += f"\n{i+1}. {content_preview}"
+
+        context += """
+TASK: Analyze these new episodes. Identify:
+1. Any patterns worth noting
+2. Actions that need follow-up
+3. Information worth remembering long-term
+Keep response under 500 tokens.
+"""
+
+        return context
 
     # ─── Phase 3: DECIDE ──────────────────────────────────────────────
 
-    def _decide(self, observations: dict, analysis: Optional[dict]) -> tuple[str, str]:
+    def _decide(self, observations: Optional[dict], analysis: Optional[dict]) -> tuple[str, str]:
         """Rule-based action selection. Returns (action, reason)."""
 
+        # No observations (idle cycle)
+        if observations is None:
+            return Action.NO_ACTION, "Idle cycle — no new episodes"
+
         # No activity → no action
-        if observations["new_episodes"] == 0 and observations["new_entities"] == 0:
+        if observations.get("episode_count", 0) == 0:
             return Action.NO_ACTION, "Idle cycle — no new activity"
 
         # Analysis failed → log error

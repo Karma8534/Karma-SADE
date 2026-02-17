@@ -50,7 +50,7 @@ LEDGER_PATH = os.getenv("LEDGER_PATH", "/ledger/memory.jsonl")
 # Consciousness loop
 CONSCIOUSNESS_INTERVAL = int(os.getenv("CONSCIOUSNESS_INTERVAL", "60"))  # seconds
 CONSCIOUSNESS_JOURNAL = os.getenv("CONSCIOUSNESS_JOURNAL", "/ledger/consciousness.jsonl")
-CONSCIOUSNESS_ENABLED = os.getenv("CONSCIOUSNESS_ENABLED", "true").lower() in ("true", "1", "yes")
+CONSCIOUSNESS_ENABLED = os.getenv("CONSCIOUSNESS_ENABLED", "true").lower() in ("true", "1", "yes")  # Defaults to ENABLED
 
 # Bootstrap
 BOOTSTRAP_LIMIT = int(os.getenv("BOOTSTRAP_LIMIT", "100"))  # conversations to process on first run
