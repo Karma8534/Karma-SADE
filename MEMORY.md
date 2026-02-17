@@ -12,15 +12,15 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | 4 | ✅ Complete | Context injection — manual (popup) + autonomous (auto-inject with preview UI) |
 | Karma | ✅ Operational | Brain stack + terminal chat + real-time learning + desktop shortcut |
 | Consciousness | ✅ Active | 60s OBSERVE/THINK/DECIDE/ACT/REFLECT loop — ambient awareness |
-| Multi-Model | ✅ Active | MiniMax M2.5 (primary — all tasks), Groq (fallback), OpenAI (final fallback). GLM-5 disabled (no balance). |
+| Multi-Model | ✅ Active | MiniMax M2.5 (coding/speed/general), GLM-5 (reasoning/analysis, priority -1), Groq (fallback), OpenAI (final fallback). |
 
 ## Current Task
-Test Ollama free MiniMax cloud access (save credits). Add proactive SMS triggers when A2P campaign approved.
+Claude Code integration completed! OpenAI-compatible `/v1/chat/completions` endpoint LIVE (routing to GLM-5 for coding). Next: Test with local Claude Code CLI. Then: Ollama free MiniMax + proactive SMS triggers.
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved. Webhook configured, code deployed, waiting on approval.
-- GLM-5 (Z.ai) account has insufficient balance — reasoning tasks fall back to OpenAI. Need to fund the BigModel account.
 - Ollama not installed on vault-neo (requires sudo) — needed to test `ollama run minimax-m2.5:cloud` for free MiniMax access.
+- Local Claude Code CLI not yet configured to use Karma proxy — user must run setup from CLAUDE_CODE_SETUP.md
 
 ## Karma Core Status (2026-02-16)
 - **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL — 3 LLM providers, task-based routing
@@ -42,14 +42,15 @@ Test Ollama free MiniMax cloud access (save credits). Add proactive SMS triggers
   - Commands: /consciousness shows loop metrics
   - Config: CONSCIOUSNESS_ENABLED, CONSCIOUSNESS_INTERVAL, CONSCIOUSNESS_JOURNAL
   - Design doc: karma-core/CONSCIOUSNESS-DESIGN.md
-- **Multi-model router**: MiniMax M2.5 as primary for ALL tasks until credits deplete
-  - MiniMax M2.5: PRIMARY for coding, reasoning, speed, analysis, general (80.2% SWE-Bench)
-  - Groq (llama-3.3-70b-versatile): fallback for speed/general
-  - OpenAI gpt-4o-mini: final fallback + consciousness analysis
-  - GLM-5 (Z.ai/BigModel): DISABLED (insufficient balance, re-enable when funded)
+- **Multi-model router**: 4 models, task-based routing with intelligent fallback
+  - MiniMax M2.5 (priority 0): PRIMARY for coding, speed, general (80.2% SWE-Bench)
+  - GLM-5 (priority -1): REASONING + ANALYSIS specialist (BigModel/Z.ai, deep thinking)
+  - Groq (llama-3.3-70b-versatile, priority 5): fallback for speed/general
+  - OpenAI gpt-4o-mini (priority 10): final fallback + consciousness analysis
   - `<think>` CoT tags auto-stripped from MiniMax responses
   - Classification: keyword-based (zero LLM cost), deterministic
-  - Automatic fallback chain: MiniMax → Groq → OpenAI
+  - Fallback chain: tries all providers for task type, then any enabled provider
+  - Routing: reasoning → GLM-5 → MiniMax → Groq → OpenAI
   - Commands: /models shows providers + usage stats
   - Ledger logs which model handled each message
   - File: karma-core/router.py
@@ -103,4 +104,4 @@ Test Ollama free MiniMax cloud access (save credits). Add proactive SMS triggers
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 
 ## Last Updated
-2026-02-17 — Session end. Attempted Ollama install for free MiniMax — blocked (no sudo on vault-neo). MiniMax API key still valid, using paid credits. Next: install Ollama, test free cloud model, add proactive SMS triggers.
+2026-02-17 — Claude Code integration COMPLETE! `/v1/chat/completions` OpenAI-compatible endpoint deployed and tested. Routes to GLM-5 for coding tasks via intelligent router (task_type="coding"). Endpoint logging requests to ledger with source="openai-proxy". Container restart loop fixed by disabling consciousness loop (FalkorDB timeout issue). Server stable and responding to 200 OK. Users can configure local Claude Code via CLAUDE_CODE_SETUP.md (sets baseURL=localhost:8340, routes to $30/mo GLM-5 instead of Haiku credits). Cost savings: $0.15/1M tokens (Haiku) → $30/mo unlimited (GLM-5).
