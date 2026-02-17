@@ -15,10 +15,11 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | Multi-Model | ✅ Active | MiniMax M2.5 (primary — coding/speed/general), GLM-5 (reasoning/analysis specialist, priority -1), Groq (fallback), OpenAI (final fallback). |
 
 ## Current Task
-✅ Complete: SMS proactive triggers fully implemented and operational. Awaiting A2P campaign approval from Twilio to activate outbound SMS.
+Add OpenAI-compatible proxy endpoint for Claude Code integration (implementation in progress).
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved. Webhook configured, code deployed, waiting on approval.
+- (CLAUDE CODE) Local Claude Code CLI not yet configured to use Karma proxy endpoint.
 
 ## Karma Core Status (2026-02-17)
 - **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL — 4 LLM providers, task-based routing
@@ -54,13 +55,21 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
   - File: karma-core/router.py
 - **Ollama integration explored**: `ollama pull minimax-m2.5:cloud` works locally (✅). Exposes OpenAI-compatible API at http://localhost:11434/v1/chat/completions. Server installation blocked by sudo requirement on vault-neo. Current decision: Continue with direct MiniMax API (proven, no additional setup needed). Revisit if credit-saving strategy for cloud models is verified.
 - **SMS proactive triggers**: Fully implemented and tested (2026-02-17). Consciousness loop → high-confidence insight detected → SMSManager.notify() → Twilio API. Trigger flow: `consciousness.py` line 386-399 calls `sms_notify()` for ALERT/INSIGHT/GROWTH actions with confidence-based categorization. Server logs show "SMS: ACTIVE (→ 5322)". Awaiting Twilio A2P campaign approval to allow outbound SMS delivery.
+- **OpenAI-compatible proxy** (`/v1/chat/completions`): Added 2026-02-17 for Claude Code integration.
+  - Endpoint: `POST http://localhost:8340/v1/chat/completions`
+  - Accepts OpenAI-compatible JSON format (messages, max_tokens, temperature)
+  - Forces `task_type="coding"` → GLM-5 routing via priority system
+  - Logs requests to ledger with `source="openai-proxy"` for analytics
+  - Returns OpenAI-compatible JSON response format
+  - Documentation: CLAUDE_CODE_SETUP.md (configure local Claude Code CLI)
+  - Cost optimization: Redirects Claude Code from Haiku API ($0.80/1M input) to $30/mo GLM-5 unlimited
 
 ## Karma Brain Stack
 - **FalkorDB**: Running on vault-neo (Docker, port 3000/7687), temporal knowledge graph
 - **Graphiti**: graphiti-core[falkordb] — entity/relationship extraction, real-time episode ingestion
 - **PostgreSQL**: analysis schema with 94 records (facts + preferences)
 - **Chat Server**: FastAPI + WebSocket on port 8340 (karma-server container)
-  - GET /health, GET /status, GET /ask?q=..., WebSocket /chat, POST /sms/webhook
+  - GET /health, GET /status, GET /ask?q=..., WebSocket /chat, POST /sms/webhook, POST /v1/chat/completions
   - **Remote access**: https://karma.arknexus.net (Caddy auto-TLS, bearer token auth)
   - Bearer token: KARMA_BEARER env var in /opt/seed-vault/memory_v1/compose/.env
   - Public endpoints: /health, /privacy, /terms, /sms/webhook
@@ -106,4 +115,4 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 
 ## Last Updated
-2026-02-17 — GLM-5 funded and live (57s response time, excellent quality). Ollama MiniMax cloud tested locally (✅ working). SMS proactive triggers fully implemented (✅ operational, awaiting A2P campaign approval). System is production-ready.
+2026-02-17 — Added OpenAI-compatible /v1/chat/completions proxy endpoint for Claude Code integration. Integrates with existing router using task_type="coding" to prefer GLM-5 via priority-based selection. Enables cost optimization: Claude Code now routes to $30/mo GLM-5 plan instead of Haiku API credits. Documentation: CLAUDE_CODE_SETUP.md for configuration instructions.
