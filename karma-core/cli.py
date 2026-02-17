@@ -5,6 +5,7 @@ Usage:
     karma chat              Start interactive conversation
     karma status            Quick system status
     karma ask "question"    Single question, get answer, exit
+    karma code "prompt"     Run Claude Code through Karma router (no credit use)
     karma goals             Show active goals
     karma graph             Visualize knowledge connections
     karma reflect           Trigger self-reflection
@@ -266,12 +267,57 @@ def http_status():
         sys.exit(1)
 
 
+# ─── Claude Code Integration ───────────────────────────────────────────────
+
+def code_ask(prompt: str):
+    """Ask Claude Code through Karma's router (OpenAI-compatible endpoint)."""
+    try:
+        import httpx
+        import json
+    except ImportError:
+        print(C.error("Missing dependency: pip install httpx"))
+        sys.exit(1)
+
+    print(C.system(f"Routing through Karma → MiniMax/GLM-5"))
+    print()
+
+    try:
+        # Use the OpenAI-compatible /v1/chat/completions endpoint
+        # which routes through Karma's intelligent router
+        resp = httpx.post(
+            f"{KARMA_HTTP}/v1/chat/completions",
+            json={
+                "model": "glm-5-coding",
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            timeout=120.0,  # Increased timeout for LLM responses
+        )
+        data = resp.json()
+
+        if "error" in data:
+            print(C.error(data["error"]))
+        elif "choices" in data and len(data["choices"]) > 0:
+            response = data["choices"][0]["message"]["content"]
+            model_used = data.get("model", "unknown")
+            print(C.karma(response))
+            print()
+            print(C.system(f"Model: {model_used}"))
+        else:
+            print(C.error(f"Unexpected response: {data}"))
+    except httpx.ConnectError:
+        print(C.error(f"Cannot connect to Karma at {KARMA_HTTP}"))
+        sys.exit(1)
+    except Exception as e:
+        print(C.error(f"Error: {e}"))
+        sys.exit(1)
+
+
 # ─── Main ─────────────────────────────────────────────────────────────────
 
 def main():
     if len(sys.argv) < 2:
         print("Usage: karma <command> [args]")
-        print("Commands: chat, status, ask, goals, graph, reflect")
+        print("Commands: chat, status, ask, code, goals, graph, reflect, know, rel")
         print("Try: karma chat")
         sys.exit(0)
 
@@ -291,6 +337,16 @@ def main():
             sys.exit(1)
         question = " ".join(sys.argv[2:])
         single_ask(question)
+
+    elif command == "code":
+        if len(sys.argv) < 3:
+            print(C.error("Usage: karma code \"your prompt here\""))
+            print(C.system("Example: karma code \"Write a Python function to reverse a list\""))
+            print(C.system("This routes through Karma's multi-model router (MiniMax M2.5, GLM-5, Groq, OpenAI)"))
+            print(C.system("Zero API credits consumed — uses the $30/mo GLM-5 plan"))
+            sys.exit(1)
+        prompt = " ".join(sys.argv[2:])
+        code_ask(prompt)
 
     elif command in ("goals", "graph", "reflect"):
         # These commands go through the /ask endpoint with a command prefix
@@ -312,7 +368,7 @@ def main():
 
     else:
         print(C.error(f"Unknown command: {command}"))
-        print("Commands: chat, status, ask, goals, graph, reflect, know, rel")
+        print("Commands: chat, status, ask, code, goals, graph, reflect, know, rel")
         sys.exit(1)
 
 
