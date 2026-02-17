@@ -15,11 +15,12 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | Multi-Model | ✅ Active | MiniMax M2.5 (primary — all tasks), Groq (fallback), OpenAI (final fallback). GLM-5 disabled (no balance). |
 
 ## Current Task
-Test SMS end-to-end when Twilio A2P campaign is approved. Add proactive notification triggers.
+Test Ollama free MiniMax cloud access (save credits). Add proactive SMS triggers when A2P campaign approved.
 
 ## Blockers
-- Twilio A2P campaign under review — SMS delivery blocked until approved
+- Twilio A2P campaign under review — SMS delivery blocked until approved. Webhook configured, code deployed, waiting on approval.
 - GLM-5 (Z.ai) account has insufficient balance — reasoning tasks fall back to OpenAI. Need to fund the BigModel account.
+- Ollama not installed on vault-neo (requires sudo) — needed to test `ollama run minimax-m2.5:cloud` for free MiniMax access.
 
 ## Karma Core Status (2026-02-16)
 - **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL — 3 LLM providers, task-based routing
@@ -102,4 +103,4 @@ Test SMS end-to-end when Twilio A2P campaign is approved. Add proactive notifica
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 
 ## Last Updated
-2026-02-16 — Remote access (karma.arknexus.net) + SMS + consciousness→graph ingestion + /privacy + /terms deployed. Twilio A2P campaign pending approval.
+2026-02-17 — Session end. Attempted Ollama install for free MiniMax — blocked (no sudo on vault-neo). MiniMax API key still valid, using paid credits. Next: install Ollama, test free cloud model, add proactive SMS triggers.
