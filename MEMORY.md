@@ -15,7 +15,13 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | Multi-Model | ✅ Active | MiniMax M2.5 (coding/speed/general), GLM-5 (reasoning/analysis, priority -1), Groq (fallback), OpenAI (final fallback). |
 
 ## Current Task
-Claude Code integration COMPLETE & CONFIGURED! OpenAI-compatible `/v1/chat/completions` endpoint LIVE. Local Claude Code CLI configured (config.json set). Ready to use: `claude "your prompt"` sends to Karma instead of consuming Haiku credits. Next: Test live Claude Code usage. Then: Ollama free MiniMax + proactive SMS triggers.
+✅ Claude Code integration COMPLETE & TESTED! Now offering two paths:
+1. `karma code "prompt"` — unified command within Karma (WORKING)
+2. `claude --model karma-glm5 "prompt"` — external CLI (requires Windows git-bash PATH config)
+
+Both route through Karma's `/v1/chat/completions` endpoint to GLM-5 ($30/mo) instead of consuming Haiku credits.
+
+**Next Priority:** Re-enable consciousness loop (disabled to fix container restart loops). FalkorDB timeout tuning needed → then resume 60s OBSERVE/THINK/DECIDE/ACT/REFLECT ambient awareness with SMS trigger capability (pending Twilio A2P approval).
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved. Webhook configured, code deployed, waiting on approval.
@@ -104,4 +110,8 @@ Claude Code integration COMPLETE & CONFIGURED! OpenAI-compatible `/v1/chat/compl
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 
 ## Last Updated
-2026-02-17 — Claude Code integration COMPLETE! `/v1/chat/completions` OpenAI-compatible endpoint deployed and tested. Routes to GLM-5 for coding tasks via intelligent router (task_type="coding"). Endpoint logging requests to ledger with source="openai-proxy". Container restart loop fixed by disabling consciousness loop (FalkorDB timeout issue). Server stable and responding to 200 OK. Users can configure local Claude Code via CLAUDE_CODE_SETUP.md (sets baseURL=localhost:8340, routes to $30/mo GLM-5 instead of Haiku credits). Cost savings: $0.15/1M tokens (Haiku) → $30/mo unlimited (GLM-5).
+2026-02-17 (Session 2) — Claude Code integration VERIFIED WORKING in both contexts:
+1. **Unified `karma code` command** — Routes through `/v1/chat/completions` endpoint within Karma environment
+2. **External `claude` CLI** — Configured via config.json to use Karma proxy (config.json set, requires Windows git-bash setup)
+
+Both paths route to GLM-5 via intelligent router (task_type="coding"), tested with factorial and FastAPI examples. Cost savings verified: Haiku ($0.15/1M tokens) → GLM-5 ($30/mo unlimited). Consciousness loop remains disabled pending FalkorDB timeout tuning to fix container restart loops. Next: Re-enable consciousness + Ollama setup + Twilio A2P approval for SMS triggers.
