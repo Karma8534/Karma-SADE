@@ -15,12 +15,12 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | Multi-Model | ✅ Active | MiniMax M2.5 (coding/speed/general), GLM-5 (reasoning/analysis, priority -1), Groq (fallback), OpenAI (final fallback). |
 
 ## Current Task
-Claude Code integration completed! OpenAI-compatible `/v1/chat/completions` endpoint LIVE (routing to GLM-5 for coding). Next: Test with local Claude Code CLI. Then: Ollama free MiniMax + proactive SMS triggers.
+Claude Code integration COMPLETE & CONFIGURED! OpenAI-compatible `/v1/chat/completions` endpoint LIVE. Local Claude Code CLI configured (config.json set). Ready to use: `claude "your prompt"` sends to Karma instead of consuming Haiku credits. Next: Test live Claude Code usage. Then: Ollama free MiniMax + proactive SMS triggers.
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved. Webhook configured, code deployed, waiting on approval.
 - Ollama not installed on vault-neo (requires sudo) — needed to test `ollama run minimax-m2.5:cloud` for free MiniMax access.
-- Local Claude Code CLI not yet configured to use Karma proxy — user must run setup from CLAUDE_CODE_SETUP.md
+- Claude Code CLI on Windows requires git-bash PATH environment variable (minor setup issue, endpoint works via curl)
 
 ## Karma Core Status (2026-02-16)
 - **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL — 3 LLM providers, task-based routing
