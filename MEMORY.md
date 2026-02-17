@@ -1,7 +1,7 @@
 # Universal AI Memory — Current State
 
 ## Active Phase
-Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM providers active.
+Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM providers active (MiniMax + GLM-5 + Groq + OpenAI).
 
 ## Phase Status
 | Phase | Status | Summary |
@@ -12,18 +12,17 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | 4 | ✅ Complete | Context injection — manual (popup) + autonomous (auto-inject with preview UI) |
 | Karma | ✅ Operational | Brain stack + terminal chat + real-time learning + desktop shortcut |
 | Consciousness | ✅ Active | 60s OBSERVE/THINK/DECIDE/ACT/REFLECT loop — ambient awareness |
-| Multi-Model | ✅ Active | MiniMax M2.5 (primary — all tasks), Groq (fallback), OpenAI (final fallback). GLM-5 disabled (no balance). |
+| Multi-Model | ✅ Active | MiniMax M2.5 (primary — coding/speed/general), GLM-5 (reasoning/analysis specialist, priority -1), Groq (fallback), OpenAI (final fallback). |
 
 ## Current Task
 Test Ollama free MiniMax cloud access (save credits). Add proactive SMS triggers when A2P campaign approved.
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved. Webhook configured, code deployed, waiting on approval.
-- GLM-5 (Z.ai) account has insufficient balance — reasoning tasks fall back to OpenAI. Need to fund the BigModel account.
 - Ollama not installed on vault-neo (requires sudo) — needed to test `ollama run minimax-m2.5:cloud` for free MiniMax access.
 
-## Karma Core Status (2026-02-16)
-- **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL — 3 LLM providers, task-based routing
+## Karma Core Status (2026-02-17)
+- **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL — 4 LLM providers, task-based routing
 - **Stats**: 479 entities, 605 episodes, 4169 relationships in FalkorDB
 - **Batch ingest**: 359/366 episodes processed (7 errors — RediSearch syntax + timeouts). Script: karma-core/batch_ingest.py
 - **FalkorDB tuning**: TIMEOUT raised from 1s→5s (graph grew 3x, queries need more time). MAX_QUEUED=25.
@@ -42,14 +41,15 @@ Test Ollama free MiniMax cloud access (save credits). Add proactive SMS triggers
   - Commands: /consciousness shows loop metrics
   - Config: CONSCIOUSNESS_ENABLED, CONSCIOUSNESS_INTERVAL, CONSCIOUSNESS_JOURNAL
   - Design doc: karma-core/CONSCIOUSNESS-DESIGN.md
-- **Multi-model router**: MiniMax M2.5 as primary for ALL tasks until credits deplete
-  - MiniMax M2.5: PRIMARY for coding, reasoning, speed, analysis, general (80.2% SWE-Bench)
-  - Groq (llama-3.3-70b-versatile): fallback for speed/general
-  - OpenAI gpt-4o-mini: final fallback + consciousness analysis
-  - GLM-5 (Z.ai/BigModel): DISABLED (insufficient balance, re-enable when funded)
+- **Multi-model router**: 4 models, task-based routing with intelligent fallback
+  - MiniMax M2.5 (priority 0): PRIMARY for coding, speed, general (80.2% SWE-Bench)
+  - GLM-5 (priority -1): REASONING + ANALYSIS specialist (BigModel/Z.ai, deep thinking). Funded 2026-02-17. Tested: 57s response time, excellent quality.
+  - Groq (llama-3.3-70b-versatile, priority 5): fallback for speed/general
+  - OpenAI gpt-4o-mini (priority 10): final fallback + consciousness analysis
   - `<think>` CoT tags auto-stripped from MiniMax responses
   - Classification: keyword-based (zero LLM cost), deterministic
-  - Automatic fallback chain: MiniMax → Groq → OpenAI
+  - Fallback chain: tries all providers for task type, then any enabled provider
+  - Routing: reasoning → GLM-5 → MiniMax → Groq → OpenAI
   - Commands: /models shows providers + usage stats
   - Ledger logs which model handled each message
   - File: karma-core/router.py
@@ -103,4 +103,4 @@ Test Ollama free MiniMax cloud access (save credits). Add proactive SMS triggers
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 
 ## Last Updated
-2026-02-17 — Session end. Attempted Ollama install for free MiniMax — blocked (no sudo on vault-neo). MiniMax API key still valid, using paid credits. Next: install Ollama, test free cloud model, add proactive SMS triggers.
+2026-02-17 — GLM-5 funded and live! Reasoning queries now route to GLM-5 (57s response time, excellent quality). Router: 4 models active with intelligent fallback chain. Next: install Ollama for free MiniMax, add proactive SMS triggers when A2P campaign approved.
