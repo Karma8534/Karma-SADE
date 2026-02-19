@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Universal AI Memory",
-  "version": "1.0.0",
-  "description": "Capture conversations from Claude, ChatGPT, and Gemini for persistent memory",
+  "version": "2.0.0",
+  "description": "Capture conversations and inject relevant context across Claude, ChatGPT, and Gemini",
   "permissions": [
     "storage",
     "activeTab",
@@ -21,30 +21,21 @@
       "matches": [
         "https://claude.ai/*"
       ],
-      "js": ["content-claude.js"],
+      "js": ["content-context.js", "content-claude.js"],
       "run_at": "document_idle"
     },
     {
       "matches": [
         "https://chatgpt.com/*"
       ],
-      "js": ["content-openai.js"],
+      "js": ["content-context.js", "content-openai.js"],
       "run_at": "document_idle"
     },
     {
       "matches": [
         "https://gemini.google.com/*"
       ],
-      "js": ["content-gemini.js"],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": [
-        "https://claude.ai/*",
-        "https://chatgpt.com/*",
-        "https://gemini.google.com/*"
-      ],
-      "js": ["content-context.js"],
+      "js": ["content-context.js", "content-gemini.js"],
       "run_at": "document_idle"
     }
   ],
