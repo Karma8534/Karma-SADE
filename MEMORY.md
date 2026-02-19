@@ -15,12 +15,12 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | Multi-Model | ✅ Active | MiniMax M2.5 (primary — coding/speed/general), GLM-5 (reasoning/analysis specialist, priority -1), Groq (fallback), OpenAI (final fallback). |
 
 ## Current Task
-Hub-bridge v2.1.0 + vault dual-tier rate limiting — COMPLETE. Next: K2 Week 2 Task 2 (consciousness memory architecture) — tabled pending approach decision.
+Extension + hub-bridge v2.1.1 hardening — COMPLETE. System fully operational. Next: worktree cleanup (prune stale worktrees) or K2 Week 2 Task 2 (consciousness memory architecture).
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
 - K2 machine (192.168.0.226): PS Remoting enabled. consciousness.py patched (load_context/log_to_daily added), LONG_TERM_MEMORY.md created, memory/daily/ directory created. 10-cycle test NOT yet run — tabled.
-- Chrome extension: needs capture token pasted into popup (captureToken field) for burst-safe batching to work.
+- Worktree sprawl: 10 active worktrees under .claude/worktrees/ — all but elegant-solomon are stale. Causes duplicate CLAUDE.md/MEMORY.md loading. Prune when convenient.
 
 ## Karma Core Status (2026-02-17)
 - **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL — 4 LLM providers, task-based routing
@@ -127,5 +127,13 @@ Hub-bridge v2.1.0 + vault dual-tier rate limiting — COMPLETE. Next: K2 Week 2 
 - Compose: `RL_RATE_INTERNAL=240`, `RL_BURST_INTERNAL=120` in `anr-vault-api` environment
 - Proof: 75/75 sequential burst test succeeded (hub-bridge → vault, private IP path)
 
+## Extension v2.0.0 Canonical (2026-02-19)
+- Duplicate extension instances eliminated: removed stale worktree (elegant-solomon) load from Chrome
+- manifest.json: v1.0.0 → v2.0.0, content-context.js per-platform (not catch-all), alarms permission retained
+- background.js: captureToken preferred over vaultToken, explicit authToken variable, diagnostic log (lengths only)
+- captureToken configured in extension popup (64-char hex), verified via storage.sync
+- e2e smoke test: chatlog_1771535912555_kjkvknexqy landed in vault ledger ✓
+- auth log: `{enabled:true, captureTokenLen:64, vaultTokenLen:0, using:'captureToken'}` ✓
+
 ## Last Updated
-2026-02-19 — Hub-bridge v2.1.0 deployed (separate capture/handoff tokens, batch ingest, rate limits). Vault API dual-tier rate limiting (public 30rpm, internal 240rpm) with Docker IPv4-mapped IPv6 fix. 75/75 burst test confirmed. Ledger: 2101 entries.
+2026-02-19 — Extension v2.0.0 canonical (single instance, captureToken auth, durable batch queue). Hub-bridge v2.1.1 (auto-handoff). Vault API dual-tier rate limiting (75/75 burst test). All e2e verified. Ledger: 2101+ entries.
