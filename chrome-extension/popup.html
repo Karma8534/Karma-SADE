@@ -201,9 +201,12 @@
 
   <div class="section">
     <div class="section-title">Configuration</div>
-    <label for="vaultToken">Vault Token</label>
-    <input type="password" id="vaultToken" placeholder="Enter your vault bearer token">
-    <div class="info">This token authenticates with your Hub API at hub.arknexus.net</div>
+    <label for="captureToken">Capture Token</label>
+    <input type="password" id="captureToken" placeholder="64-char hex capture token">
+    <div class="info" style="margin-bottom: 10px;">Primary auth token for hub.arknexus.net/v1/chatlog</div>
+    <label for="vaultToken">Vault Token <span style="font-size: 10px; color: #999;">(legacy fallback)</span></label>
+    <input type="password" id="vaultToken" placeholder="Legacy vault bearer token (optional)">
+    <div class="info">Leave blank if using Capture Token above.</div>
   </div>
 
   <div class="section">

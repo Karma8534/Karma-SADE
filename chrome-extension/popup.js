@@ -8,7 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Load configuration from storage
 function loadConfig() {
-  chrome.storage.sync.get(['vaultToken', 'enabled', 'autoInjectEnabled'], (config) => {
+  chrome.storage.sync.get(['captureToken', 'vaultToken', 'enabled', 'autoInjectEnabled'], (config) => {
+    document.getElementById('captureToken').value = config.captureToken || '';
     document.getElementById('vaultToken').value = config.vaultToken || '';
     document.getElementById('enableToggle').checked = config.enabled || false;
     document.getElementById('autoInjectToggle').checked = config.autoInjectEnabled || false;
@@ -26,28 +27,31 @@ function loadStats() {
 
 // Save configuration
 document.getElementById('saveBtn').addEventListener('click', () => {
+  const captureToken = document.getElementById('captureToken').value.trim();
   const vaultToken = document.getElementById('vaultToken').value.trim();
   const enabled = document.getElementById('enableToggle').checked;
 
-  if (!vaultToken) {
-    showStatus('Please enter a vault token', 'error');
+  if (!captureToken && !vaultToken) {
+    showStatus('Enter a Capture Token (or legacy Vault Token)', 'error');
     return;
   }
 
-  // Save to storage
+  // Save to storage — captureToken is primary, vaultToken is legacy fallback
   chrome.storage.sync.set({
+    captureToken: captureToken,
     vaultToken: vaultToken,
     enabled: enabled
   }, () => {
     if (chrome.runtime.lastError) {
       showStatus('Failed to save: ' + chrome.runtime.lastError.message, 'error');
     } else {
-      showStatus('Configuration saved successfully!', 'success');
-
-      // Reload stats in case toggle changed
-      setTimeout(() => {
-        loadStats();
-      }, 100);
+      console.log('[UAI Memory] popup saved', {
+        captureTokenLen: captureToken.length,
+        vaultTokenLen: vaultToken.length,
+        enabled
+      });
+      showStatus('Configuration saved!', 'success');
+      setTimeout(() => { loadStats(); }, 100);
     }
   });
 });
