@@ -169,10 +169,157 @@ function setupInputMonitor() {
   inputEl.addEventListener('input', onInput);
 }
 
-// Placeholder for Step 4 — inline preview UI
+// ─── Step 4: Inline Preview UI ───────────────────────────────────────
+
 function showInlinePreview(results) {
-  console.log('[UAI Memory] Inline preview placeholder — will be implemented in Step 4');
-  console.log('[UAI Memory] Results to show:', results.map(r => truncate(r.content_preview || '', 60)));
+  if (!results || results.length === 0) {
+    console.log('[UAI Memory] No results, skipping preview');
+    return;
+  }
+  // Remove any existing preview
+  const existing = document.getElementById('vault-inline-preview');
+  if (existing) existing.remove();
+  const inputElement = getInputElement();
+  if (!inputElement) return;
+
+  // Calculate position from input element's bounding rect
+  // Use fixed positioning + body append to avoid overflow:auto clipping
+  const inputRect = inputElement.getBoundingClientRect();
+  const previewWidth = Math.min(inputRect.width, 500);
+  const leftPos = inputRect.left + (inputRect.width - previewWidth) / 2;
+
+  // Create floating preview above input
+  const preview = document.createElement('div');
+  preview.id = 'vault-inline-preview';
+  preview.style.cssText = `
+    position: fixed;
+    bottom: ${window.innerHeight - inputRect.top + 8}px;
+    left: ${leftPos}px;
+    width: ${previewWidth}px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    color: #e0e0e0;
+    z-index: 10000;
+    box-sizing: border-box;
+  `;
+  preview.innerHTML = `
+    <div style="margin-bottom: 8px; font-weight: 500;">
+      Found ${results.length} relevant ${results.length === 1 ? 'memory' : 'memories'}
+    </div>
+    <div style="
+      background: #1a1a1a;
+      border-radius: 4px;
+      padding: 8px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: #999;
+      max-height: 60px;
+      overflow: hidden;
+    ">
+      ${truncate(results[0].content_preview, 150)}
+    </div>
+    <div style="
+      display: flex;
+      gap: 8px;
+      font-size: 11px;
+      color: #666;
+    ">
+      <kbd style="
+        background: #333;
+        padding: 2px 6px;
+        border-radius: 3px;
+        border: 1px solid #555;
+      ">Tab</kbd> to inject
+      <kbd style="
+        background: #333;
+        padding: 2px 6px;
+        border-radius: 3px;
+        border: 1px solid #555;
+      ">Esc</kbd> to dismiss
+    </div>
+  `;
+
+  // Append to body to avoid overflow clipping from parent containers
+  document.body.appendChild(preview);
+  // Store results for keyboard handler (Step 5)
+  preview.dataset.results = JSON.stringify(results);
+
+  // Attach keyboard handler
+  setupPreviewKeyboardHandler(preview, results);
+
+  // Auto-dismiss after 10 seconds
+  setTimeout(() => {
+    if (document.getElementById('vault-inline-preview')) {
+      dismissPreview();
+    }
+  }, 10000);
+  console.log('[UAI Memory] Inline preview shown');
+}
+
+// ─── Step 5: Keyboard Handlers (Tab / Esc) ───────────────────────────
+
+let activeKeyboardHandler = null;
+
+function setupPreviewKeyboardHandler(previewEl, results) {
+  // Remove any previous handler
+  if (activeKeyboardHandler) {
+    document.removeEventListener('keydown', activeKeyboardHandler);
+    activeKeyboardHandler = null;
+  }
+
+  activeKeyboardHandler = (e) => {
+    // Only handle if preview is still visible
+    if (!document.getElementById('vault-inline-preview')) {
+      document.removeEventListener('keydown', activeKeyboardHandler);
+      activeKeyboardHandler = null;
+      return;
+    }
+
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('[UAI Memory] Tab pressed — injecting context');
+
+      // Format and inject results into chat input
+      const contextText = formatContext(results);
+      const injected = injectIntoInput(contextText);
+
+      if (injected) {
+        // Mark this conversation as injected so we don't re-trigger
+        sessionStorage.setItem('uai-conversation-injected', 'true');
+        console.log('[UAI Memory] Context injected successfully');
+      } else {
+        console.error('[UAI Memory] Failed to inject context into input');
+      }
+
+      dismissPreview();
+    }
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('[UAI Memory] Esc pressed — dismissing preview');
+      dismissPreview();
+    }
+  };
+
+  document.addEventListener('keydown', activeKeyboardHandler, true); // capture phase
+}
+
+function dismissPreview() {
+  const preview = document.getElementById('vault-inline-preview');
+  if (preview) preview.remove();
+  if (activeKeyboardHandler) {
+    document.removeEventListener('keydown', activeKeyboardHandler, true);
+    activeKeyboardHandler = null;
+  }
+  autoInjectResults = null;
+  console.log('[UAI Memory] Preview dismissed');
 }
 
 // Initialize auto-inject after DOM is ready
