@@ -15,11 +15,12 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | Multi-Model | ✅ Active | MiniMax M2.5 (primary — coding/speed/general), GLM-5 (reasoning/analysis specialist, priority -1), Groq (fallback), OpenAI (final fallback). |
 
 ## Current Task
-Add OpenAI-compatible proxy endpoint for Claude Code integration (implementation in progress).
+Hub-bridge v2.1.0 + vault dual-tier rate limiting — COMPLETE. Next: K2 Week 2 Task 2 (consciousness memory architecture) — tabled pending approach decision.
 
 ## Blockers
-- Twilio A2P campaign under review — SMS delivery blocked until approved. Webhook configured, code deployed, waiting on approval.
-- (CLAUDE CODE) Local Claude Code CLI not yet configured to use Karma proxy endpoint.
+- Twilio A2P campaign under review — SMS delivery blocked until approved.
+- K2 machine (192.168.0.226): PS Remoting enabled. consciousness.py patched (load_context/log_to_daily added), LONG_TERM_MEMORY.md created, memory/daily/ directory created. 10-cycle test NOT yet run — tabled.
+- Chrome extension: needs capture token pasted into popup (captureToken field) for burst-safe batching to work.
 
 ## Karma Core Status (2026-02-17)
 - **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL — 4 LLM providers, task-based routing
@@ -114,5 +115,17 @@ Add OpenAI-compatible proxy endpoint for Claude Code integration (implementation
 - Cost: ~$26/mo (droplet $24 + OpenAI ~$1-2 for analysis)
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 
+## Hub-Bridge v2.1.0 (2026-02-19)
+- `/v1/chatlog`: capture auth split from vault bearer → `HUB_CAPTURE_TOKEN` (new secret). Batch ingest (1–200 items). Route-scoped rate limits (240rpm+120burst for capture).
+- `/v1/handoff/save` + `/v1/handoff/latest`: atomic file write to `/data/handoff`, `HUB_HANDOFF_TOKEN` auth.
+- Tokens: `hub.capture.token.txt`, `hub.handoff.token.txt` in `/opt/seed-vault/memory_v1/hub_auth/`
+- Chrome extension `background.js`: durable queue (`storage.local`), batch flush (30s alarm), single-flight guard, exponential backoff on 429. Reads `captureToken || vaultToken` (backward compat).
+
+## Vault API Dual-Tier Rate Limit (2026-02-19)
+- `isPrivateIp()`: detects 10.x, 172.16-31.x, 192.168.x, 127.x, ::1 — strips `::ffff:` prefix (Docker bridge IPv4-mapped IPv6)
+- `pickRlLimits(req)`: public=30rpm+10burst, internal=240rpm+120burst
+- Compose: `RL_RATE_INTERNAL=240`, `RL_BURST_INTERNAL=120` in `anr-vault-api` environment
+- Proof: 75/75 sequential burst test succeeded (hub-bridge → vault, private IP path)
+
 ## Last Updated
-2026-02-17 — Added OpenAI-compatible /v1/chat/completions proxy endpoint for Claude Code integration. Integrates with existing router using task_type="coding" to prefer GLM-5 via priority-based selection. Enables cost optimization: Claude Code now routes to $30/mo GLM-5 plan instead of Haiku API credits. Documentation: CLAUDE_CODE_SETUP.md for configuration instructions.
+2026-02-19 — Hub-bridge v2.1.0 deployed (separate capture/handoff tokens, batch ingest, rate limits). Vault API dual-tier rate limiting (public 30rpm, internal 240rpm) with Docker IPv4-mapped IPv6 fix. 75/75 burst test confirmed. Ledger: 2101 entries.
