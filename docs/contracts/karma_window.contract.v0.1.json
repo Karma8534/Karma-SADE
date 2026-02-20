@@ -1,0 +1,104 @@
+{
+  "schema": "arknexus.contract",
+  "contract_id": "karma_window.v0.1",
+  "version": "0.1.0",
+  "generated_at": "2026-02-20T20:45:00.000Z",
+  "purpose": "Single-screen cockpit UI contract for Karma Hub: Chat + State + Resume Prompt.",
+  "ui": {
+    "layout": "single_screen_cockpit",
+    "panels": [
+      {
+        "id": "chat",
+        "title": "Chat",
+        "type": "chat",
+        "primary": true,
+        "inputs": {
+          "send_on_enter": true,
+          "multiline": true,
+          "attachments": false
+        },
+        "endpoints": {
+          "send_message": { "method": "POST", "path": "/v1/chat" },
+          "history": { "method": "GET", "path": "/v1/chat/history?limit=50" }
+        },
+        "rendering": {
+          "assistant_markdown": true,
+          "code_blocks": true
+        }
+      },
+      {
+        "id": "state",
+        "title": "State",
+        "type": "state",
+        "primary": false,
+        "endpoints": {
+          "checkpoint_latest": { "method": "GET", "path": "/v1/checkpoint/latest" },
+          "hub_health": { "method": "GET", "path": "/healthz" }
+        },
+        "display": {
+          "show_verified_badges": true,
+          "show_timestamps": true
+        }
+      },
+      {
+        "id": "resume_prompt",
+        "title": "Resume Prompt",
+        "type": "resume",
+        "primary": false,
+        "endpoints": {
+          "checkpoint_latest": { "method": "GET", "path": "/v1/checkpoint/latest" }
+        },
+        "behavior": {
+          "one_click_copy": true,
+          "includes": [
+            "MIS",
+            "Invariants",
+            "Direction",
+            "next_action",
+            "VCS"
+          ]
+        }
+      }
+    ]
+  },
+  "data_contracts": {
+    "checkpoint_latest_response": {
+      "type": "object",
+      "required": ["ok", "checkpoint"],
+      "properties": {
+        "ok": { "type": "boolean" },
+        "checkpoint": {
+          "type": "object",
+          "required": ["checkpoint_id", "generated_at_utc", "packs", "latest_pack"],
+          "properties": {
+            "checkpoint_id": { "type": "string" },
+            "generated_at_utc": { "type": "string", "format": "date-time" },
+            "packs": { "type": "integer", "minimum": 0 },
+            "quarantine": { "type": "integer", "minimum": 0 },
+            "latest_pack": { "type": "string" },
+            "resume": {
+              "type": "object",
+              "additionalProperties": true,
+              "description": "Optional: resume payload (MIS+VCS) suitable for UI display/copy."
+            }
+          },
+          "additionalProperties": true
+        },
+        "error": { "type": "string" },
+        "upstream_status": { "type": "integer" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "security": {
+    "auth": {
+      "type": "bearer",
+      "notes": [
+        "UI calls Hub Bridge endpoints; Hub Bridge may forward Authorization to Vault or use internal vault token per deployment policy."
+      ]
+    },
+    "timeouts": {
+      "checkpoint_latest_ms": 5000
+    }
+  }
+}
