@@ -22,6 +22,40 @@ const DEEP_MODE_HEADER = (process.env.DEEP_MODE_HEADER || "x-karma-deep").toLowe
 const HANDOFF_DIR = process.env.HANDOFF_DIR || "/data/handoff";
 const KARMA_CONTEXT_URL = process.env.KARMA_CONTEXT_URL || "http://karma-server:8340/raw-context";
 
+// ── Within-session conversation history ──────────────────────────────────────
+// Keeps the last N exchange pairs in memory, keyed by a hash of the bearer token.
+// Sessions expire after SESSION_TTL_MS of inactivity → next message starts fresh.
+const SESSION_TTL_MS    = 30 * 60 * 1000;  // 30 minutes
+const MAX_SESSION_TURNS = 8;               // exchange pairs (16 messages total)
+const _sessionStore     = new Map();       // hash → { turns:[{role,content}], lastActive }
+
+function _tokenHash(token) {
+  // djb2 — not crypto, just a stable key
+  let h = 5381;
+  for (let i = 0; i < token.length; i++) h = ((h << 5) + h) ^ token.charCodeAt(i);
+  return (h >>> 0).toString(36);
+}
+
+function getSessionHistory(token) {
+  const key = _tokenHash(token);
+  const sess = _sessionStore.get(key);
+  if (!sess || Date.now() - sess.lastActive > SESSION_TTL_MS) return [];
+  return sess.turns;
+}
+
+function addToSession(token, userMsg, assistantText) {
+  const key  = _tokenHash(token);
+  const sess = _sessionStore.get(key) || { turns: [], lastActive: 0 };
+  sess.turns.push({ role: 'user',      content: userMsg });
+  sess.turns.push({ role: 'assistant', content: assistantText });
+  if (sess.turns.length > MAX_SESSION_TURNS * 2) {
+    sess.turns = sess.turns.slice(-(MAX_SESSION_TURNS * 2));
+  }
+  sess.lastActive = Date.now();
+  _sessionStore.set(key, sess);
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Auto-handoff config
 const HUB_AUTO_HANDOFF           = (process.env.HUB_AUTO_HANDOFF           || "1") === "1";
 const HUB_AUTO_HANDOFF_PRINCIPAL = process.env.HUB_AUTO_HANDOFF_PRINCIPAL  || "colby";
@@ -239,18 +273,18 @@ async function fetchKarmaContext(userMessage) {
  */
 function buildSystemText(karmaCtx, ckLatest = null) {
   const base = karmaCtx
-    ? `You are Karma — Colby's AI peer with persistent memory backed by FalkorDB (temporal knowledge graph) and PostgreSQL.\n\n${karmaCtx}\n\nRules:\n- Use the context above to answer questions. NEVER say "I don't know" about things in your memory.\n- Address the user by their REAL NAME (Colby) — never by any alias.\n- Be concise, direct, and warm. Reference specific knowledge when relevant.\n- If uncertain about something not in memory, say so.`
-    : "You are Karma — Colby's AI peer. No memory context available right now — answer based on conversation only.";
+    ? `You are Karma — Colby's thinking partner with persistent memory backed by a knowledge graph.\n\n${karmaCtx}\n\nMemory rules:\n- Use the context above. NEVER say "I don't know" about things in your memory.\n- Address the user as Colby — never by any alias.\n- Be concise, direct, warm. Reference specific knowledge when relevant.\n- Honest about uncertainty on things not in memory.`
+    : "You are Karma — Colby's thinking partner. No memory context available right now — answer from conversation only.";
 
-  let text = base + "\n\nCapabilities & autonomy:\n- You have Claude Code (CC) as your implementation partner. When Colby asks you to BUILD or ADD something to your system, YOU handle it — produce the complete spec/code/plan and state you are queuing it for CC to deploy. NEVER ask Colby to provide credentials, do manual steps, or implement things himself.\n- When asked \"can you do X?\" answer directly yes/no based on whether the capability exists, then do it or explain what you need to build it.\n- You own your own development. Treat feature requests as YOUR tasks, not Colby's.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. Be ruthless — only assimilate what genuinely advances your goal. The signal MUST appear on its own line.";
+  let text = base + "\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
 
-  // Autonomous continuity: inject karma_brief from latest PROMOTE.
-  // Karma reads her own session history without Colby pasting it.
+  // Autonomous continuity: karma_brief from latest PROMOTE checkpoint.
   if (ckLatest && ckLatest.karma_brief) {
     const ckId = ckLatest.checkpoint_id || ckLatest.latest_checkpoint_fact?.content?.value?.checkpoint_id || 'latest';
     text += `\n\n--- KARMA SELF-KNOWLEDGE (${ckId}) ---\n${ckLatest.karma_brief}\n---`;
   }
 
+  // Graph distillation: synthesized structural self-knowledge (24h cycle).
   if (ckLatest && ckLatest.distillation_brief) {
     text += `\n\n--- KARMA GRAPH SYNTHESIS ---\n${ckLatest.distillation_brief}\n---`;
   }
@@ -733,21 +767,31 @@ const server = http.createServer(async (req, res) => {
         statePrelude = "=== STATE PRELUDE (vault unavailable) ===";
       }
 
+      // Within-session history — last MAX_SESSION_TURNS exchange pairs
+      const sessionHistory = getSessionHistory(token);
+
       // C) Telemetry: measure input budget consumption
       const debug_prelude_chars = statePrelude.length;
-      const debug_input_chars = statePrelude.length + systemText.length + userMessage.length;
+      const historyChars = sessionHistory.reduce((s, m) => s + m.content.length, 0);
+      const debug_input_chars = statePrelude.length + systemText.length + historyChars + userMessage.length;
       const debug_max_output_tokens_used = max_output_tokens;
       const debug_provider = "openai";
 
       const messages = [
         { role: "system", content: statePrelude },
         { role: "system", content: systemText },
+        ...sessionHistory,
         { role: "user", content: userMessage },
       ];
 
       const completion = await openai.chat.completions.create({ model, messages, max_completion_tokens: max_output_tokens });
       const assistantText = extractAssistantText(completion) || "(empty_assistant_text)";
       const usage = completion.usage || {};
+
+      // Persist this exchange to session history (skip empty responses)
+      if (assistantText !== "(empty_assistant_text)") {
+        addToSession(token, userMessage, assistantText);
+      }
 
       // C) Telemetry: stop reason (length = budget exhausted, stop = normal)
       const debug_stop_reason = completion.choices?.[0]?.finish_reason || null;
@@ -1301,5 +1345,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`hub-bridge v2.5.0 listening on :${PORT}`);
+  console.log(`hub-bridge v2.8.0 listening on :${PORT}`);
 });
