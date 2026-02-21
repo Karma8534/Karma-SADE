@@ -16,13 +16,15 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop + graph dis
 | Graph Distillation | ✅ Active | _distillation_cycle() in ConsciousnessLoop — reads FalkorDB every 24h, synthesizes themes/gaps/insights via LLM, writes schema-compliant fact to ledger, re-ingests key insights as FalkorDB episodes |
 
 ## Current Task
-v2.9.0 COMPLETE — Karma now runs on Claude Sonnet 4.6 (Anthropic) as her conversational backbone (2026-02-21):
+v2.11.0 COMPLETE — Karma can now surf the web (full page content, not snippets) (2026-02-21):
 - v2.8.0: Within-session memory (session store, MAX_SESSION_TURNS=8, 30min TTL). buildSystemText governance fix. "One good question" instruction. Distillation brief now actually deployed (was committed but never built).
 - v2.9.0: Anthropic SDK added to hub-bridge. callLLM() unified helper routes "claude-*" models to Anthropic API, everything else to OpenAI. MODEL_DEFAULT=claude-sonnet-4-6 (best model on account). MODEL_DEEP=gpt-5-mini. Smoke test: provider=anthropic, model=claude-sonnet-4-6, ok=true ✅
-- Key file: /opt/seed-vault/memory_v1/session/anthropic.api_key.txt (mounted read-only in container)
+- v2.10.0: Brave Search API integrated. SEARCH_INTENT_REGEX detects search-intent queries. fetchWebSearch() calls Brave API, returns top 3 results. Self-knowledge prefix injected into every system prompt (backbone model, session memory params, web search status). debug_search telemetry field added.
+- v2.11.0: fetchPageText() added — plain HTTP fetch of top Brave result URL, strips <script>/<style>/all HTML tags, decodes entities, returns up to 4000 chars of real page content. Falls back to Brave snippets if fetch fails. Smoke test: debug_search=hit, Karma cited $100B OpenAI deal + $110B India Reliance investment from actual article. ✅
+- Key file: /opt/seed-vault/memory_v1/session/brave.api_key.txt (mounted read-only in container)
 - Available Claude models on account: claude-sonnet-4-6, claude-opus-4-6, claude-opus-4-5, claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4, claude-sonnet-4
 
-Next: PROMOTE to write karma_brief for v2.8.0+v2.9.0. Then: Brave Search API (web browsing) or ACP documentation structure review.
+Next: PROMOTE to write karma_brief for v2.8.0–v2.11.0. Then: Memory Integrity Gate design (contradiction detection, confidence scoring, Raw→Candidate→Canonical enforcement).
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
@@ -38,9 +40,10 @@ Karma correctly identified this as the most consequential unbuilt piece (2026-02
 - **Status**: Design needed. CC to design when Colby surfaces it for a session.
 
 ## Backlog
-- Brave Search API key: Colby needs to get key at brave.com/search/api → write to /opt/seed-vault/memory_v1/session/brave.api_key.txt → restart hub-bridge (no rebuild). Free: 2000 queries/month.
 - Thumbs up/down on Karma chat window — Karma proposed, logged as future build item. Not designed yet.
 - Extension deprecation — code still in repo and Chrome. Decision made: scrap it. Cleanup not yet executed.
+- Headless browser (Playwright/Puppeteer) — deferred. fetchPageText() covers ~80% of needs without Chromium overhead. Revisit if vault-neo is upgraded beyond 4GB RAM.
+- Brave Search pricing: $5 free monthly credit (~1000 queries). Paid: $5/1000 queries after that. Low usage expected (intent-gated — only triggers on explicit search keywords).
 
 ## Hub-Bridge History
 - v2.1.1: capture auth split, batch chatlog, rate limits, auto-handoff
@@ -56,6 +59,8 @@ Karma correctly identified this as the most consequential unbuilt piece (2026-02
 - v2.7.0: distillation_brief injected into buildSystemText() as --- KARMA GRAPH SYNTHESIS --- block. Karma arrives knowing her own graph structure.
 - v2.8.0: Within-session memory (session store, 8 exchange pairs, 30min TTL). buildSystemText governance fix + one-good-question instruction. Distillation brief actually deployed (was code-only before).
 - v2.9.0: Anthropic SDK in hub-bridge. callLLM() routes claude-* → Anthropic, else → OpenAI. MODEL_DEFAULT=claude-sonnet-4-6. MODEL_DEEP=gpt-5-mini. compose.hub.yml updated with Anthropic key mount.
+- v2.10.0: Brave Search API. SEARCH_INTENT_REGEX for intent detection. fetchWebSearch() calls Brave API (top 3 results). Self-knowledge prefix in buildSystemText() (backbone, session_memory, web_search params). debug_search telemetry. Brave key mounted at /run/secrets/brave.api_key.txt.
+- v2.11.0: fetchPageText() — plain HTTP fetch of top result URL, full HTML strip (<script>/<style>/tags/entities), 4000 char limit. Real article content (not snippets) injected into Karma's context. Snippet fallback if fetch fails. Smoke test: Karma cited real figures from live article ✅
 
 ## Karma Core Status (2026-02-21)
 - **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL + DISTILLING — 4 LLM providers, task-based routing, 24h self-analysis
@@ -178,4 +183,4 @@ Karma correctly identified this as the most consequential unbuilt piece (2026-02
 - auth log: `{enabled:true, captureTokenLen:64, vaultTokenLen:0, using:'captureToken'}` ✓
 
 ## Last Updated
-2026-02-21 — v2.10.0 complete. Karma now runs on Claude Sonnet 4.6 (Anthropic API) as her conversational backbone — best model on account. v2.8.0 added within-session memory (session store, 8 turns, 30min TTL) + governance fix + one-good-question. v2.9.0 added Anthropic SDK + callLLM() unified provider routing. Both committed + pushed to main. PROMOTE needed to write karma_brief for new capabilities.
+2026-02-21 — v2.11.0 complete. Karma now has real web search: Brave API finds top URLs, fetchPageText() fetches full HTML page + strips to plain text (4000 chars), giving Karma genuine article comprehension — not snippets. v2.10.0 added Brave Search + self-knowledge prefix in system prompt. v2.11.0 added full page fetch on top of Brave. v2.8.0–v2.11.0 all committed + deployed. PROMOTE needed to write karma_brief covering v2.8.0–v2.11.0 (within-session memory, Claude backbone, Brave web search, full page fetch).
