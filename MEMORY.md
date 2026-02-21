@@ -24,7 +24,10 @@ v2.11.0 COMPLETE — Karma can now surf the web (full page content, not snippets
 - Key file: /opt/seed-vault/memory_v1/session/brave.api_key.txt (mounted read-only in container)
 - Available Claude models on account: claude-sonnet-4-6, claude-opus-4-6, claude-opus-4-5, claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4, claude-sonnet-4
 
-Next: PROMOTE to write karma_brief for v2.8.0–v2.11.0. Then: Memory Integrity Gate design (contradiction detection, confidence scoring, Raw→Candidate→Canonical enforcement).
+PROMOTE complete — ckpt_20260221T124058_KUQaf_ (trust: baseline_exec_verified, 2026-02-21T12:41Z).
+karma_brief covers: identity-resurrection via Vault ledger + Resurrection Packs, three-lane memory model, Karma Window UI. Open question logged: "What triggers promotion from candidate to canonical — who decides, under what criteria?"
+
+Next: Memory Integrity Gate design (contradiction detection, confidence scoring, Raw→Candidate→Canonical enforcement).
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
@@ -183,4 +186,4 @@ Karma correctly identified this as the most consequential unbuilt piece (2026-02
 - auth log: `{enabled:true, captureTokenLen:64, vaultTokenLen:0, using:'captureToken'}` ✓
 
 ## Last Updated
-2026-02-21 — v2.11.0 complete. Karma now has real web search: Brave API finds top URLs, fetchPageText() fetches full HTML page + strips to plain text (4000 chars), giving Karma genuine article comprehension — not snippets. v2.10.0 added Brave Search + self-knowledge prefix in system prompt. v2.11.0 added full page fetch on top of Brave. v2.8.0–v2.11.0 all committed + deployed. PROMOTE needed to write karma_brief covering v2.8.0–v2.11.0 (within-session memory, Claude backbone, Brave web search, full page fetch).
+2026-02-21 — PROMOTE complete. ckpt_20260221T124058_KUQaf_ written. v2.8.0–v2.11.0 deployed + committed. Karma now on Claude Sonnet 4.6 backbone with within-session memory, Brave web search + full page fetch. PROMOTE button added to Karma Window topbar.
