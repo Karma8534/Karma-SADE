@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Karma Window v0.1</title>
+  <style>
+    :root{
+      --border:#1f2a37;
+      --muted:#9aa4b2;
+      --bg:#0b0f14;
+      --panel:#0f1620;
+      --panel2:#0c121b;
+      --text:#e5e7eb;
+      --bgA:#0f172a;
+      --bgU:#111827;
+      --mono:#0a0f16;
+      --dash:#223043;
+      --btn:#0b1220;
+      --btn2:#111a2b;
+      --link:#93c5fd;
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    .wrap{
+      display:grid;
+      grid-template-columns:minmax(520px, 2.2fr) minmax(340px, 1fr);
+      height:100dvh;
+      overflow:hidden;
+      background:var(--bg);
+    }
+    .left{
+      border-right:1px solid var(--border);
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+      overflow:hidden;
+      background:var(--panel2);
+    }
+    .right{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      padding:12px;
+      overflow:auto;
+      min-width:0;
+      background:var(--panel);
+    }
+    .topbar{
+      padding:10px 12px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      background:var(--panel2);
+    }
+    .pill{
+      font-size:12px;
+      padding:4px 8px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      white-space:nowrap;
+      background:rgba(255,255,255,0.02);
+      color:var(--text);
+    }
+    .small{font-size:12px;color:var(--muted)}
+    .tok{
+      font-size:12px;
+      padding:6px 8px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      min-width:220px;
+      flex:1 1 240px;
+      background:rgba(255,255,255,0.03);
+      color:var(--text);
+      outline:none;
+    }
+    .tok::placeholder{color:rgba(229,231,235,0.45)}
+    .log{
+      flex:1;
+      overflow:auto;
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height:0;
+      background:var(--panel2);
+    }
+    .msg{
+      max-width:78%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      white-space:pre-wrap;
+      word-break:break-word;
+      box-shadow:0 0 0 1px rgba(0,0,0,0.1) inset;
+    }
+    .u{align-self:flex-end;background:var(--bgU)}
+    .a{align-self:flex-start;background:var(--bgA)}
+    .input{
+      border-top:1px solid var(--border);
+      padding:10px 12px;
+      display:flex;
+      gap:8px;
+      align-items:flex-end;
+      background:var(--panel2);
+    }
+    textarea{
+      flex:1;
+      min-height:44px;
+      max-height:140px;
+      resize:vertical;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      font:inherit;
+      line-height:1.2;
+      background:rgba(255,255,255,0.03);
+      color:var(--text);
+      outline:none;
+    }
+    textarea::placeholder{color:rgba(229,231,235,0.45)}
+    button{
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:var(--btn);
+      color:var(--text);
+      cursor:pointer;
+      font:inherit;
+    }
+    button:hover{background:var(--btn2)}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    .card{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px;
+      min-width:0;
+      background:rgba(255,255,255,0.02);
+    }
+    .card h3{margin:0 0 8px 0;font-size:14px;color:var(--text)}
+    .mono{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+      font-size:12px;
+      white-space:pre-wrap;
+      word-break:break-word;
+      max-height:34dvh;
+      overflow:auto;
+      border:1px dashed var(--dash);
+      padding:8px;
+      border-radius:10px;
+      background:var(--mono);
+      color:var(--text);
+    }
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .row button{padding:6px 10px;border-radius:10px}
+    .hint{font-size:12px;color:var(--muted)}
+    @media (max-width: 1100px){
+      .wrap{grid-template-columns:1fr; height:auto; min-height:100dvh}
+      .left{border-right:none; border-bottom:1px solid var(--border); height:70dvh}
+      .right{height:30dvh}
+      .mono{max-height:16dvh}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="left">
+    <div class="topbar">
+      <div class="pill" id="statusPill">status: loading&hellip;</div>
+      <div class="pill" id="trustPill">trust: &mdash;</div>
+      <div class="pill small" id="ckptPill">ckpt: &mdash;</div>
+      <input class="tok" id="tok" placeholder="paste token once (stored locally)" />
+      <button id="saveTok" style="padding:6px 10px">Save</button>
+      <button id="clearTok" style="padding:6px 10px">Clear</button>
+      <span class="hint" id="tokHint"></span>
+    </div>
+    <div class="log" id="log"></div>
+    <div class="input">
+      <textarea id="msg" placeholder="Message Karma&hellip; (Ctrl+Enter to send)"></textarea>
+      <button id="send">Send</button>
+    </div>
+  </div>
+  <div class="right">
+    <div class="card">
+      <h3>Trust / Resurrection</h3>
+      <div class="mono" id="trustBlock">(loading)</div>
+      <div class="row" style="margin-top:8px">
+        <button id="refresh">Refresh</button>
+        <button id="promoteBtn" style="margin-left:8px;background:#6c3fc5;color:#fff;border:none;padding:6px 14px;border-radius:5px;cursor:pointer;font-weight:bold;">PROMOTE</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Resume Prompt</h3>
+      <div class="row" style="margin-bottom:8px">
+        <button id="copyResume">Copy</button>
+        <span class="hint" id="copyNote"></span>
+      </div>
+      <div class="mono" id="resumeBlock">(loading)</div>
+    </div>
+  </div>
+</div>
+<script>
+const headers = {};
+function getToken(){ return localStorage.getItem('HUB_CHAT_TOKEN') || ''; }
+function setAuthHeader(){
+  const t=getToken();
+  if(t){ headers['Authorization']='Bearer '+t; }
+  else { delete headers['Authorization']; }
+}
+setAuthHeader();
+const logEl = document.getElementById('log');
+function addMsg(role, text){
+  const d=document.createElement('div');
+  d.className='msg ' + (role==='user'?'u':'a');
+  d.textContent=text;
+  logEl.appendChild(d);
+  logEl.scrollTop=logEl.scrollHeight;
+}
+async function refreshState(){
+  try{
+    const r = await fetch('/v1/checkpoint/latest', { headers });
+    document.getElementById('statusPill').textContent = 'status: ' + r.status;
+    const j = await r.json();
+    if(!j.ok){ throw new Error(JSON.stringify(j)); }
+    const lines = (j.resume_prompt || '').split('\n');
+    const head = lines.slice(0, 8).join('\n');
+    document.getElementById('trustBlock').textContent = head;
+    document.getElementById('resumeBlock').textContent = j.resume_prompt || '';
+    const trustLine = lines.find(x=>x.startsWith('trust_level:')) || 'trust_level: \u2014';
+    const ckptLine = lines.find(x=>x.startsWith('checkpoint_id:')) || 'checkpoint_id: \u2014';
+    document.getElementById('trustPill').textContent = trustLine.replace('trust_level:','trust:').trim();
+    document.getElementById('ckptPill').textContent = ckptLine.replace('checkpoint_id:','ckpt:').trim();
+  }catch(e){
+    document.getElementById('statusPill').textContent='status: error';
+    document.getElementById('trustBlock').textContent=String(e);
+    document.getElementById('resumeBlock').textContent='';
+  }
+}
+async function sendMsg(){
+  const ta=document.getElementById('msg');
+  const text=ta.value.trim();
+  if(!text) return;
+  ta.value='';
+  addMsg('user', text);
+  document.getElementById('send').disabled=true;
+  try{
+    const r=await fetch('/v1/chat', {
+      method:'POST',
+      headers: { 'Content-Type':'application/json', ...headers },
+      body: JSON.stringify({ message: text, mode: 'default' })
+    });
+    const j=await r.json();
+    if(!j || j.ok===false){ throw new Error(JSON.stringify(j)); }
+    const reply = j.assistant_text || j.reply || j.message || JSON.stringify(j);
+    addMsg('assistant', reply);
+    await refreshState();
+  }catch(e){
+    addMsg('assistant', 'ERROR: ' + String(e));
+  }finally{
+    document.getElementById('send').disabled=false;
+  }
+}
+document.getElementById('send').onclick=sendMsg;
+document.getElementById('refresh').onclick=refreshState;
+document.getElementById("promoteBtn").onclick = async () => {
+  const next = prompt("next_action for checkpoint (optional):") || "";
+  try {
+    const r = await fetch("/v1/promote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...headers },
+      body: JSON.stringify({ n: 50, reason: "ui", next_action: next })
+    });
+    const j = await r.json();
+    if (!j.ok) throw new Error(JSON.stringify(j));
+    addMsg("assistant", "PROMOTE ok: " + (j.checkpoint_id || "(no checkpoint_id)"));
+    await refreshState();
+  } catch(e) {
+    addMsg("assistant", "PROMOTE ERROR: " + String(e));
+  }
+};
+
+document.getElementById('copyResume').onclick=async ()=>{
+  const text=document.getElementById('resumeBlock').textContent;
+  await navigator.clipboard.writeText(text);
+  const n=document.getElementById('copyNote');
+  n.textContent='copied';
+  setTimeout(()=>n.textContent='', 1200);
+};
+document.getElementById('saveTok').onclick=()=>{
+  const v=(document.getElementById('tok').value||'').trim();
+  if(v){ localStorage.setItem('HUB_CHAT_TOKEN', v); document.getElementById('tok').value=''; }
+  setAuthHeader();
+  document.getElementById('tokHint').textContent='saved';
+  setTimeout(()=>document.getElementById('tokHint').textContent='', 1200);
+  refreshState();
+};
+document.getElementById('clearTok').onclick=()=>{
+  localStorage.removeItem('HUB_CHAT_TOKEN');
+  setAuthHeader();
+  document.getElementById('tokHint').textContent='cleared';
+  setTimeout(()=>document.getElementById('tokHint').textContent='', 1200);
+  refreshState();
+};
+document.getElementById('msg').addEventListener('keydown', (e)=>{
+  if(e.key==='Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); sendMsg(); }
+});
+refreshState();
+</script>
+</body>
+</html>
