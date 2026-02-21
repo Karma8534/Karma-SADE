@@ -54,3 +54,8 @@ CONSCIOUSNESS_ENABLED = os.getenv("CONSCIOUSNESS_ENABLED", "true").lower() in ("
 
 # Bootstrap
 BOOTSTRAP_LIMIT = int(os.getenv("BOOTSTRAP_LIMIT", "100"))  # conversations to process on first run
+
+# Graph distillation loop
+DISTILLATION_ENABLED = os.getenv("DISTILLATION_ENABLED", "true").lower() in ("true", "1", "yes")
+DISTILLATION_INTERVAL_HOURS = float(os.getenv("DISTILLATION_INTERVAL_HOURS", "24"))
+DISTILLATION_MAX_EPISODES = int(os.getenv("DISTILLATION_MAX_EPISODES", "200"))
