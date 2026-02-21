@@ -1022,7 +1022,7 @@ const server = http.createServer(async (req, res) => {
               },
               { role: "user", content: "CHECKPOINT:\n" + briefInput },
             ],
-          }, { timeout: 10000 });
+          }, { timeout: 20000 });
           karma_brief = extractAssistantText(briefComp) || null;
         } catch (briefErr) {
           console.error("[KARMA_BRIEF] generation failed:", briefErr?.message || briefErr);
