@@ -63,6 +63,17 @@ When runtime behavior changes unexpectedly, collect evidence before proposing a 
 - **`(empty_assistant_text)` on large prompts**: caused by token budget exhaustion —
   check `debug_stop_reason` and `debug_max_output_tokens_used` in response telemetry
 - **Compose files**: `compose.hub.yml` for hub-bridge stack; `compose.yml` for vault stack
+- **Docker compose build caches hub-bridge**: `docker compose up -d` after `scp` can use stale COPY layer.
+  Always use `docker compose -f compose.hub.yml build --no-cache && docker compose -f compose.hub.yml up -d`
+- **FalkorDB graph name is `neo_workspace`** — NOT `karma`. The `karma` graph exists but is empty.
+  `neo_workspace` has all 496 entities / 620 episodes. Always query `neo_workspace`.
+- **karma-server runs from built Docker image, no volume mounts** — editing source files on host has no effect
+  until you rebuild: `docker build -t karma-core:latest . && docker stop karma-server && docker rm karma-server && docker run -d ...`
+- **`(empty_assistant_text)` on large FalkorDB context**: 3370 char context overflows gpt-5-mini reasoning budget.
+  `KARMA_CTX_MAX_CHARS=1800` env var trims it. If still failing, reduce further or increase `max_output_tokens`.
+- **Hub chat token path**: `/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt` (NOT session/)
+- **All containers on same network**: `anr-vault-net` (172.18.0.x). hub-bridge can reach karma-server,
+  falkordb, anr-vault-search, anr-vault-api by container name.
 
 ## Aria Reconciliation Protocol
 Aria (ChatGPT co-creator) writes intent from her model of the system. Her model drifts

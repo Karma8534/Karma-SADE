@@ -142,4 +142,4 @@ Hub-bridge v2.4.0 — FalkorDB context in /v1/chat — COMPLETE. Karma now knows
 - auth log: `{enabled:true, captureTokenLen:64, vaultTokenLen:0, using:'captureToken'}` ✓
 
 ## Last Updated
-2026-02-19 — Extension v2.0.0 canonical (single instance, captureToken auth, durable batch queue). Hub-bridge v2.1.1 (auto-handoff). Vault API dual-tier rate limiting (75/75 burst test). All e2e verified. Ledger: 2101+ entries.
+2026-02-21 — Hub-bridge v2.4.0 (FalkorDB context in /v1/chat via karma-server /raw-context). Luna→Ollie fixed in FalkorDB. PROMOTE ckpt_20260221T064445_vw28bT. CLAUDE.md Known Pitfalls updated (Docker build cache, FalkorDB graph name, karma-server rebuild, token paths). Ledger: 2316+ entries.

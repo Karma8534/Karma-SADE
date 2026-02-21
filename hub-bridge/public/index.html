@@ -177,8 +177,7 @@
     </div>
     <div class="log" id="log"></div>
     <div class="input">
-      <textarea id="msg" placeholder="Message Karma&hellip; (Ctrl+Enter to send)"></textarea>
-      <button id="send">Send</button>
+      <textarea id="msg" placeholder="Message Karma&hellip; (Enter to send, Shift+Enter for new line)"></textarea>
     </div>
   </div>
   <div class="right">
@@ -242,8 +241,8 @@ async function sendMsg(){
   const text=ta.value.trim();
   if(!text) return;
   ta.value='';
+  ta.disabled=true;
   addMsg('user', text);
-  document.getElementById('send').disabled=true;
   try{
     const r=await fetch('/v1/chat', {
       method:'POST',
@@ -258,10 +257,10 @@ async function sendMsg(){
   }catch(e){
     addMsg('assistant', 'ERROR: ' + String(e));
   }finally{
-    document.getElementById('send').disabled=false;
+    ta.disabled=false;
+    ta.focus();
   }
 }
-document.getElementById('send').onclick=sendMsg;
 document.getElementById('refresh').onclick=refreshState;
 document.getElementById("promoteBtn").onclick = async () => {
   const next = prompt("next_action for checkpoint (optional):") || "";
@@ -303,7 +302,7 @@ document.getElementById('clearTok').onclick=()=>{
   refreshState();
 };
 document.getElementById('msg').addEventListener('keydown', (e)=>{
-  if(e.key==='Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); sendMsg(); }
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMsg(); }
 });
 refreshState();
 </script>
