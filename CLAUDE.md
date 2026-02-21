@@ -1,4 +1,18 @@
-# Universal AI Memory System — Claude Code Instructions
+# Karma Peer — Claude Code Operator Contract
+
+## Karma Peer — North Star (non-negotiable)
+> "Karma is a single coherent peer whose long-term identity lives in a verified memory
+> spine; that memory enables continuity, evidence-based self-improvement, multi-model
+> cognition when needed, and selective delegation — without introducing parallel sources
+> of truth."
+
+- **State resurrection, not transcript replay**
+- Single canonical spine: Vault ledger + Resurrection Packs only
+- Memory lanes: Raw → Candidate → Canonical (Raw is non-canonical until PROMOTE)
+- No parallel truth stores
+- PROMOTE after every significant change — not just at session end
+- Five steps that move the needle: ARIA_BRIEF in PROMOTE, CLAUDE.md current, FalkorDB
+  context in /v1/chat, use Karma daily, PROMOTE aggressively
 
 ## Session Start (Do This First)
 1. Read MEMORY.md for current phase status and active task
@@ -7,11 +21,11 @@
 4. Resume the active task listed in MEMORY.md — do not ask what to work on
 
 ## Project Identity
-- **System:** Universal AI Memory — cross-platform conversation capture and recall
-- **Architecture:** Chrome Extension → Hub API → Vault API → JSONL Ledger
+- **System:** Karma Peer — Universal AI Memory with persistent identity and continuity
+- **Architecture:** Chrome Extension → Hub API → Vault API → JSONL Ledger + FalkorDB
 - **Server:** arknexus.net (DigitalOcean NYC3, 4GB RAM) — SSH alias: vault-neo
 - **Repo:** https://github.com/Karma8534/Karma-SADE.git
-- **Branch:** claude/elegant-solomon
+- **Branch:** main (working branch; claude/elegant-solomon is legacy)
 
 ## Critical Rules
 - Do NOT modify CLAUDE.md or any file in .claude/rules/ without explicit user approval
@@ -25,6 +39,48 @@
 ## Decision Authority
 **Do without asking:** Code changes, file edits, running tests, git commit/push, reading docs, debugging, creating test files
 **Ask before doing:** Breaking changes to API contracts, new paid dependencies or services, infrastructure changes (Docker, server config), deleting files, modifying CLAUDE.md or rules files, any action that costs money
+
+## Output Rules
+- **Full file replacements** when modifying a file — never partial patches unless explicitly requested
+- **No secrets**: never print API keys/tokens/credentials — use env var names or file path references
+- **Additive-only schemas**: never remove existing JSON fields; only add new ones
+- Never break existing API response keys; only extend them
+- Response shapes must be backwards-compatible
+
+## Debugging Discipline
+Never guess. Prefer observable proofs: exact command → expected output → actual output.
+When runtime behavior changes unexpectedly, collect evidence before proposing a fix.
+
+### Known Pitfalls (verified in production)
+- **Docker compose service name is `hub-bridge`** — NOT `anr-hub-bridge`
+  (`anr-hub-bridge` is the container name, for `docker logs`/`docker exec` only)
+- **Shell heredoc + JS escape sequences**: `\n` in a heredoc becomes a literal newline
+  in the JS file → SyntaxError. Solution: write file locally then `scp`, or use
+  Python `chr(92)+chr(110)` on vault-neo. Never use heredoc to write JS files.
+- **All `/v1/chat` smoke tests require Bearer auth**:
+  `TOKEN=$(cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt)`
+- **`python3` is not available** in local Git Bash (Windows). All Python ops via SSH.
+- **`(empty_assistant_text)` on large prompts**: caused by token budget exhaustion —
+  check `debug_stop_reason` and `debug_max_output_tokens_used` in response telemetry
+- **Compose files**: `compose.hub.yml` for hub-bridge stack; `compose.yml` for vault stack
+
+## Aria Reconciliation Protocol
+Aria (ChatGPT co-creator) writes intent from her model of the system. Her model drifts
+from actual spine state between sessions — she may generate steps already completed or
+miss operational details (auth headers, service names, token paths).
+
+Before applying any Aria-authored block:
+1. Read it fully — do not execute immediately
+2. Check each proposed file against what already exists on disk and in git
+3. Merge additively — never replace files containing operational knowledge
+4. Flag drift: report to Colby what's already done, what's missing auth, what conflicts
+5. Only what survives reconciliation gets committed to the spine
+
+After PROMOTE, two outputs are generated:
+- `resume_prompt` — execution context for Claude Code
+- `aria_brief` — architectural context for Aria's new chat (plain language, no file paths)
+
+Colby pastes `aria_brief` to Aria. Aria briefs from the spine, not from ChatGPT memory.
 
 ## Session End Protocol
 1. Run: `grep -rn "Bearer\|token\|secret\|password\|api_key" --include="*.js" --include="*.py" --include="*.json" --include="*.md" . | grep -v node_modules | grep -v .git`
@@ -42,13 +98,17 @@ MEMORY.md                    ← Mutable state (you update this)
   extension.md               ← Chrome extension specifics
   deployment.md              ← Server ops, Docker, troubleshooting
   git-workflow.md            ← GitHub backup, .gitignore, push protocol
+hub-bridge/                  ← Hub bridge Node.js source (sync from vault-neo after changes)
+  server.js                  ← Main hub-bridge application (v2.2.0+)
 PHASE-*.md                   ← Phase documentation (read-only reference)
 SESSION-SUMMARY-*.md         ← Session logs (read-only reference)
 chrome-extension/            ← Extension source code
+docs/plans/                  ← Design documents (YYYY-MM-DD-<topic>-design.md)
+scripts/                     ← Operational scripts for vault-neo
 ```
 
 ## What This Project Is NOT
 This repo also contains files from the older Karma SADE backend (Python/FastAPI, localhost:9401).
 That system is separate and operational independently. Do not modify karma_backend.py,
 karma_quota_manager.py, karma_memory.py, or related files unless explicitly asked.
-The active project is the Universal AI Memory system (Chrome extension + Vault on arknexus.net).
+The active project is the Karma Peer system (Chrome extension + Vault + Hub on arknexus.net).
