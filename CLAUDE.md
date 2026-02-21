@@ -15,10 +15,11 @@
   context in /v1/chat, use Karma daily, PROMOTE aggressively
 
 ## Session Start (Do This First)
-1. Read MEMORY.md for current phase status and active task
-2. Run: `ssh vault-neo "systemctl status seed-vault && wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
-3. Check git log --oneline -5 for recent changes
-4. Resume the active task listed in MEMORY.md — do not ask what to work on
+1. Run `Scripts/resurrection/Get-KarmaContext.ps1` then read `karma-context.md` for Karma's live graph context
+2. Read MEMORY.md for current phase status and active task
+3. Run: `ssh vault-neo "systemctl status seed-vault && wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
+4. Check git log --oneline -5 for recent changes
+5. Resume the active task listed in MEMORY.md — do not ask what to work on
 
 ## Project Identity
 - **System:** Karma Peer — Universal AI Memory with persistent identity and continuity
