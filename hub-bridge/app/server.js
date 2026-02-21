@@ -818,7 +818,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, {
         ok: true,
         service: "hub-bridge",
-        version: "2.15.0",
+        version: "2.15.1",
         config: {
           prelude_lines: HUB_PRELUDE_LINES,
           long_msg_chars: HUB_LONG_MSG_CHARS,
@@ -1328,24 +1328,37 @@ const server = http.createServer(async (req, res) => {
       let karma_brief = null;
       if (resume_prompt) {
         try {
-          // Truncate to first 1200 chars — header + MIS is sufficient for a brief
-          const briefInput = resume_prompt.slice(0, 1200);
+          // Build brief input: checkpoint header + recent session turns.
+          // The RP alone is just metadata (IDs, hashes) — no session content.
+          // Including the last conversation turns makes the brief reflect actual work done.
+          const checkpointHeader = resume_prompt.slice(0, 600);
+          const sessionTurns = getSessionHistory(token);
+          let sessionContext = "";
+          if (sessionTurns.length > 0) {
+            const recent = sessionTurns.slice(-6); // last 3 exchange pairs
+            sessionContext = "\n\nRECENT SESSION TURNS:\n" +
+              recent.map(m => `${m.role.toUpperCase()}: ${String(m.content).slice(0, 300)}`).join("\n");
+          }
+          // Also include next_action hint if Colby provided one
+          const nextActionHint = body?.next_action ? `\n\nCOLBY'S NEXT_ACTION NOTE: ${body.next_action}` : "";
+          const briefInput = checkpointHeader + sessionContext + nextActionHint;
+
           const briefMessages = [
             {
               role: "system",
               content: [
                 "You generate KARMA_BRIEF — a plain-language session summary for Karma (an AI peer).",
-                "From the checkpoint below, write exactly 3-5 bullet points:",
-                "• What was built or decided (plain English, no jargon)",
+                "From the checkpoint and session turns below, write exactly 3-5 bullet points:",
+                "• What was built or decided THIS SESSION (plain English, no jargon)",
                 "• What the system can now do that it couldn't before",
                 "• The single most important next open question",
                 "",
-                "Rules: under 150 words total, no file paths/commands/JSON,",
+                "Rules: under 180 words total, no file paths/commands/JSON,",
                 "second person to Karma ('You now have...', 'Next question:...'),",
-                "concrete and specific.",
+                "concrete and specific. Focus on session work, not just checkpoint metadata.",
               ].join("\n"),
             },
-            { role: "user", content: "CHECKPOINT:\n" + briefInput },
+            { role: "user", content: "CHECKPOINT + SESSION:\n" + briefInput },
           ];
           const briefResult = await callLLM(env.MODEL_DEFAULT, briefMessages, 1600);
           karma_brief = briefResult.text || null;
@@ -1654,5 +1667,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`hub-bridge v2.15.0 listening on :${PORT}`);
+  console.log(`hub-bridge v2.15.1 listening on :${PORT}`);
 });
