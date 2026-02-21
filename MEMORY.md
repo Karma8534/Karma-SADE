@@ -45,6 +45,7 @@ Next: Extension cleanup (deprecated — never worked, 176 logged failures) OR ba
 - v2.3.0: KARMA_BRIEF in PROMOTE (plain-language session summary for Karma)
 - v2.4.0: FalkorDB context via karma-server /raw-context injected into /v1/chat. Luna→Ollie fixed. PROMOTE: ckpt_20260221T064445_vw28bT
 - v2.4.1: Token budget raised (DEFAULT 1200→2000, CAP 1600→3000), KARMA_CTX_MAX_CHARS 1800→1200. Fixes (empty_assistant_text) on gpt-5-mini. Karma Window: Enter-to-send, no Send button.
+- v2.7.1: Model routing corrected. MODEL_DEFAULT→gpt-4o-mini (fast, cheap, no CoT overhead). MODEL_DEEP→gpt-5-mini (reasoning model, on-demand). Token budget raised to 16000/32000 for reasoning model. Pricing vars updated to match.
 - v2.4.2: Token budget further raised (DEFAULT 2000→3000, CAP 3000→5000). System prompt autonomy ("Karma owns her own development"). Neo alias purge across FalkorDB + PostgreSQL.
 - v2.5.0: Karma ingest pipeline. ASSIMILATE/DEFER/DISCARD signal detection in /v1/chat. /v1/ingest endpoint (base64 PDF, chunked). buildSystemText() refactor. pdf-parse CJS shim. writeKarmaPrimitive() → karma-server /write-primitive → direct FalkorDB write. PowerShell FileSystemWatcher for OneDrive/Karma/Inbox. Knowledge evaluation instructions in system prompt. Smoke tested: stored=true, uuid=afe90411 in neo_workspace.
 - v2.5.1: /v1/ingest handles .txt and .md as plain text (was PDF-only). Enables folder watcher text file ingestion.
