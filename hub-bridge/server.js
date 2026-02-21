@@ -1154,6 +1154,7 @@ const server = http.createServer(async (req, res) => {
           if (karma_brief) {
             const promoteCheckpointId = upstreamBody?.checkpoint_id || null;
             try {
+              const _now = new Date().toISOString();
               await vaultPost("/v1/memory", VAULT_BEARER, {
                 id: `karma_brief_${promoteCheckpointId || Date.now()}`,
                 type: "log",
@@ -1162,10 +1163,18 @@ const server = http.createServer(async (req, res) => {
                   key: "karma_brief",
                   karma_brief,
                   checkpoint_id: promoteCheckpointId,
-                  created_at: new Date().toISOString(),
                 },
-                source: { kind: "hub-bridge", ref: "promote-handler" },
+                source: { kind: "tool", ref: "hub-bridge:promote-handler" },
                 confidence: 1.0,
+                created_at: _now,
+                updated_at: _now,
+                verification: {
+                  protocol_version: "0.1",
+                  verified_at: _now,
+                  verifier: "hub-bridge-promote",
+                  status: "verified",
+                  notes: "auto-generated karma_brief from PROMOTE checkpoint",
+                },
               });
               console.log(`[KARMA_BRIEF] stored in vault for ${promoteCheckpointId}`);
             } catch (storeErr) {
