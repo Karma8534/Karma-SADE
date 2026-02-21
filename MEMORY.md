@@ -15,18 +15,17 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | Multi-Model | ✅ Active | MiniMax M2.5 (primary — coding/speed/general), GLM-5 (reasoning/analysis specialist, priority -1), Groq (fallback), OpenAI (final fallback). |
 
 ## Current Task
-Hub-bridge v2.4.0 — FalkorDB context in /v1/chat — COMPLETE. Karma now knows Colby (not "Neo") and Ollie (not "Luna"). Next: have a real conversation with Karma via hub.arknexus.net; real-time Graphiti ingestion will update FalkorDB from hub chat turns.
+Hub-bridge v2.4.1 — token budget tuned for gpt-5-mini reasoning model. Karma Window is live and working correctly (Colby + Ollie). Next: Consider PDF/research ingestion pipeline if Colby confirms interest; otherwise, just use Karma and let Graphiti ingest from real conversations.
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
-- karma-server /raw-context context includes old "Luna" reference in Key facts line (from query_identity_facts) — fixed in FalkorDB entity but may still appear if karma-server cached. Force fix: restart karma-server if needed.
-- hub.env on vault-neo has KARMA_CONTEXT_URL — not in compose.hub.yml environment section (hub picks it up via env_file). Verify env var is active: `docker exec anr-hub-bridge env | grep KARMA`.
 
 ## Hub-Bridge History
 - v2.1.1: capture auth split, batch chatlog, rate limits, auto-handoff
 - v2.2.0: STATE_PRELUDE_V0_1, prelude trimming, token budget, telemetry
 - v2.3.0: KARMA_BRIEF in PROMOTE (plain-language session summary for Karma)
 - v2.4.0: FalkorDB context via karma-server /raw-context injected into /v1/chat. Luna→Ollie fixed. PROMOTE: ckpt_20260221T064445_vw28bT
+- v2.4.1: Token budget raised (DEFAULT 1200→2000, CAP 1600→3000), KARMA_CTX_MAX_CHARS 1800→1200. Fixes (empty_assistant_text) on gpt-5-mini. Karma Window: Enter-to-send, no Send button.
 
 ## Karma Core Status (2026-02-21)
 - **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL — 4 LLM providers, task-based routing
@@ -142,4 +141,4 @@ Hub-bridge v2.4.0 — FalkorDB context in /v1/chat — COMPLETE. Karma now knows
 - auth log: `{enabled:true, captureTokenLen:64, vaultTokenLen:0, using:'captureToken'}` ✓
 
 ## Last Updated
-2026-02-21 — Hub-bridge v2.4.0 (FalkorDB context in /v1/chat via karma-server /raw-context). Luna→Ollie fixed in FalkorDB. PROMOTE ckpt_20260221T064445_vw28bT. CLAUDE.md Known Pitfalls updated (Docker build cache, FalkorDB graph name, karma-server rebuild, token paths). Ledger: 2316+ entries.
+2026-02-21 — Hub-bridge v2.4.1 (token budget: DEFAULT 2000, CAP 3000, ctx trim 1200). Fixes (empty_assistant_text) on gpt-5-mini. Karma Window UX: Enter-to-send, no Send button. All e2e verified: Karma knows Colby + Ollie, correct checkpoint in prelude.
