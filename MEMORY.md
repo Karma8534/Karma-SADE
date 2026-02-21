@@ -38,25 +38,22 @@ Memory Integrity Gate DEPLOYED (2026-02-21):
 
 Next: PROMOTE to write karma_brief covering Memory Integrity Gate. Then: design promotion criteria (see Karma's observation below).
 
-## Karma's Design — Promotion Criteria (2026-02-21) ← BUILD THIS NEXT
-Karma answered the design question directly:
+## Epistemic Gate DEPLOYED (2026-02-21) — v2.13.0
+Karma's design, built as specified:
 
-1. **Explicit criteria** — what makes something canonical-worthy (stability, verification, significance — concrete, not vibes)
-2. **Audit log on every promotion** — not just the fact in the ledger, but *why* it was promoted and *who* authorized it
-3. **Colby is the final authority** — not Karma self-promoting, not CC auto-inferring. Colby signs off.
+1. **Colby is the final authority** — `/promote-candidates` requires `approved_uuids` list. No UUID in the list = not promoted. No auto-promotion.
+2. **Audit log on every promotion** — `promoted_by`, `promoted_at`, `promotion_reason` written to FalkorDB + candidates.jsonl. Vault audit record written on every `Approve Selected` action.
+3. **Conflicts unchecked by default** — Karma Window shows checkboxes; conflicts start unchecked requiring explicit Colby approval.
 
 > "If I can self-promote memories into canonical, the integrity of the whole system depends on my judgment in the moment. That's too fragile. You should be the gate on the gate."
 
-**What this means for implementation** (NOT built yet — needs Colby confirmation):
-- PROMOTE should NOT sweep all candidates → canonical automatically
-- Instead: surface candidate list for Colby review → Colby explicitly approves/rejects → approved ones promoted with audit entry (reason + timestamp + "authorized by: Colby")
-- Conflicts require explicit Colby review before promotion (never auto-promoted)
-- Rejected candidates: lane="rejected", not deleted — visible history
+**What's built:**
+- PROMOTE button → vault checkpoint only (no auto-promotion)
+- Candidates panel → checkboxes per candidate, conflicts unchecked by default
+- "Approve Selected" → `/v1/candidates/promote` → FalkorDB + vault audit log
+- Smoke tested: ASSIMILATE → candidate → Approve Selected → promoted_count=1 ✅
 
-Current behavior (wrong): PROMOTE button → sweep all → canonical, no review, no log
-Target behavior: PROMOTE button → review queue → Colby approves each/batch → canonical + audit entry
-
-This is Karma's design. CC builds when Colby surfaces it for a session.
+**Next open question:** Promotion criteria — what concrete signals make a candidate canonical-worthy? (Karma's first requirement: "explicit criteria, not vibes")
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
@@ -92,6 +89,7 @@ Observe in practice: chat → ASSIMILATE signal → check candidates.jsonl → P
 - v2.10.0: Brave Search API. SEARCH_INTENT_REGEX for intent detection. fetchWebSearch() calls Brave API (top 3 results). Self-knowledge prefix in buildSystemText() (backbone, session_memory, web_search params). debug_search telemetry. Brave key mounted at /run/secrets/brave.api_key.txt.
 - v2.11.0: fetchPageText() — plain HTTP fetch of top result URL, full HTML strip (<script>/<style>/tags/entities), 4000 char limit. Real article content (not snippets) injected into Karma's context. Snippet fallback if fetch fails. Smoke test: Karma cited real figures from live article ✅
 - v2.12.0: Memory Integrity Gate. lane+confidence on all FalkorDB episode writes. ASSIMILATE→candidate, DEFER→raw. Contradiction detection at write time. /promote-candidates endpoint. PROMOTE now has real semantics. Context filtered to canonical only. PROMOTE button shows pending count + conflict warnings.
+- v2.13.0: Epistemic Gate. /promote-candidates now requires approved_uuids list — no auto-promotion. Audit fields (promoted_by, promoted_at, promotion_reason) written to FalkorDB + candidates.jsonl + vault. PROMOTE = vault checkpoint only. New /v1/candidates/promote endpoint with Colby authorization. Karma Window: checkbox review panel, conflicts unchecked by default, "Approve Selected" triggers gate. Fixed CANDIDATES_JSONL path to /ledger container mount.
 
 ## Karma Core Status (2026-02-21)
 - **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL + DISTILLING — 4 LLM providers, task-based routing, 24h self-analysis
@@ -214,4 +212,4 @@ Observe in practice: chat → ASSIMILATE signal → check candidates.jsonl → P
 - auth log: `{enabled:true, captureTokenLen:64, vaultTokenLen:0, using:'captureToken'}` ✓
 
 ## Last Updated
-2026-02-21 — Memory Integrity Gate (v2.12.0) deployed. ASSIMILATE→candidate, PROMOTE→canonical. Context filtered to canonical. Contradiction detection live. PROMOTE button shows pending count + conflict warnings. All v2.8.0–v2.12.0 committed + deployed.
+2026-02-21 — Epistemic Gate (v2.13.0) deployed. Colby sign-off now required for all candidate→canonical promotions. Karma Window has checkbox review panel. Audit log written to vault on every approval. All v2.8.0–v2.13.0 committed + deployed.
