@@ -23,6 +23,7 @@ const HUB_CAPTURE_TOKEN_FILE = process.env.HUB_CAPTURE_TOKEN_FILE || "/run/secre
 const HUB_HANDOFF_TOKEN_FILE = process.env.HUB_HANDOFF_TOKEN_FILE || "/run/secrets/hub.handoff.token.txt";
 const DEEP_MODE_HEADER = (process.env.DEEP_MODE_HEADER || "x-karma-deep").toLowerCase();
 const HANDOFF_DIR = process.env.HANDOFF_DIR || "/data/handoff";
+const COLLAB_FILE  = process.env.COLLAB_FILE  || "/data/handoff/collab_queue.jsonl";
 const KARMA_CONTEXT_URL = process.env.KARMA_CONTEXT_URL || "http://karma-server:8340/raw-context";
 
 // ── Within-session conversation history ──────────────────────────────────────
@@ -183,6 +184,21 @@ function parseBody(req, maxSize = 2000000) {
 }
 
 function nowIso() { return new Date().toISOString(); }
+// ── Collab queue helpers ────────────────────────────────────────────────────
+function readCollab() {
+  if (!fs.existsSync(COLLAB_FILE)) return [];
+  const entries = fs.readFileSync(COLLAB_FILE, "utf8")
+    .split("\n").filter(Boolean)
+    .map(l => { try { return JSON.parse(l); } catch { return null; } })
+    .filter(Boolean);
+  // Last-write-wins per ID (append-only; PATCH appends updated entry)
+  const byId = new Map();
+  for (const e of entries) byId.set(e.id, e);
+  return Array.from(byId.values());
+}
+function appendCollab(entry) {
+  fs.appendFileSync(COLLAB_FILE, JSON.stringify(entry) + "\n");
+}
 function currentMonthUTC() {
   const d = new Date();
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
@@ -1658,6 +1674,66 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    // --- POST /v1/collab --- Write a new Karma<->CC collaboration message
+    if (req.method === "POST" && req.url === "/v1/collab") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      let body = {};
+      try { body = JSON.parse(await parseBody(req)); } catch { return json(res, 400, { ok: false, error: "bad json" }); }
+      const { from, to, type = "proposal", content, colby_note = null } = body;
+      if (!from || !to || !content) {
+        return json(res, 400, { ok: false, error: "from, to, content required" });
+      }
+      const id = `collab_${nowIso().replace(/[^0-9T]/g, "").slice(0, 15)}_${Math.random().toString(36).slice(2, 8)}`;
+      const entry = { id, from, to, type, content: String(content).slice(0, 500), status: "pending",
+        created_at: nowIso(), approved_by: null, approved_at: null, colby_note };
+      appendCollab(entry);
+      console.log(`[COLLAB] New message from=${from} to=${to} type=${type} id=${id}`);
+      return json(res, 200, { ok: true, id });
+    }
+
+    // --- GET /v1/collab/pending --- List pending collab messages
+    if (req.method === "GET" && req.url === "/v1/collab/pending") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      const all = readCollab();
+      const pending = all.filter(e => e.status === "pending");
+      return json(res, 200, { ok: true, count: pending.length, messages: pending });
+    }
+
+    // --- PATCH /v1/collab/:id --- Approve or reject a collab message
+    if (req.method === "PATCH" && req.url.startsWith("/v1/collab/")) {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      const msgId = req.url.slice("/v1/collab/".length);
+      let body = {};
+      try { body = JSON.parse(await parseBody(req)); } catch { return json(res, 400, { ok: false, error: "bad json" }); }
+      const { action, colby_note } = body;
+      if (!action || !["approve", "reject"].includes(action)) {
+        return json(res, 400, { ok: false, error: "action must be approve or reject" });
+      }
+      const all = readCollab();
+      const idx = all.findIndex(e => e.id === msgId);
+      if (idx === -1) {
+        return json(res, 404, { ok: false, error: "message not found" });
+      }
+      const updated = { ...all[idx],
+        status: action === "approve" ? "approved" : "rejected",
+        approved_by: "colby",
+        approved_at: nowIso(),
+        colby_note: colby_note || null
+      };
+      appendCollab(updated);
+      console.log(`[COLLAB] Message ${msgId} ${action}d by colby`);
+      return json(res, 200, { ok: true, id: msgId, status: updated.status });
+    }
+
     return notFound(res);
 
   } catch (e) {
@@ -1667,5 +1743,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`hub-bridge v2.15.1 listening on :${PORT}`);
+  console.log(`hub-bridge v2.17.0 listening on :${PORT}`);
 });
