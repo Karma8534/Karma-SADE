@@ -83,7 +83,7 @@ Karma's design, built as specified:
 **Next open question:** Promotion criteria — what concrete signals make a candidate canonical-worthy? (Karma's first requirement: "explicit criteria, not vibes")
 
 ## Blockers
-- **FalkorDB neo_workspace graph EMPTY** — Container recreated during K2 replication setup with no pre-existing persistent volume. 497 entities / 620+ episodes lost from graph (data safe in JSONL ledger + PostgreSQL). Fix: `ssh vault-neo "cd /opt/seed-vault/memory_v1/karma-core && docker exec karma-server python batch_ingest.py"`. Once rebuilt, resurrection context will include full entity + episode data.
+- **FalkorDB neo_workspace graph REBUILDING** — batch_ingest.py run 2 in progress (2026-02-21 ~21:12 UTC). 912 remaining episodes, 0 errors at 2-min checkpoint. ETA ~3h. Root cause of run 1 failure (912 errors): FalkorDB TIMEOUT defaults to 1000ms — as graph grew past ~250 episodes, Graphiti deduplication queries exceeded 1s and cascaded into total failure. Fix applied: `GRAPH.CONFIG SET TIMEOUT 10000` + concurrency reduced to 2. Current graph: 345 episodes, 404 entities. After rebuild completes, recreation command needed to make TIMEOUT permanent (see Known Pitfalls in Hub-Bridge History or CLAUDE.md).
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
 - Occasional stored=false on ASSIMILATE signal (write-primitive timeout edge case). Low priority — most writes succeed.
 - ~~Within-session context drift~~ FIXED v2.8.0: session store injected as message history, MAX_SESSION_TURNS=8, 30min TTL.
@@ -217,6 +217,7 @@ Observe in practice: chat → ASSIMILATE signal → check candidates.jsonl → P
 - Server: arknexus.net (vault-neo), 7 Docker containers running
 - Containers: karma-server, falkordb, anr-vault-search, anr-vault-api, anr-hub-bridge, anr-vault-db, anr-vault-caddy
 - FalkorDB: ~150-300MB RAM, Redis protocol on 6379 internal / 7687 external (Bolt). 6379 also exposed to 127.0.0.1 for K2 replication tunnel.
+- **FalkorDB TIMEOUT CRITICAL**: Default is 1000ms — wipes on every container recreation. As graph grows past ~250 episodes, Graphiti deduplication queries exceed 1s and batch_ingest cascades to failure. ALWAYS set after any falkordb container restart: `docker exec falkordb redis-cli -p 6379 GRAPH.CONFIG SET TIMEOUT 10000`. To make permanent, recreate container with: `docker run -d --name falkordb --network anr-vault-net --restart unless-stopped -p 6379:6379 -p 3000:3000 -v /home/neo/karma/falkordb-data:/data falkordb/falkordb redis-server --loadmodule /var/lib/falkordb/bin/falkordb.so --GRAPH.TIMEOUT 10000`
 - **K2 FalkorDB replica**: K2 (192.168.0.226) runs FalkorDB in REPLICAOF mode off vault-neo via SSH tunnel (port 17687). Managed by Windows Task Scheduler task `FalkorDB-Vault-Tunnel`. Read-only. Tunnel scripts in Scripts/k2-falkordb-sync/.
 - Cost: ~$26/mo (droplet $24 + OpenAI ~$1-2 for analysis)
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
