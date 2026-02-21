@@ -551,7 +551,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, {
         ok: true,
         service: "hub-bridge",
-        version: "2.2.0",
+        version: "2.3.0",
         config: {
           prelude_lines: HUB_PRELUDE_LINES,
           long_msg_chars: HUB_LONG_MSG_CHARS,
@@ -988,7 +988,52 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
-      return json(res, 200, upstreamBody || { ok: false, error: "empty_upstream_response" });
+      // Generate KARMA_BRIEF — plain-language session summary for Karma.
+      // Prefer resume_prompt from promote body; fall back to fetchCheckpointLatestFromVault().
+      let resume_prompt = upstreamBody?.resume_prompt || null;
+      if (!resume_prompt) {
+        try {
+          const ck = await fetchCheckpointLatestFromVault();
+          resume_prompt = ck?.resume_prompt || null;
+        } catch (_) { /* non-fatal */ }
+      }
+      let karma_brief = null;
+      if (resume_prompt) {
+        try {
+          // Truncate to first 1200 chars — header + MIS is sufficient for a brief
+          const briefInput = resume_prompt.slice(0, 1200);
+          const briefComp = await openai.chat.completions.create({
+            model: env.MODEL_DEFAULT,
+            max_completion_tokens: 1600,
+            messages: [
+              {
+                role: "system",
+                content: [
+                  "You generate KARMA_BRIEF — a plain-language session summary for Karma (an AI peer).",
+                  "From the checkpoint below, write exactly 3-5 bullet points:",
+                  "• What was built or decided (plain English, no jargon)",
+                  "• What the system can now do that it couldn't before",
+                  "• The single most important next open question",
+                  "",
+                  "Rules: under 150 words total, no file paths/commands/JSON,",
+                  "second person to Karma ('You now have...', 'Next question:...'),",
+                  "concrete and specific.",
+                ].join("\n"),
+              },
+              { role: "user", content: "CHECKPOINT:\n" + briefInput },
+            ],
+          }, { timeout: 10000 });
+          karma_brief = extractAssistantText(briefComp) || null;
+        } catch (briefErr) {
+          console.error("[KARMA_BRIEF] generation failed:", briefErr?.message || briefErr);
+        }
+      }
+
+      return json(res, 200, {
+        ...(upstreamBody || {}),
+        resume_prompt,
+        karma_brief,
+      });
     }
 
     return notFound(res);
@@ -1000,5 +1045,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`hub-bridge v2.2.0 listening on :${PORT}`);
+  console.log(`hub-bridge v2.3.0 listening on :${PORT}`);
 });

@@ -77,10 +77,12 @@ Before applying any Aria-authored block:
 5. Only what survives reconciliation gets committed to the spine
 
 After PROMOTE, two outputs are generated:
-- `resume_prompt` — execution context for Claude Code
-- `aria_brief` — architectural context for Aria's new chat (plain language, no file paths)
+- `resume_prompt` — execution context for Claude Code (CC)
+- `karma_brief` — plain-language session summary for Karma to read at the start of a new
+  conversation (what was built, what the system can now do, what the next open question is)
 
-Colby pastes `aria_brief` to Aria. Aria briefs from the spine, not from ChatGPT memory.
+Colby pastes `karma_brief` to Karma. Karma briefs from the spine, not from external memory.
+Eventually Karma reads her own checkpoints from the vault — no paste required.
 
 ## Session End Protocol
 1. Run: `grep -rn "Bearer\|token\|secret\|password\|api_key" --include="*.js" --include="*.py" --include="*.json" --include="*.md" . | grep -v node_modules | grep -v .git`
