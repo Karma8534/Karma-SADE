@@ -23,8 +23,8 @@ const HUB_AUTO_HANDOFF_SCOPE     = process.env.HUB_AUTO_HANDOFF_SCOPE      || "h
 const HUB_AUTO_HANDOFF_PROJECT   = process.env.HUB_AUTO_HANDOFF_PROJECT    || "Karma";
 
 // B) Output token budget — env-configurable, safe defaults
-const HUB_MAX_OUTPUT_TOKENS_DEFAULT = Number(process.env.HUB_MAX_OUTPUT_TOKENS_DEFAULT || "1200");
-const HUB_MAX_OUTPUT_TOKENS_CAP     = Number(process.env.HUB_MAX_OUTPUT_TOKENS_CAP     || "1600");
+const HUB_MAX_OUTPUT_TOKENS_DEFAULT = Number(process.env.HUB_MAX_OUTPUT_TOKENS_DEFAULT || "2000");
+const HUB_MAX_OUTPUT_TOKENS_CAP     = Number(process.env.HUB_MAX_OUTPUT_TOKENS_CAP     || "3000");
 const HUB_MIN_OUTPUT_TOKENS         = Number(process.env.HUB_MIN_OUTPUT_TOKENS         || "128");
 // A) Prelude trimming — env-configurable
 const HUB_PRELUDE_LINES             = Number(process.env.HUB_PRELUDE_LINES             || "4");
@@ -201,7 +201,7 @@ async function fetchCheckpointLatestFromVault() {
 
 // --- FalkorDB context via karma-server ---
 
-const KARMA_CTX_MAX_CHARS = Number(process.env.KARMA_CTX_MAX_CHARS || "1800");
+const KARMA_CTX_MAX_CHARS = Number(process.env.KARMA_CTX_MAX_CHARS || "1200");
 
 async function fetchKarmaContext(userMessage) {
   const q = encodeURIComponent((userMessage || "").slice(0, 200));
