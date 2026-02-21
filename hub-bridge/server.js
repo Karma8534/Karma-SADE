@@ -1216,7 +1216,10 @@ const server = http.createServer(async (req, res) => {
       if (!file_b64) return json(res, 400, { ok: false, error: "file_b64 required" });
 
       const buffer = Buffer.from(file_b64, 'base64');
-      const rawText = await extractPdfText(buffer);
+      const _ext = filename.split('.').pop().toLowerCase();
+      const rawText = (_ext === 'txt' || _ext === 'md')
+        ? buffer.toString('utf8').trim()
+        : await extractPdfText(buffer);
       if (!rawText) return json(res, 422, { ok: false, error: "pdf_extraction_failed" });
 
       console.log(`[INGEST] ${filename}: ${rawText.length} chars extracted`);
