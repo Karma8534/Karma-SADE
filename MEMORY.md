@@ -15,16 +15,22 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | Multi-Model | ✅ Active | MiniMax M2.5 (primary — coding/speed/general), GLM-5 (reasoning/analysis specialist, priority -1), Groq (fallback), OpenAI (final fallback). |
 
 ## Current Task
-Extension + hub-bridge v2.1.1 hardening — COMPLETE. System fully operational. Next: worktree cleanup (prune stale worktrees) or K2 Week 2 Task 2 (consciousness memory architecture).
+Hub-bridge v2.4.0 — FalkorDB context in /v1/chat — COMPLETE. Karma now knows Colby (not "Neo") and Ollie (not "Luna"). Next: have a real conversation with Karma via hub.arknexus.net; real-time Graphiti ingestion will update FalkorDB from hub chat turns.
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
-- K2 machine (192.168.0.226): PS Remoting enabled. consciousness.py patched (load_context/log_to_daily added), LONG_TERM_MEMORY.md created, memory/daily/ directory created. 10-cycle test NOT yet run — tabled.
-- Worktree sprawl: 10 active worktrees under .claude/worktrees/ — all but elegant-solomon are stale. Causes duplicate CLAUDE.md/MEMORY.md loading. Prune when convenient.
+- karma-server /raw-context context includes old "Luna" reference in Key facts line (from query_identity_facts) — fixed in FalkorDB entity but may still appear if karma-server cached. Force fix: restart karma-server if needed.
+- hub.env on vault-neo has KARMA_CONTEXT_URL — not in compose.hub.yml environment section (hub picks it up via env_file). Verify env var is active: `docker exec anr-hub-bridge env | grep KARMA`.
 
-## Karma Core Status (2026-02-17)
+## Hub-Bridge History
+- v2.1.1: capture auth split, batch chatlog, rate limits, auto-handoff
+- v2.2.0: STATE_PRELUDE_V0_1, prelude trimming, token budget, telemetry
+- v2.3.0: KARMA_BRIEF in PROMOTE (plain-language session summary for Karma)
+- v2.4.0: FalkorDB context via karma-server /raw-context injected into /v1/chat. Luna→Ollie fixed. PROMOTE: ckpt_20260221T064445_vw28bT
+
+## Karma Core Status (2026-02-21)
 - **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL — 4 LLM providers, task-based routing
-- **Stats**: 479 entities, 605 episodes, 4169 relationships in FalkorDB
+- **Stats**: 496 entities, 620 episodes, 4256 relationships in FalkorDB (neo_workspace graph)
 - **Batch ingest**: 359/366 episodes processed (7 errors — RediSearch syntax + timeouts). Script: karma-core/batch_ingest.py
 - **FalkorDB tuning**: TIMEOUT raised from 1s→5s (graph grew 3x, queries need more time). MAX_QUEUED=25.
 - **Test passed**: Tell Karma "My name is Colby" → quit → new session → "What is my real name?" → "Colby"
