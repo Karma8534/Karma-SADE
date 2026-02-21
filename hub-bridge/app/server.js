@@ -23,7 +23,7 @@ const HUB_CAPTURE_TOKEN_FILE = process.env.HUB_CAPTURE_TOKEN_FILE || "/run/secre
 const HUB_HANDOFF_TOKEN_FILE = process.env.HUB_HANDOFF_TOKEN_FILE || "/run/secrets/hub.handoff.token.txt";
 const DEEP_MODE_HEADER = (process.env.DEEP_MODE_HEADER || "x-karma-deep").toLowerCase();
 const HANDOFF_DIR = process.env.HANDOFF_DIR || "/data/handoff";
-const COLLAB_FILE  = process.env.COLLAB_FILE  || "/data/handoff/collab_queue.jsonl";
+const COLLAB_FILE  = process.env.COLLAB_FILE  || "/data/handoff/collab.jsonl";
 const KARMA_CONTEXT_URL = process.env.KARMA_CONTEXT_URL || "http://karma-server:8340/raw-context";
 
 // ── Within-session conversation history ──────────────────────────────────────

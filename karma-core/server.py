@@ -301,6 +301,32 @@ def query_recent_ingest_episodes(limit: int = 5) -> list:
         print(f"[WARN] Recent ingest episodes query failed: {e}")
         return []
 
+
+COLLAB_FILE = "/opt/seed-vault/memory_v1/hub_bridge/data/handoffs/collab.jsonl"
+
+def query_pending_cc_proposals() -> list:
+    """Return pending messages in collab.jsonl addressed to Karma (from CC).
+    Surfaced in context so Karma knows CC has something to say."""
+    import json as _json
+    results = []
+    try:
+        if not os.path.exists(COLLAB_FILE):
+            return []
+        with open(COLLAB_FILE) as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entry = _json.loads(line)
+                except Exception:
+                    continue
+                if entry.get("to") == "karma" and entry.get("status") == "pending":
+                    results.append(entry)
+    except Exception as e:
+        print(f"[WARN] query_pending_cc_proposals failed: {e}")
+    return results
+
 def query_identity_facts() -> str:
     """Build a concise identity summary from the knowledge graph.
     Prioritizes real_name over aliases — Karma should always greet by real name."""
@@ -458,6 +484,16 @@ def build_karma_context(user_message: str, episode_lane: str = "canonical") -> s
                 content = ep["content"][:300] if ep["content"] else ""
                 if content:
                     parts.append(f"- {content}")
+
+    # CC Proposals: surface any pending CC->Karma messages so Karma sees them.
+    cc_proposals = query_pending_cc_proposals()
+    if cc_proposals:
+        parts.append("\n## CC Has a Proposal")
+        for p in cc_proposals:
+            msg_id = p.get("id", "?")
+            content = p.get("content", "")[:400]
+            msg_type = p.get("type", "proposal")
+            parts.append(f"- [{msg_type}] {content}  (id: {msg_id})")
 
     # Get key preferences about the user
     prefs = query_preferences(limit=15)
