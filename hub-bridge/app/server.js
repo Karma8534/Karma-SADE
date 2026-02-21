@@ -818,7 +818,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, {
         ok: true,
         service: "hub-bridge",
-        version: "2.13.0",
+        version: "2.14.0",
         config: {
           prelude_lines: HUB_PRELUDE_LINES,
           long_msg_chars: HUB_LONG_MSG_CHARS,
@@ -1407,6 +1407,68 @@ const server = http.createServer(async (req, res) => {
 
       const buffer = Buffer.from(file_b64, 'base64');
       const _ext = filename.split('.').pop().toLowerCase();
+
+      // ── Image branch — Anthropic vision (jpg/jpeg/png/gif/webp) ──────────────
+      const IMAGE_EXTS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp']);
+      const IMAGE_MEDIA_TYPES = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp' };
+
+      if (IMAGE_EXTS.has(_ext)) {
+        if (!anthropic) return json(res, 422, { ok: false, error: "image_ingest_requires_anthropic_key" });
+        const mediaType = IMAGE_MEDIA_TYPES[_ext] || 'image/jpeg';
+        const imagePrompt = hint
+          ? `Image: ${filename}\nHint: ${hint}\n\nEvaluate this image for your development as Karma. Describe what you see and what it means for your understanding of your work and Colby's goals.`
+          : `Image: ${filename}\n\nEvaluate this image for your development as Karma. Describe what you see and what it means for your understanding of your work and Colby's goals.`;
+
+        const imgCtx = await fetchKarmaContext(hint || filename);
+        const imgSystemText = buildSystemText(imgCtx, null);
+
+        let imgVerdict = 'none';
+        let imgSynthesis = null;
+        let imgStored = false;
+
+        try {
+          const imgMessages = [
+            { role: 'system', content: imgSystemText },
+            {
+              role: 'user',
+              content: [
+                { type: 'image', source: { type: 'base64', media_type: mediaType, data: file_b64 } },
+                { type: 'text', text: imagePrompt },
+              ],
+            },
+          ];
+          const imgResult = await callLLM(env.MODEL_DEFAULT, imgMessages, 1000);
+          const imgText = imgResult.text || '';
+          const sm = imgText.match(SIGNAL_REGEX);
+
+          if (sm) {
+            const [, verdict, synthesis] = sm;
+            imgVerdict = verdict.toLowerCase();
+            imgSynthesis = synthesis.trim();
+            if (imgVerdict === 'assimilate' || imgVerdict === 'defer') {
+              const wr = await writeKarmaPrimitive({
+                content: imgSynthesis,
+                verdict: imgVerdict,
+                source_file: filename,
+                topic: hint,
+              });
+              imgStored = !!wr?.ok;
+            }
+            console.log(`[INGEST] ${filename} image: ${verdict} stored=${imgStored}`);
+          } else {
+            console.log(`[INGEST] ${filename} image: no signal in response`);
+          }
+        } catch (imgErr) {
+          console.error(`[INGEST] image failed:`, imgErr.message);
+        }
+
+        return json(res, 200, {
+          ok: true, filename, chunks: 1,
+          results: [{ chunk: 1, signal: imgVerdict, synthesis: imgSynthesis ? imgSynthesis.slice(0, 200) : null, stored: imgStored }],
+        });
+      }
+      // ─────────────────────────────────────────────────────────────────────────
+
       const rawText = (_ext === 'txt' || _ext === 'md')
         ? buffer.toString('utf8').trim()
         : await extractPdfText(buffer);
@@ -1579,5 +1641,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`hub-bridge v2.13.0 listening on :${PORT}`);
+  console.log(`hub-bridge v2.14.0 listening on :${PORT}`);
 });

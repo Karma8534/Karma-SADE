@@ -15,7 +15,7 @@ param(
     [string]$ProcessingPath = "$env:USERPROFILE\OneDrive\Karma\Processing",
     [string]$DonePath       = "$env:USERPROFILE\OneDrive\Karma\Done",
     [string]$HubUrl         = "https://hub.arknexus.net/v1/ingest",
-    [string]$TokenFile      = "$env:USERPROFILE\Documents\Karma_SADE\chrome-extension\.vault-token"
+    [string]$TokenFile      = "$env:USERPROFILE\Documents\Karma_SADE\.hub-chat-token"
 )
 
 $ErrorActionPreference = "Continue"
@@ -35,7 +35,7 @@ if (-not (Test-Path $TokenFile)) {
 }
 $token = (Get-Content $TokenFile -Raw).Trim()
 
-$SUPPORTED_EXTENSIONS = @('.pdf', '.PDF', '.txt', '.md')
+$SUPPORTED_EXTENSIONS = @('.pdf', '.PDF', '.txt', '.md', '.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.gif', '.GIF', '.webp', '.WEBP')
 
 function Send-ToKarma {
     param([string]$FilePath)
@@ -130,7 +130,7 @@ $action = {
 
     # Skip error/verdict sidecars and unsupported types
     if ($name -match '\.(error|verdict)\.txt$') { return }
-    if ($ext -notin @('.pdf', '.txt', '.md'))   { return }
+    if ($ext -notin @('.pdf', '.txt', '.md', '.jpg', '.jpeg', '.png', '.gif', '.webp'))   { return }
 
     # Wait briefly for file to finish copying (OneDrive sync can be slow)
     Start-Sleep -Seconds 3

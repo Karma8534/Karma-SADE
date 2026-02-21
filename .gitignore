@@ -32,6 +32,8 @@ secrets.json
 
 # Vault token file (local-only)
 .vault_token
+.vault-token
+.hub-chat-token
 
 # Local-only worktree and test artifacts
 .claude/worktrees/elegant-solomon/
