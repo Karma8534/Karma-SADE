@@ -92,6 +92,7 @@ Observe in practice: chat → ASSIMILATE signal → check candidates.jsonl → P
 - v2.14.0: Image/screenshot ingest. /v1/ingest now handles jpg/jpeg/png/gif/webp via Anthropic vision (claude-sonnet-4-6). Watcher: default TokenFile fixed to .hub-chat-token (HUB_CHAT_TOKEN), image extensions added. .hub-chat-token copied locally. KarmaInboxWatcher registered as scheduled task (runs at login, auto-restarts). Smoke tested: HowIseeKarma.jpg ASSIMILATE'd stored=true, landed in candidates. Drop any screenshot or image in Karma/Inbox — Karma sees it and evaluates it.
 - v2.15.0: Real-time vision in /v1/chat + Karma Window image attach UI. /v1/chat accepts optional image_b64 + media_type; builds Anthropic multimodal content block for claude-* models. Body parse raised to 10MB. debug_image_attached telemetry. Karma Window: 📷 attach button, file picker, paste-from-clipboard on textarea, thumbnail preview strip with remove button. addMsg() renders thumbnail in chat log. Smoke tested: 8x8 green PNG → claude-sonnet-4-6 replied "Green." ✅ Paste any screenshot directly into Karma Window and ask about it.
 - v2.15.1: karma_brief now includes session history turns. Fix: brief generator was using only RP header (checkpoint metadata — IDs, hashes, pack count), producing stale summaries unrelated to session work. Now includes last 6 session turns from hub-bridge session store + Colby's next_action note. karma_brief will reflect actual work done this session.
+- v2.16.0: Recent Approvals block closes retrieval-drift window. New query_recent_ingest_episodes() returns last 5 canonical [karma-ingest] episodes by created_at DESC regardless of query match. Injected into every /raw-context response as "Recently Learned (Approved)" section. Deduplicated against Recent Memories. Karma now arrives in the session after promotion already aware of approved content without needing a matching query to activate it.
 
 ## Karma Core Status (2026-02-21)
 - **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL + DISTILLING — 4 LLM providers, task-based routing, 24h self-analysis
@@ -214,4 +215,4 @@ Observe in practice: chat → ASSIMILATE signal → check candidates.jsonl → P
 - auth log: `{enabled:true, captureTokenLen:64, vaultTokenLen:0, using:'captureToken'}` ✓
 
 ## Last Updated
-2026-02-21 — v2.15.1 deployed. karma_brief now reflects actual session work (includes session history turns). PROMOTE flow now produces meaningful briefs.
+2026-02-21 — v2.16.0 deployed. Retrieval drift closed. Karma now arrives oriented to recently-approved ingest content without needing a matching query.
