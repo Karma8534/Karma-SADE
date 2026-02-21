@@ -95,15 +95,47 @@
       word-break:break-word;
       box-shadow:0 0 0 1px rgba(0,0,0,0.1) inset;
     }
+    .msg img.thumb{
+      display:block;
+      max-width:200px;
+      max-height:140px;
+      border-radius:8px;
+      margin-bottom:6px;
+      border:1px solid var(--border);
+    }
     .u{align-self:flex-end;background:var(--bgU)}
     .a{align-self:flex-start;background:var(--bgA)}
     .input{
       border-top:1px solid var(--border);
       padding:10px 12px;
       display:flex;
+      flex-direction:column;
+      gap:6px;
+      background:var(--panel2);
+    }
+    .input-row{
+      display:flex;
       gap:8px;
       align-items:flex-end;
-      background:var(--panel2);
+    }
+    #imgPreview{
+      display:none;
+      align-items:center;
+      gap:8px;
+      padding:4px 2px;
+    }
+    #imgPreview img{
+      max-height:60px;
+      max-width:100px;
+      border-radius:6px;
+      border:1px solid var(--border);
+    }
+    #imgPreview button{
+      font-size:11px;
+      padding:3px 8px;
+      border-radius:6px;
+      color:#f87171;
+      border-color:#4b2222;
     }
     textarea{
       flex:1;
@@ -189,7 +221,16 @@
     </div>
     <div class="log" id="log"></div>
     <div class="input">
-      <textarea id="msg" placeholder="Message Karma&hellip; (Enter to send, Shift+Enter for new line)"></textarea>
+      <div id="imgPreview">
+        <img id="previewThumb" src="" alt="attached"/>
+        <span class="small" id="previewName"></span>
+        <button id="clearImg">&#10005; remove</button>
+      </div>
+      <div class="input-row">
+        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none"/>
+        <button id="attachBtn" title="Attach image (or paste screenshot)">&#128247;</button>
+        <textarea id="msg" placeholder="Message Karma&hellip; (Enter to send, Shift+Enter for new line, or paste a screenshot)"></textarea>
+      </div>
     </div>
   </div>
   <div class="right">
@@ -229,10 +270,54 @@ function setAuthHeader(){
 }
 setAuthHeader();
 const logEl = document.getElementById('log');
-function addMsg(role, text){
+
+// ── Image state ────────────────────────────────────────────────────────────
+let _imgB64 = '';
+let _imgMediaType = 'image/png';
+function setImage(b64, mediaType, name){
+  _imgB64 = b64;
+  _imgMediaType = mediaType || 'image/png';
+  const prev = document.getElementById('imgPreview');
+  const thumb = document.getElementById('previewThumb');
+  const nameEl = document.getElementById('previewName');
+  thumb.src = 'data:' + _imgMediaType + ';base64,' + b64;
+  nameEl.textContent = name || 'image';
+  prev.style.display = 'flex';
+}
+function clearImage(){
+  _imgB64 = '';
+  _imgMediaType = 'image/png';
+  const prev = document.getElementById('imgPreview');
+  const thumb = document.getElementById('previewThumb');
+  thumb.src = '';
+  document.getElementById('previewName').textContent = '';
+  prev.style.display = 'none';
+  document.getElementById('fileInput').value = '';
+}
+function fileToB64(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const result = reader.result; // "data:image/png;base64,..."
+      const comma = result.indexOf(',');
+      resolve({ b64: result.slice(comma+1), mediaType: file.type || 'image/png', name: file.name });
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function addMsg(role, text, imgB64, imgMediaType){
   const d=document.createElement('div');
   d.className='msg ' + (role==='user'?'u':'a');
-  d.textContent=text;
+  if(imgB64){
+    const im=document.createElement('img');
+    im.className='thumb';
+    im.src='data:'+(imgMediaType||'image/png')+';base64,'+imgB64;
+    d.appendChild(im);
+  }
+  const t=document.createTextNode(text);
+  d.appendChild(t);
   logEl.appendChild(d);
   logEl.scrollTop=logEl.scrollHeight;
 }
@@ -325,15 +410,19 @@ async function refreshState(){
 async function sendMsg(){
   const ta=document.getElementById('msg');
   const text=ta.value.trim();
-  if(!text) return;
+  if(!text && !_imgB64) return;
   ta.value='';
   ta.disabled=true;
-  addMsg('user', text);
+  const sentImg = _imgB64, sentMT = _imgMediaType;
+  addMsg('user', text || '(image)', sentImg, sentMT);
+  clearImage();
+  const payload = { message: text || '(describe this image)', mode: 'default' };
+  if(sentImg){ payload.image_b64 = sentImg; payload.media_type = sentMT; }
   try{
     const r=await fetch('/v1/chat', {
       method:'POST',
       headers: { 'Content-Type':'application/json', ...headers },
-      body: JSON.stringify({ message: text, mode: 'default' })
+      body: JSON.stringify(payload)
     });
     const j=await r.json();
     if(!j || j.ok===false){ throw new Error(JSON.stringify(j)); }
@@ -401,6 +490,37 @@ document.getElementById('clearTok').onclick=()=>{
 document.getElementById('msg').addEventListener('keydown', (e)=>{
   if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMsg(); }
 });
+
+// ── Image attach: file picker ──────────────────────────────────────────────
+document.getElementById('attachBtn').onclick=()=>document.getElementById('fileInput').click();
+document.getElementById('fileInput').addEventListener('change', async(e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const {b64, mediaType, name} = await fileToB64(file);
+    setImage(b64, mediaType, name);
+  }catch(err){ addMsg('assistant','IMAGE ERROR: '+String(err)); }
+});
+document.getElementById('clearImg').onclick=clearImage;
+
+// ── Image attach: paste from clipboard ────────────────────────────────────
+document.getElementById('msg').addEventListener('paste', async(e)=>{
+  const items = e.clipboardData?.items;
+  if(!items) return;
+  for(const item of items){
+    if(item.type.startsWith('image/')){
+      e.preventDefault();
+      const file = item.getAsFile();
+      if(!file) continue;
+      try{
+        const {b64, mediaType} = await fileToB64(file);
+        setImage(b64, mediaType, 'pasted-image');
+      }catch(err){ addMsg('assistant','PASTE ERROR: '+String(err)); }
+      break;
+    }
+  }
+});
+
 refreshState();
 </script>
 </body>

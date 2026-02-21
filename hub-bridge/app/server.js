@@ -818,7 +818,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, {
         ok: true,
         service: "hub-bridge",
-        version: "2.14.0",
+        version: "2.15.0",
         config: {
           prelude_lines: HUB_PRELUDE_LINES,
           long_msg_chars: HUB_LONG_MSG_CHARS,
@@ -839,13 +839,16 @@ const server = http.createServer(async (req, res) => {
       if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
         return json(res, 401, { ok: false, error: "unauthorized" });
       }
-      const raw = await parseBody(req);
+      const raw = await parseBody(req, 10000000); // 10MB — image payloads
       let body; try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
 
       const userMessage = (body?.message || "").toString().trim();
       if (!userMessage) return json(res, 400, { ok: false, error: "missing_message" });
 
       const topic = (body?.topic || "").toString().trim();
+      // Optional image attachment — enables vision in /v1/chat (Anthropic models only)
+      const image_b64 = (body?.image_b64 || "").toString().trim();
+      const image_media_type = (body?.media_type || "image/png").toString().trim();
 
       // B) Token budget: clamp(requested || DEFAULT, MIN, CAP)
       const maxOutReq = Number(body?.max_output_tokens || 0);
@@ -920,11 +923,20 @@ const server = http.createServer(async (req, res) => {
       const debug_input_chars = statePrelude.length + systemText.length + historyChars + userMessage.length;
       const debug_max_output_tokens_used = max_output_tokens;
 
+      // Vision: if image attached and model is Anthropic, build multimodal user content block
+      const isAnthropicVisionModel = model && model.startsWith('claude');
+      const userContent = (image_b64 && isAnthropicVisionModel)
+        ? [
+            { type: 'image', source: { type: 'base64', media_type: image_media_type, data: image_b64 } },
+            { type: 'text', text: userMessage },
+          ]
+        : userMessage;
+
       const messages = [
         { role: "system", content: statePrelude },
         { role: "system", content: systemText },
         ...sessionHistory,
-        { role: "user", content: userMessage },
+        { role: "user", content: userContent },
       ];
 
       const llmResult    = await callLLM(model, messages, max_output_tokens);
@@ -990,6 +1002,7 @@ const server = http.createServer(async (req, res) => {
           debug_provider,
           debug_karma_ctx: karmaCtx ? "ok" : "unavailable",
           debug_ingest: ingestVerdict,
+          debug_image_attached: image_b64 ? true : false,
         },
         confidence: 0.95,
       });
@@ -1641,5 +1654,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`hub-bridge v2.14.0 listening on :${PORT}`);
+  console.log(`hub-bridge v2.15.0 listening on :${PORT}`);
 });
