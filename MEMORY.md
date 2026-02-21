@@ -31,10 +31,16 @@ Next: PROMOTE to write karma_brief for v2.8.0+v2.9.0. Then: Brave Search API (we
 - ~~Within-session context drift~~ FIXED v2.8.0: session store injected as message history, MAX_SESSION_TURNS=8, 30min TTL.
 - ~~(empty_assistant_text) on complex prompts~~ FIXED v2.7.1: raised HUB_MAX_OUTPUT_TOKENS_DEFAULT 3000→16000, CAP 5000→32000.
 
+## Next Milestone — Memory Integrity Gate
+Karma correctly identified this as the most consequential unbuilt piece (2026-02-21):
+- **Problem**: All FalkorDB ingestion is automatic and append-only. Misstatements become facts. No contradiction detection. No truth filter. Candidate/Canonical distinction exists in design only — not enforced.
+- **Required**: (1) Confidence/source scoring on episodes, (2) contradiction check before ingest, (3) explicit canonical lock mechanism (beyond informal PROMOTE click), (4) review step between candidate and canonical.
+- **Status**: Design needed. CC to design when Colby surfaces it for a session.
+
 ## Backlog
+- Brave Search API key: Colby needs to get key at brave.com/search/api → write to /opt/seed-vault/memory_v1/session/brave.api_key.txt → restart hub-bridge (no rebuild). Free: 2000 queries/month.
 - Thumbs up/down on Karma chat window — Karma proposed, logged as future build item. Not designed yet.
 - Extension deprecation — code still in repo and Chrome. Decision made: scrap it. Cleanup not yet executed.
-- Karma window promotion scoring — Karma proposed a structured scoring system. Not in scope yet; CC to design when Colby surfaces it.
 
 ## Hub-Bridge History
 - v2.1.1: capture auth split, batch chatlog, rate limits, auto-handoff
@@ -172,4 +178,4 @@ Next: PROMOTE to write karma_brief for v2.8.0+v2.9.0. Then: Brave Search API (we
 - auth log: `{enabled:true, captureTokenLen:64, vaultTokenLen:0, using:'captureToken'}` ✓
 
 ## Last Updated
-2026-02-21 — v2.9.0 complete. Karma now runs on Claude Sonnet 4.6 (Anthropic API) as her conversational backbone — best model on account. v2.8.0 added within-session memory (session store, 8 turns, 30min TTL) + governance fix + one-good-question. v2.9.0 added Anthropic SDK + callLLM() unified provider routing. Both committed + pushed to main. PROMOTE needed to write karma_brief for new capabilities.
+2026-02-21 — v2.10.0 complete. Karma now runs on Claude Sonnet 4.6 (Anthropic API) as her conversational backbone — best model on account. v2.8.0 added within-session memory (session store, 8 turns, 30min TTL) + governance fix + one-good-question. v2.9.0 added Anthropic SDK + callLLM() unified provider routing. Both committed + pushed to main. PROMOTE needed to write karma_brief for new capabilities.
