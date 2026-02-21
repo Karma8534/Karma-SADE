@@ -1,0 +1,52 @@
+services:
+  hub-bridge:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: anr-hub-bridge
+    env_file:
+      - /opt/seed-vault/memory_v1/hub_bridge/config/hub.env
+    environment:
+      PORT: "18090"
+      # Read secrets from files mounted read-only (never in env)
+      OPENAI_API_KEY_FILE: "/run/secrets/openai.api_key.txt"
+      ANTHROPIC_API_KEY_FILE: "/run/secrets/anthropic.api_key.txt"
+      VAULT_BEARER_TOKEN_FILE: "/run/secrets/vault.bearer_token.txt"
+      HUB_CHAT_TOKEN_FILE: "/run/secrets/hub.chat.token.txt"
+      # NEW: capture + handoff auth (secrets live in files; paths only here)
+      HUB_CAPTURE_TOKEN_FILE: "/run/secrets/hub.capture.token.txt"
+      HUB_HANDOFF_TOKEN_FILE: "/run/secrets/hub.handoff.token.txt"
+      # Vault URLs
+      VAULT_BASE_URL: "https://vault.arknexus.net"
+      VAULT_INTERNAL_URL: "http://anr-vault-api:8080"
+      # Two-tier behavior: deep mode is explicit
+      DEEP_MODE_HEADER: "x-karma-deep"
+      # Handoff persistence (already mounted below)
+      HANDOFF_DIR: "/data/handoff"
+      # Route-scoped rate limits (RPM + burst)
+      RL_CHAT_RPM: "120"
+      RL_CHAT_BURST: "30"
+      RL_CAPTURE_RPM: "240"
+      RL_CAPTURE_BURST: "120"
+      RL_HANDOFF_RPM: "30"
+      RL_HANDOFF_BURST: "10"
+    ports:
+      - "127.0.0.1:18090:18090"
+    volumes:
+      - /opt/seed-vault/memory_v1/session/openai.api_key.txt:/run/secrets/openai.api_key.txt:ro
+      - /opt/seed-vault/memory_v1/session/anthropic.api_key.txt:/run/secrets/anthropic.api_key.txt:ro
+      - /opt/seed-vault/memory_v1/session/vault.bearer_token.txt:/run/secrets/vault.bearer_token.txt:ro
+      - /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt:/run/secrets/hub.chat.token.txt:ro
+      # Token mounts (read-only)
+      - /opt/seed-vault/memory_v1/hub_auth/hub.capture.token.txt:/run/secrets/hub.capture.token.txt:ro
+      - /opt/seed-vault/memory_v1/hub_auth/hub.handoff.token.txt:/run/secrets/hub.handoff.token.txt:ro
+      # Spend state
+      - /opt/seed-vault/memory_v1/session/state:/run/state:rw
+      # Handoff persistence (rw)
+      - /opt/seed-vault/memory_v1/hub_bridge/data/handoffs:/data/handoff:rw
+    networks:
+      - anr-vault-net
+    restart: unless-stopped
+networks:
+  anr-vault-net:
+    external: true

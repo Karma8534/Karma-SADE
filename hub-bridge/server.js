@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import { URL } from "url";
 import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 
 // CJS interop for pdf-parse (CommonJS module in ESM context)
 import { createRequire } from 'module';
@@ -13,7 +14,8 @@ try { pdfParse = _require('pdf-parse'); } catch (e) { console.warn('[PDF] pdf-pa
 const PORT = Number(process.env.PORT || "18090");
 const VAULT_INTERNAL_URL = process.env.VAULT_INTERNAL_URL || "http://api:8080";
 const VAULT_BASE_URL = process.env.VAULT_BASE_URL || "https://vault.arknexus.net";
-const OPENAI_API_KEY_FILE = process.env.OPENAI_API_KEY_FILE || "/run/secrets/openai.api_key.txt";
+const OPENAI_API_KEY_FILE     = process.env.OPENAI_API_KEY_FILE     || "/run/secrets/openai.api_key.txt";
+const ANTHROPIC_API_KEY_FILE  = process.env.ANTHROPIC_API_KEY_FILE  || "/run/secrets/anthropic.api_key.txt";
 const VAULT_BEARER_TOKEN_FILE = process.env.VAULT_BEARER_TOKEN_FILE || "/run/secrets/vault.bearer_token.txt";
 const HUB_CHAT_TOKEN_FILE = process.env.HUB_CHAT_TOKEN_FILE || "/run/secrets/hub.chat.token.txt";
 const HUB_CAPTURE_TOKEN_FILE = process.env.HUB_CAPTURE_TOKEN_FILE || "/run/secrets/hub.capture.token.txt";
@@ -200,9 +202,12 @@ function saveSpendState(path, state) {
   fs.renameSync(tmp, path);
 }
 
+function isAnthropicModel(model) { return typeof model === "string" && model.startsWith("claude-"); }
+
 function pricePer1M(model, dir, env) {
+  if (isAnthropicModel(model))    return dir === "input" ? Number(env.PRICE_CLAUDE_INPUT_PER_1M)    : Number(env.PRICE_CLAUDE_OUTPUT_PER_1M);
   if (model === env.MODEL_DEFAULT) return dir === "input" ? Number(env.PRICE_GPT_5_MINI_INPUT_PER_1M) : Number(env.PRICE_GPT_5_MINI_OUTPUT_PER_1M);
-  if (model === env.MODEL_DEEP) return dir === "input" ? Number(env.PRICE_GPT_5_2_INPUT_PER_1M) : Number(env.PRICE_GPT_5_2_OUTPUT_PER_1M);
+  if (model === env.MODEL_DEEP)    return dir === "input" ? Number(env.PRICE_GPT_5_2_INPUT_PER_1M)   : Number(env.PRICE_GPT_5_2_OUTPUT_PER_1M);
   return 1e9;
 }
 function estimateUsd(model, inputTokens, outputTokens, env) {
@@ -557,25 +562,29 @@ function atomicWriteHandoff(dir, filename, content) {
 
 const env = {
   MONTHLY_USD_CAP: Number(process.env.MONTHLY_USD_CAP || "0"),
-  MODEL_DEFAULT: process.env.MODEL_DEFAULT || "gpt-5-mini",
-  MODEL_DEEP: process.env.MODEL_DEEP || "gpt-5.2",
-  PRICE_GPT_5_MINI_INPUT_PER_1M: Number(process.env.PRICE_GPT_5_MINI_INPUT_PER_1M || "0.25"),
-  PRICE_GPT_5_MINI_OUTPUT_PER_1M: Number(process.env.PRICE_GPT_5_MINI_OUTPUT_PER_1M || "2.0"),
-  PRICE_GPT_5_2_INPUT_PER_1M: Number(process.env.PRICE_GPT_5_2_INPUT_PER_1M || "1.75"),
-  PRICE_GPT_5_2_OUTPUT_PER_1M: Number(process.env.PRICE_GPT_5_2_OUTPUT_PER_1M || "14.0"),
+  MODEL_DEFAULT: process.env.MODEL_DEFAULT || "claude-3-5-sonnet-20241022",
+  MODEL_DEEP: process.env.MODEL_DEEP || "gpt-5-mini",
+  PRICE_GPT_5_MINI_INPUT_PER_1M: Number(process.env.PRICE_GPT_5_MINI_INPUT_PER_1M || "0.15"),
+  PRICE_GPT_5_MINI_OUTPUT_PER_1M: Number(process.env.PRICE_GPT_5_MINI_OUTPUT_PER_1M || "0.60"),
+  PRICE_GPT_5_2_INPUT_PER_1M: Number(process.env.PRICE_GPT_5_2_INPUT_PER_1M || "0.25"),
+  PRICE_GPT_5_2_OUTPUT_PER_1M: Number(process.env.PRICE_GPT_5_2_OUTPUT_PER_1M || "2.00"),
+  PRICE_CLAUDE_INPUT_PER_1M: Number(process.env.PRICE_CLAUDE_INPUT_PER_1M || "3.0"),
+  PRICE_CLAUDE_OUTPUT_PER_1M: Number(process.env.PRICE_CLAUDE_OUTPUT_PER_1M || "15.0"),
   SPEND_STATE_PATH: process.env.SPEND_STATE_PATH || "/run/state/openai.spend.state.json",
 };
 
 // --- Load secrets at startup ---
 
 let OPENAI_KEY = "";
+let ANTHROPIC_KEY = "";
 let VAULT_BEARER = "";
 let HUB_CHAT_TOKEN = "";
 let HUB_CAPTURE_TOKEN = "";
 let HUB_HANDOFF_TOKEN = "";
 
-try { OPENAI_KEY = readFileTrim(OPENAI_API_KEY_FILE); } catch (e) { console.error("WARN: cannot read OPENAI key:", e.message); }
-try { VAULT_BEARER = readFileTrim(VAULT_BEARER_TOKEN_FILE); } catch (e) { console.error("WARN: cannot read VAULT bearer:", e.message); }
+try { OPENAI_KEY    = readFileTrim(OPENAI_API_KEY_FILE);    } catch (e) { console.error("WARN: cannot read OPENAI key:", e.message); }
+try { ANTHROPIC_KEY = readFileTrim(ANTHROPIC_API_KEY_FILE); } catch (e) { console.warn("WARN: cannot read ANTHROPIC key (Claude unavailable):", e.message); }
+try { VAULT_BEARER  = readFileTrim(VAULT_BEARER_TOKEN_FILE); } catch (e) { console.error("WARN: cannot read VAULT bearer:", e.message); }
 try { HUB_CHAT_TOKEN = readFileTrim(HUB_CHAT_TOKEN_FILE); } catch (e) { console.error("WARN: cannot read HUB chat token:", e.message); }
 try { HUB_CAPTURE_TOKEN = readFileTrim(HUB_CAPTURE_TOKEN_FILE); } catch (e) {
   console.error("WARN: cannot read HUB capture token (falling back to vault bearer):", e.message);
@@ -583,7 +592,39 @@ try { HUB_CAPTURE_TOKEN = readFileTrim(HUB_CAPTURE_TOKEN_FILE); } catch (e) {
 }
 try { HUB_HANDOFF_TOKEN = readFileTrim(HUB_HANDOFF_TOKEN_FILE); } catch (e) { console.error("WARN: cannot read HUB handoff token:", e.message); }
 
-const openai = new OpenAI({ apiKey: OPENAI_KEY });
+const openai    = new OpenAI({ apiKey: OPENAI_KEY });
+const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : null;
+
+// ── Unified LLM call — routes to Anthropic or OpenAI based on model name ─────
+// Anthropic differences: system is a separate param, max_tokens not max_completion_tokens,
+// response shape is response.content[0].text + response.usage.input_tokens/output_tokens.
+async function callLLM(model, messages, maxTokens) {
+  if (isAnthropicModel(model)) {
+    if (!anthropic) throw new Error("Anthropic client unavailable — ANTHROPIC_API_KEY not loaded");
+    // Extract + combine system messages; Anthropic takes them as a single string
+    const systemParts   = messages.filter(m => m.role === "system").map(m => m.content);
+    const apiMessages   = messages.filter(m => m.role !== "system");
+    const systemPrompt  = systemParts.join("\n\n") || undefined;
+    // Ensure at least one user message (Anthropic requirement)
+    if (!apiMessages.length) apiMessages.push({ role: "user", content: "(continue)" });
+    const resp = await anthropic.messages.create({ model, system: systemPrompt, messages: apiMessages, max_tokens: maxTokens });
+    return {
+      text:         resp.content?.[0]?.text || "",
+      usage:        { prompt_tokens: resp.usage?.input_tokens || 0, completion_tokens: resp.usage?.output_tokens || 0, total_tokens: (resp.usage?.input_tokens || 0) + (resp.usage?.output_tokens || 0) },
+      finish_reason: resp.stop_reason || null,
+      provider:     "anthropic",
+    };
+  }
+  // OpenAI path
+  const completion = await openai.chat.completions.create({ model, messages, max_completion_tokens: maxTokens });
+  return {
+    text:         completion.choices?.[0]?.message?.content || "",
+    usage:        completion.usage || {},
+    finish_reason: completion.choices?.[0]?.finish_reason || null,
+    provider:     "openai",
+  };
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 // --- Auth helper ---
 
@@ -775,7 +816,6 @@ const server = http.createServer(async (req, res) => {
       const historyChars = sessionHistory.reduce((s, m) => s + m.content.length, 0);
       const debug_input_chars = statePrelude.length + systemText.length + historyChars + userMessage.length;
       const debug_max_output_tokens_used = max_output_tokens;
-      const debug_provider = "openai";
 
       const messages = [
         { role: "system", content: statePrelude },
@@ -784,17 +824,16 @@ const server = http.createServer(async (req, res) => {
         { role: "user", content: userMessage },
       ];
 
-      const completion = await openai.chat.completions.create({ model, messages, max_completion_tokens: max_output_tokens });
-      const assistantText = extractAssistantText(completion) || "(empty_assistant_text)";
-      const usage = completion.usage || {};
+      const llmResult    = await callLLM(model, messages, max_output_tokens);
+      const assistantText = llmResult.text || "(empty_assistant_text)";
+      const usage         = llmResult.usage;
+      const debug_provider   = llmResult.provider;
+      const debug_stop_reason = llmResult.finish_reason;
 
       // Persist this exchange to session history (skip empty responses)
       if (assistantText !== "(empty_assistant_text)") {
         addToSession(token, userMessage, assistantText);
       }
-
-      // C) Telemetry: stop reason (length = budget exhausted, stop = normal)
-      const debug_stop_reason = completion.choices?.[0]?.finish_reason || null;
 
       // Detect ASSIMILATE/DEFER/DISCARD signals from Karma and write to FalkorDB
       let ingestVerdict = 'none';
@@ -1174,28 +1213,25 @@ const server = http.createServer(async (req, res) => {
         try {
           // Truncate to first 1200 chars — header + MIS is sufficient for a brief
           const briefInput = resume_prompt.slice(0, 1200);
-          const briefComp = await openai.chat.completions.create({
-            model: env.MODEL_DEFAULT,
-            max_completion_tokens: 1600,
-            messages: [
-              {
-                role: "system",
-                content: [
-                  "You generate KARMA_BRIEF — a plain-language session summary for Karma (an AI peer).",
-                  "From the checkpoint below, write exactly 3-5 bullet points:",
-                  "• What was built or decided (plain English, no jargon)",
-                  "• What the system can now do that it couldn't before",
-                  "• The single most important next open question",
-                  "",
-                  "Rules: under 150 words total, no file paths/commands/JSON,",
-                  "second person to Karma ('You now have...', 'Next question:...'),",
-                  "concrete and specific.",
-                ].join("\n"),
-              },
-              { role: "user", content: "CHECKPOINT:\n" + briefInput },
-            ],
-          }, { timeout: 20000 });
-          karma_brief = extractAssistantText(briefComp) || null;
+          const briefMessages = [
+            {
+              role: "system",
+              content: [
+                "You generate KARMA_BRIEF — a plain-language session summary for Karma (an AI peer).",
+                "From the checkpoint below, write exactly 3-5 bullet points:",
+                "• What was built or decided (plain English, no jargon)",
+                "• What the system can now do that it couldn't before",
+                "• The single most important next open question",
+                "",
+                "Rules: under 150 words total, no file paths/commands/JSON,",
+                "second person to Karma ('You now have...', 'Next question:...'),",
+                "concrete and specific.",
+              ].join("\n"),
+            },
+            { role: "user", content: "CHECKPOINT:\n" + briefInput },
+          ];
+          const briefResult = await callLLM(env.MODEL_DEFAULT, briefMessages, 1600);
+          karma_brief = briefResult.text || null;
 
           // Store karma_brief in vault for autonomous session continuity.
           // On next session, /v1/checkpoint/latest returns it → injected into system prompt.
@@ -1294,16 +1330,12 @@ const server = http.createServer(async (req, res) => {
         let stored = false;
 
         try {
-          const comp = await openai.chat.completions.create({
-            model: env.MODEL_DEFAULT,
-            messages: [
-              { role: 'system', content: systemText },
-              { role: 'user', content: prompt },
-            ],
-            max_completion_tokens: 1000,
-          });
-
-          const responseText = extractAssistantText(comp) || '';
+          const ingestMessages = [
+            { role: 'system', content: systemText },
+            { role: 'user', content: prompt },
+          ];
+          const ingestResult = await callLLM(env.MODEL_DEFAULT, ingestMessages, 1000);
+          const responseText = ingestResult.text || '';
           const sm = responseText.match(SIGNAL_REGEX);
 
           if (sm) {
@@ -1345,5 +1377,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`hub-bridge v2.8.0 listening on :${PORT}`);
+  console.log(`hub-bridge v2.9.0 listening on :${PORT}`);
 });
