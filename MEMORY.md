@@ -16,6 +16,16 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop + graph dis
 | Graph Distillation | ✅ Active | _distillation_cycle() in ConsciousnessLoop — reads FalkorDB every 24h, synthesizes themes/gaps/insights via LLM, writes schema-compliant fact to ledger, re-ingests key insights as FalkorDB episodes |
 
 ## Current Task
+K2 FalkorDB Replica LIVE (2026-02-21):
+- K2 (192.168.0.226) is now a live read-only FalkorDB replica of vault-neo (64.225.13.144)
+- SSH tunnel: `-L 0.0.0.0:17687:localhost:6379` via neo@64.225.13.144:22 (key: C:\Users\karma\.ssh\id_ed25519)
+- FalkorDB on K2 issues: `REPLICAOF host.docker.internal 17687` on tunnel connect
+- Task Scheduler task: `FalkorDB-Vault-Tunnel` (AtLogOn, RunLevel=Highest, restart 5x/1min)
+- Scripts: `Scripts/k2-falkordb-sync/FalkorDB-Tunnel.ps1` + `Setup-FalkorDB-Replica.ps1` (committed)
+- E2E verified: master_link_status:up, connected_slaves:1, test key replicated, READONLY write-block confirmed
+- NOTE: Re-run Setup-FalkorDB-Replica.ps1 on K2 after any script update to re-register the Task Scheduler task
+- Lesson learned: FalkorDB port 6379=Redis replication, 7687=Bolt UI. REPLICAOF must use 6379. Docker containers can't reach host 127.0.0.1 — use host.docker.internal. PowerShell 5.1 reads UTF-8-without-BOM as ANSI: em dash (U+2014) = string terminator. Use Start-Process not Start-Job to keep SSH alive.
+
 v2.11.0 COMPLETE — Karma can now surf the web (full page content, not snippets) (2026-02-21):
 - v2.8.0: Within-session memory (session store, MAX_SESSION_TURNS=8, 30min TTL). buildSystemText governance fix. "One good question" instruction. Distillation brief now actually deployed (was committed but never built).
 - v2.9.0: Anthropic SDK added to hub-bridge. callLLM() unified helper routes "claude-*" models to Anthropic API, everything else to OpenAI. MODEL_DEFAULT=claude-sonnet-4-6 (best model on account). MODEL_DEEP=gpt-5-mini. Smoke test: provider=anthropic, model=claude-sonnet-4-6, ok=true ✅
@@ -188,7 +198,8 @@ Observe in practice: chat → ASSIMILATE signal → check candidates.jsonl → P
 ## Infrastructure
 - Server: arknexus.net (vault-neo), 7 Docker containers running
 - Containers: karma-server, falkordb, anr-vault-search, anr-vault-api, anr-hub-bridge, anr-vault-db, anr-vault-caddy
-- FalkorDB: ~150-300MB RAM, Redis protocol on 6379 internal / 7687 external
+- FalkorDB: ~150-300MB RAM, Redis protocol on 6379 internal / 7687 external (Bolt). 6379 also exposed to 127.0.0.1 for K2 replication tunnel.
+- **K2 FalkorDB replica**: K2 (192.168.0.226) runs FalkorDB in REPLICAOF mode off vault-neo via SSH tunnel (port 17687). Managed by Windows Task Scheduler task `FalkorDB-Vault-Tunnel`. Read-only. Tunnel scripts in Scripts/k2-falkordb-sync/.
 - Cost: ~$26/mo (droplet $24 + OpenAI ~$1-2 for analysis)
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 - **Vault API port: 8080** (not 8000) — `curl http://localhost:8080/v1/checkpoint/latest`
@@ -222,4 +233,4 @@ ssh vault-neo "cat /opt/seed-vault/memory_v1/hub_bridge/data/handoffs/collab.jso
 ```
 
 ## Last Updated
-2026-02-21 — v2.17.0 deployed. Karma↔CC Collaboration Bridge live. Colby-gated queue for AI-to-AI proposals. Collaboration Queue card visible in Karma Window when messages pending.
+2026-02-21 — K2 FalkorDB replica live. vault-neo port 6379 exposed for SSH tunnel (127.0.0.1 binding). K2 runs REPLICAOF via Task Scheduler. master_link_status:up verified. E2E: test key replicated + READONLY write-block confirmed.

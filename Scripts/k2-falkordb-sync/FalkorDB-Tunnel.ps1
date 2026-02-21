@@ -1,14 +1,14 @@
 # FalkorDB-Tunnel.ps1
 # Keeps SSH tunnel to vault-neo alive and maintains K2 FalkorDB in replica mode.
-# Run via Task Scheduler at logon — do not run manually unless testing.
+# Run via Task Scheduler at logon - do not run manually unless testing.
 
 param(
-    [string]$VaultNeoHost = "64.225.13.144",
-    [int]$VaultNeoPort    = 22,
-    [int]$TunnelLocalPort = 17687,
-    [int]$TunnelRemotePort = 7687,
-    [string]$SshKeyPath   = "$env:USERPROFILE\.ssh\id_ed25519",
-    [string]$SshUser      = "neo"
+    [string]$VaultNeoHost  = "64.225.13.144",
+    [int]$VaultNeoPort     = 22,
+    [int]$TunnelLocalPort  = 17687,
+    [int]$TunnelRemotePort = 6379,
+    [string]$SshKeyPath    = "$env:USERPROFILE\.ssh\id_ed25519",
+    [string]$SshUser       = "neo"
 )
 
 $LogFile = "$PSScriptRoot\tunnel.log"
@@ -29,8 +29,8 @@ function Get-FalkorContainer {
 
 function Set-Replication {
     param([string]$Container, [int]$Port)
-    $result = docker exec $Container redis-cli REPLICAOF 127.0.0.1 $Port 2>&1
-    Write-Log "[REPLICATION] docker exec $Container redis-cli REPLICAOF 127.0.0.1 $Port -> $result"
+    $result = docker exec $Container redis-cli REPLICAOF host.docker.internal $Port 2>&1
+    Write-Log "[REPLICATION] REPLICAOF host.docker.internal $Port -> $result"
     return ($result -match "OK")
 }
 
@@ -39,21 +39,23 @@ Write-Log "[TUNNEL] FalkorDB tunnel keeper started. Key=$SshKeyPath Target=$SshU
 while ($true) {
     Write-Log "[TUNNEL] Opening tunnel K2:$TunnelLocalPort -> ${VaultNeoHost}:$TunnelRemotePort"
 
-    # Start SSH tunnel as background job
-    $sshArgs = @(
+    # Build ssh argument list
+    $sshArgList = @(
         "-N",
         "-o", "StrictHostKeyChecking=no",
         "-o", "ServerAliveInterval=30",
         "-o", "ServerAliveCountMax=3",
         "-i", $SshKeyPath,
-        "-p", $VaultNeoPort,
-        "-L", "${TunnelLocalPort}:localhost:${TunnelRemotePort}",
+        "-p", "$VaultNeoPort",
+        "-L", "0.0.0.0:${TunnelLocalPort}:localhost:${TunnelRemotePort}",
         "${SshUser}@${VaultNeoHost}"
     )
-    $job = Start-Job -ScriptBlock {
-        param($args)
-        & ssh @args
-    } -ArgumentList (, $sshArgs)
+
+    # Start SSH as a real Windows process (not a PS job) so it stays alive
+    $proc = Start-Process -FilePath "ssh" `
+                          -ArgumentList $sshArgList `
+                          -PassThru `
+                          -NoNewWindow
 
     # Wait for tunnel to stabilise
     Start-Sleep -Seconds 3
@@ -62,13 +64,13 @@ while ($true) {
     $container = Get-FalkorContainer
     $ok = Set-Replication -Container $container -Port $TunnelLocalPort
     if (-not $ok) {
-        Write-Log "[REPLICATION] WARNING: REPLICAOF did not return OK — will retry on next reconnect"
+        Write-Log "[REPLICATION] WARNING: REPLICAOF did not return OK - will retry on next reconnect"
     }
 
-    # Wait for SSH job to exit (means tunnel died)
-    Wait-Job $job | Out-Null
-    $exitState = $job.State
-    Remove-Job $job -Force
-    Write-Log "[TUNNEL] Tunnel exited (state=$exitState). Reconnecting in 10s..."
+    # Wait for SSH process to exit (means tunnel died or was killed)
+    $proc.WaitForExit()
+    $exitCode = $proc.ExitCode
+    $proc.Dispose()
+    Write-Log "[TUNNEL] Tunnel exited (code=$exitCode). Reconnecting in 10s..."
     Start-Sleep -Seconds 10
 }

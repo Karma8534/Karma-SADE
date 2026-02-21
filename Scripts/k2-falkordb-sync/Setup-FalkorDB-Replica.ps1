@@ -3,9 +3,9 @@
 # Must be run as the karma user (not Administrator) so Task Scheduler
 # uses the correct SSH key at C:\Users\karma\.ssh\id_ed25519
 
-$InstallDir  = "C:\Users\karma\FalkorDB-Sync"
+$InstallDir   = "C:\Users\karma\FalkorDB-Sync"
 $TunnelScript = Join-Path $InstallDir "FalkorDB-Tunnel.ps1"
-$TaskName    = "FalkorDB-Vault-Tunnel"
+$TaskName     = "FalkorDB-Vault-Tunnel"
 
 Write-Host "=== FalkorDB Replica Setup ==="
 Write-Host "Install dir: $InstallDir"
@@ -17,7 +17,7 @@ Write-Host "[1/5] Created $InstallDir"
 # 2. Copy tunnel script (this script must live next to FalkorDB-Tunnel.ps1)
 $srcScript = Join-Path $PSScriptRoot "FalkorDB-Tunnel.ps1"
 if (-not (Test-Path $srcScript)) {
-    Write-Error "FalkorDB-Tunnel.ps1 not found next to this script at $srcScript"
+    Write-Error "FalkorDB-Tunnel.ps1 not found next to this script at: $srcScript"
     exit 1
 }
 Copy-Item -Path $srcScript -Destination $TunnelScript -Force
@@ -26,18 +26,15 @@ Write-Host "[2/5] Copied FalkorDB-Tunnel.ps1 to $InstallDir"
 # 3. Verify SSH key exists
 $sshKey = "C:\Users\karma\.ssh\id_ed25519"
 if (-not (Test-Path $sshKey)) {
-    Write-Error "SSH key not found at $sshKey — cannot proceed"
+    Write-Error "SSH key not found at: $sshKey - cannot proceed"
     exit 1
 }
 Write-Host "[3/5] SSH key verified at $sshKey"
 
 # 4. Register Task Scheduler task
-$action = New-ScheduledTaskAction `
-    -Execute "powershell.exe" `
-    -Argument "-WindowStyle Hidden -ExecutionPolicy Bypass -NonInteractive -File `"$TunnelScript`""
-
-$trigger = New-ScheduledTaskTrigger -AtLogOn
-
+$taskArg = "-WindowStyle Hidden -ExecutionPolicy Bypass -NonInteractive -File `"$TunnelScript`""
+$action   = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $taskArg
+$trigger  = New-ScheduledTaskTrigger -AtLogOn
 $settings = New-ScheduledTaskSettingsSet `
     -ExecutionTimeLimit (New-TimeSpan -Hours 0) `
     -RestartCount 5 `
@@ -49,12 +46,12 @@ $settings = New-ScheduledTaskSettingsSet `
 Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
 
 Register-ScheduledTask `
-    -TaskName $TaskName `
-    -Action $action `
-    -Trigger $trigger `
-    -Settings $settings `
+    -TaskName    $TaskName `
+    -Action      $action `
+    -Trigger     $trigger `
+    -Settings    $settings `
     -Description "Maintains SSH tunnel to vault-neo FalkorDB and keeps K2 FalkorDB in replica mode" `
-    -RunLevel Highest | Out-Null
+    -RunLevel    Highest | Out-Null
 
 Write-Host "[4/5] Registered scheduled task '$TaskName' (triggers: AtLogOn)"
 
