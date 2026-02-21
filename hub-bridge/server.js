@@ -201,18 +201,20 @@ function buildStatePrelude(ckLatest) {
     const rp = String(ckLatest && ckLatest.resume_prompt ? ckLatest.resume_prompt : "");
     const lines = rp.split("\n");
     const head = lines.slice(0, 8).join("\n");
-    return [
+    const guardrail = [
       "=== STATE PRELUDE (baseline_exec_verified) ===",
       head,
       "",
-      "Rule: Treat this RESUME as canonical baseline. Do not ask clarifying questions about it.",
-      "If user asks for resume header: return the first 6 lines of the header immediately.",
+      "GUARDRAIL: RESUME is canonical. Execute sealed next_action immediately. No audits unless user says VERIFY.",
       "=== END STATE PRELUDE ==="
     ].join("\n");
+    return guardrail;
   } catch (e) {
     return "=== STATE PRELUDE (unavailable) ===";
   }
 }
+
+
 
 async function getVaultFacts(bearer) {
   const result = await vaultGet("/v1/facts", bearer, VAULT_INTERNAL_URL);
