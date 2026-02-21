@@ -178,11 +178,11 @@ class ConsciousnessLoop:
 
         print("[DISTILLATION] Starting graph distillation cycle")
 
-        try:
-            falkor = self._get_falkor()
-            group_id = config.GRAPHITI_GROUP_ID
+        falkor = self._get_falkor()
+        group_id = config.GRAPHITI_GROUP_ID
 
-            # Query 1: Top entities by relationship count
+        # Query 1: Top entities by relationship count
+        try:
             top_q = (
                 "MATCH (e:Entity) "
                 "OPTIONAL MATCH (e)-[r]-() "
@@ -192,8 +192,12 @@ class ConsciousnessLoop:
             )
             top_result = falkor.execute_command("GRAPH.QUERY", group_id, top_q)
             top_rows = top_result[1] if len(top_result) >= 2 and top_result[1] else []
+        except Exception as e:
+            print(f"[DISTILLATION] Query 1 (top entities) failed: {e}")
+            top_rows = []
 
-            # Query 2: Recent episodes (last 7 days)
+        # Query 2: Recent episodes (last 7 days)
+        try:
             seven_days_ago = _time.time() - (7 * 24 * 3600)
             max_ep = getattr(config, 'DISTILLATION_MAX_EPISODES', 200)
             ep_q = (
@@ -205,8 +209,12 @@ class ConsciousnessLoop:
             )
             ep_result = falkor.execute_command("GRAPH.QUERY", group_id, ep_q)
             ep_rows = ep_result[1] if len(ep_result) >= 2 and ep_result[1] else []
+        except Exception as e:
+            print(f"[DISTILLATION] Query 2 (recent episodes) failed: {e}")
+            ep_rows = []
 
-            # Query 3: Low-connection entities (gaps)
+        # Query 3: Low-connection entities (gaps)
+        try:
             gap_q = (
                 "MATCH (e:Entity) "
                 "OPTIONAL MATCH (e)-[r]-() "
@@ -218,10 +226,9 @@ class ConsciousnessLoop:
             )
             gap_result = falkor.execute_command("GRAPH.QUERY", group_id, gap_q)
             gap_rows = gap_result[1] if len(gap_result) >= 2 and gap_result[1] else []
-
         except Exception as e:
-            print(f"[DISTILLATION] FalkorDB query failed: {e}")
-            return
+            print(f"[DISTILLATION] Query 3 (gap entities) failed: {e}")
+            gap_rows = []
 
         def _safe(v):
             return str(v) if v is not None else ""
@@ -285,7 +292,8 @@ class ConsciousnessLoop:
 
         # Write schema-compliant fact to vault ledger
         now_iso = _dt.now(_tz.utc).isoformat()
-        fact_id = "distillation_" + str(int(_time.time()))
+        import random as _random
+        fact_id = "distillation_" + str(int(_time.time())) + "_" + str(_random.randint(1000, 9999))
         fact = {
             "id": fact_id,
             "type": "log",
@@ -320,11 +328,9 @@ class ConsciousnessLoop:
 
         # Re-ingest key insights as FalkorDB episodes
         if self._ingest_episode and key_insights:
-            import asyncio as _aio
             try:
-                loop = _aio.get_event_loop()
                 for insight in key_insights[:5]:
-                    loop.create_task(self._ingest_episode(
+                    asyncio.get_running_loop().create_task(self._ingest_episode(
                         "[karma-distillation] " + insight,
                         "Karma graph distillation insight",
                         source="karma-distillation"
@@ -335,9 +341,7 @@ class ConsciousnessLoop:
         # SMS for high-confidence synthesis
         if self._sms_notify and confidence >= 0.8:
             try:
-                import asyncio as _aio2
-                loop = _aio2.get_event_loop()
-                loop.create_task(self._sms_notify(
+                asyncio.get_running_loop().create_task(self._sms_notify(
                     "Graph distillation: " + summary[:200],
                     category="self_improvement",
                     confidence=confidence
