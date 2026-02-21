@@ -15,10 +15,11 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | Multi-Model | ✅ Active | MiniMax M2.5 (primary — coding/speed/general), GLM-5 (reasoning/analysis specialist, priority -1), Groq (fallback), OpenAI (final fallback). |
 
 ## Current Task
-Karma ingest pipeline LIVE (v2.5.0). Next: Drop PDFs from PDFs2UL into OneDrive/Karma/Inbox and start the folder watcher to process the initial batch.
+Karma ingest pipeline v2.5.0 fully operational. Initial PDF batch from PDFs2UL processed — files moving to Done/. ASSIMILATE signals detected and writing to FalkorDB. Watcher uses HUB_CHAT_TOKEN (same as hub.arknexus.net chat). No defined next phase — awaiting direction.
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
+- Occasional stored=false on ASSIMILATE signal (write-primitive timeout edge case). Low priority — most writes succeed.
 
 ## Hub-Bridge History
 - v2.1.1: capture auth split, batch chatlog, rate limits, auto-handoff
