@@ -257,6 +257,37 @@ const BRAVE_SEARCH_URL     = "https://api.search.brave.com/res/v1/web/search";
 // Patterns that reliably signal "I need current/external info" — not generic questions
 const SEARCH_INTENT_REGEX = /\b(search|look up|look up|find out|what is the latest|who is|who was|when did|when was|what happened|current|today|right now|recently|news about|price of|weather in|how to|stock price|headline|breaking)\b/i;
 
+// Fetch and strip full text from a URL — no headless browser needed.
+// Works for ~80% of pages (news, docs, Wikipedia, blogs). Fails silently on JS SPAs.
+async function fetchPageText(url) {
+  try {
+    const r = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; KarmaBot/1.0; +https://arknexus.net)",
+        "Accept":     "text/html,application/xhtml+xml,text/plain",
+      },
+      signal: AbortSignal.timeout(8000),
+      redirect: "follow",
+    });
+    if (!r.ok) return null;
+    const ct = r.headers.get("content-type") || "";
+    if (!ct.includes("text/html") && !ct.includes("text/plain")) return null;
+    const html = await r.text();
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+    return text.length > 100 ? text.slice(0, 4000) : null;
+  } catch (e) {
+    console.warn("[SEARCH] page fetch failed:", url, e.message);
+    return null;
+  }
+}
+
 async function fetchWebSearch(query) {
   if (!BRAVE_KEY || !BRAVE_SEARCH_ENABLED) return null;
   try {
@@ -269,7 +300,25 @@ async function fetchWebSearch(query) {
     const data = await r.json();
     const hits = (data?.web?.results || []).slice(0, BRAVE_MAX_RESULTS);
     if (!hits.length) return null;
-    return hits.map((h, i) => `[${i+1}] ${h.title}\n${(h.description || "").slice(0, 300)}\nSource: ${h.url}`).join("\n\n");
+
+    // Attempt full page read of top result — real content beats snippets every time
+    const topPageText = await fetchPageText(hits[0].url);
+
+    if (topPageText) {
+      // Full content from top result + snippet awareness of remaining hits
+      let out = `[1] ${hits[0].title}\nSource: ${hits[0].url}\n\n${topPageText}`;
+      if (hits.length > 1) {
+        out += "\n\n" + hits.slice(1).map((h, i) =>
+          `[${i+2}] ${h.title}\n${(h.description || "").slice(0, 200)}\nSource: ${h.url}`
+        ).join("\n\n");
+      }
+      return out;
+    }
+
+    // Fallback: snippets only if page fetch failed or returned nothing
+    return hits.map((h, i) =>
+      `[${i+1}] ${h.title}\n${(h.description || "").slice(0, 300)}\nSource: ${h.url}`
+    ).join("\n\n");
   } catch (e) {
     console.warn("[SEARCH] Brave search failed:", e.message);
     return null;
@@ -1426,5 +1475,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`hub-bridge v2.10.0 listening on :${PORT}`);
+  console.log(`hub-bridge v2.11.0 listening on :${PORT}`);
 });
