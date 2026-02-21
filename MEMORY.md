@@ -16,6 +16,23 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop + graph dis
 | Graph Distillation | ✅ Active | _distillation_cycle() in ConsciousnessLoop — reads FalkorDB every 24h, synthesizes themes/gaps/insights via LLM, writes schema-compliant fact to ledger, re-ingests key insights as FalkorDB episodes |
 
 ## Current Task
+CC Resurrection LIVE (2026-02-21):
+- Get-KarmaContext.ps1: fetches Karma's live canonical graph context at every CC session start
+- Primary path: SSH to vault-neo → curl /raw-context?q=session_start&lane=canonical (3s timeout)
+- K2 fallback: PowerShell RESP TCP client to 192.168.0.226:6379 (no redis-cli, no Docker)
+  - Must use GRAPH.RO_QUERY (not GRAPH.QUERY) on replica — write commands are rejected
+- Atomic write: .WriteAllText() to .tmp then Move-Item -Force to karma-context.md
+- karma-context.md gitignored; CC reads it immediately after script runs
+- CLAUDE.md ## Session Start: step 1 now runs resurrection script (4 steps → 5 steps)
+- Scripts/resurrection/Get-KarmaContext.ps1 committed + smoke tested ✅
+- Primary path smoke test: "Context written from vault-neo (1468 chars)" ✅
+- K2 fallback smoke test: correctly reports 0 entities (graph currently empty — see Blockers) ✅
+- Commits: 305701e (gitignore) + c3dd390 (script) + ae8d57d (RO_QUERY fix) + 51079c0 (CLAUDE.md)
+- NOTE: FalkorDB neo_workspace graph is currently EMPTY on both vault-neo and K2.
+  Container was recreated without persistent volume during K2 replication setup.
+  Data is in JSONL ledger + PostgreSQL. Rebuild: run batch_ingest.py on vault-neo.
+  Until rebuilt, resurrection context = PostgreSQL preferences only (no entity/episode data).
+
 K2 FalkorDB Replica LIVE (2026-02-21):
 - K2 (192.168.0.226) is now a live read-only FalkorDB replica of vault-neo (64.225.13.144)
 - SSH tunnel: `-L 0.0.0.0:17687:localhost:6379` via neo@64.225.13.144:22 (key: C:\Users\karma\.ssh\id_ed25519)
@@ -66,6 +83,7 @@ Karma's design, built as specified:
 **Next open question:** Promotion criteria — what concrete signals make a candidate canonical-worthy? (Karma's first requirement: "explicit criteria, not vibes")
 
 ## Blockers
+- **FalkorDB neo_workspace graph EMPTY** — Container recreated during K2 replication setup with no pre-existing persistent volume. 497 entities / 620+ episodes lost from graph (data safe in JSONL ledger + PostgreSQL). Fix: `ssh vault-neo "cd /opt/seed-vault/memory_v1/karma-core && docker exec karma-server python batch_ingest.py"`. Once rebuilt, resurrection context will include full entity + episode data.
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
 - Occasional stored=false on ASSIMILATE signal (write-primitive timeout edge case). Low priority — most writes succeed.
 - ~~Within-session context drift~~ FIXED v2.8.0: session store injected as message history, MAX_SESSION_TURNS=8, 30min TTL.
@@ -233,4 +251,4 @@ ssh vault-neo "cat /opt/seed-vault/memory_v1/hub_bridge/data/handoffs/collab.jso
 ```
 
 ## Last Updated
-2026-02-21 — K2 FalkorDB replica live. vault-neo port 6379 exposed for SSH tunnel (127.0.0.1 binding). K2 runs REPLICAOF via Task Scheduler. master_link_status:up verified. E2E: test key replicated + READONLY write-block confirmed.
+2026-02-21 — CC Resurrection live. Get-KarmaContext.ps1 fetches Karma's canonical graph context at every CC session start (SSH primary + K2 RESP TCP fallback). CLAUDE.md session-start updated (5 steps). FalkorDB neo_workspace currently empty — needs batch_ingest.py rebuild before resurrection returns entity/episode data.
