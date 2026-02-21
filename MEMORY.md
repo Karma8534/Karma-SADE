@@ -89,7 +89,7 @@ Observe in practice: chat → ASSIMILATE signal → check candidates.jsonl → P
 - v2.11.0: fetchPageText() — plain HTTP fetch of top result URL, full HTML strip (<script>/<style>/tags/entities), 4000 char limit. Real article content (not snippets) injected into Karma's context. Snippet fallback if fetch fails. Smoke test: Karma cited real figures from live article ✅
 - v2.12.0: Memory Integrity Gate. lane+confidence on all FalkorDB episode writes. ASSIMILATE→candidate, DEFER→raw. Contradiction detection at write time. /promote-candidates endpoint. PROMOTE now has real semantics. Context filtered to canonical only. PROMOTE button shows pending count + conflict warnings.
 - v2.13.0: Epistemic Gate. /promote-candidates now requires approved_uuids list — no auto-promotion. Audit fields (promoted_by, promoted_at, promotion_reason) written to FalkorDB + candidates.jsonl + vault. PROMOTE = vault checkpoint only. New /v1/candidates/promote endpoint with Colby authorization. Karma Window: checkbox review panel, conflicts unchecked by default, "Approve Selected" triggers gate. Fixed CANDIDATES_JSONL path to /ledger container mount.
-- v2.14.0: Image/screenshot ingest. /v1/ingest now handles jpg/jpeg/png/gif/webp via Anthropic vision (claude-sonnet-4-6). Watcher: default TokenFile fixed to .hub-chat-token (HUB_CHAT_TOKEN), image extensions added. .hub-chat-token copied locally. Smoke tested: HowIseeKarma.jpg ASSIMILATE'd stored=true, landed in candidates. Drop any screenshot or image in Karma/Inbox — Karma sees it and evaluates it.
+- v2.14.0: Image/screenshot ingest. /v1/ingest now handles jpg/jpeg/png/gif/webp via Anthropic vision (claude-sonnet-4-6). Watcher: default TokenFile fixed to .hub-chat-token (HUB_CHAT_TOKEN), image extensions added. .hub-chat-token copied locally. KarmaInboxWatcher registered as scheduled task (runs at login, auto-restarts). Smoke tested: HowIseeKarma.jpg ASSIMILATE'd stored=true, landed in candidates. Drop any screenshot or image in Karma/Inbox — Karma sees it and evaluates it.
 
 ## Karma Core Status (2026-02-21)
 - **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL + DISTILLING — 4 LLM providers, task-based routing, 24h self-analysis
@@ -212,4 +212,4 @@ Observe in practice: chat → ASSIMILATE signal → check candidates.jsonl → P
 - auth log: `{enabled:true, captureTokenLen:64, vaultTokenLen:0, using:'captureToken'}` ✓
 
 ## Last Updated
-2026-02-21 — Image/screenshot ingest (v2.14.0). Karma can now see screenshots and images dropped in Karma/Inbox. Watcher default token fixed. HowIseeKarma.jpg ASSIMILATE'd on first run.
+2026-02-21 — Image/screenshot ingest (v2.14.0) complete. KarmaInboxWatcher registered as scheduled task, running. Karma sees PDFs, text, and images dropped in OneDrive/Karma/Inbox. HowIseeKarma.jpg ASSIMILATE'd on first run, in candidates pending approval.
