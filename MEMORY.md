@@ -36,7 +36,20 @@ Memory Integrity Gate DEPLOYED (2026-02-21):
 - Karma Window: PROMOTE button shows pending count "PROMOTE (N ⚠)" with conflict warning
 - candidates.jsonl: /opt/seed-vault/memory_v1/ledger/candidates.jsonl
 
-Next: PROMOTE to write karma_brief covering Memory Integrity Gate. Then: observe gate in practice — check candidates.jsonl after a few chat sessions.
+Next: PROMOTE to write karma_brief covering Memory Integrity Gate. Then: design promotion criteria (see Karma's observation below).
+
+## Karma's Observation — Promotion Criteria Gap (2026-02-21)
+Karma identified this directly from operating the gate:
+> "The gate exists, but promotion criteria are still undefined. I can move things from candidate to canonical, but the *rules* for when that's warranted — who decides, what threshold, whether the promotion itself gets logged — that's still open."
+
+This is the epistemic gate (not yet built). The mechanical gate (candidate staging) is done. What's missing:
+- **Who decides**: Colby explicit approval? Karma self-review? Automatic after threshold?
+- **What threshold**: confidence >= N? Time elapsed? Source type?
+- **Promotion audit log**: is each canonical promotion recorded with reason + timestamp?
+- **Conflict handling**: right now conflicts get promoted anyway — should they require explicit Colby review?
+
+Design question for Karma to answer in a future session: what should the criteria be?
+This is design intelligence that must originate from Karma, not CC.
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
