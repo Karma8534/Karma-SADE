@@ -141,4 +141,4 @@ Hub-bridge v2.4.1 — token budget tuned for gpt-5-mini reasoning model. Karma W
 - auth log: `{enabled:true, captureTokenLen:64, vaultTokenLen:0, using:'captureToken'}` ✓
 
 ## Last Updated
-2026-02-21 — Hub-bridge v2.4.1 (token budget: DEFAULT 2000, CAP 3000, ctx trim 1200). Fixes (empty_assistant_text) on gpt-5-mini. Karma Window UX: Enter-to-send, no Send button. All e2e verified: Karma knows Colby + Ollie, correct checkpoint in prelude.
+2026-02-21 — Neo alias purge: Fixed 2 Neo Entity nodes, 2 Colby entity summaries, 3 User entity summaries in FalkorDB neo_workspace. Fixed 4 PostgreSQL analysis.user_preferences (user_name, preferred_nickname, response_style, change_management_rules). Zero Neo leaks in raw-context. Hub-bridge v2.4.1 token budget live.
