@@ -251,6 +251,10 @@ function buildSystemText(karmaCtx, ckLatest = null) {
     text += `\n\n--- KARMA SELF-KNOWLEDGE (${ckId}) ---\n${ckLatest.karma_brief}\n---`;
   }
 
+  if (ckLatest && ckLatest.distillation_brief) {
+    text += `\n\n--- KARMA GRAPH SYNTHESIS ---\n${ckLatest.distillation_brief}\n---`;
+  }
+
   return text;
 }
 
