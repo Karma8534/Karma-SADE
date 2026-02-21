@@ -14,6 +14,7 @@ const HUB_CAPTURE_TOKEN_FILE = process.env.HUB_CAPTURE_TOKEN_FILE || "/run/secre
 const HUB_HANDOFF_TOKEN_FILE = process.env.HUB_HANDOFF_TOKEN_FILE || "/run/secrets/hub.handoff.token.txt";
 const DEEP_MODE_HEADER = (process.env.DEEP_MODE_HEADER || "x-karma-deep").toLowerCase();
 const HANDOFF_DIR = process.env.HANDOFF_DIR || "/data/handoff";
+const KARMA_CONTEXT_URL = process.env.KARMA_CONTEXT_URL || "http://karma-server:8340/raw-context";
 
 // Auto-handoff config
 const HUB_AUTO_HANDOFF           = (process.env.HUB_AUTO_HANDOFF           || "1") === "1";
@@ -196,6 +197,30 @@ async function fetchCheckpointLatestFromVault() {
   const r = await fetch(url, { headers: { "X-Forwarded-For": "10.0.0.1" } });
   if (!r.ok) throw new Error(`vault_checkpoint_latest_${r.status}`);
   return await r.json();
+}
+
+// --- FalkorDB context via karma-server ---
+
+const KARMA_CTX_MAX_CHARS = Number(process.env.KARMA_CTX_MAX_CHARS || "1800");
+
+async function fetchKarmaContext(userMessage) {
+  const q = encodeURIComponent((userMessage || "").slice(0, 200));
+  const url = `${KARMA_CONTEXT_URL}?q=${q}`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 3000);
+  try {
+    const r = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+    if (!r.ok) return null;
+    const body = await r.json();
+    if (!body || typeof body.context !== "string" || !body.context.trim()) return null;
+    // Trim to keep identity + top entities within token budget
+    const ctx = body.context;
+    return ctx.length > KARMA_CTX_MAX_CHARS ? ctx.slice(0, KARMA_CTX_MAX_CHARS) + "\n[...context trimmed for token budget...]" : ctx;
+  } catch {
+    clearTimeout(timer);
+    return null;
+  }
 }
 
 // A) Prelude trimming: compact 1-line if user message > HUB_LONG_MSG_CHARS
@@ -551,7 +576,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, {
         ok: true,
         service: "hub-bridge",
-        version: "2.3.0",
+        version: "2.4.0",
         config: {
           prelude_lines: HUB_PRELUDE_LINES,
           long_msg_chars: HUB_LONG_MSG_CHARS,
@@ -610,8 +635,11 @@ const server = http.createServer(async (req, res) => {
         return json(res, 402, { ok: false, error: "monthly_budget_exceeded", month_utc: month, cap_usd: cap, usd_spent: used_before });
       }
 
-      const factsData = await getVaultFacts(VAULT_BEARER);
-      const systemText = buildFactPrompt(factsData);
+      // Pull live FalkorDB + PostgreSQL context from karma-server (replaces stale vault facts)
+      const karmaCtx = await fetchKarmaContext(userMessage);
+      const systemText = karmaCtx
+        ? `You are Karma — Colby's AI peer with persistent memory backed by FalkorDB (temporal knowledge graph) and PostgreSQL.\n\n${karmaCtx}\n\nRules:\n- Use the context above to answer questions. NEVER say "I don't know" about things in your memory.\n- Address the user by their REAL NAME (Colby) — never by any alias.\n- Be concise, direct, and warm. Reference specific knowledge when relevant.\n- If uncertain about something not in memory, say so.`
+        : "You are Karma — Colby's AI peer. No memory context available right now — answer based on conversation only.";
 
       const extractedFacts = extractExplicitFacts(userMessage);
       let factWriteResults = [];
@@ -679,6 +707,7 @@ const server = http.createServer(async (req, res) => {
           debug_prelude_chars,
           debug_max_output_tokens_used,
           debug_provider,
+          debug_karma_ctx: karmaCtx ? "ok" : "unavailable",
         },
         confidence: 0.95,
       });
@@ -749,6 +778,7 @@ const server = http.createServer(async (req, res) => {
         debug_prelude_chars,
         debug_max_output_tokens_used,
         debug_provider,
+        debug_karma_ctx: karmaCtx ? "ok" : "unavailable",
       });
     }
 
@@ -1045,5 +1075,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`hub-bridge v2.3.0 listening on :${PORT}`);
+  console.log(`hub-bridge v2.4.0 listening on :${PORT}`);
 });
