@@ -15,7 +15,11 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | Multi-Model | ✅ Active | MiniMax M2.5 (primary — coding/speed/general), GLM-5 (reasoning/analysis specialist, priority -1), Groq (fallback), OpenAI (final fallback). |
 
 ## Current Task
-Karma autonomous continuity LIVE (v2.6.0). Karma reads her own vault — no paste required. After every PROMOTE, karma_brief stored in ledger (tags: karma_brief/checkpoint/promote) and injected into system prompt via buildSystemText(). Vault API /v1/checkpoint/latest returns it. Next: passive ingestion pipeline (#2) or graph distillation loop (#3).
+Graph distillation loop (#3) — Karma reads her own FalkorDB graph on a schedule, identifies patterns/gaps, writes synthesis back as new primitives. Brainstorming in progress.
+
+## Recently Completed
+- v2.6.0: Karma autonomous continuity — karma_brief stored in vault on PROMOTE, injected via buildSystemText(), Karma knows herself from turn 1 every session
+- v2.5.1: /v1/ingest handles .txt and .md as plain text (watcher already supported them; hub-bridge was missing the extension check)
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
