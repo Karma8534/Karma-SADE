@@ -818,7 +818,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, {
         ok: true,
         service: "hub-bridge",
-        version: "2.5.0",
+        version: "2.13.0",
         config: {
           prelude_lines: HUB_PRELUDE_LINES,
           long_msg_chars: HUB_LONG_MSG_CHARS,
@@ -1374,31 +1374,12 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
-      // Memory Integrity Gate: promote pending candidates → canonical in FalkorDB
-      let promotedCandidates = 0;
-      let conflictCount = 0;
-      try {
-        const pcRes = await fetch("http://karma-server:8340/promote-candidates", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: AbortSignal.timeout(8000),
-        });
-        if (pcRes.ok) {
-          const pcBody = await pcRes.json();
-          promotedCandidates = pcBody?.promoted_count || 0;
-          conflictCount = pcBody?.conflict_count || 0;
-          console.log(`[GATE] PROMOTE: ${promotedCandidates} candidates promoted, ${conflictCount} conflicts`);
-        }
-      } catch (pcErr) {
-        console.warn("[GATE] promote-candidates call failed (non-fatal):", pcErr?.message || pcErr);
-      }
-
+      // Epistemic Gate: candidate promotion is now Colby-authorized only — NOT auto-promoted here.
+      // Candidates remain staged until Colby reviews and approves via /v1/candidates/promote.
       return json(res, 200, {
         ...(upstreamBody || {}),
         resume_prompt,
         karma_brief,
-        promoted_candidates: promotedCandidates,
-        conflict_count: conflictCount,
       });
     }
 
@@ -1527,6 +1508,68 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    // --- POST /v1/candidates/promote --- Epistemic Gate: Colby-authorized candidate promotion
+    // Only UUIDs in approved_uuids list get promoted to canonical. Audit logged to vault.
+    if (req.method === "POST" && req.url === "/v1/candidates/promote") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      let body = {};
+      try { body = JSON.parse(await parseBody(req)); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+
+      const approvedUuids = Array.isArray(body.approved_uuids) ? body.approved_uuids : [];
+      const authorizedBy  = (body.authorized_by || "Colby").toString().slice(0, 64);
+      const reason        = (body.reason || "manual_review").toString().slice(0, 256);
+
+      if (approvedUuids.length === 0) {
+        return json(res, 200, { ok: true, promoted_count: 0, skipped_count: 0, message: "no_uuids_approved" });
+      }
+
+      try {
+        const r = await fetch("http://karma-server:8340/promote-candidates", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ approved_uuids: approvedUuids, authorized_by: authorizedBy, reason }),
+          signal: AbortSignal.timeout(8000),
+        });
+        const pcBody = await r.json();
+        if (!pcBody.ok) {
+          return json(res, 500, { ok: false, error: "karma_promote_failed", details: pcBody.error });
+        }
+
+        // Write audit record to vault ledger — every promotion is logged with Colby's authorization
+        const _now = nowIso();
+        const auditRecord = buildVaultRecord({
+          type: "log",
+          tags: ["promotion_audit", "epistemic_gate", "colby_authorized"],
+          content: {
+            kind: "promotion_event",
+            authorized_by: authorizedBy,
+            reason,
+            promoted_count: pcBody.promoted_count,
+            skipped_count: pcBody.skipped_count,
+            promoted_facts: pcBody.promoted_facts || [],
+            promoted_at: pcBody.promoted_at || _now,
+          },
+          confidence: 1.0,
+          verifier: "hub-bridge-epistemic-gate",
+          verificationNotes: `Colby authorized ${pcBody.promoted_count} promotions via Karma Window`,
+        });
+        try {
+          await vaultPost("/v1/memory", VAULT_BEARER, auditRecord);
+          console.log(`[GATE] Audit logged: ${pcBody.promoted_count} promotions authorized by ${authorizedBy}`);
+        } catch (auditErr) {
+          console.warn("[GATE] audit log failed (non-fatal):", auditErr?.message || auditErr);
+        }
+
+        console.log(`[GATE] Epistemic gate: ${pcBody.promoted_count} approved by ${authorizedBy}, ${pcBody.skipped_count} remain pending`);
+        return json(res, 200, { ...pcBody });
+      } catch (e) {
+        return json(res, 500, { ok: false, error: "promote_candidates_failed", details: e.message });
+      }
+    }
+
     return notFound(res);
 
   } catch (e) {
@@ -1536,5 +1579,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`hub-bridge v2.11.0 listening on :${PORT}`);
+  console.log(`hub-bridge v2.13.0 listening on :${PORT}`);
 });

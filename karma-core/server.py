@@ -725,7 +725,7 @@ async def raw_context(q: str = "", lane: str = "canonical"):
     return JSONResponse({"ok": True, "context": ctx, "query": q, "lane": lane})
 
 
-CANDIDATES_JSONL = "/opt/seed-vault/memory_v1/ledger/candidates.jsonl"
+CANDIDATES_JSONL = os.getenv("CANDIDATES_JSONL", "/ledger/candidates.jsonl")
 
 
 def _check_contradiction(content: str) -> list[str]:
@@ -890,17 +890,32 @@ async def write_primitive(request: Request):
 
 
 @app.post("/promote-candidates")
-async def promote_candidates_endpoint():
-    """Promote all pending candidate episodes to canonical in FalkorDB.
-    Called by hub-bridge /v1/promote after vault checkpoint is written."""
+async def promote_candidates_endpoint(request: Request):
+    """Promote explicitly Colby-approved candidates to canonical in FalkorDB.
+
+    Requires approved_uuids list — only those UUIDs get promoted.
+    No auto-promotion: Colby's explicit sign-off is the gate.
+    Audit fields (promoted_by, promoted_at, promotion_reason) written to FalkorDB + ledger."""
     import json as _json
     import falkordb as fdb
     try:
+        body = {}
+        try:
+            body = await request.json()
+        except Exception:
+            pass
+
+        approved_uuids = set(body.get("approved_uuids", []))
+        authorized_by = body.get("authorized_by", "Colby")
+        reason = body.get("reason", "manual_review")
+        promoted_at = datetime.now(timezone.utc).isoformat()
+
         fdb_r = fdb.FalkorDB(host=config.FALKORDB_HOST, port=config.FALKORDB_PORT)
         g = fdb_r.select_graph(config.GRAPHITI_GROUP_ID)
 
         if not os.path.exists(CANDIDATES_JSONL):
-            return JSONResponse({"ok": True, "promoted_count": 0, "conflict_count": 0, "conflicts": []})
+            return JSONResponse({"ok": True, "promoted_count": 0, "skipped_count": 0,
+                                 "authorized_by": authorized_by})
 
         entries = []
         with open(CANDIDATES_JSONL, "r", encoding="utf-8") as f:
@@ -912,46 +927,44 @@ async def promote_candidates_endpoint():
                     except Exception:
                         pass
 
-        pending = [e for e in entries if not e.get("promoted")]
         promoted_count = 0
-        conflict_count = 0
-        conflicts_surfaced = []
+        skipped_count = 0
+        promoted_facts = []
 
-        for entry in pending:
+        for entry in entries:
             uuid_val = entry.get("uuid")
-            entry_lane = entry.get("lane", "candidate")
-            if not uuid_val:
+            if not uuid_val or entry.get("promoted"):
                 continue
-            if entry_lane == "conflict":
-                conflict_count += 1
-                conflicts_surfaced.append({
-                    "uuid": uuid_val,
-                    "name": entry.get("name"),
-                    "conflicts_with": entry.get("conflicts_with", []),
-                    "confidence": entry.get("confidence"),
-                })
-                # Still promote conflicts — Colby sees them but they go canonical
-            try:
-                g.query(
-                    "MATCH (e:Episodic {uuid: $uuid}) SET e.lane = 'canonical'",
-                    {"uuid": uuid_val}
-                )
-                entry["promoted"] = True
-                promoted_count += 1
-            except Exception as pe:
-                print(f"[GATE] promote failed for {uuid_val[:8]}: {pe}")
+            if uuid_val in approved_uuids:
+                try:
+                    g.query(
+                        "MATCH (e:Episodic {uuid: $uuid}) SET e.lane = 'canonical', "
+                        "e.promoted_by = $by, e.promoted_at = $at, e.promotion_reason = $reason",
+                        {"uuid": uuid_val, "by": authorized_by, "at": promoted_at, "reason": reason}
+                    )
+                    entry["promoted"] = True
+                    entry["promoted_by"] = authorized_by
+                    entry["promoted_at"] = promoted_at
+                    entry["promotion_reason"] = reason
+                    promoted_count += 1
+                    promoted_facts.append({"uuid": uuid_val[:8], "name": entry.get("name", "")})
+                except Exception as pe:
+                    print(f"[GATE] promote failed for {uuid_val[:8]}: {pe}")
+            else:
+                skipped_count += 1
 
-        # Rewrite candidates.jsonl with promoted flags updated (append-only style: overwrite)
         with open(CANDIDATES_JSONL, "w", encoding="utf-8") as f:
             for entry in entries:
                 f.write(_json.dumps(entry) + "\n")
 
-        print(f"[GATE] promoted {promoted_count} candidates, {conflict_count} conflicts")
+        print(f"[GATE] Colby approved {promoted_count} candidates (authorized_by={authorized_by}), {skipped_count} remain pending")
         return JSONResponse({
             "ok": True,
             "promoted_count": promoted_count,
-            "conflict_count": conflict_count,
-            "conflicts": conflicts_surfaced,
+            "skipped_count": skipped_count,
+            "authorized_by": authorized_by,
+            "promoted_at": promoted_at,
+            "promoted_facts": promoted_facts,
         })
     except Exception as e:
         print(f"[ERROR] /promote-candidates failed: {e}")
@@ -1003,7 +1016,7 @@ async def candidates_list():
                     e = _json.loads(line)
                     if not e.get("promoted"):
                         candidates.append({
-                            "uuid": e.get("uuid", "")[:8],
+                            "uuid": e.get("uuid", ""),
                             "name": e.get("name", ""),
                             "confidence": e.get("confidence", 0),
                             "lane": e.get("lane", "candidate"),

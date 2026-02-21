@@ -201,8 +201,12 @@
         <button class="promote-btn" id="promoteBtn">PROMOTE</button>
       </div>
       <div id="candidatePanel" style="margin-top:8px;display:none">
-        <div style="font-size:12px;color:#9aa4b2;margin-bottom:4px">Pending candidates</div>
-        <div class="mono" id="candidateList" style="max-height:120px;font-size:11px"></div>
+        <div style="font-size:12px;color:#9aa4b2;margin-bottom:4px">Pending review — check to approve</div>
+        <div id="candidateList" style="max-height:140px;overflow:auto;border:1px dashed var(--dash);border-radius:8px;padding:4px 6px;background:var(--mono);margin-bottom:6px"></div>
+        <div class="row">
+          <button class="promote-btn" id="approveSelectedBtn">Approve Selected</button>
+          <span class="hint" id="approveNote"></span>
+        </div>
       </div>
     </div>
     <div class="card">
@@ -252,11 +256,50 @@ async function refreshCandidates(){
     setPromoteLabel(pending.length, conflicts.length > 0);
     if(pending.length === 0){ panel.style.display='none'; return; }
     panel.style.display='block';
-    listEl.textContent = pending.map(c=>{
-      const flag = c.lane==='conflict' ? ' ⚠ CONFLICT' : '';
-      return `[${c.lane}${flag}] ${c.name} (conf:${c.confidence})`;
-    }).join('\n');
+    // Render checkboxes: conflicts unchecked by default (require explicit approval)
+    listEl.innerHTML = pending.map(c=>{
+      const isConflict = c.lane==='conflict';
+      const flag = isConflict ? ' \u26a0 CONFLICT' : '';
+      const checked = isConflict ? '' : 'checked';
+      const clr = isConflict ? '#f87171' : '#e5e7eb';
+      return `<label style="display:block;font-size:11px;padding:2px 4px;cursor:pointer;color:${clr}">` +
+        `<input type="checkbox" value="${c.uuid}" ${checked} style="margin-right:5px;cursor:pointer">` +
+        `[${c.lane}${flag}] ${c.name} <span style="color:#9aa4b2">(conf:${c.confidence})</span>` +
+        `</label>`;
+    }).join('');
   }catch(e){ /* non-fatal */ }
+}
+async function doApproveSelected(){
+  const btn = document.getElementById('approveSelectedBtn');
+  const noteEl = document.getElementById('approveNote');
+  const checkboxes = document.querySelectorAll('#candidateList input[type=checkbox]:checked');
+  const approvedUuids = Array.from(checkboxes).map(cb => cb.value);
+  if(approvedUuids.length === 0){
+    noteEl.textContent = 'nothing checked';
+    setTimeout(()=>noteEl.textContent='', 1500);
+    return;
+  }
+  btn.disabled = true;
+  const origLabel = btn.textContent;
+  btn.textContent = '\u2026';
+  try{
+    const r = await fetch('/v1/candidates/promote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...headers },
+      body: JSON.stringify({ approved_uuids: approvedUuids, authorized_by: 'Colby', reason: 'manual_review' }),
+    });
+    const j = await r.json();
+    if(!j.ok) throw new Error(JSON.stringify(j));
+    addMsg('assistant', `GATE: ${j.promoted_count} approved \u2192 canonical (${j.skipped_count} remain pending)`);
+    noteEl.textContent = `${j.promoted_count} promoted`;
+    setTimeout(()=>noteEl.textContent='', 2000);
+    await refreshState();
+  }catch(e){
+    addMsg('assistant', 'GATE ERROR: ' + String(e));
+  }finally{
+    btn.disabled = false;
+    btn.textContent = origLabel;
+  }
 }
 async function refreshState(){
   try{
@@ -305,6 +348,7 @@ async function sendMsg(){
   }
 }
 document.getElementById('refresh').onclick=refreshState;
+document.getElementById('approveSelectedBtn').onclick=doApproveSelected;
 async function doPromote(){
   const btn1=document.getElementById('promoteBtnTop');
   const btn2=document.getElementById('promoteBtn');
