@@ -93,6 +93,7 @@ Observe in practice: chat → ASSIMILATE signal → check candidates.jsonl → P
 - v2.15.0: Real-time vision in /v1/chat + Karma Window image attach UI. /v1/chat accepts optional image_b64 + media_type; builds Anthropic multimodal content block for claude-* models. Body parse raised to 10MB. debug_image_attached telemetry. Karma Window: 📷 attach button, file picker, paste-from-clipboard on textarea, thumbnail preview strip with remove button. addMsg() renders thumbnail in chat log. Smoke tested: 8x8 green PNG → claude-sonnet-4-6 replied "Green." ✅ Paste any screenshot directly into Karma Window and ask about it.
 - v2.15.1: karma_brief now includes session history turns. Fix: brief generator was using only RP header (checkpoint metadata — IDs, hashes, pack count), producing stale summaries unrelated to session work. Now includes last 6 session turns from hub-bridge session store + Colby's next_action note. karma_brief will reflect actual work done this session.
 - v2.16.0: Recent Approvals block closes retrieval-drift window. New query_recent_ingest_episodes() returns last 5 canonical [karma-ingest] episodes by created_at DESC regardless of query match. Injected into every /raw-context response as "Recently Learned (Approved)" section. Deduplicated against Recent Memories. Karma now arrives in the session after promotion already aware of approved content without needing a matching query to activate it.
+- v2.17.0: Karma↔CC Collaboration Bridge. Append-only JSONL queue at /opt/seed-vault/memory_v1/hub_bridge/data/handoffs/collab.jsonl. hub-bridge: POST/GET/PATCH /v1/collab routes; readCollab() last-write-wins dedup; appendCollab() helper. karma-server: query_pending_cc_proposals() reads collab.jsonl; "## CC Has a Proposal" block injected into every /raw-context response when pending CC→Karma messages exist. Karma Window: "Collaboration Queue" card (hidden by default, shows when pending messages exist) with Approve/Reject per message; refreshCollab() auto-called from refreshState(). CC session-start check: read collab.jsonl for pending Karma→CC proposals.
 
 ## Karma Core Status (2026-02-21)
 - **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL + DISTILLING — 4 LLM providers, task-based routing, 24h self-analysis
@@ -214,5 +215,11 @@ Observe in practice: chat → ASSIMILATE signal → check candidates.jsonl → P
 - e2e smoke test: chatlog_1771535912555_kjkvknexqy landed in vault ledger ✓
 - auth log: `{enabled:true, captureTokenLen:64, vaultTokenLen:0, using:'captureToken'}` ✓
 
+## CC Session-Start: Check Karma Proposals
+Run at each CC session start to see if Karma has left a proposal:
+```bash
+ssh vault-neo "cat /opt/seed-vault/memory_v1/hub_bridge/data/handoffs/collab.jsonl 2>/dev/null | python3 -c 'import sys,json; msgs=[json.loads(l) for l in sys.stdin if l.strip()]; byid={}; [byid.update({m[\"id\"]:m}) for m in msgs]; pending=[m for m in byid.values() if m.get(\"to\")==\"cc\" and m.get(\"status\")==\"pending\"]; [print(m[\"id\"],m[\"type\"],m[\"content\"][:100]) for m in pending] or print(\"no pending Karma proposals\")'"
+```
+
 ## Last Updated
-2026-02-21 — v2.16.0 deployed. Retrieval drift closed. Karma now arrives oriented to recently-approved ingest content without needing a matching query.
+2026-02-21 — v2.17.0 deployed. Karma↔CC Collaboration Bridge live. Colby-gated queue for AI-to-AI proposals. Collaboration Queue card visible in Karma Window when messages pending.
