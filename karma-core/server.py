@@ -279,6 +279,28 @@ def query_recent_episodes(limit: int = 5, lane: str = "canonical") -> list[dict]
         return []
 
 
+
+def query_recent_ingest_episodes(limit: int = 5) -> list:
+    """Get the most recently promoted ingest episodes (images, PDFs, text, chat signals).
+    Returned regardless of query match to close the retrieval-drift window:
+    in the session immediately after promotion, semantic queries may not yet
+    activate these memories. Ordered by created_at DESC as proxy for promoted_at."""
+    try:
+        r = get_falkor()
+        cypher = (
+            "MATCH (e:Episodic) "
+            "WHERE e.lane = 'canonical' AND e.content STARTS WITH '[karma-ingest]' "
+            "RETURN e.uuid AS uuid, e.name AS name, e.content AS content "
+            f"ORDER BY e.created_at DESC LIMIT {limit}"
+        )
+        result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
+        if len(result) >= 2 and result[1]:
+            return [{"uuid": row[0], "name": row[1], "content": (row[2] or "")[:400]} for row in result[1]]
+        return []
+    except Exception as e:
+        print(f"[WARN] Recent ingest episodes query failed: {e}")
+        return []
+
 def query_identity_facts() -> str:
     """Build a concise identity summary from the knowledge graph.
     Prioritizes real_name over aliases — Karma should always greet by real name."""
@@ -415,12 +437,27 @@ def build_karma_context(user_message: str, episode_lane: str = "canonical") -> s
 
     # Get recent conversation memories for continuity
     recent = query_recent_episodes(limit=3, lane=episode_lane)
+    recent_names = {ep["name"] for ep in recent}
     if recent:
         parts.append("\n## Recent Memories")
         for ep in recent:
             content = ep["content"][:200] if ep["content"] else ""
             if content:
                 parts.append(f"- {content}")
+
+    # Recent Approvals: last N canonical ingest episodes, always surfaced.
+    # Closes retrieval-drift window: newly-promoted memories appear in the
+    # very next session without requiring a matching query to activate them.
+    # Deduplicates against Recent Memories to avoid showing the same entry twice.
+    recent_ingest = query_recent_ingest_episodes(limit=5)
+    if recent_ingest:
+        unique_ingest = [ep for ep in recent_ingest if ep.get("name") not in recent_names]
+        if unique_ingest:
+            parts.append("\n## Recently Learned (Approved)")
+            for ep in unique_ingest:
+                content = ep["content"][:300] if ep["content"] else ""
+                if content:
+                    parts.append(f"- {content}")
 
     # Get key preferences about the user
     prefs = query_preferences(limit=15)
