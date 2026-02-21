@@ -15,11 +15,12 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | Multi-Model | ✅ Active | MiniMax M2.5 (primary — coding/speed/general), GLM-5 (reasoning/analysis specialist, priority -1), Groq (fallback), OpenAI (final fallback). |
 
 ## Current Task
-Karma ingest pipeline v2.5.0 fully operational. Initial PDF batch from PDFs2UL processed — files moving to Done/. ASSIMILATE signals detected and writing to FalkorDB. Watcher uses HUB_CHAT_TOKEN (same as hub.arknexus.net chat). No defined next phase — awaiting direction.
+Karma autonomous continuity LIVE (v2.6.0). Karma reads her own vault — no paste required. After every PROMOTE, karma_brief stored in ledger (tags: karma_brief/checkpoint/promote) and injected into system prompt via buildSystemText(). Vault API /v1/checkpoint/latest returns it. Next: passive ingestion pipeline (#2) or graph distillation loop (#3).
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
 - Occasional stored=false on ASSIMILATE signal (write-primitive timeout edge case). Low priority — most writes succeed.
+- Within-session context drift in Karma (forgets recent turns mid-conversation). Separate from between-session continuity. Future fix.
 
 ## Hub-Bridge History
 - v2.1.1: capture auth split, batch chatlog, rate limits, auto-handoff
@@ -122,6 +123,9 @@ Karma ingest pipeline v2.5.0 fully operational. Initial PDF batch from PDFs2UL p
 - FalkorDB: ~150-300MB RAM, Redis protocol on 6379 internal / 7687 external
 - Cost: ~$26/mo (droplet $24 + OpenAI ~$1-2 for analysis)
 - Ledger entries: check with `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
+- **Vault API port: 8080** (not 8000) — `curl http://localhost:8080/v1/checkpoint/latest`
+- **compose.hub.yml path**: `/opt/seed-vault/memory_v1/hub_bridge/compose.hub.yml` (NOT in compose/)
+- **vault API also needs --no-cache rebuild** (not just restart) when source changes — same as hub-bridge
 
 ## Hub-Bridge v2.1.0 (2026-02-19)
 - `/v1/chatlog`: capture auth split from vault bearer → `HUB_CAPTURE_TOKEN` (new secret). Batch ingest (1–200 items). Route-scoped rate limits (240rpm+120burst for capture).
