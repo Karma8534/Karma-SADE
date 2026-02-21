@@ -38,3 +38,7 @@ secrets.json
 # Local-only worktree and test artifacts
 .claude/worktrees/elegant-solomon/
 chrome-extension/test-extension.js
+
+# Karma context snapshot (generated at CC session start, machine-local)
+karma-context.md
+karma-context.md.tmp
