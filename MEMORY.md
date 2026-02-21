@@ -32,6 +32,7 @@ Next: Extension cleanup (deprecated — never worked, 176 logged failures) OR ba
 - Watcher default token: karma-inbox-watcher.ps1 TokenFile default points to .vault-token (VAULT_BEARER) but /v1/ingest requires HUB_CHAT_TOKEN. Colby must specify -TokenFile explicitly. Minor; deferred.
 - Occasional stored=false on ASSIMILATE signal (write-primitive timeout edge case). Low priority — most writes succeed.
 - Within-session context drift in Karma (forgets recent turns mid-conversation). Separate from between-session continuity. Future fix.
+- ~~(empty_assistant_text) on complex prompts~~ FIXED: gpt-5-mini is a reasoning model; CoT tokens count against max_completion_tokens. Raised HUB_MAX_OUTPUT_TOKENS_DEFAULT 3000→16000, CAP 5000→32000 in hub.env. Container recreated 2026-02-21.
 
 ## Backlog
 - Thumbs up/down on Karma chat window — Karma proposed, logged as future build item. Not designed yet.
