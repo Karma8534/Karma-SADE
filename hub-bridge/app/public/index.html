@@ -198,7 +198,11 @@
       <div class="mono" id="trustBlock">(loading)</div>
       <div class="row" style="margin-top:8px">
         <button id="refresh">Refresh</button>
-        <button id="promoteBtn" style="margin-left:8px;background:#6c3fc5;color:#fff;border:none;padding:6px 14px;border-radius:5px;cursor:pointer;font-weight:bold;">PROMOTE</button>
+        <button class="promote-btn" id="promoteBtn">PROMOTE</button>
+      </div>
+      <div id="candidatePanel" style="margin-top:8px;display:none">
+        <div style="font-size:12px;color:#9aa4b2;margin-bottom:4px">Pending candidates</div>
+        <div class="mono" id="candidateList" style="max-height:120px;font-size:11px"></div>
       </div>
     </div>
     <div class="card">
@@ -228,6 +232,32 @@ function addMsg(role, text){
   logEl.appendChild(d);
   logEl.scrollTop=logEl.scrollHeight;
 }
+function setPromoteLabel(n, hasConflicts){
+  const label = n > 0 ? `PROMOTE (${n}${hasConflicts ? ' ⚠' : ''})` : 'PROMOTE';
+  const b1=document.getElementById('promoteBtnTop');
+  const b2=document.getElementById('promoteBtn');
+  if(!b1.disabled) b1.textContent=label;
+  if(!b2.disabled) b2.textContent=label;
+}
+async function refreshCandidates(){
+  try{
+    const r = await fetch('/v1/candidates/list', { headers });
+    if(!r.ok) return;
+    const j = await r.json();
+    const panel = document.getElementById('candidatePanel');
+    const listEl = document.getElementById('candidateList');
+    const candidates = j.candidates || [];
+    const pending = candidates.filter(c=>!c.promoted);
+    const conflicts = pending.filter(c=>c.lane==='conflict');
+    setPromoteLabel(pending.length, conflicts.length > 0);
+    if(pending.length === 0){ panel.style.display='none'; return; }
+    panel.style.display='block';
+    listEl.textContent = pending.map(c=>{
+      const flag = c.lane==='conflict' ? ' ⚠ CONFLICT' : '';
+      return `[${c.lane}${flag}] ${c.name} (conf:${c.confidence})`;
+    }).join('\n');
+  }catch(e){ /* non-fatal */ }
+}
 async function refreshState(){
   try{
     const r = await fetch('/v1/checkpoint/latest', { headers });
@@ -247,6 +277,7 @@ async function refreshState(){
     document.getElementById('trustBlock').textContent=String(e);
     document.getElementById('resumeBlock').textContent='';
   }
+  await refreshCandidates();
 }
 async function sendMsg(){
   const ta=document.getElementById('msg');

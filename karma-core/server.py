@@ -6,6 +6,7 @@ Real-time knowledge graph updates via Graphiti after every conversation turn.
 """
 import asyncio
 import json
+import os
 import time
 import traceback
 import uuid
@@ -252,12 +253,19 @@ def get_graph_stats() -> dict:
 
 # ─── Chat Context Builder ─────────────────────────────────────────────────
 
-def query_recent_episodes(limit: int = 5) -> list[dict]:
-    """Get the most recent episodic memories for conversational continuity."""
+def query_recent_episodes(limit: int = 5, lane: str = "canonical") -> list[dict]:
+    """Get the most recent episodic memories for conversational continuity.
+    By default only returns canonical episodes (lane='canonical').
+    Pass lane=None to return all (backward compat)."""
     try:
         r = get_falkor()
+        if lane:
+            lane_filter = f"WHERE (e.lane = '{lane}' OR NOT EXISTS(e.lane))"
+        else:
+            lane_filter = ""
         cypher = f"""
             MATCH (e:Episodic)
+            {lane_filter}
             RETURN e.name AS name, e.content AS content
             ORDER BY e.created_at DESC
             LIMIT {limit}
@@ -377,8 +385,10 @@ def query_identity_facts() -> str:
         return ""
 
 
-def build_karma_context(user_message: str) -> str:
-    """Build context from knowledge graph + preferences + consciousness insights for the LLM."""
+def build_karma_context(user_message: str, episode_lane: str = "canonical") -> str:
+    """Build context from knowledge graph + preferences + consciousness insights for the LLM.
+    episode_lane: filter for Episodic nodes. 'canonical' = only promoted (default).
+    None = all lanes (backward compat)."""
     parts = []
 
     # Inject consciousness insights (things Karma noticed on its own)
@@ -404,7 +414,7 @@ def build_karma_context(user_message: str) -> str:
             parts.append(f"- **{e['name']}**: {summary}")
 
     # Get recent conversation memories for continuity
-    recent = query_recent_episodes(limit=3)
+    recent = query_recent_episodes(limit=3, lane=episode_lane)
     if recent:
         parts.append("\n## Recent Memories")
         for ep in recent:
@@ -703,6 +713,308 @@ async def ask(q: str):
         asyncio.create_task(ingest_episode(q, reply, "karma-terminal-ask"))
 
     return JSONResponse({"question": q, "answer": reply, "model": model_used})
+
+
+
+@app.get("/raw-context")
+async def raw_context(q: str = "", lane: str = "canonical"):
+    """Return raw knowledge graph context for hub-bridge injection (no LLM call).
+    Memory Integrity Gate: lane=canonical (default) returns only promoted episodes.
+    Pass lane= (empty) for all episodes (backward compat)."""
+    ctx = build_karma_context(q, episode_lane=lane if lane else None)
+    return JSONResponse({"ok": True, "context": ctx, "query": q, "lane": lane})
+
+
+CANDIDATES_JSONL = "/opt/seed-vault/memory_v1/ledger/candidates.jsonl"
+
+
+def _check_contradiction(content: str) -> list[str]:
+    """Check if content contradicts existing canonical episodes.
+    Extracts key tokens and looks for same-entity opposing values.
+    Returns list of conflicting episode UUIDs (may be empty)."""
+    try:
+        import re
+        r = get_falkor()
+        # Extract potential entity tokens: quoted strings, capitalized words, key system terms
+        tokens = re.findall(r'"([^"]+)"', content)
+        tokens += re.findall(r'\b(claude-\S+|gpt-\S+|backbone|model|version)\b', content, re.I)
+        tokens += re.findall(r'\b([A-Z][a-z]{2,})\b', content)
+        tokens = list(set(t.strip() for t in tokens if len(t) > 2))[:5]
+
+        conflicts = []
+        for token in tokens:
+            cypher = (
+                "MATCH (e:Episodic) "
+                "WHERE (e.lane = 'canonical' OR NOT EXISTS(e.lane)) "
+                f"AND toLower(e.content) CONTAINS toLower('{token.replace(chr(39), '')}') "
+                "RETURN e.uuid, e.content LIMIT 3"
+            )
+            result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
+            if len(result) >= 2 and result[1]:
+                for row in result[1]:
+                    existing_uuid = row[0]
+                    existing_content = (row[1] or "").lower()
+                    # Detect simple value conflicts: "backbone is X" vs incoming "backbone is Y"
+                    for kw in ["backbone", "model is", "version is", "is now", "is currently"]:
+                        if kw in content.lower() and kw in existing_content:
+                            # Same keyword, likely different value — flag as potential conflict
+                            if existing_uuid not in conflicts:
+                                conflicts.append(existing_uuid)
+        return conflicts
+    except Exception as e:
+        print(f"[GATE] contradiction check failed (non-fatal): {e}")
+        return []
+
+
+def _append_candidate(entry: dict) -> None:
+    """Append a candidate entry to candidates.jsonl (persistent staging ledger)."""
+    import json as _json
+    try:
+        with open(CANDIDATES_JSONL, "a", encoding="utf-8") as f:
+            f.write(_json.dumps(entry) + "\n")
+    except Exception as e:
+        print(f"[GATE] candidates.jsonl append failed: {e}")
+
+
+async def ingest_primitive_episode(name: str, body: str, source: str,
+                                    lane: str = "candidate", confidence: float = 0.85):
+    """Background task: write karma-ingest primitive directly to FalkorDB.
+
+    Uses direct FalkorDB write (not Graphiti) because:
+    - Karma's synthesized insights are already distilled — no entity extraction needed
+    - Graphiti add_episode times out on large graphs due to entity deduplication queries
+    - Direct write is fast (~ms) and immediately queryable
+
+    Memory Integrity Gate:
+    - lane="candidate": written but not canonical; promoted to canonical on PROMOTE
+    - lane="raw": written but not surfaced in context at all (DEFER signal)
+    - lane="canonical": already approved (used for distillation entries)
+    - Contradiction check on candidate writes; conflicts flagged, never blocked
+    """
+    try:
+        import falkordb as fdb
+        import uuid as _uuid
+        from datetime import datetime, timezone
+
+        r = fdb.FalkorDB(host=config.FALKORDB_HOST, port=config.FALKORDB_PORT)
+        g = r.select_graph(config.GRAPHITI_GROUP_ID)
+
+        node_uuid = str(_uuid.uuid4())
+        now = datetime.now(timezone.utc).isoformat()[:19]
+
+        # Contradiction check for candidate writes
+        conflicts_with = []
+        if lane == "candidate":
+            conflicts_with = _check_contradiction(body)
+            if conflicts_with:
+                lane = "conflict"
+                print(f"[GATE] {name} flagged conflict with {conflicts_with}")
+
+        g.query(
+            "CREATE (e:Episodic {uuid: $uuid, name: $name, content: $content, "
+            "group_id: $gid, created_at: localdatetime($ts), "
+            "source_description: $src, lane: $lane, confidence: $conf})",
+            {
+                "uuid": node_uuid,
+                "name": name,
+                "content": body,
+                "gid": config.GRAPHITI_GROUP_ID,
+                "ts": now,
+                "src": f"karma-ingest from {source}",
+                "lane": lane,
+                "conf": confidence,
+            }
+        )
+        print(f"[INGEST] {name} written lane={lane} conf={confidence} (uuid={node_uuid[:8]})")
+
+        # Persist to candidates.jsonl for PROMOTE tracking (candidate + conflict lanes only)
+        if lane in ("candidate", "conflict"):
+            _append_candidate({
+                "uuid": node_uuid,
+                "name": name,
+                "confidence": confidence,
+                "lane": lane,
+                "created_at": now,
+                "source": source,
+                "promoted": False,
+                "conflicts_with": conflicts_with,
+            })
+    except Exception as e:
+        print(f"[INGEST] {name} failed: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+@app.post("/write-primitive")
+async def write_primitive(request: Request):
+    """Write Karma's synthesized insight to FalkorDB as an Episodic node.
+    Called by hub-bridge when Karma signals ASSIMILATE or DEFER during document evaluation.
+
+    Memory Integrity Gate: lane and confidence are now explicit.
+    ASSIMILATE → lane=candidate (default), confidence=0.85
+    DEFER      → lane=raw, confidence=0.50 (not surfaced, not in candidates.jsonl)
+    """
+    try:
+        body = await request.json()
+        content_text = body.get("content", "").strip()
+        verdict = body.get("verdict", "assimilate")
+        source_file = body.get("source_file", "unknown")
+        topic = body.get("topic", "")
+        # Gate params — hub-bridge sends these; fallback to verdict-based defaults
+        lane = body.get("lane", "raw" if verdict == "defer" else "candidate")
+        confidence = float(body.get("confidence", 0.50 if verdict == "defer" else 0.85))
+
+        if not content_text:
+            return JSONResponse({"ok": False, "error": "content required"}, status_code=400)
+
+        episode_text = (
+            f"[karma-ingest][{verdict}] Source: {source_file}\n"
+            f"Topic: {topic}\n"
+            f"Karma's synthesis: {content_text}"
+        )
+
+        import time as _time
+        episode_name = f"karma_primitive_{int(_time.time())}"
+
+        asyncio.create_task(
+            ingest_primitive_episode(episode_name, episode_text, source_file,
+                                     lane=lane, confidence=confidence)
+        )
+
+        print(f"[INGEST] {verdict} from '{source_file}' queued lane={lane}")
+        return JSONResponse({"ok": True, "verdict": verdict, "source": source_file, "lane": lane})
+    except Exception as e:
+        print(f"[ERROR] /write-primitive failed: {e}")
+        traceback.print_exc()
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/promote-candidates")
+async def promote_candidates_endpoint():
+    """Promote all pending candidate episodes to canonical in FalkorDB.
+    Called by hub-bridge /v1/promote after vault checkpoint is written."""
+    import json as _json
+    import falkordb as fdb
+    try:
+        fdb_r = fdb.FalkorDB(host=config.FALKORDB_HOST, port=config.FALKORDB_PORT)
+        g = fdb_r.select_graph(config.GRAPHITI_GROUP_ID)
+
+        if not os.path.exists(CANDIDATES_JSONL):
+            return JSONResponse({"ok": True, "promoted_count": 0, "conflict_count": 0, "conflicts": []})
+
+        entries = []
+        with open(CANDIDATES_JSONL, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        entries.append(_json.loads(line))
+                    except Exception:
+                        pass
+
+        pending = [e for e in entries if not e.get("promoted")]
+        promoted_count = 0
+        conflict_count = 0
+        conflicts_surfaced = []
+
+        for entry in pending:
+            uuid_val = entry.get("uuid")
+            entry_lane = entry.get("lane", "candidate")
+            if not uuid_val:
+                continue
+            if entry_lane == "conflict":
+                conflict_count += 1
+                conflicts_surfaced.append({
+                    "uuid": uuid_val,
+                    "name": entry.get("name"),
+                    "conflicts_with": entry.get("conflicts_with", []),
+                    "confidence": entry.get("confidence"),
+                })
+                # Still promote conflicts — Colby sees them but they go canonical
+            try:
+                g.query(
+                    "MATCH (e:Episodic {uuid: $uuid}) SET e.lane = 'canonical'",
+                    {"uuid": uuid_val}
+                )
+                entry["promoted"] = True
+                promoted_count += 1
+            except Exception as pe:
+                print(f"[GATE] promote failed for {uuid_val[:8]}: {pe}")
+
+        # Rewrite candidates.jsonl with promoted flags updated (append-only style: overwrite)
+        with open(CANDIDATES_JSONL, "w", encoding="utf-8") as f:
+            for entry in entries:
+                f.write(_json.dumps(entry) + "\n")
+
+        print(f"[GATE] promoted {promoted_count} candidates, {conflict_count} conflicts")
+        return JSONResponse({
+            "ok": True,
+            "promoted_count": promoted_count,
+            "conflict_count": conflict_count,
+            "conflicts": conflicts_surfaced,
+        })
+    except Exception as e:
+        print(f"[ERROR] /promote-candidates failed: {e}")
+        traceback.print_exc()
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.get("/candidates/count")
+async def candidates_count():
+    """Return count of pending (non-promoted) candidate and conflict episodes."""
+    import json as _json
+    try:
+        if not os.path.exists(CANDIDATES_JSONL):
+            return JSONResponse({"ok": True, "count": 0, "conflict_count": 0})
+        count = 0
+        conflict_count = 0
+        with open(CANDIDATES_JSONL, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    e = _json.loads(line)
+                    if not e.get("promoted"):
+                        count += 1
+                        if e.get("lane") == "conflict":
+                            conflict_count += 1
+                except Exception:
+                    pass
+        return JSONResponse({"ok": True, "count": count, "conflict_count": conflict_count})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e), "count": 0, "conflict_count": 0})
+
+
+@app.get("/candidates/list")
+async def candidates_list():
+    """Return all pending candidate/conflict episodes for PROMOTE panel display."""
+    import json as _json
+    try:
+        if not os.path.exists(CANDIDATES_JSONL):
+            return JSONResponse({"ok": True, "candidates": []})
+        candidates = []
+        with open(CANDIDATES_JSONL, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    e = _json.loads(line)
+                    if not e.get("promoted"):
+                        candidates.append({
+                            "uuid": e.get("uuid", "")[:8],
+                            "name": e.get("name", ""),
+                            "confidence": e.get("confidence", 0),
+                            "lane": e.get("lane", "candidate"),
+                            "created_at": e.get("created_at", ""),
+                            "conflicts_with": e.get("conflicts_with", []),
+                        })
+                except Exception:
+                    pass
+        return JSONResponse({"ok": True, "candidates": candidates})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e), "candidates": []})
 
 
 @app.post("/v1/chat/completions")
