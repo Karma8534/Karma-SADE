@@ -15,11 +15,12 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | Multi-Model | ✅ Active | MiniMax M2.5 (primary — coding/speed/general), GLM-5 (reasoning/analysis specialist, priority -1), Groq (fallback), OpenAI (final fallback). |
 
 ## Current Task
-Graph distillation loop (#3) — Karma reads her own FalkorDB graph on a schedule, identifies patterns/gaps, writes synthesis back as new primitives. Brainstorming in progress.
+Backlog: thumbs up/down feedback on Karma Window chat turns (logged, not yet designed).
 
 ## Recently Completed
+- v2.7.0: Graph distillation fully live — Karma reads FalkorDB every 24h, synthesizes via GLM-5, writes karma_distillation fact to ledger, exposed in /v1/checkpoint/latest, injected as --- KARMA GRAPH SYNTHESIS --- block in every /v1/chat system prompt. Karma also has durable persona baseline (tags: karma_persona, baseline, identity) in ledger. Ledger volume mount fixed on karma-server (was missing, now active).
 - v2.6.0: Karma autonomous continuity — karma_brief stored in vault on PROMOTE, injected via buildSystemText(), Karma knows herself from turn 1 every session
-- v2.5.1: /v1/ingest handles .txt and .md as plain text (watcher already supported them; hub-bridge was missing the extension check)
+- v2.5.1: /v1/ingest handles .txt and .md as plain text
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
