@@ -60,8 +60,9 @@ function Invoke-FalkorQuery {
         $stream = $tcp.GetStream()
         $stream.ReadTimeout = $K2TimeoutMs
 
-        # Build RESP array: *3\r\n $11\r\nGRAPH.QUERY\r\n $<n>\r\n<graph>\r\n $<m>\r\n<query>\r\n
-        $cmd   = "GRAPH.QUERY"
+        # Build RESP array: *3\r\n $14\r\nGRAPH.RO_QUERY\r\n $<n>\r\n<graph>\r\n $<m>\r\n<query>\r\n
+        # Use GRAPH.RO_QUERY (read-only) -- required for replicas, safe on primary too
+        $cmd   = "GRAPH.RO_QUERY"
         $parts = @($cmd, $GraphName, $Query)
         $sb    = New-Object System.Text.StringBuilder
         $sb.Append("*$($parts.Count)`r`n") | Out-Null
@@ -84,20 +85,33 @@ function Invoke-FalkorQuery {
 }
 
 function Parse-RespStrings {
-    param([string]$raw)
+    # Extract data values from a GRAPH.RO_QUERY RESP response.
+    # Skips column headers (passed via $SkipHeaders) and FalkorDB stat lines.
+    param(
+        [string]$raw,
+        [string[]]$SkipHeaders = @()
+    )
     if (-not $raw) { return @() }
-    $lines  = $raw -split "\r\n"
-    $values = [System.Collections.Generic.List[string]]::new()
+    $lines  = $raw -split "`r`n"
+    $raw_values = [System.Collections.Generic.List[string]]::new()
     for ($i = 0; $i -lt $lines.Count; $i++) {
         if ($lines[$i] -match '^\$(\d+)$') {
             $len = [int]$Matches[1]
             if ($i + 1 -lt $lines.Count -and $lines[$i+1].Length -eq $len) {
-                $values.Add($lines[$i+1])
+                $raw_values.Add($lines[$i+1])
                 $i++
             }
+        } elseif ($lines[$i] -match '^:(-?\d+)$') {
+            # Integer type (e.g. count result)
+            $raw_values.Add($Matches[1])
         }
     }
-    return $values.ToArray()
+    # Filter out column headers and FalkorDB stats lines
+    return $raw_values | Where-Object {
+        $_ -notin $SkipHeaders -and
+        $_ -notmatch '^Cached execution:' -and
+        $_ -notmatch '^Query internal execution time:'
+    }
 }
 
 function Get-K2Context {
@@ -113,16 +127,16 @@ function Get-K2Context {
 
     # Query 1: identity entities
     $idResp = Invoke-FalkorQuery "MATCH (n:Entity) WHERE toLower(n.name) IN ['colby', 'user', 'neo'] RETURN n.name, n.summary"
-    $idVals = Parse-RespStrings $idResp
+    $idVals = @(Parse-RespStrings $idResp -SkipHeaders @('n.name', 'n.summary'))
 
     # Query 2: recent canonical episodes
     $epResp = Invoke-FalkorQuery "MATCH (e:Episodic) WHERE e.lane = 'canonical' RETURN e.content ORDER BY e.created_at DESC LIMIT 5"
-    $epVals = Parse-RespStrings $epResp
+    $epVals = @(Parse-RespStrings $epResp -SkipHeaders @('e.content'))
 
-    # Query 3: graph stats
+    # Query 3: graph stats (uses integer result :N)
     $stResp = Invoke-FalkorQuery "MATCH (n:Entity) RETURN count(n) AS cnt"
-    $stVals = Parse-RespStrings $stResp
-    $entityCount = if ($stVals.Count -gt 0) { $stVals[-1] } else { "?" }
+    $stVals = @(Parse-RespStrings $stResp -SkipHeaders @('cnt'))
+    $entityCount = if ($stVals.Count -gt 0) { $stVals[0] } else { "0" }
 
     # Format output matching /raw-context shape
     $parts = [System.Collections.Generic.List[string]]::new()
