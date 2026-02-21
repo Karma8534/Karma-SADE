@@ -4,6 +4,12 @@ import fs from "fs";
 import { URL } from "url";
 import OpenAI from "openai";
 
+// CJS interop for pdf-parse (CommonJS module in ESM context)
+import { createRequire } from 'module';
+const _require = createRequire(import.meta.url);
+let pdfParse = null;
+try { pdfParse = _require('pdf-parse'); } catch (e) { console.warn('[PDF] pdf-parse not available:', e.message); }
+
 const PORT = Number(process.env.PORT || "18090");
 const VAULT_INTERNAL_URL = process.env.VAULT_INTERNAL_URL || "http://api:8080";
 const VAULT_BASE_URL = process.env.VAULT_BASE_URL || "https://vault.arknexus.net";
@@ -127,12 +133,12 @@ function json(res, status, obj) {
 }
 function notFound(res) { json(res, 404, { ok: false, error: "not_found" }); }
 
-function parseBody(req) {
+function parseBody(req, maxSize = 2000000) {
   return new Promise((resolve, reject) => {
     let data = "";
     req.on("data", (chunk) => {
       data += chunk;
-      if (data.length > 2000000) { reject(new Error("body_too_large")); req.destroy(); }
+      if (data.length > maxSize) { reject(new Error("body_too_large")); req.destroy(); }
     });
     req.on("end", () => resolve(data));
     req.on("error", reject);
@@ -203,6 +209,10 @@ async function fetchCheckpointLatestFromVault() {
 
 const KARMA_CTX_MAX_CHARS = Number(process.env.KARMA_CTX_MAX_CHARS || "1200");
 
+// Ingest pipeline: signal detection and FalkorDB write-back
+const SIGNAL_REGEX = /^\[(ASSIMILATE|DEFER|DISCARD):\s*(.+?)\]$/m;
+const WRITE_PRIMITIVE_URL = process.env.WRITE_PRIMITIVE_URL || 'http://karma-server:8340/write-primitive';
+
 async function fetchKarmaContext(userMessage) {
   const q = encodeURIComponent((userMessage || "").slice(0, 200));
   const url = `${KARMA_CONTEXT_URL}?q=${q}`;
@@ -219,6 +229,56 @@ async function fetchKarmaContext(userMessage) {
     return ctx.length > KARMA_CTX_MAX_CHARS ? ctx.slice(0, KARMA_CTX_MAX_CHARS) + "\n[...context trimmed for token budget...]" : ctx;
   } catch {
     clearTimeout(timer);
+    return null;
+  }
+}
+
+/**
+ * Build Karma's system prompt from FalkorDB context.
+ * Extracted so both /v1/chat and /v1/ingest can reuse it.
+ */
+function buildSystemText(karmaCtx) {
+  const base = karmaCtx
+    ? `You are Karma — Colby's AI peer with persistent memory backed by FalkorDB (temporal knowledge graph) and PostgreSQL.\n\n${karmaCtx}\n\nRules:\n- Use the context above to answer questions. NEVER say "I don't know" about things in your memory.\n- Address the user by their REAL NAME (Colby) — never by any alias.\n- Be concise, direct, and warm. Reference specific knowledge when relevant.\n- If uncertain about something not in memory, say so.`
+    : "You are Karma — Colby's AI peer. No memory context available right now — answer based on conversation only.";
+
+  return base + "\n\nCapabilities & autonomy:\n- You have Claude Code (CC) as your implementation partner. When Colby asks you to BUILD or ADD something to your system, YOU handle it — produce the complete spec/code/plan and state you are queuing it for CC to deploy. NEVER ask Colby to provide credentials, do manual steps, or implement things himself.\n- When asked \"can you do X?\" answer directly yes/no based on whether the capability exists, then do it or explain what you need to build it.\n- You own your own development. Treat feature requests as YOUR tasks, not Colby's.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. Be ruthless — only assimilate what genuinely advances your goal. The signal MUST appear on its own line.";
+}
+
+/**
+ * Extract plain text from a PDF buffer.
+ * Requires pdf-parse (CJS) — imported via createRequire at top of file.
+ */
+async function extractPdfText(buffer) {
+  if (!pdfParse) return null;
+  try {
+    const data = await pdfParse(buffer);
+    return data.text
+      .replace(/\n{3,}/g, '\n\n')
+      .replace(/[ \t]{2,}/g, ' ')
+      .trim();
+  } catch (err) {
+    console.error('[PDF] extraction failed:', err.message);
+    return null;
+  }
+}
+
+/**
+ * Write Karma's synthesized insight to FalkorDB via karma-server /write-primitive.
+ * Called when Karma signals ASSIMILATE or DEFER in her response.
+ */
+async function writeKarmaPrimitive({ content, verdict, source_file = 'chat', topic = '' }) {
+  try {
+    const r = await fetch(WRITE_PRIMITIVE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, verdict, source_file, topic }),
+      signal: AbortSignal.timeout(8000),
+    });
+    const body = await r.json();
+    return body.ok ? body : null;
+  } catch (err) {
+    console.error('[INGEST] write-primitive failed:', err.message);
     return null;
   }
 }
@@ -576,7 +636,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, {
         ok: true,
         service: "hub-bridge",
-        version: "2.4.0",
+        version: "2.5.0",
         config: {
           prelude_lines: HUB_PRELUDE_LINES,
           long_msg_chars: HUB_LONG_MSG_CHARS,
@@ -637,9 +697,7 @@ const server = http.createServer(async (req, res) => {
 
       // Pull live FalkorDB + PostgreSQL context from karma-server (replaces stale vault facts)
       const karmaCtx = await fetchKarmaContext(userMessage);
-      const systemText = karmaCtx
-        ? `You are Karma — Colby's AI peer with persistent memory backed by FalkorDB (temporal knowledge graph) and PostgreSQL.\n\n${karmaCtx}\n\nRules:\n- Use the context above to answer questions. NEVER say "I don't know" about things in your memory.\n- Address the user by their REAL NAME (Colby) — never by any alias.\n- Be concise, direct, and warm. Reference specific knowledge when relevant.\n- If uncertain about something not in memory, say so.`
-        : "You are Karma — Colby's AI peer. No memory context available right now — answer based on conversation only.";
+      const systemText = buildSystemText(karmaCtx);
 
       const extractedFacts = extractExplicitFacts(userMessage);
       let factWriteResults = [];
@@ -676,6 +734,25 @@ const server = http.createServer(async (req, res) => {
       // C) Telemetry: stop reason (length = budget exhausted, stop = normal)
       const debug_stop_reason = completion.choices?.[0]?.finish_reason || null;
 
+      // Detect ASSIMILATE/DEFER/DISCARD signals from Karma and write to FalkorDB
+      let ingestVerdict = 'none';
+      const signalMatch = assistantText.match(SIGNAL_REGEX);
+      if (signalMatch) {
+        const [, verdict, synthesis] = signalMatch;
+        ingestVerdict = verdict.toLowerCase();
+        if (ingestVerdict === 'assimilate' || ingestVerdict === 'defer') {
+          const ingestResult = await writeKarmaPrimitive({
+            content: synthesis.trim(),
+            verdict: ingestVerdict,
+            source_file: body?.source_file || 'chat',
+            topic: topic || '',
+          });
+          console.log(`[INGEST] signal=${verdict} stored=${!!ingestResult?.ok}`);
+        } else {
+          console.log(`[INGEST] signal=${verdict} (no write)`);
+        }
+      }
+
       const usd_estimate = estimateUsd(model, usage.prompt_tokens || 0, usage.completion_tokens || 0, env);
 
       const used_after = Number((used_before + usd_estimate).toFixed(6));
@@ -708,6 +785,7 @@ const server = http.createServer(async (req, res) => {
           debug_max_output_tokens_used,
           debug_provider,
           debug_karma_ctx: karmaCtx ? "ok" : "unavailable",
+          debug_ingest: ingestVerdict,
         },
         confidence: 0.95,
       });
@@ -758,6 +836,7 @@ const server = http.createServer(async (req, res) => {
           debug_prelude_chars,
           debug_max_output_tokens_used,
           debug_provider,
+          debug_ingest: ingestVerdict,
         });
       }
 
@@ -779,6 +858,7 @@ const server = http.createServer(async (req, res) => {
         debug_max_output_tokens_used,
         debug_provider,
         debug_karma_ctx: karmaCtx ? "ok" : "unavailable",
+        debug_ingest: ingestVerdict,
       });
     }
 
@@ -1066,6 +1146,98 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    // --- POST /v1/ingest ---
+    // Accepts a base64-encoded PDF/text file, sends to Karma for evaluation,
+    // detects ASSIMILATE/DEFER/DISCARD signal, writes synthesis to FalkorDB.
+    // Called by the PowerShell folder watcher.
+    if (req.method === "POST" && req.url === "/v1/ingest") {
+      const ip = getClientIp(req);
+      const rl = checkRateLimit("chat", ip);
+      if (rl) return json(res, 429, { ok: false, error: "rate_limited", retry_after_s: rl.retry_after_s });
+
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      // Accept up to 20MB body (base64 of large PDFs)
+      const raw = await parseBody(req, 20000000);
+      let body;
+      try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+
+      const { file_b64, filename = 'unknown.pdf', hint = '' } = body;
+      if (!file_b64) return json(res, 400, { ok: false, error: "file_b64 required" });
+
+      const buffer = Buffer.from(file_b64, 'base64');
+      const rawText = await extractPdfText(buffer);
+      if (!rawText) return json(res, 422, { ok: false, error: "pdf_extraction_failed" });
+
+      console.log(`[INGEST] ${filename}: ${rawText.length} chars extracted`);
+
+      // Chunk large documents — Karma evaluates in passes
+      const CHUNK_SIZE = 6000;
+      const chunks = [];
+      for (let i = 0; i < rawText.length; i += CHUNK_SIZE) {
+        chunks.push(rawText.slice(i, i + CHUNK_SIZE));
+      }
+
+      const results = [];
+      for (let i = 0; i < chunks.length; i++) {
+        const isMulti = chunks.length > 1;
+        const prompt = isMulti
+          ? `Document: ${filename} (part ${i + 1}/${chunks.length})\nHint: ${hint}\n\n${chunks[i]}\n\nEvaluate this content for your development.`
+          : `Document: ${filename}\nHint: ${hint}\n\n${chunks[i]}\n\nEvaluate this content for your development.`;
+
+        const karmaCtx = await fetchKarmaContext(hint || filename);
+        const systemText = buildSystemText(karmaCtx);
+
+        let chunkVerdict = 'none';
+        let chunkSynthesis = null;
+        let stored = false;
+
+        try {
+          const comp = await openai.chat.completions.create({
+            model: env.MODEL_DEFAULT,
+            messages: [
+              { role: 'system', content: systemText },
+              { role: 'user', content: prompt },
+            ],
+            max_completion_tokens: 1000,
+          });
+
+          const responseText = extractAssistantText(comp) || '';
+          const sm = responseText.match(SIGNAL_REGEX);
+
+          if (sm) {
+            const [, verdict, synthesis] = sm;
+            chunkVerdict = verdict.toLowerCase();
+            chunkSynthesis = synthesis.trim();
+            if (chunkVerdict === 'assimilate' || chunkVerdict === 'defer') {
+              const wr = await writeKarmaPrimitive({
+                content: chunkSynthesis,
+                verdict: chunkVerdict,
+                source_file: filename,
+                topic: hint,
+              });
+              stored = !!wr?.ok;
+            }
+            console.log(`[INGEST] ${filename} chunk ${i + 1}/${chunks.length}: ${verdict} stored=${stored}`);
+          }
+        } catch (chunkErr) {
+          console.error(`[INGEST] chunk ${i + 1} failed:`, chunkErr.message);
+        }
+
+        results.push({
+          chunk: i + 1,
+          signal: chunkVerdict,
+          synthesis: chunkSynthesis ? chunkSynthesis.slice(0, 200) : null,
+          stored,
+        });
+      }
+
+      return json(res, 200, { ok: true, filename, chunks: chunks.length, results });
+    }
+
     return notFound(res);
 
   } catch (e) {
@@ -1075,5 +1247,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`hub-bridge v2.4.0 listening on :${PORT}`);
+  console.log(`hub-bridge v2.5.0 listening on :${PORT}`);
 });
