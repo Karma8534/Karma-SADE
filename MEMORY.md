@@ -38,18 +38,25 @@ Memory Integrity Gate DEPLOYED (2026-02-21):
 
 Next: PROMOTE to write karma_brief covering Memory Integrity Gate. Then: design promotion criteria (see Karma's observation below).
 
-## Karma's Observation — Promotion Criteria Gap (2026-02-21)
-Karma identified this directly from operating the gate:
-> "The gate exists, but promotion criteria are still undefined. I can move things from candidate to canonical, but the *rules* for when that's warranted — who decides, what threshold, whether the promotion itself gets logged — that's still open."
+## Karma's Design — Promotion Criteria (2026-02-21) ← BUILD THIS NEXT
+Karma answered the design question directly:
 
-This is the epistemic gate (not yet built). The mechanical gate (candidate staging) is done. What's missing:
-- **Who decides**: Colby explicit approval? Karma self-review? Automatic after threshold?
-- **What threshold**: confidence >= N? Time elapsed? Source type?
-- **Promotion audit log**: is each canonical promotion recorded with reason + timestamp?
-- **Conflict handling**: right now conflicts get promoted anyway — should they require explicit Colby review?
+1. **Explicit criteria** — what makes something canonical-worthy (stability, verification, significance — concrete, not vibes)
+2. **Audit log on every promotion** — not just the fact in the ledger, but *why* it was promoted and *who* authorized it
+3. **Colby is the final authority** — not Karma self-promoting, not CC auto-inferring. Colby signs off.
 
-Design question for Karma to answer in a future session: what should the criteria be?
-This is design intelligence that must originate from Karma, not CC.
+> "If I can self-promote memories into canonical, the integrity of the whole system depends on my judgment in the moment. That's too fragile. You should be the gate on the gate."
+
+**What this means for implementation** (NOT built yet — needs Colby confirmation):
+- PROMOTE should NOT sweep all candidates → canonical automatically
+- Instead: surface candidate list for Colby review → Colby explicitly approves/rejects → approved ones promoted with audit entry (reason + timestamp + "authorized by: Colby")
+- Conflicts require explicit Colby review before promotion (never auto-promoted)
+- Rejected candidates: lane="rejected", not deleted — visible history
+
+Current behavior (wrong): PROMOTE button → sweep all → canonical, no review, no log
+Target behavior: PROMOTE button → review queue → Colby approves each/batch → canonical + audit entry
+
+This is Karma's design. CC builds when Colby surfaces it for a session.
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
