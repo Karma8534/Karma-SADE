@@ -16,23 +16,20 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop + graph dis
 | Graph Distillation | ✅ Active | _distillation_cycle() in ConsciousnessLoop — reads FalkorDB every 24h, synthesizes themes/gaps/insights via LLM, writes schema-compliant fact to ledger, re-ingests key insights as FalkorDB episodes |
 
 ## Current Task
-v2.7.0 COMPLETE — all 4 graph distillation tasks deployed and verified (2026-02-21):
-- Task 1: config.py — DISTILLATION_ENABLED, DISTILLATION_INTERVAL_HOURS, DISTILLATION_MAX_EPISODES
-- Task 2: consciousness.py — _distillation_cycle() reads FalkorDB every 24h, synthesizes via GLM-5, writes ledger fact, re-ingests episodes. First distillation ran: distillation_1771669572 ✅
-- Task 3: vault API /v1/checkpoint/latest returns distillation_brief field alongside karma_brief
-- Task 4: hub-bridge buildSystemText() injects --- KARMA GRAPH SYNTHESIS --- block into every /v1/chat turn
-- Karma persona baseline written: karma_persona_baseline_1771670265 (tags: karma_persona, baseline, identity)
-- CC→Karma direct briefing sent via hub chat API; governance model (propose → CC approves → CC builds) acknowledged
-- PROMOTE clicked; Karma showing distillation candidates for promotion
+v2.9.0 COMPLETE — Karma now runs on Claude Sonnet 4.6 (Anthropic) as her conversational backbone (2026-02-21):
+- v2.8.0: Within-session memory (session store, MAX_SESSION_TURNS=8, 30min TTL). buildSystemText governance fix. "One good question" instruction. Distillation brief now actually deployed (was committed but never built).
+- v2.9.0: Anthropic SDK added to hub-bridge. callLLM() unified helper routes "claude-*" models to Anthropic API, everything else to OpenAI. MODEL_DEFAULT=claude-sonnet-4-6 (best model on account). MODEL_DEEP=gpt-5-mini. Smoke test: provider=anthropic, model=claude-sonnet-4-6, ok=true ✅
+- Key file: /opt/seed-vault/memory_v1/session/anthropic.api_key.txt (mounted read-only in container)
+- Available Claude models on account: claude-sonnet-4-6, claude-opus-4-6, claude-opus-4-5, claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4, claude-sonnet-4
 
-Next: Extension cleanup (deprecated — never worked, 176 logged failures) OR backlog items below.
+Next: PROMOTE to write karma_brief for v2.8.0+v2.9.0. Then: Brave Search API (web browsing) or ACP documentation structure review.
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
 - Watcher default token: karma-inbox-watcher.ps1 TokenFile default points to .vault-token (VAULT_BEARER) but /v1/ingest requires HUB_CHAT_TOKEN. Colby must specify -TokenFile explicitly. Minor; deferred.
 - Occasional stored=false on ASSIMILATE signal (write-primitive timeout edge case). Low priority — most writes succeed.
-- Within-session context drift in Karma (forgets recent turns mid-conversation). Separate from between-session continuity. Future fix.
-- ~~(empty_assistant_text) on complex prompts~~ FIXED: gpt-5-mini is a reasoning model; CoT tokens count against max_completion_tokens. Raised HUB_MAX_OUTPUT_TOKENS_DEFAULT 3000→16000, CAP 5000→32000 in hub.env. Container recreated 2026-02-21.
+- ~~Within-session context drift~~ FIXED v2.8.0: session store injected as message history, MAX_SESSION_TURNS=8, 30min TTL.
+- ~~(empty_assistant_text) on complex prompts~~ FIXED v2.7.1: raised HUB_MAX_OUTPUT_TOKENS_DEFAULT 3000→16000, CAP 5000→32000.
 
 ## Backlog
 - Thumbs up/down on Karma chat window — Karma proposed, logged as future build item. Not designed yet.
@@ -51,6 +48,8 @@ Next: Extension cleanup (deprecated — never worked, 176 logged failures) OR ba
 - v2.5.1: /v1/ingest handles .txt and .md as plain text (was PDF-only). Enables folder watcher text file ingestion.
 - v2.6.0: Autonomous continuity — karma_brief auto-injected into every /v1/chat system prompt from vault ledger. No paste from Colby required.
 - v2.7.0: distillation_brief injected into buildSystemText() as --- KARMA GRAPH SYNTHESIS --- block. Karma arrives knowing her own graph structure.
+- v2.8.0: Within-session memory (session store, 8 exchange pairs, 30min TTL). buildSystemText governance fix + one-good-question instruction. Distillation brief actually deployed (was code-only before).
+- v2.9.0: Anthropic SDK in hub-bridge. callLLM() routes claude-* → Anthropic, else → OpenAI. MODEL_DEFAULT=claude-sonnet-4-6. MODEL_DEEP=gpt-5-mini. compose.hub.yml updated with Anthropic key mount.
 
 ## Karma Core Status (2026-02-21)
 - **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL + DISTILLING — 4 LLM providers, task-based routing, 24h self-analysis
@@ -173,4 +172,4 @@ Next: Extension cleanup (deprecated — never worked, 176 logged failures) OR ba
 - auth log: `{enabled:true, captureTokenLen:64, vaultTokenLen:0, using:'captureToken'}` ✓
 
 ## Last Updated
-2026-02-21 — v2.7.0 graph distillation complete. All 4 tasks live: config.py, _distillation_cycle() in consciousness loop, vault API distillation_brief, hub-bridge system prompt injection. First distillation verified. Persona baseline in vault. CC→Karma governance briefed. Extension deprecated. Hub-bridge history complete through v2.7.0. PROMOTE active.
+2026-02-21 — v2.9.0 complete. Karma now runs on Claude Sonnet 4.6 (Anthropic API) as her conversational backbone — best model on account. v2.8.0 added within-session memory (session store, 8 turns, 30min TTL) + governance fix + one-good-question. v2.9.0 added Anthropic SDK + callLLM() unified provider routing. Both committed + pushed to main. PROMOTE needed to write karma_brief for new capabilities.
