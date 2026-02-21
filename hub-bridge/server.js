@@ -21,6 +21,14 @@ const HUB_AUTO_HANDOFF_PRINCIPAL = process.env.HUB_AUTO_HANDOFF_PRINCIPAL  || "c
 const HUB_AUTO_HANDOFF_SCOPE     = process.env.HUB_AUTO_HANDOFF_SCOPE      || "hub";
 const HUB_AUTO_HANDOFF_PROJECT   = process.env.HUB_AUTO_HANDOFF_PROJECT    || "Karma";
 
+// B) Output token budget — env-configurable, safe defaults
+const HUB_MAX_OUTPUT_TOKENS_DEFAULT = Number(process.env.HUB_MAX_OUTPUT_TOKENS_DEFAULT || "1200");
+const HUB_MAX_OUTPUT_TOKENS_CAP     = Number(process.env.HUB_MAX_OUTPUT_TOKENS_CAP     || "1600");
+const HUB_MIN_OUTPUT_TOKENS         = Number(process.env.HUB_MIN_OUTPUT_TOKENS         || "128");
+// A) Prelude trimming — env-configurable
+const HUB_PRELUDE_LINES             = Number(process.env.HUB_PRELUDE_LINES             || "4");
+const HUB_LONG_MSG_CHARS            = Number(process.env.HUB_LONG_MSG_CHARS            || "3500");
+
 function trunc(s, n) {
   if (!s || typeof s !== "string") return "";
   return s.length > n ? s.slice(0, n) + "\u2026" : s;
@@ -60,17 +68,14 @@ const HUB_SOURCE = process.env.HUB_SOURCE || "hub-bridge";
 const HUB_VERIFIER = process.env.HUB_VERIFIER || "hub-bridge";
 
 // --- Rate limiter (in-process, no external deps) ---
-// Token bucket per (route_bucket, ip)
 const RL_CONFIG = {
   chat:    { rpm: Number(process.env.RL_CHAT_RPM    || "30"),  burst: Number(process.env.RL_CHAT_BURST    || "10") },
   capture: { rpm: Number(process.env.RL_CAPTURE_RPM || "240"), burst: Number(process.env.RL_CAPTURE_BURST || "60") },
   handoff: { rpm: Number(process.env.RL_HANDOFF_RPM || "60"),  burst: Number(process.env.RL_HANDOFF_BURST || "20") },
 };
 
-// Map: `${bucket}:${ip}` -> { tokens, last_ms }
 const rlBuckets = new Map();
 
-// Purge stale buckets every 5 minutes
 setInterval(() => {
   const now = Date.now();
   for (const [k, v] of rlBuckets) {
@@ -84,7 +89,6 @@ function getClientIp(req) {
   return req.socket?.remoteAddress || "unknown";
 }
 
-// Returns null if allowed, or { retry_after_s } if rate limited
 function checkRateLimit(bucket, ip) {
   const cfg = RL_CONFIG[bucket];
   if (!cfg) return null;
@@ -95,13 +99,12 @@ function checkRateLimit(bucket, ip) {
     state = { tokens: cfg.burst, last_ms: now };
     rlBuckets.set(key, state);
   }
-  // Refill tokens since last check
   const elapsed_s = (now - state.last_ms) / 1000;
   state.tokens = Math.min(cfg.burst, state.tokens + elapsed_s * (cfg.rpm / 60));
   state.last_ms = now;
   if (state.tokens >= 1) {
     state.tokens -= 1;
-    return null; // allowed
+    return null;
   }
   const retry_after_s = Math.ceil((1 - state.tokens) / (cfg.rpm / 60));
   return { retry_after_s };
@@ -186,35 +189,46 @@ async function vaultPost(path, bearer, payload) {
   return { status: resp.status, text };
 }
 
-// --- Fact-based prompt generation ---
+// --- STATE_PRELUDE_V0_1 ---
 
-// STATE_PRELUDE_V0_1: fetch latest checkpoint/resume from vault and build a compact prelude
 async function fetchCheckpointLatestFromVault() {
   const url = `${VAULT_INTERNAL_URL}/v1/checkpoint/latest`;
-  const r = await fetch(url, { headers: { 'X-Forwarded-For': '10.0.0.1' } });
+  const r = await fetch(url, { headers: { "X-Forwarded-For": "10.0.0.1" } });
   if (!r.ok) throw new Error(`vault_checkpoint_latest_${r.status}`);
   return await r.json();
 }
 
-function buildStatePrelude(ckLatest) {
+// A) Prelude trimming: compact 1-line if user message > HUB_LONG_MSG_CHARS
+function buildStatePrelude(ckLatest, userMsgLen) {
   try {
     const rp = String(ckLatest && ckLatest.resume_prompt ? ckLatest.resume_prompt : "");
     const lines = rp.split("\n");
-    const head = lines.slice(0, 8).join("\n");
-    const guardrail = [
-      "=== STATE PRELUDE (baseline_exec_verified) ===",
+    const isLong = typeof userMsgLen === "number" && userMsgLen > HUB_LONG_MSG_CHARS;
+
+    let head;
+    if (isLong) {
+      // 1-line compact: only the three identity-anchor tokens
+      const ckId   = (ckLatest && ckLatest.checkpoint_id)  ? ckLatest.checkpoint_id            : "unknown";
+      const ledSha = (ckLatest && ckLatest.ledger_sha256)   ? ckLatest.ledger_sha256.slice(0, 16) : "?";
+      const anSha  = (ckLatest && ckLatest.anchor_sha256)   ? ckLatest.anchor_sha256.slice(0, 16) : "?";
+      head = `checkpoint_id=${ckId} ledger_sha256=${ledSha}... anchor_sha256=${anSha}...`;
+    } else {
+      head = lines.slice(0, HUB_PRELUDE_LINES).join("\n");
+    }
+
+    return [
+      `=== STATE PRELUDE (baseline_exec_verified${isLong ? ",compact" : ""}) ===`,
       head,
       "",
       "GUARDRAIL: RESUME is canonical. Execute sealed next_action immediately. No audits unless user says VERIFY.",
-      "=== END STATE PRELUDE ==="
+      "=== END STATE PRELUDE ===",
     ].join("\n");
-    return guardrail;
   } catch (e) {
     return "=== STATE PRELUDE (unavailable) ===";
   }
 }
 
-
+// --- Fact-based prompt generation ---
 
 async function getVaultFacts(bearer) {
   const result = await vaultGet("/v1/facts", bearer, VAULT_INTERNAL_URL);
@@ -348,6 +362,36 @@ function buildVaultRecord({ type, content, tags, source, confidence, verifiedAtI
   };
 }
 
+// D) Extraction hardening: robust assistant text from any provider response shape
+function extractAssistantText(completion) {
+  try {
+    // 1) chat.completions style
+    const msg = completion?.choices?.[0]?.message;
+    let c = msg?.content;
+    if (typeof c === "string") return c;
+    // content may be an array of parts
+    if (Array.isArray(c)) {
+      const parts = c.map((part) => {
+        if (!part) return "";
+        if (typeof part === "string") return part;
+        if (typeof part.text === "string") return part.text;
+        if (part.type === "text" && typeof part.text === "string") return part.text;
+        if (part.type === "output_text" && typeof part.text === "string") return part.text;
+        return "";
+      }).filter(Boolean);
+      if (parts.length) return parts.join("");
+    }
+    // 2) other common fallbacks
+    const t1 = completion?.output_text;
+    if (typeof t1 === "string" && t1.trim()) return t1;
+    const t2 = completion?.choices?.[0]?.text;
+    if (typeof t2 === "string" && t2.trim()) return t2;
+    return "";
+  } catch {
+    return "";
+  }
+}
+
 function tryParseAssistantJson(text) {
   if (!text || typeof text !== "string") return null;
   const t = text.trim();
@@ -363,7 +407,6 @@ function tryParseAssistantJson(text) {
 // --- Handoff helpers ---
 
 function safeHandoffFilename(principal_id, scope) {
-  // Allow only safe filename characters
   const safeId = String(principal_id).replace(/[^a-zA-Z0-9_\-]/g, "_").slice(0, 64);
   const safeScope = String(scope).replace(/[^a-zA-Z0-9_\-]/g, "_").slice(0, 32);
   return `${safeId}.${safeScope}.latest.md`;
@@ -403,7 +446,6 @@ try { OPENAI_KEY = readFileTrim(OPENAI_API_KEY_FILE); } catch (e) { console.erro
 try { VAULT_BEARER = readFileTrim(VAULT_BEARER_TOKEN_FILE); } catch (e) { console.error("WARN: cannot read VAULT bearer:", e.message); }
 try { HUB_CHAT_TOKEN = readFileTrim(HUB_CHAT_TOKEN_FILE); } catch (e) { console.error("WARN: cannot read HUB chat token:", e.message); }
 try { HUB_CAPTURE_TOKEN = readFileTrim(HUB_CAPTURE_TOKEN_FILE); } catch (e) {
-  // Fall back to VAULT_BEARER for backward compat if capture token file missing
   console.error("WARN: cannot read HUB capture token (falling back to vault bearer):", e.message);
   HUB_CAPTURE_TOKEN = VAULT_BEARER;
 }
@@ -488,28 +530,36 @@ const server = http.createServer(async (req, res) => {
 
   try {
     // --- GET / --- Serve Karma Window UI
-    if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
+    if (req.method === "GET" && (req.url === "/" || req.url === "/index.html")) {
       try {
-        const __dir = new URL('.', import.meta.url).pathname;
-        const html = fs.readFileSync(
-          path.join(__dir, 'public', 'index.html'),
-          'utf8'
-        );
+        const __dir = new URL(".", import.meta.url).pathname;
+        const html = fs.readFileSync(path.join(__dir, "public", "index.html"), "utf8");
         const body = Buffer.from(html);
         res.writeHead(200, {
-          'content-type': 'text/html; charset=utf-8',
-          'content-length': body.byteLength,
-          'cache-control': 'no-cache'
+          "content-type": "text/html; charset=utf-8",
+          "content-length": body.byteLength,
+          "cache-control": "no-cache",
         });
         return res.end(html);
       } catch (e) {
-        return json(res, 500, { ok: false, error: 'ui_not_found', details: e.message });
+        return json(res, 500, { ok: false, error: "ui_not_found", details: e.message });
       }
     }
 
     // --- GET /healthz ---
     if (req.method === "GET" && req.url === "/healthz") {
-      return json(res, 200, { ok: true, service: "hub-bridge", version: "2.1.1" });
+      return json(res, 200, {
+        ok: true,
+        service: "hub-bridge",
+        version: "2.2.0",
+        config: {
+          prelude_lines: HUB_PRELUDE_LINES,
+          long_msg_chars: HUB_LONG_MSG_CHARS,
+          max_output_tokens_default: HUB_MAX_OUTPUT_TOKENS_DEFAULT,
+          max_output_tokens_cap: HUB_MAX_OUTPUT_TOKENS_CAP,
+          min_output_tokens: HUB_MIN_OUTPUT_TOKENS,
+        },
+      });
     }
 
     // --- POST /v1/chat ---
@@ -529,8 +579,16 @@ const server = http.createServer(async (req, res) => {
       if (!userMessage) return json(res, 400, { ok: false, error: "missing_message" });
 
       const topic = (body?.topic || "").toString().trim();
-      const maxOut = Number(body?.max_output_tokens || 800);
-      const max_output_tokens = Number.isFinite(maxOut) ? Math.max(64, Math.min(maxOut, 2000)) : 800;
+
+      // B) Token budget: clamp(requested || DEFAULT, MIN, CAP)
+      const maxOutReq = Number(body?.max_output_tokens || 0);
+      const max_output_tokens = Math.max(
+        HUB_MIN_OUTPUT_TOKENS,
+        Math.min(
+          (Number.isFinite(maxOutReq) && maxOutReq > 0) ? maxOutReq : HUB_MAX_OUTPUT_TOKENS_DEFAULT,
+          HUB_MAX_OUTPUT_TOKENS_CAP
+        )
+      );
 
       const deepHeader = (req.headers[DEEP_MODE_HEADER] || "").toString().toLowerCase();
       const deep_mode = ["1", "true", "yes", "on"].includes(deepHeader);
@@ -561,48 +619,24 @@ const server = http.createServer(async (req, res) => {
         factWriteResults = await writeFactsToVault(extractedFacts, VAULT_BEARER);
       }
 
-      
-function extractAssistantText(completion) {
-  try {
-    // 1) chat.completions style
-    const msg = completion?.choices?.[0]?.message;
-    let c = msg?.content;
-    if (typeof c === "string") return c;
-    // content may be an array of parts
-    if (Array.isArray(c)) {
-      const parts = c.map((part) => {
-        if (!part) return "";
-        if (typeof part === "string") return part;
-        if (typeof part.text === "string") return part.text;
-        if (part.type === "text" && typeof part.text === "string") return part.text;
-        if (part.type === "output_text" && typeof part.text === "string") return part.text;
-        return "";
-      }).filter(Boolean);
-      if (parts.length) return parts.join("");
-    }
-    // 2) other common fallbacks
-    const t1 = completion?.output_text;
-    if (typeof t1 === "string" && t1.trim()) return t1;
-    const t2 = completion?.choices?.[0]?.text;
-    if (typeof t2 === "string" && t2.trim()) return t2;
-    return "";
-  } catch {
-    return "";
-  }
-}
+      // STATE_PRELUDE_V0_1: anchor turn to spine; A) pass length for compact mode
+      let statePrelude = "";
+      let ckLatestData = null;
+      try {
+        ckLatestData = await fetchCheckpointLatestFromVault();
+        statePrelude = buildStatePrelude(ckLatestData, userMessage.length);
+      } catch (e) {
+        statePrelude = "=== STATE PRELUDE (vault unavailable) ===";
+      }
 
+      // C) Telemetry: measure input budget consumption
+      const debug_prelude_chars = statePrelude.length;
+      const debug_input_chars = statePrelude.length + systemText.length + userMessage.length;
+      const debug_max_output_tokens_used = max_output_tokens;
+      const debug_provider = "openai";
 
-    // STATE_PRELUDE_V0_1: anchor turn to spine checkpoint/resume
-    let statePrelude = "";
-    try {
-      const ckLatest = await fetchCheckpointLatestFromVault();
-      statePrelude = buildStatePrelude(ckLatest);
-    } catch (e) {
-      statePrelude = "=== STATE PRELUDE (vault unavailable) ===";
-    }
-
-const messages = [
-      { role: 'system', content: statePrelude },
+      const messages = [
+        { role: "system", content: statePrelude },
         { role: "system", content: systemText },
         { role: "user", content: userMessage },
       ];
@@ -610,6 +644,9 @@ const messages = [
       const completion = await openai.chat.completions.create({ model, messages, max_completion_tokens: max_output_tokens });
       const assistantText = extractAssistantText(completion) || "(empty_assistant_text)";
       const usage = completion.usage || {};
+
+      // C) Telemetry: stop reason (length = budget exhausted, stop = normal)
+      const debug_stop_reason = completion.choices?.[0]?.finish_reason || null;
 
       const usd_estimate = estimateUsd(model, usage.prompt_tokens || 0, usage.completion_tokens || 0, env);
 
@@ -636,6 +673,12 @@ const messages = [
           },
           spend: { month_utc: month, cap_usd: cap || 0, usd_spent: used_after },
           facts_extracted: extractedFacts.length,
+          // C) Debug telemetry in vault record (additive)
+          debug_stop_reason,
+          debug_input_chars,
+          debug_prelude_chars,
+          debug_max_output_tokens_used,
+          debug_provider,
         },
         confidence: 0.95,
       });
@@ -657,7 +700,6 @@ const messages = [
 
       const assistant_json = tryParseAssistantJson(assistantText);
 
-      // Auto-handoff: write latest state after every chat turn (fire-and-forget)
       if (HUB_AUTO_HANDOFF) {
         try {
           const ahFilename = safeHandoffFilename(HUB_AUTO_HANDOFF_PRINCIPAL, HUB_AUTO_HANDOFF_SCOPE);
@@ -682,6 +724,11 @@ const messages = [
           usd_estimate,
           spend: { month_utc: month, cap_usd: cap, usd_spent: used_after },
           facts_extracted: extractedFacts.length,
+          debug_stop_reason,
+          debug_input_chars,
+          debug_prelude_chars,
+          debug_max_output_tokens_used,
+          debug_provider,
         });
       }
 
@@ -696,6 +743,12 @@ const messages = [
         spend: { month_utc: month, cap_usd: cap, usd_spent: used_after },
         assistant_json,
         facts_extracted: extractedFacts.length,
+        // C) Debug telemetry in response (additive keys only)
+        debug_stop_reason,
+        debug_input_chars,
+        debug_prelude_chars,
+        debug_max_output_tokens_used,
+        debug_provider,
       });
     }
 
@@ -716,7 +769,6 @@ const messages = [
       let payload;
       try { payload = JSON.parse(raw); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
 
-      // Batch mode: { batch: [...] }
       if (payload && Array.isArray(payload.batch)) {
         const items = payload.batch;
         if (items.length === 0) return json(res, 400, { ok: false, error: "empty_batch" });
@@ -752,7 +804,6 @@ const messages = [
         return json(res, 200, { ok: true, batch: true, total: items.length, succeeded, failed, results });
       }
 
-      // Single mode
       const v = validateChatlogItem(payload);
       if (!v.valid) return json(res, 400, { ok: false, error: v.error });
 
@@ -842,30 +893,29 @@ const messages = [
     }
 
     // --- GET /v1/checkpoint/latest (proxy to Vault, UI-facing) ---
-    if (req.method === 'GET' && req.url === '/v1/checkpoint/latest') {
+    if (req.method === "GET" && req.url === "/v1/checkpoint/latest") {
       const ip = getClientIp(req);
-      const rl = checkRateLimit('handoff', ip);
-      if (rl) return json(res, 429, { ok: false, error: 'rate_limited', retry_after_s: rl.retry_after_s });
+      const rl = checkRateLimit("handoff", ip);
+      if (rl) return json(res, 429, { ok: false, error: "rate_limited", retry_after_s: rl.retry_after_s });
 
       const token = bearerToken(req);
       if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
-        return json(res, 401, { ok: false, error: 'unauthorized' });
+        return json(res, 401, { ok: false, error: "unauthorized" });
       }
 
-      // Call Vault API internally with server-side VAULT_BEARER (never expose to client)
-      const vaultUrl = new URL('/v1/checkpoint/latest', VAULT_INTERNAL_URL).toString();
+      const vaultUrl = new URL("/v1/checkpoint/latest", VAULT_INTERNAL_URL).toString();
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000);
       let upstream;
       try {
         upstream = await fetch(vaultUrl, {
-          headers: { Authorization: 'Bearer ' + VAULT_BEARER },
+          headers: { Authorization: "Bearer " + VAULT_BEARER },
           signal: controller.signal,
         });
       } catch (fetchErr) {
         clearTimeout(timeout);
-        const isTimeout = fetchErr.name === 'AbortError';
-        return json(res, 504, { ok: false, error: isTimeout ? 'upstream_timeout' : 'upstream_unreachable',
+        const isTimeout = fetchErr.name === "AbortError";
+        return json(res, 504, { ok: false, error: isTimeout ? "upstream_timeout" : "upstream_unreachable",
           details: String(fetchErr.message || fetchErr).slice(0, 200) });
       }
       clearTimeout(timeout);
@@ -876,16 +926,14 @@ const messages = [
 
       if (upstreamStatus < 200 || upstreamStatus >= 300) {
         return json(res, upstreamStatus, {
-          ok: false,
-          error: 'upstream_error',
+          ok: false, error: "upstream_error",
           upstream_status: upstreamStatus,
           upstream_body: upstreamBody,
         });
       }
 
-      return json(res, 200, upstreamBody || { ok: false, error: 'empty_upstream_response' });
+      return json(res, 200, upstreamBody || { ok: false, error: "empty_upstream_response" });
     }
-
 
     // --- POST /v1/promote (proxy to Vault, token-gated, UI-facing) ---
     if (req.method === "POST" && req.url === "/v1/promote") {
@@ -915,7 +963,7 @@ const messages = [
           headers: {
             "Authorization": "Bearer " + VAULT_BEARER,
             "Content-Type": "application/json",
-            "X-Forwarded-For": "127.0.0.1"
+            "X-Forwarded-For": "127.0.0.1",
           },
           body: JSON.stringify(body),
           signal: controller.signal,
@@ -952,5 +1000,5 @@ const messages = [
 });
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`hub-bridge v2.1.1 listening on :${PORT}`);
+  console.log(`hub-bridge v2.2.0 listening on :${PORT}`);
 });
