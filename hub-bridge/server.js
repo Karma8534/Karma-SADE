@@ -1134,6 +1134,30 @@ const server = http.createServer(async (req, res) => {
             ],
           }, { timeout: 20000 });
           karma_brief = extractAssistantText(briefComp) || null;
+
+          // Store karma_brief in vault for autonomous session continuity.
+          // On next session, /v1/checkpoint/latest returns it → injected into system prompt.
+          if (karma_brief) {
+            const promoteCheckpointId = upstreamBody?.checkpoint_id || null;
+            try {
+              await vaultPost("/v1/memory", VAULT_BEARER, {
+                id: `karma_brief_${promoteCheckpointId || Date.now()}`,
+                type: "log",
+                tags: ["karma_brief", "checkpoint", "promote"],
+                content: {
+                  key: "karma_brief",
+                  karma_brief,
+                  checkpoint_id: promoteCheckpointId,
+                  created_at: new Date().toISOString(),
+                },
+                source: { kind: "hub-bridge", ref: "promote-handler" },
+                confidence: 1.0,
+              });
+              console.log(`[KARMA_BRIEF] stored in vault for ${promoteCheckpointId}`);
+            } catch (storeErr) {
+              console.error("[KARMA_BRIEF] vault store failed:", storeErr?.message || storeErr);
+            }
+          }
         } catch (briefErr) {
           console.error("[KARMA_BRIEF] generation failed:", briefErr?.message || briefErr);
         }
