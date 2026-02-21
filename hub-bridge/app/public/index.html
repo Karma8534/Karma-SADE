@@ -204,6 +204,21 @@
       .right{height:30dvh}
       .mono{max-height:16dvh}
     }
+    /* -- Collaboration Queue ------------------------------------------------ */
+    #collabPanel{margin-top:8px}
+    .collab-msg{border:1px solid var(--dash);border-radius:6px;padding:6px 8px;margin-bottom:6px;background:var(--mono);font-size:12px}
+    .collab-msg .collab-meta{color:#9aa4b2;margin-bottom:4px;font-size:11px}
+    .collab-msg .collab-content{color:#c9d1d9;margin-bottom:6px;line-height:1.4}
+    .collab-badge{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;margin-right:4px}
+    .badge-karma{background:#1f3a5f;color:#7cb3f5}
+    .badge-cc{background:#1f3a1f;color:#7cf59a}
+    .badge-type{background:#2a2a40;color:#a89cf5}
+    .collab-actions{display:flex;gap:6px;margin-top:4px}
+    .collab-actions button{font-size:11px;padding:2px 8px;cursor:pointer}
+    .btn-approve{background:#1a3a1a;color:#7cf59a;border:1px solid #2a5a2a;border-radius:4px}
+    .btn-approve:hover{background:#2a5a2a}
+    .btn-reject{background:#3a1a1a;color:#f57c7c;border:1px solid #5a2a2a;border-radius:4px}
+    .btn-reject:hover{background:#5a2a2a}
   </style>
 </head>
 <body>
@@ -248,6 +263,12 @@
           <button class="promote-btn" id="approveSelectedBtn">Approve Selected</button>
           <span class="hint" id="approveNote"></span>
         </div>
+      </div>
+    </div>
+    <div class="card" id="collabCard" style="display:none">
+      <h3>Collaboration Queue</h3>
+      <div id="collabPanel">
+        <div id="collabList"></div>
       </div>
     </div>
     <div class="card">
@@ -354,6 +375,49 @@ async function refreshCandidates(){
     }).join('');
   }catch(e){ /* non-fatal */ }
 }
+async function refreshCollab(){
+  const card = document.getElementById('collabCard');
+  const listEl = document.getElementById('collabList');
+  try{
+    const r = await fetch('/v1/collab/pending', {headers});
+    if(!r.ok){ card.style.display='none'; return; }
+    const j = await r.json();
+    const msgs = j.messages || [];
+    if(msgs.length === 0){ card.style.display='none'; return; }
+    card.style.display='block';
+    listEl.innerHTML = msgs.map(m => {
+      const fromBadge = m.from === 'karma'
+        ? '<span class="collab-badge badge-karma">Karma</span>'
+        : '<span class="collab-badge badge-cc">CC</span>';
+      const typeBadge = '<span class="collab-badge badge-type">' + (m.type||'proposal') + '</span>';
+      const ts = (m.created_at||'').slice(0,16).replace('T',' ') + ' UTC';
+      const safeId = (m.id||'').replace(/'/g,'');
+      return '<div class="collab-msg" data-id="' + safeId + '">'
+        + '<div class="collab-meta">' + fromBadge + typeBadge + '&rarr; ' + m.to + ' &nbsp;&middot;&nbsp; ' + ts + '</div>'
+        + '<div class="collab-content">' + (m.content||'') + '</div>'
+        + '<div class="collab-actions">'
+        + '<button class="btn-approve" onclick="collabAction(&apos;' + safeId + '&apos;,&apos;approve&apos;)">&#10003; Approve</button>'
+        + '<button class="btn-reject" onclick="collabAction(&apos;' + safeId + '&apos;,&apos;reject&apos;)">&#10007; Reject</button>'
+        + '</div></div>';
+    }).join('');
+  }catch(e){
+    card.style.display='none';
+  }
+}
+async function collabAction(id, action){
+  try{
+    const r = await fetch('/v1/collab/'+id, {
+      method:'PATCH',
+      headers:{...headers,'Content-Type':'application/json'},
+      body:JSON.stringify({action})
+    });
+    const j = await r.json();
+    if(j.ok){ await refreshCollab(); }
+    else{ alert('Collab action failed: '+JSON.stringify(j)); }
+  }catch(e){
+    alert('Collab error: '+e);
+  }
+}
 async function doApproveSelected(){
   const btn = document.getElementById('approveSelectedBtn');
   const noteEl = document.getElementById('approveNote');
@@ -406,6 +470,7 @@ async function refreshState(){
     document.getElementById('resumeBlock').textContent='';
   }
   await refreshCandidates();
+  await refreshCollab();
 }
 async function sendMsg(){
   const ta=document.getElementById('msg');
