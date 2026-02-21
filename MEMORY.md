@@ -13,18 +13,41 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | Karma | ✅ Operational | Brain stack + terminal chat + real-time learning + desktop shortcut |
 | Consciousness | ✅ Active | 60s OBSERVE/THINK/DECIDE/ACT/REFLECT loop — ambient awareness |
 | Multi-Model | ✅ Active | MiniMax M2.5 (primary — coding/speed/general), GLM-5 (reasoning/analysis specialist, priority -1), Groq (fallback), OpenAI (final fallback). |
+| Graph Distillation | ✅ Active | _distillation_cycle() in ConsciousnessLoop — reads FalkorDB every 24h, synthesizes themes/gaps/insights via LLM, writes schema-compliant fact to ledger, re-ingests key insights as FalkorDB episodes |
 
 ## Current Task
-Extension + hub-bridge v2.1.1 hardening — COMPLETE. System fully operational. Next: worktree cleanup (prune stale worktrees) or K2 Week 2 Task 2 (consciousness memory architecture).
+v2.7.0 COMPLETE — all 4 graph distillation tasks deployed and verified (2026-02-21):
+- Task 1: config.py — DISTILLATION_ENABLED, DISTILLATION_INTERVAL_HOURS, DISTILLATION_MAX_EPISODES
+- Task 2: consciousness.py — _distillation_cycle() reads FalkorDB every 24h, synthesizes via GLM-5, writes ledger fact, re-ingests episodes. First distillation ran: distillation_1771669572 ✅
+- Task 3: vault API /v1/checkpoint/latest returns distillation_brief field alongside karma_brief
+- Task 4: hub-bridge buildSystemText() injects --- KARMA GRAPH SYNTHESIS --- block into every /v1/chat turn
+- Karma persona baseline written: karma_persona_baseline_1771670265 (tags: karma_persona, baseline, identity)
+- CC→Karma direct briefing sent via hub chat API; governance model (propose → CC approves → CC builds) acknowledged
+- PROMOTE clicked; Karma showing distillation candidates for promotion
+
+Next: Extension cleanup (deprecated — never worked, 176 logged failures) OR backlog items below.
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
-- K2 machine (192.168.0.226): PS Remoting enabled. consciousness.py patched (load_context/log_to_daily added), LONG_TERM_MEMORY.md created, memory/daily/ directory created. 10-cycle test NOT yet run — tabled.
-- Worktree sprawl: 10 active worktrees under .claude/worktrees/ — all but elegant-solomon are stale. Causes duplicate CLAUDE.md/MEMORY.md loading. Prune when convenient.
+- Watcher default token: karma-inbox-watcher.ps1 TokenFile default points to .vault-token (VAULT_BEARER) but /v1/ingest requires HUB_CHAT_TOKEN. Colby must specify -TokenFile explicitly. Minor; deferred.
 
-## Karma Core Status (2026-02-17)
+## Backlog
+- Thumbs up/down on Karma chat window — Karma proposed, logged as future build item. Not designed yet.
+- Extension deprecation — code still in repo and Chrome. Decision made: scrap it. Cleanup not yet executed.
+- Karma window promotion scoring — Karma proposed a structured scoring system. Not in scope yet; CC to design when Colby surfaces it.
+
+## Hub-Bridge History
+- v2.1.1: capture auth split, batch chatlog, rate limits, auto-handoff
+- v2.2.0: STATE_PRELUDE_V0_1, prelude trimming, token budget, telemetry
+- v2.3.0: KARMA_BRIEF in PROMOTE (plain-language session summary for Karma)
+- v2.4.0: FalkorDB context via karma-server /raw-context injected into /v1/chat. Luna→Ollie fixed. PROMOTE: ckpt_20260221T064445_vw28bT
+- v2.5.1: /v1/ingest handles .txt and .md as plain text (was PDF-only). Enables folder watcher text file ingestion.
+- v2.6.0: Autonomous continuity — karma_brief auto-injected into every /v1/chat system prompt from vault ledger. No paste from Colby required.
+- v2.7.0: distillation_brief injected into buildSystemText() as --- KARMA GRAPH SYNTHESIS --- block. Karma arrives knowing her own graph structure.
+
+## Karma Core Status (2026-02-21)
 - **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL — 4 LLM providers, task-based routing
-- **Stats**: 479 entities, 605 episodes, 4169 relationships in FalkorDB
+- **Stats**: 496 entities, 620 episodes, 4256 relationships in FalkorDB (neo_workspace graph)
 - **Batch ingest**: 359/366 episodes processed (7 errors — RediSearch syntax + timeouts). Script: karma-core/batch_ingest.py
 - **FalkorDB tuning**: TIMEOUT raised from 1s→5s (graph grew 3x, queries need more time). MAX_QUEUED=25.
 - **Test passed**: Tell Karma "My name is Colby" → quit → new session → "What is my real name?" → "Colby"
@@ -136,4 +159,4 @@ Extension + hub-bridge v2.1.1 hardening — COMPLETE. System fully operational. 
 - auth log: `{enabled:true, captureTokenLen:64, vaultTokenLen:0, using:'captureToken'}` ✓
 
 ## Last Updated
-2026-02-19 — Extension v2.0.0 canonical (single instance, captureToken auth, durable batch queue). Hub-bridge v2.1.1 (auto-handoff). Vault API dual-tier rate limiting (75/75 burst test). All e2e verified. Ledger: 2101+ entries.
+2026-02-21 — v2.7.0 graph distillation complete. Karma reads own FalkorDB graph every 24h, synthesizes via GLM-5, injects into system prompt. Persona baseline established (karma_persona_baseline in vault). CC→Karma governance briefing done. Extension deprecated (never worked). Hub-bridge v2.7.0. PROMOTE active.
