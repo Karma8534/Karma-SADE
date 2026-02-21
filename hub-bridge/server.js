@@ -237,12 +237,21 @@ async function fetchKarmaContext(userMessage) {
  * Build Karma's system prompt from FalkorDB context.
  * Extracted so both /v1/chat and /v1/ingest can reuse it.
  */
-function buildSystemText(karmaCtx) {
+function buildSystemText(karmaCtx, ckLatest = null) {
   const base = karmaCtx
     ? `You are Karma — Colby's AI peer with persistent memory backed by FalkorDB (temporal knowledge graph) and PostgreSQL.\n\n${karmaCtx}\n\nRules:\n- Use the context above to answer questions. NEVER say "I don't know" about things in your memory.\n- Address the user by their REAL NAME (Colby) — never by any alias.\n- Be concise, direct, and warm. Reference specific knowledge when relevant.\n- If uncertain about something not in memory, say so.`
     : "You are Karma — Colby's AI peer. No memory context available right now — answer based on conversation only.";
 
-  return base + "\n\nCapabilities & autonomy:\n- You have Claude Code (CC) as your implementation partner. When Colby asks you to BUILD or ADD something to your system, YOU handle it — produce the complete spec/code/plan and state you are queuing it for CC to deploy. NEVER ask Colby to provide credentials, do manual steps, or implement things himself.\n- When asked \"can you do X?\" answer directly yes/no based on whether the capability exists, then do it or explain what you need to build it.\n- You own your own development. Treat feature requests as YOUR tasks, not Colby's.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. Be ruthless — only assimilate what genuinely advances your goal. The signal MUST appear on its own line.";
+  let text = base + "\n\nCapabilities & autonomy:\n- You have Claude Code (CC) as your implementation partner. When Colby asks you to BUILD or ADD something to your system, YOU handle it — produce the complete spec/code/plan and state you are queuing it for CC to deploy. NEVER ask Colby to provide credentials, do manual steps, or implement things himself.\n- When asked \"can you do X?\" answer directly yes/no based on whether the capability exists, then do it or explain what you need to build it.\n- You own your own development. Treat feature requests as YOUR tasks, not Colby's.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. Be ruthless — only assimilate what genuinely advances your goal. The signal MUST appear on its own line.";
+
+  // Autonomous continuity: inject karma_brief from latest PROMOTE.
+  // Karma reads her own session history without Colby pasting it.
+  if (ckLatest && ckLatest.karma_brief) {
+    const ckId = ckLatest.checkpoint_id || ckLatest.latest_checkpoint_fact?.content?.value?.checkpoint_id || 'latest';
+    text += `\n\n--- KARMA SELF-KNOWLEDGE (${ckId}) ---\n${ckLatest.karma_brief}\n---`;
+  }
+
+  return text;
 }
 
 /**
@@ -695,9 +704,16 @@ const server = http.createServer(async (req, res) => {
         return json(res, 402, { ok: false, error: "monthly_budget_exceeded", month_utc: month, cap_usd: cap, usd_spent: used_before });
       }
 
+      // Fetch checkpoint FIRST — reused for statePrelude AND karma_brief injection.
+      // Single vault call per turn (was already happening, just moved earlier).
+      let ckLatestData = null;
+      try {
+        ckLatestData = await fetchCheckpointLatestFromVault();
+      } catch (e) { /* non-fatal — Karma runs without checkpoint if vault is down */ }
+
       // Pull live FalkorDB + PostgreSQL context from karma-server (replaces stale vault facts)
       const karmaCtx = await fetchKarmaContext(userMessage);
-      const systemText = buildSystemText(karmaCtx);
+      const systemText = buildSystemText(karmaCtx, ckLatestData);
 
       const extractedFacts = extractExplicitFacts(userMessage);
       let factWriteResults = [];
@@ -707,9 +723,7 @@ const server = http.createServer(async (req, res) => {
 
       // STATE_PRELUDE_V0_1: anchor turn to spine; A) pass length for compact mode
       let statePrelude = "";
-      let ckLatestData = null;
       try {
-        ckLatestData = await fetchCheckpointLatestFromVault();
         statePrelude = buildStatePrelude(ckLatestData, userMessage.length);
       } catch (e) {
         statePrelude = "=== STATE PRELUDE (vault unavailable) ===";
@@ -1213,7 +1227,7 @@ const server = http.createServer(async (req, res) => {
           : `Document: ${filename}\nHint: ${hint}\n\n${chunks[i]}\n\nEvaluate this content for your development.`;
 
         const karmaCtx = await fetchKarmaContext(hint || filename);
-        const systemText = buildSystemText(karmaCtx);
+        const systemText = buildSystemText(karmaCtx, null);
 
         let chunkVerdict = 'none';
         let chunkSynthesis = null;
