@@ -27,7 +27,16 @@ v2.11.0 COMPLETE — Karma can now surf the web (full page content, not snippets
 PROMOTE complete — ckpt_20260221T124058_KUQaf_ (trust: baseline_exec_verified, 2026-02-21T12:41Z).
 karma_brief covers: identity-resurrection via Vault ledger + Resurrection Packs, three-lane memory model, Karma Window UI. Open question logged: "What triggers promotion from candidate to canonical — who decides, under what criteria?"
 
-Next: Memory Integrity Gate design (contradiction detection, confidence scoring, Raw→Candidate→Canonical enforcement).
+Memory Integrity Gate DEPLOYED (2026-02-21):
+- ASSIMILATE → lane=candidate (conf 0.85) in FalkorDB + candidates.jsonl
+- DEFER → lane=raw (conf 0.50) — stored, not surfaced in context
+- Contradiction check on candidate writes: same-entity conflict → lane=conflict, flagged in PROMOTE panel
+- PROMOTE now promotes candidates → canonical in FalkorDB (real promotion, not just checkpoint write)
+- Context (fetchKarmaContext) filters to canonical only (?lane=canonical on /raw-context)
+- Karma Window: PROMOTE button shows pending count "PROMOTE (N ⚠)" with conflict warning
+- candidates.jsonl: /opt/seed-vault/memory_v1/ledger/candidates.jsonl
+
+Next: PROMOTE to write karma_brief covering Memory Integrity Gate. Then: observe gate in practice — check candidates.jsonl after a few chat sessions.
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
@@ -37,10 +46,8 @@ Next: Memory Integrity Gate design (contradiction detection, confidence scoring,
 - ~~(empty_assistant_text) on complex prompts~~ FIXED v2.7.1: raised HUB_MAX_OUTPUT_TOKENS_DEFAULT 3000→16000, CAP 5000→32000.
 
 ## Next Milestone — Memory Integrity Gate
-Karma correctly identified this as the most consequential unbuilt piece (2026-02-21):
-- **Problem**: All FalkorDB ingestion is automatic and append-only. Misstatements become facts. No contradiction detection. No truth filter. Candidate/Canonical distinction exists in design only — not enforced.
-- **Required**: (1) Confidence/source scoring on episodes, (2) contradiction check before ingest, (3) explicit canonical lock mechanism (beyond informal PROMOTE click), (4) review step between candidate and canonical.
-- **Status**: Design needed. CC to design when Colby surfaces it for a session.
+✅ DEPLOYED v2.12.0 (2026-02-21). Gate enforces: ASSIMILATE→candidate, DEFER→raw, PROMOTE→canonical. Context filtered to canonical only. Contradiction detection flags conflicts. PROMOTE button shows live pending count.
+Observe in practice: chat → ASSIMILATE signal → check candidates.jsonl → PROMOTE → verify canonical in FalkorDB.
 
 ## Backlog
 - Thumbs up/down on Karma chat window — Karma proposed, logged as future build item. Not designed yet.
@@ -64,6 +71,7 @@ Karma correctly identified this as the most consequential unbuilt piece (2026-02
 - v2.9.0: Anthropic SDK in hub-bridge. callLLM() routes claude-* → Anthropic, else → OpenAI. MODEL_DEFAULT=claude-sonnet-4-6. MODEL_DEEP=gpt-5-mini. compose.hub.yml updated with Anthropic key mount.
 - v2.10.0: Brave Search API. SEARCH_INTENT_REGEX for intent detection. fetchWebSearch() calls Brave API (top 3 results). Self-knowledge prefix in buildSystemText() (backbone, session_memory, web_search params). debug_search telemetry. Brave key mounted at /run/secrets/brave.api_key.txt.
 - v2.11.0: fetchPageText() — plain HTTP fetch of top result URL, full HTML strip (<script>/<style>/tags/entities), 4000 char limit. Real article content (not snippets) injected into Karma's context. Snippet fallback if fetch fails. Smoke test: Karma cited real figures from live article ✅
+- v2.12.0: Memory Integrity Gate. lane+confidence on all FalkorDB episode writes. ASSIMILATE→candidate, DEFER→raw. Contradiction detection at write time. /promote-candidates endpoint. PROMOTE now has real semantics. Context filtered to canonical only. PROMOTE button shows pending count + conflict warnings.
 
 ## Karma Core Status (2026-02-21)
 - **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL + DISTILLING — 4 LLM providers, task-based routing, 24h self-analysis
@@ -186,4 +194,4 @@ Karma correctly identified this as the most consequential unbuilt piece (2026-02
 - auth log: `{enabled:true, captureTokenLen:64, vaultTokenLen:0, using:'captureToken'}` ✓
 
 ## Last Updated
-2026-02-21 — PROMOTE complete. ckpt_20260221T124058_KUQaf_ written. v2.8.0–v2.11.0 deployed + committed. Karma now on Claude Sonnet 4.6 backbone with within-session memory, Brave web search + full page fetch. PROMOTE button added to Karma Window topbar.
+2026-02-21 — Memory Integrity Gate (v2.12.0) deployed. ASSIMILATE→candidate, PROMOTE→canonical. Context filtered to canonical. Contradiction detection live. PROMOTE button shows pending count + conflict warnings. All v2.8.0–v2.12.0 committed + deployed.
