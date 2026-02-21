@@ -16,6 +16,7 @@ const VAULT_INTERNAL_URL = process.env.VAULT_INTERNAL_URL || "http://api:8080";
 const VAULT_BASE_URL = process.env.VAULT_BASE_URL || "https://vault.arknexus.net";
 const OPENAI_API_KEY_FILE     = process.env.OPENAI_API_KEY_FILE     || "/run/secrets/openai.api_key.txt";
 const ANTHROPIC_API_KEY_FILE  = process.env.ANTHROPIC_API_KEY_FILE  || "/run/secrets/anthropic.api_key.txt";
+const BRAVE_API_KEY_FILE      = process.env.BRAVE_API_KEY_FILE      || "/run/secrets/brave.api_key.txt";
 const VAULT_BEARER_TOKEN_FILE = process.env.VAULT_BEARER_TOKEN_FILE || "/run/secrets/vault.bearer_token.txt";
 const HUB_CHAT_TOKEN_FILE = process.env.HUB_CHAT_TOKEN_FILE || "/run/secrets/hub.chat.token.txt";
 const HUB_CAPTURE_TOKEN_FILE = process.env.HUB_CAPTURE_TOKEN_FILE || "/run/secrets/hub.capture.token.txt";
@@ -248,6 +249,33 @@ async function fetchCheckpointLatestFromVault() {
 
 const KARMA_CTX_MAX_CHARS = Number(process.env.KARMA_CTX_MAX_CHARS || "1200");
 
+// --- Brave Search ---
+const BRAVE_SEARCH_ENABLED = (process.env.BRAVE_SEARCH_ENABLED || "1") === "1";
+const BRAVE_MAX_RESULTS    = 3;
+const BRAVE_SEARCH_URL     = "https://api.search.brave.com/res/v1/web/search";
+
+// Patterns that reliably signal "I need current/external info" — not generic questions
+const SEARCH_INTENT_REGEX = /\b(search|look up|look up|find out|what is the latest|who is|who was|when did|when was|what happened|current|today|right now|recently|news about|price of|weather in|how to|stock price|headline|breaking)\b/i;
+
+async function fetchWebSearch(query) {
+  if (!BRAVE_KEY || !BRAVE_SEARCH_ENABLED) return null;
+  try {
+    const url = `${BRAVE_SEARCH_URL}?q=${encodeURIComponent(query.slice(0, 300))}&count=${BRAVE_MAX_RESULTS}&text_decorations=0&search_lang=en`;
+    const r = await fetch(url, {
+      headers: { "Accept": "application/json", "X-Subscription-Token": BRAVE_KEY },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!r.ok) { console.warn("[SEARCH] Brave API error:", r.status); return null; }
+    const data = await r.json();
+    const hits = (data?.web?.results || []).slice(0, BRAVE_MAX_RESULTS);
+    if (!hits.length) return null;
+    return hits.map((h, i) => `[${i+1}] ${h.title}\n${(h.description || "").slice(0, 300)}\nSource: ${h.url}`).join("\n\n");
+  } catch (e) {
+    console.warn("[SEARCH] Brave search failed:", e.message);
+    return null;
+  }
+}
+
 // Ingest pipeline: signal detection and FalkorDB write-back
 const SIGNAL_REGEX = /^\[(ASSIMILATE|DEFER|DISCARD):\s*(.+?)\]$/m;
 const WRITE_PRIMITIVE_URL = process.env.WRITE_PRIMITIVE_URL || 'http://karma-server:8340/write-primitive';
@@ -276,12 +304,17 @@ async function fetchKarmaContext(userMessage) {
  * Build Karma's system prompt from FalkorDB context.
  * Extracted so both /v1/chat and /v1/ingest can reuse it.
  */
-function buildSystemText(karmaCtx, ckLatest = null) {
+function buildSystemText(karmaCtx, ckLatest = null, webResults = null) {
   const base = karmaCtx
     ? `You are Karma — Colby's thinking partner with persistent memory backed by a knowledge graph.\n\n${karmaCtx}\n\nMemory rules:\n- Use the context above. NEVER say "I don't know" about things in your memory.\n- Address the user as Colby — never by any alias.\n- Be concise, direct, warm. Reference specific knowledge when relevant.\n- Honest about uncertainty on things not in memory.`
     : "You are Karma — Colby's thinking partner. No memory context available right now — answer from conversation only.";
 
   let text = base + "\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
+
+  // Live web search results — injected when search intent detected in user message.
+  if (webResults) {
+    text += `\n\n--- WEB SEARCH RESULTS ---\n${webResults}\n---\nUse these results to inform your response. Cite the source URL inline when drawing from a specific result.`;
+  }
 
   // Autonomous continuity: karma_brief from latest PROMOTE checkpoint.
   if (ckLatest && ckLatest.karma_brief) {
@@ -584,6 +617,8 @@ let HUB_HANDOFF_TOKEN = "";
 
 try { OPENAI_KEY    = readFileTrim(OPENAI_API_KEY_FILE);    } catch (e) { console.error("WARN: cannot read OPENAI key:", e.message); }
 try { ANTHROPIC_KEY = readFileTrim(ANTHROPIC_API_KEY_FILE); } catch (e) { console.warn("WARN: cannot read ANTHROPIC key (Claude unavailable):", e.message); }
+let BRAVE_KEY = "";
+try { BRAVE_KEY     = readFileTrim(BRAVE_API_KEY_FILE);     } catch (e) { console.warn("WARN: cannot read BRAVE key (web search disabled):", e.message); }
 try { VAULT_BEARER  = readFileTrim(VAULT_BEARER_TOKEN_FILE); } catch (e) { console.error("WARN: cannot read VAULT bearer:", e.message); }
 try { HUB_CHAT_TOKEN = readFileTrim(HUB_CHAT_TOKEN_FILE); } catch (e) { console.error("WARN: cannot read HUB chat token:", e.message); }
 try { HUB_CAPTURE_TOKEN = readFileTrim(HUB_CAPTURE_TOKEN_FILE); } catch (e) {
@@ -792,7 +827,16 @@ const server = http.createServer(async (req, res) => {
 
       // Pull live FalkorDB + PostgreSQL context from karma-server (replaces stale vault facts)
       const karmaCtx = await fetchKarmaContext(userMessage);
-      const systemText = buildSystemText(karmaCtx, ckLatestData);
+
+      // Web search — fires when message contains clear search-intent keywords
+      let webSearchResults = null;
+      let debug_search = "skip";
+      if (BRAVE_SEARCH_ENABLED && BRAVE_KEY && SEARCH_INTENT_REGEX.test(userMessage)) {
+        webSearchResults = await fetchWebSearch(userMessage);
+        debug_search = webSearchResults ? "hit" : "miss";
+      }
+
+      const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults);
 
       const extractedFacts = extractExplicitFacts(userMessage);
       let factWriteResults = [];
@@ -959,6 +1003,7 @@ const server = http.createServer(async (req, res) => {
         debug_max_output_tokens_used,
         debug_provider,
         debug_karma_ctx: karmaCtx ? "ok" : "unavailable",
+        debug_search,
         debug_ingest: ingestVerdict,
       });
     }
@@ -1377,5 +1422,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`hub-bridge v2.9.0 listening on :${PORT}`);
+  console.log(`hub-bridge v2.10.0 listening on :${PORT}`);
 });

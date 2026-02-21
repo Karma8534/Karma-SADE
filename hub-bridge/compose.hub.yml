@@ -11,6 +11,7 @@ services:
       # Read secrets from files mounted read-only (never in env)
       OPENAI_API_KEY_FILE: "/run/secrets/openai.api_key.txt"
       ANTHROPIC_API_KEY_FILE: "/run/secrets/anthropic.api_key.txt"
+      BRAVE_API_KEY_FILE: "/run/secrets/brave.api_key.txt"
       VAULT_BEARER_TOKEN_FILE: "/run/secrets/vault.bearer_token.txt"
       HUB_CHAT_TOKEN_FILE: "/run/secrets/hub.chat.token.txt"
       # NEW: capture + handoff auth (secrets live in files; paths only here)
@@ -35,6 +36,7 @@ services:
     volumes:
       - /opt/seed-vault/memory_v1/session/openai.api_key.txt:/run/secrets/openai.api_key.txt:ro
       - /opt/seed-vault/memory_v1/session/anthropic.api_key.txt:/run/secrets/anthropic.api_key.txt:ro
+      - /opt/seed-vault/memory_v1/session/brave.api_key.txt:/run/secrets/brave.api_key.txt:ro
       - /opt/seed-vault/memory_v1/session/vault.bearer_token.txt:/run/secrets/vault.bearer_token.txt:ro
       - /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt:/run/secrets/hub.chat.token.txt:ro
       # Token mounts (read-only)
