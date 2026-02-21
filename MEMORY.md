@@ -15,7 +15,7 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop. 4 LLM prov
 | Multi-Model | ✅ Active | MiniMax M2.5 (primary — coding/speed/general), GLM-5 (reasoning/analysis specialist, priority -1), Groq (fallback), OpenAI (final fallback). |
 
 ## Current Task
-Hub-bridge v2.4.1 — token budget tuned for gpt-5-mini reasoning model. Karma Window is live and working correctly (Colby + Ollie). Next: Consider PDF/research ingestion pipeline if Colby confirms interest; otherwise, just use Karma and let Graphiti ingest from real conversations.
+Karma ingest pipeline LIVE (v2.5.0). Next: Drop PDFs from PDFs2UL into OneDrive/Karma/Inbox and start the folder watcher to process the initial batch.
 
 ## Blockers
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
@@ -26,6 +26,8 @@ Hub-bridge v2.4.1 — token budget tuned for gpt-5-mini reasoning model. Karma W
 - v2.3.0: KARMA_BRIEF in PROMOTE (plain-language session summary for Karma)
 - v2.4.0: FalkorDB context via karma-server /raw-context injected into /v1/chat. Luna→Ollie fixed. PROMOTE: ckpt_20260221T064445_vw28bT
 - v2.4.1: Token budget raised (DEFAULT 1200→2000, CAP 1600→3000), KARMA_CTX_MAX_CHARS 1800→1200. Fixes (empty_assistant_text) on gpt-5-mini. Karma Window: Enter-to-send, no Send button.
+- v2.4.2: Token budget further raised (DEFAULT 2000→3000, CAP 3000→5000). System prompt autonomy ("Karma owns her own development"). Neo alias purge across FalkorDB + PostgreSQL.
+- v2.5.0: Karma ingest pipeline. ASSIMILATE/DEFER/DISCARD signal detection in /v1/chat. /v1/ingest endpoint (base64 PDF, chunked). buildSystemText() refactor. pdf-parse CJS shim. writeKarmaPrimitive() → karma-server /write-primitive → direct FalkorDB write. PowerShell FileSystemWatcher for OneDrive/Karma/Inbox. Knowledge evaluation instructions in system prompt. Smoke tested: stored=true, uuid=afe90411 in neo_workspace.
 
 ## Karma Core Status (2026-02-21)
 - **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL — 4 LLM providers, task-based routing
@@ -141,4 +143,4 @@ Hub-bridge v2.4.1 — token budget tuned for gpt-5-mini reasoning model. Karma W
 - auth log: `{enabled:true, captureTokenLen:64, vaultTokenLen:0, using:'captureToken'}` ✓
 
 ## Last Updated
-2026-02-21 — Neo alias purge: Fixed 2 Neo Entity nodes, 2 Colby entity summaries, 3 User entity summaries in FalkorDB neo_workspace. Fixed 4 PostgreSQL analysis.user_preferences (user_name, preferred_nickname, response_style, change_management_rules). Zero Neo leaks in raw-context. Hub-bridge v2.4.1 token budget live.
+2026-02-21 — Karma ingest pipeline v2.5.0 LIVE. Full pipeline verified: Karma evaluates document → [ASSIMILATE] signal detected in hub-bridge → karma-server /write-primitive → direct FalkorDB write to neo_workspace. Tested: KV-cache primitive uuid=afe90411 in graph. OneDrive/Karma/Inbox folder created. PowerShell watcher ready (scripts/karma-inbox-watcher.ps1). Next: process initial batch from PDFs2UL. Also: hub-bridge v2.4.2 token budget (3000/5000), Neo alias purge complete.
