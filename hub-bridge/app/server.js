@@ -24,6 +24,7 @@ const HUB_HANDOFF_TOKEN_FILE = process.env.HUB_HANDOFF_TOKEN_FILE || "/run/secre
 const DEEP_MODE_HEADER = (process.env.DEEP_MODE_HEADER || "x-karma-deep").toLowerCase();
 const HANDOFF_DIR = process.env.HANDOFF_DIR || "/data/handoff";
 const COLLAB_FILE  = process.env.COLLAB_FILE  || "/data/handoff/collab.jsonl";
+const REVIEW_QUEUE_FILE = process.env.REVIEW_QUEUE_FILE || "/data/handoff/review_queue.jsonl";
 const KARMA_CONTEXT_URL = process.env.KARMA_CONTEXT_URL || "http://karma-server:8340/raw-context";
 
 // ── Within-session conversation history ──────────────────────────────────────
@@ -198,6 +199,9 @@ function readCollab() {
 }
 function appendCollab(entry) {
   fs.appendFileSync(COLLAB_FILE, JSON.stringify(entry) + "\n");
+}
+function appendReviewQueue(entry) {
+  fs.appendFileSync(REVIEW_QUEUE_FILE, JSON.stringify(entry) + '\n');
 }
 function currentMonthUTC() {
   const d = new Date();
@@ -1444,7 +1448,7 @@ const server = http.createServer(async (req, res) => {
       let body;
       try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
 
-      const { file_b64, filename = 'unknown.pdf', hint = '' } = body;
+      const { file_b64, filename = 'unknown.pdf', hint = '', priority = false } = body;
       if (!file_b64) return json(res, 400, { ok: false, error: "file_b64 required" });
 
       const buffer = Buffer.from(file_b64, 'base64');
@@ -1504,6 +1508,9 @@ const server = http.createServer(async (req, res) => {
           console.error(`[INGEST] image failed:`, imgErr.message);
         }
 
+        if (priority) {
+          appendReviewQueue({ id: "review_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7), filename, hint, priority: true, created_at: new Date().toISOString(), reviewed: false, chunks: 1, results: [{ chunk: 1, signal: imgVerdict, synthesis: imgSynthesis ? imgSynthesis.slice(0, 200) : null }] });
+        }
         return json(res, 200, {
           ok: true, filename, chunks: 1,
           results: [{ chunk: 1, signal: imgVerdict, synthesis: imgSynthesis ? imgSynthesis.slice(0, 200) : null, stored: imgStored }],
@@ -1575,6 +1582,9 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
+      if (priority) {
+        appendReviewQueue({ id: "review_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7), filename, hint, priority: true, created_at: new Date().toISOString(), reviewed: false, chunks: chunks.length, results: results.map(r => ({ chunk: r.chunk, signal: r.signal, synthesis: r.synthesis })) });
+      }
       return json(res, 200, { ok: true, filename, chunks: chunks.length, results });
     }
 
