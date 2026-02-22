@@ -105,6 +105,7 @@
     }
     .u{align-self:flex-end;background:var(--bgU)}
     .a{align-self:flex-start;background:var(--bgA)}
+    .ingest{align-self:flex-start;background:#0a1a0f;border-color:#1a3a22;color:#9ee8b0;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px}
     .input{
       border-top:1px solid var(--border);
       padding:10px 12px;
@@ -242,8 +243,8 @@
         <button id="clearImg">&#10005; remove</button>
       </div>
       <div class="input-row">
-        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none"/>
-        <button id="attachBtn" title="Attach image (or paste screenshot)">&#128247;</button>
+        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,text/plain,text/markdown,.pdf,.txt,.md,.csv" style="display:none" multiple/>
+        <button id="attachBtn" title="Attach file — images staged for chat; PDF/txt/md ingested immediately (multi-select OK)">&#128247;</button>
         <textarea id="msg" placeholder="Message Karma&hellip; (Enter to send, Shift+Enter for new line, or paste a screenshot)"></textarea>
       </div>
     </div>
@@ -321,7 +322,7 @@ function fileToB64(file){
     reader.onload = ()=>{
       const result = reader.result; // "data:image/png;base64,..."
       const comma = result.indexOf(',');
-      resolve({ b64: result.slice(comma+1), mediaType: file.type || 'image/png', name: file.name });
+      resolve({ b64: result.slice(comma+1), mediaType: file.type || 'application/octet-stream', name: file.name });
     };
     reader.onerror = reject;
     reader.readAsDataURL(file);
@@ -556,15 +557,57 @@ document.getElementById('msg').addEventListener('keydown', (e)=>{
   if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMsg(); }
 });
 
-// ── Image attach: file picker ──────────────────────────────────────────────
+// ── Document ingest: send a non-image file to /v1/ingest immediately ──────
+async function sendToIngest(file){
+  const name = file.name;
+  const hint = name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+  const d = document.createElement('div');
+  d.className = 'msg ingest';
+  d.textContent = '\u{1F4C4} Ingesting: ' + name + '\u2026';
+  logEl.appendChild(d);
+  logEl.scrollTop = logEl.scrollHeight;
+  try{
+    const { b64 } = await fileToB64(file);
+    const r = await fetch('/v1/ingest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...headers },
+      body: JSON.stringify({ file_b64: b64, filename: name, hint })
+    });
+    const j = await r.json();
+    if(!j.ok) throw new Error(j.error || JSON.stringify(j));
+    const resultLines = (j.results || []).map(res => {
+      const sig = (res.signal || 'none').toUpperCase();
+      const syn = res.synthesis ? res.synthesis.slice(0, 160) : '(no synthesis)';
+      return '  chunk ' + res.chunk + ': ' + sig + ' \u2014 ' + syn;
+    });
+    const chunkWord = j.chunks === 1 ? 'chunk' : 'chunks';
+    d.textContent = '\u{1F4C4} ' + name + ' (' + j.chunks + ' ' + chunkWord + ')\n' + resultLines.join('\n');
+  }catch(e){
+    d.textContent = '\u{1F4C4} ERROR ingesting ' + name + ': ' + String(e);
+    d.style.color = '#f87171';
+    d.style.borderColor = '#4b2222';
+    d.style.background = '#1a0a0a';
+  }
+}
+
+// ── File attach: file picker (images → stage for chat; docs → ingest now) ─
 document.getElementById('attachBtn').onclick=()=>document.getElementById('fileInput').click();
 document.getElementById('fileInput').addEventListener('change', async(e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  try{
-    const {b64, mediaType, name} = await fileToB64(file);
-    setImage(b64, mediaType, name);
-  }catch(err){ addMsg('assistant','IMAGE ERROR: '+String(err)); }
+  const files = Array.from(e.target.files || []);
+  if(!files.length) return;
+  for(const file of files){
+    if(file.type.startsWith('image/')){
+      // Stage image — sent with next chat message via /v1/chat
+      try{
+        const {b64, mediaType, name} = await fileToB64(file);
+        setImage(b64, mediaType, name);
+      }catch(err){ addMsg('assistant','IMAGE ERROR: '+String(err)); }
+    } else {
+      // Non-image (PDF, txt, md, etc.) — ingest immediately via /v1/ingest
+      sendToIngest(file); // fire-and-forget; result shown in log
+    }
+  }
+  e.target.value = ''; // reset so same file can be re-selected
 });
 document.getElementById('clearImg').onclick=clearImage;
 
