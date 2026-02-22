@@ -16,7 +16,7 @@
 
 ## Session Start (Do This First)
 1. Run `Scripts/resurrection/Get-KarmaContext.ps1` then read `karma-context.md` for Karma's live graph context
-2. Read MEMORY.md for current phase status and active task
+2. Read `MEMORY.md` (`C:\Users\raest\Documents\Karma_SADE\MEMORY.md`) for current phase status and active task
 3. Run: `ssh vault-neo "systemctl status seed-vault && wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
 4. Check git log --oneline -5 for recent changes
 5. Resume the active task listed in MEMORY.md — do not ask what to work on
@@ -67,7 +67,16 @@ When runtime behavior changes unexpectedly, collect evidence before proposing a 
 - **Docker compose build caches hub-bridge**: `docker compose up -d` after `scp` can use stale COPY layer.
   Always use `docker compose -f compose.hub.yml build --no-cache && docker compose -f compose.hub.yml up -d`
 - **FalkorDB graph name is `neo_workspace`** — NOT `karma`. The `karma` graph exists but is empty.
-  `neo_workspace` has all 496 entities / 620 episodes. Always query `neo_workspace`.
+  Always query `neo_workspace`.
+- **FalkorDB container MUST be created with two env vars** (verified 2026-02-22 — both are fatal if missing):
+  - `-e FALKORDB_DATA_PATH=/data` — without this, FalkorDB writes to `/var/lib/falkordb/data` inside the
+    container (not the mounted volume). RDB never lands on host. Every container restart = empty graph.
+  - `-e FALKORDB_ARGS='TIMEOUT 10000 MAX_QUEUED_QUERIES 25'` — default TIMEOUT=1000ms. Past ~250 episodes,
+    Graphiti dedup queries exceed 1s → cascade batch failure. Do NOT use `--GRAPH.TIMEOUT` flag — ignored by run.sh.
+  - Full correct run command in MEMORY.md Infrastructure section.
+- **`batch_ingest.py` requires `LEDGER_PATH` override** — default in config.py is `/ledger/memory.jsonl` but
+  actual path inside karma-server container is `/opt/seed-vault/memory_v1/ledger/memory.jsonl`.
+  Always run as: `docker exec -d karma-server sh -c 'LEDGER_PATH=/opt/seed-vault/memory_v1/ledger/memory.jsonl python3 /app/batch_ingest.py > /tmp/batch.log 2>&1'`
 - **karma-server runs from built Docker image, no volume mounts** — editing source files on host has no effect
   until you rebuild: `docker build -t karma-core:latest . && docker stop karma-server && docker rm karma-server && docker run -d ...`
 - **`(empty_assistant_text)` on large FalkorDB context**: 3370 char context overflows gpt-5-mini reasoning budget.
