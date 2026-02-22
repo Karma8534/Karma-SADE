@@ -83,7 +83,13 @@ Karma's design, built as specified:
 **Next open question:** Promotion criteria — what concrete signals make a candidate canonical-worthy? (Karma's first requirement: "explicit criteria, not vibes")
 
 ## Blockers
-- **FalkorDB neo_workspace graph REBUILDING (run 3)** — Started 2026-02-22 ~21:51 UTC. 1257 episodes, concurrency=1, TIMEOUT=0 (no limit for rebuild), 0 errors at 2-min checkpoint. ETA ~3.5h. After completion: (1) BGSAVE to persist RDB to host volume, (2) recreate container with TIMEOUT=10000 replacing TIMEOUT=0, (3) verify K2 replication reconnects. Root causes fully identified: volume mount mismatch (FALKORDB_DATA_PATH) + TIMEOUT default. Correct run command now in Infrastructure section.
+- **FalkorDB neo_workspace graph REBUILDING (run 3)** — Started 2026-02-22 ~21:51 UTC. 1257 episodes, concurrency=1, TIMEOUT=0 (no limit for rebuild), 0 errors at 2-min checkpoint. ETA ~3.5h.
+  **Post-completion sequence (APPROVED — do not skip):**
+  1. `ssh vault-neo "docker exec falkordb redis-cli -p 6379 BGSAVE && sleep 3 && ls -lah /home/neo/karma/falkordb-data/"` — verify dump.rdb exists
+  2. Recreate falkordb: `docker run -d --name falkordb --network anr-vault-net --restart unless-stopped -p 6379:6379 -p 3000:3000 -v /home/neo/karma/falkordb-data:/data -e FALKORDB_DATA_PATH=/data -e FALKORDB_ARGS='TIMEOUT 10000 MAX_QUEUED_QUERIES 25' falkordb/falkordb`
+  3. Verify graph loaded: `GRAPH.RO_QUERY neo_workspace 'MATCH (n:Entity) RETURN count(n)'`
+  4. Verify K2 replication: `INFO replication` → connected_slaves:1
+  5. **CLAUDE.md update (EXPLICITLY APPROVED by Colby 2026-02-22)**: Add to Known Pitfalls — (a) FalkorDB persistence: FALKORDB_DATA_PATH + FALKORDB_ARGS env vars required on every container creation; (b) MEMORY.md absolute path hardcoded as `C:\Users\raest\Documents\Karma_SADE\MEMORY.md` so session chaos never loses it again
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
 - Occasional stored=false on ASSIMILATE signal (write-primitive timeout edge case). Low priority — most writes succeed.
 - ~~Within-session context drift~~ FIXED v2.8.0: session store injected as message history, MAX_SESSION_TURNS=8, 30min TTL.
