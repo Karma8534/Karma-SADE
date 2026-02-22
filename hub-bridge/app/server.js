@@ -1684,7 +1684,99 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    // --- GET /v1/candidates/count --- Memory Integrity Gate: pending candidate count
+    // --- GET /v1/vault-file/:alias --- Karma self-access: read whitelisted files
+    // Karma can read her own state files without CC mediation
+    if (req.method === "GET" && req.url.startsWith("/v1/vault-file/")) {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      const VAULT_FILES = {
+        "MEMORY.md":        "/karma/MEMORY.md",
+        "CLAUDE.md":        "/karma/repo/CLAUDE.md",
+        "consciousness":    "/karma/ledger/consciousness.jsonl",
+        "collab":           "/karma/ledger/collab.jsonl",
+        "candidates":       "/karma/ledger/candidates.jsonl",
+        "system-prompt":    "/karma/repo/Memory/00-karma-system-prompt-live.md",
+        "session-handoff":  "/karma/repo/Memory/08-session-handoff.md",
+        "session-summary":  "/karma/repo/Memory/11-session-summary-latest.md",
+        "core-architecture":"/karma/repo/Memory/01-core-architecture.md",
+      };
+
+      const alias = req.url.slice("/v1/vault-file/".length).split("?")[0];
+      const urlParams = new URL("http://x" + req.url).searchParams;
+      const tailLines = parseInt(urlParams.get("tail") || "0");
+      const filePath = VAULT_FILES[alias];
+
+      if (!filePath) {
+        return json(res, 404, { ok: false, error: "unknown_alias", available: Object.keys(VAULT_FILES) });
+      }
+
+      try {
+        if (!fs.existsSync(filePath)) {
+          return json(res, 404, { ok: false, error: "file_not_found", path: alias });
+        }
+        const stat = fs.statSync(filePath);
+        let content = fs.readFileSync(filePath, "utf8");
+        // Optional tail: return last N lines
+        if (tailLines > 0) {
+          const lines = content.split("\n");
+          content = lines.slice(-tailLines).join("\n");
+        }
+        return json(res, 200, {
+          ok: true,
+          alias,
+          size: stat.size,
+          modified: stat.mtime.toISOString(),
+          content,
+        });
+      } catch (e) {
+        return json(res, 500, { ok: false, error: "read_error", details: String(e).slice(0, 200) });
+      }
+    }
+
+    // --- PATCH /v1/vault-file/MEMORY.md --- Karma self-write: update MEMORY.md only
+    // Karma can append sections or overwrite MEMORY.md. CLAUDE.md is read-only.
+    if (req.method === "PATCH" && req.url === "/v1/vault-file/MEMORY.md") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      let body = {};
+      try {
+        const chunks = [];
+        for await (const chunk of req) chunks.push(chunk);
+        body = JSON.parse(Buffer.concat(chunks).toString() || "{}");
+      } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+
+      if (!body.content && !body.append) {
+        return json(res, 400, { ok: false, error: "content or append required" });
+      }
+
+      const MEMORY_PATH = "/karma/MEMORY.md";
+      try {
+        if (body.append) {
+          // Append mode: add new content at end of file
+          const ts = new Date().toISOString();
+          const appendBlock = "\n\n---\n<!-- Karma self-write at " + ts + " -->\n" + body.append;
+          fs.appendFileSync(MEMORY_PATH, appendBlock, "utf8");
+          return json(res, 200, { ok: true, action: "appended", bytes_added: Buffer.byteLength(appendBlock) });
+        } else {
+          // Full overwrite — require explicit confirm flag to prevent accidents
+          if (!body.confirm_overwrite) {
+            return json(res, 400, { ok: false, error: "full overwrite requires confirm_overwrite:true" });
+          }
+          fs.writeFileSync(MEMORY_PATH, body.content, "utf8");
+          return json(res, 200, { ok: true, action: "overwritten", size: Buffer.byteLength(body.content) });
+        }
+      } catch (e) {
+        return json(res, 500, { ok: false, error: "write_error", details: String(e).slice(0, 200) });
+      }
+    }
+
+        // --- GET /v1/candidates/count --- Memory Integrity Gate: pending candidate count
     if (req.method === "GET" && req.url === "/v1/candidates/count") {
       const token = bearerToken(req);
       if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {

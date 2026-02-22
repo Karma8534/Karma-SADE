@@ -94,6 +94,28 @@ When runtime behavior changes unexpectedly, collect evidence before proposing a 
   explicitly. TIMEOUT 0 caused 72% batch failure rate (batch3, 2026-02-22) — same cascade as the
   default 1000ms. Always verify the running container: `docker inspect falkordb | grep FALKORDB_ARGS`.
 
+## Karma File Locations
+Canonical paths for Karma's files on vault-neo. These must never drift.
+
+| Alias | Host Path | Container Path | Access |
+|-------|-----------|----------------|--------|
+| `MEMORY.md` | `/home/neo/karma-sade/MEMORY.md` | `/karma/MEMORY.md` | read+write |
+| `CLAUDE.md` | `/home/neo/karma-sade/CLAUDE.md` | `/karma/repo/CLAUDE.md` | read-only |
+| `consciousness` | `/opt/seed-vault/memory_v1/ledger/consciousness.jsonl` | `/karma/ledger/consciousness.jsonl` | read-only |
+| `collab` | `/opt/seed-vault/memory_v1/ledger/collab.jsonl` | `/karma/ledger/collab.jsonl` | read-only |
+| `candidates` | `/opt/seed-vault/memory_v1/ledger/candidates.jsonl` | `/karma/ledger/candidates.jsonl` | read-only |
+| `system-prompt` | `/home/neo/karma-sade/Memory/00-karma-system-prompt-live.md` | `/karma/repo/Memory/00-karma-system-prompt-live.md` | read-only |
+| `session-handoff` | `/home/neo/karma-sade/Memory/08-session-handoff.md` | `/karma/repo/Memory/08-session-handoff.md` | read-only |
+| `session-summary` | `/home/neo/karma-sade/Memory/11-session-summary-latest.md` | `/karma/repo/Memory/11-session-summary-latest.md` | read-only |
+| `core-architecture` | `/home/neo/karma-sade/Memory/01-core-architecture.md` | `/karma/repo/Memory/01-core-architecture.md` | read-only |
+
+**API access (via hub-bridge):**
+- `GET /v1/vault-file/{alias}` — read file; optional `?tail=N` for last N lines
+- `PATCH /v1/vault-file/MEMORY.md` — append: `{"append": "text"}`, overwrite: `{"content":"...", "confirm_overwrite":true}`
+- Auth: same Bearer token as `/v1/chat` (HUB_CHAT_TOKEN)
+
+**`aria.md`**: Not found on droplet (Feb 2026). If Aria writes a file by this name, canonical location will be `/home/neo/karma-sade/aria.md`.
+
 ## Aria Reconciliation Protocol
 Aria (ChatGPT co-creator) writes intent from her model of the system. Her model drifts
 from actual spine state between sessions — she may generate steps already completed or
