@@ -1588,6 +1588,89 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, filename, chunks: chunks.length, results });
     }
 
+    // --- GET /v1/review-queue --- Returns prioritized files queued for Karma's review
+    if (req.method === "GET" && req.url === "/v1/review-queue") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      try {
+        let items = [];
+        if (fs.existsSync(REVIEW_QUEUE_FILE)) {
+          const lines = fs.readFileSync(REVIEW_QUEUE_FILE, "utf8").split("\n").filter(Boolean);
+          items = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+        }
+        return json(res, 200, { ok: true, items, count: items.length, pending: items.filter(i => !i.reviewed).length });
+      } catch (e) {
+        return json(res, 500, { ok: false, error: String(e) });
+      }
+    }
+
+    // --- PATCH /v1/review-queue/:id --- Mark a review queue item as reviewed
+    if (req.method === "PATCH" && req.url.startsWith("/v1/review-queue/")) {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      const itemId = req.url.slice("/v1/review-queue/".length);
+      try {
+        let items = [];
+        if (fs.existsSync(REVIEW_QUEUE_FILE)) {
+          const lines = fs.readFileSync(REVIEW_QUEUE_FILE, "utf8").split("\n").filter(Boolean);
+          items = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+        }
+        let found = false;
+        const updated = items.map(item => {
+          if (item.id === itemId) { found = true; return { ...item, reviewed: true, reviewed_at: new Date().toISOString() }; }
+          return item;
+        });
+        if (!found) return json(res, 404, { ok: false, error: "not_found" });
+        fs.writeFileSync(REVIEW_QUEUE_FILE, updated.map(i => JSON.stringify(i)).join("\n") + "\n");
+        return json(res, 200, { ok: true, id: itemId });
+      } catch (e) {
+        return json(res, 500, { ok: false, error: String(e) });
+      }
+    }
+
+    // --- POST /v1/cypher --- Read-only FalkorDB query passthrough (proxies to karma-server)
+    if (req.method === "POST" && req.url === "/v1/cypher") {
+      const ip = getClientIp(req);
+      const rl = checkRateLimit("handoff", ip);
+      if (rl) return json(res, 429, { ok: false, error: "rate_limited", retry_after_s: rl.retry_after_s });
+
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      let body = {};
+      try {
+        const chunks = [];
+        for await (const chunk of req) chunks.push(chunk);
+        body = JSON.parse(Buffer.concat(chunks).toString() || "{}");
+      } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+
+      if (!body.q) return json(res, 400, { ok: false, error: "q required" });
+
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        let upstream;
+        try {
+          upstream = await fetch("http://karma-server:8340/graph-query", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ q: body.q }),
+            signal: controller.signal,
+          });
+        } finally { clearTimeout(timeout); }
+        const upBody = await upstream.json();
+        return json(res, upstream.status, upBody);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: "karma_server_unreachable", details: String(e).slice(0, 200) });
+      }
+    }
+
     // --- GET /v1/candidates/count --- Memory Integrity Gate: pending candidate count
     if (req.method === "GET" && req.url === "/v1/candidates/count") {
       const token = bearerToken(req);
