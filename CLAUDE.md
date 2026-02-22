@@ -84,6 +84,15 @@ When runtime behavior changes unexpectedly, collect evidence before proposing a 
 - **Hub chat token path**: `/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt` (NOT session/)
 - **All containers on same network**: `anr-vault-net` (172.18.0.x). hub-bridge can reach karma-server,
   falkordb, anr-vault-search, anr-vault-api by container name.
+- **Python patches to server.js — escape sequences become literal bytes**: `"\\n\\n"` in a Python
+  string written to a JS file lands as two actual newline bytes (0x0a 0x0a), not `\n\n`. JavaScript
+  then sees an unterminated string literal → `SyntaxError: Invalid or unexpected token`. After any
+  Python patch, always verify: `python3 -c "raw=open('server.js','rb').read(); print(raw.count(b'\\x22\\x0a\\x22'), 'bare newlines in strings')"`.
+  Fix with byte-level replacement: `b'\\x22\\x0a\\x0a\\x22'` → `b'\\x22\\x5c\\x6e\\x5c\\x6e\\x22'`
+  (quote+LF+LF+quote → quote+backslash+n+backslash+n+quote).
+- **`FALKORDB_ARGS=TIMEOUT 0` means "use default" (1000ms), NOT unlimited**: Use `TIMEOUT 10000`
+  explicitly. TIMEOUT 0 caused 72% batch failure rate (batch3, 2026-02-22) — same cascade as the
+  default 1000ms. Always verify the running container: `docker inspect falkordb | grep FALKORDB_ARGS`.
 
 ## Aria Reconciliation Protocol
 Aria (ChatGPT co-creator) writes intent from her model of the system. Her model drifts
