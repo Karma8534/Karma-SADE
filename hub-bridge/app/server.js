@@ -713,30 +713,43 @@ const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : nul
 // Anthropic differences: system is a separate param, max_tokens not max_completion_tokens,
 // response shape is response.content[0].text + response.usage.input_tokens/output_tokens.
 async function callLLM(model, messages, maxTokens) {
-  if (isAnthropicModel(model)) {
-    if (!anthropic) throw new Error("Anthropic client unavailable — ANTHROPIC_API_KEY not loaded");
-    // Extract + combine system messages; Anthropic takes them as a single string
-    const systemParts   = messages.filter(m => m.role === "system").map(m => m.content);
-    const apiMessages   = messages.filter(m => m.role !== "system");
-    const systemPrompt  = systemParts.join("\n\n") || undefined;
-    // Ensure at least one user message (Anthropic requirement)
-    if (!apiMessages.length) apiMessages.push({ role: "user", content: "(continue)" });
-    const resp = await anthropic.messages.create({ model, system: systemPrompt, messages: apiMessages, max_tokens: maxTokens });
-    return {
-      text:         resp.content?.[0]?.text || "",
-      usage:        { prompt_tokens: resp.usage?.input_tokens || 0, completion_tokens: resp.usage?.output_tokens || 0, total_tokens: (resp.usage?.input_tokens || 0) + (resp.usage?.output_tokens || 0) },
-      finish_reason: resp.stop_reason || null,
-      provider:     "anthropic",
-    };
+  const MAX_RETRIES = 3;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      if (isAnthropicModel(model)) {
+        if (!anthropic) throw new Error("Anthropic client unavailable — ANTHROPIC_API_KEY not loaded");
+        const systemParts   = messages.filter(m => m.role === "system").map(m => m.content);
+        const apiMessages   = messages.filter(m => m.role !== "system");
+        const systemPrompt  = systemParts.join("\n\n") || undefined;
+        if (!apiMessages.length) apiMessages.push({ role: "user", content: "(continue)" });
+        const resp = await anthropic.messages.create({ model, system: systemPrompt, messages: apiMessages, max_tokens: maxTokens });
+        return {
+          text:         resp.content?.[0]?.text || "",
+          usage:        { prompt_tokens: resp.usage?.input_tokens || 0, completion_tokens: resp.usage?.output_tokens || 0, total_tokens: (resp.usage?.input_tokens || 0) + (resp.usage?.output_tokens || 0) },
+          finish_reason: resp.stop_reason || null,
+          provider:     "anthropic",
+        };
+      }
+      // OpenAI path
+      const completion = await openai.chat.completions.create({ model, messages, max_completion_tokens: maxTokens });
+      return {
+        text:         completion.choices?.[0]?.message?.content || "",
+        usage:        completion.usage || {},
+        finish_reason: completion.choices?.[0]?.finish_reason || null,
+        provider:     "openai",
+      };
+    } catch (err) {
+      const is429 = err?.status === 429 || (err?.error?.type === "rate_limit_error");
+      if (is429 && attempt < MAX_RETRIES - 1) {
+        const retryAfterHeader = err?.headers?.["retry-after"];
+        const waitMs = retryAfterHeader ? (parseFloat(retryAfterHeader) * 1000) : (Math.pow(2, attempt + 1) * 1500);
+        console.warn("[callLLM] 429 rate-limited — waiting " + Math.round(waitMs / 1000) + "s (attempt " + (attempt + 2) + "/" + MAX_RETRIES + ")");
+        await new Promise(r => setTimeout(r, waitMs));
+        continue;
+      }
+      throw err;
+    }
   }
-  // OpenAI path
-  const completion = await openai.chat.completions.create({ model, messages, max_completion_tokens: maxTokens });
-  return {
-    text:         completion.choices?.[0]?.message?.content || "",
-    usage:        completion.usage || {},
-    finish_reason: completion.choices?.[0]?.finish_reason || null,
-    provider:     "openai",
-  };
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
