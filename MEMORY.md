@@ -83,7 +83,7 @@ Karma's design, built as specified:
 **Next open question:** Promotion criteria — what concrete signals make a candidate canonical-worthy? (Karma's first requirement: "explicit criteria, not vibes")
 
 ## Blockers
-- **FalkorDB batch4 RUNNING** — Started 2026-02-22 ~23:24 UTC. 990 episodes, TIMEOUT=10000 set, ok:60 err:0 at 6% checkpoint. ETA ~3h from start. TIMEOUT=0 was causing 72% failure in batch3 (queries timeout). Fixed by recreating container with TIMEOUT=10000.
+- **FalkorDB batch4 RUNNING** — Started 2026-02-22 ~23:52 UTC. 823 remaining (444 already in graph from live chats). TIMEOUT=10000 confirmed via docker inspect. ok:168 err:2 at 20% (98.8% success vs batch3's 28%). ETA ~2.5h remaining.
   - **Post-completion**: BGSAVE → verify dump.rdb → check K2 replication (already verified live: connected_slaves:1, lag:0)
 - **KarmaInboxWatcher restart needed** — New Gated/ watcher script deployed (60f796f) but old PowerShell instance still running. Colby must: `Stop-Process -Name pwsh -Force` (or `Get-Process pwsh | Stop-Process`) then `Start-ScheduledTask -TaskName "KarmaInboxWatcher"`.
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
@@ -96,7 +96,7 @@ Karma's design, built as specified:
 Observe in practice: chat → ASSIMILATE signal → check candidates.jsonl → PROMOTE → verify canonical in FalkorDB.
 
 ## Backlog
-- **Karma Window Review Queue card** (in-progress): `/v1/review-queue` endpoint is live. Missing: UI card in index.html that surfaces pending items from review_queue.jsonl with click-to-load-in-chat.
+- **Karma Window Review Queue card** ✅ BUILT (commit 6c68815): CSS + HTML card (reviewQueueCard, hidden by default) + JS (refreshReviewQueue, rqPull, rqDismiss). Shows pending Gated/ items with Pull-into-chat and Mark-reviewed buttons. Called from refreshState(). Smoke test: card hidden when queue empty ✅
 - **Priority flag on ingest** (Karma design, 2026-02-22): ✅ BUILT — Gated/ directory is the flag. Drop file in `OneDrive\Karma\Gated\` → watcher sends `priority:true` → appended to `review_queue.jsonl`. Watcher restart still needed (see Blockers).
 - **Synthesis gap on existing processed files**: 47 files in Done/ have entity extraction only (no Karma synthesis). Karma's decision: Option 1 acceptable for most (weak-signal files). Option 2 (conversational pass) worth doing selectively for files where the spidey-sense was strongest. Next CC session: Colby flags those specific files for re-paste to Karma.
 - Thumbs up/down on Karma chat window — Karma proposed, logged as future build item. Not designed yet.
@@ -274,4 +274,4 @@ ssh vault-neo "cat /opt/seed-vault/memory_v1/hub_bridge/data/handoffs/collab.jso
 ```
 
 ## Last Updated
-2026-02-22 (session 2) — Major session: (1) Multi-file upload + any format in Karma Window; (2) Gated/ directory = priority ingest flag, review_queue.jsonl; (3) /v1/review-queue + /v1/cypher + karma-server /graph-query (graph access primitives, smoke tested); (4) 429 retry logic in callLLM with exponential backoff (inject test verified); (5) Karma self-access file bridge — /v1/vault-file/:alias (read MEMORY.md/CLAUDE.md/consciousness/etc, append to MEMORY.md); (6) CLAUDE.md updated: Python escape pitfall + TIMEOUT 0 pitfall + Karma File Locations section; (7) FalkorDB rebuilt with TIMEOUT=10000 (was TIMEOUT=0), batch4 running clean ok:60 err:0; (8) K2 live: connected_slaves:1, lag:0.
+2026-02-22 (session 3) — Session 2 completion + batch4: (1) vault-neo git pull fixed (MEMORY.md local change blocked merge — discarded and pulled, all 5 files synced: CLAUDE.md + MEMORY.md + server.js + index.html + compose.hub.yml); (2) Karma File Locations section confirmed on vault-neo CLAUDE.md (Karma can now read it via GET /v1/vault-file/CLAUDE.md); (3) batch4 started — 823 remaining, ok:168 err:2 at 20% (98.8% success confirmed, TIMEOUT=10000 fix working); (4) Review Queue card confirmed built (commit 6c68815). Review Queue card promoted from in-progress to complete in backlog.
