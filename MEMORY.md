@@ -83,23 +83,22 @@ Karma's design, built as specified:
 **Next open question:** Promotion criteria — what concrete signals make a candidate canonical-worthy? (Karma's first requirement: "explicit criteria, not vibes")
 
 ## Blockers
-- **FalkorDB neo_workspace graph REBUILDING (run 3)** — Started 2026-02-22 ~21:51 UTC. 1257 episodes, concurrency=1, TIMEOUT=0 (no limit for rebuild), 0 errors at 2-min checkpoint. ETA ~3.5h.
-  **Post-completion sequence (APPROVED — do not skip):**
-  1. `ssh vault-neo "docker exec falkordb redis-cli -p 6379 BGSAVE && sleep 3 && ls -lah /home/neo/karma/falkordb-data/"` — verify dump.rdb exists
-  2. Recreate falkordb: `docker run -d --name falkordb --network anr-vault-net --restart unless-stopped -p 6379:6379 -p 3000:3000 -v /home/neo/karma/falkordb-data:/data -e FALKORDB_DATA_PATH=/data -e FALKORDB_ARGS='TIMEOUT 10000 MAX_QUEUED_QUERIES 25' falkordb/falkordb`
-  3. Verify graph loaded: `GRAPH.RO_QUERY neo_workspace 'MATCH (n:Entity) RETURN count(n)'`
-  4. Verify K2 replication: `INFO replication` → connected_slaves:1
-  5. **CLAUDE.md update (EXPLICITLY APPROVED by Colby 2026-02-22)**: Add to Known Pitfalls — (a) FalkorDB persistence: FALKORDB_DATA_PATH + FALKORDB_ARGS env vars required on every container creation; (b) MEMORY.md absolute path hardcoded as `C:\Users\raest\Documents\Karma_SADE\MEMORY.md` so session chaos never loses it again
+- **FalkorDB batch4 RUNNING** — Started 2026-02-22 ~23:24 UTC. 990 episodes, TIMEOUT=10000 set, ok:60 err:0 at 6% checkpoint. ETA ~3h from start. TIMEOUT=0 was causing 72% failure in batch3 (queries timeout). Fixed by recreating container with TIMEOUT=10000.
+  - **Post-completion**: BGSAVE → verify dump.rdb → check K2 replication (already verified live: connected_slaves:1, lag:0)
+- **KarmaInboxWatcher restart needed** — New Gated/ watcher script deployed (60f796f) but old PowerShell instance still running. Colby must: `Stop-Process -Name pwsh -Force` (or `Get-Process pwsh | Stop-Process`) then `Start-ScheduledTask -TaskName "KarmaInboxWatcher"`.
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
 - Occasional stored=false on ASSIMILATE signal (write-primitive timeout edge case). Low priority — most writes succeed.
-- ~~Within-session context drift~~ FIXED v2.8.0: session store injected as message history, MAX_SESSION_TURNS=8, 30min TTL.
-- ~~(empty_assistant_text) on complex prompts~~ FIXED v2.7.1: raised HUB_MAX_OUTPUT_TOKENS_DEFAULT 3000→16000, CAP 5000→32000.
+- ~~Within-session context drift~~ FIXED v2.8.0
+- ~~(empty_assistant_text) on complex prompts~~ FIXED v2.7.1
 
 ## Next Milestone — Memory Integrity Gate
 ✅ DEPLOYED v2.12.0 (2026-02-21). Gate enforces: ASSIMILATE→candidate, DEFER→raw, PROMOTE→canonical. Context filtered to canonical only. Contradiction detection flags conflicts. PROMOTE button shows live pending count.
 Observe in practice: chat → ASSIMILATE signal → check candidates.jsonl → PROMOTE → verify canonical in FalkorDB.
 
 ## Backlog
+- **Karma Window Review Queue card** (in-progress): `/v1/review-queue` endpoint is live. Missing: UI card in index.html that surfaces pending items from review_queue.jsonl with click-to-load-in-chat.
+- **Priority flag on ingest** (Karma design, 2026-02-22): ✅ BUILT — Gated/ directory is the flag. Drop file in `OneDrive\Karma\Gated\` → watcher sends `priority:true` → appended to `review_queue.jsonl`. Watcher restart still needed (see Blockers).
+- **Synthesis gap on existing processed files**: 47 files in Done/ have entity extraction only (no Karma synthesis). Karma's decision: Option 1 acceptable for most (weak-signal files). Option 2 (conversational pass) worth doing selectively for files where the spidey-sense was strongest. Next CC session: Colby flags those specific files for re-paste to Karma.
 - Thumbs up/down on Karma chat window — Karma proposed, logged as future build item. Not designed yet.
 - Extension deprecation — code still in repo and Chrome. Decision made: scrap it. Cleanup not yet executed.
 - Headless browser (Playwright/Puppeteer) — deferred. fetchPageText() covers ~80% of needs without Chromium overhead. Revisit if vault-neo is upgraded beyond 4GB RAM.
@@ -128,6 +127,11 @@ Observe in practice: chat → ASSIMILATE signal → check candidates.jsonl → P
 - v2.15.1: karma_brief now includes session history turns. Fix: brief generator was using only RP header (checkpoint metadata — IDs, hashes, pack count), producing stale summaries unrelated to session work. Now includes last 6 session turns from hub-bridge session store + Colby's next_action note. karma_brief will reflect actual work done this session.
 - v2.16.0: Recent Approvals block closes retrieval-drift window. New query_recent_ingest_episodes() returns last 5 canonical [karma-ingest] episodes by created_at DESC regardless of query match. Injected into every /raw-context response as "Recently Learned (Approved)" section. Deduplicated against Recent Memories. Karma now arrives in the session after promotion already aware of approved content without needing a matching query to activate it.
 - v2.17.0: Karma↔CC Collaboration Bridge. Append-only JSONL queue at /opt/seed-vault/memory_v1/hub_bridge/data/handoffs/collab.jsonl. hub-bridge: POST/GET/PATCH /v1/collab routes; readCollab() last-write-wins dedup; appendCollab() helper. karma-server: query_pending_cc_proposals() reads collab.jsonl; "## CC Has a Proposal" block injected into every /raw-context response when pending CC→Karma messages exist. Karma Window: "Collaboration Queue" card (hidden by default, shows when pending messages exist) with Approve/Reject per message; refreshCollab() auto-called from refreshState(). CC session-start check: read collab.jsonl for pending Karma→CC proposals.
+- v2.17.1 (2026-02-22): Karma Window multi-file upload + any format. File input now accepts PDF/txt/md/csv + images, `multiple` attribute. Images → vision staging. Documents → `/v1/ingest` immediately with chunk-by-chunk ASSIMILATE/DEFER/DISCARD log display. `/v1/ingest` routes to `/v1/ingest` (not chat). Commits: 054dbfe.
+- v2.17.2 (2026-02-22): Gated/ priority ingest. karma-inbox-watcher.ps1 adds `GatedPath` param + second FileSystemWatcher. Files in Gated/ → `priority:true` in POST to /v1/ingest → appended to review_queue.jsonl. /v1/ingest gains `priority` field extraction + `appendReviewQueue()` helper. Commit: 60f796f.
+- v2.17.3 (2026-02-22): Graph access primitives. Hub-bridge: GET/PATCH `/v1/review-queue`, POST `/v1/cypher` (read-only FalkorDB proxy, write-keyword blocklist, 8s timeout, auth-gated). karma-server: POST `/graph-query` (write-keyword blocklist, `GRAPH.RO_QUERY`). Smoke tests: 219 entities, empty queue. Commit: a531daa.
+- v2.17.4 (2026-02-22): 429 rate-limit retry in callLLM. Anthropic rate_limit_error (429) retried up to 3x with exponential backoff (1.5s, 3s, 6s) or honor retry-after header. Retry verified via inject test. Commit: a9dcf48.
+- v2.17.5 (2026-02-22): Karma self-access file bridge. GET `/v1/vault-file/:alias` — reads MEMORY.md, CLAUDE.md, consciousness, collab, candidates, system-prompt, session-handoff, session-summary, core-architecture. Optional `?tail=N`. PATCH `/v1/vault-file/MEMORY.md` — append or overwrite (confirm required). compose.hub.yml: 3 new volume mounts (/karma/repo, /karma/ledger, /karma/MEMORY.md). Smoke tested: MEMORY.md read (29KB ok), CLAUDE.md read, consciousness tail, append. Commit: 1c42dcf.
 
 ## Karma Core Status (2026-02-21)
 - **State**: OPERATIONAL + CONSCIOUS + MULTI-MODEL + DISTILLING — 4 LLM providers, task-based routing, 24h self-analysis
@@ -270,4 +274,4 @@ ssh vault-neo "cat /opt/seed-vault/memory_v1/hub_bridge/data/handoffs/collab.jso
 ```
 
 ## Last Updated
-2026-02-22 — FalkorDB persistence root causes found and fixed. Batch rebuild run 3 running (concurrency=1, TIMEOUT=0). Correct container config documented (FALKORDB_DATA_PATH + FALKORDB_ARGS). After run 3: BGSAVE + recreate with TIMEOUT=10000. Get-KarmaContext.ps1 fetches Karma's canonical graph context at every CC session start (SSH primary + K2 RESP TCP fallback). CLAUDE.md session-start updated (5 steps). FalkorDB neo_workspace currently empty — needs batch_ingest.py rebuild before resurrection returns entity/episode data.
+2026-02-22 (session 2) — Major session: (1) Multi-file upload + any format in Karma Window; (2) Gated/ directory = priority ingest flag, review_queue.jsonl; (3) /v1/review-queue + /v1/cypher + karma-server /graph-query (graph access primitives, smoke tested); (4) 429 retry logic in callLLM with exponential backoff (inject test verified); (5) Karma self-access file bridge — /v1/vault-file/:alias (read MEMORY.md/CLAUDE.md/consciousness/etc, append to MEMORY.md); (6) CLAUDE.md updated: Python escape pitfall + TIMEOUT 0 pitfall + Karma File Locations section; (7) FalkorDB rebuilt with TIMEOUT=10000 (was TIMEOUT=0), batch4 running clean ok:60 err:0; (8) K2 live: connected_slaves:1, lag:0.
