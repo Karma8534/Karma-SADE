@@ -83,9 +83,8 @@ Karma's design, built as specified:
 **Next open question:** Promotion criteria — what concrete signals make a candidate canonical-worthy? (Karma's first requirement: "explicit criteria, not vibes")
 
 ## Blockers
-- **FalkorDB batch5 RUNNING** — Started 2026-02-23 ~00:05 UTC. ~329 remaining (494 in graph after batch4 partial + BGSAVE). FalkorDB recreated with TIMEOUT=10000 MAX_QUEUED_QUERIES=100 (batch4 hit MAX_QUEUED_QUERIES=25 limit from live queries). New queue limit should prevent saturation.
-  - **Post-completion**: BGSAVE → verify dump.rdb → check K2 replication (already verified live: connected_slaves:1, lag:0)
-- **KarmaInboxWatcher restart needed** — New Gated/ watcher script deployed (60f796f) but old PowerShell instance still running. Colby must: `Stop-Process -Name pwsh -Force` (or `Get-Process pwsh | Stop-Process`) then `Start-ScheduledTask -TaskName "KarmaInboxWatcher"`.
+- **FalkorDB batch5 RUNNING** — Started 2026-02-23 ~00:05 UTC. 782 remaining (538 in graph). TIMEOUT=10000 MAX_QUEUED_QUERIES=100. ok:10 err:0 at 1% (100% success rate). ETA ~11h at current rate (0.02 eps/s — may improve as dedup cache warms). Post-completion: BGSAVE → verify dump.rdb.
+- ~~KarmaInboxWatcher restart~~ ✅ DONE (session 4, 2026-02-22): Old PID 53364 killed. Scheduled task restarted. New PID 79556 running with Gated/-enabled script.
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
 - Occasional stored=false on ASSIMILATE signal (write-primitive timeout edge case). Low priority — most writes succeed.
 - ~~Within-session context drift~~ FIXED v2.8.0
@@ -97,7 +96,7 @@ Observe in practice: chat → ASSIMILATE signal → check candidates.jsonl → P
 
 ## Backlog
 - **Karma Window Review Queue card** ✅ BUILT (commit 6c68815): CSS + HTML card (reviewQueueCard, hidden by default) + JS (refreshReviewQueue, rqPull, rqDismiss). Shows pending Gated/ items with Pull-into-chat and Mark-reviewed buttons. Called from refreshState(). Smoke test: card hidden when queue empty ✅
-- **Priority flag on ingest** (Karma design, 2026-02-22): ✅ BUILT — Gated/ directory is the flag. Drop file in `OneDrive\Karma\Gated\` → watcher sends `priority:true` → appended to `review_queue.jsonl`. Watcher restart still needed (see Blockers).
+- **Priority flag on ingest** (Karma design, 2026-02-22): ✅ BUILT + WATCHER LIVE — Gated/ directory is the flag. Drop file in `OneDrive\Karma\Gated\` → watcher sends `priority:true` → appended to `review_queue.jsonl`.
 - **Synthesis gap on existing processed files**: 47 files in Done/ have entity extraction only (no Karma synthesis). Karma's decision: Option 1 acceptable for most (weak-signal files). Option 2 (conversational pass) worth doing selectively for files where the spidey-sense was strongest. Next CC session: Colby flags those specific files for re-paste to Karma.
 - Thumbs up/down on Karma chat window — Karma proposed, logged as future build item. Not designed yet.
 - Extension deprecation — code still in repo and Chrome. Decision made: scrap it. Cleanup not yet executed.
@@ -227,9 +226,9 @@ Observe in practice: chat → ASSIMILATE signal → check candidates.jsonl → P
 - Server: arknexus.net (vault-neo), 7 Docker containers running
 - Containers: karma-server, falkordb, anr-vault-search, anr-vault-api, anr-hub-bridge, anr-vault-db, anr-vault-caddy
 - FalkorDB: ~150-300MB RAM, Redis protocol on 6379 internal / 7687 external (Bolt). 6379 also exposed to 127.0.0.1 for K2 replication tunnel.
-- **FalkorDB persistence + TIMEOUT — CRITICAL (verified 2026-02-22)**:
+- **FalkorDB persistence + TIMEOUT — CRITICAL (verified 2026-02-22/23)**:
   - **Data loss root cause**: volume mounted at `/data` but FalkorDB writes to `/var/lib/falkordb/data` by default. RDB never lands on host. Every container restart = empty graph. Fix: `-e FALKORDB_DATA_PATH=/data`
-  - **TIMEOUT root cause**: Default 1000ms wipes on recreation. Grows past ~250 episodes → Graphiti dedup queries exceed 1s → cascade failure. Pass via `-e FALKORDB_ARGS='TIMEOUT 10000 MAX_QUEUED_QUERIES 25'` (NOT `--GRAPH.TIMEOUT` flag — that's ignored by run.sh)
+  - **TIMEOUT root cause**: Default 1000ms wipes on recreation. Grows past ~250 episodes → Graphiti dedup queries exceed 1s → cascade failure. Pass via `-e FALKORDB_ARGS='TIMEOUT 10000 MAX_QUEUED_QUERIES 100'` (NOT `--GRAPH.TIMEOUT` flag — that's ignored by run.sh). MAX_QUEUED_QUERIES 25 also caused 40% failure under concurrent batch+live traffic — use 100.
   - **Correct permanent container run command**:
     ```
     docker run -d --name falkordb --network anr-vault-net --restart unless-stopped \
@@ -274,4 +273,4 @@ ssh vault-neo "cat /opt/seed-vault/memory_v1/hub_bridge/data/handoffs/collab.jso
 ```
 
 ## Last Updated
-2026-02-22 (session 3) — Session 2 completion + batch4: (1) vault-neo git pull fixed (MEMORY.md local change blocked merge — discarded and pulled, all 5 files synced: CLAUDE.md + MEMORY.md + server.js + index.html + compose.hub.yml); (2) Karma File Locations section confirmed on vault-neo CLAUDE.md (Karma can now read it via GET /v1/vault-file/CLAUDE.md); (3) batch4 started — 823 remaining, ok:168 err:2 at 20% (98.8% success confirmed, TIMEOUT=10000 fix working); (4) Review Queue card confirmed built (commit 6c68815). Review Queue card promoted from in-progress to complete in backlog.
+2026-02-23 (session 4) — Three tasks + two new FalkorDB pitfalls: (1) KarmaInboxWatcher restarted — old PID killed, scheduled task restarted with Gated/-enabled script, new PID 79556 confirmed running; (2) Mid-Session Capture Protocol added to CLAUDE.md (commit 4cb9f0e) — 5 trigger types, entry format, PATCH mechanism, drift check; (3) batch4 hit MAX_QUEUED_QUERIES=25 under concurrent load (40% failure) — BGSAVE, FalkorDB recreated with MAX_QUEUED_QUERIES=100, batch5 running clean (ok:10 err:0, 538 episodes, 100% success); (4) CLAUDE.md pitfall added: MAX_QUEUED_QUERIES 25 → 100; (5) /v1/vault-file endpoint confirmed live for Karma self-access (built session 2, smoke tested). NEW SESSION needed: brainstorm on batch reliability + what was lost/wasted.
