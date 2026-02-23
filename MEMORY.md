@@ -105,6 +105,10 @@ Estimated: ~half-session CC work. Does NOT require graph stabilization first. Bo
 **Option 1 fast patch (if needed before tool use is ready):**
 Inject trimmed MEMORY.md into `buildSystemText()` — Active Phase + Blockers + Last Updated only (~2KB). NOT full 29KB.
 
+**Also on agenda:**
+- Tool call failure modes — what does Karma do if `graph_query` returns empty or errors mid-conversation? Graceful degradation required, not a broken response. Design this before building.
+- Batch5 completion gate — BGSAVE + dump.rdb verification before any new tooling touches the graph. Don't build on an incomplete dataset.
+
 Karma's collab message logged: `collab_20260223T001948_v347xy` — CC will see it at next session start.
 
 ## Next Milestone — Memory Integrity Gate
