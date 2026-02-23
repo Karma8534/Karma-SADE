@@ -490,5 +490,32 @@ Read vault from end-to-end (2026-02-23 entries):
 - Deploy resurrection scripts (run at session start)
 - Verify K2 can bootstrap from resurrection pack without vault-neo queries
 
+## Session 7 — File Upload Feature + Deployment Gap (2026-02-23)
+
+**What Was Built:**
+- ✅ Multi-file upload feature for unified.html Dashboard UI
+- 📎 File upload button (click or Ctrl+Shift+U shortcut)
+- Support up to 50 files per batch with individual remove option
+- Smart file type icons (images, PDFs, spreadsheets, archives, etc.)
+- File size formatting and display with metadata tooltips
+- FormData-based file sending integrated with message pipeline
+- Graceful fallback to HTTP when files present (WebSocket text-only)
+- Code committed to git (commit 58115b5)
+
+**Deployment Issue Identified:**
+- Feature built in `/Dashboard/unified.html` (local repo)
+- Feature deployed to `/opt/seed-vault/memory_v1/hub_bridge/app/public/unified.html` (vault-neo)
+- But live UI at https://hub.arknexus.net/ still shows old version
+- Root cause: **Deployment mechanism unclear** — browser cache vs server cache vs static file serving method unknown
+- Need to understand: how is the actual running UI served? Is there a build step? How is caching managed?
+
+**Key Lesson:**
+Don't claim "deployed and ready" until verified in the actual running environment. Built ≠ deployed ≠ live. Need to map the deployment pipeline before claiming completion.
+
+**Next Session:**
+- Understand hub-bridge static file serving mechanism (Caddy? Direct file serve? Build step?)
+- Verify cache-busting strategy
+- Test file upload feature end-to-end in live environment before closing
+
 ## Last Updated
-2026-02-23T19:30 (session 6 complete) — Resurrection spine built (identity/invariants/direction/checkpoint committed to git). Foundation verified operational. API keys fresh. Both systems (Claude Code + Karma) reading from same canonical source. No parallel truth, no reset, no re-explaining. Ready for extraction + resurrection scripts.
+2026-02-23T20:15 (session 7 in-progress) — File upload feature built but deployment pipeline unclear. Resurrection architecture from session 6 verified stable. Flagging deployment mechanism as blocker for next session.
