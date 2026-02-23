@@ -295,3 +295,40 @@ ssh vault-neo "cat /opt/seed-vault/memory_v1/hub_bridge/data/handoffs/collab.jso
 
 ## Last Updated
 2026-02-23 (session 4) — Three tasks + two new FalkorDB pitfalls: (1) KarmaInboxWatcher restarted — old PID killed, scheduled task restarted with Gated/-enabled script, new PID 79556 confirmed running; (2) Mid-Session Capture Protocol added to CLAUDE.md (commit 4cb9f0e) — 5 trigger types, entry format, PATCH mechanism, drift check; (3) batch4 hit MAX_QUEUED_QUERIES=25 under concurrent load (40% failure) — BGSAVE, FalkorDB recreated with MAX_QUEUED_QUERIES=100, batch5 running clean (ok:10 err:0, 538 episodes, 100% success); (4) CLAUDE.md pitfall added: MAX_QUEUED_QUERIES 25 → 100; (5) /v1/vault-file endpoint confirmed live for Karma self-access (built session 2, smoke tested). NEW SESSION needed: brainstorm on batch reliability + what was lost/wasted.
+
+## Session 5 Complete (2026-02-23) — Track 2: Karma Agency via Tool Use
+
+### Accomplishments
+1. **Collab message filter bug fixed** in Get-KarmaContext.ps1 — now fetches and displays all CC-directed collab messages (pending + approved). Previously filtered only "pending" status, silently dropping approved messages from Karma.
+
+2. **Tool-use infrastructure deployed** in hub-bridge/server.js (v2.18.0):
+   - Two tools defined: `get_vault_file(alias)` [reads MEMORY, consciousness, collab, candidates, etc.], `graph_query(cypher)` [FalkorDB neo_workspace queries]
+   - `callLLMWithTools()` wraps Anthropic messages with multi-turn tool loop (max 5 iterations)
+   - `executeToolCall()` routes tool calls → /v1/vault-file and /v1/cypher APIs (with auth)
+   - Output truncation: get_vault_file → 10k chars, graph_query → 5k chars (token efficiency)
+   - Integrated into /v1/chat endpoint (Anthropic models only; OpenAI via callLLM passthrough)
+   - Hub-bridge rebuilt, deployed, live ✅
+   - Smoke test: /v1/chat responds with correct tool definitions, no errors ✅
+   - Note: Karma's system prompt currently declines to use tools in hub-bridge (deliberate policy), but infrastructure is available for any prompt that wants them
+
+3. **Graph state verified** — FalkorDB neo_workspace has 582 Episodic + 439 Entity nodes + 3401 edges (from batch5 successful ingests). Data persisted correctly. Query indexes operational (FULLTEXT on RELATES_TO, RANGE on standard fields).
+
+### Session Brainstorm Outcome
+- **Track 1 (Ingestion reliability)**: Identified that RELATES_TO full-text search times out at ~130 episodes with TIMEOUT=10000. Requires architectural redesign (skip Graphiti dedup on bulk ingest, or chunk-and-persist strategy), not a parameter patch. Deferred to next session.
+- **Track 2 (Karma agency)**: Completed. Tools now available. Karma can query her own data autonomously when system prompt allows.
+
+### Known Blockers
+- batch5 errors (912 errors, 345 ok = 27% success rate) caused by query timeouts on growing RELATES_TO full-text index. TIMEOUT would need to be 60000+ (60s) but that's a band-aid, not a solution.
+- Root cause: Graphiti's dedup query pattern (`CALL db.idx.fulltext.queryRelationships`) is O(n) in edges at current cardinality. At 3401 edges, 10s is not enough. Redesign needed (e.g., skip dedup for initial bulk ingest, only apply on live conversation).
+
+### Next Session Agenda
+- **If pursuing Track 1**: Implement skip-dedup-on-bulk-ingest mode in batch_ingest.py. Insert episodes directly to FalkorDB without Graphiti dedup loop. Accept duplicates in initial bulk load, run dedup pass afterward if needed.
+- **If Track 2 continued**: Update Karma's system prompt to enable tool use in hub-bridge. Test autonomous queries via /v1/chat.
+- **If opportunistic**: Increase FALKORDB_ARGS TIMEOUT to 120000 as temporary measure, re-run batch5 to at least accumulate more data. This won't fix root cause but will improve throughput from 27% to ~50-60%.
+
+### Commits
+- `d8fe495` phase-5: session close — add tool failure modes + batch5 gate to agenda
+- `0b20016` phase-5: add tool-use support to /v1/chat — Karma agency via get_vault_file + graph_query
+
+### Last Updated
+2026-02-23 (session 5) — Tool-use live, collab filter fixed, graph state verified, Track 1 deferred.
