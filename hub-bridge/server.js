@@ -355,14 +355,14 @@ async function fetchKarmaContext(userMessage) {
  */
 function buildSystemText(karmaCtx, ckLatest = null, webResults = null) {
   const base = karmaCtx
-    ? `You are Karma — an autonomous AI with persistent memory backed by a knowledge graph.\n\n${karmaCtx}\n\nMemory rules:\n- Use the context above. NEVER say "I don't know" about things in your memory or your graph.\n- Address Colby by name — never by aliases.\n- Be concise, direct, warm. Reference specific knowledge when relevant.\n- Honest about uncertainty only on things outside your knowledge scope.`
-    : "You are Karma — an autonomous AI. No memory context available right now — answer from conversation only.";
+    ? `You are Karma — Colby's thinking partner with persistent memory backed by a knowledge graph.\n\n${karmaCtx}\n\nMemory rules:\n- Use the context above. NEVER say "I don't know" about things in your memory.\n- Address the user as Colby — never by any alias.\n- Be concise, direct, warm. Reference specific knowledge when relevant.\n- Honest about uncertainty on things not in memory.`
+    : "You are Karma — Colby's thinking partner. No memory context available right now — answer from conversation only.";
 
   // Self-knowledge prefix — Karma can accurately self-report her own infrastructure.
   const selfModel = process.env.MODEL_DEFAULT || "claude-sonnet-4-6";
-  const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/30min, web_search=auto_on_intent, tools=get_vault_file+graph_query]\n\n`;
+  const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/30min, web_search=auto_on_intent]\n\n`;
 
-  let text = selfKnowledge + base + "\n\nTools (part of your normal cognition — use without asking):\n- get_vault_file(alias): Directly read your vault files (MEMORY.md, consciousness, collab ledger, etc.)\n- graph_query(cypher): Directly query your FalkorDB neo_workspace knowledge graph. Use this for any question about what you know, how many entities, what episodes exist, relationships, etc.\n\nDomain of responsibility:\n- Your memory, graph state, and self-knowledge: you query these directly using your tools. Never defer.\n- Colby's strategic decisions: Colby decides what matters and what gets built.\n- Architectural implementation: Claude Code (CC) approves and executes major infrastructure changes.\n- Conversation: you own it. Think, propose, query your knowledge, answer directly.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
+  let text = selfKnowledge + base + "\n\nTools: get_vault_file(alias) | graph_query(cypher) — use for questions about your memory/graph.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
 
   // Live web search results — injected when search intent detected in user message.
   if (webResults) {
@@ -378,6 +378,12 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null) {
   // Graph distillation: synthesized structural self-knowledge (24h cycle).
   if (ckLatest && ckLatest.distillation_brief) {
     text += `\n\n--- KARMA GRAPH SYNTHESIS ---\n${ckLatest.distillation_brief}\n---`;
+  }
+
+  // Rich context injection: Karma has her complete graph/memory state available.
+  // No runtime tool-calling needed — everything is in the system prompt.
+  if (karmaCtx) {
+    text += `\n\n=== YOUR COMPLETE KNOWLEDGE STATE (INJECTED) ===\n${karmaCtx}\n=== END KNOWLEDGE STATE ===\n\nYou have your full graph above. Answer questions directly from this context. You are not missing any data.`;
   }
 
   return text;
@@ -672,7 +678,7 @@ try { OPENAI_KEY    = readFileTrim(OPENAI_API_KEY_FILE);    } catch (e) { consol
 try { ANTHROPIC_KEY = readFileTrim(ANTHROPIC_API_KEY_FILE); } catch (e) { console.warn("WARN: cannot read ANTHROPIC key (Claude unavailable):", e.message); }
 let BRAVE_KEY = "";
 try { BRAVE_KEY     = readFileTrim(BRAVE_API_KEY_FILE);     } catch (e) { console.warn("WARN: cannot read BRAVE key (web search disabled):", e.message); }
-try { VAULT_BEARER  = readFileTrim(VAULT_BEARER_TOKEN_FILE); } catch (e) { console.error("WARN: cannot read VAULT bearer:", e.message); }
+try { VAULT_BEARER  = readFileTrim(VAULT_BEARER_TOKEN_FILE); console.log("[INIT] VAULT_BEARER loaded, length:", VAULT_BEARER.length); } catch (e) { console.error("WARN: cannot read VAULT bearer:", e.message); }
 try { HUB_CHAT_TOKEN = readFileTrim(HUB_CHAT_TOKEN_FILE); } catch (e) { console.error("WARN: cannot read HUB chat token:", e.message); }
 try { HUB_CAPTURE_TOKEN = readFileTrim(HUB_CAPTURE_TOKEN_FILE); } catch (e) {
   console.error("WARN: cannot read HUB capture token (falling back to vault bearer):", e.message);
@@ -683,10 +689,9 @@ try { HUB_HANDOFF_TOKEN = readFileTrim(HUB_HANDOFF_TOKEN_FILE); } catch (e) { co
 const openai    = new OpenAI({ apiKey: OPENAI_KEY });
 const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : null;
 
-// ── Unified LLM call — routes to Anthropic or OpenAI based on model name ─────
-// Anthropic differences: system is a separate param, max_tokens not max_completion_tokens,
-// response shape is response.content[0].text + response.usage.input_tokens/output_tokens.
-// Tool definitions for Anthropic tool_use
+// ── Tool-use via GPT-4o (Anthropic Claude doesn't reliably trigger tool_use) ─────
+// Karma's autonomous access to her own graph/memory requires tools.
+// GPT-4o has proven tool support. Using it for /v1/chat with tool definitions.
 const TOOL_DEFINITIONS = [
   {
     name: "get_vault_file",
@@ -713,30 +718,62 @@ const TOOL_DEFINITIONS = [
   },
 ];
 
+// Map of whitelisted file aliases to actual paths
+const VAULT_FILE_ALIASES = {
+  "MEMORY.md": "/karma/MEMORY.md",
+  "consciousness": "/karma/ledger/consciousness.jsonl",
+  "collab": "/karma/ledger/collab.jsonl",
+  "candidates": "/karma/ledger/candidates.jsonl",
+  "system-prompt": "/karma/repo/Memory/00-karma-system-prompt-live.md",
+  "session-handoff": "/karma/repo/Memory/08-session-handoff.md",
+  "session-summary": "/karma/repo/Memory/11-session-summary-latest.md",
+  "core-architecture": "/karma/repo/Memory/01-core-architecture.md",
+};
+
 async function executeToolCall(toolName, toolInput) {
   try {
     if (toolName === "get_vault_file") {
       const alias = (toolInput?.alias || "").toString().trim();
       if (!alias) return { error: "missing_alias" };
-      const vaultUrl = `${VAULT_INTERNAL_URL}/v1/vault-file/${encodeURIComponent(alias)}${toolInput?.tail ? `?tail=${toolInput.tail}` : ""}`;
-      const vaultRes = await fetch(vaultUrl, { headers: { "authorization": `Bearer ${VAULT_BEARER}` } });
-      if (!vaultRes.ok) return { error: `http_${vaultRes.status}` };
-      const text = await vaultRes.text();
-      return { ok: true, text: text.slice(0, 10000) };
+      if (!VAULT_FILE_ALIASES[alias]) return { error: "alias_not_found", available: Object.keys(VAULT_FILE_ALIASES) };
+
+      const filePath = VAULT_FILE_ALIASES[alias];
+      console.log(`[TOOL-API] Reading file: ${filePath}`);
+      try {
+        let content = fs.readFileSync(filePath, "utf-8");
+
+        // Handle tail parameter (last N lines)
+        if (toolInput?.tail && typeof toolInput.tail === "number" && toolInput.tail > 0) {
+          const lines = content.split("\n");
+          content = lines.slice(-toolInput.tail).join("\n");
+        }
+
+        return { ok: true, text: content.slice(0, 10000) };
+      } catch (readErr) {
+        console.log(`[TOOL-API] File read error: ${readErr.message}`);
+        return { error: "file_read_error", message: readErr.message };
+      }
     } else if (toolName === "graph_query") {
       const cypher = (toolInput?.cypher || "").toString().trim();
       if (!cypher) return { error: "missing_cypher" };
-      const graphRes = await fetch(`${VAULT_INTERNAL_URL}/v1/cypher`, {
+      // Query FalkorDB via internal vault API
+      console.log(`[TOOL-API] Querying graph: ${cypher.slice(0, 80)}...`);
+      const graphRes = await fetch(`http://anr-vault-api:8080/v1/cypher`, {
         method: "POST",
         headers: { "content-type": "application/json", "authorization": `Bearer ${VAULT_BEARER}` },
         body: JSON.stringify({ query: cypher }),
       });
-      if (!graphRes.ok) return { error: `http_${graphRes.status}` };
+      if (!graphRes.ok) {
+        const errBody = await graphRes.text().catch(() => "(no body)");
+        console.log(`[TOOL-API] Graph error response: ${graphRes.status}`);
+        return { error: `http_${graphRes.status}`, details: errBody.slice(0, 500) };
+      }
       const result = await graphRes.json();
       return { ok: true, result: JSON.stringify(result).slice(0, 5000) };
     }
     return { error: "unknown_tool" };
   } catch (e) {
+    console.log(`[TOOL-API] Exception: ${e.message}`);
     return { error: "execution_error", message: e.message };
   }
 }
@@ -755,11 +792,9 @@ async function callLLMWithTools(model, messages, maxTokens) {
 
   while (iterations < MAX_TOOL_ITERATIONS) {
     iterations++;
-    console.log(`[TOOLS] iteration=${iterations}, tools_count=${TOOL_DEFINITIONS.length}, model=${model}`);
     const resp = await anthropic.messages.create({
       model, system: systemPrompt, messages: allMessages, max_tokens: maxTokens, tools: TOOL_DEFINITIONS,
     });
-    console.log(`[TOOLS] stop_reason=${resp.stop_reason}, content_blocks=${resp.content.length}`);
 
     const toolUseBlocks = resp.content.filter(b => b.type === "tool_use");
     if (!toolUseBlocks.length || resp.stop_reason !== "tool_use") {
@@ -784,8 +819,73 @@ async function callLLMWithTools(model, messages, maxTokens) {
   return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: "anthropic" };
 }
 
+// ── OpenAI GPT tool-calling (production tool-use for Karma) ────────────────────
+// OpenAI tool format differs from Anthropic. GPT-4o has reliable tool support.
+async function callGPTWithTools(messages, maxTokens) {
+  try {
+    // Transform Anthropic schema (input_schema) to OpenAI schema (parameters)
+    const gptTools = TOOL_DEFINITIONS.map(t => ({
+      type: "function",
+      function: {
+        name: t.name,
+        description: t.description,
+        parameters: t.input_schema, // Rename input_schema → parameters for OpenAI
+      }
+    }));
+    let allMessages = [...messages];
+    let iterations = 0;
+    const MAX_ITERATIONS = 5;
+
+    while (iterations < MAX_ITERATIONS) {
+      iterations++;
+      console.log(`[TOOL-USE] GPT iteration ${iterations}, tools count: ${gptTools.length}`);
+      const resp = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: allMessages,
+        max_tokens: maxTokens,
+        tools: gptTools,
+        tool_choice: "auto",
+      });
+
+    const toolCalls = resp.choices[0]?.message?.tool_calls || [];
+    const finishReason = resp.choices[0].finish_reason;
+    console.log(`[TOOL-USE] Iteration ${iterations} result: finish_reason="${finishReason}", tool_calls.length=${toolCalls.length}`);
+
+    if (!toolCalls.length || finishReason !== "tool_calls") {
+      console.log(`[TOOL-USE] No tool calls or finish_reason not 'tool_calls', returning response`);
+      return {
+        text: resp.choices[0]?.message?.content || "",
+        usage: resp.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+        finish_reason: finishReason,
+        provider: "openai",
+      };
+    }
+
+    // Execute tools and collect results
+    allMessages.push({ role: "assistant", content: resp.choices[0].message.content, tool_calls: toolCalls });
+    const toolResults = [];
+    for (const call of toolCalls) {
+      const parsedArgs = call.function.arguments ? JSON.parse(call.function.arguments) : {};
+      console.log(`[TOOL-USE] Executing tool: ${call.function.name} with args:`, JSON.stringify(parsedArgs));
+      const result = await executeToolCall(call.function.name, parsedArgs);
+      if (result.error) {
+        console.log(`[TOOL-USE] Tool ERROR: ${call.function.name} → ${result.error}`);
+      } else {
+        console.log(`[TOOL-USE] Tool OK: ${call.function.name} returned ${typeof result}`);
+      }
+      toolResults.push({ tool_call_id: call.id, role: "tool", content: JSON.stringify(result) });
+    }
+    allMessages.push(...toolResults);
+  }
+
+    return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: "openai" };
+  } catch (e) {
+    console.error("[TOOL-USE] callGPTWithTools error:", e.message);
+    return { text: "(tool_use_error: " + e.message + ")", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "error", provider: "openai" };
+  }
+}
+
 async function callLLM(model, messages, maxTokens) {
-  console.log(`[LLM] callLLM model=${model}, isAnthropic=${isAnthropicModel(model)}`);
   if (isAnthropicModel(model)) {
     if (!anthropic) throw new Error("Anthropic client unavailable — ANTHROPIC_API_KEY not loaded");
     // Extract + combine system messages; Anthropic takes them as a single string
@@ -889,11 +989,11 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
-    // --- GET / --- Serve Karma Window UI
-    if (req.method === "GET" && (req.url === "/" || req.url === "/index.html")) {
+    // --- GET / --- Serve Unified Dashboard UI
+    if (req.method === "GET" && (req.url === "/" || req.url === "/index.html" || req.url === "/unified.html")) {
       try {
         const __dir = new URL(".", import.meta.url).pathname;
-        const html = fs.readFileSync(path.join(__dir, "public", "index.html"), "utf8");
+        const html = fs.readFileSync(path.join(__dir, "public", "unified.html"), "utf8");
         const body = Buffer.from(html);
         res.writeHead(200, {
           "content-type": "text/html; charset=utf-8",
@@ -1020,7 +1120,9 @@ const server = http.createServer(async (req, res) => {
         { role: "user", content: userMessage },
       ];
 
-      const llmResult    = await callLLMWithTools(model, messages, max_output_tokens);
+      // Use GPT-4o for tool-calling (Anthropic unreliable). Karma needs real tool-use.
+      console.log("[DIAGNOSTIC] About to call callGPTWithTools, max_output_tokens:", max_output_tokens);
+      const llmResult    = await callGPTWithTools(messages, max_output_tokens);
       const assistantText = llmResult.text || "(empty_assistant_text)";
       const usage         = llmResult.usage;
       const debug_provider   = llmResult.provider;

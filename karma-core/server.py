@@ -266,7 +266,7 @@ def query_recent_episodes(limit: int = 5, lane: str = "canonical") -> list[dict]
         cypher = f"""
             MATCH (e:Episodic)
             {lane_filter}
-            RETURN e.name AS name, e.content AS content
+            RETURN e.name AS name, COALESCE(e.content, e.episode_body) AS content
             ORDER BY e.created_at DESC
             LIMIT {limit}
         """
@@ -289,8 +289,8 @@ def query_recent_ingest_episodes(limit: int = 5) -> list:
         r = get_falkor()
         cypher = (
             "MATCH (e:Episodic) "
-            "WHERE e.lane = 'canonical' AND e.content STARTS WITH '[karma-ingest]' "
-            "RETURN e.uuid AS uuid, e.name AS name, e.content AS content "
+            "WHERE e.lane = 'canonical' AND COALESCE(e.content, e.episode_body, '') STARTS WITH '[karma-ingest]' "
+            "RETURN e.uuid AS uuid, e.name AS name, COALESCE(e.content, e.episode_body) AS content "
             f"ORDER BY e.created_at DESC LIMIT {limit}"
         )
         result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
