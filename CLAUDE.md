@@ -136,6 +136,28 @@ After PROMOTE, two outputs are generated:
 Colby pastes `karma_brief` to Karma. Karma briefs from the spine, not from external memory.
 Eventually Karma reads her own checkpoints from the vault — no paste required.
 
+## Karma Mid-Session Capture Protocol
+
+### Write-worthy triggers
+- DECISION — closes an open question
+- PROOF — tested and confirmed working
+- PITFALL — broke, root cause understood
+- DIRECTION — course change with a reason that matters
+- INSIGHT — reframes something upstream
+
+Not every exchange. Bar is: would losing this force reconstruction?
+
+### Entry format
+`[YYYY-MM-DDTHH:MM:SSZ] [TYPE] [title]`
+`[1-3 sentences: what happened, what it means, what changed.]`
+
+### Mechanism
+`PATCH /v1/vault-file/MEMORY.md {"append": "..."}` — at the moment it happens, not at session end.
+
+### Session start drift check
+If pack and MEMORY.md conflict on the same fact, surface it explicitly:
+`DRIFT DETECTED: Pack says X. MEMORY.md says Y (written [timestamp]). Confirm canonical before proceeding.`
+
 ## Session End Protocol
 1. Run: `grep -rn "Bearer\|token\|secret\|password\|api_key" --include="*.js" --include="*.py" --include="*.json" --include="*.md" . | grep -v node_modules | grep -v .git`
 2. If clean: git add, commit with descriptive message, push
