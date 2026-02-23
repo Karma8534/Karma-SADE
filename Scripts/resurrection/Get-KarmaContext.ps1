@@ -43,23 +43,18 @@ function Get-VaultNeoContext {
         $genOut = Receive-Job $genJob
         Remove-Job $genJob -Force
 
-        # Step 2: read the generated brief
-        $readJob = Start-Job {
-            param($alias)
-            ssh $alias "cat /home/neo/karma-sade/cc-session-brief.md"
-        } -ArgumentList $VaultNeoAlias
-        $readCompleted = Wait-Job $readJob -Timeout $VaultTimeoutSec
-        if (-not $readCompleted) {
-            Remove-Job $readJob -Force
+        # Step 2: SCP the generated brief for binary-accurate UTF-8 transfer.
+        # ssh cat garbles multi-byte chars (em-dashes, checkmarks) through
+        # PowerShell 5.1's ANSI console encoding — scp writes raw bytes directly.
+        $tmpBrief = [System.IO.Path]::GetTempFileName()
+        & scp "vault-neo:/home/neo/karma-sade/cc-session-brief.md" $tmpBrief 2>$null
+        if (-not (Test-Path $tmpBrief) -or (Get-Item $tmpBrief).Length -lt 50) {
+            Remove-Item $tmpBrief -ErrorAction SilentlyContinue
             return $null
         }
-        $brief = Receive-Job $readJob
-        Remove-Job $readJob -Force
 
-        if (-not $brief) { return $null }
-
-        # Join array of lines back into a single string
-        $briefText = $brief -join "`n"
+        $briefText = [System.IO.File]::ReadAllText($tmpBrief, [System.Text.Encoding]::UTF8)
+        Remove-Item $tmpBrief -ErrorAction SilentlyContinue
         if ($briefText.Length -lt 50) { return $null }
 
         return $briefText

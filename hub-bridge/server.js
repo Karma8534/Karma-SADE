@@ -728,6 +728,7 @@ const VAULT_FILE_ALIASES = {
   "session-handoff": "/karma/repo/Memory/08-session-handoff.md",
   "session-summary": "/karma/repo/Memory/11-session-summary-latest.md",
   "core-architecture": "/karma/repo/Memory/01-core-architecture.md",
+  "cc-brief": "/karma/repo/cc-session-brief.md",
 };
 
 async function executeToolCall(toolName, toolInput) {
@@ -1665,6 +1666,77 @@ const server = http.createServer(async (req, res) => {
       }
 
       return json(res, 200, { ok: true, filename, chunks: chunks.length, results });
+    }
+
+
+    // --- GET /v1/vault-file/:alias ---
+    // Serve whitelisted vault files by alias. Used by Claude Code and other trusted clients.
+    if (req.method === "GET" && req.url.startsWith("/v1/vault-file/")) {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      const parsed = new URL(req.url, `http://localhost`);
+      const alias = decodeURIComponent(parsed.pathname.replace("/v1/vault-file/", "").trim());
+      if (!alias) return json(res, 400, { ok: false, error: "missing_alias" });
+      if (!VAULT_FILE_ALIASES[alias]) {
+        return json(res, 404, { ok: false, error: "alias_not_found", available: Object.keys(VAULT_FILE_ALIASES) });
+      }
+
+      const filePath = VAULT_FILE_ALIASES[alias];
+      const tailParam = parsed.searchParams.get("tail");
+
+      let content;
+      try {
+        content = fs.readFileSync(filePath, "utf-8");
+      } catch (e) {
+        return json(res, 404, { ok: false, error: "not_found", path: filePath });
+      }
+
+      if (tailParam) {
+        const n = parseInt(tailParam, 10);
+        if (!isNaN(n) && n > 0) {
+          const lines = content.split("\n");
+          content = lines.slice(-n).join("\n");
+        }
+      }
+
+      return json(res, 200, { ok: true, alias, content, bytes: Buffer.byteLength(content, "utf-8") });
+    }
+
+    // --- PATCH /v1/vault-file/MEMORY.md ---
+    // Append to or overwrite MEMORY.md. Used by Claude Code mid-session capture.
+    if (req.method === "PATCH" && req.url === "/v1/vault-file/MEMORY.md") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      const raw = await parseBody(req, 500000);
+      let body;
+      try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+
+      const filePath = VAULT_FILE_ALIASES["MEMORY.md"];
+      if (!filePath) return json(res, 500, { ok: false, error: "alias_not_configured" });
+
+      if (body.append !== undefined) {
+        try {
+          fs.appendFileSync(filePath, "\n" + body.append);
+          return json(res, 200, { ok: true, action: "append", bytes_appended: Buffer.byteLength(body.append, "utf-8") });
+        } catch (e) {
+          return json(res, 500, { ok: false, error: "write_failed", message: e.message });
+        }
+      } else if (body.content !== undefined && body.confirm_overwrite === true) {
+        try {
+          fs.writeFileSync(filePath, body.content, "utf-8");
+          return json(res, 200, { ok: true, action: "overwrite", bytes: Buffer.byteLength(body.content, "utf-8") });
+        } catch (e) {
+          return json(res, 500, { ok: false, error: "write_failed", message: e.message });
+        }
+      } else {
+        return json(res, 400, { ok: false, error: "missing_action", hint: "provide 'append' or 'content'+'confirm_overwrite:true'" });
+      }
     }
 
     return notFound(res);
