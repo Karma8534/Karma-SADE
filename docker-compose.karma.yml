@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  karma-server:
+    image: karma-core:latest
+    container_name: karma-server
+    network_mode: host
+    environment:
+      FALKORDB_HOST: 127.0.0.1
+      FALKORDB_PORT: 6379
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: seed_vault
+      CONSCIOUSNESS_ENABLED: "true"
+      CONSCIOUSNESS_INTERVAL: 60
+      K2_HOST: 100.75.109.92
+      K2_WINRM_PORT: 5985
+      K2_USERNAME: karma
+      K2_PASSWORD: REDACTED
+    volumes:
+      - /opt/seed-vault/memory_v1/ledger:/ledger
+    restart: unless-stopped
+    # Note: network_mode=host means the container shares the host's network namespace,
+    # allowing direct access to Tailscale interfaces and eliminating Docker network isolation
