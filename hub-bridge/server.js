@@ -1261,6 +1261,11 @@ const server = http.createServer(async (req, res) => {
       spendState.updated_at = nowIso();
       saveSpendState(spendPath, spendState);
 
+      // Calculate daily spend
+      const now = new Date();
+      const dayOfMonth = now.getUTCDate();
+      const daily_spend_usd = Number((used_after / dayOfMonth).toFixed(6));
+
       const vaultRecord = buildVaultRecord({
         type: "log",
         tags: ["hub", "chat", deep_mode ? "deep" : "default"].concat(topic ? [`topic:${topic}`] : []),
@@ -1277,7 +1282,7 @@ const server = http.createServer(async (req, res) => {
             completion_tokens: usage.completion_tokens || 0,
             total_tokens: usage.total_tokens || ((usage.prompt_tokens || 0) + (usage.completion_tokens || 0)),
           },
-          spend: { month_utc: month, cap_usd: cap || 0, usd_spent: used_after },
+          spend: { month_utc: month, cap_usd: cap || 0, usd_spent: used_after, daily_spend_usd },
           facts_extracted: extractedFacts.length,
           // C) Debug telemetry in vault record (additive)
           debug_stop_reason,
@@ -1303,6 +1308,7 @@ const server = http.createServer(async (req, res) => {
         deep_mode,
         spend_cap_usd: cap || 0,
         spend_used_usd: used_after,
+        spend_daily_usd: daily_spend_usd,
         turn_id,
       };
 
@@ -1330,7 +1336,7 @@ const server = http.createServer(async (req, res) => {
           model,
           deep_mode,
           usd_estimate,
-          spend: { month_utc: month, cap_usd: cap, usd_spent: used_after },
+          spend: { month_utc: month, cap_usd: cap, usd_spent: used_after, daily_spend_usd },
           facts_extracted: extractedFacts.length,
           debug_stop_reason,
           debug_input_chars,
@@ -1350,7 +1356,7 @@ const server = http.createServer(async (req, res) => {
         model,
         deep_mode,
         usd_estimate,
-        spend: { month_utc: month, cap_usd: cap, usd_spent: used_after },
+        spend: { month_utc: month, cap_usd: cap, usd_spent: used_after, daily_spend_usd },
         assistant_json,
         facts_extracted: extractedFacts.length,
         // C) Debug telemetry in response (additive keys only)
