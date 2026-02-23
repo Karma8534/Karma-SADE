@@ -83,7 +83,7 @@ Karma's design, built as specified:
 **Next open question:** Promotion criteria — what concrete signals make a candidate canonical-worthy? (Karma's first requirement: "explicit criteria, not vibes")
 
 ## Blockers
-- **FalkorDB batch4 RUNNING** — Started 2026-02-22 ~23:52 UTC. 823 remaining (444 already in graph from live chats). TIMEOUT=10000 confirmed via docker inspect. ok:168 err:2 at 20% (98.8% success vs batch3's 28%). ETA ~2.5h remaining.
+- **FalkorDB batch5 RUNNING** — Started 2026-02-23 ~00:05 UTC. ~329 remaining (494 in graph after batch4 partial + BGSAVE). FalkorDB recreated with TIMEOUT=10000 MAX_QUEUED_QUERIES=100 (batch4 hit MAX_QUEUED_QUERIES=25 limit from live queries). New queue limit should prevent saturation.
   - **Post-completion**: BGSAVE → verify dump.rdb → check K2 replication (already verified live: connected_slaves:1, lag:0)
 - **KarmaInboxWatcher restart needed** — New Gated/ watcher script deployed (60f796f) but old PowerShell instance still running. Colby must: `Stop-Process -Name pwsh -Force` (or `Get-Process pwsh | Stop-Process`) then `Start-ScheduledTask -TaskName "KarmaInboxWatcher"`.
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
@@ -235,7 +235,7 @@ Observe in practice: chat → ASSIMILATE signal → check candidates.jsonl → P
     docker run -d --name falkordb --network anr-vault-net --restart unless-stopped \
       -p 6379:6379 -p 3000:3000 -v /home/neo/karma/falkordb-data:/data \
       -e FALKORDB_DATA_PATH=/data \
-      -e FALKORDB_ARGS='TIMEOUT 10000 MAX_QUEUED_QUERIES 25' \
+      -e 'FALKORDB_ARGS=TIMEOUT 10000 MAX_QUEUED_QUERIES 100' \
       falkordb/falkordb
     ```
   - After rebuild, force save: `docker exec falkordb redis-cli -p 6379 BGSAVE`

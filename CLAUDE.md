@@ -93,6 +93,10 @@ When runtime behavior changes unexpectedly, collect evidence before proposing a 
 - **`FALKORDB_ARGS=TIMEOUT 0` means "use default" (1000ms), NOT unlimited**: Use `TIMEOUT 10000`
   explicitly. TIMEOUT 0 caused 72% batch failure rate (batch3, 2026-02-22) — same cascade as the
   default 1000ms. Always verify the running container: `docker inspect falkordb | grep FALKORDB_ARGS`.
+- **`MAX_QUEUED_QUERIES 25` saturates under concurrent batch + live traffic**: batch_ingest.py
+  (concurrency=3) + karma-server live queries (consciousness loop, chats) can exceed 25 queued
+  queries → "Max pending queries exceeded" errors. Use `MAX_QUEUED_QUERIES 100`. Verified batch4
+  (2026-02-23) with 40% error rate before fix, clean after recreating with 100.
 
 ## Karma File Locations
 Canonical paths for Karma's files on vault-neo. These must never drift.
