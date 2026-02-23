@@ -59,3 +59,7 @@ BOOTSTRAP_LIMIT = int(os.getenv("BOOTSTRAP_LIMIT", "100"))  # conversations to p
 DISTILLATION_ENABLED = os.getenv("DISTILLATION_ENABLED", "true").lower() in ("true", "1", "yes")
 DISTILLATION_INTERVAL_HOURS = float(os.getenv("DISTILLATION_INTERVAL_HOURS", "24"))
 DISTILLATION_MAX_EPISODES = int(os.getenv("DISTILLATION_MAX_EPISODES", "200"))
+
+# K2 Worker decision & consciousness logging
+DECISION_LOG = os.getenv("DECISION_LOG", "/ledger/decision_log.jsonl")
+K2_CONSCIOUSNESS_LOG = os.getenv("K2_CONSCIOUSNESS_LOG", "/ledger/k2_consciousness.jsonl")
