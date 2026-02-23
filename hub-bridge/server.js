@@ -686,6 +686,102 @@ const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : nul
 // ── Unified LLM call — routes to Anthropic or OpenAI based on model name ─────
 // Anthropic differences: system is a separate param, max_tokens not max_completion_tokens,
 // response shape is response.content[0].text + response.usage.input_tokens/output_tokens.
+// Tool definitions for Anthropic tool_use
+const TOOL_DEFINITIONS = [
+  {
+    name: "get_vault_file",
+    description: "Read a file from Karma vault. Whitelisted: MEMORY.md, consciousness, collab, candidates, system-prompt, session-handoff, session-summary, core-architecture",
+    input_schema: {
+      type: "object",
+      properties: {
+        alias: { type: "string", description: "File alias" },
+        tail: { type: "integer", description: "Optional: last N lines" },
+      },
+      required: ["alias"],
+    },
+  },
+  {
+    name: "graph_query",
+    description: "Execute Cypher query on FalkorDB neo_workspace graph to query Karma's knowledge.",
+    input_schema: {
+      type: "object",
+      properties: {
+        cypher: { type: "string", description: "Cypher query" },
+      },
+      required: ["cypher"],
+    },
+  },
+];
+
+async function executeToolCall(toolName, toolInput) {
+  try {
+    if (toolName === "get_vault_file") {
+      const alias = (toolInput?.alias || "").toString().trim();
+      if (!alias) return { error: "missing_alias" };
+      const vaultUrl = `${VAULT_INTERNAL_URL}/v1/vault-file/${encodeURIComponent(alias)}${toolInput?.tail ? `?tail=${toolInput.tail}` : ""}`;
+      const vaultRes = await fetch(vaultUrl, { headers: { "authorization": `Bearer ${VAULT_BEARER}` } });
+      if (!vaultRes.ok) return { error: `http_${vaultRes.status}` };
+      const text = await vaultRes.text();
+      return { ok: true, text: text.slice(0, 10000) };
+    } else if (toolName === "graph_query") {
+      const cypher = (toolInput?.cypher || "").toString().trim();
+      if (!cypher) return { error: "missing_cypher" };
+      const graphRes = await fetch(`${VAULT_INTERNAL_URL}/v1/cypher`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "authorization": `Bearer ${VAULT_BEARER}` },
+        body: JSON.stringify({ query: cypher }),
+      });
+      if (!graphRes.ok) return { error: `http_${graphRes.status}` };
+      const result = await graphRes.json();
+      return { ok: true, result: JSON.stringify(result).slice(0, 5000) };
+    }
+    return { error: "unknown_tool" };
+  } catch (e) {
+    return { error: "execution_error", message: e.message };
+  }
+}
+
+async function callLLMWithTools(model, messages, maxTokens) {
+  if (!isAnthropicModel(model)) return callLLM(model, messages, maxTokens);
+
+  const systemParts = messages.filter(m => m.role === "system").map(m => m.content);
+  const apiMessages = messages.filter(m => m.role !== "system");
+  const systemPrompt = systemParts.join("\n\n") || undefined;
+  if (!apiMessages.length) apiMessages.push({ role: "user", content: "(continue)" });
+
+  let allMessages = [...apiMessages];
+  let iterations = 0;
+  const MAX_TOOL_ITERATIONS = 5;
+
+  while (iterations < MAX_TOOL_ITERATIONS) {
+    iterations++;
+    const resp = await anthropic.messages.create({
+      model, system: systemPrompt, messages: allMessages, max_tokens: maxTokens, tools: TOOL_DEFINITIONS,
+    });
+
+    const toolUseBlocks = resp.content.filter(b => b.type === "tool_use");
+    if (!toolUseBlocks.length || resp.stop_reason !== "tool_use") {
+      const finalText = resp.content.filter(b => b.type === "text").map(b => b.text).join("\n");
+      return {
+        text: finalText || "(empty_assistant_text)",
+        usage: { prompt_tokens: resp.usage?.input_tokens || 0, completion_tokens: resp.usage?.output_tokens || 0, total_tokens: (resp.usage?.input_tokens || 0) + (resp.usage?.output_tokens || 0) },
+        finish_reason: resp.stop_reason || null,
+        provider: "anthropic",
+      };
+    }
+
+    allMessages.push({ role: "assistant", content: resp.content });
+    const toolResults = [];
+    for (const toolUse of toolUseBlocks) {
+      const toolResult = await executeToolCall(toolUse.name, toolUse.input);
+      toolResults.push({ type: "tool_result", tool_use_id: toolUse.id, content: JSON.stringify(toolResult) });
+    }
+    allMessages.push({ role: "user", content: toolResults });
+  }
+
+  return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: "anthropic" };
+}
+
 async function callLLM(model, messages, maxTokens) {
   if (isAnthropicModel(model)) {
     if (!anthropic) throw new Error("Anthropic client unavailable — ANTHROPIC_API_KEY not loaded");
@@ -921,7 +1017,7 @@ const server = http.createServer(async (req, res) => {
         { role: "user", content: userMessage },
       ];
 
-      const llmResult    = await callLLM(model, messages, max_output_tokens);
+      const llmResult    = await callLLMWithTools(model, messages, max_output_tokens);
       const assistantText = llmResult.text || "(empty_assistant_text)";
       const usage         = llmResult.usage;
       const debug_provider   = llmResult.provider;

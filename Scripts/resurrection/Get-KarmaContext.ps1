@@ -114,6 +114,36 @@ function Parse-RespStrings {
     }
 }
 
+# --- Collab messages from vault-neo ---
+function Get-CollabMessages {
+    # Fetch pending/approved CC-directed collab messages from vault-neo via SSH.
+    # Shows messages that haven't been read/acked yet.
+    try {
+        $job = Start-Job {
+            param($alias)
+            ssh $alias "cat /opt/seed-vault/memory_v1/hub_bridge/data/handoffs/collab.jsonl 2>/dev/null | python3 -c 'import sys,json; msgs=[json.loads(l) for l in sys.stdin if l.strip()]; byid={}; [byid.update({m[\"id\"]:m}) for m in msgs]; cc_msgs=[m for m in byid.values() if m.get(\"to\")==\"cc\"]; [print(json.dumps({\"id\":m[\"id\"],\"status\":m[\"status\"],\"type\":m[\"type\"],\"content\":m[\"content\"][:150]})) for m in cc_msgs]' 2>/dev/null"
+        } -ArgumentList $args[0]
+        $completed = Wait-Job $job -Timeout 3
+        if (-not $completed) {
+            Remove-Job $job -Force
+            return @()
+        }
+        $raw = Receive-Job $job
+        Remove-Job $job -Force
+        $msgs = @()
+        foreach ($line in $raw) {
+            if ($line) {
+                try {
+                    $msgs += ($line | ConvertFrom-Json -ErrorAction Stop)
+                } catch { }
+            }
+        }
+        return $msgs
+    } catch {
+        return @()
+    }
+}
+
 function Get-K2Context {
     # Test connectivity first
     try {
@@ -176,6 +206,20 @@ Write-Host "[Karma] Fetching graph context..."
 $ctx = Get-VaultNeoContext
 if ($ctx) {
     $output = "# Karma Graph Context -- $Timestamp (vault-neo)`n# Query: session_start | Lane: canonical`n`n$($ctx.context)"
+
+    # Append collab messages if any exist
+    $collab = Get-CollabMessages $VaultNeoAlias
+    if ($collab.Count -gt 0) {
+        $output += "`n`n## CC-Directed Collab Messages`n"
+        foreach ($msg in $collab) {
+            $status = $msg.status
+            $type = $msg.type
+            $short = $msg.content -replace "`n", " " | Select-Object -First 1
+            if ($short.Length -gt 100) { $short = $short.Substring(0, 97) + "..." }
+            $output += "- **[$status]** $type | $($msg.id): $short`n"
+        }
+    }
+
     Write-Context $output
     Write-Host "[Karma] Context written from vault-neo ($($ctx.context.Length) chars)"
     exit 0
