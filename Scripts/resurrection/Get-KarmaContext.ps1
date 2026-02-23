@@ -1,22 +1,25 @@
 # Get-KarmaContext.ps1
-# Fetches Karma's live canonical graph context at CC session start.
-# Writes to karma-context.md (gitignored) for CC to read.
-# Primary: vault-neo /raw-context via SSH. Fallback: K2 FalkorDB at 192.168.0.226:6379.
+# Fetches Karma's live CC session brief at CC session start.
+# Primary: SSH to vault-neo, run gen-cc-brief.py, read cc-session-brief.md.
+# Writes to cc-session-brief.md and karma-context.md (both gitignored) for CC to read.
+# Fallback: K2 FalkorDB at 192.168.0.226:6379.
 
 param(
-    [string]$OutputFile    = "$PSScriptRoot\..\..\karma-context.md",
-    [string]$TmpFile       = "$PSScriptRoot\..\..\karma-context.md.tmp",
-    [string]$VaultNeoAlias = "vault-neo",
-    [string]$K2Host        = "192.168.0.226",
-    [int]$K2Port           = 6379,
-    [string]$GraphName     = "neo_workspace",
-    [int]$VaultTimeoutSec  = 3,
-    [int]$K2TimeoutMs      = 2000
+    [string]$OutputFile      = "$PSScriptRoot\..\..\karma-context.md",
+    [string]$TmpFile         = "$PSScriptRoot\..\..\karma-context.md.tmp",
+    [string]$BriefOutputFile = "$PSScriptRoot\..\..\cc-session-brief.md",
+    [string]$VaultNeoAlias   = "vault-neo",
+    [string]$K2Host          = "192.168.0.226",
+    [int]$K2Port             = 6379,
+    [string]$GraphName       = "neo_workspace",
+    [int]$VaultTimeoutSec    = 15,
+    [int]$K2TimeoutMs        = 2000
 )
 
-$OutputFile = [System.IO.Path]::GetFullPath($OutputFile)
-$TmpFile    = [System.IO.Path]::GetFullPath($TmpFile)
-$Timestamp  = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+$OutputFile      = [System.IO.Path]::GetFullPath($OutputFile)
+$TmpFile         = [System.IO.Path]::GetFullPath($TmpFile)
+$BriefOutputFile = [System.IO.Path]::GetFullPath($BriefOutputFile)
+$Timestamp       = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 
 function Write-Context {
     param([string]$Content)
@@ -24,24 +27,42 @@ function Write-Context {
     Move-Item -Path $TmpFile -Destination $OutputFile -Force
 }
 
-# --- Primary path: vault-neo SSH ---
+# --- Primary path: vault-neo SSH (gen-cc-brief.py + read result) ---
 function Get-VaultNeoContext {
     try {
-        $job = Start-Job {
+        # Step 1: run the brief generator on vault-neo
+        $genJob = Start-Job {
             param($alias)
-            ssh $alias "curl -s 'http://localhost:8340/raw-context?q=session_start&lane=canonical'"
+            ssh $alias "python3 /home/neo/karma-sade/Scripts/gen-cc-brief.py"
         } -ArgumentList $VaultNeoAlias
-        $completed = Wait-Job $job -Timeout $VaultTimeoutSec
-        if (-not $completed) {
-            Remove-Job $job -Force
+        $genCompleted = Wait-Job $genJob -Timeout $VaultTimeoutSec
+        if (-not $genCompleted) {
+            Remove-Job $genJob -Force
             return $null
         }
-        $raw = Receive-Job $job
-        Remove-Job $job -Force
-        if (-not $raw) { return $null }
-        $json = $raw | ConvertFrom-Json -ErrorAction Stop
-        if (-not $json.ok -or -not $json.context) { return $null }
-        return $json
+        $genOut = Receive-Job $genJob
+        Remove-Job $genJob -Force
+
+        # Step 2: read the generated brief
+        $readJob = Start-Job {
+            param($alias)
+            ssh $alias "cat /home/neo/karma-sade/cc-session-brief.md"
+        } -ArgumentList $VaultNeoAlias
+        $readCompleted = Wait-Job $readJob -Timeout $VaultTimeoutSec
+        if (-not $readCompleted) {
+            Remove-Job $readJob -Force
+            return $null
+        }
+        $brief = Receive-Job $readJob
+        Remove-Job $readJob -Force
+
+        if (-not $brief) { return $null }
+
+        # Join array of lines back into a single string
+        $briefText = $brief -join "`n"
+        if ($briefText.Length -lt 50) { return $null }
+
+        return $briefText
     } catch {
         return $null
     }
@@ -201,35 +222,27 @@ function Get-K2Context {
 }
 
 # --- Main ---
-Write-Host "[Karma] Fetching graph context..."
+Write-Host "[Karma] Fetching CC session brief from vault-neo..."
 
-$ctx = Get-VaultNeoContext
-if ($ctx) {
-    $output = "# Karma Graph Context -- $Timestamp (vault-neo)`n# Query: session_start | Lane: canonical`n`n$($ctx.context)"
+$briefText = Get-VaultNeoContext
+if ($briefText) {
+    $charCount = $briefText.Length
 
-    # Append collab messages if any exist
-    $collab = Get-CollabMessages $VaultNeoAlias
-    if ($collab.Count -gt 0) {
-        $output += "`n`n## CC-Directed Collab Messages`n"
-        foreach ($msg in $collab) {
-            $status = $msg.status
-            $type = $msg.type
-            $short = $msg.content -replace "`n", " " | Select-Object -First 1
-            if ($short.Length -gt 100) { $short = $short.Substring(0, 97) + "..." }
-            $output += "- **[$status]** $type | $($msg.id): $short`n"
-        }
-    }
+    # Write primary output: karma-context.md (atomic via tmp, for backward compat)
+    Write-Context $briefText
+    # Write cc-session-brief.md (primary CC pickup file)
+    [System.IO.File]::WriteAllText($BriefOutputFile, $briefText, [System.Text.Encoding]::UTF8)
 
-    Write-Context $output
-    Write-Host "[Karma] Context written from vault-neo ($($ctx.context.Length) chars)"
+    Write-Host "[Karma] Context written from vault-neo ($charCount chars) -> cc-session-brief.md"
     exit 0
 }
 
-Write-Host "[Karma] vault-neo unreachable, trying K2 fallback (${K2Host}:${K2Port})..."
+Write-Host "[Karma] vault-neo brief unavailable, trying K2 fallback (${K2Host}:${K2Port})..."
 $ctx = Get-K2Context
 if ($ctx) {
-    $output = "# Karma Graph Context -- $Timestamp [K2-FALLBACK]`n# Note: vault-neo unreachable. K2 replica used. Preferences section unavailable.`n`n$($ctx.context)"
+    $output = "# Karma Graph Context -- $Timestamp [K2-FALLBACK]`n# Note: vault-neo brief unavailable. K2 replica used. Preferences section unavailable.`n`n$($ctx.context)"
     Write-Context $output
+    [System.IO.File]::WriteAllText($BriefOutputFile, $output, [System.Text.Encoding]::UTF8)
     Write-Host "[Karma] Context written from K2 fallback ($($ctx.entity_count) entities)"
     exit 0
 }
@@ -237,5 +250,6 @@ if ($ctx) {
 # Both unreachable
 $stub = "# Karma Graph Context -- UNAVAILABLE`n# Fetched: $Timestamp`n# Reason: vault-neo SSH timeout (${VaultTimeoutSec}s) + K2 TCP timeout (${K2Host}:${K2Port}, ${K2TimeoutMs}ms)`n# CC: proceed with MEMORY.md context only."
 Write-Context $stub
+[System.IO.File]::WriteAllText($BriefOutputFile, $stub, [System.Text.Encoding]::UTF8)
 Write-Host "[Karma] Both vault-neo and K2 unreachable. UNAVAILABLE stub written."
 exit 1

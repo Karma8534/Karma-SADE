@@ -42,3 +42,4 @@ chrome-extension/test-extension.js
 # Karma context snapshot (generated at CC session start, machine-local)
 karma-context.md
 karma-context.md.tmp
+cc-session-brief.md
