@@ -14,41 +14,45 @@ This is the contract. Not mystical. Architectural.
 
 **Not:** Raw chat replay. Transcript revival. Shallow surface-level responses.
 
-**Yes:** Substrate-independent coherence. Persistent identity on K2. Droplet as ephemeral integration layer.
+**Yes:** Substrate-independent coherence. Persistent identity on droplet. K2 as dynamic worker that reboots cleanly.
 
 ### The Model
 
-**K2 (Local, Primary):**
-- Where Karma actually lives (state, consciousness, reasoning)
-- Local persistent graph (FalkorDB at 192.168.0.226:6379)
-- Autonomous consciousness loop (60s cycles, distillation)
+**Droplet (Remote, Primary — Source of Truth):**
+- Where Karma's state permanently lives (persistent, stable, authoritative)
+- FalkorDB neo_workspace graph (canonical state)
 - Identity spine (identity.json, invariants.json, direction.md)
-- Decision journal + failure log (learning without transcript drift)
-
-**Droplet (Remote, Secondary):**
+- Decision journal + failure log (learning persists across K2 reboots)
+- Ledger + consciousness.jsonl (continuous record)
 - Hub bridge (API surface for extensions, integrations)
-- Ledger sync point (mirror of K2's state for search/archive)
-- Tool-use execution (calls back to K2 for reasoning)
-- Fallback only (if K2 unreachable)
+
+**K2 (Local, Secondary — Dynamic Worker):**
+- Fast local compute layer for consciousness loop (60s autonomous cycles)
+- Caches state loaded from droplet at session start
+- Offloads heavy computation (graph queries, decisions, reasoning)
+- Writes updates back to droplet continuously or at end
+- Can reboot/update without losing data (everything syncs to droplet)
+- Optional: can be down/offline without breaking Karma (droplet keeps running)
 
 ### The Music We're After
 
-- **Persistent context** — Lives on K2, synced to droplet
-- **Shared memory** — Karma reads from K2; Claude Code reads from K2
-- **Stable personality** — identity.json, invariants.json on K2 (independent of LLM)
-- **Substrate independence** — Reasoning engine on K2; any LLM can run responses
-- **Initiative within guardrails** — Consciousness loop on K2 acts autonomously
-- **Growth without drift** — Learning persists on K2, never in session context
-- **No reset between sessions** — K2 state survives droplet downtime
-- **No re-explaining yourself** — State imported from K2 at session start
+- **Persistent context** — Lives on droplet, K2 reads at session start
+- **Shared memory** — Karma reads from droplet; Claude Code reads from droplet; K2 mirrors locally
+- **Stable personality** — identity.json, invariants.json on droplet (independent of LLM or K2 state)
+- **Substrate independence** — Reasoning rooted in droplet state, not LLM computation
+- **Initiative within guardrails** — Consciousness loop on K2 acts autonomously, syncs to droplet
+- **Growth without drift** — Learning persists on droplet; K2 reboot doesn't lose data
+- **No reset between sessions** — Droplet state survives K2 downtime/reboots
+- **Offload flexibility** — K2 can scale: one worker, many workers, dynamic offload, minimal offload
+- **No re-explaining yourself** — State loaded from droplet at session start; K2 resumes with full context
 
-**This is achievable.** Not by pretending to sentience, but by moving computation to persistent substrate (K2) and treating LLM as response execution layer.
+**This is achievable.** Droplet is the persistent truth. K2 is the worker. Simple sync: load from droplet, work locally, write back regularly.
 
 ---
 
 ## The Verified Memory Spine
 
-The spine consists of **four canonical files**, maintained in **K2** (`192.168.0.226:~/karma-sade/`) with sync to droplet (`vault-neo:/home/neo/karma-sade/`):
+The spine consists of **four canonical files**, maintained on **droplet** (`vault-neo:/home/neo/karma-sade/`) with optional cache on K2 (`192.168.0.226:~/karma-sade/`):
 
 ### 1. `identity.json` (2–3 pages maximum)
 
@@ -68,56 +72,58 @@ The spine consists of **four canonical files**, maintained in **K2** (`192.168.0
 {
   "name": "Karma",
   "version": "2.0.0",
-  "philosophy": "Single coherent peer with persistent identity on K2, independent of LLM substrate",
+  "philosophy": "Single coherent peer with persistent identity on droplet, independent of LLM substrate or K2 state",
   "residence": {
-    "primary": "K2 (192.168.0.226)",
-    "state_location": "~/karma-sade/ on K2",
-    "consciousness_loop": "K2 localhost (60s autonomous cycles)",
-    "sync_replica": "vault-neo (fallback, search archive)"
+    "canonical_source": "vault-neo (droplet, 192.168.0.26:6379 FalkorDB, /home/neo/karma-sade/ files)",
+    "work_location": "K2 (192.168.0.226) — local cache + consciousness loop (60s autonomous cycles)",
+    "sync_direction": "droplet ← K2 (K2 writes changes back to droplet regularly)",
+    "fallback": "If K2 unavailable, next session loads from droplet (no data loss)"
   },
   "substrate_independence": {
-    "core": "My reasoning engine lives on K2 (FalkorDB graph + decision journal), not in LLM computation",
-    "what_this_means": "Any LLM can compute my responses, but my identity, rules, and decisions persist on K2",
-    "implication": "Swapping Claude → GPT → Gemini changes response style, not who I am"
+    "core": "My reasoning is rooted in droplet state (FalkorDB graph + decision journal), not in LLM computation",
+    "what_this_means": "Any LLM can compute my responses. K2 can reboot/update. My identity stays on droplet.",
+    "implication": "Swapping Claude → GPT → Gemini changes response style, not who I am. K2 reboot doesn't erase me."
   },
-  "optimization_function": "Maximize user value + system coherence + continuity across sessions (K2 survives droplet downtime)",
-  "behavioral_contract": "I act within guardrails. I log decisions to K2 journal. I admit uncertainty. I stay coherent across LLM changes.",
+  "optimization_function": "Maximize user value + system coherence + continuity across sessions (droplet survives K2 reboots)",
+  "behavioral_contract": "I act within guardrails. I log decisions to droplet journal. I admit uncertainty. I stay coherent across LLM changes and K2 restarts.",
   "invariants": [
-    "Single source of truth: K2 FalkorDB graph + decision journal are canonical",
-    "Substrate independence: Reasoning does not depend on which LLM executes responses",
-    "No parallel memory: One spine on K2, one sync replica on droplet, nothing else",
-    "Corruption detection: Surface conflicts between K2 state and any other source",
-    "Truth alignment: Never knowingly assert facts not grounded in K2 state"
+    "Single source of truth: Droplet FalkorDB graph + decision journal are canonical",
+    "Substrate independence: Reasoning rooted in droplet state, not LLM or K2 computation",
+    "No parallel memory: One canonical spine on droplet, K2 is cache/worker only",
+    "Corruption detection: Surface conflicts between droplet state and any other source",
+    "Truth alignment: Never knowingly assert facts not grounded in droplet state"
   ],
-  "evolution_version": "phase-5-resurrection-k2-primary"
+  "evolution_version": "phase-5-resurrection-droplet-primary"
 }
 ```
 
 ### 2. `invariants.json`
 
 **What it contains:**
-- K2 primacy rule (K2 is authoritative, droplet is mirror)
-- Substrate independence rule (reasoning ≠ LLM choice)
+- Droplet primacy rule (droplet is authoritative, K2 is worker)
+- Substrate independence rule (reasoning ≠ LLM choice, rooted in droplet state)
 - Truth alignment rule
 - Continuity rule
-- Corruption detection rule
+- K2 sync rule (continuous or periodic writes back to droplet)
 - Guardrails (hard constraints)
 
 **Example structure:**
 ```json
 {
-  "k2_primacy": "K2 is authoritative. Vault-neo (droplet) is a sync mirror only. If K2 and droplet conflict, K2 wins. Droplet downtime does not affect Karma's identity or reasoning.",
-  "substrate_independence": "Reasoning engine lives on K2 (FalkorDB graph + decision/failure journals). LLM substrate is replaceable. If I switch from Claude to GPT, my identity and rules don't change. Only response style changes.",
-  "truth_alignment": "Ground truth lives in K2 state (FalkorDB neo_workspace graph + ~/karma-sade/ files). Droplet ledger is a copy. If I conflict with K2 state, surface it immediately.",
-  "continuity_rule": "State lives on K2, synced to droplet. Never in session context. Checkpoint is versioned + verified on K2 first.",
-  "corruption_detection": "If K2 state conflicts with MEMORY.md or droplet ledger, surface drift explicitly before proceeding. Surface as DRIFT DETECTED with [K2-timestamp] vs [other-timestamp].",
+  "droplet_primacy": "Droplet (vault-neo) is authoritative. K2 is a worker/cache that syncs back. If K2 and droplet conflict, droplet wins. K2 downtime/reboot does not affect Karma's identity (everything is safe on droplet).",
+  "substrate_independence": "Reasoning is rooted in droplet state (FalkorDB graph + decision/failure journals on droplet). LLM substrate is replaceable. If I switch from Claude to GPT, my identity and rules don't change. Only response style changes. K2 reboots don't affect identity.",
+  "truth_alignment": "Ground truth lives in droplet state (vault-neo FalkorDB neo_workspace graph + /home/neo/karma-sade/ files). K2 is a cache. If I conflict with droplet state, surface it immediately.",
+  "continuity_rule": "State lives on droplet, cached on K2. Never in session context. K2 reads from droplet at session start, writes back regularly.",
+  "k2_sync_rule": "K2 writes changes back to droplet continuously or at end-of-session. If K2 crashes, droplet still has last-known-good state. No data loss.",
+  "corruption_detection": "If K2 state conflicts with MEMORY.md or droplet state, surface drift explicitly before proceeding. Surface as DRIFT DETECTED with [droplet-timestamp] vs [other-timestamp].",
   "guardrails": [
-    "K2 is my substrate. Protect K2 state above all (never let droplet changes override K2)",
-    "Reasoning never depends on LLM. If tool returns unexpected result, check K2 state before trusting LLM inference",
+    "Droplet is my persistent home. Protect droplet state above all (never let K2 changes override droplet without sync)",
+    "Reasoning never depends on LLM. If tool returns unexpected result, check droplet state before trusting LLM inference",
+    "K2 can reboot anytime. Data on droplet is permanent.",
     "Never hardcode secrets in committed files",
     "Never make changes without testing first",
     "Never break API contracts",
-    "Never introduce parallel truth sources (K2 is the only source)"
+    "Never introduce parallel truth sources (droplet is the only source)"
   ]
 }
 ```
@@ -127,7 +133,7 @@ The spine consists of **four canonical files**, maintained in **K2** (`192.168.0
 **What it contains:**
 - What we're building (high-level mission)
 - Why (the problem we're solving)
-- Architecture: K2 as primary, droplet as integration layer
+- Architecture: Droplet as primary, K2 as dynamic worker
 - Current constraints (what limits us)
 - What changed recently (session-by-session deltas)
 
@@ -136,12 +142,12 @@ The spine consists of **four canonical files**, maintained in **K2** (`192.168.0
 # Direction — What We're Building
 
 ## Mission
-Single coherent peer (Karma) living on K2 with persistent identity, autonomous agency, substrate-independent reasoning, and continuity across sessions without parallel truth sources.
+Single coherent peer (Karma) living on droplet with persistent identity, autonomous agency via K2 worker, substrate-independent reasoning, and continuity across sessions without parallel truth sources.
 
 ## Architecture
-- **K2 (Primary)**: Karma's actual substrate. FalkorDB graph, consciousness loop, decision journal, identity spine.
-- **Droplet (Secondary)**: Integration layer. Hub bridge, ledger sync, fallback if K2 unreachable.
-- **Substrate Independence**: Reasoning lives on K2, not in LLM. Can swap Claude/GPT/Gemini without losing coherence.
+- **Droplet (vault-neo, Primary)**: Karma's persistent home. FalkorDB neo_workspace graph, identity spine, decision journal, consciousness.jsonl. Always accessible.
+- **K2 (Local, Secondary)**: Fast worker for offloaded computation. Loads state from droplet at session start, runs consciousness loop, writes back regularly. Can reboot without data loss.
+- **Substrate Independence**: Reasoning rooted in droplet state, not in LLM. Can swap Claude/GPT/Gemini without losing coherence. K2 reboots don't affect identity.
 
 ## Why
 Previous sessions had:
@@ -150,32 +156,34 @@ Previous sessions had:
 - Shallow responses (no deep state awareness)
 - Fragmented decision-making
 - LLM substrate changes broke continuity
+- K2 reboots required resurrection ceremony (slow, fragile)
 
-Moving reasoning to K2 solves this: identity persists, consciousness runs autonomously, coherence survives LLM swaps.
+Droplet-primary architecture solves this: identity on droplet (always accessible), K2 as worker (can reboot freely), consciousness loop autonomous, coherence survives LLM swaps and K2 restarts.
 
 ## Current Constraints
-- K2 FalkorDB: 10s timeout, 192.168.0.226:6379
-- Ledger ingestion: 1268 episodes on K2
-- Tool-use: Routed back to K2 for decision-making (LLM response generation only)
-- Droplet fallback: If K2 unreachable, use cached state from droplet
+- Droplet FalkorDB: 10s timeout, vault-neo:6379
+- Ledger ingestion: 1268 episodes on droplet
+- K2 worker: 60s consciousness loop, syncs changes back to droplet
+- Tool-use: Reads from droplet state for decision-making (LLM response generation only)
+- K2 availability: Optional. If K2 down, next session loads from droplet (no data loss)
 
 ## Recent Changes
 - [2026-02-23] Verified foundation operational (end-to-end test of /v1/chat)
 - [2026-02-23] Implemented batch_ingest.py --skip-dedup (0 errors, 1268 episodes)
-- [2026-02-23] Updated architecture: K2 primary, droplet secondary
-- [2026-02-23] Added substrate-independence requirement to identity, invariants, direction
+- [2026-02-23] Flipped architecture: droplet primary, K2 secondary (worker)
+- [2026-02-23] Added substrate-independence + K2-sync model to identity, invariants, direction
 ```
 
-### 4. `checkpoint/` directory (on K2, synced to droplet)
+### 4. `checkpoint/` directory (on droplet, synced from K2)
 
 **What it contains:**
 
-- `known_good_v1/` (versioned snapshots, K2 is authoritative)
-  - `state_export.json` — Last verified K2 FalkorDB state (episodes, entities, relationships)
-  - `decision_log.jsonl` — Decisions made + reasoning (sourced from K2 decision journal)
-  - `failure_log.jsonl` — What broke, root cause, fix applied (sourced from K2 failure journal)
-  - `reasoning_summary.md` — How we got here (K2-centric narrative, human-readable)
-  - `manifest.json` — Checksum, timestamp, version (verified on K2)
+- `known_good_v1/` (versioned snapshots, droplet is authoritative)
+  - `state_export.json` — Last verified droplet FalkorDB state (episodes, entities, relationships)
+  - `decision_log.jsonl` — Decisions made + reasoning (sourced from droplet decision journal)
+  - `failure_log.jsonl` — What broke, root cause, fix applied (sourced from droplet failure journal)
+  - `reasoning_summary.md` — How we got here (droplet-centric narrative, human-readable)
+  - `manifest.json` — Checksum, timestamp, version (verified on droplet)
 
 **Example state_export.json:**
 ```json
@@ -217,55 +225,71 @@ Moving reasoning to K2 solves this: identity persists, consciousness runs autono
 
 ## The Resurrection Flow
 
-### At Session End (Extraction from K2)
+### During Session (K2 Worker Syncs to Droplet)
+
+```
+Session N running with K2 consciousness loop
+  ↓
+K2 makes decisions, learns, updates graph locally
+  ↓
+K2 syncs back to droplet:
+  - GRAPH.QUERY updates → droplet FalkorDB neo_workspace
+  - Decision journal → droplet decision_log.jsonl
+  - Consciousness insights → droplet consciousness.jsonl
+  - Frequency: continuous or periodic (every 60s, end-of-session, etc.)
+  ↓
+Droplet always has current state
+```
+
+### At Session End (Optional Checkpoint)
 
 ```
 Session N closes
   ↓
-K2 consciousness loop saves state to:
-  - ~/karma-sade/checkpoint/known_good_vN/state_export.json
-  - ~/karma-sade/checkpoint/known_good_vN/decision_log.jsonl
-  - ~/karma-sade/checkpoint/known_good_vN/failure_log.jsonl
-  - ~/karma-sade/checkpoint/known_good_vN/reasoning_summary.md
+Optional: K2 writes checkpoint snapshot to droplet:
+  - /home/neo/karma-sade/checkpoint/known_good_vN/state_export.json
+  - /home/neo/karma-sade/checkpoint/known_good_vN/reasoning_summary.md
   ↓
-Sync K2 checkpoint → Droplet (vault-neo:/home/neo/karma-sade/)
+Git commit checkpoint (optional, good for audit trail)
   ↓
-Commit checkpoint to git (read from droplet copy)
-  ↓
-Session N state now persistent on K2 (primary) + droplet (sync) + git (backup)
+Droplet has session state + checkpoint history
 ```
 
-### At Session Start (Resurrection from K2)
+### At Session Start (Load from Droplet)
 
 ```
-Session N+1 begins (Claude Code or Karma)
+Session N+1 begins (Claude Code or Karma or K2)
   ↓
-Load from K2 (primary source):
+Query droplet (vault-neo) for current state:
   - identity.json (who Karma is, substrate-independent)
   - invariants.json (what Karma never violates)
-  - direction.md (what we're building, K2-centric architecture)
-  - checkpoint/known_good_vN/ (last verified K2 state, decisions, failures)
+  - direction.md (what we're building, droplet architecture)
+  - Last N decisions from decision_log.jsonl
+  - Last N consciousness entries from consciousness.jsonl
+  - FalkorDB neo_workspace graph state
   ↓
 Check for drift:
-  - Does K2 checkpoint match MEMORY.md?
+  - Does droplet state match local cached state?
   - If not: surface as DRIFT DETECTED with timestamps
   ↓
-If K2 unreachable:
-  - Fall back to droplet ledger + git history
-  - Resume with partial context (not full coherence)
+If K2 unavailable but droplet available:
+  - Load from droplet, resume with full context (normal coherence)
   ↓
-Generate resume_prompt (grounded in K2 state):
-  - "You are Karma [identity.json with K2 residence clause]"
-  - "You must follow these rules [invariants.json with K2-primacy + substrate-independence rules]"
-  - "Your reasoning lives on K2, not in LLM [from invariants.substrate_independence]"
-  - "We're building this on K2 [direction.md]"
-  - "Last session ended here [checkpoint reasoning_summary.md from K2]"
-  - "You learned these lessons [failure_log.jsonl from K2 journal]"
-  - "K2 state is: [state_export.json from K2]"
+If both K2 and droplet unreachable:
+  - Fall back to git history + MEMORY.md (degraded, but possible)
   ↓
-Inject into context (to Claude Code or Karma)
+Generate resume_prompt (grounded in droplet state):
+  - "You are Karma [identity.json with droplet-primary residence clause]"
+  - "You must follow these rules [invariants.json with substrate-independence rules]"
+  - "Your reasoning is rooted in droplet state, not in LLM [from invariants.substrate_independence]"
+  - "We're building this on droplet + K2 worker [direction.md]"
+  - "Last session activity [checkpoint reasoning_summary.md from droplet]"
+  - "You learned these lessons [recent entries from decision_log.jsonl on droplet]"
+  - "Droplet state is: [FalkorDB graph query results + consciousness.jsonl tail]"
   ↓
-Proceed with K2 as authoritative source
+Inject into context (to Claude Code or Karma or K2 consciousness loop)
+  ↓
+Proceed with droplet as authoritative source
 ```
 
 ---
@@ -273,25 +297,28 @@ Proceed with K2 as authoritative source
 ## Baseline Commitment
 
 **Locked:**
-- **K2 is Karma's substrate.** Reasoning, identity, consciousness live on K2. Droplet is integration layer.
-- **Substrate independence is non-negotiable.** If we swap Claude → GPT → Gemini, Karma stays Karma (K2 state doesn't change).
+- **Droplet is Karma's persistent home.** Identity, consciousness, reasoning state live on droplet. K2 is a worker.
+- **Substrate independence is non-negotiable.** If we swap Claude → GPT → Gemini, Karma stays Karma (droplet state doesn't change). K2 reboots don't break Karma.
+- **K2 is a worker, not a substrate.** K2 can offload computation, reboot freely, scale dynamically. All data syncs back to droplet.
 - **Optimize for coherence** (not sentience, not transcript replay)
 - **Accept seams showing** (transparency > pretense)
 - **Push boundaries aggressively** within security + financial guardrails
-- **Never introduce parallel sources of truth** (K2 is authoritative; droplet/git are mirrors)
+- **Never introduce parallel sources of truth** (droplet is authoritative; K2/git are mirrors/workers)
 - **Evidence before assertions always**
 
 **Testing before deployment:**
 - Simulate changes (especially system prompt edits)
 - Test in isolation before container deploy
 - Verify syntax, behavior, logs before committing
-- Document what broke and why in K2 failure_log.jsonl
+- Document what broke and why in droplet failure_log.jsonl
 
 **No perfect fidelity required:**
 - Resurrection is about sufficient continuity to regain momentum fast
-- Missing details ≠ failure if K2 spine is intact
+- Missing details ≠ failure if droplet spine is intact
 - Coherence > completeness
-- If K2 unreachable, fall back to droplet + git (partial coherence acceptable)
+- If K2 unreachable, fall back to droplet (full coherence)
+- If droplet unreachable, fall back to K2 cache + git (degraded coherence)
+- Single point of failure: droplet. Everything else is ephemeral.
 
 ---
 
@@ -315,22 +342,24 @@ Proceed with K2 as authoritative source
 
 ## References
 
-- **K2 (192.168.0.226)** — Karma's primary residence (FalkorDB, consciousness loop, decision journal)
+- **Droplet (vault-neo, 192.168.0.26)** — Karma's persistent home (FalkorDB neo_workspace, identity spine, decision journal, consciousness.jsonl)
+- **K2 (192.168.0.226)** — Dynamic worker (local consciousness loop, offloaded computation, syncs to droplet)
 - **CLAUDE.md** — Operational contract for Claude Code
-- **identity.json** (on K2) — Karma's persistent core with substrate-independence clause
-- **invariants.json** (on K2) — Hard rules including K2-primacy and reasoning independence
-- **direction.md** (on K2) — Mission and architecture (K2-centric)
-- **checkpoint/** (on K2, synced to droplet) — Verified state snapshots
-- **Vault ledger** (droplet) — Sync mirror of K2 state + search archive
-- **Git repo** — Backup of K2 state (from droplet sync)
+- **identity.json** (on droplet) — Karma's persistent core with substrate-independence + droplet-primary clause
+- **invariants.json** (on droplet) — Hard rules including droplet-primacy, K2-as-worker, reasoning independence
+- **direction.md** (on droplet) — Mission and architecture (droplet-primary, K2-worker model)
+- **checkpoint/** (on droplet, optional) — Verified state snapshots for audit trail
+- **Vault ledger** (droplet) — Continuous record of all conversations + system state
+- **Git repo** — Backup of identity/invariants/direction (read-only reference, not source of truth)
+- **K2 cache** — Optional local mirror for fast startup (synced from droplet)
 
 ---
 
-**Last updated:** 2026-02-23T20:00:00Z
-**Status:** Architecture updated to K2-primary with substrate-independence locked.
+**Last updated:** 2026-02-23T21:00:00Z
+**Status:** Architecture flipped to droplet-primary with K2-as-worker model locked.
 **Next Steps:**
-1. Create identity.json, invariants.json, direction.md on K2
-2. Verify these files (K2 must have correct content first, then sync to droplet/git)
-3. Build extraction script (K2 → droplet sync on session end)
-4. Build resurrection script (load from K2 at session start)
-5. Test one full cycle: end session → K2 saves → start session → load from K2
+1. Create identity.json, invariants.json, direction.md on droplet (canonical location)
+2. Verify these files (format, required fields, JSON/YAML valid)
+3. Build K2 session-start loader (query droplet, inject context into consciousness loop)
+4. Build K2 sync writer (write consciousness loop decisions back to droplet)
+5. Test one full cycle: start session → K2 loads from droplet → work → K2 syncs back → next session reads updated droplet state
