@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -ExecutionPolicy Bypass \"Scripts/resurrection/Get-KarmaContext.ps1\")",
+      "Bash(ssh vault-neo:*)"
+    ]
+  }
+}
