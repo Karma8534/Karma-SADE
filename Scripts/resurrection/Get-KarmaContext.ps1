@@ -1,6 +1,6 @@
 # Get-KarmaContext.ps1
 # Fetches Karma's live CC session brief at CC session start.
-# Primary: SSH to vault-neo, run gen-cc-brief.py, read cc-session-brief.md.
+# Primary: SCP cc-session-brief.md from vault-neo (cron keeps it fresh every 5min).
 # Writes to cc-session-brief.md and karma-context.md (both gitignored) for CC to read.
 # Fallback: K2 FalkorDB at 192.168.0.226:6379.
 
@@ -12,7 +12,6 @@ param(
     [string]$K2Host          = "192.168.0.226",
     [int]$K2Port             = 6379,
     [string]$GraphName       = "neo_workspace",
-    [int]$VaultTimeoutSec    = 15,
     [int]$K2TimeoutMs        = 2000
 )
 
@@ -27,36 +26,18 @@ function Write-Context {
     Move-Item -Path $TmpFile -Destination $OutputFile -Force
 }
 
-# --- Primary path: vault-neo SSH (gen-cc-brief.py + read result) ---
+# --- Primary path: SCP from vault-neo (cron regenerates every 5min, always fresh) ---
 function Get-VaultNeoContext {
     try {
-        # Step 1: run the brief generator on vault-neo
-        $genJob = Start-Job {
-            param($alias)
-            ssh $alias "python3 /home/neo/karma-sade/Scripts/gen-cc-brief.py"
-        } -ArgumentList $VaultNeoAlias
-        $genCompleted = Wait-Job $genJob -Timeout $VaultTimeoutSec
-        if (-not $genCompleted) {
-            Remove-Job $genJob -Force
-            return $null
-        }
-        $genOut = Receive-Job $genJob
-        Remove-Job $genJob -Force
-
-        # Step 2: SCP the generated brief for binary-accurate UTF-8 transfer.
-        # ssh cat garbles multi-byte chars (em-dashes, checkmarks) through
-        # PowerShell 5.1's ANSI console encoding — scp writes raw bytes directly.
         $tmpBrief = [System.IO.Path]::GetTempFileName()
         & scp "vault-neo:/home/neo/karma-sade/cc-session-brief.md" $tmpBrief 2>$null
         if (-not (Test-Path $tmpBrief) -or (Get-Item $tmpBrief).Length -lt 50) {
             Remove-Item $tmpBrief -ErrorAction SilentlyContinue
             return $null
         }
-
         $briefText = [System.IO.File]::ReadAllText($tmpBrief, [System.Text.Encoding]::UTF8)
         Remove-Item $tmpBrief -ErrorAction SilentlyContinue
         if ($briefText.Length -lt 50) { return $null }
-
         return $briefText
     } catch {
         return $null
