@@ -789,6 +789,7 @@ async function callLLMWithTools(model, messages, maxTokens) {
 
   let allMessages = [...apiMessages];
   let iterations = 0;
+  let totalToolCalls = 0;
   const MAX_TOOL_ITERATIONS = 5;
 
   while (iterations < MAX_TOOL_ITERATIONS) {
@@ -805,9 +806,12 @@ async function callLLMWithTools(model, messages, maxTokens) {
         usage: { prompt_tokens: resp.usage?.input_tokens || 0, completion_tokens: resp.usage?.output_tokens || 0, total_tokens: (resp.usage?.input_tokens || 0) + (resp.usage?.output_tokens || 0) },
         finish_reason: resp.stop_reason || null,
         provider: "anthropic",
+        tool_calls_made: totalToolCalls,
       };
     }
 
+    totalToolCalls += toolUseBlocks.length;
+    console.log(`[TOOL-USE] Iteration ${iterations}: executing ${toolUseBlocks.length} tool calls (total: ${totalToolCalls})`);
     allMessages.push({ role: "assistant", content: resp.content });
     const toolResults = [];
     for (const toolUse of toolUseBlocks) {
@@ -817,13 +821,14 @@ async function callLLMWithTools(model, messages, maxTokens) {
     allMessages.push({ role: "user", content: toolResults });
   }
 
-  return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: "anthropic" };
+  return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: "anthropic", tool_calls_made: totalToolCalls };
 }
 
 // ── OpenAI GPT tool-calling (production tool-use for Karma) ────────────────────
 // OpenAI tool format differs from Anthropic. GPT-4o has reliable tool support.
 async function callGPTWithTools(messages, maxTokens) {
   try {
+    let totalToolCalls = 0;
     // Transform Anthropic schema (input_schema) to OpenAI schema (parameters)
     const gptTools = TOOL_DEFINITIONS.map(t => ({
       type: "function",
@@ -853,15 +858,17 @@ async function callGPTWithTools(messages, maxTokens) {
     console.log(`[TOOL-USE] Iteration ${iterations} result: finish_reason="${finishReason}", tool_calls.length=${toolCalls.length}`);
 
     if (!toolCalls.length || finishReason !== "tool_calls") {
-      console.log(`[TOOL-USE] No tool calls or finish_reason not 'tool_calls', returning response`);
+      console.log(`[TOOL-USE] No tool calls or finish_reason not 'tool_calls', returning response (total tool calls: ${totalToolCalls})`);
       return {
         text: resp.choices[0]?.message?.content || "",
         usage: resp.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
         finish_reason: finishReason,
         provider: "openai",
+        tool_calls_made: totalToolCalls,
       };
     }
 
+    totalToolCalls += toolCalls.length;
     // Execute tools and collect results
     allMessages.push({ role: "assistant", content: resp.choices[0].message.content, tool_calls: toolCalls });
     const toolResults = [];
@@ -879,10 +886,10 @@ async function callGPTWithTools(messages, maxTokens) {
     allMessages.push(...toolResults);
   }
 
-    return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: "openai" };
+    return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: "openai", tool_calls_made: totalToolCalls };
   } catch (e) {
     console.error("[TOOL-USE] callGPTWithTools error:", e.message);
-    return { text: "(tool_use_error: " + e.message + ")", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "error", provider: "openai" };
+    return { text: "(tool_use_error: " + e.message + ")", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "error", provider: "openai", tool_calls_made: 0 };
   }
 }
 
@@ -1023,6 +1030,40 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    // --- POST /v1/cypher --- Graph query proxy for tool-calling
+    if (req.method === "POST" && req.url === "/v1/cypher") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      const raw = await parseBody(req);
+      let body; try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+
+      const cypher = (body?.q || "").toString().trim();
+      if (!cypher) return json(res, 400, { ok: false, error: "missing_query" });
+
+      try {
+        const graphQueryUrl = "http://karma-server:8340/graph-query";
+        const response = await fetch(graphQueryUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ q: cypher }),
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          return json(res, response.status, { ok: false, error: "graph_query_failed", details: errText });
+        }
+
+        const result = await response.json();
+        return json(res, 200, { ok: true, ...result });
+      } catch (e) {
+        console.error("[/v1/cypher] Error:", e.message);
+        return json(res, 500, { ok: false, error: "graph_query_error", details: e.message });
+      }
+    }
+
     // --- POST /v1/chat ---
     if (req.method === "POST" && req.url === "/v1/chat") {
       const ip = getClientIp(req);
@@ -1121,13 +1162,17 @@ const server = http.createServer(async (req, res) => {
         { role: "user", content: userMessage },
       ];
 
-      // Use GPT-4o for tool-calling (Anthropic unreliable). Karma needs real tool-use.
-      console.log("[DIAGNOSTIC] About to call callGPTWithTools, max_output_tokens:", max_output_tokens);
-      const llmResult    = await callGPTWithTools(messages, max_output_tokens);
+      // Route to Anthropic tool-calling for Claude models, GPT tool-calling for others
+      const useAnthropicTools = isAnthropicModel(model);
+      console.log("[DIAGNOSTIC] model:", model, "useAnthropicTools:", useAnthropicTools, "max_output_tokens:", max_output_tokens);
+      const llmResult    = useAnthropicTools
+        ? await callLLMWithTools(model, messages, max_output_tokens)
+        : await callGPTWithTools(messages, max_output_tokens);
       const assistantText = llmResult.text || "(empty_assistant_text)";
       const usage         = llmResult.usage;
       const debug_provider   = llmResult.provider;
       const debug_stop_reason = llmResult.finish_reason;
+      const debug_tools_called = llmResult.tool_calls_made || 0;
 
       // Persist this exchange to session history (skip empty responses)
       if (assistantText !== "(empty_assistant_text)") {
@@ -1236,6 +1281,7 @@ const server = http.createServer(async (req, res) => {
           debug_prelude_chars,
           debug_max_output_tokens_used,
           debug_provider,
+          debug_tools_called,
           debug_ingest: ingestVerdict,
         });
       }
@@ -1257,6 +1303,7 @@ const server = http.createServer(async (req, res) => {
         debug_prelude_chars,
         debug_max_output_tokens_used,
         debug_provider,
+        debug_tools_called,
         debug_karma_ctx: karmaCtx ? "ok" : "unavailable",
         debug_search,
         debug_ingest: ingestVerdict,
