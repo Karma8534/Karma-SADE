@@ -90,6 +90,23 @@ Karma's design, built as specified:
 - ~~Within-session context drift~~ FIXED v2.8.0
 - ~~(empty_assistant_text) on complex prompts~~ FIXED v2.7.1
 
+## Next Session Agenda (brainstorm — 2026-02-23)
+Two tracks. Decide which first at top of session.
+
+**Track 1 — Ingestion reliability:**
+batch3 72% fail (TIMEOUT=0), batch4 40% fail (MAX_QUEUED_QUERIES=25), each fix = container rebuild + data loss risk. Design a resilient pipeline. Not another patch.
+
+**Track 2 — Karma agency (tool use, Option 3):**
+Add Anthropic tool use to `/v1/chat` handler. Tool set:
+- `get_vault_file(alias)` — reads any whitelisted vault file on demand
+- `graph_query(cypher)` — `/v1/cypher` already built (v2.17.3), just needs tool wrapper
+Estimated: ~half-session CC work. Does NOT require graph stabilization first. Both tracks unblocked.
+
+**Option 1 fast patch (if needed before tool use is ready):**
+Inject trimmed MEMORY.md into `buildSystemText()` — Active Phase + Blockers + Last Updated only (~2KB). NOT full 29KB.
+
+Karma's collab message logged: `collab_20260223T001948_v347xy` — CC will see it at next session start.
+
 ## Next Milestone — Memory Integrity Gate
 ✅ DEPLOYED v2.12.0 (2026-02-21). Gate enforces: ASSIMILATE→candidate, DEFER→raw, PROMOTE→canonical. Context filtered to canonical only. Contradiction detection flags conflicts. PROMOTE button shows live pending count.
 Observe in practice: chat → ASSIMILATE signal → check candidates.jsonl → PROMOTE → verify canonical in FalkorDB.
