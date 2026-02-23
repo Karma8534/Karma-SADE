@@ -1,878 +1,608 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Karma SADE - Unified Dashboard</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Karma</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        :root {
-            --bg-primary: #0a0e1a;
-            --bg-secondary: #151b2d;
-            --bg-card: #1a2332;
-            --bg-hover: #222b3f;
-            --border-color: #2d3748;
-            --text-primary: #e2e8f0;
-            --text-secondary: #94a3b8;
-            --accent-purple: #a78bfa;
-            --accent-blue: #60a5fa;
-            --accent-green: #10b981;
-            --status-healthy: #10b981;
-            --status-warning: #f59e0b;
-            --status-critical: #ef4444;
-        }
+  :root {
+    --bg-primary:    #0f1117;
+    --bg-secondary:  #1a1d27;
+    --bg-card:       #1e2130;
+    --border:        #2a2d3e;
+    --text-primary:  #e2e8f0;
+    --text-secondary:#8892a4;
+    --accent-purple: #a78bfa;
+    --accent-blue:   #60a5fa;
+    --accent-green:  #34d399;
+    --status-ok:     #34d399;
+    --status-warn:   #f59e0b;
+    --status-err:    #f87171;
+    --user-bubble:   #2d3a5e;
+    --karma-bubble:  #1e2130;
+  }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            height: 100vh;
-            overflow: hidden;
-        }
+  html, body { height: 100%; overflow: hidden; }
 
-        /* 3-Panel Layout */
-        .dashboard-container {
-            display: grid;
-            grid-template-columns: 400px 1fr 350px;
-            grid-template-rows: 60px 1fr;
-            height: 100vh;
-            gap: 0;
-        }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+  }
 
-        /* Header spans all columns */
-        .header {
-            grid-column: 1 / -1;
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-            padding: 12px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+  /* ── Top bar ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 44px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    gap: 16px;
+  }
+  .topbar-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent-purple);
+    letter-spacing: 0.02em;
+  }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--status-ok);
+    display: inline-block;
+    margin-right: 5px;
+  }
+  .model-badge {
+    background: rgba(167,139,250,0.15);
+    color: var(--accent-purple);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .spend-badge {
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+  #topbar-clock { color: var(--text-secondary); font-size: 12px; }
 
-        .header h1 {
-            font-size: 24px;
-            font-weight: 600;
-            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+  /* ── Main layout ── */
+  .layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
 
-        .header-status {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
+  /* ── Chat panel ── */
+  .chat-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+    min-width: 0;
+  }
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--status-healthy);
-            animation: pulse 2s ease-in-out infinite;
-        }
+  .msg { max-width: 85%; display: flex; flex-direction: column; gap: 3px; }
+  .msg.user  { align-self: flex-end; }
+  .msg.karma { align-self: flex-start; }
+  .msg-bubble {
+    padding: 10px 14px;
+    border-radius: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .msg.user  .msg-bubble { background: var(--user-bubble); color: var(--text-primary); border-bottom-right-radius: 3px; }
+  .msg.karma .msg-bubble { background: var(--karma-bubble); color: var(--text-primary); border: 1px solid var(--border); border-bottom-left-radius: 3px; }
+  .msg.system .msg-bubble { background: transparent; color: var(--text-secondary); font-size: 12px; font-style: italic; border: none; padding: 4px 0; }
+  .msg-meta { font-size: 11px; color: var(--text-secondary); padding: 0 4px; }
+  .msg.user .msg-meta { text-align: right; }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
+  /* ── Input area ── */
+  .chat-input-area {
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    flex-shrink: 0;
+  }
+  .file-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .file-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .file-chip-remove {
+    cursor: pointer;
+    color: var(--text-secondary);
+    margin-left: 2px;
+    line-height: 1;
+  }
+  .file-chip-remove:hover { color: var(--status-err); }
 
-        /* Left Panel: Chat */
-        .chat-panel {
-            background: var(--bg-secondary);
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-        }
+  textarea#chat-input {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    min-height: 60px;
+    max-height: 160px;
+    overflow-y: auto;
+    line-height: 1.5;
+  }
+  textarea#chat-input:focus { border-color: var(--accent-purple); }
+  textarea#chat-input::placeholder { color: var(--text-secondary); }
 
-        .chat-header {
-            padding: 16px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+  .input-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+  .conn-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .conn-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--status-ok);
+  }
+  .input-actions { display: flex; gap: 8px; align-items: center; }
 
-        .chat-header h2 {
-            font-size: 16px;
-            font-weight: 600;
-        }
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    transition: opacity 0.15s;
+  }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-icon {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 6px 10px;
+  }
+  .btn-icon:hover:not(:disabled) { border-color: var(--accent-purple); }
+  .btn-send {
+    background: var(--accent-purple);
+    color: #fff;
+    padding: 6px 16px;
+    font-weight: 500;
+  }
+  .btn-send:hover:not(:disabled) { opacity: 0.85; }
 
-        .model-badge {
-            font-size: 11px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            background: rgba(167, 139, 250, 0.2);
-            color: var(--accent-purple);
-        }
+  input[type="file"] { display: none; }
 
-        .chat-messages {
-            flex: 1;
-            min-height: 0;  /* Critical: allows flex child to shrink and enable scrolling */
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: 16px;
-        }
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 16px 12px;
+    gap: 4px;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-        /* Custom Scrollbar Styling */
-        .chat-messages::-webkit-scrollbar {
-            width: 10px;  /* Made slightly wider for better visibility */
-        }
+  .sidebar-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+  .sidebar-section-title {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  .sidebar-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-row:last-child { border-bottom: none; }
+  .sidebar-row-label { color: var(--text-secondary); }
+  .sidebar-row-value { color: var(--text-primary); font-weight: 500; text-align: right; }
 
-        .chat-messages::-webkit-scrollbar-track {
-            background: var(--bg-secondary);
-            border-radius: 5px;
-            margin: 4px 0;  /* Add margin to prevent scrollbar from touching edges */
-        }
+  .service-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+  .service-row:last-child { border-bottom: none; }
+  .service-name { color: var(--text-secondary); }
+  .service-status {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+  .service-status.ok { background: rgba(52,211,153,0.15); color: var(--status-ok); }
+  .service-status.warn { background: rgba(245,158,11,0.15); color: var(--status-warn); }
 
-        .chat-messages::-webkit-scrollbar-thumb {
-            background: var(--accent-purple);  /* Changed to purple for visibility */
-            border-radius: 5px;
-            border: 2px solid var(--bg-secondary);  /* Add border for better definition */
-        }
-
-        .chat-messages::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-blue);  /* Change to blue on hover */
-            border-color: var(--bg-secondary);
-        }
-
-        .message {
-            padding: 12px 16px;
-            border-radius: 8px;
-            max-width: 90%;
-            word-wrap: break-word;
-        }
-
-        .message.user {
-            background: var(--bg-card);
-            align-self: flex-end;
-            border: 1px solid var(--border-color);
-        }
-
-        .message.assistant {
-            background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(96, 165, 250, 0.1));
-            align-self: flex-start;
-            border: 1px solid rgba(167, 139, 250, 0.3);
-        }
-
-        .message-meta {
-            font-size: 10px;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
-
-        .chat-input-area {
-            border-top: 1px solid var(--border-color);
-            padding: 16px;
-        }
-
-        .chat-input {
-            width: 100%;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px;
-            color: var(--text-primary);
-            font-size: 14px;
-            resize: none;
-            min-height: 60px;
-            font-family: inherit;
-        }
-
-        .chat-input:focus {
-            outline: none;
-            border-color: var(--accent-purple);
-        }
-
-        .chat-actions {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 8px;
-            align-items: center;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border-radius: 6px;
-            border: none;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
-            color: white;
-        }
-
-        .btn-primary:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-icon {
-            background: var(--bg-card);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            width: 36px;
-            height: 36px;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-
-        .btn-icon:hover {
-            background: var(--bg-hover);
-            border-color: var(--accent-purple);
-        }
-
-        #file-input {
-            display: none;
-        }
-
-        .file-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 8px;
-            max-height: 80px;
-            overflow-y: auto;
-        }
-
-        .file-item {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 6px 10px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            color: var(--text-secondary);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 150px;
-        }
-
-        .file-item-icon {
-            font-size: 14px;
-        }
-
-        .file-item-name {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            flex: 1;
-        }
-
-        .file-item-remove {
-            cursor: pointer;
-            color: var(--status-critical);
-            font-weight: bold;
-            padding: 0 4px;
-            transition: all 0.2s;
-        }
-
-        .file-item-remove:hover {
-            color: var(--text-primary);
-            transform: scale(1.2);
-        }
-
-        .connection-status {
-            font-size: 11px;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        /* Center Panel: Main Dashboard */
-        .main-panel {
-            background: var(--bg-primary);
-            overflow-y: auto;
-            padding: 24px;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-        }
-
-        .card h3 {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .metric-value {
-            font-size: 32px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-        }
-
-        .metric-label {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        /* Right Panel: System Monitor */
-        .monitor-panel {
-            background: var(--bg-secondary);
-            border-left: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .monitor-header {
-            padding: 16px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .monitor-header h2 {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .monitor-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-        }
-
-        .monitor-item {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 12px;
-        }
-
-        .monitor-item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .monitor-item-title {
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .monitor-item-status {
-            font-size: 11px;
-            padding: 3px 8px;
-            border-radius: 4px;
-        }
-
-        .monitor-item-status.running {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--status-healthy);
-        }
-
-        .monitor-item-status.stopped {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--status-critical);
-        }
-
-        .monitor-item-detail {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg-primary);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--bg-hover);
-        }
-    </style>
+  /* ── Typing indicator ── */
+  .typing-indicator .msg-bubble {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 12px 14px;
+  }
+  .typing-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-secondary);
+    animation: bounce 1.2s infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
+  }
+</style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <!-- Header -->
-        <div class="header">
-            <h1>Karma SADE - Unified Dashboard</h1>
-            <div class="header-status">
-                <div class="status-dot"></div>
-                <span id="system-status">All Systems Operational</span>
-                <span>|</span>
-                <span id="current-time">--:--:--</span>
-            </div>
+
+<!-- Top bar -->
+<div class="topbar">
+  <span class="topbar-title">Karma</span>
+  <div class="topbar-right">
+    <span><span class="status-dot" id="topbar-dot"></span>All Systems Operational</span>
+    <span class="model-badge" id="topbar-model">claude-sonnet-4-6</span>
+    <span class="spend-badge" id="topbar-spend">— / $35.00</span>
+    <span id="topbar-clock"></span>
+  </div>
+</div>
+
+<!-- Main layout -->
+<div class="layout">
+
+  <!-- Chat panel -->
+  <div class="chat-panel">
+    <div class="chat-messages" id="chat-messages"></div>
+
+    <div class="chat-input-area">
+      <div class="file-list" id="file-list"></div>
+      <textarea id="chat-input" placeholder="Ask Karma anything… (Enter to send, Shift+Enter for new line)" rows="2"></textarea>
+      <input type="file" id="file-input" multiple accept="*/*">
+      <div class="input-row">
+        <div class="conn-status">
+          <span class="conn-dot" id="conn-dot"></span>
+          <span id="conn-status">Connected</span>
         </div>
-
-        <!-- Left Panel: Chat -->
-        <div class="chat-panel">
-            <div class="chat-header">
-                <h2>Chat with Karma</h2>
-                <div class="model-badge" id="current-model">Gemini 3 Flash</div>
-            </div>
-
-            <div class="chat-messages" id="chat-messages">
-                <div class="message assistant">
-                    <div>Hello! I'm Karma, your agentic AI assistant. I use Gemini 3 Flash (FREE, Feb 2026 latest) by default, with smart routing to paid models for complex tasks.</div>
-                    <div class="message-meta">System | Just now</div>
-                </div>
-            </div>
-
-            <div class="chat-input-area">
-                <div id="file-list" class="file-list"></div>
-                <textarea
-                    id="chat-input"
-                    class="chat-input"
-                    placeholder="Ask Karma anything... (Enter to send, Shift+Enter for new line)"
-                ></textarea>
-                <input type="file" id="file-input" multiple accept="*/*">
-                <div class="chat-actions">
-                    <div class="connection-status">
-                        <span id="connection-dot" style="width: 6px; height: 6px; border-radius: 50%; background: var(--status-healthy);"></span>
-                        <span id="connection-status">Connected</span>
-                    </div>
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                        <button id="file-btn" class="btn btn-icon" title="Upload files (Ctrl+Shift+U)">📎</button>
-                        <button id="send-btn" class="btn btn-primary">Send</button>
-                    </div>
-                </div>
-            </div>
+        <div class="input-actions">
+          <button class="btn-icon" id="file-btn" title="Attach files (Ctrl+Shift+U)">📎</button>
+          <button class="btn-send" id="send-btn">Send</button>
         </div>
+      </div>
+    </div>
+  </div>
 
-        <!-- Center Panel: Main Dashboard -->
-        <div class="main-panel">
-            <div class="dashboard-grid">
-                <div class="card">
-                    <h3>System Health</h3>
-                    <div class="metric-value" id="health-status">Healthy</div>
-                    <div class="metric-label">All services operational</div>
-                </div>
+  <!-- Sidebar -->
+  <div class="sidebar">
 
-                <div class="card">
-                    <h3>API Usage Today</h3>
-                    <div class="metric-value" id="api-usage">0</div>
-                    <div class="metric-label">FREE queries today</div>
-                </div>
-
-                <div class="card">
-                    <h3>Cost Savings</h3>
-                    <div class="metric-value" style="color: var(--accent-green);">$0.00</div>
-                    <div class="metric-label">vs Claude API (90% saved)</div>
-                </div>
-
-                <div class="card">
-                    <h3>Active Model</h3>
-                    <div class="metric-value" style="font-size: 20px;" id="active-model">Gemini 3 Flash</div>
-                    <div class="metric-label">Smart routing active</div>
-                </div>
-            </div>
-
-            <div class="card" style="margin-bottom: 16px;">
-                <h3>Recent Activity</h3>
-                <div id="activity-log" style="font-size: 13px; color: var(--text-secondary);">
-                    <div style="padding: 8px 0; border-bottom: 1px solid var(--border-color);">
-                        <span style="color: var(--accent-green);">[OK]</span> Backend started successfully
-                    </div>
-                    <div style="padding: 8px 0; border-bottom: 1px solid var(--border-color);">
-                        <span style="color: var(--accent-green);">[OK]</span> Gemini 3 Flash - FREE tier (1,500/day)
-                    </div>
-                    <div style="padding: 8px 0;">
-                        <span style="color: var(--accent-blue);">[INFO]</span> Smart routing active
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Panel: System Monitor -->
-        <div class="monitor-panel">
-            <div class="monitor-header">
-                <h2>System Monitor</h2>
-            </div>
-
-            <div class="monitor-content">
-                <div class="monitor-item">
-                    <div class="monitor-item-header">
-                        <div class="monitor-item-title">Karma Backend</div>
-                        <div class="monitor-item-status running" id="backend-status">Running</div>
-                    </div>
-                    <div class="monitor-item-detail">Port: 9401 | PID: --</div>
-                </div>
-
-                <div class="monitor-item">
-                    <div class="monitor-item-header">
-                        <div class="monitor-item-title">Primary Model</div>
-                        <div class="monitor-item-status running">Active</div>
-                    </div>
-                    <div class="monitor-item-detail">Gemini 3 Flash | FREE | 2024 knowledge</div>
-                </div>
-
-                <div class="monitor-item">
-                    <div class="monitor-item-header">
-                        <div class="monitor-item-title">Claude API</div>
-                        <div class="monitor-item-status running" id="claude-status">Available</div>
-                    </div>
-                    <div class="monitor-item-detail">Fallback mode | Paid</div>
-                </div>
-
-                <div class="monitor-item">
-                    <div class="monitor-item-header">
-                        <div class="monitor-item-title">Cockpit</div>
-                        <div class="monitor-item-status running" id="cockpit-status">Running</div>
-                    </div>
-                    <div class="monitor-item-detail">Port: 9400</div>
-                </div>
-
-                <div class="monitor-item">
-                    <div class="monitor-item-header">
-                        <div class="monitor-item-title">Memory System</div>
-                        <div class="monitor-item-status running">Active</div>
-                    </div>
-                    <div class="monitor-item-detail">SQLite + ChromaDB</div>
-                </div>
-            </div>
-        </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Session</div>
+      <div class="sidebar-row">
+        <span class="sidebar-row-label">Model</span>
+        <span class="sidebar-row-value" id="sb-model">—</span>
+      </div>
+      <div class="sidebar-row">
+        <span class="sidebar-row-label">This request</span>
+        <span class="sidebar-row-value" id="sb-last-cost">—</span>
+      </div>
+      <div class="sidebar-row">
+        <span class="sidebar-row-label">Month spend</span>
+        <span class="sidebar-row-value" id="sb-spend">—</span>
+      </div>
+      <div class="sidebar-row">
+        <span class="sidebar-row-label">Cap</span>
+        <span class="sidebar-row-value" id="sb-cap">$35.00</span>
+      </div>
     </div>
 
-    <script>
-        // Configuration — hub-bridge at same origin, no WebSocket
-        const API_URL = '/v1/chat';
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Services</div>
+      <div class="service-row">
+        <span class="service-name">hub-bridge</span>
+        <span class="service-status ok">Running</span>
+      </div>
+      <div class="service-row">
+        <span class="service-name">karma-server</span>
+        <span class="service-status ok">Running</span>
+      </div>
+      <div class="service-row">
+        <span class="service-name">falkordb</span>
+        <span class="service-status ok">Running</span>
+      </div>
+      <div class="service-row">
+        <span class="service-name">vault-api</span>
+        <span class="service-status ok">Running</span>
+      </div>
+    </div>
 
-        // Token: stored in localStorage so user only enters it once
-        function getToken() {
-            return localStorage.getItem('karma_hub_token') || '';
-        }
-        function promptToken() {
-            const t = prompt('Enter your Karma hub token (stored locally in browser):');
-            if (t && t.trim()) {
-                localStorage.setItem('karma_hub_token', t.trim());
-                updateConnectionStatus('Connected', true);
-                return t.trim();
-            }
-            return '';
-        }
+  </div>
+</div>
 
-        let conversationId = generateUUID();
+<script>
+  // ── Config ──────────────────────────────────────────────────────────────
+  const API_URL = '/v1/chat';
 
-        // DOM elements
-        const chatMessages = document.getElementById('chat-messages');
-        const chatInput = document.getElementById('chat-input');
-        const sendBtn = document.getElementById('send-btn');
-        const connectionStatus = document.getElementById('connection-status');
-        const connectionDot = document.getElementById('connection-dot');
-        const currentModel = document.getElementById('current-model');
-        const apiUsage = document.getElementById('api-usage');
-        const fileBtn = document.getElementById('file-btn');
-        const fileInput = document.getElementById('file-input');
-        const fileList = document.getElementById('file-list');
+  function getToken()  { return localStorage.getItem('karma_hub_token') || ''; }
+  function saveToken(t){ localStorage.setItem('karma_hub_token', t.trim()); }
+  function clearToken(){ localStorage.removeItem('karma_hub_token'); }
+  function promptToken() {
+    const t = prompt('Enter your Karma hub token:');
+    if (t && t.trim()) { saveToken(t); return t.trim(); }
+    return '';
+  }
 
-        // File management
-        let selectedFiles = [];
+  // ── State ────────────────────────────────────────────────────────────────
+  let conversationId = crypto.randomUUID();
+  let selectedFiles  = [];
 
-        // Initialize
-        function init() {
-            updateTime();
-            setInterval(updateTime, 1000);
+  // ── DOM refs ─────────────────────────────────────────────────────────────
+  const $messages  = document.getElementById('chat-messages');
+  const $input     = document.getElementById('chat-input');
+  const $sendBtn   = document.getElementById('send-btn');
+  const $fileBtn   = document.getElementById('file-btn');
+  const $fileInput = document.getElementById('file-input');
+  const $fileList  = document.getElementById('file-list');
+  const $connDot   = document.getElementById('conn-dot');
+  const $connStatus= document.getElementById('conn-status');
+  const $sbModel   = document.getElementById('sb-model');
+  const $sbLastCost= document.getElementById('sb-last-cost');
+  const $sbSpend   = document.getElementById('sb-spend');
+  const $sbCap     = document.getElementById('sb-cap');
+  const $topModel  = document.getElementById('topbar-model');
+  const $topSpend  = document.getElementById('topbar-spend');
+  const $topClock  = document.getElementById('topbar-clock');
 
-            // Check token on load
-            if (getToken()) {
-                updateConnectionStatus('Connected', true);
-            } else {
-                updateConnectionStatus('Token required', false);
-            }
+  // ── Clock ────────────────────────────────────────────────────────────────
+  function updateClock() {
+    $topClock.textContent = new Date().toLocaleTimeString();
+  }
 
-            // Event listeners
-            sendBtn.addEventListener('click', sendMessage);
-            fileBtn.addEventListener('click', () => fileInput.click());
-            fileInput.addEventListener('change', handleFileSelect);
+  // ── Connection status ────────────────────────────────────────────────────
+  function setConnStatus(text, ok) {
+    $connStatus.textContent = text;
+    $connDot.style.background = ok ? 'var(--status-ok)' : 'var(--status-err)';
+  }
 
-            chatInput.addEventListener('keydown', (e) => {
-                // Enter to send (Shift+Enter for new line)
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-                // Ctrl+Shift+U to open file dialog
-                if (e.ctrlKey && e.shiftKey && e.key === 'U') {
-                    e.preventDefault();
-                    fileInput.click();
-                }
-            });
-        }
+  // ── Sidebar update from response telemetry ───────────────────────────────
+  function updateSidebar(data) {
+    if (data.model) {
+      $sbModel.textContent  = data.model;
+      $topModel.textContent = data.model;
+    }
+    if (data.usd_estimate != null) {
+      $sbLastCost.textContent = '$' + data.usd_estimate.toFixed(4);
+    }
+    if (data.spend) {
+      const spent = data.spend.usd_spent ?? data.spend.spend_used_usd ?? 0;
+      const cap   = data.spend.cap_usd   ?? data.spend.spend_cap_usd  ?? 35;
+      $sbSpend.textContent = '$' + spent.toFixed(2);
+      $sbCap.textContent   = '$' + cap.toFixed(2);
+      $topSpend.textContent = '$' + spent.toFixed(2) + ' / $' + cap.toFixed(2);
+    }
+  }
 
-        // Handle file selection
-        function handleFileSelect(e) {
-            const newFiles = Array.from(e.target.files);
-            selectedFiles = [...selectedFiles, ...newFiles];
+  // ── Typing indicator ─────────────────────────────────────────────────────
+  let typingEl = null;
+  function showTyping() {
+    typingEl = document.createElement('div');
+    typingEl.className = 'msg karma typing-indicator';
+    typingEl.innerHTML = '<div class="msg-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>';
+    $messages.appendChild(typingEl);
+    $messages.scrollTop = $messages.scrollHeight;
+  }
+  function hideTyping() {
+    if (typingEl) { typingEl.remove(); typingEl = null; }
+  }
 
-            // Limit to 50 files max
-            if (selectedFiles.length > 50) {
-                selectedFiles = selectedFiles.slice(0, 50);
-                addMessage('system', '⚠️ File limit: Maximum 50 files allowed', 'warning');
-            }
+  // ── Add message ──────────────────────────────────────────────────────────
+  function addMessage(role, content) {
+    const wrap    = document.createElement('div');
+    wrap.className = 'msg ' + role;
+    const bubble  = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    bubble.textContent = content;
+    const meta    = document.createElement('div');
+    meta.className = 'msg-meta';
+    meta.textContent = (role === 'user' ? 'You' : role === 'karma' ? 'Karma' : '') + ' · ' + new Date().toLocaleTimeString();
+    wrap.appendChild(bubble);
+    if (role !== 'system') wrap.appendChild(meta);
+    $messages.appendChild(wrap);
+    setTimeout(() => { $messages.scrollTop = $messages.scrollHeight; }, 10);
+  }
 
-            renderFileList();
+  // ── Handle response ──────────────────────────────────────────────────────
+  function handleMessage(data) {
+    hideTyping();
+    if (data.assistant_text || data.response || data.content) {
+      const text = data.assistant_text || data.response || data.content;
+      addMessage('karma', text);
+      updateSidebar(data);
+      setConnStatus('Connected', true);
+    } else if (data.error) {
+      addMessage('system', 'Error: ' + data.error);
+      setConnStatus('Error', false);
+    }
+  }
 
-            // Reset input so the same file can be selected again
-            fileInput.value = '';
-        }
+  // ── File handling ────────────────────────────────────────────────────────
+  function renderFileList() {
+    $fileList.innerHTML = '';
+    selectedFiles.forEach((f, i) => {
+      const chip = document.createElement('div');
+      chip.className = 'file-chip';
+      chip.innerHTML = getFileIcon(f.type) + ' <span>' + f.name + '</span>'
+        + '<span class="file-chip-remove" onclick="removeFile(' + i + ')">×</span>';
+      $fileList.appendChild(chip);
+    });
+  }
+  function removeFile(i) { selectedFiles.splice(i, 1); renderFileList(); }
+  function getFileIcon(mime) {
+    if (mime.startsWith('image/')) return '🖼️';
+    if (mime.includes('pdf'))      return '📄';
+    if (mime.includes('text') || mime.includes('json')) return '📝';
+    if (mime.includes('spreadsheet') || mime.includes('csv')) return '📊';
+    return '📎';
+  }
+  function formatBytes(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+    return (b/1048576).toFixed(1) + ' MB';
+  }
 
-        // Render file list display
-        function renderFileList() {
-            fileList.innerHTML = '';
+  // ── Send message ─────────────────────────────────────────────────────────
+  async function sendMessage() {
+    const text = $input.value.trim();
+    if (!text && selectedFiles.length === 0) return;
 
-            selectedFiles.forEach((file, index) => {
-                const fileIcon = getFileIcon(file.type);
-                const fileSize = formatFileSize(file.size);
+    let token = getToken();
+    if (!token) {
+      token = promptToken();
+      if (!token) return;
+      setConnStatus('Connected', true);
+    }
 
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item';
-                fileItem.title = `${file.name} (${fileSize})`;
+    // Show user message
+    let display = text;
+    if (selectedFiles.length > 0) {
+      display += (text ? '\n' : '') + '📎 ' + selectedFiles.map(f => f.name).join(', ');
+    }
+    addMessage('user', display);
+    $input.value = '';
+    $sendBtn.disabled = true;
+    showTyping();
 
-                fileItem.innerHTML = `
-                    <span class="file-item-icon">${fileIcon}</span>
-                    <span class="file-item-name">${file.name}</span>
-                    <span class="file-item-remove" onclick="removeFile(${index})">×</span>
-                `;
+    try {
+      let fetchOpts = {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token }
+      };
+      let body;
 
-                fileList.appendChild(fileItem);
-            });
-        }
+      if (selectedFiles.length > 0) {
+        const fd = new FormData();
+        fd.append('message', text);
+        fd.append('conversation_id', conversationId);
+        selectedFiles.forEach((f, i) => fd.append('file_' + i, f));
+        body = fd;
+      } else {
+        fetchOpts.headers['Content-Type'] = 'application/json';
+        body = JSON.stringify({ message: text, conversation_id: conversationId, stream: false });
+      }
+      fetchOpts.body = body;
 
-        // Remove file from selection
-        function removeFile(index) {
-            selectedFiles.splice(index, 1);
-            renderFileList();
-        }
+      const res = await fetch(API_URL, fetchOpts);
 
-        // Get icon for file type
-        function getFileIcon(mimeType) {
-            if (mimeType.startsWith('image/')) return '🖼️';
-            if (mimeType.startsWith('video/')) return '🎬';
-            if (mimeType.startsWith('audio/')) return '🔊';
-            if (mimeType.includes('pdf')) return '📄';
-            if (mimeType.includes('text') || mimeType.includes('json') || mimeType.includes('javascript')) return '📝';
-            if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType.includes('csv')) return '📊';
-            if (mimeType.includes('word') || mimeType.includes('document')) return '📋';
-            if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('archive')) return '📦';
-            return '📎';
-        }
+      if (res.status === 401) {
+        hideTyping();
+        clearToken();
+        setConnStatus('Token invalid — re-enter', false);
+        addMessage('system', 'Token rejected. Click Send again to re-enter.');
+        return;
+      }
 
-        // Format file size
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-        }
+      const data = await res.json();
+      handleMessage(data);
+      selectedFiles = [];
+      renderFileList();
 
-        // Send message
-        async function sendMessage() {
-            const message = chatInput.value.trim();
-            if (!message && selectedFiles.length === 0) return;
+    } catch (err) {
+      hideTyping();
+      addMessage('system', 'Error: ' + err.message);
+      setConnStatus('Request failed', false);
+    } finally {
+      $sendBtn.disabled = false;
+      $input.focus();
+    }
+  }
 
-            // Add user message to UI
-            let displayMessage = message;
-            if (selectedFiles.length > 0) {
-                const fileNames = selectedFiles.map(f => f.name).join(', ');
-                displayMessage += (message ? '\n' : '') + `📎 Files: ${fileNames}`;
-            }
-            addMessage('user', displayMessage);
-            chatInput.value = '';
-            sendBtn.disabled = true;
+  // ── Init ─────────────────────────────────────────────────────────────────
+  function init() {
+    updateClock();
+    setInterval(updateClock, 1000);
 
-            try {
-                let token = getToken();
-                if (!token) {
-                    token = promptToken();
-                    if (!token) { sendBtn.disabled = false; return; }
-                }
+    setConnStatus(getToken() ? 'Connected' : 'Token required', !!getToken());
 
-                // Prepare request — FormData for files, JSON for text-only
-                let payload;
-                let fetchOptions = {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                };
+    $sendBtn.addEventListener('click', sendMessage);
+    $fileBtn.addEventListener('click', () => $fileInput.click());
+    $fileInput.addEventListener('change', (e) => {
+      const incoming = Array.from(e.target.files);
+      selectedFiles = [...selectedFiles, ...incoming].slice(0, 50);
+      if (selectedFiles.length === 50) addMessage('system', '⚠ Maximum 50 files');
+      renderFileList();
+      $fileInput.value = '';
+    });
 
-                if (selectedFiles.length > 0) {
-                    const formData = new FormData();
-                    formData.append('message', message);
-                    formData.append('conversation_id', conversationId);
-                    formData.append('stream', false);
-                    selectedFiles.forEach((file, index) => {
-                        formData.append(`file_${index}`, file);
-                    });
-                    payload = formData;
-                } else {
-                    fetchOptions.headers['Content-Type'] = 'application/json';
-                    payload = JSON.stringify({
-                        message,
-                        conversation_id: conversationId,
-                        stream: false
-                    });
-                }
+    $input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+      if (e.ctrlKey && e.shiftKey && e.key === 'U') { e.preventDefault(); $fileInput.click(); }
+    });
+  }
 
-                fetchOptions.body = payload;
-                const response = await fetch(API_URL, fetchOptions);
-
-                if (response.status === 401) {
-                    localStorage.removeItem('karma_hub_token');
-                    updateConnectionStatus('Token invalid — re-enter', false);
-                    addMessage('system', 'Token rejected. Click send again to re-enter.', 'error');
-                    sendBtn.disabled = false;
-                    return;
-                }
-
-                const data = await response.json();
-                handleMessage(data);
-
-                // Clear files after successful send
-                selectedFiles = [];
-                renderFileList();
-
-            } catch (error) {
-                console.error('Send error:', error);
-                addMessage('system', `Error: ${error.message}`, 'error');
-            } finally {
-                sendBtn.disabled = false;
-                chatInput.focus();
-            }
-
-            // Update usage counter
-            const currentUsage = parseInt(apiUsage.textContent) || 0;
-            apiUsage.textContent = currentUsage + 1;
-        }
-
-        // Handle incoming message
-        function handleMessage(data) {
-            if (data.type === 'response' || data.response || data.assistant_text) {
-                const content = data.content || data.response || data.assistant_text;
-                addMessage('assistant', content);
-
-                // Update model badge if present in response
-                if (content.includes('[Gemini')) {
-                    currentModel.textContent = 'Gemini 3 Flash';
-                    currentModel.style.background = 'rgba(16, 185, 129, 0.2)';
-                    currentModel.style.color = 'var(--status-healthy)';
-                } else if (content.includes('[Z.ai')) {
-                    const match = content.match(/\[Z\.ai ([\w\-]+)/);
-                    if (match) {
-                        currentModel.textContent = `Z.ai ${match[1]}`;
-                        currentModel.style.background = 'rgba(96, 165, 250, 0.2)';
-                        currentModel.style.color = 'var(--accent-blue)';
-                    }
-                } else if (content.includes('[OpenAI')) {
-                    const match = content.match(/\[OpenAI ([\w\-]+)/);
-                    if (match) {
-                        currentModel.textContent = `OpenAI ${match[1]}`;
-                        currentModel.style.background = 'rgba(245, 158, 11, 0.2)';
-                        currentModel.style.color = '#f59e0b';
-                    }
-                } else if (content.includes('[Ollama/')) {
-                    const match = content.match(/\[Ollama\/([\w\-.:]+)/);
-                    if (match) {
-                        currentModel.textContent = `Ollama/${match[1]}`;
-                        currentModel.style.background = 'rgba(148, 163, 184, 0.2)';
-                        currentModel.style.color = 'var(--text-secondary)';
-                    }
-                } else if (content.includes('[Claude')) {
-                    currentModel.textContent = 'Claude Sonnet';
-                    currentModel.style.background = 'rgba(167, 139, 250, 0.2)';
-                    currentModel.style.color = 'var(--accent-purple)';
-                } else if (content.includes('[Perplexity')) {
-                    currentModel.textContent = 'Perplexity';
-                    currentModel.style.background = 'rgba(96, 165, 250, 0.2)';
-                    currentModel.style.color = 'var(--accent-blue)';
-                }
-            } else if (data.type === 'error') {
-                addMessage('system', `Error: ${data.message}`, 'error');
-            }
-        }
-
-        // Add message to UI
-        function addMessage(role, content, type = 'normal') {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${role}`;
-            messageDiv.style.marginBottom = '12px';  // Add explicit margin instead of gap
-
-            const contentDiv = document.createElement('div');
-            contentDiv.textContent = content;
-
-            const metaDiv = document.createElement('div');
-            metaDiv.className = 'message-meta';
-            metaDiv.textContent = `${role === 'user' ? 'You' : 'Karma'} | ${new Date().toLocaleTimeString()}`;
-
-            messageDiv.appendChild(contentDiv);
-            messageDiv.appendChild(metaDiv);
-
-            chatMessages.appendChild(messageDiv);
-
-            // Force scroll to bottom with a slight delay to ensure rendering is complete
-            setTimeout(() => {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }, 10);
-        }
-
-        // Update connection status
-        function updateConnectionStatus(status, isConnected) {
-            connectionStatus.textContent = status;
-            connectionDot.style.background = isConnected ? 'var(--status-healthy)' : 'var(--status-critical)';
-        }
-
-        // Update time
-        function updateTime() {
-            const now = new Date();
-            document.getElementById('current-time').textContent = now.toLocaleTimeString();
-        }
-
-        // Generate UUID
-        function generateUUID() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                const r = Math.random() * 16 | 0;
-                const v = c === 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
-        }
-
-        // Start
-        init();
-    </script>
+  init();
+</script>
 </body>
 </html>
