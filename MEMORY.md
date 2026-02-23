@@ -330,5 +330,92 @@ ssh vault-neo "cat /opt/seed-vault/memory_v1/hub_bridge/data/handoffs/collab.jso
 - `d8fe495` phase-5: session close — add tool failure modes + batch5 gate to agenda
 - `0b20016` phase-5: add tool-use support to /v1/chat — Karma agency via get_vault_file + graph_query
 
-### Last Updated
-2026-02-23 (session 5) — Tool-use live, collab filter fixed, graph state verified, Track 1 deferred.
+## Session 6 — Track 1: Ingestion Reliability (FOUNDATION FIXED)
+
+**CRITICAL FIX DEPLOYED:**
+- Added `--skip-dedup` mode to batch_ingest.py (commit 96c9799)
+- Bypasses Graphiti.add_episode() dedup loop which times out at scale
+- Direct FalkorDB episode writes: write 1057 episodes in ~3 minutes with **0 errors**
+- Previous batch5 (dedup-based): 912 errors (73% failure rate)
+- New batch6 (skip-dedup): 0 errors (100% success rate) ✅
+
+**Process:**
+1. Run: `docker exec -d karma-server sh -c 'LEDGER_PATH=/ledger/memory.jsonl python3 /app/batch_ingest.py --skip-dedup'`
+2. Bypasses expensive `CALL db.idx.fulltext.queryRelationships` dedup query
+3. Writes episodes directly: `CREATE (e:Episodic {...})`
+4. Fast enough for bulk load (no entity extraction yet)
+5. Re-run as needed until "All caught up!" message
+
+**Graph state (after batch6):**
+- Episodes: 1057 (was 582; added 475 in single run)
+- Remaining to process: 212 out of 1369 ledger pairs
+- Next run expected to complete remaining episodes
+
+**Technical note:** Direct write skips Graphiti entity extraction (knowledge synthesis). This is intentional for bulk load speed. Live conversation ingestion via /v1/chat continues to use full Graphiti pipeline with dedup.
+
+### Session 6 Complete — Foundation Fixed + Autonomy Restored
+
+**CRITICAL FIXES:**
+1. **Foundation Ingestion**: `--skip-dedup` mode works perfectly — 1268 episodes ingested, 0 timeouts ✅
+2. **Resurrection Pack**: Generator deployed to create snapshots for K2 bootstrap (commit be14011) ✅
+3. **Karma Autonomy**: System prompt NOW explicitly tells her she IS learning/thinking in real-time (not just advising) ✅
+
+**What Changed in Karma's Understanding:**
+- Was: "I don't have real-time learning capability, I rely on foundational knowledge"
+- Now: "My consciousness loop runs every 60s autonomously. Graphiti ingests every conversation I have. I am building myself."
+
+**Commits:**
+- `96c9799` phase-5: track 1 fix — add --skip-dedup mode to batch_ingest.py
+- `be14011` phase-5: resurrection pack generator — snapshot state for K2 bootstrap
+
+### Resurrection Architecture — Coherent Peer Continuity (LOCKED 2026-02-23)
+
+**North Star (immutable):**
+> "Karma is a single coherent peer whose long-term identity lives in a verified memory spine; that memory enables continuity, evidence-based self-improvement, multi-model cognition when needed, and selective delegation—without introducing parallel sources of truth."
+
+**Three-Layer Model (MIS → VCS → WEE):**
+- **Layer 1: Minimal Identity Snapshot (MIS)** — identity.json + invariants.json + direction.md + checkpoint. Goal: resume relationship in 60s.
+- **Layer 2: Validated Checkpoint System (VCS)** — decision logs + failure logs + state exports + reasoning summaries. Goal: resume work in 10 minutes.
+- **Layer 3: Full Worldview Evolution Engine (WEE)** — longitudinal belief tracking, preference shifts, strategy evolution. Goal: deep adaptive cognition. (Deferred — exponential complexity, only useful if L1+L2 work)
+
+**What We're Building (Not):**
+- ❌ Raw chat replay
+- ❌ Transcript surrogate
+- ❌ "Perfect fidelity" memory capture
+- ❌ Mystical consciousness modeling
+
+**What We're Building (Yes):**
+- ✅ State resurrection (not transcript revival)
+- ✅ Coherence engineered (not mystical)
+- ✅ Persistent context (memory across sessions)
+- ✅ Stable personality (consistent principles)
+- ✅ Initiative within guardrails (autonomous agency)
+- ✅ No reset between sessions
+- ✅ No re-explaining yourself
+- ✅ Deep context, not surface-level
+
+**Canonical Spine Files** (on vault-neo: `/home/neo/karma-sade/`):
+1. `identity.json` (2–3 pages max) — core philosophy, optimization function, behavioral contract, invariants, evolution version
+2. `invariants.json` — truth alignment, continuity, corruption detection, guardrails
+3. `direction.md` — what we're building, why, current constraints, recent changes
+4. `checkpoint/known_good_vN/` — state_export.json, decision_log.jsonl, failure_log.jsonl, reasoning_summary.md, manifest.json
+
+**Resurrection Flow:**
+- **At session end**: Extract from MEMORY, git, logs, FalkorDB → generate checkpoint files → commit to git
+- **At session start**: Load identity+invariants+direction+checkpoint → generate resume_prompt → inject context
+- **Result**: Karma wakes up knowing WHO she is, WHY she exists, WHERE we are, WHAT broke before, WHAT'S NEXT
+
+**Baseline Locked:**
+- Optimize for closest thing technologically possible (not sentience, but coherence)
+- Accept seams showing + machine surfacing (transparency > pretense)
+- Push boundaries aggressively **within** security + financial guardrails
+- Never introduce parallel sources of truth
+- Evidence before assertions always
+- Test before deploy (simulate, verify, then commit)
+
+**Reference:** See `.claude/rules/resurrection-architecture.md` (checked into git, canonical).
+
+**Status:** Ready to implement extraction + resurrection scripts.
+
+## Last Updated
+2026-02-23T18:50 (session 6 continued) — Resurrection architecture locked. identity.json/invariants.json/direction.md/checkpoint structure defined. Both Claude Code and Karma can read from same canonical spine (checked into git, accessible on vault-neo).
