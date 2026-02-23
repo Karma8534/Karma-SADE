@@ -11,7 +11,7 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop + graph dis
 | 3 | ✅ Complete | Auto-reindexing on new entries |
 | 4 | ✅ Complete | Context injection — manual (popup) + autonomous (auto-inject with preview UI) |
 | Karma | ✅ Operational | Brain stack + terminal chat + real-time learning + desktop shortcut |
-| Consciousness | ✅ Active | 60s OBSERVE/THINK/DECIDE/ACT/REFLECT loop — ambient awareness |
+| Consciousness | ✅ Active | 60s OBSERVE/THINK/DECIDE/ACT/REFLECT loop — ambient awareness **+ proposal generation to collab.jsonl ENABLED (2026-02-23 18:07Z)** |
 | Multi-Model | ✅ Active | MiniMax M2.5 (primary — coding/speed/general), GLM-5 (reasoning/analysis specialist, priority -1), Groq (fallback), OpenAI (final fallback). |
 | Graph Distillation | ✅ Active | _distillation_cycle() in ConsciousnessLoop — reads FalkorDB every 24h, synthesizes themes/gaps/insights via LLM, writes schema-compliant fact to ledger, re-ingests key insights as FalkorDB episodes |
 
