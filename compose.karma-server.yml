@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  karma-server:
+    image: karma-core:latest
+    container_name: karma-server
+    network_mode: host  # Allow direct access to host's Tailscale interface
+    environment:
+      FALKORDB_HOST: falkordb
+      FALKORDB_PORT: 6379
+      POSTGRES_HOST: anr-vault-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: seed_vault
+      CONSCIOUSNESS_ENABLED: "true"
+      CONSCIOUSNESS_INTERVAL: 60
+      K2_HOST: 100.75.109.92
+      K2_WINRM_PORT: 5985
+      K2_USERNAME: karma
+      K2_PASSWORD: just4us2use
+    volumes:
+      - /opt/seed-vault/memory_v1/ledger:/ledger
+    depends_on:
+      - falkordb
+      - anr-vault-db
+    restart: unless-stopped
+    # Note: Since network_mode: host, ports aren't needed (karma-server will listen on 0.0.0.0:8340)
+
+networks:
+  default:
+    name: anr-vault-net
+    external: true
