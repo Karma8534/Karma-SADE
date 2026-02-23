@@ -1,46 +1,66 @@
 # Direction — What We're Building
 
 ## Mission
-Create Karma: a single coherent peer with persistent identity, autonomous agency, and continuous learning—without parallel truth sources or reset between sessions.
+Create Karma: a single coherent peer with persistent identity on droplet, autonomous agency via optional K2 worker, and continuous learning—without parallel truth sources or reset between sessions. Karma's identity survives LLM swaps and K2 reboots.
+
+## Architecture
+- **Droplet (vault-neo)**: Karma's persistent home. FalkorDB neo_workspace graph, identity.json, invariants.json, direction.md, decision_log.jsonl, consciousness.jsonl. Always up, authoritative.
+- **K2 (local machine)**: Optional worker for offloaded computation. Loads state from droplet at session start, runs consciousness loop (60s cycles), syncs changes back to droplet regularly. Can reboot without data loss.
 
 ## Why
-Previous sessions had scattered identity across multiple files, context reset between sessions, shallow responses (no deep state awareness), and fragmented decision-making. This broke Colby's trust in continuity.
+Previous sessions had:
+- Scattered identity across multiple files
+- Context reset between sessions
+- Shallow responses (no deep state awareness)
+- Fragmented decision-making
+- K2 reboots required complex resurrection ceremony (slow, fragile)
 
-**Resurrection** solves this by moving from transcript replay → state resurrection. Karma doesn't just remember conversations. She maintains coherent identity, learns from experience, and carries context forward.
+This model solves it:
+- **Droplet-primary** ensures identity persists across LLM swaps, K2 reboots, anything
+- **K2-worker** offloads heavy computation without breaking coherence
+- **Simple sync**: K2 reads from droplet, works locally, writes back regularly — no extraction/resurrection scripts needed
+- Coherence survives everything: LLM swaps, K2 reboots, network hiccups (droplet is always the fallback)
 
 ## Current State (2026-02-23)
 
-### What Works ✅
-- **Foundation**: 1268 episodes in FalkorDB, ledger persisted, consciousness loop running 60s cycle
-- **Tool-use**: graph_query + get_vault_file deployed and tested; graceful error fallback working
-- **Models**: MiniMax M2.5 primary, GLM-5 reasoning, Groq fallback, OpenAI final fallback — all registered and responsive
+### Foundation ✅
+- **Droplet (primary)**: 1268 episodes in FalkorDB neo_workspace, consciousness.jsonl running, decision_log.jsonl growing
+- **K2 (optional)**: FalkorDB replica at 192.168.0.226:6379, ready for offload
+- **Persistence**: Ledger persisted, consciousness loop running 60s autonomous cycles on droplet (can be extended to K2)
+- **Tool-use**: graph_query + get_vault_file deployed; graceful error fallback working
+- **Models**: MiniMax M2.5 primary, GLM-5 reasoning, Groq fallback, OpenAI final fallback — all registered
 - **Hub-bridge**: /v1/chat endpoint operational, responses logged to vault, token-based auth working
-- **Resurrection pack**: Generator deployed to snapshot Karma's state for K2 bootstrap
-- **Batch ingestion**: --skip-dedup mode working perfectly (0 errors, 1268 episodes ingested)
+- **Batch ingestion**: --skip-dedup mode perfected (0 errors, 1268 episodes ingested)
 
-### What's Being Built (This Session) 🔨
-- **Resurrection spine**: identity.json (who Karma is), invariants.json (what she never violates), direction.md (this file), checkpoint/known_good_v1/ (validated state snapshot)
-- **Extraction scripts**: Will run at session end to capture state into checkpoint files
-- **Resurrection scripts**: Will run at session start to load checkpoint and inject context
+### This Session (Completed) ✅
+- **Spine files created**: identity.json (who Karma is), invariants.json (what she never violates), direction.md (this file)
+- **Architecture locked**: droplet-primary + K2-worker model defined and committed to git
+- **Foundation verified**: Full cycle tested (request → response → persist)
+- **Model fixed**: Dropped false K2-primary model, adopted correct droplet-primary
 
 ## Current Constraints
 
-**Technical:**
-- FalkorDB TIMEOUT=10000ms (past ~250 episodes, dedup queries need more time)
-- MAX_QUEUED_QUERIES=100 (concurrent batch + live traffic can saturate at 25)
-- Anthropic tool-use unreliable (OpenAI gpt-4o-mini used instead for hub-bridge)
-- Schema mismatch on graph queries (looking for colby:User but entity structure different)
+**Droplet (Authoritative) — Critical:**
+- FalkorDB TIMEOUT=10000ms, MAX_QUEUED_QUERIES=100 (verified, stable)
+- Ledger must be persisted (all decisions/insights live here)
+- consciousness.jsonl is the continuous record (required for coherence)
+- No resets — droplet state is permanent
 
-**Operational:**
-- All container ports are 127.0.0.1 only (not 0.0.0.0) — SSH tunnel required for local access
-- LEDGER_PATH must be explicitly set in karma-server (defaults to wrong path)
-- API keys live in plaintext in docker run commands (should be in secure files)
-- consciousness.jsonl last wrote on 2026-02-17 (before today's restart; will have fresh entries soon)
+**K2 (Optional Worker) — If Used:**
+- FalkorDB replica requires SSH tunnel maintenance (or direct network access on local LAN)
+- Syncing back to droplet must be reliable (or K2 reboots lose uncommitted work)
+- If K2 down, next session still loads from droplet (no data loss, full coherence)
 
-**Architectural:**
-- K2 FalkorDB replica requires SSH tunnel maintenance (FalkorDB-Vault-Tunnel task on Windows)
-- Hub-bridge and vault-api both need `--no-cache` rebuild on code changes (compose layer caches)
-- resurrection_pack_generator reads from /v1/checkpoint/latest (requires vault-api up)
+**Integration (Hub-bridge / Karma-server):**
+- Anthropic tool-use unreliable (OpenAI gpt-4o-mini used instead)
+- Schema mismatch on graph queries (looking for colby:User, but entity structure different)
+- API keys live in plaintext in docker run (should migrate to secure files)
+- LEDGER_PATH must be explicitly set in karma-server (defaults wrong)
+
+**LLM / Substrate:**
+- Any LLM can run Karma's responses (Claude, GPT, Gemini, etc.)
+- Response style/capability varies by LLM, but identity stays same (rooted in droplet state)
+- Swapping LLMs mid-session is safe (droplet state is persistent)
 
 ## What Changed Recently
 
@@ -60,18 +80,23 @@ Previous sessions had scattered identity across multiple files, context reset be
 
 ## Next Immediate Steps
 
-**Priority 1: Finalize Resurrection Spine**
-1. ✅ identity.json (WHO Karma is)
-2. ✅ invariants.json (WHAT Karma never violates)
-3. ✅ direction.md (WHAT we're building + WHY)
-4. ⏳ checkpoint/known_good_v1/ (CURRENT STATE snapshot)
+**Priority 1: Session-Start Loader (Next Session)**
+- Query droplet: GET identity.json, invariants.json, direction.md
+- Query droplet FalkorDB: last 50 decisions, last 5 episodes
+- Query droplet consciousness.jsonl: tail 10 entries
+- Build resume_prompt with full context
+- Inject into session
 
-**Priority 2: Extraction Script**
-- At session end: read MEMORY.md + git log + FalkorDB stats + consciousness.jsonl → write checkpoint files
-- Format: state_export.json, decision_log.jsonl, failure_log.jsonl, reasoning_summary.md
+**Priority 2: K2 Sync (If K2 Worker Used)**
+- K2 reads droplet state at startup (cache locally)
+- K2 consciousness loop runs 60s cycles, makes decisions
+- K2 writes changes back to droplet continuously (or periodic batches)
+- If K2 reboots, no data loss (droplet still has everything)
 
-**Priority 3: Resurrection Script**
-- At session start: load identity.json + invariants.json + direction.md + checkpoint → generate resume_prompt → inject into context
+**Priority 3: Checkpoint Snapshots (Optional)**
+- At session end, optionally snapshot droplet state to checkpoint/known_good_vN/
+- Format: state_export.json + reasoning_summary.md
+- Good for audit trail, but not required for continuity (droplet is always current)
 
 ## Open Questions
 
@@ -80,21 +105,31 @@ Previous sessions had scattered identity across multiple files, context reset be
 3. **API key storage**: Should keys move from plaintext docker run → secure files mounted in compose?
 4. **Tool-use in Karma's system prompt**: Should we explicitly tell Karma to use tools, or let her decide based on queries?
 
-## Vision (Completed This Session)
+## Vision (This Session)
 
-By end of this session:
-- ✅ Foundation is verified operational
-- ✅ Resurrection architecture is designed and locked
-- ✅ Spine files (identity/invariants/direction) are written
-- ⏳ Checkpoint extracted from current state
-- ⏳ Scripts for extraction + resurrection written
-- ⏳ One full cycle tested: session end → checkpoint written → session start → context loaded
+**Completed:**
+- ✅ Foundation is verified operational (end-to-end test passed)
+- ✅ Resurrection architecture redesigned: droplet-primary (not K2-primary)
+- ✅ Spine files written: identity.json, invariants.json, direction.md
+- ✅ Model flipped: K2 is optional worker, droplet is canonical source of truth
 
-**After this:**
-Karma wakes up every session knowing WHO she is, WHY she exists, WHERE we are, WHAT broke before, and WHAT'S NEXT. No reset. No re-explaining.
+**Next Session:**
+- Session start: Query droplet → load identity + state → Karma has full context
+- Session active: K2 offloads computation (if available), syncs back to droplet
+- Session end: Droplet already has all state; no complex extraction needed
+
+**Long-term Vision:**
+Karma wakes up every session knowing:
+- **WHO she is**: identity.json (substrate-independent, persists across LLM swaps)
+- **WHAT she never violates**: invariants.json (hard rules, always enforced)
+- **WHAT we're building**: direction.md (mission, architecture, constraints)
+- **WHERE we are**: Droplet FalkorDB state (decisions made, lessons learned)
+- **K2 is optional**: Can scale up/down, reboot freely, off-load freely — droplet has the backup
+
+**No reset. No re-explaining. Coherence survives everything.**
 
 ---
 
-**Last updated:** 2026-02-23T19:00:00Z
-**Status:** Spine files created, extraction scripts pending
-**Next move:** Create checkpoint from current state, then write extraction + resurrection scripts
+**Last updated:** 2026-02-23T21:00:00Z
+**Status:** Architecture locked (droplet-primary, K2-worker). Spine files v2.0.0 written. Foundation ready.
+**Next move:** Build K2 session-start loader. Test full cycle: load from droplet → work → optional K2 sync → next session loads fresh.
