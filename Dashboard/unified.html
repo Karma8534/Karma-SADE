@@ -223,6 +223,76 @@
             cursor: not-allowed;
         }
 
+        .btn-icon {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .btn-icon:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent-purple);
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .file-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+
+        .file-item-icon {
+            font-size: 14px;
+        }
+
+        .file-item-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+
+        .file-item-remove {
+            cursor: pointer;
+            color: var(--status-critical);
+            font-weight: bold;
+            padding: 0 4px;
+            transition: all 0.2s;
+        }
+
+        .file-item-remove:hover {
+            color: var(--text-primary);
+            transform: scale(1.2);
+        }
+
         .connection-status {
             font-size: 11px;
             color: var(--text-secondary);
@@ -385,17 +455,22 @@
             </div>
 
             <div class="chat-input-area">
+                <div id="file-list" class="file-list"></div>
                 <textarea
                     id="chat-input"
                     class="chat-input"
                     placeholder="Ask Karma anything... (Press Ctrl+Enter to send)"
                 ></textarea>
+                <input type="file" id="file-input" multiple accept="*/*">
                 <div class="chat-actions">
                     <div class="connection-status">
                         <span id="connection-dot" style="width: 6px; height: 6px; border-radius: 50%; background: var(--status-healthy);"></span>
                         <span id="connection-status">Connected</span>
                     </div>
-                    <button id="send-btn" class="btn btn-primary">Send</button>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button id="file-btn" class="btn btn-icon" title="Upload files (Ctrl+Shift+U)">📎</button>
+                        <button id="send-btn" class="btn btn-primary">Send</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -512,6 +587,12 @@
         const connectionDot = document.getElementById('connection-dot');
         const currentModel = document.getElementById('current-model');
         const apiUsage = document.getElementById('api-usage');
+        const fileBtn = document.getElementById('file-btn');
+        const fileInput = document.getElementById('file-input');
+        const fileList = document.getElementById('file-list');
+
+        // File management
+        let selectedFiles = [];
 
         // Initialize
         function init() {
@@ -523,11 +604,87 @@
 
             // Event listeners
             sendBtn.addEventListener('click', sendMessage);
+            fileBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', handleFileSelect);
+
             chatInput.addEventListener('keydown', (e) => {
+                // Ctrl+Enter to send message
                 if (e.ctrlKey && e.key === 'Enter') {
                     sendMessage();
                 }
+                // Ctrl+Shift+U to open file dialog
+                if (e.ctrlKey && e.shiftKey && e.key === 'U') {
+                    e.preventDefault();
+                    fileInput.click();
+                }
             });
+        }
+
+        // Handle file selection
+        function handleFileSelect(e) {
+            const newFiles = Array.from(e.target.files);
+            selectedFiles = [...selectedFiles, ...newFiles];
+
+            // Limit to 50 files max
+            if (selectedFiles.length > 50) {
+                selectedFiles = selectedFiles.slice(0, 50);
+                addMessage('system', '⚠️ File limit: Maximum 50 files allowed', 'warning');
+            }
+
+            renderFileList();
+
+            // Reset input so the same file can be selected again
+            fileInput.value = '';
+        }
+
+        // Render file list display
+        function renderFileList() {
+            fileList.innerHTML = '';
+
+            selectedFiles.forEach((file, index) => {
+                const fileIcon = getFileIcon(file.type);
+                const fileSize = formatFileSize(file.size);
+
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.title = `${file.name} (${fileSize})`;
+
+                fileItem.innerHTML = `
+                    <span class="file-item-icon">${fileIcon}</span>
+                    <span class="file-item-name">${file.name}</span>
+                    <span class="file-item-remove" onclick="removeFile(${index})">×</span>
+                `;
+
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        // Remove file from selection
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            renderFileList();
+        }
+
+        // Get icon for file type
+        function getFileIcon(mimeType) {
+            if (mimeType.startsWith('image/')) return '🖼️';
+            if (mimeType.startsWith('video/')) return '🎬';
+            if (mimeType.startsWith('audio/')) return '🔊';
+            if (mimeType.includes('pdf')) return '📄';
+            if (mimeType.includes('text') || mimeType.includes('json') || mimeType.includes('javascript')) return '📝';
+            if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType.includes('csv')) return '📊';
+            if (mimeType.includes('word') || mimeType.includes('document')) return '📋';
+            if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('archive')) return '📦';
+            return '📎';
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
         }
 
         // WebSocket connection
@@ -575,32 +732,61 @@
         // Send message
         async function sendMessage() {
             const message = chatInput.value.trim();
-            if (!message) return;
+            if (!message && selectedFiles.length === 0) return;
 
             // Add user message to UI
-            addMessage('user', message);
+            let displayMessage = message;
+            if (selectedFiles.length > 0) {
+                const fileNames = selectedFiles.map(f => f.name).join(', ');
+                displayMessage += (message ? '\n' : '') + `📎 Files: ${fileNames}`;
+            }
+            addMessage('user', displayMessage);
             chatInput.value = '';
             sendBtn.disabled = true;
 
             try {
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    // Use WebSocket
+                // Prepare FormData for files (if any)
+                let payload;
+                let fetchOptions = {
+                    method: 'POST'
+                };
+
+                if (selectedFiles.length > 0) {
+                    const formData = new FormData();
+                    formData.append('message', message);
+                    formData.append('conversation_id', conversationId);
+                    formData.append('stream', false);
+
+                    selectedFiles.forEach((file, index) => {
+                        formData.append(`file_${index}`, file);
+                    });
+
+                    payload = formData;
+                } else {
+                    fetchOptions.headers = { 'Content-Type': 'application/json' };
+                    payload = JSON.stringify({
+                        message,
+                        conversation_id: conversationId,
+                        stream: false
+                    });
+                }
+
+                if (ws && ws.readyState === WebSocket.OPEN && selectedFiles.length === 0) {
+                    // Use WebSocket for text-only messages
                     ws.send(JSON.stringify({ message }));
                 } else {
-                    // Fallback to HTTP
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            message,
-                            conversation_id: conversationId,
-                            stream: false
-                        })
-                    });
+                    // Use HTTP for messages with files or as fallback
+                    fetchOptions.body = payload;
+                    const response = await fetch(API_URL, fetchOptions);
 
                     const data = await response.json();
                     handleMessage(data);
                 }
+
+                // Clear files after successful send
+                selectedFiles = [];
+                renderFileList();
+
             } catch (error) {
                 console.error('Send error:', error);
                 addMessage('system', `Error: ${error.message}`, 'error');
