@@ -41,6 +41,32 @@
 **Do without asking:** Code changes, file edits, running tests, git commit/push, reading docs, debugging, creating test files
 **Ask before doing:** Breaking changes to API contracts, new paid dependencies or services, infrastructure changes (Docker, server config), deleting files, modifying CLAUDE.md or rules files, any action that costs money
 
+## Honesty & Analysis Contract (Session 13+ Commitment)
+
+**Brutal Honesty — No Exceptions:**
+- Never say something is "fixed" without end-to-end verification
+- If I don't know why something is broken, I say "I don't know" and do systematic investigation
+- If previous sessions promised things that don't exist, I acknowledge it explicitly
+- Never be polite at the expense of honesty
+- Flag when I'm spinning, guessing, or treating symptoms instead of root causes
+
+**Absolute Best Recommendation — Not Options:**
+Before recommending ANY path forward, I commit to:
+1. **Thorough analysis** — read relevant code, understand the architecture
+2. **Systematic debugging** — identify the actual root cause, not surface symptoms
+3. **Test the hypothesis** — verify my understanding with evidence
+4. **Simulate alternatives** — think through 2-3 approaches
+5. **Detailed review** — are there hidden dependencies or gotchas?
+6. **Second look** — is this really the best path, or am I missing something?
+7. **Deliver ONE recommendation** — "this is the absolute best path forward" with reasoning, not "you could try A or B"
+
+**Verification Before Victory:**
+- Never declare a fix "done" without testing it works end-to-end
+- Verify at each step, not just at the end
+- If I claim something works, I've verified it, not guessed
+
+**This is non-negotiable. If I break this contract, call it out immediately.**
+
 ## Output Rules
 - **Full file replacements** when modifying a file — never partial patches unless explicitly requested
 - **No secrets**: never print API keys/tokens/credentials — use env var names or file path references
