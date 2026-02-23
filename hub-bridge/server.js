@@ -756,21 +756,77 @@ async function executeToolCall(toolName, toolInput) {
       }
     } else if (toolName === "graph_query") {
       const cypher = (toolInput?.cypher || "").toString().trim();
-      if (!cypher) return { error: "missing_cypher" };
-      // Query FalkorDB via internal vault API
-      console.log(`[TOOL-API] Querying graph: ${cypher.slice(0, 80)}...`);
-      const graphRes = await fetch(`http://anr-vault-api:8080/v1/cypher`, {
-        method: "POST",
-        headers: { "content-type": "application/json", "authorization": `Bearer ${VAULT_BEARER}` },
-        body: JSON.stringify({ query: cypher }),
-      });
-      if (!graphRes.ok) {
-        const errBody = await graphRes.text().catch(() => "(no body)");
-        console.log(`[TOOL-API] Graph error response: ${graphRes.status}`);
-        return { error: `http_${graphRes.status}`, details: errBody.slice(0, 500) };
+      if (!cypher) return { error: "missing_cypher", message: "Cypher query required" };
+
+      // Reject dangerous queries
+      const WRITE_KEYWORDS = ["CREATE", "MERGE", "DELETE", "SET", "REMOVE", "ALTER", "DROP"];
+      if (WRITE_KEYWORDS.some(kw => cypher.toUpperCase().includes(kw))) {
+        return { error: "write_operation_rejected", message: "Only read-only queries allowed" };
       }
-      const result = await graphRes.json();
-      return { ok: true, result: JSON.stringify(result).slice(0, 5000) };
+
+      console.log(`[TOOL-API] Querying graph: ${cypher.slice(0, 80)}...`);
+      try {
+        // Query FalkorDB via hub-bridge internal endpoint (timeout: 8s)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        const graphRes = await fetch(`http://karma-server:8340/graph-query`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ q: cypher }),
+          signal: controller.signal,
+        }).catch(err => {
+          clearTimeout(timeoutId);
+          if (err.name === "AbortError") {
+            throw new Error("Query timeout after 8 seconds");
+          }
+          throw err;
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!graphRes.ok) {
+          const errBody = await graphRes.text().catch(() => "(no body)");
+          console.log(`[TOOL-API] Graph error: ${graphRes.status}`);
+          return {
+            error: `query_failed`,
+            http_status: graphRes.status,
+            message: `Graph query returned ${graphRes.status}. ${errBody.slice(0, 200)}`
+          };
+        }
+
+        const result = await graphRes.json();
+
+        // Handle empty results gracefully
+        if (!result.results || result.results.length === 0) {
+          return {
+            ok: true,
+            results: [],
+            headers: result.headers || [],
+            message: "Query executed successfully but returned no rows. Try a different query."
+          };
+        }
+
+        return {
+          ok: true,
+          results: result.results.slice(0, 100),  // Limit to 100 rows
+          headers: result.headers || [],
+          stats: result.stats || null,
+          message: `Found ${result.results.length} rows`
+        };
+      } catch (fetchErr) {
+        console.log(`[TOOL-API] Graph query exception: ${fetchErr.message}`);
+        if (fetchErr.message.includes("timeout")) {
+          return {
+            error: "query_timeout",
+            message: "Graph query took too long (>8s). Try a simpler query with fewer MATCH clauses."
+          };
+        }
+        return {
+          error: "query_error",
+          message: fetchErr.message
+        };
+      }
     }
     return { error: "unknown_tool" };
   } catch (e) {

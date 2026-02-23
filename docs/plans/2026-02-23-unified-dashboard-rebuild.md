@@ -1,0 +1,738 @@
+# Unified Dashboard Rebuild Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+
+**Goal:** Replace the broken 3-column unified.html with a clean 2-column layout (chat + sidebar) that shows accurate system data from response telemetry, removes all SADE-era labels, and preserves all existing JS logic.
+
+**Architecture:** Single HTML file (embedded CSS + JS). Two columns: chat panel (~70%) and sidebar (~30%). Top bar shows model + spend inline. Sidebar populates from chat response telemetry — no polling, no new endpoints. Full rewrite, not a patch.
+
+**Tech Stack:** Vanilla HTML/CSS/JS. Deployed via SCP to vault-neo → docker compose build --no-cache.
+
+---
+
+## Reference: What hub-bridge /v1/chat returns
+
+```json
+{
+  "ok": true,
+  "assistant_text": "Hi Colby!...",
+  "model": "claude-sonnet-4-6",
+  "debug_provider": "openai",
+  "usd_estimate": 0.0051,
+  "spend": {
+    "usd_spent": 10.33,
+    "cap_usd": 35
+  }
+}
+```
+
+Sidebar reads `model`, `usd_estimate`, `spend.usd_spent`, `spend.cap_usd` from every response.
+
+---
+
+## Reference: Token auth flow
+
+```js
+// localStorage key: 'karma_hub_token'
+// On send: if no token → prompt() → store → add Authorization header
+// On 401: clear localStorage, set status 'Token invalid — re-enter'
+```
+
+---
+
+### Task 1: Write HTML structure + CSS
+
+**Files:**
+- Modify: `hub-bridge/app/public/unified.html` (full rewrite)
+
+**Step 1: Replace file with new HTML skeleton + CSS**
+
+The complete file starts here. Write this as the entire unified.html content:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Karma</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-primary:    #0f1117;
+    --bg-secondary:  #1a1d27;
+    --bg-card:       #1e2130;
+    --border:        #2a2d3e;
+    --text-primary:  #e2e8f0;
+    --text-secondary:#8892a4;
+    --accent-purple: #a78bfa;
+    --accent-blue:   #60a5fa;
+    --accent-green:  #34d399;
+    --status-ok:     #34d399;
+    --status-warn:   #f59e0b;
+    --status-err:    #f87171;
+    --user-bubble:   #2d3a5e;
+    --karma-bubble:  #1e2130;
+  }
+
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 44px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    gap: 16px;
+  }
+  .topbar-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent-purple);
+    letter-spacing: 0.02em;
+  }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--status-ok);
+    display: inline-block;
+    margin-right: 5px;
+  }
+  .model-badge {
+    background: rgba(167,139,250,0.15);
+    color: var(--accent-purple);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .spend-badge {
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+  #topbar-clock { color: var(--text-secondary); font-size: 12px; }
+
+  /* ── Main layout ── */
+  .layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Chat panel ── */
+  .chat-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+    min-width: 0;
+  }
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .msg { max-width: 85%; display: flex; flex-direction: column; gap: 3px; }
+  .msg.user  { align-self: flex-end; }
+  .msg.karma { align-self: flex-start; }
+  .msg-bubble {
+    padding: 10px 14px;
+    border-radius: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .msg.user  .msg-bubble { background: var(--user-bubble); color: var(--text-primary); border-bottom-right-radius: 3px; }
+  .msg.karma .msg-bubble { background: var(--karma-bubble); color: var(--text-primary); border: 1px solid var(--border); border-bottom-left-radius: 3px; }
+  .msg.system .msg-bubble { background: transparent; color: var(--text-secondary); font-size: 12px; font-style: italic; border: none; padding: 4px 0; }
+  .msg-meta { font-size: 11px; color: var(--text-secondary); padding: 0 4px; }
+  .msg.user .msg-meta { text-align: right; }
+
+  /* ── Input area ── */
+  .chat-input-area {
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    flex-shrink: 0;
+  }
+  .file-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .file-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .file-chip-remove {
+    cursor: pointer;
+    color: var(--text-secondary);
+    margin-left: 2px;
+    line-height: 1;
+  }
+  .file-chip-remove:hover { color: var(--status-err); }
+
+  textarea#chat-input {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    min-height: 60px;
+    max-height: 160px;
+    overflow-y: auto;
+    line-height: 1.5;
+  }
+  textarea#chat-input:focus { border-color: var(--accent-purple); }
+  textarea#chat-input::placeholder { color: var(--text-secondary); }
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+  .conn-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .conn-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--status-ok);
+  }
+  .input-actions { display: flex; gap: 8px; align-items: center; }
+
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    transition: opacity 0.15s;
+  }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-icon {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 6px 10px;
+  }
+  .btn-icon:hover:not(:disabled) { border-color: var(--accent-purple); }
+  .btn-send {
+    background: var(--accent-purple);
+    color: #fff;
+    padding: 6px 16px;
+    font-weight: 500;
+  }
+  .btn-send:hover:not(:disabled) { opacity: 0.85; }
+
+  input[type="file"] { display: none; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 16px 12px;
+    gap: 4px;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .sidebar-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+  .sidebar-section-title {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  .sidebar-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-row:last-child { border-bottom: none; }
+  .sidebar-row-label { color: var(--text-secondary); }
+  .sidebar-row-value { color: var(--text-primary); font-weight: 500; text-align: right; }
+
+  .service-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+  .service-row:last-child { border-bottom: none; }
+  .service-name { color: var(--text-secondary); }
+  .service-status {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+  .service-status.ok { background: rgba(52,211,153,0.15); color: var(--status-ok); }
+  .service-status.warn { background: rgba(245,158,11,0.15); color: var(--status-warn); }
+
+  /* ── Typing indicator ── */
+  .typing-indicator .msg-bubble {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 12px 14px;
+  }
+  .typing-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-secondary);
+    animation: bounce 1.2s infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <span class="topbar-title">Karma</span>
+  <div class="topbar-right">
+    <span><span class="status-dot" id="topbar-dot"></span>All Systems Operational</span>
+    <span class="model-badge" id="topbar-model">claude-sonnet-4-6</span>
+    <span class="spend-badge" id="topbar-spend">— / $35.00</span>
+    <span id="topbar-clock"></span>
+  </div>
+</div>
+
+<!-- Main layout -->
+<div class="layout">
+
+  <!-- Chat panel -->
+  <div class="chat-panel">
+    <div class="chat-messages" id="chat-messages"></div>
+
+    <div class="chat-input-area">
+      <div class="file-list" id="file-list"></div>
+      <textarea id="chat-input" placeholder="Ask Karma anything… (Enter to send, Shift+Enter for new line)" rows="2"></textarea>
+      <input type="file" id="file-input" multiple accept="*/*">
+      <div class="input-row">
+        <div class="conn-status">
+          <span class="conn-dot" id="conn-dot"></span>
+          <span id="conn-status">Connected</span>
+        </div>
+        <div class="input-actions">
+          <button class="btn-icon" id="file-btn" title="Attach files (Ctrl+Shift+U)">📎</button>
+          <button class="btn-send" id="send-btn">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Session</div>
+      <div class="sidebar-row">
+        <span class="sidebar-row-label">Model</span>
+        <span class="sidebar-row-value" id="sb-model">—</span>
+      </div>
+      <div class="sidebar-row">
+        <span class="sidebar-row-label">This request</span>
+        <span class="sidebar-row-value" id="sb-last-cost">—</span>
+      </div>
+      <div class="sidebar-row">
+        <span class="sidebar-row-label">Month spend</span>
+        <span class="sidebar-row-value" id="sb-spend">—</span>
+      </div>
+      <div class="sidebar-row">
+        <span class="sidebar-row-label">Cap</span>
+        <span class="sidebar-row-value" id="sb-cap">$35.00</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Services</div>
+      <div class="service-row">
+        <span class="service-name">hub-bridge</span>
+        <span class="service-status ok">Running</span>
+      </div>
+      <div class="service-row">
+        <span class="service-name">karma-server</span>
+        <span class="service-status ok">Running</span>
+      </div>
+      <div class="service-row">
+        <span class="service-name">falkordb</span>
+        <span class="service-status ok">Running</span>
+      </div>
+      <div class="service-row">
+        <span class="service-name">vault-api</span>
+        <span class="service-status ok">Running</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── Config ──────────────────────────────────────────────────────────────
+  const API_URL = '/v1/chat';
+
+  function getToken()  { return localStorage.getItem('karma_hub_token') || ''; }
+  function saveToken(t){ localStorage.setItem('karma_hub_token', t.trim()); }
+  function clearToken(){ localStorage.removeItem('karma_hub_token'); }
+  function promptToken() {
+    const t = prompt('Enter your Karma hub token:');
+    if (t && t.trim()) { saveToken(t); return t.trim(); }
+    return '';
+  }
+
+  // ── State ────────────────────────────────────────────────────────────────
+  let conversationId = crypto.randomUUID();
+  let selectedFiles  = [];
+
+  // ── DOM refs ─────────────────────────────────────────────────────────────
+  const $messages  = document.getElementById('chat-messages');
+  const $input     = document.getElementById('chat-input');
+  const $sendBtn   = document.getElementById('send-btn');
+  const $fileBtn   = document.getElementById('file-btn');
+  const $fileInput = document.getElementById('file-input');
+  const $fileList  = document.getElementById('file-list');
+  const $connDot   = document.getElementById('conn-dot');
+  const $connStatus= document.getElementById('conn-status');
+  const $sbModel   = document.getElementById('sb-model');
+  const $sbLastCost= document.getElementById('sb-last-cost');
+  const $sbSpend   = document.getElementById('sb-spend');
+  const $sbCap     = document.getElementById('sb-cap');
+  const $topModel  = document.getElementById('topbar-model');
+  const $topSpend  = document.getElementById('topbar-spend');
+  const $topClock  = document.getElementById('topbar-clock');
+
+  // ── Clock ────────────────────────────────────────────────────────────────
+  function updateClock() {
+    $topClock.textContent = new Date().toLocaleTimeString();
+  }
+
+  // ── Connection status ────────────────────────────────────────────────────
+  function setConnStatus(text, ok) {
+    $connStatus.textContent = text;
+    $connDot.style.background = ok ? 'var(--status-ok)' : 'var(--status-err)';
+  }
+
+  // ── Sidebar update from response telemetry ───────────────────────────────
+  function updateSidebar(data) {
+    if (data.model) {
+      $sbModel.textContent  = data.model;
+      $topModel.textContent = data.model;
+    }
+    if (data.usd_estimate != null) {
+      $sbLastCost.textContent = '$' + data.usd_estimate.toFixed(4);
+    }
+    if (data.spend) {
+      const spent = data.spend.usd_spent ?? data.spend.spend_used_usd ?? 0;
+      const cap   = data.spend.cap_usd   ?? data.spend.spend_cap_usd  ?? 35;
+      $sbSpend.textContent = '$' + spent.toFixed(2);
+      $sbCap.textContent   = '$' + cap.toFixed(2);
+      $topSpend.textContent = '$' + spent.toFixed(2) + ' / $' + cap.toFixed(2);
+    }
+  }
+
+  // ── Typing indicator ─────────────────────────────────────────────────────
+  let typingEl = null;
+  function showTyping() {
+    typingEl = document.createElement('div');
+    typingEl.className = 'msg karma typing-indicator';
+    typingEl.innerHTML = '<div class="msg-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>';
+    $messages.appendChild(typingEl);
+    $messages.scrollTop = $messages.scrollHeight;
+  }
+  function hideTyping() {
+    if (typingEl) { typingEl.remove(); typingEl = null; }
+  }
+
+  // ── Add message ──────────────────────────────────────────────────────────
+  function addMessage(role, content) {
+    const wrap    = document.createElement('div');
+    wrap.className = 'msg ' + role;
+    const bubble  = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    bubble.textContent = content;
+    const meta    = document.createElement('div');
+    meta.className = 'msg-meta';
+    meta.textContent = (role === 'user' ? 'You' : role === 'karma' ? 'Karma' : '') + ' · ' + new Date().toLocaleTimeString();
+    wrap.appendChild(bubble);
+    if (role !== 'system') wrap.appendChild(meta);
+    $messages.appendChild(wrap);
+    setTimeout(() => { $messages.scrollTop = $messages.scrollHeight; }, 10);
+  }
+
+  // ── Handle response ──────────────────────────────────────────────────────
+  function handleMessage(data) {
+    hideTyping();
+    if (data.assistant_text || data.response || data.content) {
+      const text = data.assistant_text || data.response || data.content;
+      addMessage('karma', text);
+      updateSidebar(data);
+      setConnStatus('Connected', true);
+    } else if (data.error) {
+      addMessage('system', 'Error: ' + data.error);
+      setConnStatus('Error', false);
+    }
+  }
+
+  // ── File handling ────────────────────────────────────────────────────────
+  function renderFileList() {
+    $fileList.innerHTML = '';
+    selectedFiles.forEach((f, i) => {
+      const chip = document.createElement('div');
+      chip.className = 'file-chip';
+      chip.innerHTML = getFileIcon(f.type) + ' <span>' + f.name + '</span>'
+        + '<span class="file-chip-remove" onclick="removeFile(' + i + ')">×</span>';
+      $fileList.appendChild(chip);
+    });
+  }
+  function removeFile(i) { selectedFiles.splice(i, 1); renderFileList(); }
+  function getFileIcon(mime) {
+    if (mime.startsWith('image/')) return '🖼️';
+    if (mime.includes('pdf'))      return '📄';
+    if (mime.includes('text') || mime.includes('json')) return '📝';
+    if (mime.includes('spreadsheet') || mime.includes('csv')) return '📊';
+    return '📎';
+  }
+  function formatBytes(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+    return (b/1048576).toFixed(1) + ' MB';
+  }
+
+  // ── Send message ─────────────────────────────────────────────────────────
+  async function sendMessage() {
+    const text = $input.value.trim();
+    if (!text && selectedFiles.length === 0) return;
+
+    let token = getToken();
+    if (!token) {
+      token = promptToken();
+      if (!token) return;
+      setConnStatus('Connected', true);
+    }
+
+    // Show user message
+    let display = text;
+    if (selectedFiles.length > 0) {
+      display += (text ? '\n' : '') + '📎 ' + selectedFiles.map(f => f.name).join(', ');
+    }
+    addMessage('user', display);
+    $input.value = '';
+    $sendBtn.disabled = true;
+    showTyping();
+
+    try {
+      let fetchOpts = {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token }
+      };
+      let body;
+
+      if (selectedFiles.length > 0) {
+        const fd = new FormData();
+        fd.append('message', text);
+        fd.append('conversation_id', conversationId);
+        selectedFiles.forEach((f, i) => fd.append('file_' + i, f));
+        body = fd;
+      } else {
+        fetchOpts.headers['Content-Type'] = 'application/json';
+        body = JSON.stringify({ message: text, conversation_id: conversationId, stream: false });
+      }
+      fetchOpts.body = body;
+
+      const res = await fetch(API_URL, fetchOpts);
+
+      if (res.status === 401) {
+        hideTyping();
+        clearToken();
+        setConnStatus('Token invalid — re-enter', false);
+        addMessage('system', 'Token rejected. Click Send again to re-enter.');
+        return;
+      }
+
+      const data = await res.json();
+      handleMessage(data);
+      selectedFiles = [];
+      renderFileList();
+
+    } catch (err) {
+      hideTyping();
+      addMessage('system', 'Error: ' + err.message);
+      setConnStatus('Request failed', false);
+    } finally {
+      $sendBtn.disabled = false;
+      $input.focus();
+    }
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────────────
+  function init() {
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    setConnStatus(getToken() ? 'Connected' : 'Token required', !!getToken());
+
+    $sendBtn.addEventListener('click', sendMessage);
+    $fileBtn.addEventListener('click', () => $fileInput.click());
+    $fileInput.addEventListener('change', (e) => {
+      const incoming = Array.from(e.target.files);
+      selectedFiles = [...selectedFiles, ...incoming].slice(0, 50);
+      if (selectedFiles.length === 50) addMessage('system', '⚠ Maximum 50 files');
+      renderFileList();
+      $fileInput.value = '';
+    });
+
+    $input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+      if (e.ctrlKey && e.shiftKey && e.key === 'U') { e.preventDefault(); $fileInput.click(); }
+    });
+  }
+
+  init();
+</script>
+</body>
+</html>
+```
+
+**Step 2: Verify file was written correctly**
+
+```bash
+wc -l hub-bridge/app/public/unified.html
+# Expected: ~300 lines
+grep -c "sendMessage\|handleMessage\|updateSidebar\|getToken" hub-bridge/app/public/unified.html
+# Expected: multiple matches (all JS functions present)
+```
+
+**Step 3: SCP to vault-neo**
+
+```bash
+scp hub-bridge/app/public/unified.html vault-neo:/opt/seed-vault/memory_v1/hub_bridge/app/public/unified.html
+# Expected: no output = success
+```
+
+**Step 4: Rebuild and restart hub-bridge**
+
+```bash
+ssh vault-neo "cd /opt/seed-vault/memory_v1/hub_bridge && docker compose -f compose.hub.yml build --no-cache 2>&1 | tail -4 && docker compose -f compose.hub.yml up -d 2>&1 | tail -3"
+# Expected: Image hub_bridge-hub-bridge Built ... Container anr-hub-bridge Started
+```
+
+**Step 5: Verify clean startup**
+
+```bash
+ssh vault-neo "docker logs anr-hub-bridge --tail 4 2>&1"
+# Expected: hub-bridge v2.11.0 listening on :18090
+```
+
+**Step 6: Take Playwright screenshot to verify layout**
+
+Navigate to https://hub.arknexus.net and take a screenshot.
+
+Expected:
+- Two columns visible (chat left, sidebar right)
+- Top bar shows "Karma" title + model badge + spend + clock
+- No "Gemini 3 Flash", no "Port: 9401", no "SQLite + ChromaDB"
+- Sidebar shows Session + Services sections
+- Input textarea with correct placeholder
+
+**Step 7: Smoke test Enter key**
+
+Type a message in the input, press Enter (not Ctrl+Enter).
+Expected: message sends (or token prompt appears on first send).
+
+**Step 8: Commit**
+
+```bash
+cd /c/Users/raest/Documents/Karma_SADE
+git add hub-bridge/app/public/unified.html
+git commit -m "feat: rebuild unified dashboard — 2-col layout, telemetry sidebar, accurate labels
+
+- Remove 3-column broken layout and all SADE-era content
+- Chat panel (70%) + sidebar (30%), top bar with model + spend
+- Sidebar populates from response telemetry (model, usd_estimate, spend)
+- No polling, no new endpoints
+- All JS logic preserved: auth, file upload, Enter-to-send
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
+git push origin main
+```
+
+---
+
+## Acceptance Criteria
+
+- [ ] Two-column layout renders without overflow
+- [ ] No "Gemini 3 Flash", "Port 9401", "SQLite", "FREE queries" text anywhere
+- [ ] Sidebar model field updates after first successful chat
+- [ ] Sidebar spend updates after first successful chat
+- [ ] Enter sends message, Shift+Enter inserts newline
+- [ ] 📎 file button works
+- [ ] Token prompt appears on first send if no token in localStorage
+- [ ] 401 clears token and shows re-entry prompt
+- [ ] `docker logs anr-hub-bridge` shows no errors after rebuild

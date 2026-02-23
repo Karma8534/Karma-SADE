@@ -83,12 +83,23 @@ Karma's design, built as specified:
 **Next open question:** Promotion criteria — what concrete signals make a candidate canonical-worthy? (Karma's first requirement: "explicit criteria, not vibes")
 
 ## Blockers
-- **FalkorDB batch5 RUNNING** — Started 2026-02-23 ~00:05 UTC. 782 remaining (538 in graph). TIMEOUT=10000 MAX_QUEUED_QUERIES=100. ok:10 err:0 at 1% (100% success rate). ETA ~11h at current rate (0.02 eps/s — may improve as dedup cache warms). Post-completion: BGSAVE → verify dump.rdb.
+- ~~FalkorDB batch5 RUNNING~~ ✅ COMPLETE (2026-02-23 17:16 UTC): Ingested 1273 Episodic + 108 Entity nodes. Graph now live and populated.
 - ~~KarmaInboxWatcher restart~~ ✅ DONE (session 4, 2026-02-22): Old PID 53364 killed. Scheduled task restarted. New PID 79556 running with Gated/-enabled script.
 - Twilio A2P campaign under review — SMS delivery blocked until approved.
 - Occasional stored=false on ASSIMILATE signal (write-primitive timeout edge case). Low priority — most writes succeed.
 - ~~Within-session context drift~~ FIXED v2.8.0
 - ~~(empty_assistant_text) on complex prompts~~ FIXED v2.7.1
+
+## Track 2 Progress — Karma Agency via Anthropic Tool-Use (Session 11, 2026-02-23)
+**Status:** 3 of 4 phases complete. Ready for testing.
+
+- **Phase 0** ✅ — Build /graph-query endpoint in karma-server (POST /graph-query, read-only Cypher execution, 8s timeout). Deployed and tested: returns 1273 Episodic nodes.
+- **Phase 1** ✅ — Build /v1/cypher proxy in hub-bridge (route requests to karma-server:8340/graph-query, Bearer auth, 8s timeout). Deployed, code in place.
+- **Phase 2** ✅ — Route /v1/chat to model-aware tool-calling: `isAnthropicModel(model) ? callLLMWithTools() : callGPTWithTools()`. Both functions now track tool_calls_made. Added debug_tools_called telemetry to vault records.
+- **Phase 3** ⏳ — Error handling for tool failures (graph timeouts, empty results, malformed queries). Needs executeToolCall enhancements for graceful degradation.
+- **Phase 4** ⏳ — End-to-end testing: send chat with claude-sonnet-4-6, verify tool calls execute, graph queries return data, Karma responds with insights.
+
+**Next:** Test with explicit model override in /v1/chat request body (pass `model: "claude-sonnet-4-6"`) to verify Anthropic tool-calling works end-to-end.
 
 ## Next Session Agenda (brainstorm — 2026-02-23)
 Two tracks. Decide which first at top of session.
