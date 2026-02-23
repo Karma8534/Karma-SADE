@@ -205,6 +205,21 @@ function saveSpendState(path, state) {
 
 function isAnthropicModel(model) { return typeof model === "string" && model.startsWith("claude-"); }
 
+// --- Phase 1: Task-aware model selection for cost optimization ---
+function selectOptimalModel(userMessage, phase, taskType, env) {
+  // Priority 1: Phase-based routing (self-improvement context)
+  // Maps each phase to optimal model: deep analysis → Opus, synthesis → Sonnet, validation → Sonnet
+  if (phase === "analyze_failure" || phase === "analyze_success") {
+    return "claude-opus-4-6";  // Deep analysis — complexity justifies 5x cost
+  }
+  if (phase === "generate_fix" || phase === "synthesize" || phase === "validate" || phase === "quick_check") {
+    return "claude-sonnet-4-6";  // Balanced synthesis + validation — fast + capable + cost-effective
+  }
+
+  // Priority 2: Fallback to default (for non-self-improvement queries)
+  return env.MODEL_DEFAULT || "claude-sonnet-4-6";
+}
+
 function pricePer1M(model, dir, env) {
   if (isAnthropicModel(model))    return dir === "input" ? Number(env.PRICE_CLAUDE_INPUT_PER_1M)    : Number(env.PRICE_CLAUDE_OUTPUT_PER_1M);
   if (model === env.MODEL_DEFAULT) return dir === "input" ? Number(env.PRICE_GPT_5_MINI_INPUT_PER_1M) : Number(env.PRICE_GPT_5_MINI_OUTPUT_PER_1M);
@@ -1137,6 +1152,8 @@ const server = http.createServer(async (req, res) => {
       if (!userMessage) return json(res, 400, { ok: false, error: "missing_message" });
 
       const topic = (body?.topic || "").toString().trim();
+      const phase = (body?.phase || "").toString().trim();  // Self-improvement phase
+      const taskType = (body?.task_type || "").toString().trim();  // Task classification
 
       // B) Token budget: clamp(requested || DEFAULT, MIN, CAP)
       const maxOutReq = Number(body?.max_output_tokens || 0);
@@ -1150,7 +1167,20 @@ const server = http.createServer(async (req, res) => {
 
       const deepHeader = (req.headers[DEEP_MODE_HEADER] || "").toString().toLowerCase();
       const deep_mode = ["1", "true", "yes", "on"].includes(deepHeader);
-      const model = deep_mode ? env.MODEL_DEEP : env.MODEL_DEFAULT;
+
+      // Phase 1: Task-aware model selection
+      let model;
+      let debug_model_selection_reason;
+      if (phase || taskType) {
+        model = selectOptimalModel(userMessage, phase, taskType, env);
+        debug_model_selection_reason = phase ? `phase:${phase}` : `task:${taskType}`;
+      } else if (deep_mode) {
+        model = env.MODEL_DEEP;
+        debug_model_selection_reason = "deep_mode";
+      } else {
+        model = env.MODEL_DEFAULT;
+        debug_model_selection_reason = "default";
+      }
 
       const month = currentMonthUTC();
       const spendPath = env.SPEND_STATE_PATH;
@@ -1290,6 +1320,8 @@ const server = http.createServer(async (req, res) => {
           debug_prelude_chars,
           debug_max_output_tokens_used,
           debug_provider,
+          debug_model_selection_reason,
+          debug_tools_called,
           debug_karma_ctx: karmaCtx ? "ok" : "unavailable",
           debug_ingest: ingestVerdict,
         },
@@ -1344,6 +1376,7 @@ const server = http.createServer(async (req, res) => {
           debug_max_output_tokens_used,
           debug_provider,
           debug_tools_called,
+          debug_model_selection_reason,
           debug_ingest: ingestVerdict,
         });
       }
@@ -1366,6 +1399,7 @@ const server = http.createServer(async (req, res) => {
         debug_max_output_tokens_used,
         debug_provider,
         debug_tools_called,
+        debug_model_selection_reason,
         debug_karma_ctx: karmaCtx ? "ok" : "unavailable",
         debug_search,
         debug_ingest: ingestVerdict,
