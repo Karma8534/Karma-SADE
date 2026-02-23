@@ -782,8 +782,8 @@
 
         // Handle incoming message
         function handleMessage(data) {
-            if (data.type === 'response' || data.response) {
-                const content = data.content || data.response;
+            if (data.type === 'response' || data.response || data.assistant_text) {
+                const content = data.content || data.response || data.assistant_text;
                 addMessage('assistant', content);
 
                 // Update model badge if present in response
