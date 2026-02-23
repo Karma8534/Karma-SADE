@@ -52,13 +52,28 @@ def process_state(state):
     }
 
 def write_decision(decision):
-    """Write decision back to droplet."""
+    """Write decision back to droplet via /v1/decisions endpoint."""
     try:
         headers = {"Content-Type": "application/json"}
-        # For now, just log locally (droplet endpoint can be added later)
-        return {"status": "logged", "decision": decision}
+        url = f"{DROPLET_BASE}/v1/decisions"
+
+        payload = {
+            "cycle_number": decision.get("cycle_number", 0),
+            "decision_text": f"K2 consciousness cycle {decision.get('cycle_number', 0)}: {decision.get('type', 'unknown')}",
+            "reasoning": f"Observations: {decision.get('observations', {})}",
+            "observations": decision.get("observations", {}),
+        }
+
+        resp = requests.post(url, json=payload, headers=headers, timeout=5, verify=False)
+        resp.raise_for_status()
+        result = resp.json()
+
+        print(f"[K2 WRITE] Decision posted to /v1/decisions: {result.get('id')}")
+        return {"status": "written", "id": result.get("id"), "cycle": decision.get("cycle_number")}
+    except requests.exceptions.RequestException as e:
+        return {"status": "write_failed", "error": f"POST to /v1/decisions failed: {str(e)}"}
     except Exception as e:
-        return {"error": str(e)}
+        return {"status": "error", "error": str(e)}
 
 def log_cycle(result):
     """Log cycle result to shared drive."""
