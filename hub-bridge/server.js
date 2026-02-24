@@ -4,12 +4,39 @@ import fs from "fs";
 import { URL } from "url";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
+import redis from "redis";
 
 // CJS interop for pdf-parse (CommonJS module in ESM context)
 import { createRequire } from 'module';
 const _require = createRequire(import.meta.url);
 let pdfParse = null;
 try { pdfParse = _require('pdf-parse'); } catch (e) { console.warn('[PDF] pdf-parse not available:', e.message); }
+
+// Redis/FalkorDB client for graph queries
+let falkordbClient = null;
+async function getFalkordbClient() {
+  if (!falkordbClient) {
+    const host = process.env.FALKORDB_HOST || "falkordb";
+    const port = Number(process.env.FALKORDB_PORT || 6379);
+    falkordbClient = redis.createClient({
+      socket: {
+        host: host,
+        port: port,
+        family: 4,  // Force IPv4
+        reconnectStrategy: (retries) => Math.min(retries * 50, 500)  // Exponential backoff
+      }
+    });
+    falkordbClient.on('error', (err) => console.error('[FalkorDB]', err));
+    falkordbClient.on('connect', () => console.log(`[FalkorDB] Connected to ${host}:${port}`));
+    try {
+      await falkordbClient.connect();
+    } catch (e) {
+      console.error(`[FalkorDB] Connection failed:`, e.message);
+      throw e;
+    }
+  }
+  return falkordbClient;
+}
 
 const PORT = Number(process.env.PORT || "18090");
 const VAULT_INTERNAL_URL = process.env.VAULT_INTERNAL_URL || "http://api:8080";
@@ -781,57 +808,36 @@ async function executeToolCall(toolName, toolInput) {
 
       console.log(`[TOOL-API] Querying graph: ${cypher.slice(0, 80)}...`);
       try {
-        // Query FalkorDB via hub-bridge internal endpoint (timeout: 8s)
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const client = await getFalkordbClient();
+        // Use sendCommand with proper FalkorDB timeout option (separate argument, not part of query)
+        console.log(`[TOOL-API] Sending GRAPH.RO_QUERY neo_workspace...`);
+        const result = await client.sendCommand(["GRAPH.RO_QUERY", "neo_workspace", cypher, "--timeout", "8000"]);
+        console.log(`[TOOL-API] Query returned: ${typeof result}`);
 
-        const graphRes = await fetch(`http://karma-server:8340/graph-query`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ q: cypher }),
-          signal: controller.signal,
-        }).catch(err => {
-          clearTimeout(timeoutId);
-          if (err.name === "AbortError") {
-            throw new Error("Query timeout after 8 seconds");
-          }
-          throw err;
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!graphRes.ok) {
-          const errBody = await graphRes.text().catch(() => "(no body)");
-          console.log(`[TOOL-API] Graph error: ${graphRes.status}`);
-          return {
-            error: `query_failed`,
-            http_status: graphRes.status,
-            message: `Graph query returned ${graphRes.status}. ${errBody.slice(0, 200)}`
-          };
-        }
-
-        const result = await graphRes.json();
-
-        // Handle empty results gracefully
-        if (!result.results || result.results.length === 0) {
+        if (!result || !Array.isArray(result) || result.length === 0) {
           return {
             ok: true,
             results: [],
-            headers: result.headers || [],
+            headers: [],
             message: "Query executed successfully but returned no rows. Try a different query."
           };
         }
 
+        // FalkorDB returns: [[headers], [row1], [row2], ...]
+        const headers = result[0] || [];
+        const rows = result.slice(1) || [];
+        console.log(`[TOOL-API] Parsed ${rows.length} rows from graph query`);
+
         return {
           ok: true,
-          results: result.results.slice(0, 100),  // Limit to 100 rows
-          headers: result.headers || [],
-          stats: result.stats || null,
-          message: `Found ${result.results.length} rows`
+          results: rows.slice(0, 100),  // Limit to 100 rows
+          headers: headers,
+          stats: null,
+          message: `Found ${rows.length} rows`
         };
-      } catch (fetchErr) {
-        console.log(`[TOOL-API] Graph query exception: ${fetchErr.message}`);
-        if (fetchErr.message.includes("timeout")) {
+      } catch (err) {
+        console.log(`[TOOL-API] Graph query exception: ${err.message}`);
+        if (err.message.includes("timeout") || err.message.includes("ETIMEDOUT")) {
           return {
             error: "query_timeout",
             message: "Graph query took too long (>8s). Try a simpler query with fewer MATCH clauses."
@@ -839,7 +845,7 @@ async function executeToolCall(toolName, toolInput) {
         }
         return {
           error: "query_error",
-          message: fetchErr.message
+          message: err.message
         };
       }
     }
@@ -1101,7 +1107,7 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
-    // --- POST /v1/cypher --- Graph query proxy for tool-calling
+    // --- POST /v1/cypher --- Graph query endpoint for tool-calling
     if (req.method === "POST" && req.url === "/v1/cypher") {
       const token = bearerToken(req);
       if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
@@ -1114,21 +1120,32 @@ const server = http.createServer(async (req, res) => {
       const cypher = (body?.q || "").toString().trim();
       if (!cypher) return json(res, 400, { ok: false, error: "missing_query" });
 
-      try {
-        const graphQueryUrl = "http://karma-server:8340/graph-query";
-        const response = await fetch(graphQueryUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ q: cypher }),
-        });
+      // Reject dangerous queries
+      const WRITE_KEYWORDS = ["CREATE", "MERGE", "DELETE", "SET", "REMOVE", "ALTER", "DROP"];
+      if (WRITE_KEYWORDS.some(kw => cypher.toUpperCase().includes(kw))) {
+        return json(res, 400, { ok: false, error: "write_operation_rejected", message: "Only read-only queries allowed" });
+      }
 
-        if (!response.ok) {
-          const errText = await response.text();
-          return json(res, response.status, { ok: false, error: "graph_query_failed", details: errText });
+      try {
+        const client = await getFalkordbClient();
+        console.log(`[/v1/cypher] Executing: ${cypher.slice(0, 80)}...`);
+        const result = await client.sendCommand(["GRAPH.RO_QUERY", "neo_workspace", cypher, "--timeout", "8000"]);
+
+        if (!result || !Array.isArray(result) || result.length === 0) {
+          return json(res, 200, { ok: true, results: [], headers: [], message: "Query executed successfully but returned no rows." });
         }
 
-        const result = await response.json();
-        return json(res, 200, { ok: true, ...result });
+        // FalkorDB returns: [[headers], [row1], [row2], ...]
+        const headers = result[0] || [];
+        const rows = result.slice(1) || [];
+
+        return json(res, 200, {
+          ok: true,
+          results: rows.slice(0, 100),
+          headers: headers,
+          stats: null,
+          message: `Found ${rows.length} rows`
+        });
       } catch (e) {
         console.error("[/v1/cypher] Error:", e.message);
         return json(res, 500, { ok: false, error: "graph_query_error", details: e.message });
