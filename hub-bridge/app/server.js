@@ -841,7 +841,7 @@ async function callLLMWithTools(model, messages, maxTokens) {
 
 // ── OpenAI GPT tool-calling (production tool-use for Karma) ────────────────────
 // OpenAI tool format differs from Anthropic. GPT-4o has reliable tool support.
-async function callGPTWithTools(messages, maxTokens) {
+async function callGPTWithTools(messages, maxTokens, model) {
   try {
     // Transform Anthropic schema (input_schema) to OpenAI schema (parameters)
     const gptTools = TOOL_DEFINITIONS.map(t => ({
@@ -856,11 +856,16 @@ async function callGPTWithTools(messages, maxTokens) {
     let iterations = 0;
     const MAX_ITERATIONS = 5;
 
+    // Model validation: must be OpenAI model for tool-use
+    // (tool-calling via OpenAI is more reliable than Anthropic)
+    const actualModel = model && model.startsWith("gpt") ? model : "gpt-4o-mini";
+    console.log(`[TOOL-USE] Using model: ${actualModel} (requested: ${model})`);
+
     while (iterations < MAX_ITERATIONS) {
       iterations++;
       console.log(`[TOOL-USE] GPT iteration ${iterations}, tools count: ${gptTools.length}`);
       const resp = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: actualModel,
         messages: allMessages,
         max_tokens: maxTokens,
         tools: gptTools,
@@ -1141,8 +1146,8 @@ const server = http.createServer(async (req, res) => {
       ];
 
       // Use GPT-4o for tool-calling (Anthropic unreliable). Karma needs real tool-use.
-      console.log("[DIAGNOSTIC] About to call callGPTWithTools, max_output_tokens:", max_output_tokens);
-      const llmResult    = await callGPTWithTools(messages, max_output_tokens);
+      console.log("[DIAGNOSTIC] About to call callGPTWithTools, model:", model, "max_output_tokens:", max_output_tokens);
+      const llmResult    = await callGPTWithTools(messages, max_output_tokens, model);
       const assistantText = llmResult.text || "(empty_assistant_text)";
       const usage         = llmResult.usage;
       const debug_provider   = llmResult.provider;
