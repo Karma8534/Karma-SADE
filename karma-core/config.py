@@ -50,6 +50,7 @@ LEDGER_PATH = os.getenv("LEDGER_PATH", "/ledger/memory.jsonl")
 # Consciousness loop
 CONSCIOUSNESS_INTERVAL = int(os.getenv("CONSCIOUSNESS_INTERVAL", "60"))  # seconds
 CONSCIOUSNESS_JOURNAL = os.getenv("CONSCIOUSNESS_JOURNAL", "/ledger/consciousness.jsonl")
+COLLAB_JOURNAL = os.getenv("COLLAB_JOURNAL", "/ledger/collab.jsonl")  # Proposals for CC review
 CONSCIOUSNESS_ENABLED = os.getenv("CONSCIOUSNESS_ENABLED", "true").lower() in ("true", "1", "yes")  # Defaults to ENABLED
 
 # Bootstrap
