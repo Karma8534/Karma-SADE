@@ -1993,6 +1993,130 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    // --- GET /v1/consciousness ---
+    // Query consciousness loop state. Returns recent cycles, pending proposals, and system state.
+    if (req.method === "GET" && req.url === "/v1/consciousness") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      const consciousnessPath = "/karma/ledger/consciousness.jsonl";
+      const collabPath = "/karma/ledger/collab.jsonl";
+      let recentCycles = [];
+      let totalCycles = 0;
+      let latestTimestamp = null;
+
+      // Read recent consciousness cycles
+      try {
+        const raw = fs.readFileSync(consciousnessPath, "utf-8");
+        const lines = raw.split("\n").filter(l => l.trim());
+        totalCycles = lines.length;
+
+        // Parse all lines to find recent + latest timestamp
+        for (let i = Math.max(0, lines.length - 20); i < lines.length; i++) {
+          try {
+            const entry = JSON.parse(lines[i]);
+            recentCycles.push({
+              timestamp: entry.timestamp,
+              cycle: entry.cycle || null,
+              action: entry.action || null,
+              reason: entry.reason || null,
+              observations: entry.observations || {},
+            });
+            if (!latestTimestamp || new Date(entry.timestamp) > new Date(latestTimestamp)) {
+              latestTimestamp = entry.timestamp;
+            }
+          } catch (parseErr) {
+            console.error("[CONSCIOUSNESS] Failed to parse cycle:", parseErr.message);
+          }
+        }
+      } catch (e) {
+        console.error("[CONSCIOUSNESS] Failed to read consciousness.jsonl:", e.message);
+        // Not fatal; return partial state
+      }
+
+      // Count pending proposals
+      let pendingProposals = 0;
+      try {
+        const raw = fs.readFileSync(collabPath, "utf-8");
+        const lines = raw.split("\n").filter(l => l.trim());
+        for (const line of lines) {
+          try {
+            const entry = JSON.parse(line);
+            if (entry.type === "self_improvement_proposal" && entry.status === "pending") {
+              pendingProposals++;
+            }
+          } catch (parseErr) {
+            // skip parse errors
+          }
+        }
+      } catch (e) {
+        console.error("[CONSCIOUSNESS] Failed to read collab.jsonl:", e.message);
+        // Not fatal; return partial state
+      }
+
+      return json(res, 200, {
+        ok: true,
+        total_cycles: totalCycles,
+        recent_cycles: recentCycles,
+        latest_timestamp: latestTimestamp,
+        pending_proposals: pendingProposals,
+      });
+    }
+
+    // --- POST /v1/consciousness ---
+    // Send control signals to consciousness loop (pause, resume, focus, reset).
+    if (req.method === "POST" && req.url === "/v1/consciousness") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      const raw = await parseBody(req);
+      let body;
+      try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+
+      const { signal, reason } = body || {};
+      if (!signal) {
+        return json(res, 400, { ok: false, error: "missing_signal", allowed_signals: ["pause", "resume", "focus", "reset"] });
+      }
+      if (!["pause", "resume", "focus", "reset"].includes(signal)) {
+        return json(res, 400, { ok: false, error: "invalid_signal", allowed_signals: ["pause", "resume", "focus", "reset"] });
+      }
+
+      const timestamp = new Date().toISOString();
+
+      // Write control signal to consciousness.jsonl
+      const signalEntry = {
+        timestamp: timestamp,
+        id: `ctrl_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+        action: `CONTROL_${signal.toUpperCase()}`,
+        reason: reason || `External control signal: ${signal}`,
+        observations: {
+          signal_from: "claude-code",
+          signal_type: signal,
+        },
+        cycle: null,
+      };
+
+      const consciousnessPath = "/karma/ledger/consciousness.jsonl";
+      try {
+        fs.appendFileSync(consciousnessPath, JSON.stringify(signalEntry) + "\n");
+        console.log(`[CONSCIOUSNESS] Control signal recorded: ${signal}`);
+        return json(res, 200, {
+          ok: true,
+          signal: signal,
+          acknowledged_at: timestamp,
+          signal_id: signalEntry.id,
+          reason: reason || null,
+        });
+      } catch (e) {
+        console.error("[CONSCIOUSNESS] Failed to write control signal:", e.message);
+        return json(res, 500, { ok: false, error: "failed_to_write_signal", details: e.message });
+      }
+    }
+
     return notFound(res);
 
   } catch (e) {
