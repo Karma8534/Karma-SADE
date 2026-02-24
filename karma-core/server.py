@@ -1544,7 +1544,7 @@ async def startup():
             get_openai_client_fn=get_openai_client,
             active_conversations_ref=active_conversations,
             router=app.state.router,
-            ingest_episode_fn=ingest_episode,
+            ingest_episode_fn=None,  # Disabled: Graphiti has corrupted entities from batch_ingest --skip-dedup; consciousness writes to ledger only
             sms_notify_fn=app.state.sms.notify if app.state.sms.enabled else None,
         )
         app.state.consciousness.start()
