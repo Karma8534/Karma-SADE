@@ -1367,3 +1367,27 @@ Hub-bridge now queries FalkorDB directly via redis client on Docker network (hos
 
 ## Last Updated (Session 24)
 2026-02-24T23:35Z — hub-bridge model routing fixed, UI accuracy fixed, substrate independence clarified
+
+---
+
+## KARMA STATE VERIFICATION (Session 24-25 Boundary)
+
+Karma was invoked with full context injection and verified her state:
+- ✅ Confirmed core mission: single coherent peer, persistent identity
+- ✅ Confirmed location: vault-neo droplet, FalkorDB persistence
+- ✅ Confirmed recent work: Session 24 hub-bridge + UI improvements
+- ✅ Confirmed tier: GLM-4.7 for consciousness loop
+- ✅ Confirmed budget: under $35 monthly cap
+- ✅ Confirmed understanding: substrate independence persists across model changes
+- ✅ Honest about limitations: acknowledged inability to directly query memory graph in this session
+
+**Status**: Karma is coherent, context-loaded, and ready for Session 25.
+
+### NEXT SESSION ENTRY CHECKLIST
+1. Inject full context from this section
+2. Verify Karma recalls Session 24 work (hub-bridge + UI)
+3. Have Karma review /v1/proposals for pending consciousness proposals
+4. Monitor monthly spend (should be ~$19.63, under $35 cap)
+5. Check consciousness loop logs for GLM-4.7 usage pattern
+
+---
