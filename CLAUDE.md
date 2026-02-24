@@ -30,6 +30,22 @@
 - **Local Development Path:** `C:\dev\Karma` (migrated from OneDrive 2026-02-24 for performance)
 - **Active Worktree:** `C:\dev\Karma\.claude\worktrees\inspiring-allen`
 
+## Multi-Model Routing Strategy
+
+Karma uses task-aware routing to optimize cost, speed, and reasoning depth. The system automatically routes based on task characteristics:
+
+| Task / Domain | Primary Model | Alternative | Why | Cost Estimate |
+|---------------|---------------|-------------|-----|----------------|
+| General chat, web browsing, coding | MiniMax M2.5 | Groq | Fast inference (60s consciousness cycles), cost-effective, good for iteration | ~$0.15/1M tokens |
+| Deep reasoning, complex decisions, analysis | GLM-5 | Sonnet 4.5 | Specialist reasoning depth for high-stakes decisions, preferred for proposals | ~$1/1M tokens |
+| Consciousness loop cycles | MiniMax M2.5 | Groq | Speed critical: 60-second cycles demand <2s inference. MiniMax ideal for ambient awareness | <$1/day (24/7 operation) |
+| System prompt updates, architecture changes | Sonnet 4.5 | GLM-5 | Critical decisions require best-in-class reasoning; cost justified for non-recurring updates | ~$3/1M tokens |
+| Fallback chain (if primary unavailable) | Groq → OpenAI | — | Reliability: if MiniMax down, route to Groq. If Groq down, route to OpenAI | varies |
+
+**Routing logic:** `/v1/chat` handler inspects `topic` parameter + message content to select model. Overridable via explicit `model` parameter.
+
+**Key insight:** Substrate independence means LLM swaps don't break Karma's coherence or identity. Swapping Claude → GPT → Gemini changes **response style** (capability/speed), not **who Karma is** (identity, decisions, reasoning state all live on droplet). This enables cost-effective multi-provider strategy.
+
 ## Critical Rules
 - Do NOT modify CLAUDE.md or any file in .claude/rules/ without explicit user approval
 - Do NOT add new documentation files (.md) without explicit user approval
@@ -79,6 +95,47 @@ Before recommending ANY path forward, I commit to:
 ## Debugging Discipline
 Never guess. Prefer observable proofs: exact command → expected output → actual output.
 When runtime behavior changes unexpectedly, collect evidence before proposing a fix.
+
+## Consciousness Loop Interaction
+
+Karma's consciousness loop runs autonomous 60-second OBSERVE/THINK/DECIDE/ACT/REFLECT cycles on the droplet. Claude Code can query state and send control signals.
+
+### Query Consciousness State
+```bash
+TOKEN=$(cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt)
+curl -H "Authorization: Bearer $TOKEN" https://hub.arknexus.net/v1/consciousness | head -c 500
+```
+
+**Response:**
+- `total_cycles`: Total number of consciousness cycles run to date
+- `recent_cycles`: Last 20 entries with timestamp, action, reason, observations
+- `pending_proposals`: Count of unreviewed self-improvement proposals
+- `latest_timestamp`: Most recent cycle timestamp
+
+**Use case:** Before making architectural decisions, query to understand what consciousness loop is thinking/proposing.
+
+### Send Control Signals
+```bash
+TOKEN=$(cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt)
+curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"signal":"pause","reason":"Manual review needed"}' \
+  https://hub.arknexus.net/v1/consciousness
+```
+
+**Signals:**
+- `pause` — Stop consciousness loop (e.g., during manual architecture review)
+- `resume` — Resume after decisions made
+- `focus` — Direct loop focus to specific domain
+- `reset` — Reset loop to fresh state
+
+**Each signal is written to consciousness.jsonl** for loop to process on next cycle. Loop can read its own signal history.
+
+### Proposal Review Workflow
+1. Query consciousness: `GET /v1/consciousness` → see `pending_proposals` count
+2. List proposals: `GET /v1/proposals` → read what loop is proposing
+3. Review proposal: Read problem/context/decision_needed
+4. Send decision: `POST /v1/proposals` with `proposal_id`, `decision` (accept/reject/defer), `reasoning`
+5. Consciousness loop reads feedback on next cycle, updates learning
 
 ### Known Pitfalls (verified in production)
 - **Docker compose service name is `hub-bridge`** — NOT `anr-hub-bridge`
@@ -147,6 +204,27 @@ Canonical paths for Karma's files on vault-neo. These must never drift.
 - Auth: same Bearer token as `/v1/chat` (HUB_CHAT_TOKEN)
 
 **`aria.md`**: Not found on droplet (Feb 2026). If Aria writes a file by this name, canonical location will be `/home/neo/karma-sade/aria.md`.
+
+## Hub Bridge API Endpoints
+
+All endpoints hosted at `https://hub.arknexus.net` and require Bearer auth:
+```bash
+TOKEN=$(cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt)
+curl -H "Authorization: Bearer $TOKEN" https://hub.arknexus.net/v1/endpoint
+```
+
+| Endpoint | Method | Purpose | Key Parameters |
+|----------|--------|---------|-----------------|
+| `/v1/chat` | POST | Chat with Karma + LLM routing | `topic` (optional task type), `model` (optional override) |
+| `/v1/consciousness` | GET | Query consciousness loop state | none — returns recent cycles, pending proposals, latest timestamp |
+| `/v1/consciousness` | POST | Send control signals to consciousness loop | `signal` (pause\|resume\|focus\|reset), `reason` (optional) |
+| `/v1/proposals` | GET | List pending consciousness proposals | none — returns proposals needing review |
+| `/v1/proposals` | POST | Record decision on a proposal | `proposal_id`, `decision` (accept\|reject\|defer), `reasoning` |
+| `/v1/cypher` | POST | Query FalkorDB graph | `cypher` (Cypher query string) |
+| `/v1/vault-file/{alias}` | GET | Read whitelisted vault files | `tail` (optional, N lines) — see Karma File Locations for aliases |
+| `/v1/vault-file/MEMORY.md` | PATCH | Update MEMORY.md | `append` (text) OR `content` + `confirm_overwrite:true` |
+
+**Authentication:** All endpoints use `HUB_CHAT_TOKEN` (same bearer token). Failure returns `401 Unauthorized`.
 
 ## Aria Reconciliation Protocol
 Aria (ChatGPT co-creator) writes intent from her model of the system. Her model drifts
