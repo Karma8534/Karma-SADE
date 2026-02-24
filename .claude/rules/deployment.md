@@ -1,5 +1,12 @@
 # Deployment & Server Operations
 
+## Local Development Environment (Updated 2026-02-24)
+- **Development path:** `C:\dev\Karma` (migrated from OneDrive)
+- **Active worktree:** `C:\dev\Karma\.claude\worktrees\inspiring-allen`
+- **Backup:** `C:\migrate_backup\Karma_SADE_Feb24.tar.gz` (git history intact)
+- **Performance:** git status 2.5x faster (0.10s vs 0.25s), claude-mem stable
+- **Note:** All deployment targets (vault-neo, hub-bridge, etc.) are unchanged. This is a LOCAL development-only change.
+
 ## Server Access
 - **Host:** arknexus.net (DigitalOcean NYC3, 4GB RAM)
 - **SSH:** `ssh vault-neo` (alias configured in local ~/.ssh/config)
