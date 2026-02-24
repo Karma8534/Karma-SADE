@@ -61,6 +61,7 @@ class ConsciousnessLoop:
             "idle_cycles": 0,
             "insights_generated": 0,
             "alerts_generated": 0,
+            "proposals_written": 0,
             "journal_ingested": 0,
             "sms_sent": 0,
             "errors": 0,
@@ -563,6 +564,31 @@ Keep response under 500 tokens.
                 f.write(json.dumps(entry) + "\n")
         except Exception as e:
             print(f"[CONSCIOUSNESS] Failed to write journal: {e}")
+
+        # ─── PROPOSE Phase ──────────────────────────────────────────────
+        # Write proposals to collab.jsonl for CC review before deployment
+        if action in (Action.LOG_INSIGHT, Action.LOG_ALERT, Action.LOG_GROWTH):
+            proposal = {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "cycle": cycle_num,
+                "action": action,
+                "proposal": reason,
+                "evidence": {
+                    "new_episodes": observations.get("new_episodes", 0),
+                    "new_entities": observations.get("new_entities", 0),
+                    "new_relationships": observations.get("new_relationships", 0),
+                    "active_sessions": observations.get("active_sessions", 0),
+                },
+                "analysis": analysis if analysis else None,
+                "status": "pending_review",  # CC approval workflow: pending_review → approved → deployed
+            }
+            try:
+                collab_path = getattr(config, "COLLAB_JOURNAL", "/ledger/collab.jsonl")
+                with open(collab_path, "a", encoding="utf-8") as f:
+                    f.write(json.dumps(proposal) + "\n")
+                self.metrics["proposals_written"] = self.metrics.get("proposals_written", 0) + 1
+            except Exception as e:
+                print(f"[CONSCIOUSNESS] Failed to write proposal: {e}")
 
         # Queue insights for proactive chat mention
         if action in (Action.LOG_INSIGHT, Action.LOG_ALERT, Action.LOG_GROWTH):
