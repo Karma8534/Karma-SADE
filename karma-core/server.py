@@ -12,6 +12,7 @@ import traceback
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
+import threading
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -36,6 +37,7 @@ def get_openai_client():
 _graphiti_instance = None
 _graphiti_lock = asyncio.Lock()
 _graphiti_ready = False
+_candidates_lock = threading.Lock()
 _episode_counter = 0
 
 async def get_graphiti():
@@ -266,7 +268,7 @@ def query_recent_episodes(limit: int = 5, lane: str = "canonical") -> list[dict]
         cypher = f"""
             MATCH (e:Episodic)
             {lane_filter}
-            RETURN e.name AS name, e.content AS content
+            RETURN e.name AS name, COALESCE(e.content, e.episode_body) AS content
             ORDER BY e.created_at DESC
             LIMIT {limit}
         """
@@ -289,8 +291,8 @@ def query_recent_ingest_episodes(limit: int = 5) -> list:
         r = get_falkor()
         cypher = (
             "MATCH (e:Episodic) "
-            "WHERE e.lane = 'canonical' AND e.content STARTS WITH '[karma-ingest]' "
-            "RETURN e.uuid AS uuid, e.name AS name, e.content AS content "
+            "WHERE e.lane = 'canonical' AND COALESCE(e.content, e.episode_body, '') STARTS WITH '[karma-ingest]' "
+            "RETURN e.uuid AS uuid, e.name AS name, COALESCE(e.content, e.episode_body) AS content "
             f"ORDER BY e.created_at DESC LIMIT {limit}"
         )
         result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
@@ -843,10 +845,11 @@ def _append_candidate(entry: dict) -> None:
     """Append a candidate entry to candidates.jsonl (persistent staging ledger)."""
     import json as _json
     try:
-        with open(CANDIDATES_JSONL, "a", encoding="utf-8") as f:
-            f.write(_json.dumps(entry) + "\n")
+        with _candidates_lock:
+            with open(CANDIDATES_JSONL, "a", encoding="utf-8") as f:
+                f.write(_json.dumps(entry) + "\n")
     except Exception as e:
-        print(f"[GATE] candidates.jsonl append failed: {e}")
+            print(f"[GATE] candidates.jsonl append failed: {e}")
 
 
 async def ingest_primitive_episode(name: str, body: str, source: str,
@@ -1103,6 +1106,80 @@ async def candidates_list():
         return JSONResponse({"ok": False, "error": str(e), "candidates": []})
 
 
+@app.post("/v1/decisions")
+async def post_decisions(request: Request):
+    """Write K2 decision to decision_log.jsonl.
+    Called by K2 worker to persist decisions.
+    """
+    try:
+        from config import DECISION_LOG
+        body = await request.json()
+
+        decision = {
+            "id": f"k2_decision_{int(time.time())}_{uuid.uuid4().hex[:8]}",
+            "type": "decision",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "k2_cycle": body.get("cycle_number", 0),
+            "decision_text": body.get("decision_text", "").strip(),
+            "reasoning": body.get("reasoning", ""),
+            "observations": body.get("observations", {}),
+            "source": "k2-worker",
+        }
+
+        if not decision.get("decision_text"):
+            return JSONResponse({"ok": False, "error": "decision_text required"}, status_code=400)
+
+        # Ensure parent dir exists
+        os.makedirs(os.path.dirname(DECISION_LOG), exist_ok=True)
+
+        # Append atomically
+        with open(DECISION_LOG, "a", encoding="utf-8") as f:
+            f.write(json.dumps(decision) + "\n")
+
+        print(f"[K2] Decision logged: cycle={decision['k2_cycle']}")
+        return JSONResponse({"ok": True, "id": decision["id"]}, status_code=201)
+    except Exception as e:
+        print(f"[ERROR] /v1/decisions failed: {e}")
+        traceback.print_exc()
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/v1/consciousness")
+async def post_consciousness(request: Request):
+    """Write K2 consciousness entry to k2_consciousness.jsonl.
+    Called by K2 worker to log autonomous observations and reasoning.
+    """
+    try:
+        from config import K2_CONSCIOUSNESS_LOG
+        body = await request.json()
+
+        entry = {
+            "id": f"k2_consciousness_{int(time.time())}_{uuid.uuid4().hex[:8]}",
+            "type": "consciousness",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "k2_cycle": body.get("cycle_number", 0),
+            "observation": body.get("observation", "").strip(),
+            "state_snapshot": body.get("state_snapshot", {}),
+            "reasoning": body.get("reasoning", ""),
+            "source": "k2-worker",
+        }
+
+        if not entry.get("observation"):
+            return JSONResponse({"ok": False, "error": "observation required"}, status_code=400)
+
+        # Ensure parent dir exists
+        os.makedirs(os.path.dirname(K2_CONSCIOUSNESS_LOG), exist_ok=True)
+
+        # Append atomically
+        with open(K2_CONSCIOUSNESS_LOG, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+
+        print(f"[K2] Consciousness logged: cycle={entry['k2_cycle']}")
+        return JSONResponse({"ok": True, "id": entry["id"]}, status_code=201)
+    except Exception as e:
+        print(f"[ERROR] /v1/consciousness failed: {e}")
+        traceback.print_exc()
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 @app.post("/v1/chat/completions")
 async def openai_proxy_completions(request: Request):
     """
