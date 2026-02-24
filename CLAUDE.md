@@ -30,21 +30,24 @@
 - **Local Development Path:** `C:\dev\Karma` (migrated from OneDrive 2026-02-24 for performance)
 - **Active Worktree:** `C:\dev\Karma\.claude\worktrees\inspiring-allen`
 
-## Multi-Model Routing Strategy
+## LLM Routing Strategy
 
-Karma uses task-aware routing to optimize cost, speed, and reasoning depth. The system automatically routes based on task characteristics:
+**Current Implementation (2026-02-24):**
 
-| Task / Domain | Primary Model | Alternative | Why | Cost Estimate |
-|---------------|---------------|-------------|-----|----------------|
-| General chat, web browsing, coding | MiniMax M2.5 | Groq | Fast inference (60s consciousness cycles), cost-effective, good for iteration | ~$0.15/1M tokens |
-| Deep reasoning, complex decisions, analysis | GLM-5 | Sonnet 4.5 | Specialist reasoning depth for high-stakes decisions, preferred for proposals | ~$1/1M tokens |
-| Consciousness loop cycles | MiniMax M2.5 | Groq | Speed critical: 60-second cycles demand <2s inference. MiniMax ideal for ambient awareness | <$1/day (24/7 operation) |
-| System prompt updates, architecture changes | Sonnet 4.5 | GLM-5 | Critical decisions require best-in-class reasoning; cost justified for non-recurring updates | ~$3/1M tokens |
-| Fallback chain (if primary unavailable) | Groq → OpenAI | — | Reliability: if MiniMax down, route to Groq. If Groq down, route to OpenAI | varies |
+Karma uses phase-based routing for self-improvement contexts only. All other requests default to Claude 3.5 Sonnet.
 
-**Routing logic:** `/v1/chat` handler inspects `topic` parameter + message content to select model. Overridable via explicit `model` parameter.
+| Context | Model | Routing Trigger |
+|---------|-------|-----------------|
+| Analyze failure / success cycles | Claude Opus 4.6 | `phase=analyze_failure` OR `phase=analyze_success` |
+| Generate fix / synthesize / validate | Claude Sonnet 4.6 | `phase=generate_fix` OR `phase=synthesize` OR `phase=validate` OR `phase=quick_check` |
+| General chat, web, coding, all other | Claude 3.5 Sonnet (default) | No phase parameter or unrecognized phase |
+| Deep mode (explicit override) | GPT-5-mini | `x-karma-deep` header |
 
-**Key insight:** Substrate independence means LLM swaps don't break Karma's coherence or identity. Swapping Claude → GPT → Gemini changes **response style** (capability/speed), not **who Karma is** (identity, decisions, reasoning state all live on droplet). This enables cost-effective multi-provider strategy.
+**Task-aware routing PLANNED:** Full task-aware routing (MiniMax for speed, GLM-5 for reasoning, Sonnet for critical decisions) is designed but not yet implemented. Implementation requires: (1) inspecting message content + `topic` parameter, (2) mapping to optimal model, (3) testing cost/speed trade-offs before deployment.
+
+**Explicit model override:** Always possible via `model` parameter in `/v1/chat` request. Overrides all routing logic.
+
+**Key insight:** Substrate independence means LLM swaps don't break Karma's coherence or identity. Swapping Claude → GPT → Gemini changes **response style** (capability/speed), not **who Karma is** (identity, decisions, reasoning state all live on droplet). This enables safe experimentation with different models.
 
 ## Critical Rules
 - Do NOT modify CLAUDE.md or any file in .claude/rules/ without explicit user approval
