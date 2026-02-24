@@ -306,7 +306,7 @@
   <span class="topbar-title">Karma</span>
   <div class="topbar-right">
     <span><span class="status-dot" id="topbar-dot"></span>All Systems Operational</span>
-    <span class="model-badge" id="topbar-model">claude-sonnet-4-6</span>
+    <span class="model-badge" id="topbar-model">loading…</span>
     <span class="spend-badge" id="topbar-spend">— / $35.00</span>
     <span id="topbar-clock"></span>
   </div>
@@ -429,13 +429,22 @@
 
   // ── Sidebar update from response telemetry ───────────────────────────────
   function updateSidebar(data) {
-    if (data.model) {
-      $sbModel.textContent  = data.model;
-      $topModel.textContent = data.model;
+    // Model: ALWAYS update (multiple fallback sources for reliability)
+    const model = data.model || data.canonical?.model || 'unknown';
+    if (model && model !== 'unknown') {
+      $sbModel.textContent  = model;
+      $topModel.textContent = model;
+      console.log('[UI] Model updated to:', model);
+    } else {
+      console.warn('[UI] Model field missing in response:', data);
     }
+
+    // Cost estimate
     if (data.usd_estimate != null) {
       $sbLastCost.textContent = '$' + data.usd_estimate.toFixed(4);
     }
+
+    // Spend tracking
     if (data.spend) {
       const spent = data.spend.usd_spent ?? data.spend.spend_used_usd ?? 0;
       const cap   = data.spend.cap_usd   ?? data.spend.spend_cap_usd  ?? 35;
@@ -477,6 +486,7 @@
   // ── Handle response ──────────────────────────────────────────────────────
   function handleMessage(data) {
     hideTyping();
+    console.log('[UI] handleMessage received:', data);
     if (data.assistant_text || data.response || data.content) {
       const text = data.assistant_text || data.response || data.content;
       addMessage('karma', text);
