@@ -15,6 +15,17 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop + graph dis
 | Multi-Model | ✅ Active | MiniMax M2.5 (primary — coding/speed/general), GLM-5 (reasoning/analysis specialist, priority -1), Groq (fallback), OpenAI (final fallback). |
 | Graph Distillation | ✅ Active | _distillation_cycle() in ConsciousnessLoop — reads FalkorDB every 24h, synthesizes themes/gaps/insights via LLM, writes schema-compliant fact to ledger, re-ingests key insights as FalkorDB episodes |
 
+## Session 16 — Consciousness Loop Fix (2026-02-24)
+✅ **CRITICAL FIX: _think() phase now working**
+- **Bug identified:** consciousness.py line 435 had `await self._router.complete()` on non-async function
+- **Bug identified:** consciousness.py line 444 tried `response.get("content", "")` but response is tuple `(text, model_name)`
+- **Root cause:** Router returns tuple, not dict. LLM calls were silently failing since Feb 16, returning null analysis
+- **Fix applied:** Removed `await`, unpacked tuple correctly, router now successfully completes
+- **Result:** Consciousness loop should now log THINK phase success; proposals should feed to collab.jsonl
+- **Deployment:** Rebuilt karma-core image, restarted karma container on vault-neo
+- **Commit:** b0cc9c3 (github.com/Karma8534/Karma-SADE)
+- **Status:** Waiting for next consciousness cycle (60s interval) to verify analysis = insight (not null)
+
 ## Current Task
 CC Resurrection LIVE (2026-02-21):
 - Get-KarmaContext.ps1: fetches Karma's live canonical graph context at every CC session start
