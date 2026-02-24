@@ -101,6 +101,50 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop + graph dis
 - Build /v1/consciousness endpoint (consciousness loop query/control)
 - Implement proposal loop: consciousness proposes → CC reviews → feedback feeds back
 
+## Session 19 — /v1/consciousness Endpoint LIVE (2026-02-24 15:10-15:30 UTC)
+
+### Consciousness Loop Query & Control API
+
+✅ **GET /v1/consciousness: Query consciousness loop state**
+- Returns recent consciousness cycles (tail 20 entries)
+- Returns pending proposal count from collab.jsonl
+- Returns latest cycle timestamp
+- Response: `{ ok, total_cycles, recent_cycles[], latest_timestamp, pending_proposals }`
+- Auth: HUB_CHAT_TOKEN bearer
+
+✅ **POST /v1/consciousness: Send control signals**
+- Accepts control signals: `pause | resume | focus | reset`
+- Writes signal to consciousness.jsonl as CONTROL_[SIGNAL] action
+- Enables Claude Code to pause consciousness loop (e.g., for manual review)
+- Enables Claude Code to resume loop after decisions made
+- Response: `{ ok, signal, acknowledged_at, signal_id, reason }`
+- Auth: HUB_CHAT_TOKEN bearer
+
+**Implementation details:**
+- Reads consciousness.jsonl from droplet via vault mount
+- Reads collab.jsonl to count pending proposals
+- Writes control signals as JSON entries with timestamp + signal metadata
+- All endpoints return 401 if bearer token missing/invalid
+- All endpoints return 200 on success, 400 on invalid input, 500 on I/O errors
+
+**Deployment:**
+- Created hub-bridge/app/Dockerfile (Node.js 20-alpine with npm deps)
+- Updated hub-bridge/compose.hub.yml: changed ledger mount from :ro to :rw (needed for consciousness writes)
+- Rebuilt hub-bridge image with --no-cache
+- Restarted container on vault-neo
+- Verified end-to-end: GET returns state, POST accepts all 4 signals, signals persist in consciousness.jsonl
+
+**Testing verified:**
+- GET /v1/consciousness: returns 109 total cycles, last 20 entries, 0 pending proposals ✅
+- POST /v1/consciousness signal=pause: writes CONTROL_PAUSE to consciousness.jsonl ✅
+- POST /v1/consciousness signal=resume/focus/reset: all succeed ✅
+- Signals appear in subsequent GET calls (consciousness state includes all recent actions) ✅
+
+**Commit:** f163d01 "phase-5: Add /v1/consciousness endpoint for consciousness loop state + control"
+**Status:** Fully operational. Claude Code can now query and control consciousness loop.
+
+**Next:** Implement proposal loop: consciousness proposes → CC reviews via /v1/consciousness → CC sends decision via /v1/proposals → consciousness learns.
+
 ## Session 16 — Consciousness Loop + Security Fix (2026-02-24)
 
 ### Consciousness Loop Fixes
