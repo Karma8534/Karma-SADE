@@ -34,9 +34,26 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop + graph dis
 **Commit:** 496dc78 "phase-5: Add /v1/proposals endpoint for consciousness loop proposal review"
 **Status:** Fully operational. Claude Code can now review and guide consciousness loop decisions.
 
+### Tool-Use Wired into System Prompt
+✅ **Tool-use now active and encouraged**
+- Improved system prompt with explicit TOOL-USE section
+- Documented when to use get_vault_file(alias) and graph_query(cypher)
+- Clarified that tool results are authoritative
+- Verified: Claude now calls tools proactively (debug_tools_called=4 in sample interaction)
+- Claude extracts data from collab.jsonl, consciousness.jsonl, MEMORY.md, etc. via tool calls
+- Fallback: Full context still injected for safety, but tools are primary
+
+**Verified in production:** /v1/chat with topic="consciousness_loop" → Claude calls tools, reads collab.jsonl, returns informed analysis of pending proposals.
+
+**Session 17 Summary:**
+- Built /v1/proposals endpoint (GET list + POST feedback) ✅
+- Wired tool-use into system prompt (active + verified) ✅
+- Tool-use telemetry now in debug output ✅
+- Claude Code can now query Karma's state autonomously via tools ✅
+
 **Next Priority:**
-- Wire tool-use into system prompt (get_vault_file + graph_query infrastructure)
-- Enable Claude Code to make autonomous decisions backed by tool access
+- Build /v1/consciousness endpoint (consciousness loop query/control)
+- Implement proposal loop: consciousness proposes → CC reviews → feedback feeds back
 
 ## Session 16 — Consciousness Loop + Security Fix (2026-02-24)
 
