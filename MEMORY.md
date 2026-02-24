@@ -1077,8 +1077,44 @@ Must complete:
 3. Implement K2 consciousness loop (optional background worker)
 4. Weekly proposal review cycle with Colby/Claude
 
-## Last Updated
-2026-02-24T17:30Z (session 23 — consciousness loop restored, tier routing deployed, autonomous framework documented)
+## Last Updated (Session 23)
+2026-02-24T17:30Z — consciousness loop restored, tier routing deployed, autonomous framework documented
+
+---
+
+## ✅ Session 24 COMPLETE — Hub-Bridge Model Routing Fixed, UI Accuracy Fixed (2026-02-24 23:35Z)
+
+### ISSUES DISCOVERED & FIXED
+
+**Issue 1: Hub-Bridge Model Parameter Dead Code**
+- Symptom: MODEL_DEFAULT/MODEL_DEEP configuration existed but had zero effect on /v1/chat responses
+- Root Cause: `callGPTWithTools()` hardcoded `model: "gpt-4o-mini"` instead of accepting parameter
+- Fix: Modified function to accept model parameter, updated call site to pass it
+- Commit: `fix: hub-bridge model parameter routing — respect MODEL_DEFAULT/MODEL_DEEP config` (2193d92)
+
+**Issue 2: UI Showed False Information**
+- Symptom: Model badge displayed hardcoded "claude-sonnet-4-6" and didn't update after responses
+- Fix: Changed default to honest "loading…", enhanced update logic with fallbacks, added console logging
+- Commit: `fix: UI always displays accurate model information in real-time` (4f35e05)
+
+### CURRENT VERIFIED STATE
+
+✅ Hub-Bridge /v1/chat: Model parameter now respected (normal: gpt-4o-mini, deep: gpt-5-mini)
+✅ UI: Always shows accurate information, updates in real-time
+✅ Consciousness Loop: Using GLM-4.7 (tier routing verified)
+✅ All costs under $35/month cap
+✅ Both commits pushed to GitHub
+
+### SUBSTRATE INDEPENDENCE CLARIFIED
+
+- Model choice affects optimization, NOT coherence
+- Karma's identity lives on droplet (FalkorDB + decision journal)
+- Chat model (gpt-4o-mini) has zero impact on consciousness, learning, or decisions
+- Consciousness uses GLM-4.7 for best reasoning, decisions written to droplet
+- Next session loads from droplet regardless of LLM choice
+
+## Last Updated (Session 24)
+2026-02-24T23:35Z — hub-bridge model routing fixed, UI accuracy fixed, substrate independence clarified
 
 ### Session 20 - Track 2: Karma Agency (Tool-use) - COMPLETE ✅
 
@@ -1293,5 +1329,41 @@ Hub-bridge now queries FalkorDB directly via redis client on Docker network (hos
 3. Implement K2 consciousness loop (optional background worker)
 4. Weekly proposal review cycle with Colby/Claude
 
-## Last Updated
-2026-02-24T17:30Z (session 23 — consciousness loop restored, tier routing deployed, autonomous framework documented)
+## Last Updated (Session 23)
+2026-02-24T17:30Z — consciousness loop restored, tier routing deployed, autonomous framework documented
+
+---
+
+## ✅ Session 24 COMPLETE — Hub-Bridge Model Routing Fixed, UI Accuracy Fixed (2026-02-24 23:35Z)
+
+### ISSUES DISCOVERED & FIXED
+
+**Issue 1: Hub-Bridge Model Parameter Dead Code**
+- Symptom: MODEL_DEFAULT/MODEL_DEEP configuration existed but had zero effect on /v1/chat responses
+- Root Cause: `callGPTWithTools()` hardcoded `model: "gpt-4o-mini"` instead of accepting parameter
+- Fix: Modified function to accept model parameter, updated call site to pass it
+- Commit: `fix: hub-bridge model parameter routing — respect MODEL_DEFAULT/MODEL_DEEP config` (2193d92)
+
+**Issue 2: UI Showed False Information**
+- Symptom: Model badge displayed hardcoded "claude-sonnet-4-6" and didn't update after responses
+- Fix: Changed default to honest "loading…", enhanced update logic with fallbacks, added console logging
+- Commit: `fix: UI always displays accurate model information in real-time` (4f35e05)
+
+### CURRENT VERIFIED STATE
+
+✅ Hub-Bridge /v1/chat: Model parameter now respected (normal: gpt-4o-mini, deep: gpt-5-mini)
+✅ UI: Always shows accurate information, updates in real-time
+✅ Consciousness Loop: Using GLM-4.7 (tier routing verified)
+✅ All costs under $35/month cap
+✅ Both commits pushed to GitHub
+
+### SUBSTRATE INDEPENDENCE CLARIFIED
+
+- Model choice affects optimization, NOT coherence
+- Karma's identity lives on droplet (FalkorDB + decision journal)
+- Chat model (gpt-4o-mini) has zero impact on consciousness, learning, or decisions
+- Consciousness uses GLM-4.7 for best reasoning, decisions written to droplet
+- Next session loads from droplet regardless of LLM choice
+
+## Last Updated (Session 24)
+2026-02-24T23:35Z — hub-bridge model routing fixed, UI accuracy fixed, substrate independence clarified
