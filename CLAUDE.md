@@ -14,6 +14,47 @@
 - Five steps that move the needle: ARIA_BRIEF in PROMOTE, CLAUDE.md current, FalkorDB
   context in /v1/chat, use Karma daily, PROMOTE aggressively
 
+## Quick Reference — Session Start Checklist (Updated 2026-02-24)
+
+**Immutable Architecture (Don't change this without explicit approval):**
+- **Droplet (vault-neo) is authoritative:** FalkorDB neo_workspace graph, identity spine, decision journal, consciousness.jsonl, ledger — source of truth
+- **K2 (local) is a worker:** Loads from droplet, runs consciousness loop, syncs back. Can reboot without data loss.
+- **Git is backup only:** Not authoritative. Droplet state always wins in conflicts.
+- **Substrate independence:** Swapping Claude → GPT → Gemini changes response style, not Karma's identity (lives on droplet)
+
+**Session Flow (Never skip this):**
+1. Run `Scripts/resurrection/Get-KarmaContext.ps1` → generates `cc-session-brief.md`
+2. Read `cc-session-brief.md` (complete context: active task, blockers, next agenda, recent decisions)
+3. Resume active task (don't ask what to do — brief tells you)
+4. Work within honesty/analysis contract (below)
+5. Update MEMORY.md autonomously with progress
+6. Push to GitHub after significant changes
+7. At session end: update MEMORY.md, commit `phase-N: message`, push
+
+**Decision Authority (Locked):**
+- **Autonomous:** Code changes, file edits, tests, git ops, debugging, reading docs
+- **Ask first:** Breaking API changes, paid dependencies, infrastructure changes, deleting files, modifying CLAUDE.md/rules, anything that costs money
+
+**Honesty & Analysis Contract (Non-negotiable):**
+- Never claim "fixed" without end-to-end verification
+- If you don't know why something is broken: say "I don't know" + systematic investigation
+- Brutal honesty over politeness, always
+- Before any recommendation: thorough analysis → systematic debugging → test hypothesis → simulate alternatives → deliver ONE best path with evidence
+- Verify at each step, not just at the end
+
+**Hub Bridge & FalkorDB (Quick Ref):**
+- Auth: `TOKEN=$(cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt)` for all /v1/* endpoints
+- Graph name: `neo_workspace` (NOT `karma`)
+- Consciousness: `GET /v1/consciousness` (query state), `POST /v1/consciousness {"signal":"pause|resume|focus|reset", "reason":"..."}` (send signals)
+- FalkorDB env vars: `FALKORDB_DATA_PATH=/data`, `FALKORDB_ARGS='TIMEOUT 10000 MAX_QUEUED_QUERIES 100'` (critical for scale)
+
+**Critical Pitfalls (Don't repeat these):**
+- Docker compose service: `hub-bridge` (NOT `anr-hub-bridge`)
+- Shell heredoc + JS: `\n` in heredoc becomes literal newline → SyntaxError. Use `scp` for JS files instead.
+- FalkorDB graph: always query `neo_workspace`, never `karma`
+- Python on Windows: use SSH, not local Git Bash (no python3)
+- Hub chat token path: `/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt`
+
 ## Session Start (Do This First)
 1. Run `Scripts/resurrection/Get-KarmaContext.ps1` — generates `cc-session-brief.md` from live vault state
 2. Read `cc-session-brief.md` — **this single file has everything**: active task, blockers, next agenda, git state, recent decisions, recent failures, and Karma's memory state. No other files needed to start.
