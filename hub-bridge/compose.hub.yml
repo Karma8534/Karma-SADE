@@ -46,9 +46,9 @@ services:
       - /opt/seed-vault/memory_v1/session/state:/run/state:rw
       # Handoff persistence (rw)
       - /opt/seed-vault/memory_v1/hub_bridge/data/handoffs:/data/handoff:rw
-      # Karma self-access: repo files (ro) + ledger (ro) + MEMORY.md (rw)
+      # Karma self-access: repo files (ro) + ledger (rw) + MEMORY.md (rw)
       - /home/neo/karma-sade:/karma/repo:ro
-      - /opt/seed-vault/memory_v1/ledger:/karma/ledger:ro
+      - /opt/seed-vault/memory_v1/ledger:/karma/ledger:rw
       - /home/neo/karma-sade/MEMORY.md:/karma/MEMORY.md:rw
     networks:
       - anr-vault-net
