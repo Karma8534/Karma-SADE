@@ -653,5 +653,36 @@ Don't claim "deployed and ready" until verified in the actual running environmen
 - Verify cache-busting strategy
 - Test file upload feature end-to-end in live environment before closing
 
+## Session 14 Complete (2026-02-24) — Resurrection Spine Wired + Consciousness Blocker Isolated
+
+**MAJOR FIX: Resurrection Spine Now Injected Into CC Brief**
+- Problem: identity.json, invariants.json, direction.md existed on droplet but gen-cc-brief.py never loaded them
+- Solution: Modified Scripts/gen-cc-brief.py to add read_spine_file() + inject spine files into cc-session-brief.md
+- Result: cc-session-brief.md now 424 lines with full spine content (was ~100 without spine)
+- Impact: CC session starts now load Karma's persistent identity + invariants + direction (north star)
+- Verified: Ran script on droplet, spine content present, cron job runs every 5 minutes
+- Commit: 35af7e9 "phase-5: wire resurrection spine injection into cc-session-brief"
+
+**Consciousness Loop Blocker Diagnosed and Isolated**
+- Consciousness loop runs 60s OBSERVE/THINK/DECIDE/PROPOSE/REFLECT successfully
+- Fails at SYNC phase when trying to write insights via Graphiti.add_episode()
+- Error: "EntityNode validation errors: uuid=None, created_at=None"
+- Root cause: FalkorDB neo_workspace has corrupted entity nodes (missing required fields from Graphiti schema)
+- When Graphiti does fulltext_search("RELATES_TO"), it reconstructs EntityNode objects from DB that fail Pydantic validation
+- This is DATA CORRUPTION, not a resurrection issue
+- Decision: Skip Graphiti writes from consciousness loop. Write directly to consciousness.jsonl as JSON append.
+- This unblocks persistence without touching corrupted graph.
+
+**Pending Task (Next Session)**
+User's last explicit directive: "then do all of that. you really CAN Do this."
+Must complete:
+1. Modify consciousness.py to skip Graphiti.add_episode() call
+2. Implement direct JSON write to /ledger/consciousness.jsonl
+3. Rebuild docker image
+4. Restart karma container
+5. Verify consciousness loop runs without validation errors
+6. Verify insights persist to consciousness.jsonl on droplet
+7. Commit with clear explanation
+
 ## Last Updated
-2026-02-23T20:15 (session 7 in-progress) — File upload feature built but deployment pipeline unclear. Resurrection architecture from session 6 verified stable. Flagging deployment mechanism as blocker for next session.
+2026-02-24T23:40 (session 14 — resurrection spine wired, consciousness blocker diagnosed). Next session: modify consciousness.py to skip Graphiti and write directly to consciousness.jsonl. User directive: complete this before next session start.
