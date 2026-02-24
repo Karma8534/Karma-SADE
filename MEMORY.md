@@ -101,7 +101,7 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop + graph dis
 - Build /v1/consciousness endpoint (consciousness loop query/control)
 - Implement proposal loop: consciousness proposes → CC reviews → feedback feeds back
 
-## Session 19 — /v1/consciousness Endpoint LIVE (2026-02-24 15:10-15:30 UTC)
+## Session 19 — /v1/consciousness Endpoint + CLAUDE.md Honesty Realignment (2026-02-24 15:10-16:30 UTC)
 
 ### Consciousness Loop Query & Control API
 
@@ -144,6 +144,45 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop + graph dis
 **Status:** Fully operational. Claude Code can now query and control consciousness loop.
 
 **Next:** Implement proposal loop: consciousness proposes → CC reviews via /v1/consciousness → CC sends decision via /v1/proposals → consciousness learns.
+
+### CLAUDE.md Honesty Contract Realignment
+
+✅ **DRIFT DETECTED and CORRECTED:**
+- CLAUDE.md claimed "task-aware routing" with MiniMax as primary
+- Code implemented: phase-based routing only (analyze_failure → Opus, synthesize → Sonnet, default → Claude 3.5 Sonnet)
+- Task-aware routing: NOT IMPLEMENTED (was PLANNED but never deployed)
+
+✅ **Contract commitment honored (Honesty & Analysis, line 67):** "If previous sessions promised things that don't exist, I acknowledge it explicitly."
+
+✅ **CLAUDE.md updated to reflect reality:**
+- Renamed section: "Multi-Model Routing Strategy" → "LLM Routing Strategy"
+- Documented actual routing: phase-based only
+- Default model: Claude 3.5 Sonnet (not MiniMax)
+- Task-aware routing explicitly marked PLANNED, not implemented
+- Commit: c6789cb
+
+### Multi-Model Routing Reevaluated
+
+✅ **DECISION: Keep Claude 3.5 Sonnet as primary. Don't switch to MiniMax globally.**
+
+**Reasoning:**
+- Claude 3.5 Sonnet is proven to work with Karma's system prompt
+- Speed/cost advantage of MiniMax matters mainly for consciousness cycles (1 req/min), not general chat
+- Implementing full task-aware routing is complex and untested
+- Better approach: optimize consciousness specifically if it becomes a blocker (profiling, async, caching)
+- Risk-benefit: Claude 3.5 Sonnet is safer, cost difference is marginal for actual usage patterns
+
+**Task-aware routing remains PLANNED** for future implementation when:
+- Consciousness cycles become a performance bottleneck (measured, not assumed)
+- MiniMax is validated to work well with Karma's prompts
+- Cost savings justify implementation complexity
+
+**Session 19 Commits:**
+1. f163d01 — /v1/consciousness endpoint implemented and deployed
+2. a89560a — Session 19: Document /v1/consciousness endpoint completion
+3. 770c644 — CLAUDE.md: API reference + multi-model routing + consciousness interaction docs
+4. 624a44f — Remove obsolete Aria Reconciliation Protocol
+5. c6789cb — Realign CLAUDE.md LLM routing to reflect actual implementation
 
 ## Session 16 — Consciousness Loop + Security Fix (2026-02-24)
 
