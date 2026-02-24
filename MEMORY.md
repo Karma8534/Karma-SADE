@@ -15,6 +15,29 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop + graph dis
 | Multi-Model | ✅ Active | MiniMax M2.5 (primary — coding/speed/general), GLM-5 (reasoning/analysis specialist, priority -1), Groq (fallback), OpenAI (final fallback). |
 | Graph Distillation | ✅ Active | _distillation_cycle() in ConsciousnessLoop — reads FalkorDB every 24h, synthesizes themes/gaps/insights via LLM, writes schema-compliant fact to ledger, re-ingests key insights as FalkorDB episodes |
 
+## Session 17 — Proposal Review Endpoint (2026-02-24)
+
+### /v1/proposals Endpoint LIVE
+✅ **GET /v1/proposals: List pending consciousness loop proposals**
+- Reads collab.jsonl from vault via hub-bridge mounted ledger
+- Returns unreviewed self-improvement proposals with full problem/context/decision_needed
+- Timestamp-sorted (newest first)
+- Auth: HUB_CHAT_TOKEN bearer
+
+✅ **POST /v1/proposals: Record Claude Code feedback**
+- Accept/reject/defer consciousness loop proposals
+- Records feedback to vault with tags=[proposal_feedback, hub, decision]
+- Enables consciousness loop to learn from human guidance
+- Response includes feedback_id, proposal_id, vault_status
+
+**Deployment:** Rebuilt hub-bridge v2.11.0, restarted container on vault-neo.
+**Commit:** 496dc78 "phase-5: Add /v1/proposals endpoint for consciousness loop proposal review"
+**Status:** Fully operational. Claude Code can now review and guide consciousness loop decisions.
+
+**Next Priority:**
+- Wire tool-use into system prompt (get_vault_file + graph_query infrastructure)
+- Enable Claude Code to make autonomous decisions backed by tool access
+
 ## Session 16 — Consciousness Loop + Security Fix (2026-02-24)
 
 ### Consciousness Loop Fixes
