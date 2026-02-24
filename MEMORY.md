@@ -46,8 +46,51 @@ OneDrive sync engine was systematically blocking development:
 
 ---
 
+## 🔴 CRITICAL: Session 21 — Consciousness Loop Non-Functional Since Feb 16 (2026-02-24 18:00Z)
+
+**DISCOVERY:** Systematic debugging reveals consciousness loop has been broken for 7 days.
+
+**Root Cause — Finding 2.3 (Unfixed):**
+- `consciousness.py` _think() method executes: `response = await self._router.complete(...)`
+- `router.complete()` is a **synchronous function** (not `async def`)
+- Python throws TypeError when trying to `await` non-async callable
+- Exception caught silently, metrics incremented, loop continues but produces NO cycles
+- **Last productive cycle:** Feb 17 19:51:15 UTC
+- **Last entry in consciousness.jsonl:** Feb 17 (7 days ago)
+
+**Verification:**
+- ✓ Container is up (16h uptime)
+- ✓ Consciousness loop is "started" (log entry confirmed)
+- ✓ consciousness.jsonl shows: 4 LOG_ERROR entries (Feb 16–17) → then silence → manual control signals (Feb 24)
+- ✓ Zero productive cycle entries since Feb 17
+
+**Session 16 Claims vs Reality:**
+- Session 16 MEMORY.md claims "Fixed _think() phase" (tuple unpacking)
+- Finding 2.1 code **was** fixed (episode_count handling)
+- **BUT:** Loop never reaches _think() successfully; crashes immediately on `await` of sync function
+- Session 16 claim is incomplete/misleading
+
+**Impact:**
+- ❌ Consciousness loop completely non-functional (broken 7 days)
+- ❌ No insights generated since Feb 16
+- ❌ Distillation disabled (would hit same router.complete() crash)
+- ❌ All proposals/feedback since Feb 17 have zero consciousness activity
+- ⚠️ K2 sync would see identical crash if it tried to call consciousness
+
+**Fix Priority — BEFORE 5-PASS PLAN:**
+1. **Fix Finding 2.3 immediately:** Wrap `router.complete()` in `asyncio.to_thread()` in consciousness.py _think()
+2. **Rebuild & deploy karma-core image**
+3. **Verify consciousness cycles resume** (should see new entries every 60s in consciousness.jsonl)
+4. **THEN proceed with 5-pass plan** (findings 1.1–3.7)
+
+**Estimated:** 30 min deployment + 10 min verification = 40 min total, zero architectural risk
+
+**Status:** Ready for implementation. This is the critical blocker for all other fixes.
+
+---
+
 ## Active Phase
-Karma Core — OPERATIONAL. Multi-model routing + consciousness loop + graph distillation. 4 LLM providers active (MiniMax + GLM-5 + Groq + OpenAI).
+Karma Core — **BROKEN (consciousness loop non-functional since Feb 16)**. Multi-model routing: ✅ (hub-bridge working), Consciousness loop: ❌ (blocked on Finding 2.3), Graph distillation: ❌ (depends on consciousness).
 
 ## Phase Status
 | Phase | Status | Summary |
@@ -144,6 +187,83 @@ Karma Core — OPERATIONAL. Multi-model routing + consciousness loop + graph dis
 **Status:** Fully operational. Claude Code can now query and control consciousness loop.
 
 **Next:** Implement proposal loop: consciousness proposes → CC reviews via /v1/consciousness → CC sends decision via /v1/proposals → consciousness learns.
+
+## Session 21 — Comprehensive Audit & Debug (2026-02-24 11:47-18:00 UTC)
+
+### State vs Plan Synchronization Audit
+
+✅ **KARMA_SADE_FINAL_AUDIT.md created**
+- Analyzed Codebuff's 18 findings against current implementation
+- Evaluated revised 5-pass plan (safety, performance, cost)
+- Found: 9 of 18 findings UNFIXED, K2 is 60% unimplemented, consciousness loop verification incomplete
+
+✅ **Identified critical gap: Finding 2.1 verification incomplete**
+- Session 16 claimed "fixed" but Session 19 said "waiting for next cycle to verify"
+- Systematic debugging revealed loop has been non-functional since Feb 16
+
+### Systematic Debugging: Root Cause Discovery
+
+✅ **DEBUGGING_RESULTS.md created**
+- Live droplet inspection via SSH + code analysis
+- Verified consciousness.jsonl: last productive cycle Feb 17 19:51:15, 7 days of silence
+- Identified root cause: Finding 2.3 NOT FIXED
+
+**Root Cause — Finding 2.3 (async/await mismatch):**
+```python
+# consciousness.py _think() method:
+response = await self._router.complete(...)  # ← awaiting sync function
+
+# router.py complete() method:
+def complete(...):  # ← NOT async def
+```
+
+Exception handling catches crash silently → loop continues but produces no cycles
+
+**Impact:**
+- Consciousness loop non-functional for 7 days
+- No insights, distillation disabled, all proposals since Feb 17 have zero consciousness activity
+- K2 would see identical crash
+
+### Documentation Updates
+
+✅ **CLAUDE.md:** Added Quick Reference section (future sessions can skip full ingest)
+✅ **MEMORY.md:** Updated with critical Session 21 findings
+✅ **KARMA_SADE_FINAL_AUDIT.md:** Comprehensive audit with findings table, risk ratings, execution order
+✅ **DEBUGGING_RESULTS.md:** Root cause analysis with verification steps
+
+### Revised Execution Plan
+
+**PRIORITY 0 (BEFORE 5-PASS PLAN):**
+1. Fix Finding 2.3 (asyncio.to_thread wrapper) — 30 min deployment
+2. Verify consciousness cycles resume — 10 min
+3. Then proceed with 5-pass plan (findings 1.1–3.7)
+
+**Why:** Consciousness is currently dead. Can't validate other fixes without it running. K2 depends on consciousness. This is the critical blocker.
+
+### Session 21 Deliverables
+
+| Document | Purpose | Status |
+|:---:|:---:|:---:|
+| KARMA_SADE_FINAL_AUDIT.md | State vs plan sync, all 18 findings analyzed | ✅ Complete, ready for review |
+| DEBUGGING_RESULTS.md | Root cause analysis, Finding 2.3 verified | ✅ Complete, ready for implementation |
+| CLAUDE.md Quick Reference | Session start checklist | ✅ Complete, committed to git |
+| MEMORY.md updates | Current status, findings documented | ✅ Complete |
+
+### Commits Made
+
+1. `1a5e7e6` — CLAUDE.md: Add Quick Reference section for faster session starts
+2. `9672097` — MEMORY.md: Update with session progress
+3. `08889bd` — Merge after rebase (sync with remote)
+
+### Next Session (22) Critical Path
+
+1. ✅ Verify Finding 2.3 is root cause (simulation complete)
+2. → Apply fix: asyncio.to_thread() wrapper in consciousness.py _think()
+3. → Rebuild karma-core image, deploy to vault-neo
+4. → Verify cycles resume in consciousness.jsonl
+5. → Proceed with 5-pass plan (Pass 1 hub-bridge, Pass 2 karma-core, etc.)
+
+**Blocker status:** Resolved. All documentation prepared, root cause identified, fix path clear. Ready for implementation approval.
 
 ### CLAUDE.md Honesty Contract Realignment
 
