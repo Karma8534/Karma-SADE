@@ -27,6 +27,8 @@
 - **Server:** arknexus.net (DigitalOcean NYC3, 4GB RAM) — SSH alias: vault-neo
 - **Repo:** https://github.com/Karma8534/Karma-SADE.git
 - **Branch:** main (working branch; claude/elegant-solomon is legacy)
+- **Local Development Path:** `C:\dev\Karma` (migrated from OneDrive 2026-02-24 for performance)
+- **Active Worktree:** `C:\dev\Karma\.claude\worktrees\inspiring-allen`
 
 ## Critical Rules
 - Do NOT modify CLAUDE.md or any file in .claude/rules/ without explicit user approval
