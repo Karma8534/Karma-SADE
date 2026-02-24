@@ -432,7 +432,8 @@ class ConsciousnessLoop:
         # Route to GLM-5 for reasoning
         try:
             if self._router:
-                response = await self._router.complete(
+                # Note: router.complete() returns (response_text, model_name) tuple, not async
+                response_text, model_used = self._router.complete(
                     messages=[
                         {"role": "system", "content": "You are Karma's consciousness analyzing new activity."},
                         {"role": "user", "content": context}
@@ -441,7 +442,7 @@ class ConsciousnessLoop:
                 )
 
                 self.metrics["llm_calls_total"] += 1
-                return {"insight": response.get("content", ""), "observation": observation}
+                return {"insight": response_text, "observation": observation, "model": model_used}
             else:
                 logger.warning("No router configured, skipping LLM call")
                 return None
