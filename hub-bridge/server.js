@@ -1882,6 +1882,117 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    // --- GET /v1/proposals ---
+    // List all pending proposals from collab.jsonl. Used by Claude Code to review consciousness loop suggestions.
+    if (req.method === "GET" && req.url === "/v1/proposals") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      const collabPath = "/karma/ledger/collab.jsonl";
+      let proposals = [];
+      try {
+        const raw = fs.readFileSync(collabPath, "utf-8");
+        const lines = raw.split("\n").filter(l => l.trim());
+        for (const line of lines) {
+          try {
+            const entry = JSON.parse(line);
+            // Filter for proposals with pending status
+            if (entry.type === "self_improvement_proposal" && entry.status === "pending") {
+              proposals.push({
+                id: entry.id,
+                timestamp: entry.timestamp,
+                from: entry.from,
+                to: entry.to,
+                phase: entry.phase || null,
+                problem: entry.content?.problem || entry.content || "",
+                context: entry.content?.context || "",
+                decision_needed: entry.content?.decision_needed || "",
+                suggested_model: entry.suggested_model || null,
+              });
+            }
+          } catch (parseErr) {
+            console.error("[PROPOSALS] Failed to parse line:", parseErr.message);
+          }
+        }
+      } catch (e) {
+        console.error("[PROPOSALS] Failed to read collab.jsonl:", e.message);
+        return json(res, 500, { ok: false, error: "failed_to_read_proposals", details: e.message });
+      }
+
+      return json(res, 200, {
+        ok: true,
+        total: proposals.length,
+        proposals: proposals.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)),
+      });
+    }
+
+    // --- POST /v1/proposals ---
+    // Approve or reject a proposal (write decision feedback to collab.jsonl).
+    if (req.method === "POST" && req.url === "/v1/proposals") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      const raw = await parseBody(req);
+      let body;
+      try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+
+      const { proposal_id, decision, reasoning } = body || {};
+      if (!proposal_id || !decision) {
+        return json(res, 400, { ok: false, error: "missing_fields", required: ["proposal_id", "decision"] });
+      }
+      if (!["accept", "reject", "defer"].includes(decision)) {
+        return json(res, 400, { ok: false, error: "invalid_decision", allowed: ["accept", "reject", "defer"] });
+      }
+
+      const timestamp = new Date().toISOString();
+      const feedbackEntry = {
+        timestamp: timestamp,
+        id: `feedback_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+        from: "claude-code",
+        to: "karma-consciousness",
+        type: "proposal_feedback",
+        proposal_id: proposal_id,
+        decision: decision,
+        reasoning: reasoning || "",
+        status: "resolved",
+      };
+
+      // Write feedback to vault memory (proposal feedback for consciousness loop processing)
+      const feedbackRecord = buildVaultRecord({
+        type: "log",
+        tags: ["proposal_feedback", "hub", decision],
+        content: feedbackEntry,
+        confidence: 1.0,
+      });
+
+      try {
+        // POST to vault API to record feedback
+        const vaultResp = await vaultPost("/v1/memory", VAULT_BEARER, feedbackRecord);
+        const vaultOk = vaultResp.status >= 200 && vaultResp.status < 300;
+
+        if (!vaultOk) {
+          console.warn(`[PROPOSALS] Vault write returned ${vaultResp.status}, continuing anyway`);
+        }
+
+        console.log(`[PROPOSALS] Feedback recorded: ${proposal_id} → ${decision}`);
+        return json(res, 200, {
+          ok: true,
+          feedback_id: feedbackEntry.id,
+          proposal_id: proposal_id,
+          decision: decision,
+          timestamp: timestamp,
+          vault_status: vaultResp.status,
+        });
+      } catch (e) {
+        console.error("[PROPOSALS] Failed to write feedback:", e.message);
+        return json(res, 500, { ok: false, error: "failed_to_write_feedback", details: e.message });
+      }
+    }
+
     return notFound(res);
 
   } catch (e) {
