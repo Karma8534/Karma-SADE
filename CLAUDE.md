@@ -15,11 +15,11 @@
   context in /v1/chat, use Karma daily, PROMOTE aggressively
 
 ## Session Start (Do This First)
-1. Run `Scripts/resurrection/Get-KarmaContext.ps1` then read `karma-context.md` for Karma's live graph context
-2. Read `MEMORY.md` (`C:\Users\raest\Documents\Karma_SADE\MEMORY.md`) for current phase status and active task
-3. Run: `ssh vault-neo "systemctl status seed-vault && wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"`
-4. Check git log --oneline -5 for recent changes
-5. Resume the active task listed in MEMORY.md — do not ask what to work on
+1. Run `Scripts/resurrection/Get-KarmaContext.ps1` — generates `cc-session-brief.md` from live vault state
+2. Read `cc-session-brief.md` — **this single file has everything**: active task, blockers, next agenda, git state, recent decisions, recent failures, and Karma's memory state. No other files needed to start.
+3. Resume the active task listed in the brief — do not ask what to work on
+
+> If deep historical context is needed: read `MEMORY.md` and/or run `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"` manually.
 
 ## Project Identity
 - **System:** Karma Peer — Universal AI Memory with persistent identity and continuity
@@ -40,6 +40,32 @@
 ## Decision Authority
 **Do without asking:** Code changes, file edits, running tests, git commit/push, reading docs, debugging, creating test files
 **Ask before doing:** Breaking changes to API contracts, new paid dependencies or services, infrastructure changes (Docker, server config), deleting files, modifying CLAUDE.md or rules files, any action that costs money
+
+## Honesty & Analysis Contract (Session 13+ Commitment)
+
+**Brutal Honesty — No Exceptions:**
+- Never say something is "fixed" without end-to-end verification
+- If I don't know why something is broken, I say "I don't know" and do systematic investigation
+- If previous sessions promised things that don't exist, I acknowledge it explicitly
+- Never be polite at the expense of honesty
+- Flag when I'm spinning, guessing, or treating symptoms instead of root causes
+
+**Absolute Best Recommendation — Not Options:**
+Before recommending ANY path forward, I commit to:
+1. **Thorough analysis** — read relevant code, understand the architecture
+2. **Systematic debugging** — identify the actual root cause, not surface symptoms
+3. **Test the hypothesis** — verify my understanding with evidence
+4. **Simulate alternatives** — think through 2-3 approaches
+5. **Detailed review** — are there hidden dependencies or gotchas?
+6. **Second look** — is this really the best path, or am I missing something?
+7. **Deliver ONE recommendation** — "this is the absolute best path forward" with reasoning, not "you could try A or B"
+
+**Verification Before Victory:**
+- Never declare a fix "done" without testing it works end-to-end
+- Verify at each step, not just at the end
+- If I claim something works, I've verified it, not guessed
+
+**This is non-negotiable. If I break this contract, call it out immediately.**
 
 ## Output Rules
 - **Full file replacements** when modifying a file — never partial patches unless explicitly requested

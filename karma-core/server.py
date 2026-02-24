@@ -12,8 +12,8 @@ import traceback
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
-import threading
 
+import aiohttp
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
@@ -21,6 +21,58 @@ from fastapi.responses import JSONResponse, Response, HTMLResponse
 import uvicorn
 
 import config
+
+# ─── Tools & Schema ────────────────────────────────────────────────────────
+
+SHELL_EXEC_TOOL = {
+    "name": "shell_exec",
+    "description": "Execute a read-only shell command on vault-neo for self-diagnosis. Supports: git log, systemctl status, docker ps, ls, cat, grep, wc, tail, head, ping. Useful for understanding system state, consciousness loop status, K2 connectivity, batch ingestion progress, etc.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "command": {
+                "type": "string",
+                "description": "Shell command to execute (must be whitelisted). Example: 'git log --oneline -30' or 'systemctl status karma-consciousness'"
+            }
+        },
+        "required": ["command"]
+    }
+}
+
+AVAILABLE_TOOLS = {
+    "shell_exec": SHELL_EXEC_TOOL,
+}
+
+
+async def execute_shell_command(command: str) -> dict:
+    """Execute whitelisted shell command via /v1/shell endpoint."""
+    hub_token = os.getenv('HUB_CHAT_TOKEN')
+    if not hub_token:
+        return {"ok": False, "error": "HUB_CHAT_TOKEN not set"}
+
+    url = "https://hub.arknexus.net/v1/shell"
+    headers = {"Authorization": f"Bearer {hub_token}"}
+    payload = {"command": command}
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=payload, headers=headers, timeout=10) as resp:
+                if resp.status == 200:
+                    result = await resp.json()
+                    return {
+                        "ok": result.get("ok", False),
+                        "command": result.get("command", command),
+                        "stdout": result.get("stdout", ""),
+                        "stderr": result.get("stderr", ""),
+                        "exitCode": result.get("exitCode"),
+                        "error": result.get("error")
+                    }
+                else:
+                    text = await resp.text()
+                    return {"ok": False, "error": f"HTTP {resp.status}: {text}"}
+    except Exception as e:
+        return {"ok": False, "error": f"shell_exec failed: {str(e)}"}
+
 
 # ─── LLM Client ──────────────────────────────────────────────────────────
 _openai_client = None
@@ -37,7 +89,6 @@ def get_openai_client():
 _graphiti_instance = None
 _graphiti_lock = asyncio.Lock()
 _graphiti_ready = False
-_candidates_lock = threading.Lock()
 _episode_counter = 0
 
 async def get_graphiti():
@@ -845,11 +896,10 @@ def _append_candidate(entry: dict) -> None:
     """Append a candidate entry to candidates.jsonl (persistent staging ledger)."""
     import json as _json
     try:
-        with _candidates_lock:
-            with open(CANDIDATES_JSONL, "a", encoding="utf-8") as f:
-                f.write(_json.dumps(entry) + "\n")
+        with open(CANDIDATES_JSONL, "a", encoding="utf-8") as f:
+            f.write(_json.dumps(entry) + "\n")
     except Exception as e:
-            print(f"[GATE] candidates.jsonl append failed: {e}")
+        print(f"[GATE] candidates.jsonl append failed: {e}")
 
 
 async def ingest_primitive_episode(name: str, body: str, source: str,
@@ -1263,6 +1313,76 @@ async def openai_proxy_completions(request: Request):
         print(f"[OpenAI Proxy] Error: {e}")
         return JSONResponse(
             {"error": f"Internal server error: {str(e)}"},
+            status_code=500
+        )
+
+
+@app.post("/v1/tools/execute")
+async def execute_tool(request: Request):
+    """
+    Execute a whitelisted tool via consciousness loop.
+
+    Request body:
+    {
+        "tool_name": "shell_exec",
+        "tool_input": {"command": "git log --oneline -30"}
+    }
+
+    Response:
+    {
+        "ok": true,
+        "tool_name": "shell_exec",
+        "result": {...}
+    }
+    """
+    try:
+        body = await request.json()
+        tool_name = body.get("tool_name", "").strip()
+        tool_input = body.get("tool_input", {})
+
+        if not tool_name:
+            return JSONResponse(
+                {"ok": False, "error": "tool_name required"},
+                status_code=400
+            )
+
+        if tool_name not in AVAILABLE_TOOLS:
+            return JSONResponse(
+                {"ok": False, "error": f"Tool '{tool_name}' not found. Available: {list(AVAILABLE_TOOLS.keys())}"},
+                status_code=400
+            )
+
+        # Execute the tool
+        if tool_name == "shell_exec":
+            command = tool_input.get("command", "")
+            if not command:
+                return JSONResponse(
+                    {"ok": False, "error": "command required for shell_exec"},
+                    status_code=400
+                )
+            result = await execute_shell_command(command)
+        else:
+            return JSONResponse(
+                {"ok": False, "error": f"Tool '{tool_name}' not implemented"},
+                status_code=501
+            )
+
+        return JSONResponse({
+            "ok": result.get("ok", False),
+            "tool_name": tool_name,
+            "result": result
+        })
+
+    except json.JSONDecodeError:
+        return JSONResponse(
+            {"ok": False, "error": "Invalid JSON in request body"},
+            status_code=400
+        )
+    except Exception as e:
+        print(f"[TOOL EXEC] Error: {e}")
+        traceback.print_exc()
+        return JSONResponse(
+            {"ok": False, "error": f"Tool execution failed: {str(e)}"},
             status_code=500
         )
 
