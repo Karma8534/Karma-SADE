@@ -226,26 +226,6 @@ curl -H "Authorization: Bearer $TOKEN" https://hub.arknexus.net/v1/endpoint
 
 **Authentication:** All endpoints use `HUB_CHAT_TOKEN` (same bearer token). Failure returns `401 Unauthorized`.
 
-## Aria Reconciliation Protocol
-Aria (ChatGPT co-creator) writes intent from her model of the system. Her model drifts
-from actual spine state between sessions — she may generate steps already completed or
-miss operational details (auth headers, service names, token paths).
-
-Before applying any Aria-authored block:
-1. Read it fully — do not execute immediately
-2. Check each proposed file against what already exists on disk and in git
-3. Merge additively — never replace files containing operational knowledge
-4. Flag drift: report to Colby what's already done, what's missing auth, what conflicts
-5. Only what survives reconciliation gets committed to the spine
-
-After PROMOTE, two outputs are generated:
-- `resume_prompt` — execution context for Claude Code (CC)
-- `karma_brief` — plain-language session summary for Karma to read at the start of a new
-  conversation (what was built, what the system can now do, what the next open question is)
-
-Colby pastes `karma_brief` to Karma. Karma briefs from the spine, not from external memory.
-Eventually Karma reads her own checkpoints from the vault — no paste required.
-
 ## Karma Mid-Session Capture Protocol
 
 ### Write-worthy triggers
