@@ -799,9 +799,31 @@ Check every session:
 - **Workaround:** Bypass Graphiti for consciousness loop (ledgers only)
 - **Long-term:** Re-ingest with proper validation or clean corrupted entities
 
+### _PROPOSE Phase Implementation (Completed 2026-02-24)
+
+**What was added:**
+- New phase in _act() method: detects LOG_INSIGHT/LOG_ALERT/LOG_GROWTH actions
+- Writes proposal entry to collab.jsonl with:
+  - timestamp, cycle, action
+  - proposal (the suggestion/insight)
+  - evidence (episode/entity/relationship counts)
+  - analysis (full analysis dict)
+  - status: "pending_review"
+- Added COLLAB_JOURNAL config variable
+- Added proposals_written metric to track count
+- Status: ✅ Deployed in karma container
+
+**Commit:** 569097a
+
+**What this enables:**
+- Consciousness loop now has complete OBSERVE→THINK→DECIDE→ACT→REFLECT cycle
+- Proposals written to collab.jsonl for CC human review
+- Evidence trail for every proposal (observations + analysis)
+- Foundation for approval workflow (once /v1/proposals endpoint built)
+
 ### Next Steps (Priority Order)
 
-1. **Build _PROPOSE Phase** — Write proposals to collab.jsonl when analysis detects actionable insights
+1. ✅ **Build _PROPOSE Phase** — Completed 2026-02-24
 2. **Build _SYNC Phase** — Write K2 changes back to droplet (K2 → Droplet sync)
 3. **Build /v1/proposals Endpoint** — CC review proposals before deployment
 4. **Wire Tool-Use** — Get vault_file + graph_query already built, need system prompt injection
