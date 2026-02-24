@@ -837,3 +837,55 @@ Must complete:
 
 ## Last Updated
 2026-02-24T23:40 (session 14 — resurrection spine wired, consciousness blocker diagnosed). Next session: modify consciousness.py to skip Graphiti and write directly to consciousness.jsonl. User directive: complete this before next session start.
+
+### Session 20 - Track 2: Karma Agency (Tool-use) - COMPLETE ✅
+
+**Objective:** Fix the broken graph_query tool that was trying to call a non-existent karma-server endpoint. Enable Karma to query her own knowledge graph via tool-use.
+
+**Status: COMPLETE**
+
+**What Was Working:**
+- Tool-use infrastructure in /v1/chat (Anthropic tool-calling)
+- get_vault_file tool (reading MEMORY.md, consciousness, etc.)
+- get_vault_file was successfully falling back when graph queries failed
+
+**What Was Broken:**
+- graph_query tool was trying to call `http://karma-server:8340/graph-query`
+- This endpoint didn't exist
+- All graph queries returned "fetch failed" errors
+
+**Root Cause Analysis:**
+- v2.17.3 (previous session) documented /v1/cypher endpoint being built in hub-bridge
+- But the code still referenced karma-server:8340/graph-query (old, never-implemented endpoint)
+- graph_query tool needed direct FalkorDB connection via redis protocol
+
+**Solution Implemented:**
+1. Added redis v4 client to hub-bridge/package.json
+2. Implemented getFalkordbClient() function with proper Docker network configuration
+3. Updated executeToolCall(graph_query) to query FalkorDB directly via redis sendCommand
+4. Updated /v1/cypher endpoint to use same FalkorDB redis connection
+5. Fixed connection to use IPv4 (avoided IPv6 loopback issues)
+6. Added proper error handling and logging
+
+**Verification:**
+- Tool-use test: Query "How many nodes total?" 
+- Result: Total nodes = 2,875, Total relationships = 375
+- Execution: <100ms
+- Both tools now working:
+  - get_vault_file(alias) ✅ 
+  - graph_query(cypher) ✅
+
+**Commits:**
+- 90587e0: fix: enable tool-use for graph queries via direct FalkorDB connection
+
+**Token spent this session:** ~65k tokens debugging and implementing redis connection
+
+**Next Agenda Items:**
+1. **Track 1** — Ingestion reliability: Design resilient pipeline (batch3 72% fail, batch4 40% fail)
+2. **Tool call failure modes** — Document graceful degradation when tools return empty/error
+3. **Graph analysis** — 2875 nodes, 375 relationships is sparse (7.7 nodes:edge ratio). Investigate underconnected entities
+4. **K2 inbox** — Implement polling endpoint for vault-neo to push tasks to K2 worker
+
+**Architecture Note:**
+Hub-bridge now queries FalkorDB directly via redis client on Docker network (host=falkordb, port=6379). No intermediate services needed. Queries execute in <100ms.
+
