@@ -395,8 +395,11 @@ class ConsciousnessLoop:
         # Return delta observation
         return {
             'new_episodes': episodes,
-            'time_delta_seconds': time_delta,
-            'episode_count': len(episodes)
+            'episode_count': len(episodes),
+            'new_entities': 0,
+            'new_relationships': 0,
+            'active_sessions': 0,
+            'time_delta_seconds': time_delta
         }
 
     def _get_recent_episode_content(self, limit: int) -> list[str]:
@@ -432,7 +435,8 @@ class ConsciousnessLoop:
         # Route to GLM-5 for reasoning
         try:
             if self._router:
-                response = await self._router.complete(
+                response = await asyncio.to_thread(
+                    self._router.complete,
                     messages=[
                         {"role": "system", "content": "You are Karma's consciousness analyzing new activity."},
                         {"role": "user", "content": context}
@@ -440,14 +444,27 @@ class ConsciousnessLoop:
                     task_type="reasoning"  # Routes to GLM-5
                 )
 
+                print(f"[CONSCIOUSNESS] Router response type: {type(response)}, value: {response}")
+
                 self.metrics["llm_calls_total"] += 1
-                return {"insight": response.get("content", ""), "observation": observation}
+
+                # Extract content based on response structure
+                if isinstance(response, tuple):
+                    insight = response[0] if response else ""
+                elif isinstance(response, dict):
+                    insight = response.get("content", response.get("insight", ""))
+                else:
+                    insight = str(response)
+
+                return {"insight": insight, "observation": observation}
             else:
                 logger.warning("No router configured, skipping LLM call")
                 return None
 
         except Exception as e:
+            print(f"[CONSCIOUSNESS] ANALYSIS STEP FAILED: {type(e).__name__}: {e}")
             logger.error(f"Consciousness _think() failed: {e}")
+            traceback.print_exc()
             self.metrics["errors"] += 1
             return None
 
@@ -502,7 +519,7 @@ Keep response under 500 tokens.
             return Action.NO_ACTION, "Idle cycle — no new activity"
 
         # Analysis failed → log error
-        if analysis is None and observations["new_episodes"] > 0:
+        if analysis is None and observations.get("episode_count", 0) > 0:
             return Action.LOG_ERROR, "Analysis failed despite new activity"
 
         if analysis is None:
