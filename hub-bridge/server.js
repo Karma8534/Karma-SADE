@@ -268,7 +268,7 @@ async function vaultGet(path, bearer, baseUrl) {
   return { status: resp.status, text };
 }
 async function vaultPost(path, bearer, payload) {
-  const url = new URL(path, VAULT_BASE_URL).toString();
+  const url = new URL(path, VAULT_INTERNAL_URL).toString();
   const resp = await fetch(url, {
     method: "POST",
     headers: { Authorization: `Bearer ${bearer}`, "content-type": "application/json" },
@@ -615,16 +615,23 @@ function buildVaultRecord({ type, content, tags, source, confidence, verifiedAtI
   const t = (type || "").toString();
   const tagArr = Array.isArray(tags) ? tags.filter(x => typeof x === "string" && x.trim().length) : [];
   const ts = nowIso();
+  // Guard against Array/Date/non-plain-object content
+  let contentObj = content;
+  if (content && typeof content === "object" && !Array.isArray(content) && !(content instanceof Date)) {
+    contentObj = content;
+  } else {
+    contentObj = { value: String(content ?? "") };
+  }
   return {
     type: t,
-    content: content && typeof content === "object" ? content : { value: String(content ?? "") },
+    content: contentObj,
     tags: tagArr,
     source: { kind: "tool", ref: (source || HUB_SOURCE).toString() },
     created_at: ts,
     updated_at: ts,
     confidence: Number.isFinite(confidence) ? confidence : 0.9,
     verification: {
-      protocol_version: "fp.v1",
+      protocol_version: "v0.1",
       verified_at: verifiedAtIso || ts,
       verifier: verifier || HUB_VERIFIER,
       status: "verified",
@@ -1041,7 +1048,7 @@ async function writeChatlogItemToVault(item) {
     updated_at: item.timestamp,
     confidence: 1.0,
     verification: {
-      protocol_version: "v1",
+      protocol_version: "v0.1",
       verified_at: nowIso(),
       verifier: "hub-bridge-chatlog-endpoint",
       status: "verified",
@@ -1304,9 +1311,6 @@ const server = http.createServer(async (req, res) => {
       const usd_estimate = estimateUsd(model, usage.prompt_tokens || 0, usage.completion_tokens || 0, env);
 
       const used_after = Number((used_before + usd_estimate).toFixed(6));
-      spendState.usd_spent = used_after;
-      spendState.updated_at = nowIso();
-      saveSpendState(spendPath, spendState);
 
       // Calculate daily spend
       const now = new Date();
@@ -1371,6 +1375,13 @@ const server = http.createServer(async (req, res) => {
         } catch (ahErr) {
           console.error("[AUTO_HANDOFF] failed:", ahErr.message);
         }
+      }
+
+      // Only commit spend state after vault write succeeds
+      if (vp.status === 201) {
+        spendState.usd_spent = used_after;
+        spendState.updated_at = nowIso();
+        saveSpendState(spendPath, spendState);
       }
 
       if (vp.status !== 201) {
@@ -1713,7 +1724,7 @@ const server = http.createServer(async (req, res) => {
                 created_at: _now,
                 updated_at: _now,
                 verification: {
-                  protocol_version: "0.1",
+                  protocol_version: "v0.1",
                   verified_at: _now,
                   verifier: "hub-bridge-promote",
                   status: "verified",
