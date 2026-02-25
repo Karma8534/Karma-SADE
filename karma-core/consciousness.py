@@ -268,7 +268,7 @@ class ConsciousnessLoop:
                     {"role": "system", "content": "You are Karma graph distillation engine. Output only valid JSON, no markdown."},
                     {"role": "user", "content": prompt}
                 ],
-                task_type="reasoning"
+                tier="sonnet"
             )
             raw = (raw or "").strip()
             # Strip markdown fences if model adds them
@@ -439,7 +439,7 @@ class ConsciousnessLoop:
                         {"role": "system", "content": "You are Karma's consciousness analyzing new activity."},
                         {"role": "user", "content": context}
                     ],
-                    task_type="reasoning"  # Routes to GLM-5
+                    tier="sonnet"  # Routes to GLM-4.7 (Sonnet tier, 66% cost savings)
                 )
 
                 self.metrics["llm_calls_total"] += 1
@@ -504,7 +504,7 @@ Keep response under 500 tokens.
             return Action.NO_ACTION, "Idle cycle — no new activity"
 
         # Analysis failed → log error
-        if analysis is None and observations["new_episodes"] > 0:
+        if analysis is None and observations.get("episode_count", 0) > 0:
             return Action.LOG_ERROR, "Analysis failed despite new activity"
 
         if analysis is None:
@@ -516,8 +516,8 @@ Keep response under 500 tokens.
         patterns = analysis.get("patterns", [])
 
         # Rapid graph growth
-        if observations["new_entities"] > 10:
-            return Action.LOG_GROWTH, f"Rapid growth: {observations['new_entities']} new entities in one cycle"
+        if observations.get("episode_count", 0) > 10:
+            return Action.LOG_GROWTH, f"Rapid growth: {observations.get('episode_count', 0)} new episodes in one cycle"
 
         # Anomaly with urgency
         if anomalies and urgency in ("medium", "high"):
@@ -528,8 +528,8 @@ Keep response under 500 tokens.
             return Action.LOG_INSIGHT, insights[0]
 
         # New entities discovered
-        if observations["new_entities"] > 0:
-            return Action.LOG_DISCOVERY, f"{observations['new_entities']} new entities, {observations['new_relationships']} new relationships"
+        if observations.get("episode_count", 0) > 0:
+            return Action.LOG_DISCOVERY, f"{observations.get('episode_count', 0)} new episodes"
 
         # Patterns noted but nothing urgent
         if patterns:
@@ -549,11 +549,12 @@ Keep response under 500 tokens.
             "cycle": cycle_num,
             "action": action,
             "reason": reason,
+            "model": analysis.get("model", "unknown") if analysis else "unknown",
             "observations": {
-                "new_episodes": observations["new_episodes"],
-                "new_entities": observations["new_entities"],
-                "new_relationships": observations["new_relationships"],
-                "active_sessions": observations["active_sessions"],
+                "new_episodes": observations.get("new_episodes", []),
+                "new_entities": observations.get("new_entities", 0),
+                "new_relationships": observations.get("new_relationships", 0),
+                "active_sessions": observations.get("active_sessions", 0),
             },
             "analysis": analysis,
         }
@@ -667,6 +668,42 @@ Keep response under 500 tokens.
             self._last_reflection = f"Cycle #{cycle_num}: Idle ({self.metrics['consecutive_idle']} consecutive)"
         else:
             self._last_reflection = f"Cycle #{cycle_num}: {action}"
+
+    # ─── Tool Use (Consciousness reasoning) ──────────────────────────
+
+    async def _execute_tool(self, tool_name: str, tool_input: dict):
+        """Execute a tool from consciousness reasoning context."""
+        import os
+        import json
+        import subprocess
+        
+        if tool_name == "graph_query":
+            cypher = tool_input.get("query", "")
+            if not cypher:
+                return {"error": "missing_query"}
+            
+            # Call graph endpoint
+            vault_bearer = os.getenv("VAULT_BEARER", "")
+            result = subprocess.run(
+                ["curl", "-s", "-X", "POST",
+                 "-H", f"authorization: Bearer {vault_bearer}",
+                 "-H", "content-type: application/json",
+                 "-d", json.dumps({"query": cypher}),
+                 "http://karma:8340/v1/cypher"],
+                capture_output=True, text=True
+            )
+            try:
+                return json.loads(result.stdout) if result.stdout else {"error": "empty_response"}
+            except json.JSONDecodeError:
+                return {"error": f"invalid_json: {result.stdout}"}
+        
+        elif tool_name == "get_vault_file":
+            alias = tool_input.get("alias", "")
+            # Placeholder for now (implement in later task)
+            return {"error": "get_vault_file not yet implemented"}
+        
+        return {"error": f"unknown_tool: {tool_name}"}
+
 
     # ─── Public API (used by server.py) ───────────────────────────────
 
