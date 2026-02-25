@@ -36,6 +36,7 @@ secrets.json
 .hub-chat-token
 
 # Local-only worktree and test artifacts
+.worktrees/
 .claude/worktrees/elegant-solomon/
 chrome-extension/test-extension.js
 
