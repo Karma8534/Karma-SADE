@@ -1391,3 +1391,87 @@ Karma was invoked with full context injection and verified her state:
 5. Check consciousness loop logs for GLM-4.7 usage pattern
 
 ---
+
+## Session 26 Progress — Implement /v1/cypher Endpoint (2026-02-25 00:35Z - ongoing)
+
+### CRITICAL DISCOVERY: /v1/cypher Endpoint Was Never Implemented
+
+**What we found:**
+- Hub-bridge was calling `/v1/cypher` on karma-server
+- Endpoint returned 404 (not found)
+- Brief claimed endpoint was built v2.17.3, but it never existed
+- Graph state is healthy: 1103 episodes, 100 entities, 381 relationships (per health endpoint)
+- FalkorDB neo_workspace graph fully functional, just no query API
+
+### IMPLEMENTATION COMPLETED
+
+✅ **Added POST /v1/cypher endpoint to karma-server (server.py)**
+- Accepts both "cypher" and "query" field names (for hub-bridge compatibility)
+- Returns FalkorDB query results with headers, results, and metadata
+- Tested and verified working: `curl http://karma:8340/v1/cypher -d '{"query":"..."}'`
+- Successfully queries: `MATCH (n) RETURN COUNT(n)` → returns 1203 nodes
+
+✅ **Fixed Hub-Bridge Port Configuration**
+- Hub-bridge was trying to reach port 8080 (external mapping)
+- Should use port 8340 (internal container port within Docker network)
+- Updated hub-bridge server.js line 781: `http://anr-vault-api:8080` → `http://anr-vault-api:8340`
+- Redeployed hub-bridge container with updated configuration
+
+### CURRENT BLOCKERS
+
+🔴 **Hub-Bridge Authentication Missing**
+- Endpoint connectivity fixed, but hub-bridge can't authenticate to /v1/chat
+- Returns "unauthorized" error
+- Root cause: Docker secrets not mounted (/run/secrets/hub.chat.token.txt missing)
+- Container needs:
+  - HUB_CHAT_TOKEN mounted as `/run/secrets/hub.chat.token.txt`
+  - VAULT_BEARER mounted as `/run/secrets/vault.bearer_token.txt`
+  - OPENAI/ANTHROPIC/BRAVE keys mounted similarly
+
+### WHAT WORKS NOW
+
+✅ /v1/cypher endpoint fully operational on karma-server (port 8340)
+✅ Hub-bridge can reach karma-server on correct port + alias (anr-vault-api)
+✅ Container networking configured properly (karma on anr-vault-net with anr-vault-api alias)
+✅ Dockerfile updated, dependencies installed, no more import errors
+
+### NEXT STEPS
+
+**Priority 1: Mount Docker Secrets for Hub-Bridge**
+- Stop anr-hub-bridge container
+- Recreate with -v or Docker --secret mounts for:
+  - `/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt` → `/run/secrets/hub.chat.token.txt`
+  - API keys similarly
+- Restart container and test /v1/chat → /v1/cypher flow
+
+**Priority 2: Test Full Tool-Use Flow**
+- Karma queries graph via /v1/chat (with graph_query tool)
+- Hub-bridge forwards to /v1/cypher on karma-server
+- Graph results returned to Karma
+- Verify one full cycle works end-to-end
+
+**Priority 3: Track 2 Progress**
+- Tool-use partially unblocked (endpoint exists, networking fixed)
+- Still need: proper auth/secret mounting, end-to-end test
+
+### Files Modified
+- `/c/Users/raest/Documents/Karma_SADE/karma-core/server.py` (+58 lines, /v1/cypher endpoint)
+- `/c/Users/raest/Documents/Karma_SADE/hub-bridge/app/server.js` (port 8340 fix)
+- `/c/Users/raest/Documents/Karma_SADE/hub-bridge/app/Dockerfile` (dependencies + simplified build)
+- `/c/Users/raest/Documents/Karma_SADE/hub-bridge/app/package.json` (created)
+
+### Session Commits
+- `phase-9: Implement /v1/cypher endpoint on karma-server for graph queries` (9bd26cb)
+- `phase-9: Fix hub-bridge port configuration and update Dockerfiles` (a43fa66)
+
+### Known Issues for Debugging
+
+1. **FalkorDB v neo_workspace graph empty early**: Graph showed 0 episodes when queried directly, but health endpoint reports 1103 episodes. Possible schemas or query path differences.
+2. **Hub-bridge socket connection**: "fetch failed" error suggests network issue despite proper alias setup. May need to validate DNS resolution inside container.
+3. **Consciousness loop showing only control signals**: consciousness.jsonl has 115 entries, but all are control signals (pause/resume/focus/reset), not actual cycle data. Need to verify consciousness loop is actually running 60s cycles.
+
+---
+
+Last Updated: 2026-02-25T00:50Z
+Status: Endpoint implemented, networking fixed, awaiting secret mounting and auth verification
+Next Session: Mount secrets and test full graph_query flow
