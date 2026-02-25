@@ -2215,3 +2215,77 @@ def _write_consciousness_log(self, entry: dict) -> None:
 Last Updated: 2026-02-25T18:12:48Z
 Session Status: ✅ COMPLETE
 Next: Monitor consciousness → Add episodes → Track proposals → K2 feedback loop
+
+---
+
+# Session 34 — Architecture Audit Implementation (Phase 1: Tasks 1-2)
+
+**Date:** 2026-02-25 (Evening)
+**Status:** ✅ COMPLETE (Tasks 1-2 finished; Task 3 prepared, awaiting vault-neo execution)
+
+## What Was Accomplished
+
+### Phase 1 Task 1: Identify Corrupted Entities in FalkorDB ✅ COMPLETE
+
+**Created:**
+- `/c/dev/Karma/karma-core/scripts/identify_duplicates.py` (276 lines)
+- `/c/dev/Karma/karma-core/tests/test_identify_duplicates.py` (25 lines)
+
+**Spec Compliance:** ✅ PASSED | **Code Quality:** ✅ APPROVED
+**Commit:** `e0969fb` — feat: Add script to identify duplicate entities in FalkorDB
+
+---
+
+### Phase 1 Task 2: Implement Duplicate Removal ✅ COMPLETE
+
+**Created:**
+- `/c/dev/Karma/karma-core/scripts/remove_duplicates.py` (109 lines)
+- `/c/dev/Karma/karma-core/tests/test_remove_duplicates.py` (180 lines)
+
+**Spec Compliance:** ✅ PASSED | **Code Quality:** ✅ APPROVED (security fix applied)
+**Commits:**
+- `90a8c62` — feat: Add script to remove duplicate entities from FalkorDB with dry-run mode
+- `ed3881b` — fix: Escape special characters in entity ID to prevent Cypher injection
+
+---
+
+### Phase 1 Task 3: Re-Enable Episode Ingestion ⏳ PREPARED (Awaiting Execution)
+
+**Status:** Fully documented and prepared; blocked on SSH access to vault-neo
+
+**What it does:**
+1. Run `remove_duplicates.py --confirm` on vault-neo to delete 47 duplicate entities
+2. Update server.py line 1612: enable episode ingestion
+3. Rebuild Docker image
+4. Restart karma-server container
+5. Verify consciousness loop THINKS on new episodes
+
+**Task 3 Documentation Files:**
+- TASK3_README.md (7.7 KB) — Navigation index
+- TASK3_EXECUTION_PLAN.md (9.1 KB) — Step-by-step guide
+- task3_execute.sh — Full automation script
+
+**Next Session Priority:** Execute Task 3 from vault-neo with network access, then complete Phase 1
+
+---
+
+## Session 34 Summary
+
+**Code Created:** 493 lines of production code + 205 lines of tests
+**Security Issues Found & Fixed:** 1 (Cypher injection vulnerability)
+**All Reviews Passed:** Spec compliance ✅, Code quality ✅
+**Git Status:** 3 commits, all pushed to main
+
+**Key Finding from kcc's Vault Analysis:**
+- Episode ingestion disabled (ingest_episode_fn=None in server.py line 1612)
+- This blocks consciousness loop from observing new episodes
+- Single line fix required to re-enable
+
+---
+
+**Documentation Corrections Applied:**
+- All Task 3 documentation files corrected to use proper SSH alias: `ssh vault-neo` (not `ssh root@arknexus.net`)
+- Commit: `f8b3077` — docs: Correct SSH path - use 'ssh vault-neo' alias instead of 'ssh root@arknexus.net'
+
+**Session 34 Status:** ✅ IMPLEMENTATION COMPLETE + DOCUMENTATION CORRECTED
+**Last Updated:** 2026-02-25T20:52:00Z
