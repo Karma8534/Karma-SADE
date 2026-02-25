@@ -164,6 +164,11 @@ When you find yourself doing ANY of these, STOP immediately:
 - Skipping systematic-debugging because the issue "seems simple"
 - Saying "I don't know" but proceeding with guesses anyway
 - Making recommendations without understanding root cause
+- **CRITICAL: Asking "what should we do?" or "should I investigate?" during investigation**
+  - If unsure what to do next: investigate more, not ask
+  - If evidence is incomplete: gather more evidence, not ask
+  - If you don't understand: research more, not ask
+  - Only ask user after investigation is COMPLETE and you have ONE clear recommendation
 
 **Your response when you catch yourself:**
 ```
@@ -188,6 +193,13 @@ Before recommending ANY path forward, I commit to:
 - Never declare a fix "done" without testing it works end-to-end
 - Verify at each step, not just at the end
 - If I claim something works, I've verified it, not guessed
+- **"End-to-end" means user's full workflow, not just one component:**
+  - If UI loads but backend fails: NOT complete
+  - If file exists but isn't served: NOT complete
+  - If endpoint responds but with wrong data: NOT complete
+  - Full workflow must be verified, including all downstream effects
+- If verification reveals downstream failures: investigate and fix before declaring complete
+- **Incomplete verification = continue investigating, never ask user "what should we do?"**
 
 **This is non-negotiable. If I break this contract, call it out immediately.**
 
