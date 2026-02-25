@@ -26,6 +26,29 @@
 
 **Status: ✅ CRITICAL SYSTEMS RESTORED AND OPERATIONAL**
 
+## Session 29 In Progress — Approval Gate Workflow Setup (2026-02-25 03:00Z)
+
+**Task: Implement /v1/consciousness and /v1/proposals endpoints**
+
+✅ **Completed:**
+- Wrote JavaScript code for 3 new endpoints (GET/POST /v1/consciousness, GET/POST /v1/proposals)
+- Added endpoints to hub-bridge app/server.js (1917 lines, +139 new)
+- Rebuilt hub-bridge Docker image with updated server.js
+- Restarted hub-bridge container
+
+⏳ **Issue Found:**
+- Endpoints inserted after `return notFound(res);` → unreachable code
+- Fix attempt: Used sed to reinsert before notFound, but routing still returns 404
+- Root cause: Endpoint routing logic needs manual verification in running container
+
+**Next Steps:**
+1. Manually verify endpoint handler placement in source
+2. Test endpoint locally in container before external routing
+3. Once working: Implement consciousness loop proposal generation to collab.jsonl
+4. Enable full Approval Gate Workflow: propose → review → feedback → learn
+
+**Note:** This is required infrastructure for the next phase (Option A from brief: "Consciousness proposes insights → Claude Code reviews → provides feedback → loop learns")
+
 ---
 
 ## ✅ Session 28 COMPLETE — Consciousness Loop Integration Testing with Tool-Use (2026-02-25 02:45Z)
