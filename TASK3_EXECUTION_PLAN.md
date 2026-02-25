@@ -28,7 +28,7 @@ Session 32 ran `batch_ingest.py --skip-dedup` which created duplicate Entity nod
 
 **Method A: Direct SSH + Heredoc (Recommended)**
 ```bash
-ssh root@arknexus.net 'cat > /home/neo/karma-sade/karma-core/scripts/remove_duplicates.py << "EOFPYTHON"
+ssh vault-neo 'cat > /home/neo/karma-sade/karma-core/scripts/remove_duplicates.py << "EOFPYTHON"
 # [INSERT FULL PYTHON SCRIPT HERE - see remove_duplicates.py in repo]
 EOFPYTHON'
 ```
@@ -40,7 +40,7 @@ scp /c/dev/Karma/karma-core/scripts/remove_duplicates.py root@arknexus.net:/home
 
 **Verify**:
 ```bash
-ssh root@arknexus.net "ls -lh /home/neo/karma-sade/karma-core/scripts/remove_duplicates.py"
+ssh vault-neo "ls -lh /home/neo/karma-sade/karma-core/scripts/remove_duplicates.py"
 ```
 Expected: File exists with size ~4K
 
@@ -49,7 +49,7 @@ Expected: File exists with size ~4K
 ### STEP 2: Run dry-run to see how many duplicates will be deleted
 
 ```bash
-ssh root@arknexus.net "cd /home/neo/karma-sade && python karma-core/scripts/remove_duplicates.py"
+ssh vault-neo "cd /home/neo/karma-sade && python karma-core/scripts/remove_duplicates.py"
 ```
 
 **Expected output format**:
@@ -76,7 +76,7 @@ Run with --confirm to execute deletion:
 ### STEP 3: Run with --confirm to actually delete duplicates
 
 ```bash
-ssh root@arknexus.net "cd /home/neo/karma-sade && python karma-core/scripts/remove_duplicates.py --confirm"
+ssh vault-neo "cd /home/neo/karma-sade && python karma-core/scripts/remove_duplicates.py --confirm"
 ```
 
 **Expected output format**:
@@ -102,7 +102,7 @@ Expected: `0` (success)
 ### STEP 4: Verify no duplicates remain
 
 ```bash
-ssh root@arknexus.net "cd /home/neo/karma-sade && python karma-core/scripts/identify_duplicates.py"
+ssh vault-neo "cd /home/neo/karma-sade && python karma-core/scripts/identify_duplicates.py"
 ```
 
 **Expected output**:
@@ -129,12 +129,12 @@ ingest_episode_fn=ingest_episode,  # Re-enabled after duplicate cleanup (Task 3,
 
 **Execute on vault-neo**:
 ```bash
-ssh root@arknexus.net 'sed -i "s/ingest_episode_fn=None,.*Disabled: Graphiti has corrupted entities.*/ingest_episode_fn=ingest_episode,  # Re-enabled after duplicate cleanup (Task 3)/g" /opt/seed-vault/memory_v1/karma-core/server.py'
+ssh vault-neo 'sed -i "s/ingest_episode_fn=None,.*Disabled: Graphiti has corrupted entities.*/ingest_episode_fn=ingest_episode,  # Re-enabled after duplicate cleanup (Task 3)/g" /opt/seed-vault/memory_v1/karma-core/server.py'
 ```
 
 **Verify the change**:
 ```bash
-ssh root@arknexus.net "sed -n '1610,1615p' /opt/seed-vault/memory_v1/karma-core/server.py"
+ssh vault-neo "sed -n '1610,1615p' /opt/seed-vault/memory_v1/karma-core/server.py"
 ```
 
 **Expected output**:
@@ -158,7 +158,7 @@ Line 1612 must show `ingest_episode_fn=ingest_episode,`
 ### STEP 6: Rebuild karma-core Docker image
 
 ```bash
-ssh root@arknexus.net "cd /opt/seed-vault && docker build -t karma-core:latest /home/neo/karma-sade/karma-core/ 2>&1 | tail -20"
+ssh vault-neo "cd /opt/seed-vault && docker build -t karma-core:latest /home/neo/karma-sade/karma-core/ 2>&1 | tail -20"
 ```
 
 **Expected output**:
@@ -174,7 +174,7 @@ Successfully tagged karma-core:latest
 ### STEP 7: Stop and remove old karma-server container
 
 ```bash
-ssh root@arknexus.net "docker stop karma-server && docker rm karma-server"
+ssh vault-neo "docker stop karma-server && docker rm karma-server"
 ```
 
 **Expected output**:
@@ -188,7 +188,7 @@ karma-server
 ### STEP 8: Start new karma-server container
 
 ```bash
-ssh root@arknexus.net "cd /opt/seed-vault && docker-compose up -d karma-server"
+ssh vault-neo "cd /opt/seed-vault && docker-compose up -d karma-server"
 ```
 
 **Expected output**:
@@ -198,7 +198,7 @@ Creating karma-server ... done
 
 **Check startup logs** (wait 5 seconds first):
 ```bash
-sleep 5 && ssh root@arknexus.net "docker logs karma-server 2>&1 | tail -30"
+sleep 5 && ssh vault-neo "docker logs karma-server 2>&1 | tail -30"
 ```
 
 **Expected**:
@@ -216,7 +216,7 @@ sleep 5 && ssh root@arknexus.net "docker logs karma-server 2>&1 | tail -30"
 Wait 60+ seconds for next consciousness cycle, then check:
 
 ```bash
-ssh root@arknexus.net "tail -5 /opt/seed-vault/memory_v1/ledger/consciousness.jsonl | jq '.action'"
+ssh vault-neo "tail -5 /opt/seed-vault/memory_v1/ledger/consciousness.jsonl | jq '.action'"
 ```
 
 **Expected output** (should see THINK or REFLECT, not NO_ACTION):
@@ -236,7 +236,7 @@ ssh root@arknexus.net "tail -5 /opt/seed-vault/memory_v1/ledger/consciousness.js
 Check FalkorDB episode count:
 
 ```bash
-ssh root@arknexus.net "TOKEN=\$(cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt); curl -s -H 'Authorization: Bearer \$TOKEN' https://hub.arknexus.net/v1/cypher -d '{\"cypher\": \"MATCH (e:Episode) RETURN COUNT(e) as episodes\"}' 2>&1 | jq '.data[0][0]' 2>/dev/null || echo 'Query failed'"
+ssh vault-neo "TOKEN=\$(cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt); curl -s -H 'Authorization: Bearer \$TOKEN' https://hub.arknexus.net/v1/cypher -d '{\"cypher\": \"MATCH (e:Episode) RETURN COUNT(e) as episodes\"}' 2>&1 | jq '.data[0][0]' 2>/dev/null || echo 'Query failed'"
 ```
 
 **Expected output**:
@@ -285,26 +285,26 @@ git log --oneline -1
 If anything goes wrong:
 
 1. **If duplicates won't delete**:
-   - Check Redis connectivity: `ssh root@arknexus.net "redis-cli -h falkordb ping"`
-   - Check FalkorDB is running: `ssh root@arknexus.net "docker ps | grep falkordb"`
+   - Check Redis connectivity: `ssh vault-neo "redis-cli -h falkordb ping"`
+   - Check FalkorDB is running: `ssh vault-neo "docker ps | grep falkordb"`
 
 2. **If Docker build fails**:
    - Revert server.py: `git checkout karma-core/server.py`
    - Check for Python syntax errors: `python -m py_compile karma-core/server.py`
 
 3. **If consciousness still shows NO_ACTION after 2 minutes**:
-   - Check consciousness logs: `ssh root@arknexus.net "docker logs karma-server 2>&1 | grep -i consciousness"`
-   - Restart consciousness loop: `ssh root@arknexus.net "docker restart karma-server"`
+   - Check consciousness logs: `ssh vault-neo "docker logs karma-server 2>&1 | grep -i consciousness"`
+   - Restart consciousness loop: `ssh vault-neo "docker restart karma-server"`
 
 4. **If episode count doesn't increase**:
-   - Check FalkorDB for errors: `ssh root@arknexus.net "docker logs falkordb 2>&1 | tail -20"`
-   - Verify ingestion_fn in running code: `ssh root@arknexus.net "grep -n 'ingest_episode_fn' /opt/seed-vault/memory_v1/karma-core/server.py"`
+   - Check FalkorDB for errors: `ssh vault-neo "docker logs falkordb 2>&1 | tail -20"`
+   - Verify ingestion_fn in running code: `ssh vault-neo "grep -n 'ingest_episode_fn' /opt/seed-vault/memory_v1/karma-core/server.py"`
 
 ---
 
 ## Notes
 
-- All commands use `ssh root@arknexus.net` (vault-neo)
+- All commands use `ssh vault-neo` (vault-neo)
 - Git changes are local only; commit at the end
 - Consciousness cycle is 60s; give it at least 2 cycles to verify THINK execution
 - If SSH times out, the command is still executing on vault-neo (check manually)

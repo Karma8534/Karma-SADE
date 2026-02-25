@@ -104,7 +104,7 @@ scp C:\dev\Karma\task3_execute.sh root@arknexus.net:/tmp/
 
 **Step 2**: SSH and execute
 ```bash
-ssh root@arknexus.net
+ssh vault-neo
 bash /tmp/task3_execute.sh
 ```
 
@@ -161,7 +161,7 @@ That's the only code change.
 
 ### Definitive Check (After 60+ seconds)
 ```bash
-ssh root@arknexus.net "tail -5 /opt/seed-vault/memory_v1/ledger/consciousness.jsonl | jq '.action'"
+ssh vault-neo "tail -5 /opt/seed-vault/memory_v1/ledger/consciousness.jsonl | jq '.action'"
 ```
 **Expected Output**:
 ```

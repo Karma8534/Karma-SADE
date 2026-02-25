@@ -39,7 +39,7 @@
 scp C:\dev\Karma\task3_execute.sh root@arknexus.net:/tmp/
 
 # Then SSH to vault-neo and run
-ssh root@arknexus.net
+ssh vault-neo
 bash /tmp/task3_execute.sh
 ```
 
@@ -95,37 +95,37 @@ git push origin main
 
 ### Checkpoint 1: Duplicates Removed
 ```bash
-ssh root@arknexus.net "cd /home/neo/karma-sade && python karma-core/scripts/identify_duplicates.py"
+ssh vault-neo "cd /home/neo/karma-sade && python karma-core/scripts/identify_duplicates.py"
 ```
 Expected: `No duplicates found`
 
 ### Checkpoint 2: Server.py Updated
 ```bash
-ssh root@arknexus.net "grep -n 'ingest_episode_fn' /opt/seed-vault/memory_v1/karma-core/server.py"
+ssh vault-neo "grep -n 'ingest_episode_fn' /opt/seed-vault/memory_v1/karma-core/server.py"
 ```
 Expected: Line 1612 shows `ingest_episode_fn=ingest_episode,`
 
 ### Checkpoint 3: Docker Image Rebuilt
 ```bash
-ssh root@arknexus.net "docker images karma-core:latest"
+ssh vault-neo "docker images karma-core:latest"
 ```
 Expected: Image exists with recent timestamp
 
 ### Checkpoint 4: karma-server Running
 ```bash
-ssh root@arknexus.net "docker ps | grep karma-server"
+ssh vault-neo "docker ps | grep karma-server"
 ```
 Expected: Container is running
 
 ### Checkpoint 5: Consciousness THINKING
 ```bash
-ssh root@arknexus.net "tail -5 /opt/seed-vault/memory_v1/ledger/consciousness.jsonl | jq '.action'"
+ssh vault-neo "tail -5 /opt/seed-vault/memory_v1/ledger/consciousness.jsonl | jq '.action'"
 ```
 Expected: Shows `"THINK"` or `"REFLECT"` (NOT `"NO_ACTION"`)
 
 ### Checkpoint 6: Episode Count Growing
 ```bash
-ssh root@arknexus.net "TOKEN=\$(cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt); curl -s -H 'Authorization: Bearer \$TOKEN' https://hub.arknexus.net/v1/cypher -d '{\"cypher\": \"MATCH (e:Episode) RETURN COUNT(e) as episodes\"}' 2>&1 | jq '.data[0][0]'"
+ssh vault-neo "TOKEN=\$(cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt); curl -s -H 'Authorization: Bearer \$TOKEN' https://hub.arknexus.net/v1/cypher -d '{\"cypher\": \"MATCH (e:Episode) RETURN COUNT(e) as episodes\"}' 2>&1 | jq '.data[0][0]'"
 ```
 Expected: Number > 0 (episodes in FalkorDB)
 
@@ -221,7 +221,7 @@ vault-neo:/opt/seed-vault/
 ### 1. Verify on Vault-Neo (All checkpoints pass)
 
 ```bash
-ssh root@arknexus.net "cd /home/neo/karma-sade && python karma-core/scripts/identify_duplicates.py"
+ssh vault-neo "cd /home/neo/karma-sade && python karma-core/scripts/identify_duplicates.py"
 # Should show: No duplicates found
 ```
 
