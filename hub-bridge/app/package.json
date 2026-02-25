@@ -1,0 +1,13 @@
+{
+  "name": "hub-bridge",
+  "version": "2.11.0",
+  "description": "Hub Bridge - middleware for Karma system",
+  "main": "server.js",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "openai": "^2.24.0"
+  }
+}

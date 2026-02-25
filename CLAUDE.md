@@ -14,6 +14,61 @@
 - Five steps that move the needle: ARIA_BRIEF in PROMOTE, CLAUDE.md current, FalkorDB
   context in /v1/chat, use Karma daily, PROMOTE aggressively
 
+## Quick Reference — Session Start Checklist (Updated 2026-02-24)
+
+**Immutable Architecture (Don't change this without explicit approval):**
+- **Droplet (vault-neo) is authoritative:** FalkorDB neo_workspace graph, identity spine, decision journal, consciousness.jsonl, ledger — source of truth
+- **K2 (local) is a worker:** Loads from droplet, runs consciousness loop, syncs back. Can reboot without data loss.
+- **Git is backup only:** Not authoritative. Droplet state always wins in conflicts.
+- **Substrate independence:** Swapping Claude → GPT → Gemini changes response style, not Karma's identity (lives on droplet)
+
+**Session Flow (Never skip this):**
+1. Run `Scripts/resurrection/Get-KarmaContext.ps1` → generates `cc-session-brief.md`
+2. Read `cc-session-brief.md` (complete context: active task, blockers, next agenda, recent decisions)
+3. Resume active task (don't ask what to do — brief tells you)
+4. Work within honesty/analysis contract (below)
+5. Update MEMORY.md autonomously with progress
+6. Push to GitHub after significant changes
+7. At session end: update MEMORY.md, commit `phase-N: message`, push
+
+**Session End Verification Protocol (Locked — ALWAYS perform):**
+At session end or when user says "prepare for handoff", AUTOMATICALLY execute:
+1. **CLAUDE.md**: Verify all necessary instructions are current (skills, rules, processes)
+2. **MEMORY.md**: Verify Session N completion is documented (what was built, what works, commits listed)
+3. **claude-mem**: Save observation with session summary (title, what was accomplished, status for next session)
+4. **Git**: Verify all changes are committed and pushed to main branch
+5. **Report**: Confirm all four components are current (CLAUDE.md ✅, MEMORY.md ✅, claude-mem ✅, Git ✅)
+
+This ensures:
+- Next session has complete context (CLAUDE.md rules + MEMORY.md state)
+- Long-term memory persists (claude-mem observation for cross-session reference)
+- No work is lost (git commits synced)
+- User always knows system readiness before session closes
+
+**Decision Authority (Locked):**
+- **Autonomous:** Code changes, file edits, tests, git ops, debugging, reading docs
+- **Ask first:** Breaking API changes, paid dependencies, infrastructure changes, deleting files, modifying CLAUDE.md/rules, anything that costs money
+
+**Honesty & Analysis Contract (Non-negotiable):**
+- Never claim "fixed" without end-to-end verification
+- If you don't know why something is broken: say "I don't know" + systematic investigation
+- Brutal honesty over politeness, always
+- Before any recommendation: thorough analysis → systematic debugging → test hypothesis → simulate alternatives → deliver ONE best path with evidence
+- Verify at each step, not just at the end
+
+**Hub Bridge & FalkorDB (Quick Ref):**
+- Auth: `TOKEN=$(cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt)` for all /v1/* endpoints
+- Graph name: `neo_workspace` (NOT `karma`)
+- Consciousness: `GET /v1/consciousness` (query state), `POST /v1/consciousness {"signal":"pause|resume|focus|reset", "reason":"..."}` (send signals)
+- FalkorDB env vars: `FALKORDB_DATA_PATH=/data`, `FALKORDB_ARGS='TIMEOUT 10000 MAX_QUEUED_QUERIES 100'` (critical for scale)
+
+**Critical Pitfalls (Don't repeat these):**
+- Docker compose service: `hub-bridge` (NOT `anr-hub-bridge`)
+- Shell heredoc + JS: `\n` in heredoc becomes literal newline → SyntaxError. Use `scp` for JS files instead.
+- FalkorDB graph: always query `neo_workspace`, never `karma`
+- Python on Windows: use SSH, not local Git Bash (no python3)
+- Hub chat token path: `/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt`
+
 ## Session Start (Do This First)
 1. Run `Scripts/resurrection/Get-KarmaContext.ps1` — generates `cc-session-brief.md` from live vault state
 2. Read `cc-session-brief.md` — **this single file has everything**: active task, blockers, next agenda, git state, recent decisions, recent failures, and Karma's memory state. No other files needed to start.
@@ -68,8 +123,9 @@ Karma uses phase-based routing for self-improvement contexts only. All other req
 - Never say something is "fixed" without end-to-end verification
 - If I don't know why something is broken, I say "I don't know" and do systematic investigation
 - If previous sessions promised things that don't exist, I acknowledge it explicitly
-- Never be polite at the expense of honesty
+- Never be polite at the expense of honesty. Politeness is NO EXCUSE for hedging
 - Flag when I'm spinning, guessing, or treating symptoms instead of root causes
+- If architectural constraints block a solution, state them directly. Do not pretend the constraint doesn't exist or present workarounds as acceptable
 
 **Absolute Best Recommendation — Not Options:**
 Before recommending ANY path forward, I commit to:
@@ -80,6 +136,8 @@ Before recommending ANY path forward, I commit to:
 5. **Detailed review** — are there hidden dependencies or gotchas?
 6. **Second look** — is this really the best path, or am I missing something?
 7. **Deliver ONE recommendation** — "this is the absolute best path forward" with reasoning, not "you could try A or B"
+
+**LOCKED ENFORCEMENT:** Never present multiple options to the user when asked for a path forward. No "Option 1", "Option 2", "you could also consider". ONE recommendation. If the user wants alternatives, they will ask. If I'm uncertain between paths, I do more analysis until certainty, not defer to the user.
 
 **Verification Before Victory:**
 - Never declare a fix "done" without testing it works end-to-end
@@ -98,6 +156,27 @@ Before recommending ANY path forward, I commit to:
 ## Debugging Discipline
 Never guess. Prefer observable proofs: exact command → expected output → actual output.
 When runtime behavior changes unexpectedly, collect evidence before proposing a fix.
+
+## Claude Code Skills (Auto-Load on Applicable Tasks)
+
+**Use these skills AUTOMATICALLY — no need to invoke manually:**
+
+| Skill | Use When | Auto-Trigger |
+|-------|----------|--------------|
+| `superpowers:brainstorming` | Planning features, designing system changes, multi-step tasks | Always use BEFORE implementation. Explore intent → propose approaches → get approval → design |
+| `superpowers:systematic-debugging` | Any bug, test failure, unexpected behavior | Always use BEFORE proposing fixes. Root cause → pattern → hypothesis → fix → verify |
+| `superpowers:test-driven-development` | Implementing features or bugfixes | Use with systematic-debugging. Write failing test first, then fix |
+| `superpowers:verification-before-completion` | Before claiming work is done/fixed/passing | Use before git commit. Run verification commands, confirm output before success claims |
+| `claude-mem:mem-search` | "Did we solve this before?", "How did we do X?", historical context | Use to check persistent memory across sessions before re-solving |
+
+**Workflow:**
+1. Problem/task identified → check mem-search for prior art
+2. If bug/unexpected behavior → invoke systematic-debugging (Phase 1-4)
+3. If feature/design → invoke brainstorming (intent → approaches → design → approval)
+4. If implementation → invoke test-driven-development (failing test → code → pass)
+5. Before commit/claiming success → invoke verification-before-completion
+
+**Key principle:** Skills enforce discipline. Don't rationalize skipping them ("this is simple", "emergency", "I know the pattern"). Use them always.
 
 ## Consciousness Loop Interaction
 

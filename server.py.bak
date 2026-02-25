@@ -12,6 +12,7 @@ import traceback
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
+import threading
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -37,6 +38,9 @@ _graphiti_instance = None
 _graphiti_lock = asyncio.Lock()
 _graphiti_ready = False
 _episode_counter = 0
+
+# ─── Candidates Lock (Memory Integrity Gate) ──────────────────────────────
+_candidates_lock = threading.Lock()  # Find 3.5: Lightweight advisory lock for candidates operations
 
 async def get_graphiti():
     """Get or create the persistent Graphiti client."""
@@ -843,8 +847,10 @@ def _append_candidate(entry: dict) -> None:
     """Append a candidate entry to candidates.jsonl (persistent staging ledger)."""
     import json as _json
     try:
-        with open(CANDIDATES_JSONL, "a", encoding="utf-8") as f:
-            f.write(_json.dumps(entry) + "\n")
+        # Find 3.5: Lightweight advisory lock on append
+        with _candidates_lock:
+            with open(CANDIDATES_JSONL, "a", encoding="utf-8") as f:
+                f.write(_json.dumps(entry) + "\n")
     except Exception as e:
         print(f"[GATE] candidates.jsonl append failed: {e}")
 
@@ -937,6 +943,10 @@ async def write_primitive(request: Request):
         lane = body.get("lane", "raw" if verdict == "defer" else "candidate")
         confidence = float(body.get("confidence", 0.50 if verdict == "defer" else 0.85))
 
+        # Find 3.2: Whitelist lane to {"candidate", "raw"} only
+        if lane not in ("candidate", "raw"):
+            return JSONResponse({"ok": False, "error": f"invalid lane: {lane}, must be candidate or raw"}, status_code=400)
+
         if not content_text:
             return JSONResponse({"ok": False, "error": "content required"}, status_code=400)
 
@@ -990,37 +1000,47 @@ async def promote_candidates_endpoint(request: Request):
             return JSONResponse({"ok": True, "promoted_count": 0, "skipped_count": 0,
                                  "authorized_by": authorized_by})
 
-        entries = []
-        with open(CANDIDATES_JSONL, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    try:
-                        entries.append(_json.loads(line))
-                    except Exception:
-                        pass
+        # Find 3.1 (interim): Wrap full read-modify-write in lock to prevent races
+        with _candidates_lock:
+            entries = []
+            with open(CANDIDATES_JSONL, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        try:
+                            entries.append(_json.loads(line))
+                        except Exception:
+                            pass
 
-        promoted_count = 0
-        skipped_count = 0
-        promoted_facts = []
+            promoted_count = 0
+            skipped_count = 0
+            promoted_facts = []
 
-        for entry in entries:
+            for entry in entries:
             uuid_val = entry.get("uuid")
             if not uuid_val or entry.get("promoted"):
                 continue
             if uuid_val in approved_uuids:
                 try:
-                    g.query(
-                        "MATCH (e:Episodic {uuid: $uuid}) SET e.lane = 'canonical', "
-                        "e.promoted_by = $by, e.promoted_at = $at, e.promotion_reason = $reason",
+                    # Find 3.7: Add WHERE e.lane = 'candidate' to prevent re-promotion
+                    result = g.query(
+                        "MATCH (e:Episodic {uuid: $uuid}) WHERE e.lane = 'candidate' SET e.lane = 'canonical', "
+                        "e.promoted_by = $by, e.promoted_at = $at, e.promotion_reason = $reason RETURN count(e) AS matched",
                         {"uuid": uuid_val, "by": authorized_by, "at": promoted_at, "reason": reason}
                     )
-                    entry["promoted"] = True
-                    entry["promoted_by"] = authorized_by
-                    entry["promoted_at"] = promoted_at
-                    entry["promotion_reason"] = reason
-                    promoted_count += 1
-                    promoted_facts.append({"uuid": uuid_val[:8], "name": entry.get("name", "")})
+                    # Find 3.4: Verify FalkorDB SET matched rows before marking promoted
+                    matched_rows = 0
+                    if result and len(result) >= 2 and result[1]:
+                        matched_rows = result[1][0][0] if result[1][0] else 0
+                    if matched_rows > 0:
+                        entry["promoted"] = True
+                        entry["promoted_by"] = authorized_by
+                        entry["promoted_at"] = promoted_at
+                        entry["promotion_reason"] = reason
+                        promoted_count += 1
+                        promoted_facts.append({"uuid": uuid_val[:8], "name": entry.get("name", "")})
+                    else:
+                        print(f"[GATE] promote query matched 0 rows for {uuid_val[:8]} (already promoted or not found)")
                 except Exception as pe:
                     print(f"[GATE] promote failed for {uuid_val[:8]}: {pe}")
             else:
@@ -1260,64 +1280,6 @@ async def openai_proxy_completions(request: Request):
         print(f"[OpenAI Proxy] Error: {e}")
         return JSONResponse(
             {"error": f"Internal server error: {str(e)}"},
-            status_code=500
-        )
-
-
-@app.post("/v1/cypher")
-async def cypher_query(request: Request):
-    """
-    Execute a Cypher query against the FalkorDB knowledge graph.
-
-    Request body: {"cypher": "MATCH (n) RETURN n LIMIT 10"} or {"query": "MATCH (n) RETURN n LIMIT 10"}
-    Response: {"ok": true, "results": [...], "stats": {...}} or {"ok": false, "error": "..."}
-    """
-    try:
-        body = await request.json()
-        # Accept both "cypher" and "query" field names for flexibility
-        cypher_str = body.get("cypher", body.get("query", "")).strip()
-
-        if not cypher_str:
-            return JSONResponse(
-                {"ok": False, "error": "Missing 'cypher' or 'query' field in request body"},
-                status_code=400
-            )
-
-        r = get_falkor()
-        result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher_str)
-
-        # FalkorDB returns [headers, [rows], [metadata]]
-        if isinstance(result, list) and len(result) >= 2:
-            headers = result[0] if result[0] else []
-            rows = result[1] if len(result) > 1 else []
-            metadata = result[2] if len(result) > 2 else []
-
-            # Convert header bytes to strings
-            headers_str = [h.decode() if isinstance(h, bytes) else h for h in headers]
-
-            return JSONResponse({
-                "ok": True,
-                "headers": headers_str,
-                "results": rows,
-                "metadata": metadata
-            })
-        else:
-            return JSONResponse({
-                "ok": True,
-                "headers": [],
-                "results": [],
-                "metadata": []
-            })
-
-    except json.JSONDecodeError:
-        return JSONResponse(
-            {"ok": False, "error": "Invalid JSON in request body"},
-            status_code=400
-        )
-    except Exception as e:
-        print(f"[CYPHER] Error executing query: {e}\n{traceback.format_exc()}")
-        return JSONResponse(
-            {"ok": False, "error": f"Query execution failed: {str(e)}"},
             status_code=500
         )
 
@@ -1602,7 +1564,7 @@ async def startup():
             get_openai_client_fn=get_openai_client,
             active_conversations_ref=active_conversations,
             router=app.state.router,
-            ingest_episode_fn=None,  # Disabled: Graphiti has corrupted entities from batch_ingest --skip-dedup; consciousness writes to ledger only
+            ingest_episode_fn=ingest_episode,
             sms_notify_fn=app.state.sms.notify if app.state.sms.enabled else None,
         )
         app.state.consciousness.start()
