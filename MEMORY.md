@@ -1,5 +1,33 @@
 # Universal AI Memory — Current State
 
+## ✅ Session 29 CRITICAL FIX — API Key Configuration Restored (2026-02-25 02:50Z)
+
+**ISSUE FOUND & RESOLVED:**
+- Karma-server container running without API keys (missing env vars)
+- Symptom: Graphiti FAILED, Router had 0 models, consciousness distillation crashing with JSON errors
+- Root cause: Container started manually without environment variable configuration
+
+**FIX APPLIED:**
+1. Located API key files on droplet: `/opt/seed-vault/memory_v1/session/*.api_key.txt`
+2. Stopped + removed broken karma container
+3. Restarted with proper `docker run` including:
+   - OPENAI_API_KEY, MINIMAX_API_KEY, GROQ_API_KEY from secure files
+   - All required environment variables configured
+   - Consciousness loop enabled
+
+**VERIFICATION — ALL SYSTEMS RESTORED:**
+```
+[GRAPHITI] Client initialized — real-time knowledge updates enabled
+[ROUTER] MiniMax registered, Groq registered, OpenAI registered (3 models)
+[CONSCIOUSNESS] Loop started — interval: 60s (running IDLE cycle just now)
+```
+
+**Latest consciousness cycle:** 2026-02-25T02:50:32 (IDLE = no new episodes, working correctly)
+
+**Status: ✅ CRITICAL SYSTEMS RESTORED AND OPERATIONAL**
+
+---
+
 ## ✅ Session 28 COMPLETE — Consciousness Loop Integration Testing with Tool-Use (2026-02-25 02:45Z)
 
 **CRITICAL ACHIEVEMENT: Consciousness loop now autonomously executes OBSERVE/THINK/DECIDE/ACT/REFLECT with tool-use integration.**
