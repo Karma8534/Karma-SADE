@@ -1694,6 +1694,198 @@ const server = http.createServer(async (req, res) => {
     }
 
 
+    // --- GET /v1/consciousness ---
+    // Query consciousness loop state. Returns recent cycles + pending proposals.
+    if (req.method === "GET" && req.url === "/v1/consciousness") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      try {
+        const consciousPath = "/opt/seed-vault/memory_v1/ledger/consciousness.jsonl";
+        const collabPath = "/opt/seed-vault/memory_v1/ledger/collab.jsonl";
+
+        // Read consciousness.jsonl and get last 20 entries
+        let recentCycles = [];
+        try {
+          const conscContent = fs.readFileSync(consciousPath, "utf-8");
+          const lines = conscContent.split("\n").filter(l => l.trim());
+          const entries = lines.slice(-20).map((line, idx) => {
+            try { return JSON.parse(line); } catch { return null; }
+          }).filter(e => e);
+          recentCycles = entries;
+        } catch (_) {}
+
+        // Count pending proposals in collab.jsonl
+        let pendingProposals = 0;
+        try {
+          const collabContent = fs.readFileSync(collabPath, "utf-8");
+          const lines = collabContent.split("\n").filter(l => l.trim());
+          pendingProposals = lines.filter(line => {
+            try {
+              const obj = JSON.parse(line);
+              return obj.type === "proposal" && (!obj.reviewed || obj.reviewed === false);
+            } catch { return false; }
+          }).length;
+        } catch (_) {}
+
+        // Get latest timestamp
+        const latestTimestamp = recentCycles.length > 0
+          ? recentCycles[recentCycles.length - 1].timestamp
+          : null;
+
+        return json(res, 200, {
+          ok: true,
+          total_cycles: recentCycles.length,
+          recent_cycles: recentCycles,
+          latest_timestamp: latestTimestamp,
+          pending_proposals: pendingProposals,
+        });
+      } catch (err) {
+        return json(res, 500, { ok: false, error: "internal_error", detail: err.message });
+      }
+    }
+
+    // --- POST /v1/consciousness ---
+    // Send control signals to consciousness loop (pause, resume, focus, reset).
+    if (req.method === "POST" && req.url === "/v1/consciousness") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      try {
+        const raw = await parseBody(req, 100000);
+        const body = JSON.parse(raw || "{}");
+        const { signal, reason } = body;
+
+        if (!signal) {
+          return json(res, 400, { ok: false, error: "signal required (pause|resume|focus|reset)" });
+        }
+        if (!["pause", "resume", "focus", "reset"].includes(signal)) {
+          return json(res, 400, { ok: false, error: "signal must be pause, resume, focus, or reset" });
+        }
+
+        // Write signal to consciousness.jsonl or a signals file
+        const signalRecord = {
+          id: `signal_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          type: "control_signal",
+          timestamp: new Date().toISOString(),
+          signal: signal,
+          reason: reason || "",
+          source: "hub-bridge",
+        };
+
+        try {
+          const consciousPath = "/opt/seed-vault/memory_v1/ledger/consciousness.jsonl";
+          const content = fs.readFileSync(consciousPath, "utf-8");
+          const updatedContent = content + "\n" + JSON.stringify(signalRecord);
+          fs.writeFileSync(consciousPath, updatedContent, "utf-8");
+
+          console.log(`[CONSCIOUSNESS] Signal recorded: ${signal} (${reason})`);
+        } catch (writeErr) {
+          return json(res, 500, { ok: false, error: "write_failed", detail: writeErr.message });
+        }
+
+        return json(res, 200, {
+          ok: true,
+          signal_id: signalRecord.id,
+          signal: signal,
+          recorded_at: signalRecord.timestamp,
+        });
+      } catch (err) {
+        return json(res, 500, { ok: false, error: "internal_error", detail: err.message });
+      }
+    }
+
+    // --- GET /v1/proposals ---
+    // List pending consciousness loop proposals for review.
+    if (req.method === "GET" && req.url === "/v1/proposals") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      try {
+        const collabPath = "/opt/seed-vault/memory_v1/ledger/collab.jsonl";
+        let proposals = [];
+
+        try {
+          const content = fs.readFileSync(collabPath, "utf-8");
+          const lines = content.split("\n").filter(l => l.trim());
+          proposals = lines.map(line => {
+            try { return JSON.parse(line); } catch { return null; }
+          }).filter(e => e && e.type === "proposal" && (!e.reviewed || e.reviewed === false));
+
+          // Sort by timestamp, newest first
+          proposals.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        } catch (_) {}
+
+        return json(res, 200, {
+          ok: true,
+          proposals: proposals,
+          count: proposals.length,
+        });
+      } catch (err) {
+        return json(res, 500, { ok: false, error: "internal_error", detail: err.message });
+      }
+    }
+
+    // --- POST /v1/proposals ---
+    // Record Claude Code decision on a consciousness proposal.
+    if (req.method === "POST" && req.url === "/v1/proposals") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      try {
+        const raw = await parseBody(req, 100000);
+        const body = JSON.parse(raw || "{}");
+        const { proposal_id, decision, reasoning } = body;
+
+        if (!proposal_id || !decision) {
+          return json(res, 400, { ok: false, error: "proposal_id and decision required" });
+        }
+        if (!["accept", "reject", "defer"].includes(decision)) {
+          return json(res, 400, { ok: false, error: "decision must be accept, reject, or defer" });
+        }
+
+        // Write feedback to collab.jsonl
+        const feedback = {
+          id: `feedback_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          type: "proposal_feedback",
+          timestamp: new Date().toISOString(),
+          proposal_id: proposal_id,
+          decision: decision,
+          reasoning: reasoning || "",
+          source: "hub-bridge",
+        };
+
+        try {
+          const collabPath = "/opt/seed-vault/memory_v1/ledger/collab.jsonl";
+          const content = fs.readFileSync(collabPath, "utf-8");
+          const updatedContent = content + "\n" + JSON.stringify(feedback);
+          fs.writeFileSync(collabPath, updatedContent, "utf-8");
+
+          console.log(`[PROPOSALS] Feedback recorded: ${feedback.id} (${decision})`);
+        } catch (writeErr) {
+          return json(res, 500, { ok: false, error: "write_failed", detail: writeErr.message });
+        }
+
+        return json(res, 200, {
+          ok: true,
+          feedback_id: feedback.id,
+          proposal_id: proposal_id,
+          decision: decision,
+          recorded_at: feedback.timestamp,
+        });
+      } catch (err) {
+        return json(res, 500, { ok: false, error: "internal_error", detail: err.message });
+      }
+    }
+
     // --- GET /v1/vault-file/:alias ---
     // Serve whitelisted vault files by alias. Used by Claude Code and other trusted clients.
     if (req.method === "GET" && req.url.startsWith("/v1/vault-file/")) {
