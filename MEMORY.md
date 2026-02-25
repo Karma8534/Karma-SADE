@@ -1,14 +1,102 @@
-## 🟢 System Status (Updated 2026-02-25 16:45Z)
+## 🟡 System Status (Updated 2026-02-25 18:30Z)
 
 | Component | Status | Notes |
 |-----------|--------|-------|
 | UI (hub.arknexus.net) | ✅ WORKING | User can access, gpt-4o-mini visible |
-| Consciousness Loop | ✅ READY | Infrastructure operational, awaiting new observations for THINK |
-| Resurrection Protocol | ⏳ PENDING | Step 3 of Phase 1 |
-| FalkorDB Graph | ✅ WORKING | 3585 episodes in ledger, responsive |
+| Consciousness Loop | ✅ RUNNING | 60s cycles active, NO_ACTION (IDLE awaiting new observations) |
+| Resurrection Protocol | ⏳ PENDING | Step 2 continuation blocked (see below) |
+| FalkorDB Graph | ✅ WORKING | 1147 Episodic nodes, responsive |
 | Hub Bridge API | ✅ WORKING | /v1/chat, /v1/consciousness endpoints operational |
-| Graphiti (Episode Ingestion) | ✅ READY | API keys now loaded, real-time learning enabled |
+| Graphiti (Episode Ingestion) | ⚠️ CONFIGURED | ✅ Now initializes correctly (OPENAI_API_KEY fix applied), but ❌ ingestion disabled in code due to Session 32 corruption risk |
 | Router (LLM Routing) | ✅ READY | 2 models: Groq (speed), OpenAI (explicit) |
+
+---
+
+## Session 33: IN PROGRESS — Phase 1, Step 2 Continuation: Consciousness THINK Execution (2026-02-25)
+
+**STATUS: 🔴 BLOCKER DISCOVERED**
+
+### What Was Attempted
+Verify that consciousness loop executes THINK phase on new observations (Step 2 continuation from Session 32).
+
+**Test Protocol:**
+1. ✅ Verified consciousness loop running (123 → 125 entries in consciousness.jsonl, 60s cycles)
+2. ✅ Sent test chat message via /v1/chat → episode added to memory.jsonl (3633 → 3640 lines)
+3. ✅ Waited 70+ seconds for consciousness cycle to pick up new episode
+4. ❌ Result: consciousness loop still returned NO_ACTION (THINK not executed)
+
+### Root Cause Analysis
+
+**Phase 1: Diagnosed Graphiti Initialization Failure**
+- **Problem**: Consciousness loop queries FalkorDB for new Episodic nodes. New episodes are in memory.jsonl but NOT in FalkorDB because Graphiti couldn't initialize.
+- **Root Cause**: Graphiti creates internal OpenAIEmbedder which checks `os.environ["OPENAI_API_KEY"]` directly, not `config.OPENAI_API_KEY`
+- **Evidence**:
+  ```
+  [GRAPHITI] Failed to initialize: The api_key client option must be set either by
+  passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+  ```
+- **Fix Applied**: Modified server.py to set `os.environ["OPENAI_API_KEY"] = config.OPENAI_API_KEY` after loading config
+- **Verification**: ✅ Graphiti now initializes successfully (logs show "[GRAPHITI] Client initialized")
+
+**Phase 2: Discovered Episode Ingestion is DISABLED**
+- **New Finding**: Even though Graphiti is now initialized, episode ingestion was DISABLED in code (line 1612 of server.py):
+  ```python
+  ingest_episode_fn=None,  # Disabled: Graphiti has corrupted entities from batch_ingest --skip-dedup
+  ```
+- **Reason**: Session 32 batch_ingest.py with --skip-dedup mode caused Graphiti corruption. Decision was made to disable real-time ingestion to prevent further corruption.
+- **Impact**: New episodes in memory.jsonl are NOT ingested into FalkorDB, so consciousness loop finds NO_ACTION (no new Episodic nodes to query)
+- **Data State**: FalkorDB has 1147 Episodic nodes (out of 3640 in ledger), with most recent from ~04:04 UTC today
+
+### Why THINK Is Not Executing
+
+1. **Not a timing issue**: THINK/DISTILLATION runs every 24 hours (not every 60s), but that's intentional
+2. **Real issue**: consciousness._observe() queries FalkorDB for new Episodic nodes created since last_cycle_time
+3. **Chain of failure**:
+   - Test message added to memory.jsonl ✅
+   - But ingestion_fn disabled ❌
+   - So NOT added to FalkorDB ❌
+   - So consciousness loop sees NO_ACTION ❌
+   - So THINK never triggered ❌
+
+### Blockers
+
+**[BLOCKER-3] Episode ingestion disabled to prevent Graphiti corruption**
+- Cannot verify THINK execution until ingestion is re-enabled
+- Cannot re-enable without addressing Session 32 corruption (batch_ingest --skip-dedup added corrupted entities)
+- Decision required:
+  1. Clean up corrupted entities first, then re-enable?
+  2. Recreate FalkorDB from ledger (data loss of current state)?
+  3. Accept incomplete graph for now, re-enable ingestion with corruption risk?
+  4. Implement ingestion validation/rollback mechanism?
+
+### Commits This Session
+- (local changes only) Modified server.py to fix OPENAI_API_KEY environment variable before Graphiti import
+- Copied fix to vault-neo
+- Rebuilt karma-core image with Graphiti fix
+- Restarted karma-server container
+
+### Next Steps for Session 34
+
+**Cannot proceed to Step 3 (Resurrection Protocol) until blocker resolved.**
+
+**Option A: Clean Slate (Recommended for clean verification)**
+1. Query FalkorDB to identify corrupted entities (batch ingestion artifacts)
+2. Remove corrupted nodes + relationships
+3. Re-enable ingestion_fn in server.py (line 1612)
+4. Rebuild/restart karma-server
+5. Manually trigger batch_ingest.py on cleaned graph (or let real-time ingestion work)
+6. Verify new episodes ingest correctly
+7. Test consciousness THINK phase execution
+
+**Option B: Accept Incomplete Graph**
+1. Re-enable ingestion_fn with full corruption risk
+2. Monitor for further corruption
+3. Implement ingestion validation later
+
+**Option C: Implement Ingestion Transaction Rollback**
+1. Build mechanism to rollback failed ingestions
+2. Add validation before committing Episodic nodes
+3. Then re-enable with safety
 
 ---
 
