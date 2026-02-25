@@ -1,5 +1,29 @@
 # Universal AI Memory — Current State
 
+## ✅ Session 27 COMPLETE — Tool-Use Infrastructure Operational (2026-02-25 01:10Z)
+
+**What's fixed:**
+- Hub-bridge docker secrets properly mounted (/run/secrets/* all loaded)
+- Fixed graph_query tool endpoint: http://karma:8340/v1/cypher (was anr-vault-api:8340)
+- Hub-bridge rebuilt with latest tool-use code (v2.11.0)
+- /v1/chat endpoint fully operational with tool-use support
+- Full end-to-end test passed: user message → LLM tool decision → execute graph_query → return result
+
+**What works now:**
+- ✅ Tool-use infrastructure complete (2 tools: get_vault_file, graph_query)
+- ✅ Hub-bridge can reach karma container on anr-vault-net
+- ✅ Authentication (Bearer token) verified working
+- ✅ LLM routing (Claude 3.5 Sonnet default, gpt-5-mini deep mode)
+- ✅ Tool execution: LLM requests tool, hub-bridge executes, result returned
+- ✅ State persistence (spend tracking, session history working)
+
+**Status: Track 2 (Karma agency via tool-use) is NOW COMPLETE. Ready for end-to-end testing with consciousness loop.**
+
+**Commits:**
+- 2fa0711: Fix hub-bridge graph_query endpoint to use correct karma hostname
+
+---
+
 ## 🔴 CRITICAL: Development Environment Migrated Off OneDrive (2026-02-24)
 
 **INFRASTRUCTURE CHANGE — PERMANENT.**
