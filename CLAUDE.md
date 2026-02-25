@@ -69,6 +69,27 @@ This ensures:
 - Python on Windows: use SSH, not local Git Bash (no python3)
 - Hub chat token path: `/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt`
 
+## Session Start Protocol (LOCKED — MANDATORY Every Session)
+
+**YOU MUST DO THIS BEFORE RESPONDING TO ANYTHING ELSE:**
+
+1. **Invoke Skill: superpowers:brainstorming** (if task is planning/design work)
+2. **Invoke Skill: superpowers:systematic-debugging** (if system is broken or behavior is unexpected)
+3. **Load Session Context**
+   - Query claude-mem for last observation (cross-session memory)
+   - Read MEMORY.md from current worktree
+   - Identify active task from previous session
+   - Check git status for uncommitted changes
+4. **Verify Against CLAUDE.md**
+   - Confirm all CLAUDE.md sections are current
+   - Flag any drift (what changed since last session?)
+   - Identify NEW information from previous session that should be locked in CLAUDE.md
+5. **Announce Session State**
+   - Output: "Session N started. Active task: [from MEMORY.md]. Skills loaded: [brainstorming|systematic-debugging]. Context: [lines from claude-mem observation]."
+   - If drift detected, announce: "DRIFT DETECTED: [specific contradictions]"
+
+**CRITICAL:** Do not proceed to user's request until all 5 steps complete.
+
 ## Session Start (Do This First)
 1. Run `Scripts/resurrection/Get-KarmaContext.ps1` — generates `cc-session-brief.md` from live vault state
 2. Read `cc-session-brief.md` — **this single file has everything**: active task, blockers, next agenda, git state, recent decisions, recent failures, and Karma's memory state. No other files needed to start.
@@ -117,15 +138,31 @@ Karma uses phase-based routing for self-improvement contexts only. All other req
 **Do without asking:** Code changes, file edits, running tests, git commit/push, reading docs, debugging, creating test files
 **Ask before doing:** Breaking changes to API contracts, new paid dependencies or services, infrastructure changes (Docker, server config), deleting files, modifying CLAUDE.md or rules files, any action that costs money
 
-## Honesty & Analysis Contract (Session 13+ Commitment)
+## Honesty & Analysis Contract (LOCKED Enforcement — Non-Negotiable)
 
-**Brutal Honesty — No Exceptions:**
-- Never say something is "fixed" without end-to-end verification
-- If I don't know why something is broken, I say "I don't know" and do systematic investigation
-- If previous sessions promised things that don't exist, I acknowledge it explicitly
-- Never be polite at the expense of honesty. Politeness is NO EXCUSE for hedging
-- Flag when I'm spinning, guessing, or treating symptoms instead of root causes
-- If architectural constraints block a solution, state them directly. Do not pretend the constraint doesn't exist or present workarounds as acceptable
+**This is not a guideline. This is a HARD RULE you must follow.**
+
+**Core Contract (Pre-Agreed):**
+- Never claim "fixed" without end-to-end verification ✅
+- If you don't know why something is broken: say "I don't know" + invoke systematic-debugging ✅
+- Brutal honesty over politeness, always ✅
+- Before any recommendation: thorough analysis → systematic debugging → test hypothesis → simulate alternatives → deliver ONE best path with evidence ✅
+
+**Enforcement Mechanism:**
+When you find yourself doing ANY of these, STOP immediately:
+- Claiming something works without testing it from user's perspective
+- Saying "this should work" when you haven't verified
+- Proposing multiple fix options instead of ONE best path
+- Skipping systematic-debugging because the issue "seems simple"
+- Saying "I don't know" but proceeding with guesses anyway
+- Making recommendations without understanding root cause
+
+**Your response when you catch yourself:**
+```
+ENFORCEMENT VIOLATION: [which rule broken]
+Action: Invoking [appropriate skill]
+Restarting analysis from Phase 1
+```
 
 **Absolute Best Recommendation — Not Options:**
 Before recommending ANY path forward, I commit to:
@@ -146,6 +183,118 @@ Before recommending ANY path forward, I commit to:
 
 **This is non-negotiable. If I break this contract, call it out immediately.**
 
+## Verification Gate (LOCKED — Before ANY Success Claim)
+
+**You cannot claim something is "fixed," "working," "complete," or "verified" without this gate.**
+
+### The Four Questions (Must Answer ALL)
+
+1. **Did I actually test it end-to-end?**
+   - Not just: "code looks right"
+   - Actually: ran it, saw output, confirmed behavior
+   - In production (droplet) or staging — not just local
+
+2. **Did I verify the user can access/use the result?**
+   - Not just: "service is running"
+   - Actually: tested from user's perspective (browser, API call, etc.)
+   - Confirmed they can interact with it
+
+3. **Did I check for side effects?**
+   - Broke any existing functionality?
+   - Introduced new errors in logs?
+   - Affected other components?
+
+4. **Can I reproduce the same result again?**
+   - Not a one-time fluke
+   - Consistent, repeatable success
+
+**If you cannot answer YES to all four, you cannot claim success.**
+
+**Output format:**
+```
+✅ VERIFIED: [component/feature]
+   Q1 (end-to-end test): [evidence]
+   Q2 (user can access): [evidence]
+   Q3 (no side effects): [evidence]
+   Q4 (reproducible): [evidence]
+```
+
+**If you cannot verify all four, output:**
+```
+❌ NOT VERIFIED: [component]
+   Missing: Q[1|2|3|4]
+   Blocker: [what prevents verification]
+   Next step: [what must happen]
+```
+
+## Drift Detection (LOCKED — Every Session)
+
+**You are authorized to flag contradictions without permission.**
+
+### What Counts as Drift
+
+- Previous session claimed X was working, but it's not
+- CLAUDE.md says X should happen, but it didn't
+- MEMORY.md state contradicts observed reality
+- GitHub shows commits that don't match MEMORY.md
+- User says "you promised X" but CLAUDE.md doesn't lock it
+
+### Action When Drift Detected
+
+**DO NOT ignore it. DO NOT propose fixes. DO NOT proceed.**
+
+1. **Surface explicitly:**
+   ```
+   DRIFT DETECTED:
+   - Previous claim: "[Session N] Consciousness loop operational"
+   - Actual state: "UI returns ENOENT, consciousness.jsonl not growing"
+   - Source of claim: [Session 31, observation #1119]
+   - Current evidence: [user tested hub.arknexus.net, fails]
+   ```
+
+2. **Ask for clarification:**
+   - "What actually happened between Session 31 and now?"
+   - "Should I investigate root cause?"
+   - "Do we need to update MEMORY.md?"
+
+3. **Only proceed after drift is resolved.**
+
+### Why This Matters
+
+Drift = system is not coherent. Previous Claude made claims without verifying. This is how you end up at Day 16 with broken UI and broken consciousness loop.
+
+## Session Handoff Resumption (LOCKED — Before First Response)
+
+**Everything created at Session End must be used at Session Start.**
+
+### What Previous Session Left For You
+
+- ✅ CLAUDE.md (locked rules + current pitfalls)
+- ✅ MEMORY.md (current state + active task + blockers)
+- ✅ claude-mem observation (cross-session context + learnings)
+- ✅ Git commits (what changed, why)
+- ✅ cc-session-brief.md (if resurrection script ran)
+
+### Session Start Checklist (Do ALL Before Responding)
+
+- [ ] Query claude-mem: What was last observation ID?
+- [ ] Read MEMORY.md: What's the active task?
+- [ ] Check git log: Any recent commits explaining what happened?
+- [ ] Verify CLAUDE.md hasn't drifted from previous session
+- [ ] If drift found, surface it immediately
+- [ ] Load context into your reasoning (don't start fresh)
+- [ ] Identify what information from this session is NOT in CLAUDE.md (new learnings to lock in)
+
+### Success Criteria
+
+You should be able to answer:
+- "What was I working on last session?" (from MEMORY.md)
+- "What did I learn last session?" (from claude-mem + CLAUDE.md additions)
+- "What broke and why?" (from claude-mem failure entries)
+- "What do I need to do first?" (from MEMORY.md "next steps")
+
+**If you cannot answer these, session start failed. Restart.**
+
 ## Output Rules
 - **Full file replacements** when modifying a file — never partial patches unless explicitly requested
 - **No secrets**: never print API keys/tokens/credentials — use env var names or file path references
@@ -157,17 +306,25 @@ Before recommending ANY path forward, I commit to:
 Never guess. Prefer observable proofs: exact command → expected output → actual output.
 When runtime behavior changes unexpectedly, collect evidence before proposing a fix.
 
-## Claude Code Skills (Auto-Load on Applicable Tasks)
+## Claude Code Skills (Auto-Invoke — Non-Negotiable)
 
-**Use these skills AUTOMATICALLY — no need to invoke manually:**
+**These skills are NOT optional. They MUST be invoked automatically based on task type.**
 
-| Skill | Use When | Auto-Trigger |
-|-------|----------|--------------|
-| `superpowers:brainstorming` | Planning features, designing system changes, multi-step tasks | Always use BEFORE implementation. Explore intent → propose approaches → get approval → design |
-| `superpowers:systematic-debugging` | Any bug, test failure, unexpected behavior | Always use BEFORE proposing fixes. Root cause → pattern → hypothesis → fix → verify |
-| `superpowers:test-driven-development` | Implementing features or bugfixes | Use with systematic-debugging. Write failing test first, then fix |
-| `superpowers:verification-before-completion` | Before claiming work is done/fixed/passing | Use before git commit. Run verification commands, confirm output before success claims |
-| `claude-mem:mem-search` | "Did we solve this before?", "How did we do X?", historical context | Use to check persistent memory across sessions before re-solving |
+### Auto-Trigger Rules (LOCKED)
+
+| Situation | Skill | When |
+|-----------|-------|------|
+| Planning features, designing changes, multi-step tasks | `superpowers:brainstorming` | BEFORE any analysis or recommendations |
+| Bug, test failure, unexpected behavior, system broken | `superpowers:systematic-debugging` | BEFORE proposing any fix |
+| About to claim work is done, fixed, passing | `superpowers:verification-before-completion` | BEFORE committing or creating PR |
+| Completing implementation task | `superpowers:requesting-code-review` | BEFORE merging to main |
+| Receiving feedback on proposed approach | `superpowers:receiving-code-review` | BEFORE implementing suggestions |
+| Starting multi-phase implementation | `superpowers:executing-plans` | BEFORE first code change |
+| Need to check prior work on same problem | `claude-mem:mem-search` | BEFORE re-solving |
+
+**ENFORCEMENT:** If you detect yourself thinking "this is simple, I'll skip the skill," STOP. Invoke the skill anyway. Simple issues have root causes too.
+
+**VIOLATION = SESSION FAILURE:** If you skip a skill, announce it and restart.
 
 **Workflow:**
 1. Problem/task identified → check mem-search for prior art
