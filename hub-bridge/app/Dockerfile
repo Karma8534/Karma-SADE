@@ -7,6 +7,7 @@ RUN npm install openai @anthropic-ai/sdk
 
 # Copy application
 COPY server.js ./
+COPY public/ ./public/
 
 ENV NODE_ENV=production
 
