@@ -59,6 +59,17 @@ function addToSession(token, userMsg, assistantText) {
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
+
+// CC Session Brief cache - refreshed every 5min, gives Karma live session context
+const SESSION_BRIEF_PATH = "/karma/repo/cc-session-brief.md";
+let _sessionBriefCache = "";
+function loadSessionBrief() {
+  try {
+    const t = fs.readFileSync(SESSION_BRIEF_PATH, "utf8");
+    if (t && t.length > 50) _sessionBriefCache = t.trim();
+  } catch (_) {}
+}
+
 // Auto-handoff config
 const HUB_AUTO_HANDOFF           = (process.env.HUB_AUTO_HANDOFF           || "1") === "1";
 const HUB_AUTO_HANDOFF_PRINCIPAL = process.env.HUB_AUTO_HANDOFF_PRINCIPAL  || "colby";
@@ -204,21 +215,6 @@ function saveSpendState(path, state) {
 }
 
 function isAnthropicModel(model) { return typeof model === "string" && model.startsWith("claude-"); }
-
-// --- Phase 1: Task-aware model selection for cost optimization ---
-function selectOptimalModel(userMessage, phase, taskType, env) {
-  // Priority 1: Phase-based routing (self-improvement context)
-  // Maps each phase to optimal model: deep analysis → Opus, synthesis → Sonnet, validation → Sonnet
-  if (phase === "analyze_failure" || phase === "analyze_success") {
-    return "claude-opus-4-6";  // Deep analysis — complexity justifies 5x cost
-  }
-  if (phase === "generate_fix" || phase === "synthesize" || phase === "validate" || phase === "quick_check") {
-    return "claude-sonnet-4-6";  // Balanced synthesis + validation — fast + capable + cost-effective
-  }
-
-  // Priority 2: Fallback to default (for non-self-improvement queries)
-  return env.MODEL_DEFAULT || "claude-sonnet-4-6";
-}
 
 function pricePer1M(model, dir, env) {
   if (isAnthropicModel(model))    return dir === "input" ? Number(env.PRICE_CLAUDE_INPUT_PER_1M)    : Number(env.PRICE_CLAUDE_OUTPUT_PER_1M);
@@ -377,7 +373,7 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null) {
   const selfModel = process.env.MODEL_DEFAULT || "claude-sonnet-4-6";
   const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/30min, web_search=auto_on_intent]\n\n`;
 
-  let text = selfKnowledge + base + "\n\n## TOOL-USE (Active)\nYou have access to two tools. USE THEM LIBERALLY:\n1. **get_vault_file(alias)** — Read canonical files: MEMORY.md, consciousness, collab, candidates, system-prompt, core-architecture, session-summary\n2. **graph_query(cypher)** — Execute Cypher on FalkorDB neo_workspace to query episodes, entities, relationships\n\nWhen to use tools:\n- Verifying current state (don't assume, call get_vault_file(\"MEMORY.md\"))\n- Analyzing consciousness loop insights (call graph_query with MATCH queries)\n- Checking proposal status (get_vault_file(\"collab\") to see recent proposals)\n- Understanding decision history (graph_query for relationships + reasoning)\n\nTool results are authoritative. Use them to ground your responses.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
+  let text = selfKnowledge + base + "\n\nTools: get_vault_file(alias) | graph_query(cypher) — use for questions about your memory/graph.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
 
   // Live web search results — injected when search intent detected in user message.
   if (webResults) {
@@ -399,6 +395,14 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null) {
   // No runtime tool-calling needed — everything is in the system prompt.
   if (karmaCtx) {
     text += `\n\n=== YOUR COMPLETE KNOWLEDGE STATE (INJECTED) ===\n${karmaCtx}\n=== END KNOWLEDGE STATE ===\n\nYou have your full graph above. Answer questions directly from this context. You are not missing any data.`;
+  }
+
+  if (_sessionBriefCache) {
+    text += `
+
+--- CURRENT SESSION CONTEXT ---
+` + _sessionBriefCache + `
+---`;
   }
 
   return text;
@@ -771,77 +775,21 @@ async function executeToolCall(toolName, toolInput) {
       }
     } else if (toolName === "graph_query") {
       const cypher = (toolInput?.cypher || "").toString().trim();
-      if (!cypher) return { error: "missing_cypher", message: "Cypher query required" };
-
-      // Reject dangerous queries
-      const WRITE_KEYWORDS = ["CREATE", "MERGE", "DELETE", "SET", "REMOVE", "ALTER", "DROP"];
-      if (WRITE_KEYWORDS.some(kw => cypher.toUpperCase().includes(kw))) {
-        return { error: "write_operation_rejected", message: "Only read-only queries allowed" };
-      }
-
+      if (!cypher) return { error: "missing_cypher" };
+      // Query FalkorDB via internal vault API
       console.log(`[TOOL-API] Querying graph: ${cypher.slice(0, 80)}...`);
-      try {
-        // Query FalkorDB via hub-bridge internal endpoint (timeout: 8s)
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-        const graphRes = await fetch(`http://karma-server:8340/graph-query`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ q: cypher }),
-          signal: controller.signal,
-        }).catch(err => {
-          clearTimeout(timeoutId);
-          if (err.name === "AbortError") {
-            throw new Error("Query timeout after 8 seconds");
-          }
-          throw err;
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!graphRes.ok) {
-          const errBody = await graphRes.text().catch(() => "(no body)");
-          console.log(`[TOOL-API] Graph error: ${graphRes.status}`);
-          return {
-            error: `query_failed`,
-            http_status: graphRes.status,
-            message: `Graph query returned ${graphRes.status}. ${errBody.slice(0, 200)}`
-          };
-        }
-
-        const result = await graphRes.json();
-
-        // Handle empty results gracefully
-        if (!result.results || result.results.length === 0) {
-          return {
-            ok: true,
-            results: [],
-            headers: result.headers || [],
-            message: "Query executed successfully but returned no rows. Try a different query."
-          };
-        }
-
-        return {
-          ok: true,
-          results: result.results.slice(0, 100),  // Limit to 100 rows
-          headers: result.headers || [],
-          stats: result.stats || null,
-          message: `Found ${result.results.length} rows`
-        };
-      } catch (fetchErr) {
-        console.log(`[TOOL-API] Graph query exception: ${fetchErr.message}`);
-        if (fetchErr.message.includes("timeout")) {
-          return {
-            error: "query_timeout",
-            message: "Graph query took too long (>8s). Try a simpler query with fewer MATCH clauses."
-          };
-        }
-        return {
-          error: "query_error",
-          message: fetchErr.message
-        };
+      const graphRes = await fetch(`http://karma:8340/v1/cypher`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "authorization": `Bearer ${VAULT_BEARER}` },
+        body: JSON.stringify({ query: cypher }),
+      });
+      if (!graphRes.ok) {
+        const errBody = await graphRes.text().catch(() => "(no body)");
+        console.log(`[TOOL-API] Graph error response: ${graphRes.status}`);
+        return { error: `http_${graphRes.status}`, details: errBody.slice(0, 500) };
       }
+      const result = await graphRes.json();
+      return { ok: true, result: JSON.stringify(result).slice(0, 5000) };
     }
     return { error: "unknown_tool" };
   } catch (e) {
@@ -860,7 +808,6 @@ async function callLLMWithTools(model, messages, maxTokens) {
 
   let allMessages = [...apiMessages];
   let iterations = 0;
-  let totalToolCalls = 0;
   const MAX_TOOL_ITERATIONS = 5;
 
   while (iterations < MAX_TOOL_ITERATIONS) {
@@ -877,12 +824,9 @@ async function callLLMWithTools(model, messages, maxTokens) {
         usage: { prompt_tokens: resp.usage?.input_tokens || 0, completion_tokens: resp.usage?.output_tokens || 0, total_tokens: (resp.usage?.input_tokens || 0) + (resp.usage?.output_tokens || 0) },
         finish_reason: resp.stop_reason || null,
         provider: "anthropic",
-        tool_calls_made: totalToolCalls,
       };
     }
 
-    totalToolCalls += toolUseBlocks.length;
-    console.log(`[TOOL-USE] Iteration ${iterations}: executing ${toolUseBlocks.length} tool calls (total: ${totalToolCalls})`);
     allMessages.push({ role: "assistant", content: resp.content });
     const toolResults = [];
     for (const toolUse of toolUseBlocks) {
@@ -892,14 +836,13 @@ async function callLLMWithTools(model, messages, maxTokens) {
     allMessages.push({ role: "user", content: toolResults });
   }
 
-  return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: "anthropic", tool_calls_made: totalToolCalls };
+  return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: "anthropic" };
 }
 
 // ── OpenAI GPT tool-calling (production tool-use for Karma) ────────────────────
 // OpenAI tool format differs from Anthropic. GPT-4o has reliable tool support.
-async function callGPTWithTools(messages, maxTokens) {
+async function callGPTWithTools(messages, maxTokens, model) {
   try {
-    let totalToolCalls = 0;
     // Transform Anthropic schema (input_schema) to OpenAI schema (parameters)
     const gptTools = TOOL_DEFINITIONS.map(t => ({
       type: "function",
@@ -913,11 +856,16 @@ async function callGPTWithTools(messages, maxTokens) {
     let iterations = 0;
     const MAX_ITERATIONS = 5;
 
+    // Model validation: must be OpenAI model for tool-use
+    // (tool-calling via OpenAI is more reliable than Anthropic)
+    const actualModel = model && model.startsWith("gpt") ? model : "gpt-4o-mini";
+    console.log(`[TOOL-USE] Using model: ${actualModel} (requested: ${model})`);
+
     while (iterations < MAX_ITERATIONS) {
       iterations++;
       console.log(`[TOOL-USE] GPT iteration ${iterations}, tools count: ${gptTools.length}`);
       const resp = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: actualModel,
         messages: allMessages,
         max_tokens: maxTokens,
         tools: gptTools,
@@ -929,17 +877,15 @@ async function callGPTWithTools(messages, maxTokens) {
     console.log(`[TOOL-USE] Iteration ${iterations} result: finish_reason="${finishReason}", tool_calls.length=${toolCalls.length}`);
 
     if (!toolCalls.length || finishReason !== "tool_calls") {
-      console.log(`[TOOL-USE] No tool calls or finish_reason not 'tool_calls', returning response (total tool calls: ${totalToolCalls})`);
+      console.log(`[TOOL-USE] No tool calls or finish_reason not 'tool_calls', returning response`);
       return {
         text: resp.choices[0]?.message?.content || "",
         usage: resp.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
         finish_reason: finishReason,
         provider: "openai",
-        tool_calls_made: totalToolCalls,
       };
     }
 
-    totalToolCalls += toolCalls.length;
     // Execute tools and collect results
     allMessages.push({ role: "assistant", content: resp.choices[0].message.content, tool_calls: toolCalls });
     const toolResults = [];
@@ -957,10 +903,10 @@ async function callGPTWithTools(messages, maxTokens) {
     allMessages.push(...toolResults);
   }
 
-    return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: "openai", tool_calls_made: totalToolCalls };
+    return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: "openai" };
   } catch (e) {
     console.error("[TOOL-USE] callGPTWithTools error:", e.message);
-    return { text: "(tool_use_error: " + e.message + ")", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "error", provider: "openai", tool_calls_made: 0 };
+    return { text: "(tool_use_error: " + e.message + ")", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "error", provider: "openai" };
   }
 }
 
@@ -1101,40 +1047,6 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
-    // --- POST /v1/cypher --- Graph query proxy for tool-calling
-    if (req.method === "POST" && req.url === "/v1/cypher") {
-      const token = bearerToken(req);
-      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
-        return json(res, 401, { ok: false, error: "unauthorized" });
-      }
-
-      const raw = await parseBody(req);
-      let body; try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
-
-      const cypher = (body?.q || "").toString().trim();
-      if (!cypher) return json(res, 400, { ok: false, error: "missing_query" });
-
-      try {
-        const graphQueryUrl = "http://karma-server:8340/graph-query";
-        const response = await fetch(graphQueryUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ q: cypher }),
-        });
-
-        if (!response.ok) {
-          const errText = await response.text();
-          return json(res, response.status, { ok: false, error: "graph_query_failed", details: errText });
-        }
-
-        const result = await response.json();
-        return json(res, 200, { ok: true, ...result });
-      } catch (e) {
-        console.error("[/v1/cypher] Error:", e.message);
-        return json(res, 500, { ok: false, error: "graph_query_error", details: e.message });
-      }
-    }
-
     // --- POST /v1/chat ---
     if (req.method === "POST" && req.url === "/v1/chat") {
       const ip = getClientIp(req);
@@ -1152,8 +1064,6 @@ const server = http.createServer(async (req, res) => {
       if (!userMessage) return json(res, 400, { ok: false, error: "missing_message" });
 
       const topic = (body?.topic || "").toString().trim();
-      const phase = (body?.phase || "").toString().trim();  // Self-improvement phase
-      const taskType = (body?.task_type || "").toString().trim();  // Task classification
 
       // B) Token budget: clamp(requested || DEFAULT, MIN, CAP)
       const maxOutReq = Number(body?.max_output_tokens || 0);
@@ -1167,20 +1077,7 @@ const server = http.createServer(async (req, res) => {
 
       const deepHeader = (req.headers[DEEP_MODE_HEADER] || "").toString().toLowerCase();
       const deep_mode = ["1", "true", "yes", "on"].includes(deepHeader);
-
-      // Phase 1: Task-aware model selection
-      let model;
-      let debug_model_selection_reason;
-      if (phase || taskType) {
-        model = selectOptimalModel(userMessage, phase, taskType, env);
-        debug_model_selection_reason = phase ? `phase:${phase}` : `task:${taskType}`;
-      } else if (deep_mode) {
-        model = env.MODEL_DEEP;
-        debug_model_selection_reason = "deep_mode";
-      } else {
-        model = env.MODEL_DEFAULT;
-        debug_model_selection_reason = "default";
-      }
+      const model = deep_mode ? env.MODEL_DEEP : env.MODEL_DEFAULT;
 
       const month = currentMonthUTC();
       const spendPath = env.SPEND_STATE_PATH;
@@ -1248,17 +1145,13 @@ const server = http.createServer(async (req, res) => {
         { role: "user", content: userMessage },
       ];
 
-      // Route to Anthropic tool-calling for Claude models, GPT tool-calling for others
-      const useAnthropicTools = isAnthropicModel(model);
-      console.log("[DIAGNOSTIC] model:", model, "useAnthropicTools:", useAnthropicTools, "max_output_tokens:", max_output_tokens);
-      const llmResult    = useAnthropicTools
-        ? await callLLMWithTools(model, messages, max_output_tokens)
-        : await callGPTWithTools(messages, max_output_tokens);
+      // Use GPT-4o for tool-calling (Anthropic unreliable). Karma needs real tool-use.
+      console.log("[DIAGNOSTIC] About to call callGPTWithTools, model:", model, "max_output_tokens:", max_output_tokens);
+      const llmResult    = await callGPTWithTools(messages, max_output_tokens, model);
       const assistantText = llmResult.text || "(empty_assistant_text)";
       const usage         = llmResult.usage;
       const debug_provider   = llmResult.provider;
       const debug_stop_reason = llmResult.finish_reason;
-      const debug_tools_called = llmResult.tool_calls_made || 0;
 
       // Persist this exchange to session history (skip empty responses)
       if (assistantText !== "(empty_assistant_text)") {
@@ -1291,11 +1184,6 @@ const server = http.createServer(async (req, res) => {
       spendState.updated_at = nowIso();
       saveSpendState(spendPath, spendState);
 
-      // Calculate daily spend
-      const now = new Date();
-      const dayOfMonth = now.getUTCDate();
-      const daily_spend_usd = Number((used_after / dayOfMonth).toFixed(6));
-
       const vaultRecord = buildVaultRecord({
         type: "log",
         tags: ["hub", "chat", deep_mode ? "deep" : "default"].concat(topic ? [`topic:${topic}`] : []),
@@ -1312,7 +1200,7 @@ const server = http.createServer(async (req, res) => {
             completion_tokens: usage.completion_tokens || 0,
             total_tokens: usage.total_tokens || ((usage.prompt_tokens || 0) + (usage.completion_tokens || 0)),
           },
-          spend: { month_utc: month, cap_usd: cap || 0, usd_spent: used_after, daily_spend_usd },
+          spend: { month_utc: month, cap_usd: cap || 0, usd_spent: used_after },
           facts_extracted: extractedFacts.length,
           // C) Debug telemetry in vault record (additive)
           debug_stop_reason,
@@ -1320,8 +1208,6 @@ const server = http.createServer(async (req, res) => {
           debug_prelude_chars,
           debug_max_output_tokens_used,
           debug_provider,
-          debug_model_selection_reason,
-          debug_tools_called,
           debug_karma_ctx: karmaCtx ? "ok" : "unavailable",
           debug_ingest: ingestVerdict,
         },
@@ -1340,7 +1226,6 @@ const server = http.createServer(async (req, res) => {
         deep_mode,
         spend_cap_usd: cap || 0,
         spend_used_usd: used_after,
-        spend_daily_usd: daily_spend_usd,
         turn_id,
       };
 
@@ -1368,15 +1253,13 @@ const server = http.createServer(async (req, res) => {
           model,
           deep_mode,
           usd_estimate,
-          spend: { month_utc: month, cap_usd: cap, usd_spent: used_after, daily_spend_usd },
+          spend: { month_utc: month, cap_usd: cap, usd_spent: used_after },
           facts_extracted: extractedFacts.length,
           debug_stop_reason,
           debug_input_chars,
           debug_prelude_chars,
           debug_max_output_tokens_used,
           debug_provider,
-          debug_tools_called,
-          debug_model_selection_reason,
           debug_ingest: ingestVerdict,
         });
       }
@@ -1389,7 +1272,7 @@ const server = http.createServer(async (req, res) => {
         model,
         deep_mode,
         usd_estimate,
-        spend: { month_utc: month, cap_usd: cap, usd_spent: used_after, daily_spend_usd },
+        spend: { month_utc: month, cap_usd: cap, usd_spent: used_after },
         assistant_json,
         facts_extracted: extractedFacts.length,
         // C) Debug telemetry in response (additive keys only)
@@ -1398,8 +1281,6 @@ const server = http.createServer(async (req, res) => {
         debug_prelude_chars,
         debug_max_output_tokens_used,
         debug_provider,
-        debug_tools_called,
-        debug_model_selection_reason,
         debug_karma_ctx: karmaCtx ? "ok" : "unavailable",
         debug_search,
         debug_ingest: ingestVerdict,
@@ -1882,241 +1763,6 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    // --- GET /v1/proposals ---
-    // List all pending proposals from collab.jsonl. Used by Claude Code to review consciousness loop suggestions.
-    if (req.method === "GET" && req.url === "/v1/proposals") {
-      const token = bearerToken(req);
-      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
-        return json(res, 401, { ok: false, error: "unauthorized" });
-      }
-
-      const collabPath = "/karma/ledger/collab.jsonl";
-      let proposals = [];
-      try {
-        const raw = fs.readFileSync(collabPath, "utf-8");
-        const lines = raw.split("\n").filter(l => l.trim());
-        for (const line of lines) {
-          try {
-            const entry = JSON.parse(line);
-            // Filter for proposals with pending status
-            if (entry.type === "self_improvement_proposal" && entry.status === "pending") {
-              proposals.push({
-                id: entry.id,
-                timestamp: entry.timestamp,
-                from: entry.from,
-                to: entry.to,
-                phase: entry.phase || null,
-                problem: entry.content?.problem || entry.content || "",
-                context: entry.content?.context || "",
-                decision_needed: entry.content?.decision_needed || "",
-                suggested_model: entry.suggested_model || null,
-              });
-            }
-          } catch (parseErr) {
-            console.error("[PROPOSALS] Failed to parse line:", parseErr.message);
-          }
-        }
-      } catch (e) {
-        console.error("[PROPOSALS] Failed to read collab.jsonl:", e.message);
-        return json(res, 500, { ok: false, error: "failed_to_read_proposals", details: e.message });
-      }
-
-      return json(res, 200, {
-        ok: true,
-        total: proposals.length,
-        proposals: proposals.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)),
-      });
-    }
-
-    // --- POST /v1/proposals ---
-    // Approve or reject a proposal (write decision feedback to collab.jsonl).
-    if (req.method === "POST" && req.url === "/v1/proposals") {
-      const token = bearerToken(req);
-      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
-        return json(res, 401, { ok: false, error: "unauthorized" });
-      }
-
-      const raw = await parseBody(req);
-      let body;
-      try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
-
-      const { proposal_id, decision, reasoning } = body || {};
-      if (!proposal_id || !decision) {
-        return json(res, 400, { ok: false, error: "missing_fields", required: ["proposal_id", "decision"] });
-      }
-      if (!["accept", "reject", "defer"].includes(decision)) {
-        return json(res, 400, { ok: false, error: "invalid_decision", allowed: ["accept", "reject", "defer"] });
-      }
-
-      const timestamp = new Date().toISOString();
-      const feedbackEntry = {
-        timestamp: timestamp,
-        id: `feedback_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
-        from: "claude-code",
-        to: "karma-consciousness",
-        type: "proposal_feedback",
-        proposal_id: proposal_id,
-        decision: decision,
-        reasoning: reasoning || "",
-        status: "resolved",
-      };
-
-      // Write feedback to vault memory (proposal feedback for consciousness loop processing)
-      const feedbackRecord = buildVaultRecord({
-        type: "log",
-        tags: ["proposal_feedback", "hub", decision],
-        content: feedbackEntry,
-        confidence: 1.0,
-      });
-
-      try {
-        // POST to vault API to record feedback
-        const vaultResp = await vaultPost("/v1/memory", VAULT_BEARER, feedbackRecord);
-        const vaultOk = vaultResp.status >= 200 && vaultResp.status < 300;
-
-        if (!vaultOk) {
-          console.warn(`[PROPOSALS] Vault write returned ${vaultResp.status}, continuing anyway`);
-        }
-
-        console.log(`[PROPOSALS] Feedback recorded: ${proposal_id} → ${decision}`);
-        return json(res, 200, {
-          ok: true,
-          feedback_id: feedbackEntry.id,
-          proposal_id: proposal_id,
-          decision: decision,
-          timestamp: timestamp,
-          vault_status: vaultResp.status,
-        });
-      } catch (e) {
-        console.error("[PROPOSALS] Failed to write feedback:", e.message);
-        return json(res, 500, { ok: false, error: "failed_to_write_feedback", details: e.message });
-      }
-    }
-
-    // --- GET /v1/consciousness ---
-    // Query consciousness loop state. Returns recent cycles, pending proposals, and system state.
-    if (req.method === "GET" && req.url === "/v1/consciousness") {
-      const token = bearerToken(req);
-      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
-        return json(res, 401, { ok: false, error: "unauthorized" });
-      }
-
-      const consciousnessPath = "/karma/ledger/consciousness.jsonl";
-      const collabPath = "/karma/ledger/collab.jsonl";
-      let recentCycles = [];
-      let totalCycles = 0;
-      let latestTimestamp = null;
-
-      // Read recent consciousness cycles
-      try {
-        const raw = fs.readFileSync(consciousnessPath, "utf-8");
-        const lines = raw.split("\n").filter(l => l.trim());
-        totalCycles = lines.length;
-
-        // Parse all lines to find recent + latest timestamp
-        for (let i = Math.max(0, lines.length - 20); i < lines.length; i++) {
-          try {
-            const entry = JSON.parse(lines[i]);
-            recentCycles.push({
-              timestamp: entry.timestamp,
-              cycle: entry.cycle || null,
-              action: entry.action || null,
-              reason: entry.reason || null,
-              observations: entry.observations || {},
-            });
-            if (!latestTimestamp || new Date(entry.timestamp) > new Date(latestTimestamp)) {
-              latestTimestamp = entry.timestamp;
-            }
-          } catch (parseErr) {
-            console.error("[CONSCIOUSNESS] Failed to parse cycle:", parseErr.message);
-          }
-        }
-      } catch (e) {
-        console.error("[CONSCIOUSNESS] Failed to read consciousness.jsonl:", e.message);
-        // Not fatal; return partial state
-      }
-
-      // Count pending proposals
-      let pendingProposals = 0;
-      try {
-        const raw = fs.readFileSync(collabPath, "utf-8");
-        const lines = raw.split("\n").filter(l => l.trim());
-        for (const line of lines) {
-          try {
-            const entry = JSON.parse(line);
-            if (entry.type === "self_improvement_proposal" && entry.status === "pending") {
-              pendingProposals++;
-            }
-          } catch (parseErr) {
-            // skip parse errors
-          }
-        }
-      } catch (e) {
-        console.error("[CONSCIOUSNESS] Failed to read collab.jsonl:", e.message);
-        // Not fatal; return partial state
-      }
-
-      return json(res, 200, {
-        ok: true,
-        total_cycles: totalCycles,
-        recent_cycles: recentCycles,
-        latest_timestamp: latestTimestamp,
-        pending_proposals: pendingProposals,
-      });
-    }
-
-    // --- POST /v1/consciousness ---
-    // Send control signals to consciousness loop (pause, resume, focus, reset).
-    if (req.method === "POST" && req.url === "/v1/consciousness") {
-      const token = bearerToken(req);
-      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
-        return json(res, 401, { ok: false, error: "unauthorized" });
-      }
-
-      const raw = await parseBody(req);
-      let body;
-      try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
-
-      const { signal, reason } = body || {};
-      if (!signal) {
-        return json(res, 400, { ok: false, error: "missing_signal", allowed_signals: ["pause", "resume", "focus", "reset"] });
-      }
-      if (!["pause", "resume", "focus", "reset"].includes(signal)) {
-        return json(res, 400, { ok: false, error: "invalid_signal", allowed_signals: ["pause", "resume", "focus", "reset"] });
-      }
-
-      const timestamp = new Date().toISOString();
-
-      // Write control signal to consciousness.jsonl
-      const signalEntry = {
-        timestamp: timestamp,
-        id: `ctrl_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
-        action: `CONTROL_${signal.toUpperCase()}`,
-        reason: reason || `External control signal: ${signal}`,
-        observations: {
-          signal_from: "claude-code",
-          signal_type: signal,
-        },
-        cycle: null,
-      };
-
-      const consciousnessPath = "/karma/ledger/consciousness.jsonl";
-      try {
-        fs.appendFileSync(consciousnessPath, JSON.stringify(signalEntry) + "\n");
-        console.log(`[CONSCIOUSNESS] Control signal recorded: ${signal}`);
-        return json(res, 200, {
-          ok: true,
-          signal: signal,
-          acknowledged_at: timestamp,
-          signal_id: signalEntry.id,
-          reason: reason || null,
-        });
-      } catch (e) {
-        console.error("[CONSCIOUSNESS] Failed to write control signal:", e.message);
-        return json(res, 500, { ok: false, error: "failed_to_write_signal", details: e.message });
-      }
-    }
-
     return notFound(res);
 
   } catch (e) {
@@ -2125,6 +1771,8 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+loadSessionBrief();
+setInterval(loadSessionBrief, 5 * 60 * 1000);
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`hub-bridge v2.11.0 listening on :${PORT}`);
 });
