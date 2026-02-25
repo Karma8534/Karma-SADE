@@ -1,4 +1,4 @@
-# CC Session Brief — 2026-02-25T16:50:01Z
+# CC Session Brief — 2026-02-25T22:15:02Z
 > Auto-generated at session start. Read this instead of MEMORY.md. Full MEMORY.md available if deep dive needed.
 > **RESURRECTION SPINE LOADED** — Karma identity + invariants + direction are CANONICAL and AUTHORITATIVE for this session.
 
@@ -368,25 +368,12 @@ Karma's collab message logged: `collab_20260223T001948_v347xy` — CC will see i
 ## Code State
 Branch: main
 Last 5 commits:
+6dfa32f phase-32-continued: Integrate KCC integrity fixes (async loopback, non-blocking I/O, append-only journal, WHERE enforcement)
 5f308ca Task 7: Deploy consciousness loop with OBSERVE/THINK/DECIDE/ACT/REFLECT cycle and decision_logger
 f7402bf feat: Integrate full OBSERVE/THINK/DECIDE/ACT/REFLECT cycle with tool-use
 32116d3 phase-8: shell access infrastructure complete - /v1/shell endpoint, shell_exec tool, karma self-diagnostic enabled
 aecb5b1 phase-5: Session 23 status checkpoint - 5-pass deployment complete, documenting issues for user review
-355dfc1 phase-5: Session 22 completion - all 5 passes deployed and operational
-Status: M MEMORY.md
- M hub-bridge/app/server.js
- M hub-bridge/compose.hub.yml
-?? Scripts/gen-cc-brief.py
-?? Scripts/gen-cc-brief.py.backup
-?? cc-session-brief.md
-?? checkpoint-known_good_v1-reasoning_summary.md
-?? checkpoint-known_good_v1-state_export.json
-?? checkpoint/
-?? direction.md
-?? hub-bridge/app/Dockerfile
-?? hub-bridge/app/package.json
-?? identity.json
-?? invariants.json
+Status: M cc-session-brief.md
 
 ## Recent Decisions
 - [2026-02-23T17:00:00Z] Update API keys: MiniMax + GLM-5
@@ -408,7 +395,19 @@ Status: M MEMORY.md
   Fix: Tool error handled gracefully. GPT iteration 1: tool_calls attempted, 404 response. GPT iteration 2: saw error, decided not to retry, returned response from context.
 
 ## Karma Memory State
-Not available (URLError: [Errno 111] Connection refused)
+## Consciousness Insights (things I noticed on my own — mention naturally if relevant)
+- Rapid growth: 20 new episodes in one cycle
+## User Identity (CRITICAL — use REAL NAME for greetings and conversation)
+Known names: Neo, User
+
+## Recent Memories
+- [unknown] User: NCS Phase 2 live test. Reply with JSON only: {ok:true, model:<model>, spend_cap_usd:<cap>, spend_used_usd:<used>, turn_id:<id>}
+Assistant: {"ok":true,"model":null,"spend_cap_usd":null,
+- [unknown] User: Phase 2 live test. Reply JSON only with keys: ok, model, spend_cap_usd, spend_used_usd, turn_id.
+Assistant: {"ok":false,"model":"unknown","spend_cap_usd":null,"spend_used_usd":null,"tu
+- [gemini] User: yes
+Assistant: The Karma Logic Audit: A Schematic for Peer FrictionThe following template is designed to be the "Standard Opera
+... (trimmed to 800 chars)
 
 ---
-Generated: 2026-02-25T16:50:01Z | MEMORY.md last updated: Last Updated: 2026-02-24T18:11:19.946247Z
+Generated: 2026-02-25T22:15:02Z | MEMORY.md last updated: Last Updated: 2026-02-24T18:11:19.946247Z
