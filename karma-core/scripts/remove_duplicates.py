@@ -115,7 +115,8 @@ def delete_duplicates(marked):
         for entity in delete_list:
             try:
                 # Delete entity by ID
-                cypher = f"MATCH (e:Entity) WHERE e.id = '{entity['id']}' DELETE e"
+                escaped_id = entity['id'].replace("'", "\\'")
+                cypher = f"MATCH (e:Entity) WHERE e.id = '{escaped_id}' DELETE e"
                 r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
                 print(f"✓ Deleted: {entity['id']:<20} {entity['name']:<30} ({entity['type']})")
                 deleted_count += 1
