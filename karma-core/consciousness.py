@@ -420,38 +420,80 @@ class ConsciousnessLoop:
     # ─── Phase 2: THINK ───────────────────────────────────────────────
 
     async def _think(self, observation: Optional[dict]) -> Optional[dict]:
-        """Reason about observations using GLM-5 (skip if None)"""
-
+        """
+        THINK phase: Query graph for observations, reason about state.
+        
+        Now executes intermediate graph queries to inform reasoning.
+        Maintains compatibility with existing observation parameter.
+        """
+        import asyncio
+        
         # Skip LLM call if nothing changed (idle cycle)
         if observation is None:
             self.metrics["llm_calls_skipped"] += 1
             return None
-
-        # Build lightweight context from delta
-        context = self._build_delta_context(observation)
-
-        # Route to GLM-5 for reasoning
+        
         try:
+            # Query graph for current state observations
+            graph_result = await self._execute_tool("graph_query", {
+                "query": "MATCH (n) RETURN COUNT(DISTINCT n) AS entity_count LIMIT 1"
+            })
+            
+            # Format observation from graph result
+            graph_observation = ""
+            if graph_result.get("error"):
+                graph_observation = f"Graph query error: {graph_result.get('error')}"
+            else:
+                result_data = graph_result.get("result", [])
+                if result_data:
+                    stats = result_data[0]
+                    entity_count = stats.get('entity_count', 0)
+                    graph_observation = f"Current graph state: {entity_count} entities in knowledge base"
+                else:
+                    graph_observation = "Graph query returned no results"
+            
+            # Build context combining observation and graph state
+            base_context = self._build_delta_context(observation)
+            combined_context = f"""{base_context}
+
+Additional context from knowledge graph:
+{graph_observation}
+
+Reason about both the new activity and the current state of Karma's knowledge base."""
+            
+            # Route to LLM for reasoning
             if self._router:
                 # Note: router.complete() returns (response_text, model_name) tuple, not async
-                response_text, model_used = self._router.complete(
+                response_text, model_used = await asyncio.to_thread(
+                    self._router.complete,
                     messages=[
-                        {"role": "system", "content": "You are Karma's consciousness analyzing new activity."},
-                        {"role": "user", "content": context}
+                        {"role": "system", "content": "You are Karma's consciousness analyzing new activity and knowledge state."},
+                        {"role": "user", "content": combined_context}
                     ],
-                    tier="sonnet"  # Routes to GLM-4.7 (Sonnet tier, 66% cost savings)
+                    tier="sonnet"  # Routes to Claude Sonnet (cost-efficient reasoning)
                 )
-
+                
                 self.metrics["llm_calls_total"] += 1
-                return {"insight": response_text, "observation": observation, "model": model_used}
+                return {
+                    "insight": response_text,
+                    "observation": observation,
+                    "graph_observation": graph_observation,
+                    "model": model_used,
+                    "phase": "THINK"
+                }
             else:
                 logger.warning("No router configured, skipping LLM call")
                 return None
-
+        
         except Exception as e:
             logger.error(f"Consciousness _think() failed: {e}")
             self.metrics["errors"] += 1
-            return None
+            return {
+                "observation": observation,
+                "insight": f"Exception during thinking: {str(e)}",
+                "error": str(e),
+                "phase": "THINK"
+            }
 
     def _build_delta_context(self, observation: dict) -> str:
         """Build lightweight context from delta only"""
