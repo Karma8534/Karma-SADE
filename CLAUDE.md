@@ -143,6 +143,27 @@ Before recommending ANY path forward, I commit to:
 Never guess. Prefer observable proofs: exact command → expected output → actual output.
 When runtime behavior changes unexpectedly, collect evidence before proposing a fix.
 
+## Claude Code Skills (Auto-Load on Applicable Tasks)
+
+**Use these skills AUTOMATICALLY — no need to invoke manually:**
+
+| Skill | Use When | Auto-Trigger |
+|-------|----------|--------------|
+| `superpowers:brainstorming` | Planning features, designing system changes, multi-step tasks | Always use BEFORE implementation. Explore intent → propose approaches → get approval → design |
+| `superpowers:systematic-debugging` | Any bug, test failure, unexpected behavior | Always use BEFORE proposing fixes. Root cause → pattern → hypothesis → fix → verify |
+| `superpowers:test-driven-development` | Implementing features or bugfixes | Use with systematic-debugging. Write failing test first, then fix |
+| `superpowers:verification-before-completion` | Before claiming work is done/fixed/passing | Use before git commit. Run verification commands, confirm output before success claims |
+| `claude-mem:mem-search` | "Did we solve this before?", "How did we do X?", historical context | Use to check persistent memory across sessions before re-solving |
+
+**Workflow:**
+1. Problem/task identified → check mem-search for prior art
+2. If bug/unexpected behavior → invoke systematic-debugging (Phase 1-4)
+3. If feature/design → invoke brainstorming (intent → approaches → design → approval)
+4. If implementation → invoke test-driven-development (failing test → code → pass)
+5. Before commit/claiming success → invoke verification-before-completion
+
+**Key principle:** Skills enforce discipline. Don't rationalize skipping them ("this is simple", "emergency", "I know the pattern"). Use them always.
+
 ## Consciousness Loop Interaction
 
 Karma's consciousness loop runs autonomous 60-second OBSERVE/THINK/DECIDE/ACT/REFLECT cycles on the droplet. Claude Code can query state and send control signals.
