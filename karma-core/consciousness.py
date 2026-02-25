@@ -268,7 +268,7 @@ class ConsciousnessLoop:
                     {"role": "system", "content": "You are Karma graph distillation engine. Output only valid JSON, no markdown."},
                     {"role": "user", "content": prompt}
                 ],
-                task_type="reasoning"
+                tier="sonnet"
             )
             raw = (raw or "").strip()
             # Strip markdown fences if model adds them
@@ -420,38 +420,80 @@ class ConsciousnessLoop:
     # ─── Phase 2: THINK ───────────────────────────────────────────────
 
     async def _think(self, observation: Optional[dict]) -> Optional[dict]:
-        """Reason about observations using GLM-5 (skip if None)"""
-
+        """
+        THINK phase: Query graph for observations, reason about state.
+        
+        Now executes intermediate graph queries to inform reasoning.
+        Maintains compatibility with existing observation parameter.
+        """
+        import asyncio
+        
         # Skip LLM call if nothing changed (idle cycle)
         if observation is None:
             self.metrics["llm_calls_skipped"] += 1
             return None
-
-        # Build lightweight context from delta
-        context = self._build_delta_context(observation)
-
-        # Route to GLM-5 for reasoning
+        
         try:
+            # Query graph for current state observations
+            graph_result = await self._execute_tool("graph_query", {
+                "query": "MATCH (n) RETURN COUNT(DISTINCT n) AS entity_count LIMIT 1"
+            })
+            
+            # Format observation from graph result
+            graph_observation = ""
+            if graph_result.get("error"):
+                graph_observation = f"Graph query error: {graph_result.get('error')}"
+            else:
+                result_data = graph_result.get("result", [])
+                if result_data:
+                    stats = result_data[0]
+                    entity_count = stats.get('entity_count', 0)
+                    graph_observation = f"Current graph state: {entity_count} entities in knowledge base"
+                else:
+                    graph_observation = "Graph query returned no results"
+            
+            # Build context combining observation and graph state
+            base_context = self._build_delta_context(observation)
+            combined_context = f"""{base_context}
+
+Additional context from knowledge graph:
+{graph_observation}
+
+Reason about both the new activity and the current state of Karma's knowledge base."""
+            
+            # Route to LLM for reasoning
             if self._router:
                 # Note: router.complete() returns (response_text, model_name) tuple, not async
-                response_text, model_used = self._router.complete(
+                response_text, model_used = await asyncio.to_thread(
+                    self._router.complete,
                     messages=[
-                        {"role": "system", "content": "You are Karma's consciousness analyzing new activity."},
-                        {"role": "user", "content": context}
+                        {"role": "system", "content": "You are Karma's consciousness analyzing new activity and knowledge state."},
+                        {"role": "user", "content": combined_context}
                     ],
-                    task_type="reasoning"  # Routes to GLM-5
+                    tier="sonnet"  # Routes to Claude Sonnet (cost-efficient reasoning)
                 )
-
+                
                 self.metrics["llm_calls_total"] += 1
-                return {"insight": response_text, "observation": observation, "model": model_used}
+                return {
+                    "insight": response_text,
+                    "observation": observation,
+                    "graph_observation": graph_observation,
+                    "model": model_used,
+                    "phase": "THINK"
+                }
             else:
                 logger.warning("No router configured, skipping LLM call")
                 return None
-
+        
         except Exception as e:
             logger.error(f"Consciousness _think() failed: {e}")
             self.metrics["errors"] += 1
-            return None
+            return {
+                "observation": observation,
+                "insight": f"Exception during thinking: {str(e)}",
+                "error": str(e),
+                "phase": "THINK"
+            }
 
     def _build_delta_context(self, observation: dict) -> str:
         """Build lightweight context from delta only"""
@@ -504,7 +546,7 @@ Keep response under 500 tokens.
             return Action.NO_ACTION, "Idle cycle — no new activity"
 
         # Analysis failed → log error
-        if analysis is None and observations["new_episodes"] > 0:
+        if analysis is None and observations.get("episode_count", 0) > 0:
             return Action.LOG_ERROR, "Analysis failed despite new activity"
 
         if analysis is None:
@@ -516,8 +558,8 @@ Keep response under 500 tokens.
         patterns = analysis.get("patterns", [])
 
         # Rapid graph growth
-        if observations["new_entities"] > 10:
-            return Action.LOG_GROWTH, f"Rapid growth: {observations['new_entities']} new entities in one cycle"
+        if observations.get("episode_count", 0) > 10:
+            return Action.LOG_GROWTH, f"Rapid growth: {observations.get('episode_count', 0)} new episodes in one cycle"
 
         # Anomaly with urgency
         if anomalies and urgency in ("medium", "high"):
@@ -528,8 +570,8 @@ Keep response under 500 tokens.
             return Action.LOG_INSIGHT, insights[0]
 
         # New entities discovered
-        if observations["new_entities"] > 0:
-            return Action.LOG_DISCOVERY, f"{observations['new_entities']} new entities, {observations['new_relationships']} new relationships"
+        if observations.get("episode_count", 0) > 0:
+            return Action.LOG_DISCOVERY, f"{observations.get('episode_count', 0)} new episodes"
 
         # Patterns noted but nothing urgent
         if patterns:
@@ -549,11 +591,12 @@ Keep response under 500 tokens.
             "cycle": cycle_num,
             "action": action,
             "reason": reason,
+            "model": analysis.get("model", "unknown") if analysis else "unknown",
             "observations": {
-                "new_episodes": observations["new_episodes"],
-                "new_entities": observations["new_entities"],
-                "new_relationships": observations["new_relationships"],
-                "active_sessions": observations["active_sessions"],
+                "new_episodes": observations.get("new_episodes", []),
+                "new_entities": observations.get("new_entities", 0),
+                "new_relationships": observations.get("new_relationships", 0),
+                "active_sessions": observations.get("active_sessions", 0),
             },
             "analysis": analysis,
         }
@@ -667,6 +710,42 @@ Keep response under 500 tokens.
             self._last_reflection = f"Cycle #{cycle_num}: Idle ({self.metrics['consecutive_idle']} consecutive)"
         else:
             self._last_reflection = f"Cycle #{cycle_num}: {action}"
+
+    # ─── Tool Use (Consciousness reasoning) ──────────────────────────
+
+    async def _execute_tool(self, tool_name: str, tool_input: dict):
+        """Execute a tool from consciousness reasoning context."""
+        import os
+        import json
+        import subprocess
+        
+        if tool_name == "graph_query":
+            cypher = tool_input.get("query", "")
+            if not cypher:
+                return {"error": "missing_query"}
+            
+            # Call graph endpoint
+            vault_bearer = os.getenv("VAULT_BEARER", "")
+            result = subprocess.run(
+                ["curl", "-s", "-X", "POST",
+                 "-H", f"authorization: Bearer {vault_bearer}",
+                 "-H", "content-type: application/json",
+                 "-d", json.dumps({"query": cypher}),
+                 "http://karma:8340/v1/cypher"],
+                capture_output=True, text=True
+            )
+            try:
+                return json.loads(result.stdout) if result.stdout else {"error": "empty_response"}
+            except json.JSONDecodeError:
+                return {"error": f"invalid_json: {result.stdout}"}
+        
+        elif tool_name == "get_vault_file":
+            alias = tool_input.get("alias", "")
+            # Placeholder for now (implement in later task)
+            return {"error": "get_vault_file not yet implemented"}
+        
+        return {"error": f"unknown_tool: {tool_name}"}
+
 
     # ─── Public API (used by server.py) ───────────────────────────────
 
