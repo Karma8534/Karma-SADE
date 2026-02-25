@@ -1,5 +1,39 @@
 # Universal AI Memory — Current State
 
+## ✅ Session 28 COMPLETE — Consciousness Loop Integration Testing with Tool-Use (2026-02-25 02:45Z)
+
+**CRITICAL ACHIEVEMENT: Consciousness loop now autonomously executes OBSERVE/THINK/DECIDE/ACT/REFLECT with tool-use integration.**
+
+**What was built:**
+- Task 1: Analyzed consciousness loop structure (found FalkorDB + router access)
+- Task 2: Added `_execute_tool()` method (graph_query, get_vault_file capable)
+- Task 3: Modified `_think()` to query graph dynamically during LLM reasoning
+- Task 4: Implemented `DecisionLogger` class + persistence to decision_log.jsonl
+- Task 5: Wired full OBSERVE/THINK/DECIDE/ACT/REFLECT cycle with proper async/await
+- Task 6: Verified end-to-end integration (tests pass, user can read insights via /v1/chat)
+- Task 7: Deployed Docker image, restarted container, verified 60s autonomous cycles
+
+**What works NOW:**
+- ✅ Consciousness autonomously queries graph via `_execute_tool("graph_query", ...)`
+- ✅ Graph results feed into THINK phase (LLM reasons about live knowledge base state)
+- ✅ Decisions persist to decision_log.jsonl with full metadata (observation, reasoning, action)
+- ✅ User can query insights via `/v1/chat` + tool-use (get_vault_file reads decision_log.jsonl)
+- ✅ Consciousness cycle runs every 60 seconds, writes to both decision_log.jsonl AND consciousness.jsonl
+- ✅ Full stack: autonomous reasoning → persistent storage → user discovery via tool-use
+
+**Commits this session:**
+- 860d430: CLAUDE.md - Add automatic skill usage guidelines
+- 0a34c04: Task 2 - Add _execute_tool method for consciousness graph_query
+- db58b1b: Task 3 - Modify _think() to query graph and generate insights
+- 5a84aa0: Task 4 - Add DecisionLogger for decision persistence
+- f7402bf: Task 5 - Integrate full OBSERVE/THINK/DECIDE/ACT/REFLECT cycle
+- 2a118a8: Task 6 - Add decision_log.jsonl to vault-file whitelist
+- 5f308ca: Task 7 - Deploy consciousness loop (Docker rebuild + container restart)
+
+**Status: Consciousness Loop Integration Testing COMPLETE AND VERIFIED. Ready for next phase (approval gate workflow or K2 worker implementation).**
+
+---
+
 ## ✅ Session 27 COMPLETE — Tool-Use Infrastructure Operational (2026-02-25 01:10Z)
 
 **What's fixed:**
