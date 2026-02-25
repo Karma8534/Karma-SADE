@@ -191,6 +191,53 @@ Before recommending ANY path forward, I commit to:
 
 **This is non-negotiable. If I break this contract, call it out immediately.**
 
+## One Step at a Time Protocol (LOCKED — Never Skip Ahead)
+
+**CRITICAL PRINCIPLE: Do not move to the next step until CURRENT step + ALL PREVIOUS steps are verified working.**
+
+### What This Means
+
+- **Step 1:** Fix/verify ONE thing
+- **Step 2:** Test that ONE thing end-to-end
+- **Step 3:** Confirm it still works
+- **Step 4:** ONLY THEN move to Step 2
+
+**NOT:** Fix 5 things, test them all together, hope they work
+
+### Enforcement
+
+**You CANNOT proceed to the next task/step if:**
+- Current step is not end-to-end verified working
+- ANY previous step broke or regressed
+- You haven't confirmed with the user that current step is actually fixed
+
+**When in doubt:** Stop and ask the user: "Is Step N working? Should I proceed to Step N+1?"
+
+### Why This Matters
+
+- **Day 16:** Previous Claude claimed Session 31 was complete but didn't verify UI worked
+- **Result:** Broke the entire system with false positives
+- **This protocol:** Prevents false progress claims
+
+### Application to Session 32+
+
+**Step 1: Fix the UI (unified.html missing)**
+- Cannot claim Step 1 complete until: User can access hub.arknexus.net and UI loads
+- Do NOT start consciousness loop debugging until UI works
+- Do NOT start resurrection protocol debugging until UI works
+
+**Step 2: Verify consciousness loop is thinking**
+- Only after UI is working and verified
+- Cannot claim Step 2 complete until: consciousness.jsonl grows with new THINK entries
+- Do NOT start implementing proposals until consciousness THINK works
+
+**Step 3: Confirm resurrection protocol works**
+- Only after consciousness loop is thinking
+- Cannot claim complete until: Session ends, context saved, next session loads full context
+- Do NOT move to K2 or Phase 2 until resurrection works end-to-end
+
+**Only after ALL THREE are verified working = THEN move to Phase 2 (K2 integration)**
+
 ## Verification Gate (LOCKED — Before ANY Success Claim)
 
 **You cannot claim something is "fixed," "working," "complete," or "verified" without this gate.**
