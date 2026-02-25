@@ -21,6 +21,13 @@ import uvicorn
 
 import config
 
+# ─── Ensure Graphiti's OpenAIEmbedder can access API key ──────────────────
+# Graphiti creates its own OpenAIEmbedder internally, which checks os.environ
+# for OPENAI_API_KEY before using config parameters. Set it here to ensure
+# the embedder can initialize even if environment variable wasn't passed to container.
+if not os.environ.get("OPENAI_API_KEY") and config.OPENAI_API_KEY:
+    os.environ["OPENAI_API_KEY"] = config.OPENAI_API_KEY
+
 # ─── LLM Client ──────────────────────────────────────────────────────────
 _openai_client = None
 
