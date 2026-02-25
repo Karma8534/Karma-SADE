@@ -520,6 +520,271 @@ curl -H "Authorization: Bearer $TOKEN" https://hub.arknexus.net/v1/endpoint
 
 **Authentication:** All endpoints use `HUB_CHAT_TOKEN` (same bearer token). Failure returns `401 Unauthorized`.
 
+## MEMORY.md Structure & Template (LOCKED — Every Session)
+
+**MEMORY.md MUST follow this structure or session continuity breaks.**
+
+```markdown
+# Universal AI Memory — Current State
+
+## 🟢 System Status (Updated [ISO timestamp])
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| UI (hub.arknexus.net) | ✅ WORKING | User can access and interact |
+| Consciousness Loop | ✅ WORKING | consciousness.jsonl growing, THINK entries present |
+| Resurrection Protocol | ✅ WORKING | Session end/start loads full context |
+| FalkorDB Graph | ✅ WORKING | Queries responsive, episodes queryable |
+| Hub Bridge API | ✅ WORKING | /v1/chat, /v1/consciousness endpoints operational |
+
+**Status Legend:** ✅ WORKING | ⚠️ DEGRADED | ❌ BROKEN | 🔴 CRITICAL
+
+---
+
+## Active Task (Session N)
+
+**Status:** [IN_PROGRESS | BLOCKED | COMPLETED]
+
+**Task:** [One-line description]
+
+**What it is:** [2-3 sentences explaining what we're working on and why]
+
+**How to resume:** [Step-by-step instructions to pick up where we left off]
+
+**Blockers:** [If any — see Blocker Tracking section]
+
+---
+
+## Session N — [Date] [Status: Success/Partial/Failure]
+
+**What was completed:**
+- [ ] Step 1: [description] ✅ VERIFIED
+- [ ] Step 2: [description] ❌ NOT VERIFIED (reason)
+
+**Verification status:**
+- Q1 (end-to-end test): [evidence]
+- Q2 (user can access): [evidence]
+- Q3 (no side effects): [evidence]
+- Q4 (reproducible): [evidence]
+
+**Blockers introduced:**
+- [BLOCKER] description → action required in Session N+1
+
+**Git commits:**
+- [hash] phase-N: commit message
+
+**Key learnings:**
+- [learning 1]
+- [learning 2]
+
+**Next steps for Session N+1:**
+- [ ] Step 1: ... (depends on: nothing)
+- [ ] Step 2: ... (depends on: Step 1)
+- [ ] Step 3: ... (depends on: Steps 1 + 2)
+
+---
+
+## Blocker Tracking
+
+**Current blockers (carry forward):**
+- [BLOCKER-ID] description → resolve by: [deadline/session]
+
+**Resolved blockers (archive):**
+- [OLD-BLOCKER] resolved in Session N by: [action]
+
+---
+```
+
+**Critical rules:**
+- MUST update System Status every session end
+- MUST mark every step as ✅ VERIFIED or ❌ NOT VERIFIED
+- MUST list blockers explicitly with `[BLOCKER]` prefix
+- MUST show dependency chain for next steps
+- MUST add git commit hashes so work is traceable
+
+---
+
+## Context Loading Priority Order (LOCKED)
+
+**When loading session context, use this PRIORITY order:**
+
+1. **CLAUDE.md (FIRST)** — This file is the source of truth for rules
+   - Verify it hasn't been modified unexpectedly
+   - Check for drift from previous session
+
+2. **Git Log (SECOND)** — See what actually happened
+   - `git log --oneline -10` to see recent commits
+   - If commits exist that aren't in MEMORY.md → DRIFT DETECTED
+
+3. **MEMORY.md (THIRD)** — State from previous session
+   - Read System Status section
+   - Identify Active Task
+   - Check Blockers
+
+4. **claude-mem (FOURTH)** — Cross-session insights
+   - Query for last observation
+   - Get learnings from previous session
+
+5. **cc-session-brief.md (FIFTH)** — If resurrection script generated it
+   - This synthesizes everything above
+
+**Conflict Resolution:**
+- Git shows commits not in MEMORY.md → DRIFT DETECTED, investigate
+- MEMORY.md claims working but System Status broken → DRIFT DETECTED, update
+- claude-mem contradicts MEMORY.md → DRIFT DETECTED, flag explicitly
+
+---
+
+## Blocker Tracking Protocol (LOCKED)
+
+**Format for blockers in MEMORY.md:**
+
+```
+[BLOCKER-ID] Description of what's blocked → Action required in Session N
+
+Examples:
+[BLOCKER-1] UI returns ENOENT: /app/public/unified.html missing → Copy file into Docker image
+[BLOCKER-2] Consciousness loop KeyError on 'new_entities' → Fix dict access in consciousness.py
+[BLOCKER-3] K2 sync endpoint not implemented → Build /v1/graph/sync endpoint
+```
+
+**Rules:**
+- Each blocker gets an ID (BLOCKER-1, BLOCKER-2, etc.)
+- Blockers are tracked in MEMORY.md under "Blocker Tracking"
+- When blocker is resolved, move it to "Resolved blockers (archive)"
+- Next session cannot proceed past a blocker without resolving it
+
+---
+
+## Session Dependency Map (LOCKED)
+
+**Session phases are sequential. DO NOT SKIP STEPS.**
+
+```
+Phase 1: Karma Persistence Foundation
+  Session 32: Fix UI (Step 1)
+    ├─ UI loads: hub.arknexus.net accessible
+    ├─ Depends on: nothing
+    └─ Blocks: consciousness debugging
+
+  Session 33: Consciousness Loop Thinking (Step 2)
+    ├─ Consciousness THINKS: consciousness.jsonl grows with THINK entries
+    ├─ Depends on: Session 32 (UI working)
+    └─ Blocks: proposal/resurrection work
+
+  Session 34: Resurrection Protocol (Step 3)
+    ├─ Session end→start loads full context
+    ├─ Depends on: Sessions 32 + 33 (UI + consciousness working)
+    └─ Unblocks: Phase 2
+
+Phase 2: K2 Integration (ONLY after Phase 1 complete)
+  Session 35+: K2 Polling & Sync
+    ├─ Depends on: Phase 1 complete + verified
+    └─ Builds: Autonomous continuity
+
+Phase 3: Consciousness Proposals (ONLY after Phase 2)
+  Session N+: Proposal generation & feedback loop
+```
+
+**Critical rule:** Cannot move to next phase until ALL previous phases verified working (✅ VERIFIED status in MEMORY.md for all steps).
+
+---
+
+## Failure Mode Detection (LOCKED)
+
+**These are known failure modes. Check for them every session:**
+
+| Failure Mode | Symptoms | Detection | Recovery |
+|--------------|----------|-----------|----------|
+| **UI Silent Break** | hub.arknexus.net loads but shows ENOENT | Verification Gate Q2 fails | Check /app/public/ in container |
+| **Consciousness Loop Stopped** | consciousness.jsonl hasn't grown in 60+ seconds | Check file timestamps | Check container logs for errors |
+| **Resurrection Context Lost** | Next session doesn't load MEMORY.md state | MEMORY.md empty or missing | Recover from claude-mem observation |
+| **Git Out of Sync** | Commits exist not in MEMORY.md | `git log` vs MEMORY.md mismatch | Update MEMORY.md or revert commits |
+| **Drift Accumulation** | Previous session claimed working, but system broken | System Status contradicts reality | Surface as DRIFT DETECTED, investigate |
+| **Blocker Carried Forward** | Same blocker in two consecutive sessions | Check "Blocker Tracking" section | Investigate why it wasn't resolved |
+
+**Detection protocol:**
+- Check System Status section every session start
+- If any component is ❌ BROKEN that was ✅ WORKING last session → REGRESSION DETECTED
+- Surface explicitly: "System regressed since Session N"
+
+---
+
+## Rollback Protocol (LOCKED)
+
+**If session breaks the system, use this protocol:**
+
+**Step 1: Detect Regression**
+- System Status shows ❌ BROKEN for previously ✅ WORKING component
+- User reports: "system was working yesterday"
+- Git shows broken code committed
+
+**Step 2: Identify Last Known Good**
+- Query: Which session had ALL components ✅ WORKING?
+- Find git commit hash from that session
+- Check MEMORY.md for that session's System Status section
+
+**Step 3: Assess Damage**
+- What broke? (UI? Consciousness? Database?)
+- Is it reversible? (code change? config? data?)
+- Can we fix it or must we revert?
+
+**Step 4: Execute Recovery**
+- If fixable: Invoke systematic-debugging, find root cause, fix
+- If must revert: `git revert [broken-commit]` OR `git reset --hard [last-known-good]`
+- Verify: New System Status shows ✅ WORKING again
+
+**Step 5: Document**
+- Add to MEMORY.md: "Session N regression detected and reverted"
+- Update blocker tracking
+- Add to claude-mem: "failure mode observed and recovery procedure used"
+
+---
+
+## Session End Verification Checklist (LOCKED — Enhanced)
+
+**MANDATORY before session ends. ALL items must pass.**
+
+- [ ] **Code Changes:** All code committed to git
+- [ ] **CLAUDE.md:** Any new learnings locked in (no outstanding gaps)
+- [ ] **MEMORY.md:** Session N summary complete with System Status updated
+- [ ] **System Health:** All components have status (✅ WORKING | ❌ BROKEN | ⚠️ DEGRADED)
+- [ ] **Blockers:** All current blockers documented with action required
+- [ ] **Verification:** All completed steps marked ✅ VERIFIED (not just "done")
+- [ ] **Next Steps:** Dependencies clearly documented for Session N+1
+- [ ] **claude-mem:** Observation saved with cross-session learnings
+- [ ] **Git push:** All commits synced to origin/main
+- [ ] **No drift:** CLAUDE.md/MEMORY.md/git are in sync (run Drift Detection)
+
+**If ANY item fails:** Session is NOT ready for handoff. Fix it before ending.
+
+---
+
+## Progress Metrics (LOCKED — Track Continuity Health)
+
+**These metrics measure if session continuity is working:**
+
+| Metric | Target | Current | Trend |
+|--------|--------|---------|-------|
+| False Positive Claims (per session) | 0 | ? | ← lower is better |
+| Drift Detected (per session) | 0 | ? | ← lower is better |
+| System Regressions (per session) | 0 | ? | ← lower is better |
+| Session Completion Rate | 100% | ? | ← higher is better |
+| Steps Verified Before Proceeding | 100% | ? | ← higher is better |
+| Blocker Resolution Time | <1 session | ? | ← lower is better |
+| Context Loading Success | 100% | ? | ← higher is better |
+
+**Track these in a monthly summary:**
+- Sessions completed: N
+- False positives: X (should be 0)
+- Drifts detected: Y (should be 0)
+- Regressions: Z (should be 0)
+- Average steps to resolve a blocker: A
+
+**Goal:** All metrics green. If any red, session continuity is degrading.
+
+---
+
 ## Karma Mid-Session Capture Protocol
 
 ### Write-worthy triggers
