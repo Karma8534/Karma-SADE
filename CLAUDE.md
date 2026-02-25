@@ -68,6 +68,14 @@ This ensures:
 - FalkorDB graph: always query `neo_workspace`, never `karma`
 - Python on Windows: use SSH, not local Git Bash (no python3)
 - Hub chat token path: `/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt`
+- **Consciousness deployment (Session 31+):**
+  - Consciousness work lives in `.worktrees/consciousness-proposal` (not inspiring-allen) — use `grep -r "ProposalGenerator"` to find the active branch
+  - consciousness.py on vault-neo: `/opt/seed-vault/memory_v1/karma-core/consciousness.py`
+  - Karma container requires: `--network anr-vault-net -e FALKORDB_HOST=falkordb -e POSTGRES_HOST=anr-vault-db`
+  - Ledger volume: `/opt/seed-vault/memory_v1/ledger:/ledger:rw` (host:container, must be :rw)
+  - Consciousness cycles: 60s interval, IDLE cycles (~1-2ms, $0 cost) are normal when no new ledger activity
+  - Testing proposals: submit feedback, wait 70+ seconds to catch next cycle output in consciousness.jsonl
+  - Proposals and feedback both stored in `collab.jsonl` with type="proposal" or type="proposal_feedback"
 
 ## Session Start Protocol (LOCKED — MANDATORY Every Session)
 
