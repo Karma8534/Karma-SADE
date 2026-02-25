@@ -1264,6 +1264,64 @@ async def openai_proxy_completions(request: Request):
         )
 
 
+@app.post("/v1/cypher")
+async def cypher_query(request: Request):
+    """
+    Execute a Cypher query against the FalkorDB knowledge graph.
+
+    Request body: {"cypher": "MATCH (n) RETURN n LIMIT 10"} or {"query": "MATCH (n) RETURN n LIMIT 10"}
+    Response: {"ok": true, "results": [...], "stats": {...}} or {"ok": false, "error": "..."}
+    """
+    try:
+        body = await request.json()
+        # Accept both "cypher" and "query" field names for flexibility
+        cypher_str = body.get("cypher", body.get("query", "")).strip()
+
+        if not cypher_str:
+            return JSONResponse(
+                {"ok": False, "error": "Missing 'cypher' or 'query' field in request body"},
+                status_code=400
+            )
+
+        r = get_falkor()
+        result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher_str)
+
+        # FalkorDB returns [headers, [rows], [metadata]]
+        if isinstance(result, list) and len(result) >= 2:
+            headers = result[0] if result[0] else []
+            rows = result[1] if len(result) > 1 else []
+            metadata = result[2] if len(result) > 2 else []
+
+            # Convert header bytes to strings
+            headers_str = [h.decode() if isinstance(h, bytes) else h for h in headers]
+
+            return JSONResponse({
+                "ok": True,
+                "headers": headers_str,
+                "results": rows,
+                "metadata": metadata
+            })
+        else:
+            return JSONResponse({
+                "ok": True,
+                "headers": [],
+                "results": [],
+                "metadata": []
+            })
+
+    except json.JSONDecodeError:
+        return JSONResponse(
+            {"ok": False, "error": "Invalid JSON in request body"},
+            status_code=400
+        )
+    except Exception as e:
+        print(f"[CYPHER] Error executing query: {e}\n{traceback.format_exc()}")
+        return JSONResponse(
+            {"ok": False, "error": f"Query execution failed: {str(e)}"},
+            status_code=500
+        )
+
+
 @app.websocket("/chat")
 async def websocket_chat(ws: WebSocket):
     """WebSocket chat endpoint — persistent conversation."""

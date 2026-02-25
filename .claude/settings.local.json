@@ -4,7 +4,8 @@
       "Bash(powershell -ExecutionPolicy Bypass \"Scripts/resurrection/Get-KarmaContext.ps1\")",
       "Bash(ssh vault-neo:*)",
       "Bash(pwsh Scripts/resurrection/Get-KarmaContext.ps1)",
-      "Bash(powershell -NoProfile -File Scripts/resurrection/Get-KarmaContext.ps1)"
+      "Bash(powershell -NoProfile -File Scripts/resurrection/Get-KarmaContext.ps1)",
+      "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/resurrection/Get-KarmaContext.ps1)"
     ]
   }
 }
