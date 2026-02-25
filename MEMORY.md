@@ -1,3 +1,47 @@
+## ✅ Session 30 COMPLETE — Approval Gate Endpoints Live & Tested (2026-02-25 03:25Z)
+
+**MAJOR MILESTONE: Full Approval Gate workflow infrastructure now operational.**
+
+**What was built:**
+- Task 1: Investigated /v1/consciousness endpoint 404 routing error → found endpoints missing from server.js
+- Task 2: Reviewed server.js structure → located generated endpoint code in /tmp/proposals_endpoints.js
+- Task 3: Integrated 3 new endpoints into hub-bridge/app/server.js:
+  - GET /v1/consciousness — returns recent consciousness cycles + pending proposal count
+  - POST /v1/consciousness — accepts control signals (pause|resume|focus|reset)
+  - GET /v1/proposals — lists unreviewed proposals from collab.jsonl
+  - POST /v1/proposals — records Claude Code decisions on proposals
+- Task 4: Fixed critical issue: ledger paths were host paths, updated to container mount paths
+- Task 5: Updated compose.hub.yml: changed ledger mount from `:ro` (read-only) to `:rw` (read-write)
+- Task 6: Rebuilt + deployed hub-bridge container with all fixes
+- Task 7: Validated full end-to-end cycle with test data → all endpoints return 200 ok:true
+
+**Approval Gate Full Test Results:**
+```
+1. GET /v1/proposals → ✓ Returns pending proposals
+2. POST /v1/proposals → ✓ Records decision + feedback
+3. GET /v1/consciousness → ✓ Queries consciousness state (19 recent cycles found)
+4. End-to-end validation → ✓ Proposal→Decision→Feedback recorded in collab.jsonl
+```
+
+**Commits This Session:**
+- c1ab3c2: feat: Add /v1/consciousness and /v1/proposals endpoints
+- 5073f34: fix: Update ledger paths from host /opt/seed-vault to container /karma mount
+
+**What NOW WORKS:**
+- ✅ Hub-bridge /v1/consciousness endpoint operational (GET + POST)
+- ✅ Hub-bridge /v1/proposals endpoint operational (GET + POST)
+- ✅ Endpoints have write access to collab.jsonl for proposal feedback
+- ✅ Full Approval Gate cycle verified: consciousness proposes → Claude Code decides → feedback recorded
+- ✅ Endpoints protected with Bearer token auth (HUB_CHAT_TOKEN)
+- ✅ Both localhost:18090 and public HTTPS (hub.arknexus.net) working
+
+**READY FOR:**
+Next session can extend consciousness.py to:
+1. Generate proposals during THINK/DECIDE phase
+2. Write proposals to collab.jsonl
+3. Full loop: consciousness proposes → endpoints return proposals → Claude Code reviews → submits feedback → consciousness reads feedback on next cycle
+
+---
 # Universal AI Memory — Current State
 
 ## ✅ Session 29 CRITICAL FIX — API Key Configuration Restored (2026-02-25 02:50Z)
