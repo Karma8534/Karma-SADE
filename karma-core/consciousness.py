@@ -275,7 +275,7 @@ class ConsciousnessLoop:
                     {"role": "system", "content": "You are Karma graph distillation engine. Output only valid JSON, no markdown."},
                     {"role": "user", "content": prompt}
                 ],
-                tier="sonnet"
+                task_type="reasoning"
             )
             raw = (raw or "").strip()
             # Strip markdown fences if model adds them
@@ -446,7 +446,7 @@ class ConsciousnessLoop:
                         {"role": "system", "content": "You are Karma's consciousness analyzing new activity."},
                         {"role": "user", "content": context}
                     ],
-                    tier="sonnet"  # Routes to GLM-4.7 (Sonnet tier, 66% cost savings)
+                    task_type="reasoning"  # Routes to GLM-4.7 (Sonnet tier, 66% cost savings)
                 )
 
                 self.metrics["llm_calls_total"] += 1
