@@ -714,7 +714,7 @@ const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : nul
 const TOOL_DEFINITIONS = [
   {
     name: "get_vault_file",
-    description: "Read a file from Karma vault. Whitelisted: MEMORY.md, consciousness, collab, candidates, system-prompt, session-handoff, session-summary, core-architecture",
+    description: "Read a file from Karma vault. Whitelisted: MEMORY.md, consciousness, collab, candidates, decision_log, system-prompt, session-handoff, session-summary, core-architecture",
     input_schema: {
       type: "object",
       properties: {
@@ -743,6 +743,7 @@ const VAULT_FILE_ALIASES = {
   "consciousness": "/karma/ledger/consciousness.jsonl",
   "collab": "/karma/ledger/collab.jsonl",
   "candidates": "/karma/ledger/candidates.jsonl",
+  "decision_log": "/karma/ledger/decision_log.jsonl",
   "system-prompt": "/karma/repo/Memory/00-karma-system-prompt-live.md",
   "session-handoff": "/karma/repo/Memory/08-session-handoff.md",
   "session-summary": "/karma/repo/Memory/11-session-summary-latest.md",
