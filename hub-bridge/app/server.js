@@ -1703,8 +1703,8 @@ const server = http.createServer(async (req, res) => {
       }
 
       try {
-        const consciousPath = "/opt/seed-vault/memory_v1/ledger/consciousness.jsonl";
-        const collabPath = "/opt/seed-vault/memory_v1/ledger/collab.jsonl";
+        const consciousPath = "/karma/ledger/consciousness.jsonl";
+        const collabPath = "/karma/ledger/collab.jsonl";
 
         // Read consciousness.jsonl and get last 20 entries
         let recentCycles = [];
@@ -1778,7 +1778,7 @@ const server = http.createServer(async (req, res) => {
         };
 
         try {
-          const consciousPath = "/opt/seed-vault/memory_v1/ledger/consciousness.jsonl";
+          const consciousPath = "/karma/ledger/consciousness.jsonl";
           const content = fs.readFileSync(consciousPath, "utf-8");
           const updatedContent = content + "\n" + JSON.stringify(signalRecord);
           fs.writeFileSync(consciousPath, updatedContent, "utf-8");
@@ -1808,7 +1808,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       try {
-        const collabPath = "/opt/seed-vault/memory_v1/ledger/collab.jsonl";
+        const collabPath = "/karma/ledger/collab.jsonl";
         let proposals = [];
 
         try {
@@ -1864,7 +1864,7 @@ const server = http.createServer(async (req, res) => {
         };
 
         try {
-          const collabPath = "/opt/seed-vault/memory_v1/ledger/collab.jsonl";
+          const collabPath = "/karma/ledger/collab.jsonl";
           const content = fs.readFileSync(collabPath, "utf-8");
           const updatedContent = content + "\n" + JSON.stringify(feedback);
           fs.writeFileSync(collabPath, updatedContent, "utf-8");
