@@ -20,4 +20,4 @@ def test_find_duplicate_entities_returns_dict():
     for group, entities in result.items():
         assert isinstance(entities, list)
         assert all(isinstance(e, dict) for e in entities)
-        assert all('id' in e and 'name' in e for e in entities)
+        assert all('id' in e and 'name' in e and 'type' in e for e in entities)
