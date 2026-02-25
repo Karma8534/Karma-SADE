@@ -778,7 +778,7 @@ async function executeToolCall(toolName, toolInput) {
       if (!cypher) return { error: "missing_cypher" };
       // Query FalkorDB via internal vault API
       console.log(`[TOOL-API] Querying graph: ${cypher.slice(0, 80)}...`);
-      const graphRes = await fetch(`http://anr-vault-api:8080/v1/cypher`, {
+      const graphRes = await fetch(`http://anr-vault-api:8340/v1/cypher`, {
         method: "POST",
         headers: { "content-type": "application/json", "authorization": `Bearer ${VAULT_BEARER}` },
         body: JSON.stringify({ query: cypher }),
