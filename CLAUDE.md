@@ -31,6 +31,20 @@
 6. Push to GitHub after significant changes
 7. At session end: update MEMORY.md, commit `phase-N: message`, push
 
+**Session End Verification Protocol (Locked — ALWAYS perform):**
+At session end or when user says "prepare for handoff", AUTOMATICALLY execute:
+1. **CLAUDE.md**: Verify all necessary instructions are current (skills, rules, processes)
+2. **MEMORY.md**: Verify Session N completion is documented (what was built, what works, commits listed)
+3. **claude-mem**: Save observation with session summary (title, what was accomplished, status for next session)
+4. **Git**: Verify all changes are committed and pushed to main branch
+5. **Report**: Confirm all four components are current (CLAUDE.md ✅, MEMORY.md ✅, claude-mem ✅, Git ✅)
+
+This ensures:
+- Next session has complete context (CLAUDE.md rules + MEMORY.md state)
+- Long-term memory persists (claude-mem observation for cross-session reference)
+- No work is lost (git commits synced)
+- User always knows system readiness before session closes
+
 **Decision Authority (Locked):**
 - **Autonomous:** Code changes, file edits, tests, git ops, debugging, reading docs
 - **Ask first:** Breaking API changes, paid dependencies, infrastructure changes, deleting files, modifying CLAUDE.md/rules, anything that costs money
