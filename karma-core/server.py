@@ -21,6 +21,7 @@ from fastapi.responses import JSONResponse, Response, HTMLResponse
 import uvicorn
 
 import config
+from token_budget import SessionBudget, count_tokens, count_message_tokens, check_budget, get_monthly_tracker
 
 # ─── Tools & Schema ────────────────────────────────────────────────────────
 
@@ -128,8 +129,17 @@ async def get_graphiti():
 
 async def ingest_episode(user_msg: str, assistant_msg: str, source: str = "karma-terminal"):
     """Ingest a conversation turn into the knowledge graph as a new episode.
-    Runs as a background task — does not block chat responses."""
+    Runs as a background task — does not block chat responses.
+    Decision #4: Only admits episodes scoring >= MEMORY_ADMISSION_THRESHOLD."""
     global _episode_counter
+
+    # ── Admission gate (Decision #4) ──
+    from admission import should_admit
+    admitted, score = should_admit(user_msg, assistant_msg, source)
+    if not admitted:
+        print(f"[GRAPHITI] Episode rejected — admission score {score:.3f} < {config.MEMORY_ADMISSION_THRESHOLD}")
+        return
+
     _episode_counter += 1
     episode_num = _episode_counter
 
@@ -150,7 +160,7 @@ async def ingest_episode(user_msg: str, assistant_msg: str, source: str = "karma
             reference_time=ref_time,
             group_id=config.GRAPHITI_GROUP_ID,
         )
-        print(f"[GRAPHITI] Episode #{episode_num} ingested — entities/relationships updated")
+        print(f"[GRAPHITI] Episode #{episode_num} ingested (score={score:.3f}) — entities/relationships updated")
     except Exception as e:
         print(f"[GRAPHITI] Episode #{episode_num} failed: {e}")
         traceback.print_exc()
@@ -597,6 +607,7 @@ class ConversationManager:
         self.history: list[dict] = []
         self.max_history = max_history
         self.session_start = datetime.now(timezone.utc)
+        self.budget = SessionBudget()
 
     def add_message(self, role: str, content: str):
         self.history.append({
@@ -636,6 +647,11 @@ async def generate_response(user_message: str, conversation: ConversationManager
     try:
         messages = conversation.get_openai_messages(system_prompt)
 
+        # Check token budget (Decision #11)
+        allowed, budget_info = check_budget(conversation.budget)
+        if not allowed:
+            return f"[Budget exceeded: {budget_info['reason']}]", "budget_limit"
+
         # Use router if available, else fall back to direct OpenAI
         if hasattr(app.state, "router") and app.state.router:
             reply, model_used = app.state.router.complete(
@@ -652,6 +668,13 @@ async def generate_response(user_message: str, conversation: ConversationManager
             )
             reply = response.choices[0].message.content
             model_used = f"openai/{config.ANALYSIS_MODEL}"
+
+        # Track token usage
+        input_tokens = count_message_tokens(messages)
+        output_tokens = count_tokens(reply)
+        total_tokens = input_tokens + output_tokens
+        conversation.budget.consume(total_tokens)
+        get_monthly_tracker().consume(total_tokens)
 
         conversation.add_message("assistant", reply)
         return reply, model_used
@@ -749,6 +772,16 @@ async def health():
             "preferences": len(query_preferences(limit=100)),
         },
         "uptime_seconds": int(time.time() - app.state.start_time) if hasattr(app.state, "start_time") else 0,
+    })
+
+
+@app.get("/v1/budget")
+async def get_budget():
+    """Return current token budget status."""
+    monthly = get_monthly_tracker()
+    return JSONResponse({
+        "monthly": monthly.get_usage(),
+        "session_budget_default": config.SESSION_TOKEN_BUDGET,
     })
 
 
