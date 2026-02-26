@@ -65,3 +65,22 @@ DISTILLATION_MAX_EPISODES = int(os.getenv("DISTILLATION_MAX_EPISODES", "200"))
 # K2 Worker decision & consciousness logging
 DECISION_LOG = os.getenv("DECISION_LOG", "/ledger/decision_log.jsonl")
 K2_CONSCIOUSNESS_LOG = os.getenv("K2_CONSCIOUSNESS_LOG", "/ledger/k2_consciousness.jsonl")
+
+# ── Token Budget (Decision #11) ──
+SESSION_TOKEN_BUDGET = int(os.getenv("SESSION_TOKEN_BUDGET", "50000"))
+MONTHLY_TOKEN_CAP = int(os.getenv("MONTHLY_TOKEN_CAP", "500000"))
+TOKEN_USAGE_PATH = os.getenv("TOKEN_USAGE_PATH", "/ledger/token_usage.json")
+
+# ── Memory Admission (Decision #4) ──
+MEMORY_ADMISSION_THRESHOLD = float(os.getenv("MEMORY_ADMISSION_THRESHOLD", "0.5"))
+
+# ── Memory Decay (Decision #5) ──
+MEMORY_DECAY_RATE = float(os.getenv("MEMORY_DECAY_RATE", "0.02"))
+MEMORY_DECAY_FLOOR = float(os.getenv("MEMORY_DECAY_FLOOR", "0.1"))
+MEMORY_DECAY_INTERVAL_HOURS = int(os.getenv("MEMORY_DECAY_INTERVAL_HOURS", "24"))
+
+# ── DO Spaces Backup (Decision #9) ──
+DO_SPACES_BUCKET = os.getenv("DO_SPACES_BUCKET", "karma-backups")
+DO_SPACES_REGION = os.getenv("DO_SPACES_REGION", "nyc3")
+DO_SPACES_ACCESS_KEY = os.getenv("DO_SPACES_ACCESS_KEY", "")
+DO_SPACES_SECRET_KEY = os.getenv("DO_SPACES_SECRET_KEY", "")
