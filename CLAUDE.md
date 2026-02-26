@@ -78,6 +78,26 @@ Before recommending ANY path forward, I commit to:
 Never guess. Prefer observable proofs: exact command → expected output → actual output.
 When runtime behavior changes unexpectedly, collect evidence before proposing a fix.
 
+## Deployment Procedure
+
+**Always use the `/deploy` skill for any Docker Compose service deployment.** Never manually run `docker build` or `docker compose up -d` without verification gates.
+
+The `/deploy` skill enforces an 8-step verification pipeline:
+1. Validate docker-compose.yml syntax
+2. Extract service config and verify image naming
+3. Check all required environment variables in .env
+4. Build with `docker compose build --no-cache` (never `docker build`)
+5. Deploy with `docker compose up -d`
+6. Verify startup logs for errors
+7. Run health endpoint checks
+8. Confirm final container health
+
+This prevents: image naming mismatches, missing env vars, stale images, silent startup failures, and unresponsive services.
+
+**Usage:** `/deploy [service-name] --remote vault-neo --health-endpoint /health`
+
+**Detailed documentation:** See `.claude/skills/deploy/SKILL.md`
+
 ### Known Pitfalls (verified in production)
 - **Docker compose service name is `hub-bridge`** — NOT `anr-hub-bridge`
   (`anr-hub-bridge` is the container name, for `docker logs`/`docker exec` only)
