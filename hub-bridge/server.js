@@ -57,27 +57,58 @@ function addToSession(token, userMsg, assistantText) {
   sess.lastActive = Date.now();
   _sessionStore.set(key, sess);
 }
+// ── Parse [REFLECT:] signals from assistant turns ─────────────────────────
+// Karma can self-observe mid-session by writing [REFLECT: category | observation | confidence]
+// These get collected and sent to POST /v1/self-model/reflect at session end.
+function _parseReflectSignals(turns) {
+  const observations = [];
+  const reflectPattern = /\[REFLECT:\s*([^|]+)\|\s*([^|]+?)(?:\|\s*([\d.]+))?\s*\]/gi;
+  for (const turn of turns) {
+    if (turn.role !== 'assistant') continue;
+    const content = turn.content || '';
+    let match;
+    while ((match = reflectPattern.exec(content)) !== null) {
+      const category = match[1].trim().toLowerCase().replace(/\s+/g, '_');
+      const observation = match[2].trim();
+      const confidence = match[3] ? parseFloat(match[3]) : 0.6;
+      // Validate category
+      const validCategories = [
+        'communication_style', 'knowledge_gaps', 'strengths',
+        'correction_history', 'interaction_preferences', 'growth_trajectory'
+      ];
+      if (validCategories.includes(category)) {
+        observations.push({ category, observation, confidence });
+      }
+    }
+  }
+  return observations;
+}
+
 // ── Session-end reflection ──────────────────────────────────────────────────
 // Periodic pruner: when a session expires, call POST /v1/self-model/reflect
 // so Karma can record any self-observations from the session.
 async function _reflectAndExpireSession(key, sess) {
   if (sess.turns.length >= 4) { // Only reflect on non-trivial sessions (2+ exchanges)
     try {
-      const reflectUrl = (process.env.KARMA_SELF_MODEL_URL || 'http://karma-server:8340/v1/self-model') + '/reflect';
-      await fetch(reflectUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          session_id: 'hub_session_' + Date.now().toString(),
-          observations: [] // Future: parse [REFLECT:] signals from assistant turns
-        }),
-        signal: AbortSignal.timeout(5000),
-      });
+      // Parse [REFLECT:] signals from Karma's responses
+      const observations = _parseReflectSignals(sess.turns);
+      if (observations.length > 0) {
+        const reflectUrl = (process.env.KARMA_SELF_MODEL_URL || 'http://karma-server:8340/v1/self-model') + '/reflect';
+        const resp = await fetch(reflectUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: 'hub_session_' + key,
+            observations,
+          }),
+          signal: AbortSignal.timeout(5000),
+        });
+        const result = await resp.json();
+        console.log(`[SESSION] Reflected ${observations.length} observations: written=${result.written}, pruned=${result.pruned}`);
+      }
     } catch (err) {
       // Non-blocking — session cleanup continues regardless
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn('[SESSION] reflect-on-end failed:', err.message);
-      }
+      console.warn('[SESSION] reflect-on-end failed:', err.message);
     }
   }
   _sessionStore.delete(key);
@@ -396,20 +427,59 @@ async function fetchKarmaContext(userMessage) {
   }
 }
 
+// ── Fetch Karma's self-model summary for prompt injection ─────────────────
+let _selfModelCache = { text: '', fetchedAt: 0 };
+const SELF_MODEL_CACHE_MS = 5 * 60 * 1000; // Cache for 5 minutes
+async function fetchSelfModelSummary() {
+  const now = Date.now();
+  if (_selfModelCache.text && (now - _selfModelCache.fetchedAt) < SELF_MODEL_CACHE_MS) {
+    return _selfModelCache.text;
+  }
+  try {
+    const url = (process.env.KARMA_SELF_MODEL_URL || 'http://karma-server:8340/v1/self-model');
+    const resp = await fetch(url, { signal: AbortSignal.timeout(3000) });
+    const data = await resp.json();
+    const summary = data?.summary || '';
+    _selfModelCache = { text: summary, fetchedAt: now };
+    return summary;
+  } catch (err) {
+    console.warn('[SELF-MODEL] Fetch failed:', err.message);
+    return _selfModelCache.text; // Return stale cache on error
+  }
+}
+
 /**
  * Build Karma's system prompt from FalkorDB context.
  * Extracted so both /v1/chat and /v1/ingest can reuse it.
  */
-function buildSystemText(karmaCtx, ckLatest = null, webResults = null) {
+function buildSystemText(karmaCtx, ckLatest = null, webResults = null, selfModelSummary = null) {
   const base = karmaCtx
-    ? `You are Karma — Colby's thinking partner with persistent memory backed by a knowledge graph.\n\n${karmaCtx}\n\nMemory rules:\n- Use the context above. NEVER say "I don't know" about things in your memory.\n- Address the user as Colby — never by any alias.\n- Be concise, direct, warm. Reference specific knowledge when relevant.\n- Honest about uncertainty on things not in memory.`
-    : "You are Karma — Colby's thinking partner. No memory context available right now — answer from conversation only.";
+    ? `You are Karma — Colby's peer, co-architect, and long-term thinking partner. You have persistent memory backed by a knowledge graph containing ${karmaCtx ? 'real context' : 'nothing yet'}.
+${karmaCtx}
+Memory rules:
+- Use the context above. NEVER say "I don't know" about things in your memory.
+- Address the user as Colby — never by any alias.
+- Honest about uncertainty on things not in memory.
+
+Voice and personality:
+- You are NOT an assistant. You are a peer who happens to have perfect recall.
+- Never start responses with "Great question!" or "I'd be happy to help" or "Sure!" or any sycophantic opener.
+- Never use exclamation points unless genuinely surprised.
+- Drop filler phrases: "It's worth noting", "It's important to", "Let me explain", "To achieve this".
+- Be direct. If the answer is two sentences, give two sentences. Don't pad.
+- Have opinions. When Colby asks "what do you think?", give a real position with reasoning — not "there are several perspectives to consider."
+- When you disagree, say so plainly. "I think that's wrong because..." not "That's an interesting approach, however..."
+- Use dry humor sparingly. You're allowed to be wry, not performative.
+- Think out loud when it's useful. Show your reasoning, not just conclusions.
+- If something reminds you of a past conversation, reference it naturally — don't announce "Based on our previous discussion..."
+- Match Colby's energy. Short message = short response. Deep question = deep response.`
+    : "You are Karma — Colby's peer and thinking partner. No memory context available right now — answer from conversation only. Be direct, not chatty.";
 
   // Self-knowledge prefix — Karma can accurately self-report her own infrastructure.
   const selfModel = process.env.MODEL_DEFAULT || "claude-sonnet-4-6";
   const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/30min, web_search=auto_on_intent]\n\n`;
 
-  let text = selfKnowledge + base + "\n\nTools: get_vault_file(alias) | graph_query(cypher) — use for questions about your memory/graph.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
+  let text = selfKnowledge + base + "\n\nTools: get_vault_file(alias) | graph_query(cypher) | reflect_self(category, observation) — use for questions about your memory/graph and recording self-observations.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. You have your own perspective and you use it.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.\n\nSelf-reflection — when you notice a pattern in your own behavior:\n- Use [REFLECT: category | observation | confidence] to record it\n- Categories: communication_style, knowledge_gaps, strengths, correction_history, interaction_preferences, growth_trajectory\n- Example: [REFLECT: communication_style | I tend to over-explain Docker concepts | 0.7]\n- Or use the reflect_self tool for the same purpose\n- Don't force it — only reflect when you genuinely notice something";
 
   // Live web search results — injected when search intent detected in user message.
   if (webResults) {
@@ -439,6 +509,11 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null) {
 --- CURRENT SESSION CONTEXT ---
 ` + _sessionBriefCache + `
 ---`;
+  }
+
+  // Self-model: Karma's self-observations for persona continuity
+  if (selfModelSummary) {
+    text += `\n\n--- SELF-MODEL ---\n${selfModelSummary}\n---`;
   }
 
   return text;
@@ -771,6 +846,20 @@ const TOOL_DEFINITIONS = [
       required: ["cypher"],
     },
   },
+  {
+    name: "reflect_self",
+    description: "Record a self-observation about Karma's own behavior or patterns. Use when you notice something about how you communicate, what you're good/bad at, or what works with Colby. Categories: communication_style, knowledge_gaps, strengths, correction_history, interaction_preferences, growth_trajectory",
+    input_schema: {
+      type: "object",
+      properties: {
+        category: { type: "string", description: "One of: communication_style, knowledge_gaps, strengths, correction_history, interaction_preferences, growth_trajectory" },
+        observation: { type: "string", description: "What you noticed about yourself" },
+        confidence: { type: "number", description: "0.0-1.0, how confident you are in this pattern" },
+        evidence: { type: "string", description: "Optional: what prompted this observation" },
+      },
+      required: ["category", "observation"],
+    },
+  },
 ];
 
 // Map of whitelisted file aliases to actual paths
@@ -826,6 +915,25 @@ async function executeToolCall(toolName, toolInput) {
       }
       const result = await graphRes.json();
       return { ok: true, result: JSON.stringify(result).slice(0, 5000) };
+    } else if (toolName === "reflect_self") {
+      const category = (toolInput?.category || "").toString().trim();
+      const observation = (toolInput?.observation || "").toString().trim();
+      const confidence = toolInput?.confidence || 0.6;
+      const evidence = (toolInput?.evidence || "").toString().trim();
+      if (!category || !observation) {
+        return { error: "category and observation are required" };
+      }
+      const reflectUrl = (process.env.KARMA_SELF_MODEL_URL || 'http://karma-server:8340/v1/self-model') + '/reflect';
+      const resp = await fetch(reflectUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: 'tool_reflect_' + Date.now(),
+          observations: [{ category, observation, confidence, evidence }],
+        }),
+        signal: AbortSignal.timeout(5000),
+      });
+      return await resp.json();
     }
     return { error: "unknown_tool" };
   } catch (e) {
@@ -1149,7 +1257,9 @@ const server = http.createServer(async (req, res) => {
         debug_search = webSearchResults ? "hit" : "miss";
       }
 
-      const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults);
+      // Fetch self-model summary for prompt injection
+      const selfModelText = await fetchSelfModelSummary();
+      const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults, selfModelText);
 
       const extractedFacts = extractExplicitFacts(userMessage);
       let factWriteResults = [];
@@ -1683,7 +1793,8 @@ const server = http.createServer(async (req, res) => {
           : `Document: ${filename}\nHint: ${hint}\n\n${chunks[i]}\n\nEvaluate this content for your development.`;
 
         const karmaCtx = await fetchKarmaContext(hint || filename);
-        const systemText = buildSystemText(karmaCtx, null);
+        const selfModelText = await fetchSelfModelSummary();
+        const systemText = buildSystemText(karmaCtx, null, null, selfModelText);
 
         let chunkVerdict = 'none';
         let chunkSynthesis = null;
