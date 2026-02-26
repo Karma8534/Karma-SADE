@@ -133,6 +133,29 @@ Karma uses phase-based routing for self-improvement contexts only. All other req
 
 **Key insight:** Substrate independence means LLM swaps don't break Karma's coherence or identity. Swapping Claude → GPT → Gemini changes **response style** (capability/speed), not **who Karma is** (identity, decisions, reasoning state all live on droplet). This enables safe experimentation with different models.
 
+## Claude Graph Integration
+
+**Status:** Active (installed via @colbymchenry/codegraph)
+
+**Purpose:** Persistent codebase knowledge across sessions. Eliminates exploration overhead by pre-indexing code structure with tree-sitter AST parsing and semantic search.
+
+**How it works:**
+- Tree-sitter parses codebase into AST
+- SQLite database stores symbols, relationships, embeddings
+- MCP server (codegraph) exposes tools to Claude Code:
+  - `codegraph_context` — build context for any task
+  - `codegraph_search` — semantic symbol search
+  - `codegraph_callers`/`codegraph_callees` — trace relationships
+  - `codegraph_impact` — change blast radius analysis
+
+**Auto-sync:** Claude Code hooks (PostToolUse, Stop) keep index fresh when files are edited.
+
+**Storage:** `.codegraph/codegraph.db` (local SQLite, 100% private, auto-ignored in git)
+
+**Performance:** ~30% fewer tokens on exploration tasks, ~25% fewer tool calls.
+
+**Testing:** Ask Claude Code "What are the main entry points?" and verify it uses codegraph_context instead of file scanning.
+
 ## Critical Rules
 - Do NOT modify CLAUDE.md or any file in .claude/rules/ without explicit user approval
 - Do NOT add new documentation files (.md) without explicit user approval
