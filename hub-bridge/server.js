@@ -93,7 +93,7 @@ async function _reflectAndExpireSession(key, sess) {
       // Parse [REFLECT:] signals from Karma's responses
       const observations = _parseReflectSignals(sess.turns);
       if (observations.length > 0) {
-        const reflectUrl = (process.env.KARMA_SELF_MODEL_URL || 'http://64.225.13.144:8340/v1/self-model') + '/reflect';
+        const reflectUrl = (process.env.KARMA_SELF_MODEL_URL || 'http://karma-server:8340/v1/self-model') + '/reflect';
         const resp = await fetch(reflectUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -436,7 +436,7 @@ async function fetchSelfModelSummary() {
     return _selfModelCache.text;
   }
   try {
-    const url = (process.env.KARMA_SELF_MODEL_URL || 'http://64.225.13.144:8340/v1/self-model');
+    const url = (process.env.KARMA_SELF_MODEL_URL || 'http://karma-server:8340/v1/self-model');
     const resp = await fetch(url, { signal: AbortSignal.timeout(3000) });
     const data = await resp.json();
     const summary = data?.summary || '';
@@ -923,7 +923,7 @@ async function executeToolCall(toolName, toolInput) {
       if (!category || !observation) {
         return { error: "category and observation are required" };
       }
-      const reflectUrl = (process.env.KARMA_SELF_MODEL_URL || 'http://64.225.13.144:8340/v1/self-model') + '/reflect';
+      const reflectUrl = (process.env.KARMA_SELF_MODEL_URL || 'http://karma-server:8340/v1/self-model') + '/reflect';
       const resp = await fetch(reflectUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
