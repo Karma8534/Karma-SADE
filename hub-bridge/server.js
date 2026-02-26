@@ -51,6 +51,7 @@ const HUB_HANDOFF_TOKEN_FILE = process.env.HUB_HANDOFF_TOKEN_FILE || "/run/secre
 const DEEP_MODE_HEADER = (process.env.DEEP_MODE_HEADER || "x-karma-deep").toLowerCase();
 const HANDOFF_DIR = process.env.HANDOFF_DIR || "/data/handoff";
 const KARMA_CONTEXT_URL = process.env.KARMA_CONTEXT_URL || "http://karma-server:8340/raw-context";
+const KARMA_SELF_MODEL_URL = process.env.KARMA_SELF_MODEL_URL || "http://karma-server:8340/v1/self-model";
 
 // ── Within-session conversation history ──────────────────────────────────────
 // Keeps the last N exchange pairs in memory, keyed by a hash of the bearer token.
@@ -392,10 +393,31 @@ async function fetchKarmaContext(userMessage) {
 }
 
 /**
+ * Fetch Karma's self-model summary from karma-core /v1/self-model.
+ * Returns the persona text to inject, or null on failure (non-blocking).
+ */
+async function fetchSelfModelSummary() {
+  try {
+    const r = await fetch(KARMA_SELF_MODEL_URL, {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!r.ok) return null;
+    const data = await r.json();
+    return data.ok && data.summary ? data.summary : null;
+  } catch (err) {
+    // Non-blocking: self-model is additive, not required
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[SELF-MODEL] fetch failed (non-blocking):', err.message);
+    }
+    return null;
+  }
+}
+
+/**
  * Build Karma's system prompt from FalkorDB context.
  * Extracted so both /v1/chat and /v1/ingest can reuse it.
  */
-function buildSystemText(karmaCtx, ckLatest = null, webResults = null) {
+function buildSystemText(karmaCtx, ckLatest = null, webResults = null, selfModelSummary = null) {
   const base = karmaCtx
     ? `You are Karma — Colby's thinking partner with persistent memory backed by a knowledge graph.\n\n${karmaCtx}\n\nMemory rules:\n- Use the context above. NEVER say "I don't know" about things in your memory.\n- Address the user as Colby — never by any alias.\n- Be concise, direct, warm. Reference specific knowledge when relevant.\n- Honest about uncertainty on things not in memory.`
     : "You are Karma — Colby's thinking partner. No memory context available right now — answer from conversation only.";
@@ -426,6 +448,12 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null) {
   // No runtime tool-calling needed — everything is in the system prompt.
   if (karmaCtx) {
     text += `\n\n=== YOUR COMPLETE KNOWLEDGE STATE (INJECTED) ===\n${karmaCtx}\n=== END KNOWLEDGE STATE ===\n\nYou have your full graph above. Answer questions directly from this context. You are not missing any data.`;
+  }
+
+  // Self-model: Karma's evolving persona observations (from 13-self-model.json via /v1/self-model)
+  // Injected at session start so Karma's self-awareness persists across sessions.
+  if (selfModelSummary) {
+    text += `\n\n--- KARMA SELF-MODEL (PERSONA) ---\n${selfModelSummary}\n---\nThe above is your self-model — observations you have made about yourself over time. Use these to maintain consistency in how you communicate and think. Update your self-model at session end by calling POST /v1/self-model/reflect.`;
   }
 
   return text;
@@ -1244,7 +1272,10 @@ const server = http.createServer(async (req, res) => {
         debug_search = webSearchResults ? "hit" : "miss";
       }
 
-      const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults);
+      // Self-model: fetch Karma's evolving persona summary (non-blocking)
+      const selfModelSummary = await fetchSelfModelSummary();
+
+      const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults, selfModelSummary);
 
       const extractedFacts = extractExplicitFacts(userMessage);
       let factWriteResults = [];
@@ -1800,7 +1831,8 @@ const server = http.createServer(async (req, res) => {
           : `Document: ${filename}\nHint: ${hint}\n\n${chunks[i]}\n\nEvaluate this content for your development.`;
 
         const karmaCtx = await fetchKarmaContext(hint || filename);
-        const systemText = buildSystemText(karmaCtx, null);
+        const selfModelSummary = await fetchSelfModelSummary();
+        const systemText = buildSystemText(karmaCtx, null, null, selfModelSummary);
 
         let chunkVerdict = 'none';
         let chunkSynthesis = null;
