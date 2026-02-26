@@ -1,4 +1,4 @@
-# CC Session Brief — 2026-02-25T22:15:02Z
+# CC Session Brief — 2026-02-26T18:25:01Z
 > Auto-generated at session start. Read this instead of MEMORY.md. Full MEMORY.md available if deep dive needed.
 > **RESURRECTION SPINE LOADED** — Karma identity + invariants + direction are CANONICAL and AUTHORITATIVE for this session.
 
@@ -315,65 +315,25 @@ Karma wakes up every session knowing:
 ---
 
 ## Active Task
-Session 10 complete (2026-02-23). Identity merge + resurrect skill.
-
-WHAT IS WORKING:
-- Karma identity: single coherent peer, verified memory spine, Vault ledger + Resurrection Packs, Hub Bridge, no parallel sources of truth
-- Karma system prompt: fully updated (commit 43ed3e0). Optimization philosophy + knowledge eval as hypothesis engine.
-- Brief injection: every /v1/chat includes cc-session-brief via _sessionBriefCache (commit 55b9d4f)
-- CC resurrection: type 'resurrect' in new session -> runs Get-KarmaContext.ps1 -> reads brief -> resumes
-- Dashboard: hub.arknexus.net, 2-col layout, telemetry sidebar, all services Running
-- Talk to Karma via Playwright to diagnose her state (faster than log diving)
-
-WHAT IS BROKEN:
-- No Karma-to-K2 comms: vault-neo cannot reach 192.168.0.226 LAN, needs K2-side polling endpoint
-
-SESSION 10 COMMITS: 43ed3e0 (identity merge: single coherent peer + optimization philosophy + knowledge eval)
-
-OPEN NEXT:
-1. batch5 status: check /tmp/batch.log on karma-server
-2. K2 inbox: K2-side polling endpoint so vault-neo can push tasks to K2
-3. Track 2: enable tool-use in Karma system prompt (infrastructure v2.18.0 already built)
-4. Talk to Karma via Playwright first -- diagnose state before patching
+Not found.
 
 ## Blockers
-- **FalkorDB batch5 RUNNING** — Started 2026-02-23 ~00:05 UTC. 782 remaining (538 in graph). TIMEOUT=10000 MAX_QUEUED_QUERIES=100. ok:10 err:0 at 1% (100% success rate). ETA ~11h at current rate (0.02 eps/s — may improve as dedup cache warms). Post-completion: BGSAVE → verify dump.rdb.
-- ~~KarmaInboxWatcher restart~~ ✅ DONE (session 4, 2026-02-22): Old PID 53364 killed. Scheduled task restarted. New PID 79556 running with Gated/-enabled script.
-- Twilio A2P campaign under review — SMS delivery blocked until approved.
-- Occasional stored=false on ASSIMILATE signal (write-primitive timeout edge case). Low priority — most writes succeed.
-- ~~Within-session context drift~~ FIXED v2.8.0
-- ~~(empty_assistant_text) on complex prompts~~ FIXED v2.7.1
+None.
 
 ## Next Session Agenda
-Two tracks. Decide which first at top of session.
-
-**Track 1 — Ingestion reliability:**
-batch3 72% fail (TIMEOUT=0), batch4 40% fail (MAX_QUEUED_QUERIES=25), each fix = container rebuild + data loss risk. Design a resilient pipeline. Not another patch.
-
-**Track 2 — Karma agency (tool use, Option 3):**
-Add Anthropic tool use to `/v1/chat` handler. Tool set:
-- `get_vault_file(alias)` — reads any whitelisted vault file on demand
-- `graph_query(cypher)` — `/v1/cypher` already built (v2.17.3), just needs tool wrapper
-Estimated: ~half-session CC work. Does NOT require graph stabilization first. Both tracks unblocked.
-
-**Option 1 fast patch (if needed before tool use is ready):**
-Inject trimmed MEMORY.md into `buildSystemText()` — Active Phase + Blockers + Last Updated only (~2KB). NOT full 29KB.
-
-**Also on agenda:**
-- Tool call failure modes — what does Karma do if `graph_query` returns empty or errors mid-conversation? Graceful degradation required, not a broken response. Design this before building.
-- Batch5 completion gate — BGSAVE + dump.rdb verification before any new tooling touches the graph. Don't build on an incomplete dataset.
-
-Karma's collab message logged: `collab_20260223T001948_v347xy` — CC will see it at next session start.
+Not found.
 
 ## Code State
 Branch: main
 Last 5 commits:
+fac1140 phase-37: Fix Karma persona - eliminate assistant language
+687aeb2 phase-36: Consciousness bug fix and rollback
+6feb5de phase-35: TIER 1 Consciousness Loop Restoration Complete
 6dfa32f phase-32-continued: Integrate KCC integrity fixes (async loopback, non-blocking I/O, append-only journal, WHERE enforcement)
 5f308ca Task 7: Deploy consciousness loop with OBSERVE/THINK/DECIDE/ACT/REFLECT cycle and decision_logger
-f7402bf feat: Integrate full OBSERVE/THINK/DECIDE/ACT/REFLECT cycle with tool-use
-32116d3 phase-8: shell access infrastructure complete - /v1/shell endpoint, shell_exec tool, karma self-diagnostic enabled
-aecb5b1 phase-5: Session 23 status checkpoint - 5-pass deployment complete, documenting issues for user review
-Status: M cc-session-brief.md
+Status: M MEMORY.md
+ M cc-session-brief.md
+?? checkpoint-session36-state.json
 
 ## Recent Decisions
 - [2026-02-23T17:00:00Z] Update API keys: MiniMax + GLM-5
@@ -395,19 +355,7 @@ Status: M cc-session-brief.md
   Fix: Tool error handled gracefully. GPT iteration 1: tool_calls attempted, 404 response. GPT iteration 2: saw error, decided not to retry, returned response from context.
 
 ## Karma Memory State
-## Consciousness Insights (things I noticed on my own — mention naturally if relevant)
-- Rapid growth: 20 new episodes in one cycle
-## User Identity (CRITICAL — use REAL NAME for greetings and conversation)
-Known names: Neo, User
-
-## Recent Memories
-- [unknown] User: NCS Phase 2 live test. Reply with JSON only: {ok:true, model:<model>, spend_cap_usd:<cap>, spend_used_usd:<used>, turn_id:<id>}
-Assistant: {"ok":true,"model":null,"spend_cap_usd":null,
-- [unknown] User: Phase 2 live test. Reply JSON only with keys: ok, model, spend_cap_usd, spend_used_usd, turn_id.
-Assistant: {"ok":false,"model":"unknown","spend_cap_usd":null,"spend_used_usd":null,"tu
-- [gemini] User: yes
-Assistant: The Karma Logic Audit: A Schematic for Peer FrictionThe following template is designed to be the "Standard Opera
-... (trimmed to 800 chars)
+Not available (URLError: [Errno 111] Connection refused)
 
 ---
-Generated: 2026-02-25T22:15:02Z | MEMORY.md last updated: Last Updated: 2026-02-24T18:11:19.946247Z
+Generated: 2026-02-26T18:25:01Z | MEMORY.md last updated: Unknown
