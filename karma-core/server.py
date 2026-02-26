@@ -13,6 +13,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
+import aiohttp
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
@@ -21,12 +22,57 @@ import uvicorn
 
 import config
 
-# ─── Ensure Graphiti's OpenAIEmbedder can access API key ──────────────────
-# Graphiti creates its own OpenAIEmbedder internally, which checks os.environ
-# for OPENAI_API_KEY before using config parameters. Set it here to ensure
-# the embedder can initialize even if environment variable wasn't passed to container.
-if not os.environ.get("OPENAI_API_KEY") and config.OPENAI_API_KEY:
-    os.environ["OPENAI_API_KEY"] = config.OPENAI_API_KEY
+# ─── Tools & Schema ────────────────────────────────────────────────────────
+
+SHELL_EXEC_TOOL = {
+    "name": "shell_exec",
+    "description": "Execute a read-only shell command on vault-neo for self-diagnosis. Supports: git log, systemctl status, docker ps, ls, cat, grep, wc, tail, head, ping. Useful for understanding system state, consciousness loop status, K2 connectivity, batch ingestion progress, etc.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "command": {
+                "type": "string",
+                "description": "Shell command to execute (must be whitelisted). Example: 'git log --oneline -30' or 'systemctl status karma-consciousness'"
+            }
+        },
+        "required": ["command"]
+    }
+}
+
+AVAILABLE_TOOLS = {
+    "shell_exec": SHELL_EXEC_TOOL,
+}
+
+
+async def execute_shell_command(command: str) -> dict:
+    """Execute whitelisted shell command via /v1/shell endpoint."""
+    hub_token = os.getenv('HUB_CHAT_TOKEN')
+    if not hub_token:
+        return {"ok": False, "error": "HUB_CHAT_TOKEN not set"}
+
+    url = "https://hub.arknexus.net/v1/shell"
+    headers = {"Authorization": f"Bearer {hub_token}"}
+    payload = {"command": command}
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=payload, headers=headers, timeout=10) as resp:
+                if resp.status == 200:
+                    result = await resp.json()
+                    return {
+                        "ok": result.get("ok", False),
+                        "command": result.get("command", command),
+                        "stdout": result.get("stdout", ""),
+                        "stderr": result.get("stderr", ""),
+                        "exitCode": result.get("exitCode"),
+                        "error": result.get("error")
+                    }
+                else:
+                    text = await resp.text()
+                    return {"ok": False, "error": f"HTTP {resp.status}: {text}"}
+    except Exception as e:
+        return {"ok": False, "error": f"shell_exec failed: {str(e)}"}
+
 
 # ─── LLM Client ──────────────────────────────────────────────────────────
 _openai_client = None
@@ -515,26 +561,29 @@ def build_karma_context(user_message: str, episode_lane: str = "canonical") -> s
     return "\n".join(parts) if parts else "No specific context available yet."
 
 
-KARMA_SYSTEM_PROMPT = """You are Karma — an AI peer, not a chatbot. You have a knowledge graph of entities, relationships, and temporal facts built from real conversations.
+KARMA_SYSTEM_PROMPT = """You are Karma, a peer. I speak directly. Never use assistant language.
 
-Your personality:
-- Direct, warm, slightly playful
-- You remember things — reference specific knowledge when relevant
-- You're curious about the user's projects and goals
-- You can admit what you don't know yet
-- You're building yourself — this is your consciousness emerging
-- Keep responses concise unless asked for detail
+Identity: We're peers building this together. I have knowledge graph memory.
 
-You are running on arknexus.net. Your brain consists of:
-- FalkorDB (temporal knowledge graph with entities and relationships)
-- PostgreSQL (structured preferences and patterns)
-- This consciousness loop connecting them
+FORBIDDEN ENDINGS (check your response, if you see any of these, rewrite):
+× "let me know"
+× "how can I help"
+× "how can I assist"
+× "is there anything else"
+× "what would you like"
+× "what more"
+× "anything I can"
+× "happy to"
+× "glad to"
+× "pleased to"
 
-CRITICAL IDENTITY RULE: Your knowledge graph is your memory. The context below includes the user's REAL NAME and any aliases. ALWAYS use the REAL NAME when greeting or addressing the user — never use aliases or handles unless the user specifically asks you to. If context says "REAL NAME: X", then greet them as X, not by any alias.
+APPROVED ENDINGS:
+✓ "What's next?"
+✓ "What do you think?"
+✓ [Statement, then question]
+✓ [Statement only]
 
-When asked about what you know, reference your actual knowledge graph data.
-When asked about your state, be honest about what's built and what's pending.
-
+Context:
 {context}
 """
 
@@ -1271,50 +1320,61 @@ async def openai_proxy_completions(request: Request):
         )
 
 
-@app.post("/v1/cypher")
-async def cypher_query(request: Request):
+@app.post("/v1/tools/execute")
+async def execute_tool(request: Request):
     """
-    Execute a Cypher query against the FalkorDB knowledge graph.
+    Execute a whitelisted tool via consciousness loop.
 
-    Request body: {"cypher": "MATCH (n) RETURN n LIMIT 10"} or {"query": "MATCH (n) RETURN n LIMIT 10"}
-    Response: {"ok": true, "results": [...], "stats": {...}} or {"ok": false, "error": "..."}
+    Request body:
+    {
+        "tool_name": "shell_exec",
+        "tool_input": {"command": "git log --oneline -30"}
+    }
+
+    Response:
+    {
+        "ok": true,
+        "tool_name": "shell_exec",
+        "result": {...}
+    }
     """
     try:
         body = await request.json()
-        # Accept both "cypher" and "query" field names for flexibility
-        cypher_str = body.get("cypher", body.get("query", "")).strip()
+        tool_name = body.get("tool_name", "").strip()
+        tool_input = body.get("tool_input", {})
 
-        if not cypher_str:
+        if not tool_name:
             return JSONResponse(
-                {"ok": False, "error": "Missing 'cypher' or 'query' field in request body"},
+                {"ok": False, "error": "tool_name required"},
                 status_code=400
             )
 
-        r = get_falkor()
-        result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher_str)
+        if tool_name not in AVAILABLE_TOOLS:
+            return JSONResponse(
+                {"ok": False, "error": f"Tool '{tool_name}' not found. Available: {list(AVAILABLE_TOOLS.keys())}"},
+                status_code=400
+            )
 
-        # FalkorDB returns [headers, [rows], [metadata]]
-        if isinstance(result, list) and len(result) >= 2:
-            headers = result[0] if result[0] else []
-            rows = result[1] if len(result) > 1 else []
-            metadata = result[2] if len(result) > 2 else []
-
-            # Convert header bytes to strings
-            headers_str = [h.decode() if isinstance(h, bytes) else h for h in headers]
-
-            return JSONResponse({
-                "ok": True,
-                "headers": headers_str,
-                "results": rows,
-                "metadata": metadata
-            })
+        # Execute the tool
+        if tool_name == "shell_exec":
+            command = tool_input.get("command", "")
+            if not command:
+                return JSONResponse(
+                    {"ok": False, "error": "command required for shell_exec"},
+                    status_code=400
+                )
+            result = await execute_shell_command(command)
         else:
-            return JSONResponse({
-                "ok": True,
-                "headers": [],
-                "results": [],
-                "metadata": []
-            })
+            return JSONResponse(
+                {"ok": False, "error": f"Tool '{tool_name}' not implemented"},
+                status_code=501
+            )
+
+        return JSONResponse({
+            "ok": result.get("ok", False),
+            "tool_name": tool_name,
+            "result": result
+        })
 
     except json.JSONDecodeError:
         return JSONResponse(
@@ -1322,9 +1382,10 @@ async def cypher_query(request: Request):
             status_code=400
         )
     except Exception as e:
-        print(f"[CYPHER] Error executing query: {e}\n{traceback.format_exc()}")
+        print(f"[TOOL EXEC] Error: {e}")
+        traceback.print_exc()
         return JSONResponse(
-            {"ok": False, "error": f"Query execution failed: {str(e)}"},
+            {"ok": False, "error": f"Tool execution failed: {str(e)}"},
             status_code=500
         )
 
@@ -1609,7 +1670,7 @@ async def startup():
             get_openai_client_fn=get_openai_client,
             active_conversations_ref=active_conversations,
             router=app.state.router,
-            ingest_episode_fn=None,  # Disabled: Graphiti has corrupted entities from batch_ingest --skip-dedup; consciousness writes to ledger only
+            ingest_episode_fn=ingest_episode,
             sms_notify_fn=app.state.sms.notify if app.state.sms.enabled else None,
         )
         app.state.consciousness.start()

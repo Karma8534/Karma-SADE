@@ -1,0 +1,53 @@
+{
+  "checkpoint_name": "SESSION_36_CONSCIOUSNESS_FIX",
+  "timestamp": "2026-02-26T17:15:00Z",
+  "status": "SUCCESS",
+  "container": {
+    "id": "781e53c089c4",
+    "image": "karma-core:latest",
+    "created": "2026-02-26T17:08:53.631110501Z",
+    "network": "anr-vault-net"
+  },
+  "consciousness": {
+    "status": "ACTIVE",
+    "loop_interval_seconds": 60,
+    "actions_observed": 145,
+    "action_types": ["LOG_GROWTH", "LOG_INSIGHT", "LOG_DISCOVERY", "LOG_ALERT", "LOG_ERROR"],
+    "last_action": "LOG_GROWTH",
+    "is_idle": false
+  },
+  "falkordb": {
+    "episodic_count": 1198,
+    "labels": ["Episodic", "Entity", "Community", "Saga"]
+  },
+  "model": {
+    "analysis_model": "gpt-4o-mini",
+    "provider": "openai"
+  },
+  "bug_fixes_applied": [
+    {
+      "file": "consciousness.py",
+      "line": 78,
+      "before": "self.last_cycle_time = time.time()",
+      "after": "self.last_cycle_time = 0",
+      "reason": "First cycle must observe all episodes, not just post-startup"
+    }
+  ],
+  "verification": {
+    "q1_end_to_end": true,
+    "q2_user_access": true,
+    "q3_no_side_effects": true,
+    "q4_reproducible": true
+  },
+  "git": {
+    "commit": "687aeb2",
+    "message": "phase-36: Consciousness bug fix and rollback",
+    "files_changed": ["MEMORY.md", "karma-core/consciousness.py", "karma-core/ledger_watcher.py"]
+  },
+  "claude_mem_observation_id": 5,
+  "next_session_priority": [
+    "Monitor consciousness.jsonl for THINK/ANALYZE insights",
+    "Consider enabling proposal generation",
+    "Manual git push required (read-only SSH key)"
+  ]
+}

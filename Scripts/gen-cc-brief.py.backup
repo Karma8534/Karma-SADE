@@ -16,9 +16,6 @@ import os
 MEMORY_MD = "/home/neo/karma-sade/MEMORY.md"
 DECISION_LOG = "/home/neo/karma-sade/checkpoint/known_good_v1/decision_log.jsonl"
 FAILURE_LOG = "/home/neo/karma-sade/checkpoint/known_good_v1/failure_log.jsonl"
-IDENTITY_JSON = "/home/neo/karma-sade/identity.json"
-INVARIANTS_JSON = "/home/neo/karma-sade/invariants.json"
-DIRECTION_MD = "/home/neo/karma-sade/direction.md"
 REPO_PATH = "/home/neo/karma-sade"
 OUTPUT_PATH = "/home/neo/karma-sade/cc-session-brief.md"
 RAW_CONTEXT_URL = "http://localhost:8340/raw-context"
@@ -39,19 +36,6 @@ def extract_section(text, header):
             result.append(line)
     content = "\n".join(result).strip()
     return content if content else None
-
-
-def read_spine_file(path, name):
-    """Read resurrection spine file (identity, invariants, direction) safely."""
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            if path.endswith(".json"):
-                data = json.load(f)
-                return json.dumps(data, indent=2)
-            else:
-                return f.read()
-    except Exception as e:
-        return f"[ERROR reading {name}: {e}]"
 
 
 def read_memory_md():
@@ -205,36 +189,11 @@ def main():
     failure_lines = read_jsonl_tail(FAILURE_LOG, 3)
     karma_context = fetch_karma_context()
 
-    # Load resurrection spine files
-    identity_content = read_spine_file(IDENTITY_JSON, "identity.json")
-    invariants_content = read_spine_file(INVARIANTS_JSON, "invariants.json")
-    direction_content = read_spine_file(DIRECTION_MD, "direction.md")
-
     decisions_fmt = format_decisions(decision_lines)
     failures_fmt = format_failures(failure_lines)
 
     brief = f"""# CC Session Brief — {now}
 > Auto-generated at session start. Read this instead of MEMORY.md. Full MEMORY.md available if deep dive needed.
-> **RESURRECTION SPINE LOADED** — Karma identity + invariants + direction are CANONICAL and AUTHORITATIVE for this session.
-
-## KARMA PERSISTENT IDENTITY (Resurrection Spine — Canonical Source of Truth)
-
-### Identity (identity.json)
-```json
-{identity_content}
-```
-
-### Invariants (invariants.json)
-```json
-{invariants_content}
-```
-
-### Direction (direction.md)
-```
-{direction_content}
-```
-
----
 
 ## Active Task
 {memory['current_task']}
