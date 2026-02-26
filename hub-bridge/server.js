@@ -244,7 +244,7 @@ function selectOptimalModel(userMessage, phase, taskType, env) {
   }
 
   // Priority 2: Fallback to default (for non-self-improvement queries)
-  return env.MODEL_DEFAULT || "claude-sonnet-4-6";
+  return env.MODEL_DEFAULT || "gpt-4o-mini";  // Decision #7: cheapest fallback
 }
 
 function pricePer1M(model, dir, env) {
@@ -401,7 +401,7 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null) {
     : "You are Karma — Colby's thinking partner. No memory context available right now — answer from conversation only.";
 
   // Self-knowledge prefix — Karma can accurately self-report her own infrastructure.
-  const selfModel = process.env.MODEL_DEFAULT || "claude-sonnet-4-6";
+  const selfModel = process.env.MODEL_DEFAULT || "gpt-4o-mini";  // Decision #7 aligned
   const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/30min, web_search=auto_on_intent]\n\n`;
 
   let text = selfKnowledge + base + "\n\n## TOOL-USE (Active)\nYou have access to two tools. USE THEM LIBERALLY:\n1. **get_vault_file(alias)** — Read canonical files: MEMORY.md, consciousness, collab, candidates, system-prompt, core-architecture, session-summary\n2. **graph_query(cypher)** — Execute Cypher on FalkorDB neo_workspace to query episodes, entities, relationships\n\nWhen to use tools:\n- Verifying current state (don't assume, call get_vault_file(\"MEMORY.md\"))\n- Analyzing consciousness loop insights (call graph_query with MATCH queries)\n- Checking proposal status (get_vault_file(\"collab\") to see recent proposals)\n- Understanding decision history (graph_query for relationships + reasoning)\n\nTool results are authoritative. Use them to ground your responses.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
@@ -703,7 +703,7 @@ function atomicWriteHandoff(dir, filename, content) {
 
 const env = {
   MONTHLY_USD_CAP: Number(process.env.MONTHLY_USD_CAP || "0"),
-  MODEL_DEFAULT: process.env.MODEL_DEFAULT || "claude-3-5-sonnet-20241022",
+  MODEL_DEFAULT: process.env.MODEL_DEFAULT || "gpt-4o-mini",  // Decision #7: default to cheapest tier; Claude removed from default path
   MODEL_DEEP: process.env.MODEL_DEEP || "gpt-5-mini",
   PRICE_GPT_5_MINI_INPUT_PER_1M: Number(process.env.PRICE_GPT_5_MINI_INPUT_PER_1M || "0.15"),
   PRICE_GPT_5_MINI_OUTPUT_PER_1M: Number(process.env.PRICE_GPT_5_MINI_OUTPUT_PER_1M || "0.60"),
@@ -1014,6 +1014,10 @@ function bearerToken(req) {
 }
 
 // --- Chatlog item validator ---
+// DEPRECATED: Chrome Extension capture never worked properly (user confirmed).
+// This code is kept for backward compatibility but the /v1/chatlog endpoint
+// should be removed in Phase 2. All memory ingestion happens through
+// session-end reflection and explicit admit_memory() calls only.
 
 function validateChatlogItem(item) {
   const { provider, url, timestamp, user_message, assistant_message } = item;
@@ -1435,8 +1439,10 @@ const server = http.createServer(async (req, res) => {
     }
 
     // --- POST /v1/chatlog (single or batch) ---
+    // DEPRECATED: Chrome Extension never worked properly. Endpoint kept for
+    // backward compatibility; slated for removal in Phase 2.
     if (req.method === "POST" && req.url === "/v1/chatlog") {
-      console.log("[DEBUG] /v1/chatlog endpoint hit");
+      console.log("[DEPRECATED] /v1/chatlog endpoint hit — Chrome Extension capture is dead code");
 
       const ip = getClientIp(req);
       const rl = checkRateLimit("capture", ip);
