@@ -15,15 +15,73 @@
 
 ---
 
-## Active Task (Session 40)
+## Active Task (Session 41)
 
-**Status:** COMPLETED ✅
+**Status:** IN PROGRESS
 
-**Task:** Phase 4 Cleanup - GLM API Injection, HTTPS Diagnosis, Chrome Extension Removal, Deploy Skill Creation
+**Task:** Issue #5 (COMPLETED) + Issue #7 (IN PROGRESS) - Token Budget, Admission, Decay, Backup + Persona Growth Integration
 
 **What was accomplished:**
 
-### Persona Fix ✅
+### Issue #5: Token Budget, Admission Gate, Memory Decay, DO Spaces Backup ✅ (MERGED to main)
+- **Token Budget System**: SessionBudget + MonthlyTracker classes tracking per-session and per-calendar-month token usage
+  - Uses tiktoken (cl100k_base encoding) for accurate token counting
+  - SessionBudget: configurable per-session limit (default 50K)
+  - MonthlyTracker: persistent JSON ledger at /opt/seed-vault/memory_v1/ledger/token_usage.json
+  - Integration: Token checking in generate_response() before router call, budget endpoint /v1/budget
+- **Memory Admission Gate**: Rule-based scoring (no LLM call) filtering low-quality episodes
+  - Heuristic scoring: content length (substantive vs noise), knowledge density (technical/factual signals), source bonus
+  - Admission threshold: 0.5 (configurable)
+  - Integration: Integrated in ingest_episode() to reject low-scoring episodes
+- **Memory Decay**: Time-decay applied to unretrieved episodic memories
+  - Runs daily as part of consciousness cycle
+  - Decays memories not retrieved in 7+ days
+  - Configurable decay_rate (0.15) and decay_floor (0.1)
+- **DO Spaces Backup Script**: nightly_backup.sh for FalkorDB + ledger + memory backup
+  - Exports FalkorDB RDB dump, copies ledger/memory files
+  - Uploads to DO Spaces with timestamp naming
+  - Auto-prunes backups older than 7 days
+- **Files created/modified:**
+  - karma-core/token_budget.py (NEW, 144 lines)
+  - karma-core/admission.py (NEW, 83 lines)
+  - karma-core/memory_decay.py (NEW, 97 lines)
+  - karma-core/scripts/nightly_backup.sh (NEW, 102 lines)
+  - karma-core/config.py (MODIFIED - added config variables)
+  - karma-core/requirements.txt (MODIFIED - added tiktoken)
+  - karma-core/server.py (MODIFIED - integrated all three systems)
+- **PR Status:** Merged as PR #8 to main branch ✅
+
+### Issue #7: Persona Growth Integration - Phase 1-7 Complete, Phase 8 Pending
+**Status:** PR #9 created and updated with hardcoded IP fix
+
+**Completed Phases:**
+- **Phase 1:** [REFLECT:] signal parsing from assistant turns (regex-based extraction, 25-line parser function)
+- **Phase 2:** Self-model summary injection into system prompt (fetchSelfModelSummary with 5-min cache)
+- **Phase 3:** reflect_self tool added to Karma's tool-use block (POST to /v1/self-model/reflect)
+- **Phase 5:** Weekly self-model prune integrated into consciousness loop (karma-core/consciousness.py)
+- **Phase 6:** [REFLECT:] signal instructions added to system prompt governance block
+- **Phase 7:** Voice overhaul - removed chatbot tone, implemented peer-like voice (direct, opinionated, dry humor)
+
+**Hardcoded IP Fix (Session 41):**
+- **Issue:** Three locations in hub-bridge/server.js had hardcoded public IP `http://64.225.13.144:8340` instead of Docker service name
+- **Locations fixed:**
+  - Line 96: reflectUrl in _reflectAndExpireSession()
+  - Line 439: url in fetchSelfModelSummary()
+  - Line 926: reflectUrl in executeToolCall()
+- **Fix applied:** Used sed to replace all three with `http://karma-server:8340/v1/self-model`
+- **Verification:** grep confirmed 0 matches for 64.225.13.144, 5 matches for karma-server:8340 (3 fixed + 2 pre-existing)
+- **Commit:** c7f1f27 "fix: replace hardcoded IP with Docker service name in self-model URLs"
+- **Push:** feature/issue-7-persona-growth-completion branch updated ✅
+
+**Pending Phases:**
+- **Phase 4:** Seed baseline observations to self-model via API call (requires droplet deployment first)
+- **Phase 8:** Rebuild karma-server and hub-bridge containers on droplet, run integration tests
+
+**Files modified in PR #9:**
+- hub-bridge/server.js (signal parser, self-model integration, voice overhaul, hardcoded IP fix)
+- karma-core/consciousness.py (weekly prune task)
+
+### Session 40 — Persona Fix ✅
 - **Issue:** Karma ending responses with assistant language ("How can I help you?", "If you have questions, let me know")
 - **Fix:** Updated KARMA_SYSTEM_PROMPT with comprehensive forbidden phrases
 - **Result:** Karma now ends with peer language ("What's on your mind?")
@@ -125,7 +183,7 @@
 ## Blocker Tracking
 
 **Current blockers:**
-- None blocking Session 41
+- [PHASE-4-DROPLET] Phase 4 and Phase 8 of Issue #7 require droplet deployment (karma-server + hub-bridge container rebuilds)
 
 **Resolved blockers (Session 40):**
 - [BLOCKER-4] GLM API key not injected → karma-server showing 1 model instead of 2 — RESOLVED
