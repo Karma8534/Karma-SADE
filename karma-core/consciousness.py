@@ -195,6 +195,27 @@ class ConsciousnessLoop:
             except Exception as e:
                 print(f"[CONSCIOUSNESS] Memory decay error: {e}")
 
+        # ── Self-model prune (Issue #7) — runs weekly ──
+        if not hasattr(self, '_last_self_model_prune'):
+            self._last_self_model_prune = 0
+        weekly_seconds = 7 * 24 * 3600
+        if time.time() - self._last_self_model_prune > weekly_seconds:
+            try:
+                from self_reflection import prune_self_model
+                prune_result = prune_self_model()
+                self._last_self_model_prune = time.time()
+                pruned = prune_result.get("pruned", 0)
+                if pruned > 0:
+                    self._log_journal(
+                        Action.LOG_DISCOVERY,
+                        f"Self-model prune: {pruned} stale observations removed"
+                    )
+                    print(f"[CONSCIOUSNESS] Self-model prune: {pruned} entries removed")
+                else:
+                    print(f"[CONSCIOUSNESS] Self-model prune: no stale entries")
+            except Exception as e:
+                print(f"[CONSCIOUSNESS] Self-model prune error: {e}")
+
     # ─── Phase 1: OBSERVE ─────────────────────────────────────────────
 
     def _observe(self) -> Optional[dict]:
