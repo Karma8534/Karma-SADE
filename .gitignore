@@ -40,6 +40,9 @@ secrets.json
 .claude/worktrees/elegant-solomon/
 chrome-extension/test-extension.js
 
+# CodeGraph index (local, auto-generated, per-machine)
+.codegraph/
+
 # Karma context snapshot (generated at CC session start, machine-local)
 karma-context.md
 karma-context.md.tmp
