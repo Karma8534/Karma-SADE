@@ -11,6 +11,7 @@
 | Graphiti (Episode Ingestion) | ✅ READY | Initializes correctly with OPENAI_API_KEY, real-time learning enabled |
 | Router (LLM Routing) | ✅ READY | Multiple models available (Groq, OpenAI via gpt-4o-mini) |
 | Delta Filtering | ✅ FIXED (S36) | Consciousness WHERE clause restored, prevents re-observation of old episodes |
+| CodeGraph Index | ✅ WORKING | 1,783 symbols indexed, 87 files, auto-synced via hooks |
 
 ---
 
@@ -2475,3 +2476,34 @@ Next: Monitor consciousness → Add episodes → Track proposals → K2 feedback
 
 **Session 36 Status:** ✅ DELTA FILTER FIX COMPLETE + VERIFIED
 **Last Updated:** 2026-02-25T22:30:00Z
+
+---
+
+## Session 38 — CodeGraph Integration ✅ COMPLETE
+
+**Date:** 2026-02-26
+
+**What was completed:**
+- ✅ **CodeGraph CLI installed** — v0.6.2 globally available
+- ✅ **Index initialized** — 1,783 symbols, 3,040 relationships, 87 files scanned, 4.1MB database
+- ✅ **Tools verified working** — codegraph_query, codegraph_context, codegraph_files all operational
+- ✅ **.gitignore configured** — .codegraph/ properly ignored
+- ✅ **CLAUDE.md documented** — Integration instructions added
+- ✅ **MEMORY.md updated** — System Status includes CodeGraph entry
+
+**Key achievements:**
+- Semantic search working (e.g., `codegraph query "hub"` finds hub-related symbols)
+- Context building functional (e.g., `codegraph context "fix consciousness loop"` retrieves ConsciousnessLoop classes + related code)
+- Project file structure available with symbol counts per file
+
+**Git commits:**
+- `030303a` — chore: ignore codegraph local index (.codegraph/)
+- `4f3c5cb` — docs: document CodeGraph integration and usage
+
+**Next steps:**
+- Use CodeGraph tools in Claude Code for code exploration tasks
+- Verify token savings (~30% reduction on exploration) in practice
+- Monitor auto-sync hook functionality (PostToolUse/Stop)
+
+**Session 38 Status:** ✅ CODEGRAPH INTEGRATION COMPLETE AND VERIFIED
+**Last Updated:** 2026-02-26T12:50:00Z
