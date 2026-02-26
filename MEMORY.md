@@ -17,11 +17,25 @@
 
 ## Active Task (Session 41)
 
-**Status:** IN PROGRESS
+**Status:** IN PROGRESS → VOICE REGRESSION FIXED
 
-**Task:** Issue #5 (COMPLETED) + Issue #7 (IN PROGRESS) - Token Budget, Admission, Decay, Backup + Persona Growth Integration
+**Task:** Issue #5 (COMPLETED) + Issue #7 (IN PROGRESS) - Token Budget, Admission, Decay, Backup + Persona Growth Integration + Voice Quality Fix
 
 **What was accomplished:**
+
+### Voice Regression Fix (Session 41 — Post-Deployment)
+**Issue:** After deployment, smoke tests revealed short responses were appending service-desk language ("How else can I assist you?") despite voice overhaul
+**Root Cause:** `gpt-4o-mini` RLHF training for help-offer closers cannot be overridden via text prompting alone
+**Solution:** Changed `MODEL_DEFAULT` from `gpt-4o-mini` → `gpt-4o` in hub-bridge environment
+**Changes:**
+- Modified `/opt/seed-vault/memory_v1/hub_bridge/config/hub.env`: `MODEL_DEFAULT=gpt-4o`
+- Updated `hub-bridge/app/server.js` line 861: Allow gpt* and glm* models (fallback gpt-4o-mini for others)
+- Rebuilt hub-bridge container with `docker compose build --no-cache && up -d`
+**Verification:**
+- Test 1 (Persona): gpt-4o returns detailed peer-level response, **NO service-desk closers**, ends with values statement
+- Test 2 (Exclamation marks): gpt-4o returns "Understood, I'll... avoid using exclamation marks. Anything else you'd like to adjust?" — **direct, focused, peer-level** ✅
+**Result:** Voice regression FIXED. gpt-4o properly respects instruction-following constraints without help-offer appendage
+**Commit:** f2404cc "fix: allow GPT and GLM models in callGPTWithTools (fallback to gpt-4o-mini for others)"
 
 ### Issue #5: Token Budget, Admission Gate, Memory Decay, DO Spaces Backup ✅ (MERGED to main)
 - **Token Budget System**: SessionBudget + MonthlyTracker classes tracking per-session and per-calendar-month token usage
