@@ -20,7 +20,7 @@ scp C:\dev\Karma\task3_execute.sh root@arknexus.net:/tmp/
 ### STEP 2: SSH and Execute
 
 ```bash
-ssh root@arknexus.net
+ssh vault-neo
 bash /tmp/task3_execute.sh
 ```
 
@@ -122,8 +122,8 @@ Next steps:
 ### Script Fails at Step 3 (Deletion)
 **Likely cause**: Redis/FalkorDB connection issue
 **Action**:
-- Check if FalkorDB is running: `ssh root@arknexus.net "docker ps | grep falkordb"`
-- Check logs: `ssh root@arknexus.net "docker logs falkordb 2>&1 | tail -30"`
+- Check if FalkorDB is running: `ssh vault-neo "docker ps | grep falkordb"`
+- Check logs: `ssh vault-neo "docker logs falkordb 2>&1 | tail -30"`
 
 ### Docker Build Fails
 **Likely cause**: server.py syntax error
@@ -138,8 +138,8 @@ Next steps:
 ### Everything Worked, But consciousness Shows NO_ACTION After 2 Minutes
 **Likely cause**: Ingestion still not working despite code change
 **Action**:
-- Check if container has new code: `ssh root@arknexus.net "docker logs karma-server 2>&1 | grep 'ingest_episode'"`
-- If not present, container may have cached old image. Force rebuild: `ssh root@arknexus.net "cd /opt/seed-vault && docker build --no-cache -t karma-core:latest /home/neo/karma-sade/karma-core/"`
+- Check if container has new code: `ssh vault-neo "docker logs karma-server 2>&1 | grep 'ingest_episode'"`
+- If not present, container may have cached old image. Force rebuild: `ssh vault-neo "cd /opt/seed-vault && docker build --no-cache -t karma-core:latest /home/neo/karma-sade/karma-core/"`
 
 ---
 
@@ -172,23 +172,23 @@ Run these commands to verify Task 3 succeeded:
 
 ```bash
 # Check 1: Duplicates are gone
-ssh root@arknexus.net "cd /home/neo/karma-sade && python karma-core/scripts/identify_duplicates.py"
+ssh vault-neo "cd /home/neo/karma-sade && python karma-core/scripts/identify_duplicates.py"
 # Expected: No duplicates found
 
 # Check 2: server.py is updated
-ssh root@arknexus.net "sed -n '1612p' /opt/seed-vault/memory_v1/karma-core/server.py"
+ssh vault-neo "sed -n '1612p' /opt/seed-vault/memory_v1/karma-core/server.py"
 # Expected: Contains "ingest_episode_fn=ingest_episode"
 
 # Check 3: Container is running
-ssh root@arknexus.net "docker ps | grep karma-server"
+ssh vault-neo "docker ps | grep karma-server"
 # Expected: Container listed as running
 
 # Check 4: consciousness is THINKING
-ssh root@arknexus.net "tail -10 /opt/seed-vault/memory_v1/ledger/consciousness.jsonl | jq '.action'"
+ssh vault-neo "tail -10 /opt/seed-vault/memory_v1/ledger/consciousness.jsonl | jq '.action'"
 # Expected: Some entries show "THINK" or "REFLECT"
 
 # Check 5: Episodes exist in FalkorDB
-ssh root@arknexus.net "TOKEN=\$(cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt); curl -s -H 'Authorization: Bearer \$TOKEN' https://hub.arknexus.net/v1/cypher -d '{\"cypher\": \"MATCH (e:Episode) RETURN COUNT(e) as episodes\"}' 2>&1 | jq '.data[0][0]'"
+ssh vault-neo "TOKEN=\$(cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt); curl -s -H 'Authorization: Bearer \$TOKEN' https://hub.arknexus.net/v1/cypher -d '{\"cypher\": \"MATCH (e:Episode) RETURN COUNT(e) as episodes\"}' 2>&1 | jq '.data[0][0]'"
 # Expected: Number > 0
 
 # Check 6: Git is committed

@@ -21,7 +21,7 @@ scp C:\dev\Karma\task3_execute.sh root@arknexus.net:/tmp/
 
 2. **SSH to vault-neo and run the script**:
 ```bash
-ssh root@arknexus.net
+ssh vault-neo
 cd /tmp
 bash task3_execute.sh
 ```
@@ -59,7 +59,7 @@ If the script fails or you need to debug each step:
 #### STEP 1: Create/Verify remove_duplicates.py
 
 ```bash
-ssh root@arknexus.net 'test -f /home/neo/karma-sade/karma-core/scripts/remove_duplicates.py && echo "File exists" || echo "File missing - create it"'
+ssh vault-neo 'test -f /home/neo/karma-sade/karma-core/scripts/remove_duplicates.py && echo "File exists" || echo "File missing - create it"'
 ```
 
 If file is missing, copy it:
@@ -70,7 +70,7 @@ scp /c/dev/Karma/karma-core/scripts/remove_duplicates.py root@arknexus.net:/home
 #### STEP 2: Run dry-run to identify duplicates
 
 ```bash
-ssh root@arknexus.net "cd /home/neo/karma-sade && python karma-core/scripts/remove_duplicates.py"
+ssh vault-neo "cd /home/neo/karma-sade && python karma-core/scripts/remove_duplicates.py"
 ```
 
 **Expected output**:
@@ -95,7 +95,7 @@ Run with --confirm to execute deletion:
 #### STEP 3: Run with --confirm to actually delete
 
 ```bash
-ssh root@arknexus.net "cd /home/neo/karma-sade && python karma-core/scripts/remove_duplicates.py --confirm"
+ssh vault-neo "cd /home/neo/karma-sade && python karma-core/scripts/remove_duplicates.py --confirm"
 ```
 
 **Expected output**:
@@ -113,7 +113,7 @@ Summary: Deleted N entities, kept M canonical
 #### STEP 4: Verify duplicates are gone
 
 ```bash
-ssh root@arknexus.net "cd /home/neo/karma-sade && python karma-core/scripts/identify_duplicates.py"
+ssh vault-neo "cd /home/neo/karma-sade && python karma-core/scripts/identify_duplicates.py"
 ```
 
 **Expected output**:
@@ -127,12 +127,12 @@ No duplicates found
 #### STEP 5: Update server.py to re-enable ingestion
 
 ```bash
-ssh root@arknexus.net 'sed -i "s/ingest_episode_fn=None,.*Disabled: Graphiti has corrupted entities.*/ingest_episode_fn=ingest_episode,  # Re-enabled after duplicate cleanup (Task 3)/g" /opt/seed-vault/memory_v1/karma-core/server.py'
+ssh vault-neo 'sed -i "s/ingest_episode_fn=None,.*Disabled: Graphiti has corrupted entities.*/ingest_episode_fn=ingest_episode,  # Re-enabled after duplicate cleanup (Task 3)/g" /opt/seed-vault/memory_v1/karma-core/server.py'
 ```
 
 **Verify the change**:
 ```bash
-ssh root@arknexus.net "sed -n '1610,1615p' /opt/seed-vault/memory_v1/karma-core/server.py"
+ssh vault-neo "sed -n '1610,1615p' /opt/seed-vault/memory_v1/karma-core/server.py"
 ```
 
 **Expected output** (line 1612 must show):
@@ -143,7 +143,7 @@ ssh root@arknexus.net "sed -n '1610,1615p' /opt/seed-vault/memory_v1/karma-core/
 #### STEP 6: Rebuild Docker image
 
 ```bash
-ssh root@arknexus.net "cd /opt/seed-vault && docker build -t karma-core:latest /home/neo/karma-sade/karma-core/ 2>&1 | tail -20"
+ssh vault-neo "cd /opt/seed-vault && docker build -t karma-core:latest /home/neo/karma-sade/karma-core/ 2>&1 | tail -20"
 ```
 
 **Expected output**:
@@ -156,16 +156,16 @@ Successfully tagged karma-core:latest
 #### STEP 7: Restart container
 
 ```bash
-ssh root@arknexus.net "docker stop karma-server && docker rm karma-server"
+ssh vault-neo "docker stop karma-server && docker rm karma-server"
 ```
 
 ```bash
-ssh root@arknexus.net "cd /opt/seed-vault && docker-compose up -d karma-server"
+ssh vault-neo "cd /opt/seed-vault && docker-compose up -d karma-server"
 ```
 
 **Check startup** (wait 5 seconds):
 ```bash
-ssh root@arknexus.net "docker logs karma-server 2>&1 | tail -30"
+ssh vault-neo "docker logs karma-server 2>&1 | tail -30"
 ```
 
 **Expected**:
@@ -179,7 +179,7 @@ ssh root@arknexus.net "docker logs karma-server 2>&1 | tail -30"
 Wait 60+ seconds, then:
 
 ```bash
-ssh root@arknexus.net "tail -5 /opt/seed-vault/memory_v1/ledger/consciousness.jsonl | jq '.action'"
+ssh vault-neo "tail -5 /opt/seed-vault/memory_v1/ledger/consciousness.jsonl | jq '.action'"
 ```
 
 **Expected** (NOT NO_ACTION):
@@ -195,7 +195,7 @@ ssh root@arknexus.net "tail -5 /opt/seed-vault/memory_v1/ledger/consciousness.js
 #### STEP 9: Verify episode ingestion
 
 ```bash
-ssh root@arknexus.net "TOKEN=\$(cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt); curl -s -H 'Authorization: Bearer \$TOKEN' https://hub.arknexus.net/v1/cypher -d '{\"cypher\": \"MATCH (e:Episode) RETURN COUNT(e) as episodes\"}' 2>&1 | jq '.data[0][0]'"
+ssh vault-neo "TOKEN=\$(cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt); curl -s -H 'Authorization: Bearer \$TOKEN' https://hub.arknexus.net/v1/cypher -d '{\"cypher\": \"MATCH (e:Episode) RETURN COUNT(e) as episodes\"}' 2>&1 | jq '.data[0][0]'"
 ```
 
 **Expected output**:
@@ -229,7 +229,7 @@ Should show your commit message.
 ## Troubleshooting
 
 ### SSH Connection Timeout
-- If `ssh root@arknexus.net` times out, try:
+- If `ssh vault-neo` times out, try:
   - Check network connectivity: `ping arknexus.net`
   - Try with explicit timeout: `ssh -o ConnectTimeout=30 root@arknexus.net`
   - Use a cloud terminal (AWS/GCP) if available

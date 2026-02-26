@@ -1,6 +1,6 @@
 #!/bin/bash
 # Task 3: Re-Enable Episode Ingestion
-# Run on vault-neo (ssh root@arknexus.net 'bash task3_execute.sh')
+# Run on vault-neo (ssh vault-neo 'bash task3_execute.sh')
 
 set -e
 
