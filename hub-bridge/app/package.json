@@ -1,13 +1,11 @@
 {
-  "name": "hub-bridge",
-  "version": "2.11.0",
-  "description": "Hub Bridge - middleware for Karma system",
-  "main": "server.js",
+  "name": "anr-hub-bridge",
+  "version": "1.0.0",
+  "private": true,
   "type": "module",
-  "engines": {
-    "node": ">=20.0.0"
-  },
   "dependencies": {
-    "openai": "^2.24.0"
+    "@anthropic-ai/sdk": "^0.39.0",
+    "openai": "^4.0.0",
+    "pdf-parse": "^1.1.1"
   }
 }

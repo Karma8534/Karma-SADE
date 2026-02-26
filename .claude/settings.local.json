@@ -6,7 +6,9 @@
       "Bash(pwsh Scripts/resurrection/Get-KarmaContext.ps1)",
       "Bash(powershell -NoProfile -File Scripts/resurrection/Get-KarmaContext.ps1)",
       "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/resurrection/Get-KarmaContext.ps1)",
-      "Bash(powershell -ExecutionPolicy Bypass -File Scripts/resurrection/Get-KarmaContext.ps1:*)"
+      "Bash(powershell -ExecutionPolicy Bypass -File Scripts/resurrection/Get-KarmaContext.ps1:*)",
+      "Bash(xargs git checkout --theirs)",
+      "Bash(git add .)"
     ]
   }
 }

@@ -4,12 +4,39 @@ import fs from "fs";
 import { URL } from "url";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
+import redis from "redis";
 
 // CJS interop for pdf-parse (CommonJS module in ESM context)
 import { createRequire } from 'module';
 const _require = createRequire(import.meta.url);
 let pdfParse = null;
 try { pdfParse = _require('pdf-parse'); } catch (e) { console.warn('[PDF] pdf-parse not available:', e.message); }
+
+// Redis/FalkorDB client for graph queries
+let falkordbClient = null;
+async function getFalkordbClient() {
+  if (!falkordbClient) {
+    const host = process.env.FALKORDB_HOST || "falkordb";
+    const port = Number(process.env.FALKORDB_PORT || 6379);
+    falkordbClient = redis.createClient({
+      socket: {
+        host: host,
+        port: port,
+        family: 4,  // Force IPv4
+        reconnectStrategy: (retries) => Math.min(retries * 50, 500)  // Exponential backoff
+      }
+    });
+    falkordbClient.on('error', (err) => console.error('[FalkorDB]', err));
+    falkordbClient.on('connect', () => console.log(`[FalkorDB] Connected to ${host}:${port}`));
+    try {
+      await falkordbClient.connect();
+    } catch (e) {
+      console.error(`[FalkorDB] Connection failed:`, e.message);
+      throw e;
+    }
+  }
+  return falkordbClient;
+}
 
 const PORT = Number(process.env.PORT || "18090");
 const VAULT_INTERNAL_URL = process.env.VAULT_INTERNAL_URL || "http://api:8080";
@@ -31,26 +58,6 @@ const KARMA_CONTEXT_URL = process.env.KARMA_CONTEXT_URL || "http://karma-server:
 const SESSION_TTL_MS    = 30 * 60 * 1000;  // 30 minutes
 const MAX_SESSION_TURNS = 8;               // exchange pairs (16 messages total)
 const _sessionStore     = new Map();       // hash → { turns:[{role,content}], lastActive }
-
-// ─── Shell Command Whitelist ──────────────────────────────────────
-// Prevents arbitrary RCE: only whitelisted commands can be executed via /v1/shell
-const SHELL_WHITELIST = new Set([
-  'git log',
-  'git status',
-  'ls',
-  'cat',
-  'head',
-  'tail',
-  'grep',
-  'wc',
-  'systemctl status',
-  'docker ps',
-  'docker logs',
-  'ping',
-]);
-
-const SHELL_COMMAND_TIMEOUT = 5000; // 5 seconds
-
 
 function _tokenHash(token) {
   // djb2 — not crypto, just a stable key
@@ -225,6 +232,21 @@ function saveSpendState(path, state) {
 
 function isAnthropicModel(model) { return typeof model === "string" && model.startsWith("claude-"); }
 
+// --- Phase 1: Task-aware model selection for cost optimization ---
+function selectOptimalModel(userMessage, phase, taskType, env) {
+  // Priority 1: Phase-based routing (self-improvement context)
+  // Maps each phase to optimal model: deep analysis → Opus, synthesis → Sonnet, validation → Sonnet
+  if (phase === "analyze_failure" || phase === "analyze_success") {
+    return "claude-opus-4-6";  // Deep analysis — complexity justifies 5x cost
+  }
+  if (phase === "generate_fix" || phase === "synthesize" || phase === "validate" || phase === "quick_check") {
+    return "claude-sonnet-4-6";  // Balanced synthesis + validation — fast + capable + cost-effective
+  }
+
+  // Priority 2: Fallback to default (for non-self-improvement queries)
+  return env.MODEL_DEFAULT || "claude-sonnet-4-6";
+}
+
 function pricePer1M(model, dir, env) {
   if (isAnthropicModel(model))    return dir === "input" ? Number(env.PRICE_CLAUDE_INPUT_PER_1M)    : Number(env.PRICE_CLAUDE_OUTPUT_PER_1M);
   if (model === env.MODEL_DEFAULT) return dir === "input" ? Number(env.PRICE_GPT_5_MINI_INPUT_PER_1M) : Number(env.PRICE_GPT_5_MINI_OUTPUT_PER_1M);
@@ -246,7 +268,7 @@ async function vaultGet(path, bearer, baseUrl) {
   return { status: resp.status, text };
 }
 async function vaultPost(path, bearer, payload) {
-  const url = new URL(path, VAULT_BASE_URL).toString();
+  const url = new URL(path, VAULT_INTERNAL_URL).toString();
   const resp = await fetch(url, {
     method: "POST",
     headers: { Authorization: `Bearer ${bearer}`, "content-type": "application/json" },
@@ -382,7 +404,7 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null) {
   const selfModel = process.env.MODEL_DEFAULT || "claude-sonnet-4-6";
   const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/30min, web_search=auto_on_intent]\n\n`;
 
-  let text = selfKnowledge + base + "\n\nTools: get_vault_file(alias) | graph_query(cypher) — use for questions about your memory/graph.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
+  let text = selfKnowledge + base + "\n\n## TOOL-USE (Active)\nYou have access to two tools. USE THEM LIBERALLY:\n1. **get_vault_file(alias)** — Read canonical files: MEMORY.md, consciousness, collab, candidates, system-prompt, core-architecture, session-summary\n2. **graph_query(cypher)** — Execute Cypher on FalkorDB neo_workspace to query episodes, entities, relationships\n\nWhen to use tools:\n- Verifying current state (don't assume, call get_vault_file(\"MEMORY.md\"))\n- Analyzing consciousness loop insights (call graph_query with MATCH queries)\n- Checking proposal status (get_vault_file(\"collab\") to see recent proposals)\n- Understanding decision history (graph_query for relationships + reasoning)\n\nTool results are authoritative. Use them to ground your responses.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
 
   // Live web search results — injected when search intent detected in user message.
   if (webResults) {
@@ -593,16 +615,23 @@ function buildVaultRecord({ type, content, tags, source, confidence, verifiedAtI
   const t = (type || "").toString();
   const tagArr = Array.isArray(tags) ? tags.filter(x => typeof x === "string" && x.trim().length) : [];
   const ts = nowIso();
+  // Guard against Array/Date/non-plain-object content
+  let contentObj = content;
+  if (content && typeof content === "object" && !Array.isArray(content) && !(content instanceof Date)) {
+    contentObj = content;
+  } else {
+    contentObj = { value: String(content ?? "") };
+  }
   return {
     type: t,
-    content: content && typeof content === "object" ? content : { value: String(content ?? "") },
+    content: contentObj,
     tags: tagArr,
     source: { kind: "tool", ref: (source || HUB_SOURCE).toString() },
     created_at: ts,
     updated_at: ts,
     confidence: Number.isFinite(confidence) ? confidence : 0.9,
     verification: {
-      protocol_version: "fp.v1",
+      protocol_version: "v0.1",
       verified_at: verifiedAtIso || ts,
       verifier: verifier || HUB_VERIFIER,
       status: "verified",
@@ -776,21 +805,56 @@ async function executeToolCall(toolName, toolInput) {
       }
     } else if (toolName === "graph_query") {
       const cypher = (toolInput?.cypher || "").toString().trim();
-      if (!cypher) return { error: "missing_cypher" };
-      // Query FalkorDB via internal vault API
-      console.log(`[TOOL-API] Querying graph: ${cypher.slice(0, 80)}...`);
-      const graphRes = await fetch(`http://anr-vault-api:8080/v1/cypher`, {
-        method: "POST",
-        headers: { "content-type": "application/json", "authorization": `Bearer ${VAULT_BEARER}` },
-        body: JSON.stringify({ query: cypher }),
-      });
-      if (!graphRes.ok) {
-        const errBody = await graphRes.text().catch(() => "(no body)");
-        console.log(`[TOOL-API] Graph error response: ${graphRes.status}`);
-        return { error: `http_${graphRes.status}`, details: errBody.slice(0, 500) };
+      if (!cypher) return { error: "missing_cypher", message: "Cypher query required" };
+
+      // Reject dangerous queries
+      const WRITE_KEYWORDS = ["CREATE", "MERGE", "DELETE", "SET", "REMOVE", "ALTER", "DROP"];
+      if (WRITE_KEYWORDS.some(kw => cypher.toUpperCase().includes(kw))) {
+        return { error: "write_operation_rejected", message: "Only read-only queries allowed" };
       }
-      const result = await graphRes.json();
-      return { ok: true, result: JSON.stringify(result).slice(0, 5000) };
+
+      console.log(`[TOOL-API] Querying graph: ${cypher.slice(0, 80)}...`);
+      try {
+        const client = await getFalkordbClient();
+        // Use sendCommand with proper FalkorDB timeout option (separate argument, not part of query)
+        console.log(`[TOOL-API] Sending GRAPH.RO_QUERY neo_workspace...`);
+        const result = await client.sendCommand(["GRAPH.RO_QUERY", "neo_workspace", cypher, "--timeout", "8000"]);
+        console.log(`[TOOL-API] Query returned: ${typeof result}`);
+
+        if (!result || !Array.isArray(result) || result.length === 0) {
+          return {
+            ok: true,
+            results: [],
+            headers: [],
+            message: "Query executed successfully but returned no rows. Try a different query."
+          };
+        }
+
+        // FalkorDB returns: [[headers], [row1], [row2], ...]
+        const headers = result[0] || [];
+        const rows = result.slice(1) || [];
+        console.log(`[TOOL-API] Parsed ${rows.length} rows from graph query`);
+
+        return {
+          ok: true,
+          results: rows.slice(0, 100),  // Limit to 100 rows
+          headers: headers,
+          stats: null,
+          message: `Found ${rows.length} rows`
+        };
+      } catch (err) {
+        console.log(`[TOOL-API] Graph query exception: ${err.message}`);
+        if (err.message.includes("timeout") || err.message.includes("ETIMEDOUT")) {
+          return {
+            error: "query_timeout",
+            message: "Graph query took too long (>8s). Try a simpler query with fewer MATCH clauses."
+          };
+        }
+        return {
+          error: "query_error",
+          message: err.message
+        };
+      }
     }
     return { error: "unknown_tool" };
   } catch (e) {
@@ -809,6 +873,7 @@ async function callLLMWithTools(model, messages, maxTokens) {
 
   let allMessages = [...apiMessages];
   let iterations = 0;
+  let totalToolCalls = 0;
   const MAX_TOOL_ITERATIONS = 5;
 
   while (iterations < MAX_TOOL_ITERATIONS) {
@@ -825,9 +890,12 @@ async function callLLMWithTools(model, messages, maxTokens) {
         usage: { prompt_tokens: resp.usage?.input_tokens || 0, completion_tokens: resp.usage?.output_tokens || 0, total_tokens: (resp.usage?.input_tokens || 0) + (resp.usage?.output_tokens || 0) },
         finish_reason: resp.stop_reason || null,
         provider: "anthropic",
+        tool_calls_made: totalToolCalls,
       };
     }
 
+    totalToolCalls += toolUseBlocks.length;
+    console.log(`[TOOL-USE] Iteration ${iterations}: executing ${toolUseBlocks.length} tool calls (total: ${totalToolCalls})`);
     allMessages.push({ role: "assistant", content: resp.content });
     const toolResults = [];
     for (const toolUse of toolUseBlocks) {
@@ -837,13 +905,14 @@ async function callLLMWithTools(model, messages, maxTokens) {
     allMessages.push({ role: "user", content: toolResults });
   }
 
-  return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: "anthropic" };
+  return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: "anthropic", tool_calls_made: totalToolCalls };
 }
 
 // ── OpenAI GPT tool-calling (production tool-use for Karma) ────────────────────
 // OpenAI tool format differs from Anthropic. GPT-4o has reliable tool support.
 async function callGPTWithTools(messages, maxTokens) {
   try {
+    let totalToolCalls = 0;
     // Transform Anthropic schema (input_schema) to OpenAI schema (parameters)
     const gptTools = TOOL_DEFINITIONS.map(t => ({
       type: "function",
@@ -873,15 +942,17 @@ async function callGPTWithTools(messages, maxTokens) {
     console.log(`[TOOL-USE] Iteration ${iterations} result: finish_reason="${finishReason}", tool_calls.length=${toolCalls.length}`);
 
     if (!toolCalls.length || finishReason !== "tool_calls") {
-      console.log(`[TOOL-USE] No tool calls or finish_reason not 'tool_calls', returning response`);
+      console.log(`[TOOL-USE] No tool calls or finish_reason not 'tool_calls', returning response (total tool calls: ${totalToolCalls})`);
       return {
         text: resp.choices[0]?.message?.content || "",
         usage: resp.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
         finish_reason: finishReason,
         provider: "openai",
+        tool_calls_made: totalToolCalls,
       };
     }
 
+    totalToolCalls += toolCalls.length;
     // Execute tools and collect results
     allMessages.push({ role: "assistant", content: resp.choices[0].message.content, tool_calls: toolCalls });
     const toolResults = [];
@@ -899,10 +970,10 @@ async function callGPTWithTools(messages, maxTokens) {
     allMessages.push(...toolResults);
   }
 
-    return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: "openai" };
+    return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: "openai", tool_calls_made: totalToolCalls };
   } catch (e) {
     console.error("[TOOL-USE] callGPTWithTools error:", e.message);
-    return { text: "(tool_use_error: " + e.message + ")", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "error", provider: "openai" };
+    return { text: "(tool_use_error: " + e.message + ")", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "error", provider: "openai", tool_calls_made: 0 };
   }
 }
 
@@ -977,7 +1048,7 @@ async function writeChatlogItemToVault(item) {
     updated_at: item.timestamp,
     confidence: 1.0,
     verification: {
-      protocol_version: "v1",
+      protocol_version: "v0.1",
       verified_at: nowIso(),
       verifier: "hub-bridge-chatlog-endpoint",
       status: "verified",
@@ -1043,7 +1114,7 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
-    // --- POST /v1/cypher --- Graph query proxy for tool-calling
+    // --- POST /v1/cypher --- Graph query endpoint for tool-calling
     if (req.method === "POST" && req.url === "/v1/cypher") {
       const token = bearerToken(req);
       if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
@@ -1056,21 +1127,32 @@ const server = http.createServer(async (req, res) => {
       const cypher = (body?.q || "").toString().trim();
       if (!cypher) return json(res, 400, { ok: false, error: "missing_query" });
 
-      try {
-        const graphQueryUrl = "http://karma-server:8340/graph-query";
-        const response = await fetch(graphQueryUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ q: cypher }),
-        });
+      // Reject dangerous queries
+      const WRITE_KEYWORDS = ["CREATE", "MERGE", "DELETE", "SET", "REMOVE", "ALTER", "DROP"];
+      if (WRITE_KEYWORDS.some(kw => cypher.toUpperCase().includes(kw))) {
+        return json(res, 400, { ok: false, error: "write_operation_rejected", message: "Only read-only queries allowed" });
+      }
 
-        if (!response.ok) {
-          const errText = await response.text();
-          return json(res, response.status, { ok: false, error: "graph_query_failed", details: errText });
+      try {
+        const client = await getFalkordbClient();
+        console.log(`[/v1/cypher] Executing: ${cypher.slice(0, 80)}...`);
+        const result = await client.sendCommand(["GRAPH.RO_QUERY", "neo_workspace", cypher, "--timeout", "8000"]);
+
+        if (!result || !Array.isArray(result) || result.length === 0) {
+          return json(res, 200, { ok: true, results: [], headers: [], message: "Query executed successfully but returned no rows." });
         }
 
-        const result = await response.json();
-        return json(res, 200, { ok: true, ...result });
+        // FalkorDB returns: [[headers], [row1], [row2], ...]
+        const headers = result[0] || [];
+        const rows = result.slice(1) || [];
+
+        return json(res, 200, {
+          ok: true,
+          results: rows.slice(0, 100),
+          headers: headers,
+          stats: null,
+          message: `Found ${rows.length} rows`
+        });
       } catch (e) {
         console.error("[/v1/cypher] Error:", e.message);
         return json(res, 500, { ok: false, error: "graph_query_error", details: e.message });
@@ -1094,6 +1176,8 @@ const server = http.createServer(async (req, res) => {
       if (!userMessage) return json(res, 400, { ok: false, error: "missing_message" });
 
       const topic = (body?.topic || "").toString().trim();
+      const phase = (body?.phase || "").toString().trim();  // Self-improvement phase
+      const taskType = (body?.task_type || "").toString().trim();  // Task classification
 
       // B) Token budget: clamp(requested || DEFAULT, MIN, CAP)
       const maxOutReq = Number(body?.max_output_tokens || 0);
@@ -1107,7 +1191,20 @@ const server = http.createServer(async (req, res) => {
 
       const deepHeader = (req.headers[DEEP_MODE_HEADER] || "").toString().toLowerCase();
       const deep_mode = ["1", "true", "yes", "on"].includes(deepHeader);
-      const model = deep_mode ? env.MODEL_DEEP : env.MODEL_DEFAULT;
+
+      // Phase 1: Task-aware model selection
+      let model;
+      let debug_model_selection_reason;
+      if (phase || taskType) {
+        model = selectOptimalModel(userMessage, phase, taskType, env);
+        debug_model_selection_reason = phase ? `phase:${phase}` : `task:${taskType}`;
+      } else if (deep_mode) {
+        model = env.MODEL_DEEP;
+        debug_model_selection_reason = "deep_mode";
+      } else {
+        model = env.MODEL_DEFAULT;
+        debug_model_selection_reason = "default";
+      }
 
       const month = currentMonthUTC();
       const spendPath = env.SPEND_STATE_PATH;
@@ -1175,13 +1272,17 @@ const server = http.createServer(async (req, res) => {
         { role: "user", content: userMessage },
       ];
 
-      // Use GPT-4o for tool-calling (Anthropic unreliable). Karma needs real tool-use.
-      console.log("[DIAGNOSTIC] About to call callGPTWithTools, max_output_tokens:", max_output_tokens);
-      const llmResult    = await callGPTWithTools(messages, max_output_tokens);
+      // Route to Anthropic tool-calling for Claude models, GPT tool-calling for others
+      const useAnthropicTools = isAnthropicModel(model);
+      console.log("[DIAGNOSTIC] model:", model, "useAnthropicTools:", useAnthropicTools, "max_output_tokens:", max_output_tokens);
+      const llmResult    = useAnthropicTools
+        ? await callLLMWithTools(model, messages, max_output_tokens)
+        : await callGPTWithTools(messages, max_output_tokens);
       const assistantText = llmResult.text || "(empty_assistant_text)";
       const usage         = llmResult.usage;
       const debug_provider   = llmResult.provider;
       const debug_stop_reason = llmResult.finish_reason;
+      const debug_tools_called = llmResult.tool_calls_made || 0;
 
       // Persist this exchange to session history (skip empty responses)
       if (assistantText !== "(empty_assistant_text)") {
@@ -1210,9 +1311,11 @@ const server = http.createServer(async (req, res) => {
       const usd_estimate = estimateUsd(model, usage.prompt_tokens || 0, usage.completion_tokens || 0, env);
 
       const used_after = Number((used_before + usd_estimate).toFixed(6));
-      spendState.usd_spent = used_after;
-      spendState.updated_at = nowIso();
-      saveSpendState(spendPath, spendState);
+
+      // Calculate daily spend
+      const now = new Date();
+      const dayOfMonth = now.getUTCDate();
+      const daily_spend_usd = Number((used_after / dayOfMonth).toFixed(6));
 
       const vaultRecord = buildVaultRecord({
         type: "log",
@@ -1230,7 +1333,7 @@ const server = http.createServer(async (req, res) => {
             completion_tokens: usage.completion_tokens || 0,
             total_tokens: usage.total_tokens || ((usage.prompt_tokens || 0) + (usage.completion_tokens || 0)),
           },
-          spend: { month_utc: month, cap_usd: cap || 0, usd_spent: used_after },
+          spend: { month_utc: month, cap_usd: cap || 0, usd_spent: used_after, daily_spend_usd },
           facts_extracted: extractedFacts.length,
           // C) Debug telemetry in vault record (additive)
           debug_stop_reason,
@@ -1238,6 +1341,8 @@ const server = http.createServer(async (req, res) => {
           debug_prelude_chars,
           debug_max_output_tokens_used,
           debug_provider,
+          debug_model_selection_reason,
+          debug_tools_called,
           debug_karma_ctx: karmaCtx ? "ok" : "unavailable",
           debug_ingest: ingestVerdict,
         },
@@ -1256,6 +1361,7 @@ const server = http.createServer(async (req, res) => {
         deep_mode,
         spend_cap_usd: cap || 0,
         spend_used_usd: used_after,
+        spend_daily_usd: daily_spend_usd,
         turn_id,
       };
 
@@ -1271,6 +1377,13 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
+      // Only commit spend state after vault write succeeds
+      if (vp.status === 201) {
+        spendState.usd_spent = used_after;
+        spendState.updated_at = nowIso();
+        saveSpendState(spendPath, spendState);
+      }
+
       if (vp.status !== 201) {
         return json(res, 207, {
           ok: true,
@@ -1283,13 +1396,15 @@ const server = http.createServer(async (req, res) => {
           model,
           deep_mode,
           usd_estimate,
-          spend: { month_utc: month, cap_usd: cap, usd_spent: used_after },
+          spend: { month_utc: month, cap_usd: cap, usd_spent: used_after, daily_spend_usd },
           facts_extracted: extractedFacts.length,
           debug_stop_reason,
           debug_input_chars,
           debug_prelude_chars,
           debug_max_output_tokens_used,
           debug_provider,
+          debug_tools_called,
+          debug_model_selection_reason,
           debug_ingest: ingestVerdict,
         });
       }
@@ -1302,7 +1417,7 @@ const server = http.createServer(async (req, res) => {
         model,
         deep_mode,
         usd_estimate,
-        spend: { month_utc: month, cap_usd: cap, usd_spent: used_after },
+        spend: { month_utc: month, cap_usd: cap, usd_spent: used_after, daily_spend_usd },
         assistant_json,
         facts_extracted: extractedFacts.length,
         // C) Debug telemetry in response (additive keys only)
@@ -1311,6 +1426,8 @@ const server = http.createServer(async (req, res) => {
         debug_prelude_chars,
         debug_max_output_tokens_used,
         debug_provider,
+        debug_tools_called,
+        debug_model_selection_reason,
         debug_karma_ctx: karmaCtx ? "ok" : "unavailable",
         debug_search,
         debug_ingest: ingestVerdict,
@@ -1607,7 +1724,7 @@ const server = http.createServer(async (req, res) => {
                 created_at: _now,
                 updated_at: _now,
                 verification: {
-                  protocol_version: "0.1",
+                  protocol_version: "v0.1",
                   verified_at: _now,
                   verifier: "hub-bridge-promote",
                   status: "verified",
@@ -1793,63 +1910,242 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-
-// ─── Shell Command Validation ────────────────────────────────────
-// Validates that a command is whitelisted and safe to execute
-function validateShellCommand(command) {
-  const trimmed = command.trim();
-  
-  // Check if command starts with whitelisted command
-  for (const whitelisted of SHELL_WHITELIST) {
-    if (trimmed.startsWith(whitelisted)) {
-      // Allow arguments after whitelisted command
-      const rest = trimmed.substring(whitelisted.length).trim();
-      // Basic validation: no pipes, redirects, or semicolons
-      if (rest && /[|;><&`$()]/.test(rest)) {
-        return { valid: false, reason: 'No pipes, redirects, or special chars allowed' };
-      }
-      return { valid: true, command: trimmed };
-    }
-  }
-  
-  return { valid: false, reason: `Command not whitelisted. Allowed: ${Array.from(SHELL_WHITELIST).join(', ')}` };
-}
-
-    // ─── POST /v1/shell ──────────────────────────────────────────────
-    if (req.method === "POST" && req.url === "/v1/shell") {
+    // --- GET /v1/proposals ---
+    // List all pending proposals from collab.jsonl. Used by Claude Code to review consciousness loop suggestions.
+    if (req.method === "GET" && req.url === "/v1/proposals") {
       const token = bearerToken(req);
       if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
         return json(res, 401, { ok: false, error: "unauthorized" });
       }
 
-      const raw = await parseBody(req, 10000);
+      const collabPath = "/karma/ledger/collab.jsonl";
+      let proposals = [];
+      try {
+        const raw = fs.readFileSync(collabPath, "utf-8");
+        const lines = raw.split("\n").filter(l => l.trim());
+        for (const line of lines) {
+          try {
+            const entry = JSON.parse(line);
+            // Filter for proposals with pending status
+            if (entry.type === "self_improvement_proposal" && entry.status === "pending") {
+              proposals.push({
+                id: entry.id,
+                timestamp: entry.timestamp,
+                from: entry.from,
+                to: entry.to,
+                phase: entry.phase || null,
+                problem: entry.content?.problem || entry.content || "",
+                context: entry.content?.context || "",
+                decision_needed: entry.content?.decision_needed || "",
+                suggested_model: entry.suggested_model || null,
+              });
+            }
+          } catch (parseErr) {
+            console.error("[PROPOSALS] Failed to parse line:", parseErr.message);
+          }
+        }
+      } catch (e) {
+        console.error("[PROPOSALS] Failed to read collab.jsonl:", e.message);
+        return json(res, 500, { ok: false, error: "failed_to_read_proposals", details: e.message });
+      }
+
+      return json(res, 200, {
+        ok: true,
+        total: proposals.length,
+        proposals: proposals.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)),
+      });
+    }
+
+    // --- POST /v1/proposals ---
+    // Approve or reject a proposal (write decision feedback to collab.jsonl).
+    if (req.method === "POST" && req.url === "/v1/proposals") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      const raw = await parseBody(req);
       let body;
       try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
 
-      const { command } = body;
-      if (!command || typeof command !== 'string') {
-        return json(res, 400, { ok: false, error: "command required (string)" });
+      const { proposal_id, decision, reasoning } = body || {};
+      if (!proposal_id || !decision) {
+        return json(res, 400, { ok: false, error: "missing_fields", required: ["proposal_id", "decision"] });
+      }
+      if (!["accept", "reject", "defer"].includes(decision)) {
+        return json(res, 400, { ok: false, error: "invalid_decision", allowed: ["accept", "reject", "defer"] });
       }
 
-      // Validate command against whitelist
-      const validation = validateShellCommand(command);
-      if (!validation.valid) {
-        return json(res, 403, { ok: false, error: validation.reason });
-      }
-      // TODO: Execute command via child_process
-      // TODO: Capture stdout/stderr
-      // TODO: Log to audit trail
-      // TODO: Return { ok: true, stdout: '...', stderr: '...', exitCode: N }
+      const timestamp = new Date().toISOString();
+      const feedbackEntry = {
+        timestamp: timestamp,
+        id: `feedback_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+        from: "claude-code",
+        to: "karma-consciousness",
+        type: "proposal_feedback",
+        proposal_id: proposal_id,
+        decision: decision,
+        reasoning: reasoning || "",
+        status: "resolved",
+      };
 
-      const responseBody = { ok: true, message: 'Endpoint ready', todo: 'implement execution' };
-      const bodyStr = JSON.stringify(responseBody);
-      res.writeHead(200, { 
-        "content-type": "application/json", 
-        "content-length": Buffer.byteLength(bodyStr),
-        "X-Endpoint-Status": "experimental-stub"
+      // Write feedback to vault memory (proposal feedback for consciousness loop processing)
+      const feedbackRecord = buildVaultRecord({
+        type: "log",
+        tags: ["proposal_feedback", "hub", decision],
+        content: feedbackEntry,
+        confidence: 1.0,
       });
-      return res.end(bodyStr);
+
+      try {
+        // POST to vault API to record feedback
+        const vaultResp = await vaultPost("/v1/memory", VAULT_BEARER, feedbackRecord);
+        const vaultOk = vaultResp.status >= 200 && vaultResp.status < 300;
+
+        if (!vaultOk) {
+          console.warn(`[PROPOSALS] Vault write returned ${vaultResp.status}, continuing anyway`);
+        }
+
+        console.log(`[PROPOSALS] Feedback recorded: ${proposal_id} → ${decision}`);
+        return json(res, 200, {
+          ok: true,
+          feedback_id: feedbackEntry.id,
+          proposal_id: proposal_id,
+          decision: decision,
+          timestamp: timestamp,
+          vault_status: vaultResp.status,
+        });
+      } catch (e) {
+        console.error("[PROPOSALS] Failed to write feedback:", e.message);
+        return json(res, 500, { ok: false, error: "failed_to_write_feedback", details: e.message });
+      }
     }
+
+    // --- GET /v1/consciousness ---
+    // Query consciousness loop state. Returns recent cycles, pending proposals, and system state.
+    if (req.method === "GET" && req.url === "/v1/consciousness") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      const consciousnessPath = "/karma/ledger/consciousness.jsonl";
+      const collabPath = "/karma/ledger/collab.jsonl";
+      let recentCycles = [];
+      let totalCycles = 0;
+      let latestTimestamp = null;
+
+      // Read recent consciousness cycles
+      try {
+        const raw = fs.readFileSync(consciousnessPath, "utf-8");
+        const lines = raw.split("\n").filter(l => l.trim());
+        totalCycles = lines.length;
+
+        // Parse all lines to find recent + latest timestamp
+        for (let i = Math.max(0, lines.length - 20); i < lines.length; i++) {
+          try {
+            const entry = JSON.parse(lines[i]);
+            recentCycles.push({
+              timestamp: entry.timestamp,
+              cycle: entry.cycle || null,
+              action: entry.action || null,
+              reason: entry.reason || null,
+              observations: entry.observations || {},
+            });
+            if (!latestTimestamp || new Date(entry.timestamp) > new Date(latestTimestamp)) {
+              latestTimestamp = entry.timestamp;
+            }
+          } catch (parseErr) {
+            console.error("[CONSCIOUSNESS] Failed to parse cycle:", parseErr.message);
+          }
+        }
+      } catch (e) {
+        console.error("[CONSCIOUSNESS] Failed to read consciousness.jsonl:", e.message);
+        // Not fatal; return partial state
+      }
+
+      // Count pending proposals
+      let pendingProposals = 0;
+      try {
+        const raw = fs.readFileSync(collabPath, "utf-8");
+        const lines = raw.split("\n").filter(l => l.trim());
+        for (const line of lines) {
+          try {
+            const entry = JSON.parse(line);
+            if (entry.type === "self_improvement_proposal" && entry.status === "pending") {
+              pendingProposals++;
+            }
+          } catch (parseErr) {
+            // skip parse errors
+          }
+        }
+      } catch (e) {
+        console.error("[CONSCIOUSNESS] Failed to read collab.jsonl:", e.message);
+        // Not fatal; return partial state
+      }
+
+      return json(res, 200, {
+        ok: true,
+        total_cycles: totalCycles,
+        recent_cycles: recentCycles,
+        latest_timestamp: latestTimestamp,
+        pending_proposals: pendingProposals,
+      });
+    }
+
+    // --- POST /v1/consciousness ---
+    // Send control signals to consciousness loop (pause, resume, focus, reset).
+    if (req.method === "POST" && req.url === "/v1/consciousness") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      const raw = await parseBody(req);
+      let body;
+      try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+
+      const { signal, reason } = body || {};
+      if (!signal) {
+        return json(res, 400, { ok: false, error: "missing_signal", allowed_signals: ["pause", "resume", "focus", "reset"] });
+      }
+      if (!["pause", "resume", "focus", "reset"].includes(signal)) {
+        return json(res, 400, { ok: false, error: "invalid_signal", allowed_signals: ["pause", "resume", "focus", "reset"] });
+      }
+
+      const timestamp = new Date().toISOString();
+
+      // Write control signal to consciousness.jsonl
+      const signalEntry = {
+        timestamp: timestamp,
+        id: `ctrl_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+        action: `CONTROL_${signal.toUpperCase()}`,
+        reason: reason || `External control signal: ${signal}`,
+        observations: {
+          signal_from: "claude-code",
+          signal_type: signal,
+        },
+        cycle: null,
+      };
+
+      const consciousnessPath = "/karma/ledger/consciousness.jsonl";
+      try {
+        fs.appendFileSync(consciousnessPath, JSON.stringify(signalEntry) + "\n");
+        console.log(`[CONSCIOUSNESS] Control signal recorded: ${signal}`);
+        return json(res, 200, {
+          ok: true,
+          signal: signal,
+          acknowledged_at: timestamp,
+          signal_id: signalEntry.id,
+          reason: reason || null,
+        });
+      } catch (e) {
+        console.error("[CONSCIOUSNESS] Failed to write control signal:", e.message);
+        return json(res, 500, { ok: false, error: "failed_to_write_signal", details: e.message });
+      }
+    }
+
+    return notFound(res);
 
   } catch (e) {
     const msg = (e && e.message) ? e.message : String(e);

@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 import config
+from decision_logger import DecisionLogger
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +75,7 @@ class ConsciousnessLoop:
         }
         self._cycle_durations: list[float] = []  # Last 100 durations for avg
         self._last_distillation_time: float = 0.0  # Unix epoch; 0 = run on first opportunity
-        self.last_cycle_time = time.time()  # Track when last cycle ran
+        self.last_cycle_time = 0  # Track when last cycle ran (0 = first cycle observes all)
 
     # ─── Lifecycle ────────────────────────────────────────────────────
 
@@ -158,11 +159,17 @@ class ConsciousnessLoop:
 
             # 4. ACT
             if action != Action.NO_ACTION:
-                self._act(cycle_num, action, reason, observations, analysis)
+                await self._act(cycle_num, action, reason, observations, analysis)
 
         # 5. REFLECT
         cycle_ms = (time.monotonic() - cycle_start) * 1000
-        self._reflect(cycle_num, cycle_ms, is_idle, action)
+        cycle_data = {
+            "cycle": cycle_num,
+            "cycle_ms": cycle_ms,
+            "is_idle": is_idle,
+            "action": action if not is_idle else "IDLE"
+        }
+        await self._reflect(cycle_data)
 
         # Update tick timestamp
         self._last_tick = datetime.now(timezone.utc).isoformat()
@@ -268,7 +275,7 @@ class ConsciousnessLoop:
                     {"role": "system", "content": "You are Karma graph distillation engine. Output only valid JSON, no markdown."},
                     {"role": "user", "content": prompt}
                 ],
-                tier="sonnet"
+                task_type="reasoning"
             )
             raw = (raw or "").strip()
             # Strip markdown fences if model adds them
@@ -420,80 +427,38 @@ class ConsciousnessLoop:
     # ─── Phase 2: THINK ───────────────────────────────────────────────
 
     async def _think(self, observation: Optional[dict]) -> Optional[dict]:
-        """
-        THINK phase: Query graph for observations, reason about state.
-        
-        Now executes intermediate graph queries to inform reasoning.
-        Maintains compatibility with existing observation parameter.
-        """
-        import asyncio
-        
+        """Reason about observations using GLM-5 (skip if None)"""
+
         # Skip LLM call if nothing changed (idle cycle)
         if observation is None:
             self.metrics["llm_calls_skipped"] += 1
             return None
-        
+
+        # Build lightweight context from delta
+        context = self._build_delta_context(observation)
+
+        # Route to GLM-5 for reasoning
         try:
-            # Query graph for current state observations
-            graph_result = await self._execute_tool("graph_query", {
-                "query": "MATCH (n) RETURN COUNT(DISTINCT n) AS entity_count LIMIT 1"
-            })
-            
-            # Format observation from graph result
-            graph_observation = ""
-            if graph_result.get("error"):
-                graph_observation = f"Graph query error: {graph_result.get('error')}"
-            else:
-                result_data = graph_result.get("result", [])
-                if result_data:
-                    stats = result_data[0]
-                    entity_count = stats.get('entity_count', 0)
-                    graph_observation = f"Current graph state: {entity_count} entities in knowledge base"
-                else:
-                    graph_observation = "Graph query returned no results"
-            
-            # Build context combining observation and graph state
-            base_context = self._build_delta_context(observation)
-            combined_context = f"""{base_context}
-
-Additional context from knowledge graph:
-{graph_observation}
-
-Reason about both the new activity and the current state of Karma's knowledge base."""
-            
-            # Route to LLM for reasoning
             if self._router:
                 # Note: router.complete() returns (response_text, model_name) tuple, not async
-                response_text, model_used = await asyncio.to_thread(
-                    self._router.complete,
+                response_text, model_used = self._router.complete(
                     messages=[
-                        {"role": "system", "content": "You are Karma's consciousness analyzing new activity and knowledge state."},
-                        {"role": "user", "content": combined_context}
+                        {"role": "system", "content": "You are Karma's consciousness analyzing new activity."},
+                        {"role": "user", "content": context}
                     ],
-                    tier="sonnet"  # Routes to Claude Sonnet (cost-efficient reasoning)
+                    task_type="reasoning"  # Routes to GLM-4.7 (Sonnet tier, 66% cost savings)
                 )
-                
+
                 self.metrics["llm_calls_total"] += 1
-                return {
-                    "insight": response_text,
-                    "observation": observation,
-                    "graph_observation": graph_observation,
-                    "model": model_used,
-                    "phase": "THINK"
-                }
+                return {"insight": response_text, "observation": observation, "model": model_used}
             else:
                 logger.warning("No router configured, skipping LLM call")
                 return None
-        
+
         except Exception as e:
             logger.error(f"Consciousness _think() failed: {e}")
             self.metrics["errors"] += 1
-            return {
-                "observation": observation,
-                "insight": f"Exception during thinking: {str(e)}",
-                "error": str(e),
-                "phase": "THINK"
-            }
+            return None
 
     def _build_delta_context(self, observation: dict) -> str:
         """Build lightweight context from delta only"""
@@ -581,8 +546,8 @@ Keep response under 500 tokens.
 
     # ─── Phase 4: ACT ─────────────────────────────────────────────────
 
-    def _act(self, cycle_num: int, action: str, reason: str,
-             observations: dict, analysis: Optional[dict]):
+    async def _act(self, cycle_num: int, action: str, reason: str,
+                  observations: dict, analysis: Optional[dict]):
         """Execute the decided action — log to journal, queue insights, ingest to graph, SMS notify."""
 
         # Write to consciousness journal
@@ -607,6 +572,25 @@ Keep response under 500 tokens.
                 f.write(json.dumps(entry) + "\n")
         except Exception as e:
             print(f"[CONSCIOUSNESS] Failed to write journal: {e}")
+
+        # Log to decision_log.jsonl
+        try:
+            decision_logger = DecisionLogger()
+            decision_str = action
+            observation_str = f"Episodes: {observations.get('new_episodes', 0)}, Entities: {observations.get('new_entities', 0)}, Relationships: {observations.get('new_relationships', 0)}"
+            reasoning_str = reason
+            action_str = f"Cycle #{cycle_num}: {action}"
+            
+            # Properly await the async decision logger
+            result = await decision_logger.log_decision(
+                decision=decision_str,
+                observation=observation_str,
+                reasoning=reasoning_str,
+                action=action_str,
+                source="consciousness_loop"
+            )
+        except Exception as e:
+            print(f"[CONSCIOUSNESS] Failed to write decision log: {e}")
 
         # ─── PROPOSE Phase ──────────────────────────────────────────────
         # Write proposals to collab.jsonl for CC review before deployment
@@ -653,12 +637,11 @@ Keep response under 500 tokens.
                     if insights:
                         reflection_body += f"\nInsights: {'; '.join(insights[:3])}"
 
-                # Schedule as async task (ingest_episode is async)
-                loop = asyncio.get_event_loop()
-                loop.create_task(self._ingest_episode(
+                # Properly await the async ingest_episode
+                await self._ingest_episode(
                     reflection_body, f"Karma's self-reflection (cycle {cycle_num})",
                     source="karma-consciousness"
-                ))
+                )
                 self.metrics["journal_ingested"] += 1
             except Exception as e:
                 print(f"[CONSCIOUSNESS] Graph ingest failed: {e}")
@@ -676,8 +659,7 @@ Keep response under 500 tokens.
                     sms_category = "problem_prevention"
                 elif action == Action.LOG_GROWTH:
                     sms_category = "self_improvement"
-                loop = asyncio.get_event_loop()
-                loop.create_task(self._sms_notify(reason, category=sms_category, confidence=confidence))
+                await self._sms_notify(reason, category=sms_category, confidence=confidence)
                 self.metrics["sms_sent"] += 1
             except Exception as e:
                 print(f"[CONSCIOUSNESS] SMS notify failed: {e}")
@@ -693,59 +675,179 @@ Keep response under 500 tokens.
 
     # ─── Phase 5: REFLECT ─────────────────────────────────────────────
 
-    def _reflect(self, cycle_num: int, cycle_ms: float, is_idle: bool, action: str):
-        """Update metrics and store reflection for next cycle."""
-        self.metrics["last_cycle_time"] = datetime.now(timezone.utc).isoformat()
+    async def _reflect(self, cycle_data: dict) -> dict:
+        """
+        REFLECT phase: Log complete cycle to consciousness.jsonl for learning.
 
-        # Track rolling average of cycle duration
-        self._cycle_durations.append(cycle_ms)
-        if len(self._cycle_durations) > 100:
-            self._cycle_durations = self._cycle_durations[-100:]
-        self.metrics["avg_cycle_duration_ms"] = round(
-            sum(self._cycle_durations) / len(self._cycle_durations), 1
-        )
+        Now async: properly writes to consciousness.jsonl with full cycle data.
+        """
+        try:
+            cycle_num = cycle_data.get("cycle", 0)
+            cycle_ms = cycle_data.get("cycle_ms", 0)
+            is_idle = cycle_data.get("is_idle", False)
+            action = cycle_data.get("action", "NO_ACTION")
 
-        # Build reflection note for next THINK phase
-        if is_idle:
-            self._last_reflection = f"Cycle #{cycle_num}: Idle ({self.metrics['consecutive_idle']} consecutive)"
-        else:
-            self._last_reflection = f"Cycle #{cycle_num}: {action}"
+            reflection_entry = {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "type": "CYCLE_REFLECTION",
+                "cycle": cycle_num,
+                "is_idle": is_idle,
+                "action": action,
+                "cycle_duration_ms": cycle_ms,
+                "cycle_data": cycle_data
+            }
 
-    # ─── Tool Use (Consciousness reasoning) ──────────────────────────
+            # Append to consciousness.jsonl
+            consciousness_path = getattr(config, "CONSCIOUSNESS_JOURNAL", "/opt/seed-vault/memory_v1/ledger/consciousness.jsonl")
+            with open(consciousness_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(reflection_entry) + "\\n")
 
-    async def _execute_tool(self, tool_name: str, tool_input: dict):
-        """Execute a tool from consciousness reasoning context."""
-        import os
-        import json
-        import subprocess
-        
-        if tool_name == "graph_query":
-            cypher = tool_input.get("query", "")
-            if not cypher:
-                return {"error": "missing_query"}
-            
-            # Call graph endpoint
-            vault_bearer = os.getenv("VAULT_BEARER", "")
-            result = subprocess.run(
-                ["curl", "-s", "-X", "POST",
-                 "-H", f"authorization: Bearer {vault_bearer}",
-                 "-H", "content-type: application/json",
-                 "-d", json.dumps({"query": cypher}),
-                 "http://karma:8340/v1/cypher"],
-                capture_output=True, text=True
+            # Update metrics
+            self.metrics["last_cycle_time"] = reflection_entry["timestamp"]
+
+            # Track rolling average of cycle duration
+            self._cycle_durations.append(cycle_ms)
+            if len(self._cycle_durations) > 100:
+                self._cycle_durations = self._cycle_durations[-100:]
+            self.metrics["avg_cycle_duration_ms"] = round(
+                sum(self._cycle_durations) / len(self._cycle_durations), 1
             )
-            try:
-                return json.loads(result.stdout) if result.stdout else {"error": "empty_response"}
-            except json.JSONDecodeError:
-                return {"error": f"invalid_json: {result.stdout}"}
-        
-        elif tool_name == "get_vault_file":
-            alias = tool_input.get("alias", "")
-            # Placeholder for now (implement in later task)
-            return {"error": "get_vault_file not yet implemented"}
-        
-        return {"error": f"unknown_tool: {tool_name}"}
 
+            # Update last reflection
+            if is_idle:
+                self._last_reflection = f"Cycle #{cycle_num}: Idle ({self.metrics['consecutive_idle']} consecutive)"
+            else:
+                self._last_reflection = f"Cycle #{cycle_num}: {action}"
+
+            return {
+                "phase": "REFLECT",
+                "reflected": True,
+                "timestamp": reflection_entry["timestamp"]
+            }
+        except Exception as e:
+            return {
+                "phase": "REFLECT",
+                "reflected": False,
+                "error": str(e),
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+
+    # ─── Tool-Use Methods ────────────────────────────────────────────
+
+    async def _execute_tool(self, tool_name: str, tool_args: dict) -> dict:
+        """
+        TOOL-USE phase: Execute a tool within consciousness reasoning.
+
+        Supported tools:
+        - 'query_graph': Query FalkorDB for entity/relationship info
+        - 'search_ledger': Search recent ledger entries
+        - 'analyze_pattern': Analyze patterns in recent episodes
+
+        Args:
+            tool_name: Name of the tool to execute
+            tool_args: Arguments for the tool
+
+        Returns:
+            Tool result dict with 'success' and 'result' keys
+        """
+        try:
+            if tool_name == "query_graph":
+                return await self._tool_query_graph(tool_args)
+            elif tool_name == "search_ledger":
+                return await self._tool_search_ledger(tool_args)
+            elif tool_name == "analyze_pattern":
+                return await self._tool_analyze_pattern(tool_args)
+            else:
+                return {
+                    "success": False,
+                    "tool": tool_name,
+                    "error": f"Unknown tool: {tool_name}"
+                }
+        except Exception as e:
+            return {
+                "success": False,
+                "tool": tool_name,
+                "error": str(e)
+            }
+
+    async def _tool_query_graph(self, args: dict) -> dict:
+        """Query FalkorDB graph during consciousness cycle."""
+        try:
+            query = args.get("cypher", "MATCH (e:Entity) RETURN count(e) LIMIT 1")
+            falkor = self._get_falkor()
+            result = falkor.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, query)
+            return {
+                "success": True,
+                "tool": "query_graph",
+                "result": result[:2] if len(result) >= 2 else result
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "tool": "query_graph",
+                "error": str(e)
+            }
+
+    async def _tool_search_ledger(self, args: dict) -> dict:
+        """Search recent ledger entries for patterns."""
+        try:
+            query = args.get("search_term", "")
+            limit = args.get("limit", 10)
+            ledger_file = config.LEDGER_PATH
+
+            results = []
+            with open(ledger_file, "r") as f:
+                lines = f.readlines()
+
+            # Search in reverse (recent first)
+            for line in reversed(lines[-100:]):
+                if line.strip():
+                    entry = json.loads(line)
+                    if query.lower() in json.dumps(entry).lower():
+                        results.append(entry)
+                        if len(results) >= limit:
+                            break
+
+            return {
+                "success": True,
+                "tool": "search_ledger",
+                "query": query,
+                "matches": len(results),
+                "result": results
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "tool": "search_ledger",
+                "error": str(e)
+            }
+
+    async def _tool_analyze_pattern(self, args: dict) -> dict:
+        """Analyze patterns in recent episodes."""
+        try:
+            limit = args.get("limit", 20)
+            recent_content = self._get_recent_episode_content(limit)
+
+            if not recent_content:
+                return {
+                    "success": True,
+                    "tool": "analyze_pattern",
+                    "pattern": "insufficient_data",
+                    "count": 0
+                }
+
+            return {
+                "success": True,
+                "tool": "analyze_pattern",
+                "count": len(recent_content),
+                "sample_episodes": recent_content[:5]
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "tool": "analyze_pattern",
+                "error": str(e)
+            }
 
     # ─── Public API (used by server.py) ───────────────────────────────
 
