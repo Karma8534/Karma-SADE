@@ -697,6 +697,16 @@ def log_to_ledger(user_msg: str, assistant_msg: str, model_used: str = "unknown"
 
 app = FastAPI(title="Karma Chat Server", version="0.1.0")
 
+# ─── Self-Model API (persona growth / self-reflection) ────────────────────
+try:
+    from self_model_api import register_self_model_routes
+    register_self_model_routes(app)
+    print("  Self-Model API: /v1/self-model endpoints registered")
+except ImportError:
+    print("  Self-Model API: SKIPPED (self_model_api.py not found)")
+except Exception as e:
+    print(f"  Self-Model API: FAILED ({e})")
+
 # Active conversations (one per WebSocket)
 active_conversations: dict[str, ConversationManager] = {}
 
