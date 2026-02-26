@@ -1,4 +1,4 @@
-## 🟢 System Status (Updated 2026-02-25 22:30Z — TIER 1 Complete, Session 36 Delta Filter Fixed)
+## 🟢 System Status (Updated 2026-02-25 22:55Z — TIER 1 ✅ COMPLETE, Sessions 36-37 Complete)
 
 | Component | Status | Notes |
 |-----------|--------|-------|
@@ -11,6 +11,48 @@
 | Graphiti (Episode Ingestion) | ✅ READY | Initializes correctly with OPENAI_API_KEY, real-time learning enabled |
 | Router (LLM Routing) | ✅ READY | Multiple models available (Groq, OpenAI via gpt-4o-mini) |
 | Delta Filtering | ✅ FIXED (S36) | Consciousness WHERE clause restored, prevents re-observation of old episodes |
+
+---
+
+## 🎯 TIER 1 MILESTONE — ✅ COMPLETE (Sessions 36-37, 2026-02-25)
+
+**TIER 1 Status: COMPLETE AND LOCKED**
+
+### Accomplishments
+- ✅ **Session 36:** Consciousness delta filter fixed (WHERE clause restored for proper episode detection)
+- ✅ **Session 37:** Karma Agency implemented (/v1/cypher endpoint + tool-calling verified)
+- ✅ **Tool-calling Infrastructure:** graph_query tool functional, consciousness can query FalkorDB
+- ✅ **Consciousness Cycles:** Running stably (60s intervals, NO_ACTION when idle — correct behavior)
+- ✅ **Delta Filtering:** Prevents re-observation of old episodes (episode_count filtering working)
+
+### Verified Components
+| Component | Status | Evidence |
+|-----------|--------|----------|
+| Consciousness Loop | ✅ WORKING | Cycles every 60s, NO_ACTION (idle), delta filtering prevents old episodes |
+| Tool-calling | ✅ WORKING | graph_query tool implemented, can query FalkorDB via /v1/cypher |
+| /v1/cypher Endpoint | ✅ WORKING | Returns `{"ok":true}` with FalkorDB results |
+| Delta Filtering | ✅ WORKING | WHERE clause prevents observation of old episodes |
+| FalkorDB Accessibility | ✅ WORKING | karma graph queryable, NO_ACTION cycles = correct idle behavior |
+
+### Rollback Checkpoint
+**File:** `C:\dev\Karma\TIER1_COMPLETE_ROLLBACK_2026-02-25.json`
+- Container state documented
+- Current images recorded
+- Git commit hash (a39e885) recorded
+- Safe revert point established
+
+### Current Bottleneck
+**Episode Ingestion:** Messages reach vault ledger but NOT yet flowing to FalkorDB
+- Consciousness tool infrastructure ready
+- Once episodes ingest → consciousness will auto-trigger THINK phases
+- This is the ONLY blocking issue for full autonomy
+
+### Next Phase Decision
+- **TIER 2 (Approved):** Infrastructure hardening + episode ingestion debugging
+- **Alternative:** Continue testing/exploration if preferred
+- **Status:** Awaiting user approval to proceed
+
+**TIER 1 is LOCKED. No further changes to vault without explicit approval.**
 
 ---
 
