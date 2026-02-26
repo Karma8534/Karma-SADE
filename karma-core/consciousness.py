@@ -1,9 +1,14 @@
 """
-Karma Consciousness Loop — OBSERVE / THINK / DECIDE / ACT / REFLECT
+Karma Consciousness Loop — OBSERVE-only (Decision #3 aligned)
 
 Background async loop running every CONSCIOUSNESS_INTERVAL seconds.
-Gives Karma ambient awareness: notices patterns, detects anomalies,
-surfaces insights proactively during chat without being asked.
+OBSERVE phase: rule-based delta scan of FalkorDB graph, no LLM calls.
+THINK/DECIDE/ACT: removed per Decision #3 — Karma is the ONLY origin of
+thought; K2 never calls LLM autonomously. The consciousness loop logs
+observations to consciousness.jsonl for Karma to review in-session.
+
+Distillation cycle: DISABLED — was making autonomous LLM calls.
+Re-enable only when Karma explicitly triggers it during a session.
 """
 import asyncio
 import json
@@ -33,7 +38,11 @@ class Action:
 # ─── Consciousness Loop ──────────────────────────────────────────────────
 
 class ConsciousnessLoop:
-    """Karma's background awareness — observes, thinks, decides, acts, reflects."""
+    """Karma's background awareness — OBSERVE only, no autonomous LLM calls.
+
+    Decision #3: Keep OBSERVE (60s, no LLM), kill THINK/DECIDE/ACT LLM calls.
+    K2 is a continuity substrate, not an agent — preserve, observe, sync only.
+    """
 
     def __init__(self, get_falkor_fn, get_graph_stats_fn, get_openai_client_fn,
                  active_conversations_ref: dict, router=None,
@@ -43,9 +52,10 @@ class ConsciousnessLoop:
         self._get_graph_stats = get_graph_stats_fn
         self._get_openai_client = get_openai_client_fn
         self._active_conversations = active_conversations_ref
-        self._router = router  # Optional: use model router for THINK phase
-        self._ingest_episode = ingest_episode_fn  # Optional: feed reflections into graph
-        self._sms_notify = sms_notify_fn  # Optional: SMS notification for high-value insights
+        # Router kept for interface compatibility but NOT used for autonomous calls
+        self._router = router
+        self._ingest_episode = ingest_episode_fn
+        self._sms_notify = sms_notify_fn  # Kept but only fires for rule-based alerts
 
         # State
         self._running = False
@@ -66,7 +76,7 @@ class ConsciousnessLoop:
             "journal_ingested": 0,
             "sms_sent": 0,
             "errors": 0,
-            "llm_calls_total": 0,
+            "llm_calls_total": 0,       # Should always be 0 now
             "llm_calls_skipped": 0,
             "avg_cycle_duration_ms": 0.0,
             "last_cycle_time": None,
@@ -74,16 +84,16 @@ class ConsciousnessLoop:
             "started_at": None,
         }
         self._cycle_durations: list[float] = []  # Last 100 durations for avg
-        self._last_distillation_time: float = 0.0  # Unix epoch; 0 = run on first opportunity
         self.last_cycle_time = 0  # Track when last cycle ran (0 = first cycle observes all)
 
     # ─── Lifecycle ────────────────────────────────────────────────────
 
     async def run(self):
-        """Main loop — runs until stopped."""
+        """Main loop — runs until stopped. OBSERVE only, no LLM calls."""
         self._running = True
         self.metrics["started_at"] = datetime.now(timezone.utc).isoformat()
-        print("[CONSCIOUSNESS] Loop started — interval: {}s".format(config.CONSCIOUSNESS_INTERVAL))
+        print("[CONSCIOUSNESS] Loop started — interval: {}s (OBSERVE-only mode, no LLM)".format(
+            config.CONSCIOUSNESS_INTERVAL))
 
         # Capture initial graph snapshot
         try:
@@ -99,12 +109,8 @@ class ConsciousnessLoop:
                 if not self._running:
                     break
                 await self._cycle()
-                # Distillation check -- runs every DISTILLATION_INTERVAL_HOURS
-                if getattr(config, 'DISTILLATION_ENABLED', False):
-                    import time as _t_dist
-                    _hours_elapsed = (_t_dist.time() - self._last_distillation_time) / 3600
-                    if _hours_elapsed >= getattr(config, 'DISTILLATION_INTERVAL_HOURS', 24):
-                        await self._distillation_cycle()
+                # NOTE: Distillation cycle DISABLED — it made autonomous LLM calls.
+                # To re-enable, Karma must explicitly trigger distillation during a session.
             except asyncio.CancelledError:
                 break
             except Exception as e:
@@ -127,15 +133,15 @@ class ConsciousnessLoop:
         self._task = asyncio.create_task(self.run())
         return self._task
 
-    # ─── Core Cycle ───────────────────────────────────────────────────
+    # ─── Core Cycle (OBSERVE → rule-based DECIDE → log) ──────────────
 
     async def _cycle(self):
-        """Execute one OBSERVE → THINK → DECIDE → ACT → REFLECT cycle."""
+        """Execute one OBSERVE → DECIDE → LOG cycle. NO LLM calls."""
         cycle_start = time.monotonic()
         self.metrics["total_cycles"] += 1
         cycle_num = self.metrics["total_cycles"]
 
-        # 1. OBSERVE
+        # 1. OBSERVE (rule-based, no LLM)
         observations = self._observe()
 
         # If observation is None (idle cycle - no new episodes), skip rest
@@ -143,239 +149,45 @@ class ConsciousnessLoop:
             self.metrics["idle_cycles"] += 1
             self.metrics["consecutive_idle"] += 1
             self.metrics["llm_calls_skipped"] += 1
-            analysis = None
-            is_idle = True
             action = Action.NO_ACTION
+            reason = "Idle cycle — no new episodes"
         else:
-            is_idle = False
             self.metrics["active_cycles"] += 1
             self.metrics["consecutive_idle"] = 0
 
-            # 2. THINK (run LLM for non-idle observations)
-            analysis = await self._think(observations)
+            # 2. DECIDE (rule-based — NO LLM, replaces old THINK+DECIDE)
+            action, reason = self._decide_rule_based(observations)
 
-            # 3. DECIDE
-            action, reason = self._decide(observations, analysis)
-
-            # 4. ACT
+            # 3. ACT (log only — no LLM, no autonomous graph ingest)
             if action != Action.NO_ACTION:
-                await self._act(cycle_num, action, reason, observations, analysis)
+                await self._act(cycle_num, action, reason, observations)
 
-        # 5. REFLECT
+        # 4. REFLECT (write cycle data to consciousness.jsonl)
         cycle_ms = (time.monotonic() - cycle_start) * 1000
         cycle_data = {
             "cycle": cycle_num,
             "cycle_ms": cycle_ms,
-            "is_idle": is_idle,
-            "action": action if not is_idle else "IDLE"
+            "is_idle": observations is None,
+            "action": action if observations is not None else "IDLE"
         }
         await self._reflect(cycle_data)
 
         # Update tick timestamp
         self._last_tick = datetime.now(timezone.utc).isoformat()
 
-
-    # ─── Graph Distillation ───────────────────────────────────────────
-
-    async def _distillation_cycle(self):
-        """Read FalkorDB graph structure, synthesize patterns/gaps via LLM,
-        write schema-compliant fact to vault ledger, re-ingest key insights."""
-        import time as _time
-        import json as _json
-        from datetime import datetime as _dt, timezone as _tz
-
-        print("[DISTILLATION] Starting graph distillation cycle")
-
-        falkor = self._get_falkor()
-        group_id = config.GRAPHITI_GROUP_ID
-
-        # Query 1: Top entities by relationship count
-        try:
-            top_q = (
-                "MATCH (e:Entity) "
-                "OPTIONAL MATCH (e)-[r]-() "
-                "RETURN e.name, e.entity_type, count(r) AS rel_count "
-                "ORDER BY rel_count DESC "
-                "LIMIT 15"
-            )
-            top_result = falkor.execute_command("GRAPH.QUERY", group_id, top_q)
-            top_rows = top_result[1] if len(top_result) >= 2 and top_result[1] else []
-        except Exception as e:
-            print(f"[DISTILLATION] Query 1 (top entities) failed: {e}")
-            top_rows = []
-
-        # Query 2: Recent episodes (last 7 days)
-        try:
-            seven_days_ago = _time.time() - (7 * 24 * 3600)
-            max_ep = getattr(config, 'DISTILLATION_MAX_EPISODES', 200)
-            ep_q = (
-                "MATCH (ep:Episodic) "
-                "WHERE ep.created_at > " + str(seven_days_ago) + " "
-                "RETURN ep.content, ep.created_at "
-                "ORDER BY ep.created_at DESC "
-                "LIMIT " + str(max_ep)
-            )
-            ep_result = falkor.execute_command("GRAPH.QUERY", group_id, ep_q)
-            ep_rows = ep_result[1] if len(ep_result) >= 2 and ep_result[1] else []
-        except Exception as e:
-            print(f"[DISTILLATION] Query 2 (recent episodes) failed: {e}")
-            ep_rows = []
-
-        # Query 3: Low-connection entities (gaps)
-        try:
-            gap_q = (
-                "MATCH (e:Entity) "
-                "OPTIONAL MATCH (e)-[r]-() "
-                "WITH e, count(r) AS rel_count "
-                "WHERE rel_count <= 2 "
-                "RETURN e.name, e.entity_type, rel_count "
-                "ORDER BY rel_count ASC "
-                "LIMIT 10"
-            )
-            gap_result = falkor.execute_command("GRAPH.QUERY", group_id, gap_q)
-            gap_rows = gap_result[1] if len(gap_result) >= 2 and gap_result[1] else []
-        except Exception as e:
-            print(f"[DISTILLATION] Query 3 (gap entities) failed: {e}")
-            gap_rows = []
-
-        def _safe(v):
-            return str(v) if v is not None else ""
-
-        top_text = "\n".join(
-            "  - " + _safe(r[0]) + " (" + _safe(r[1]) + "): " + _safe(r[2]) + " connections"
-            for r in top_rows[:15]
-        ) or "  (none)"
-
-        recent_text = "\n".join(
-            "  - " + _safe(r[0])[:200]
-            for r in ep_rows[:30]
-        ) or "  (none)"
-
-        gaps_text = "\n".join(
-            "  - " + _safe(r[0]) + " (" + _safe(r[1]) + "): " + _safe(r[2]) + " connections"
-            for r in gap_rows[:10]
-        ) or "  (none)"
-
-        prompt = (
-            "You are Karma analyzing your own knowledge graph.\n\n"
-            "MOST CONNECTED ENTITIES:\n" + top_text + "\n\n"
-            "RECENT ACTIVITY (last 7 days):\n" + recent_text + "\n\n"
-            "UNDEREXPLORED ENTITIES:\n" + gaps_text + "\n\n"
-            "Synthesize what you see. Respond in this EXACT JSON format (no markdown, no fences):\n"
-            '{"themes": ["theme1", "theme2"], "gaps": ["gap1", "gap2"], "key_insights": ["insight1", "insight2"], "summary": "2-3 sentence synthesis", "confidence": 0.0}'
-        )
-
-        if not self._router:
-            print("[DISTILLATION] No router configured -- skipping")
-            return
-
-        try:
-            raw, _model_used = self._router.complete(
-                messages=[
-                    {"role": "system", "content": "You are Karma graph distillation engine. Output only valid JSON, no markdown."},
-                    {"role": "user", "content": prompt}
-                ],
-                task_type="reasoning"
-            )
-            raw = (raw or "").strip()
-            # Strip markdown fences if model adds them
-            if raw.startswith("```"):
-                parts = raw.split("```")
-                raw = parts[1] if len(parts) > 1 else raw
-                if raw.startswith("json"):
-                    raw = raw[4:]
-            raw = raw.strip()
-            synthesis = _json.loads(raw)
-        except Exception as e:
-            print(f"[DISTILLATION] LLM synthesis failed: {e}")
-            return
-
-        themes = synthesis.get("themes", [])
-        gaps = synthesis.get("gaps", [])
-        key_insights = synthesis.get("key_insights", [])
-        summary = synthesis.get("summary", "")
-        confidence = float(synthesis.get("confidence", 0.5))
-
-        print(f"[DISTILLATION] Synthesis: confidence={confidence:.2f} themes={len(themes)} gaps={len(gaps)}")
-
-        # Write schema-compliant fact to vault ledger
-        now_iso = _dt.now(_tz.utc).isoformat()
-        import random as _random
-        fact_id = "distillation_" + str(int(_time.time())) + "_" + str(_random.randint(1000, 9999))
-        fact = {
-            "id": fact_id,
-            "type": "log",
-            "tags": ["karma_distillation", "graph_synthesis"],
-            "content": {
-                "key": "distillation_brief",
-                "distillation_brief": summary,
-                "themes": themes,
-                "gaps": gaps,
-                "key_insights": key_insights,
-            },
-            "source": {"kind": "tool", "ref": "karma-consciousness:distillation"},
-            "confidence": confidence,
-            "created_at": now_iso,
-            "updated_at": now_iso,
-            "verification": {
-                "protocol_version": "0.1",
-                "verified_at": now_iso,
-                "verifier": "karma-consciousness-distillation",
-                "status": "verified",
-                "notes": "auto-generated graph distillation synthesis",
-            },
-        }
-
-        try:
-            with open(config.LEDGER_PATH, "a", encoding="utf-8") as f:
-                f.write(_json.dumps(fact) + "\n")
-            print(f"[DISTILLATION] Fact written: {fact_id}")
-        except Exception as e:
-            print(f"[DISTILLATION] Ledger write failed: {e}")
-            return
-
-        # Re-ingest key insights as FalkorDB episodes
-        if self._ingest_episode and key_insights:
-            try:
-                for insight in key_insights[:5]:
-                    asyncio.get_running_loop().create_task(self._ingest_episode(
-                        "[karma-distillation] " + insight,
-                        "Karma graph distillation insight",
-                        source="karma-distillation"
-                    ))
-            except Exception as e:
-                print(f"[DISTILLATION] Episode ingest failed: {e}")
-
-        # SMS for high-confidence synthesis
-        if self._sms_notify and confidence >= 0.8:
-            try:
-                asyncio.get_running_loop().create_task(self._sms_notify(
-                    "Graph distillation: " + summary[:200],
-                    category="self_improvement",
-                    confidence=confidence
-                ))
-            except Exception as e:
-                print(f"[DISTILLATION] SMS failed: {e}")
-
-        self._last_distillation_time = _time.time()
-        print(f"[DISTILLATION] Cycle complete. Next in {getattr(config, 'DISTILLATION_INTERVAL_HOURS', 24)}h")
-
     # ─── Phase 1: OBSERVE ─────────────────────────────────────────────
 
     def _observe(self) -> Optional[dict]:
-        """Observe ONLY what changed since last cycle (delta mode)"""
+        """Observe ONLY what changed since last cycle (delta mode).
+        Pure graph query — no LLM calls."""
 
         # Calculate time since last cycle
         current_time = time.time()
         time_delta = current_time - self.last_cycle_time
 
         # Query ONLY new episodes since last cycle
-        # Note: FalkorDB timestamp is Unix epoch (seconds)
         try:
             falkor = self._get_falkor()
-
-            # Delta query - only episodes newer than last_cycle_time
-            # Use execute_command for FalkorDB Redis client
             cypher = f"""
                 MATCH (e:Episodic)
                 WHERE e.created_at > {self.last_cycle_time}
@@ -384,9 +196,6 @@ class ConsciousnessLoop:
                 LIMIT 20
             """
             result = falkor.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
-
-            # FalkorDB returns [["e"], [[...], [...]], ...]
-            # Extract episode objects from result
             episodes = result[1] if len(result) >= 2 and result[1] else []
 
         except Exception as e:
@@ -424,131 +233,35 @@ class ConsciousnessLoop:
         except Exception:
             return []
 
-    # ─── Phase 2: THINK ───────────────────────────────────────────────
+    # ─── Phase 2: DECIDE (rule-based, replaces THINK+DECIDE) ─────────
 
-    async def _think(self, observation: Optional[dict]) -> Optional[dict]:
-        """Reason about observations using GLM-5 (skip if None)"""
+    def _decide_rule_based(self, observations: dict) -> tuple[str, str]:
+        """Pure rule-based action selection. NO LLM calls.
+        Replaces the old _think() + _decide() pipeline."""
 
-        # Skip LLM call if nothing changed (idle cycle)
-        if observation is None:
-            self.metrics["llm_calls_skipped"] += 1
-            return None
-
-        # Build lightweight context from delta
-        context = self._build_delta_context(observation)
-
-        # Route to GLM-5 for reasoning
-        try:
-            if self._router:
-                # Note: router.complete() returns (response_text, model_name) tuple, not async
-                response_text, model_used = self._router.complete(
-                    messages=[
-                        {"role": "system", "content": "You are Karma's consciousness analyzing new activity."},
-                        {"role": "user", "content": context}
-                    ],
-                    task_type="reasoning"  # Routes to GLM-4.7 (Sonnet tier, 66% cost savings)
-                )
-
-                self.metrics["llm_calls_total"] += 1
-                return {"insight": response_text, "observation": observation, "model": model_used}
-            else:
-                logger.warning("No router configured, skipping LLM call")
-                return None
-
-        except Exception as e:
-            logger.error(f"Consciousness _think() failed: {e}")
-            self.metrics["errors"] += 1
-            return None
-
-    def _build_delta_context(self, observation: dict) -> str:
-        """Build lightweight context from delta only"""
-
-        new_episodes = observation.get('new_episodes', [])
-        time_delta = observation.get('time_delta_seconds', 0)
-        episode_count = observation.get('episode_count', 0)
-
-        context = f"""TIME ELAPSED: {time_delta:.0f} seconds since last observation
-NEW ACTIVITY:
-{episode_count} new episodes detected
-EPISODE SUMMARIES:
-"""
-
-        # Limit to first 10 episodes for context size
-        for i, ep in enumerate(new_episodes[:10]):
-            # Extract episode content (adjust based on your Episode node structure)
-            content = ""
-            if hasattr(ep, 'properties'):
-                props = ep.properties
-                content = props.get('content', props.get('name', 'Unknown'))
-            elif isinstance(ep, dict):
-                content = ep.get('content', ep.get('name', 'Unknown'))
-
-            # Truncate to 200 chars
-            content_preview = str(content)[:200]
-            context += f"\n{i+1}. {content_preview}"
-
-        context += """
-TASK: Analyze these new episodes. Identify:
-1. Any patterns worth noting
-2. Actions that need follow-up
-3. Information worth remembering long-term
-Keep response under 500 tokens.
-"""
-
-        return context
-
-    # ─── Phase 3: DECIDE ──────────────────────────────────────────────
-
-    def _decide(self, observations: Optional[dict], analysis: Optional[dict]) -> tuple[str, str]:
-        """Rule-based action selection. Returns (action, reason)."""
-
-        # No observations (idle cycle)
-        if observations is None:
-            return Action.NO_ACTION, "Idle cycle — no new episodes"
+        episode_count = observations.get("episode_count", 0)
 
         # No activity → no action
-        if observations.get("episode_count", 0) == 0:
-            return Action.NO_ACTION, "Idle cycle — no new activity"
+        if episode_count == 0:
+            return Action.NO_ACTION, "No new activity"
 
-        # Analysis failed → log error
-        if analysis is None and observations.get("episode_count", 0) > 0:
-            return Action.LOG_ERROR, "Analysis failed despite new activity"
+        # Rapid graph growth (>10 episodes in one 60s cycle = unusual)
+        if episode_count > 10:
+            return Action.LOG_GROWTH, f"Rapid growth: {episode_count} new episodes in one cycle"
 
-        if analysis is None:
-            return Action.NO_ACTION, "No analysis available"
-
-        urgency = analysis.get("urgency", "none")
-        insights = analysis.get("insights", [])
-        anomalies = analysis.get("anomalies", [])
-        patterns = analysis.get("patterns", [])
-
-        # Rapid graph growth
-        if observations.get("episode_count", 0) > 10:
-            return Action.LOG_GROWTH, f"Rapid growth: {observations.get('episode_count', 0)} new episodes in one cycle"
-
-        # Anomaly with urgency
-        if anomalies and urgency in ("medium", "high"):
-            return Action.LOG_ALERT, anomalies[0]
-
-        # Actionable insights
-        if insights and any(i.strip() for i in insights):
-            return Action.LOG_INSIGHT, insights[0]
-
-        # New entities discovered
-        if observations.get("episode_count", 0) > 0:
-            return Action.LOG_DISCOVERY, f"{observations.get('episode_count', 0)} new episodes"
-
-        # Patterns noted but nothing urgent
-        if patterns:
-            return Action.LOG_INSIGHT, patterns[0]
+        # Moderate activity — just log discovery
+        if episode_count > 0:
+            return Action.LOG_DISCOVERY, f"{episode_count} new episodes"
 
         return Action.NO_ACTION, "Activity detected but nothing notable"
 
-    # ─── Phase 4: ACT ─────────────────────────────────────────────────
+    # ─── Phase 3: ACT (log only — no LLM, no autonomous ingest) ──────
 
     async def _act(self, cycle_num: int, action: str, reason: str,
-                  observations: dict, analysis: Optional[dict]):
-        """Execute the decided action — log to journal, queue insights, ingest to graph, SMS notify."""
+                  observations: dict):
+        """Execute the decided action — LOG ONLY.
+        No LLM calls, no autonomous graph ingest, no autonomous SMS.
+        Proposals written to collab.jsonl for Karma to review in-session."""
 
         # Write to consciousness journal
         entry = {
@@ -556,14 +269,11 @@ Keep response under 500 tokens.
             "cycle": cycle_num,
             "action": action,
             "reason": reason,
-            "model": analysis.get("model", "unknown") if analysis else "unknown",
+            "model": "none",  # No LLM used
             "observations": {
-                "new_episodes": observations.get("new_episodes", []),
-                "new_entities": observations.get("new_entities", 0),
-                "new_relationships": observations.get("new_relationships", 0),
-                "active_sessions": observations.get("active_sessions", 0),
+                "episode_count": observations.get("episode_count", 0),
+                "time_delta_seconds": observations.get("time_delta_seconds", 0),
             },
-            "analysis": analysis,
         }
 
         try:
@@ -576,93 +286,24 @@ Keep response under 500 tokens.
         # Log to decision_log.jsonl
         try:
             decision_logger = DecisionLogger()
-            decision_str = action
-            observation_str = f"Episodes: {observations.get('new_episodes', 0)}, Entities: {observations.get('new_entities', 0)}, Relationships: {observations.get('new_relationships', 0)}"
-            reasoning_str = reason
-            action_str = f"Cycle #{cycle_num}: {action}"
-            
-            # Properly await the async decision logger
             result = await decision_logger.log_decision(
-                decision=decision_str,
-                observation=observation_str,
-                reasoning=reasoning_str,
-                action=action_str,
+                decision=action,
+                observation=f"Episodes: {observations.get('episode_count', 0)}",
+                reasoning=reason,
+                action=f"Cycle #{cycle_num}: {action}",
                 source="consciousness_loop"
             )
         except Exception as e:
             print(f"[CONSCIOUSNESS] Failed to write decision log: {e}")
 
-        # ─── PROPOSE Phase ──────────────────────────────────────────────
-        # Write proposals to collab.jsonl for CC review before deployment
-        if action in (Action.LOG_INSIGHT, Action.LOG_ALERT, Action.LOG_GROWTH):
-            proposal = {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "cycle": cycle_num,
-                "action": action,
-                "proposal": reason,
-                "evidence": {
-                    "new_episodes": observations.get("new_episodes", 0),
-                    "new_entities": observations.get("new_entities", 0),
-                    "new_relationships": observations.get("new_relationships", 0),
-                    "active_sessions": observations.get("active_sessions", 0),
-                },
-                "analysis": analysis if analysis else None,
-                "status": "pending_review",  # CC approval workflow: pending_review → approved → deployed
-            }
-            try:
-                collab_path = getattr(config, "COLLAB_JOURNAL", "/ledger/collab.jsonl")
-                with open(collab_path, "a", encoding="utf-8") as f:
-                    f.write(json.dumps(proposal) + "\n")
-                self.metrics["proposals_written"] = self.metrics.get("proposals_written", 0) + 1
-            except Exception as e:
-                print(f"[CONSCIOUSNESS] Failed to write proposal: {e}")
-
-        # Queue insights for proactive chat mention
+        # Queue insights for proactive chat mention (Karma reads these in-session)
         if action in (Action.LOG_INSIGHT, Action.LOG_ALERT, Action.LOG_GROWTH):
             self._pending_insights.append(reason)
-            # Cap queue at 5 to avoid overwhelming chat context
             if len(self._pending_insights) > 5:
                 self._pending_insights = self._pending_insights[-5:]
 
-        # Ingest reflection into knowledge graph (non-blocking)
-        if self._ingest_episode and action != Action.NO_ACTION:
-            try:
-                # Build a reflection episode for the graph
-                reflection_body = f"[karma-consciousness] Cycle #{cycle_num} ({action}): {reason}"
-                if analysis:
-                    patterns = analysis.get("patterns", [])
-                    insights = analysis.get("insights", [])
-                    if patterns:
-                        reflection_body += f"\nPatterns: {'; '.join(patterns[:3])}"
-                    if insights:
-                        reflection_body += f"\nInsights: {'; '.join(insights[:3])}"
-
-                # Properly await the async ingest_episode
-                await self._ingest_episode(
-                    reflection_body, f"Karma's self-reflection (cycle {cycle_num})",
-                    source="karma-consciousness"
-                )
-                self.metrics["journal_ingested"] += 1
-            except Exception as e:
-                print(f"[CONSCIOUSNESS] Graph ingest failed: {e}")
-
-        # SMS notify for high-value insights
-        if self._sms_notify and action in (Action.LOG_ALERT, Action.LOG_INSIGHT, Action.LOG_GROWTH):
-            try:
-                confidence = 0.0
-                if analysis:
-                    urgency = analysis.get("urgency", "none")
-                    confidence = {"none": 0.3, "low": 0.5, "medium": 0.8, "high": 1.0}.get(urgency, 0.3)
-                # SMS module handles throttling and confidence filtering
-                sms_category = "breakthrough_insight"
-                if action == Action.LOG_ALERT:
-                    sms_category = "problem_prevention"
-                elif action == Action.LOG_GROWTH:
-                    sms_category = "self_improvement"
-                await self._sms_notify(reason, category=sms_category, confidence=confidence)
-                self.metrics["sms_sent"] += 1
-            except Exception as e:
-                print(f"[CONSCIOUSNESS] SMS notify failed: {e}")
+        # NOTE: Autonomous graph ingest REMOVED — Karma decides what to ingest during sessions
+        # NOTE: Autonomous SMS REMOVED — Karma decides when to notify during sessions
 
         # Update counters
         if action == Action.LOG_INSIGHT:
@@ -673,14 +314,11 @@ Keep response under 500 tokens.
         log_level = "ALERT" if action == Action.LOG_ALERT else "INFO"
         print(f"[CONSCIOUSNESS] [{log_level}] Cycle #{cycle_num}: {action} — {reason}")
 
-    # ─── Phase 5: REFLECT ─────────────────────────────────────────────
+    # ─── Phase 4: REFLECT ─────────────────────────────────────────────
 
     async def _reflect(self, cycle_data: dict) -> dict:
-        """
-        REFLECT phase: Log complete cycle to consciousness.jsonl for learning.
-
-        Now async: properly writes to consciousness.jsonl with full cycle data.
-        """
+        """REFLECT phase: Log complete cycle to consciousness.jsonl.
+        Pure logging — no LLM calls."""
         try:
             cycle_num = cycle_data.get("cycle", 0)
             cycle_ms = cycle_data.get("cycle_ms", 0)
@@ -698,9 +336,10 @@ Keep response under 500 tokens.
             }
 
             # Append to consciousness.jsonl
-            consciousness_path = getattr(config, "CONSCIOUSNESS_JOURNAL", "/opt/seed-vault/memory_v1/ledger/consciousness.jsonl")
+            consciousness_path = getattr(config, "CONSCIOUSNESS_JOURNAL",
+                "/opt/seed-vault/memory_v1/ledger/consciousness.jsonl")
             with open(consciousness_path, "a", encoding="utf-8") as f:
-                f.write(json.dumps(reflection_entry) + "\\n")
+                f.write(json.dumps(reflection_entry) + "\n")
 
             # Update metrics
             self.metrics["last_cycle_time"] = reflection_entry["timestamp"]
@@ -732,24 +371,11 @@ Keep response under 500 tokens.
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }
 
-    # ─── Tool-Use Methods ────────────────────────────────────────────
+    # ─── Tool-Use Methods (available for Karma to call in-session) ────
 
     async def _execute_tool(self, tool_name: str, tool_args: dict) -> dict:
-        """
-        TOOL-USE phase: Execute a tool within consciousness reasoning.
-
-        Supported tools:
-        - 'query_graph': Query FalkorDB for entity/relationship info
-        - 'search_ledger': Search recent ledger entries
-        - 'analyze_pattern': Analyze patterns in recent episodes
-
-        Args:
-            tool_name: Name of the tool to execute
-            tool_args: Arguments for the tool
-
-        Returns:
-            Tool result dict with 'success' and 'result' keys
-        """
+        """TOOL-USE: Execute a tool when Karma explicitly requests it.
+        NOT called autonomously by the consciousness loop."""
         try:
             if tool_name == "query_graph":
                 return await self._tool_query_graph(tool_args)
@@ -771,7 +397,7 @@ Keep response under 500 tokens.
             }
 
     async def _tool_query_graph(self, args: dict) -> dict:
-        """Query FalkorDB graph during consciousness cycle."""
+        """Query FalkorDB graph — available for Karma in-session use."""
         try:
             query = args.get("cypher", "MATCH (e:Entity) RETURN count(e) LIMIT 1")
             falkor = self._get_falkor()
@@ -799,7 +425,6 @@ Keep response under 500 tokens.
             with open(ledger_file, "r") as f:
                 lines = f.readlines()
 
-            # Search in reverse (recent first)
             for line in reversed(lines[-100:]):
                 if line.strip():
                     entry = json.loads(line)
@@ -856,6 +481,7 @@ Keep response under 500 tokens.
         return {
             **self.metrics,
             "state": "running" if self._running else "stopped",
+            "mode": "observe-only",  # Signal that no LLM calls happen
             "pending_insights": len(self._pending_insights),
         }
 
