@@ -75,7 +75,7 @@ class ConsciousnessLoop:
         }
         self._cycle_durations: list[float] = []  # Last 100 durations for avg
         self._last_distillation_time: float = 0.0  # Unix epoch; 0 = run on first opportunity
-        self.last_cycle_time = time.time()  # Track when last cycle ran
+        self.last_cycle_time = 0  # Track when last cycle ran (0 = first cycle observes all)
 
     # ─── Lifecycle ────────────────────────────────────────────────────
 
