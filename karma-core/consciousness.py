@@ -175,6 +175,26 @@ class ConsciousnessLoop:
         # Update tick timestamp
         self._last_tick = datetime.now(timezone.utc).isoformat()
 
+        # ── Memory Decay (Decision #5) — runs once per MEMORY_DECAY_INTERVAL_HOURS ──
+        if not hasattr(self, '_last_decay_run'):
+            self._last_decay_run = 0
+        decay_interval_seconds = config.MEMORY_DECAY_INTERVAL_HOURS * 3600
+        if time.time() - self._last_decay_run > decay_interval_seconds:
+            try:
+                from memory_decay import run_decay
+                decay_result = run_decay(self._get_falkor)
+                self._last_decay_run = time.time()
+                if decay_result.get("decayed", 0) > 0:
+                    self._log_journal(
+                        Action.LOG_DISCOVERY,
+                        f"Memory decay: {decay_result['decayed']}/{decay_result['total_checked']} episodes decayed"
+                    )
+                    print(f"[CONSCIOUSNESS] Memory decay: {decay_result['decayed']} episodes decayed")
+                else:
+                    print(f"[CONSCIOUSNESS] Memory decay: checked {decay_result.get('total_checked', 0)} episodes, none needed decay")
+            except Exception as e:
+                print(f"[CONSCIOUSNESS] Memory decay error: {e}")
+
     # ─── Phase 1: OBSERVE ─────────────────────────────────────────────
 
     def _observe(self) -> Optional[dict]:
