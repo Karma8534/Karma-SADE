@@ -23,7 +23,7 @@
 
 ## Project Identity
 - **System:** Karma Peer — Universal AI Memory with persistent identity and continuity
-- **Architecture:** Chrome Extension → Hub API → Vault API → JSONL Ledger + FalkorDB
+- **Architecture:** Hub API → Vault API → JSONL Ledger + FalkorDB
 - **Server:** arknexus.net (DigitalOcean NYC3, 4GB RAM) — SSH alias: vault-neo
 - **Repo:** https://github.com/Karma8534/Karma-SADE.git
 - **Branch:** main (working branch; claude/elegant-solomon is legacy)
@@ -33,7 +33,7 @@
 - Do NOT add new documentation files (.md) without explicit user approval
 - MEMORY.md is the ONLY file you update autonomously (phase status, active task, blockers)
 - Never hardcode API keys, bearer tokens, or secrets in any committed file
-- Bearer token location: chrome-extension/.vault-token (never read or log the value)
+- Bearer token location: /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt (never read or log the value)
 - Push to GitHub after every significant change
 - Run pre-commit secret scan before every push
 
@@ -201,14 +201,14 @@ CLAUDE.md                    ← You are here (root instructions)
 MEMORY.md                    ← Mutable state (you update this)
 .claude/rules/               ← Auto-loaded reference (do not modify)
   architecture.md            ← System design, data flow, schema
-  extension.md               ← Chrome extension specifics
+  extension.md               ← (DEPRECATED — Chrome extension never worked)
   deployment.md              ← Server ops, Docker, troubleshooting
   git-workflow.md            ← GitHub backup, .gitignore, push protocol
 hub-bridge/                  ← Hub bridge Node.js source (sync from vault-neo after changes)
   server.js                  ← Main hub-bridge application (v2.2.0+)
 PHASE-*.md                   ← Phase documentation (read-only reference)
 SESSION-SUMMARY-*.md         ← Session logs (read-only reference)
-chrome-extension/            ← Extension source code
+chrome-extension/            ← DEPRECATED: Extension never worked properly. Dead code.
 docs/plans/                  ← Design documents (YYYY-MM-DD-<topic>-design.md)
 scripts/                     ← Operational scripts for vault-neo
 ```
@@ -217,4 +217,4 @@ scripts/                     ← Operational scripts for vault-neo
 This repo also contains files from the older Karma SADE backend (Python/FastAPI, localhost:9401).
 That system is separate and operational independently. Do not modify karma_backend.py,
 karma_quota_manager.py, karma_memory.py, or related files unless explicitly asked.
-The active project is the Karma Peer system (Chrome extension + Vault + Hub on arknexus.net).
+The active project is the Karma Peer system (Hub + Vault on arknexus.net). The Chrome extension has never worked and should be treated as dead code.

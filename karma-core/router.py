@@ -1,12 +1,11 @@
 """
-Karma Model Router — Multi-Model Intelligence
+Karma Model Router — Two-Tier Locked (Decision #7 aligned)
 
-Routes requests to the best model for each task type:
-  - MiniMax M2.5: Primary model for coding, speed, general
-  - GLM-5: Reasoning + analysis (priority 1 — deep thinking tasks)
-  - Groq (Llama): Fallback for speed-critical responses
-  - OpenAI gpt-4o-mini: Final fallback, consciousness analysis
+Routes ALL requests through exactly two models:
+  - GLM-4.7-Flash (free via Z.ai, ~80% of traffic — coding, speed, general)
+  - gpt-4o-mini (OpenAI, ~20% — reasoning, analysis, final fallback)
 
+MiniMax, Groq, GLM-5 REMOVED per Decision #7.
 All providers expose OpenAI-compatible /v1/chat/completions endpoints,
 so we use the OpenAI Python SDK with different base_url + api_key per provider.
 """
@@ -53,7 +52,7 @@ class TaskType:
     CODING = "coding"           # Code generation, debugging, technical
     REASONING = "reasoning"     # Complex analysis, multi-step logic
     SPEED = "speed"             # Quick answers, simple chat, low latency
-    ANALYSIS = "analysis"       # Consciousness loop, pattern detection
+    ANALYSIS = "analysis"       # Pattern detection (used by Karma in-session)
     GENERAL = "general"         # Default catch-all
 
 
@@ -134,7 +133,10 @@ def classify_task(message: str) -> str:
 # ─── Router ───────────────────────────────────────────────────────────────
 
 class ModelRouter:
-    """Routes requests to the best available model based on task type."""
+    """Routes requests to EXACTLY two models per Decision #7:
+      - GLM-4.7-Flash (free, ~80% of traffic)
+      - gpt-4o-mini (~20%, reasoning + fallback)
+    """
 
     def __init__(self):
         self.providers: list[ModelProvider] = []
@@ -142,69 +144,43 @@ class ModelRouter:
         self._init_providers()
 
     def _init_providers(self):
-        """Initialize all configured model providers."""
-        # MiniMax M2.5 — PRIMARY for coding, speed, general
-        # Top benchmark scores: 80.2% SWE-Bench, strong coding + speed
-        if config.MINIMAX_API_KEY:
+        """Initialize the two locked model providers.
+        Decision #7: GLM-4.7-Flash (free, ~80%) + gpt-4o-mini (~20%)."""
+
+        # ── Tier 1: GLM-4.7-Flash — PRIMARY for coding, speed, general ──
+        # Free via Z.ai / BigModel. Handles ~80% of traffic.
+        if config.GLM_API_KEY:
             self.providers.append(ModelProvider(
-                name="minimax",
-                model=config.MINIMAX_MODEL,
-                base_url="https://api.minimax.io/v1",
-                api_key=config.MINIMAX_API_KEY,
+                name="glm-flash",
+                model=config.GLM_MODEL,  # "glm-4-flash" from config
+                base_url=config.GLM_BASE_URL,
+                api_key=config.GLM_API_KEY,
                 task_types=[TaskType.CODING, TaskType.SPEED, TaskType.GENERAL,
                             TaskType.REASONING, TaskType.ANALYSIS],
                 max_tokens=2048,
                 temperature=0.7,
-                priority=0,  # Highest priority for coding/speed/general; fallback for reasoning/analysis
+                priority=0,  # Highest priority — default for everything
             ))
-            print(f"[ROUTER] MiniMax registered: {config.MINIMAX_MODEL} (PRIMARY — coding/speed/general)")
+            print(f"[ROUTER] GLM-4.7-Flash registered: {config.GLM_MODEL} (PRIMARY — free tier, ~80%)")
 
-        # Groq — secondary fallback for speed tasks (Llama on custom silicon)
-        if config.GROQ_API_KEY:
-            self.providers.append(ModelProvider(
-                name="groq",
-                model=config.GROQ_MODEL,
-                base_url="https://api.groq.com/openai/v1",
-                api_key=config.GROQ_API_KEY,
-                task_types=[TaskType.SPEED, TaskType.GENERAL],
-                max_tokens=1024,
-                temperature=0.7,
-                priority=5,  # Fallback behind MiniMax
-            ))
-            print(f"[ROUTER] Groq registered: {config.GROQ_MODEL} (fallback)")
-
-        # GLM-5 — Reasoning + analysis specialist (BigModel / Z.ai, OpenAI-compatible)
-        # Priority -1 beats MiniMax (0) for reasoning/analysis tasks
-        if config.GLM_API_KEY:
-            self.providers.append(ModelProvider(
-                name="glm5",
-                model=config.GLM_MODEL,
-                base_url=config.GLM_BASE_URL,
-                api_key=config.GLM_API_KEY,
-                task_types=[TaskType.REASONING, TaskType.ANALYSIS],
-                max_tokens=2048,
-                temperature=0.7,
-                priority=-1,  # Highest priority for reasoning/analysis — beats MiniMax
-            ))
-            print(f"[ROUTER] GLM-5 registered: {config.GLM_MODEL} (reasoning + analysis, priority -1)")
-
-        # OpenAI gpt-4o-mini — final fallback + consciousness analysis
+        # ── Tier 2: OpenAI gpt-4o-mini — reasoning + final fallback ──
+        # ~20% of traffic. Used for reasoning/analysis tasks, fallback for all.
         if config.OPENAI_API_KEY:
             self.providers.append(ModelProvider(
                 name="openai",
-                model=config.ANALYSIS_MODEL,
+                model=config.ANALYSIS_MODEL,  # "gpt-4o-mini" from config
                 base_url="https://api.openai.com/v1",
                 api_key=config.OPENAI_API_KEY,
-                task_types=[TaskType.ANALYSIS, TaskType.GENERAL, TaskType.CODING,
-                            TaskType.REASONING, TaskType.SPEED],
+                task_types=[TaskType.REASONING, TaskType.ANALYSIS,
+                            TaskType.GENERAL, TaskType.CODING, TaskType.SPEED],
                 max_tokens=1024,
                 temperature=0.7,
-                priority=10,  # Lowest priority — final fallback
+                priority=5,  # Lower priority — reasoning specialist + fallback
             ))
-            print(f"[ROUTER] OpenAI registered: {config.ANALYSIS_MODEL} (final fallback)")
+            print(f"[ROUTER] OpenAI registered: {config.ANALYSIS_MODEL} (TIER 2 — reasoning + fallback, ~20%)")
 
         if not self.providers:
-            print("[ROUTER] WARNING: No model providers configured!")
+            print("[ROUTER] WARNING: No model providers configured! Need GLM_API_KEY or OPENAI_API_KEY.")
 
     def get_provider(self, task_type: str) -> Optional[ModelProvider]:
         """Get the best provider for a task type.
@@ -233,12 +209,10 @@ class ModelRouter:
 
         # Build fallback chain: primary → other providers that support this task → any enabled
         providers_to_try = [provider]
-        # Add other providers for same task type (sorted by priority)
         for p in sorted(self.providers, key=lambda x: x.priority):
             if p.enabled and p.name != provider.name and p not in providers_to_try:
                 if task_type in p.task_types:
                     providers_to_try.append(p)
-        # Final fallback: OpenAI (always available for everything)
         for p in sorted(self.providers, key=lambda x: x.priority):
             if p.enabled and p not in providers_to_try:
                 providers_to_try.append(p)
@@ -256,7 +230,7 @@ class ModelRouter:
                 elapsed_ms = (time.monotonic() - start) * 1000
                 reply = response.choices[0].message.content
 
-                # Strip <think>...</think> reasoning blocks (MiniMax M2.5 exposes CoT)
+                # Strip <think>...</think> reasoning blocks (some models expose CoT)
                 if reply and "<think>" in reply:
                     import re
                     reply = re.sub(r"<think>.*?</think>\s*", "", reply, flags=re.DOTALL).strip()
