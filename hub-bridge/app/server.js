@@ -866,16 +866,14 @@ async function callGPTWithTools(messages, maxTokens, model) {
 
     // Model validation: permit OpenAI (gpt*) and GLM models; fallback to gpt-4o-mini for others
     // (tool-calling via OpenAI/GLM is more reliable than Anthropic)
-    const actualModel = model && (model.startsWith("gpt") || model.startsWith("glm")) ? model : "gpt-4o-mini";
+    const actualModel = model && model.startsWith("gpt") ? model : "gpt-4o-mini";
     const isZaiModel = actualModel.startsWith("glm-");
     const providerName = (isZaiModel && zai) ? "zai" : "openai";
     console.log(`[TOOL-USE] Using model: ${actualModel} (requested: ${model})`);
 
     while (iterations < MAX_ITERATIONS) {
       iterations++;
-      console.log(`[TOOL-USE] GPT iteration ${iterations}, tools count: ${gptTools.length}`);
-      // Route: Z.ai models go through zai client, everything else through openai
-      const isZaiModel = actualModel.startsWith("glm-");
+      // Tool-use always via OpenAI (GLM models routed to callLLM for chat backbone)
       const client = (isZaiModel && zai) ? zai : openai;
       const resp = await client.chat.completions.create({
         model: actualModel,
@@ -1163,7 +1161,7 @@ const server = http.createServer(async (req, res) => {
 
       // Use GPT-4o for tool-calling (Anthropic unreliable). Karma needs real tool-use.
       console.log("[DIAGNOSTIC] About to call callGPTWithTools, model:", model, "max_output_tokens:", max_output_tokens);
-      const llmResult    = await callGPTWithTools(messages, max_output_tokens, model);
+      const llmResult    = await callLLMWithTools(model, messages, max_output_tokens);
       const assistantText = llmResult.text || "(empty_assistant_text)";
       const usage         = llmResult.usage;
       const debug_provider   = llmResult.provider;
@@ -1776,6 +1774,28 @@ const server = http.createServer(async (req, res) => {
         }
       } else {
         return json(res, 400, { ok: false, error: "missing_action", hint: "provide 'append' or 'content'+'confirm_overwrite:true'" });
+      }
+    }
+
+    // ─── Memory API Proxy Routes (Phase 1) ─────────────────────────────
+    // Proxy POST requests to karma-server for memory operations
+    const MEMORY_PROXY_ROUTES = ["/v1/admit", "/v1/retrieve", "/v1/memory/update", "/v1/memory/delete", "/v1/reflect"];
+    if (req.method === "POST" && MEMORY_PROXY_ROUTES.includes(req.url)) {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      const raw = await parseBody(req, 500000);
+      try {
+        const proxyRes = await fetch(`http://karma-server:8340${req.url}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: raw,
+        });
+        const data = await proxyRes.json();
+        return json(res, proxyRes.status, data);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: "karma_server_unavailable", message: e.message });
       }
     }
 

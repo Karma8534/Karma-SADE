@@ -29,6 +29,18 @@ import config
 import subprocess
 import asyncio as _asyncio
 
+# ─── Memory Tools (Phase 1) ──────────────────────────────────────────────
+try:
+    from memory_tools import (
+        admit_memory, retrieve_memory, update_memory, delete_memory,
+        save_session_context, load_last_session, load_pending_observations
+    )
+    _MEMORY_TOOLS_AVAILABLE = True
+    print("[MEMORY] memory_tools loaded successfully")
+except ImportError as e:
+    _MEMORY_TOOLS_AVAILABLE = False
+    print(f"[MEMORY] memory_tools not available: {e}")
+
 TOOL_DEFINITIONS = [
     {"name": "read_file", "description": "Read a file from the droplet filesystem.",
      "input_schema": {"type": "object", "properties": {"path": {"type": "string"}}, "required": ["path"]}},
@@ -712,6 +724,27 @@ def build_karma_context(user_message: str, episode_lane: str = "canonical") -> s
             for insight in insights:
                 parts.append(f"- {insight}")
 
+    # P6: Memory-before-prompt — retrieve relevant memories from SQLite
+    if _MEMORY_TOOLS_AVAILABLE:
+        try:
+            memories = retrieve_memory(user_message, top_k=5)
+            if memories:
+                parts.append("\n## Retrieved Memories (Long-Term)")
+                for mem in memories:
+                    parts.append(f"- [{mem['cell_type']}] {mem['content']} (score: {mem['score']:.3f})")
+        except Exception as e:
+            print(f"[MEMORY] retrieve_memory failed: {e}")
+
+        # Load recent observations from consciousness loop
+        try:
+            observations = load_pending_observations(limit=10)
+            if observations:
+                parts.append("\n## Recent Observations (since last session)")
+                for obs in observations[:10]:
+                    parts.append(f"- [{obs.get('event_type', '?')}] {obs.get('description', '')}")
+        except Exception as e:
+            print(f"[MEMORY] load_pending_observations failed: {e}")
+
     # FIRST: Identity facts — who the user is (compact, always included)
     identity = query_identity_facts()
     if identity:
@@ -969,6 +1002,7 @@ async def health():
     graph_stats = get_graph_stats()
     return JSONResponse({
         "status": "alive",
+        "memory_tools": _MEMORY_TOOLS_AVAILABLE,
         "brain": {
             "knowledge_graph": graph_stats,
             "preferences": len(query_preferences(limit=100)),
@@ -1584,6 +1618,117 @@ async def openai_proxy_completions(request: Request):
         )
 
 
+# ─── Memory API Endpoints (Phase 1) ──────────────────────────────────────
+
+@app.post("/v1/admit")
+async def api_admit_memory(request: Request):
+    """Admit a new memory through the quality gate (P4)."""
+    if not _MEMORY_TOOLS_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "memory_tools not loaded"}, status_code=503)
+    try:
+        body = await request.json()
+        result = admit_memory(
+            content=body.get("content", ""),
+            category=body.get("category", "learning"),
+            source=body.get("source", "api"),
+            confidence=body.get("confidence", 0.7),
+            pinned=body.get("pinned", False)
+        )
+        return JSONResponse({"ok": result.get("action") in ("added", "updated", "queued"), **result})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/v1/retrieve")
+async def api_retrieve_memory(request: Request):
+    """Retrieve memories via hybrid RRF search (P9)."""
+    if not _MEMORY_TOOLS_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "memory_tools not loaded"}, status_code=503)
+    try:
+        body = await request.json()
+        results = retrieve_memory(
+            query=body.get("query", ""),
+            top_k=body.get("top_k", 5),
+            category_filter=body.get("category", None)
+        )
+        return JSONResponse({"ok": True, "results": results, "count": len(results)})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/v1/memory/update")
+async def api_update_memory(request: Request):
+    """Update an existing memory cell (Decision #6: newer wins)."""
+    if not _MEMORY_TOOLS_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "memory_tools not loaded"}, status_code=503)
+    try:
+        body = await request.json()
+        result = update_memory(
+            memory_id=body.get("memory_id", ""),
+            new_content=body.get("content", ""),
+            reason=body.get("reason", "api_update")
+        )
+        return JSONResponse({"ok": result.get("action") == "updated", **result})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/v1/memory/delete")
+async def api_delete_memory(request: Request):
+    """Soft-delete (archive) a memory cell."""
+    if not _MEMORY_TOOLS_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "memory_tools not loaded"}, status_code=503)
+    try:
+        body = await request.json()
+        result = delete_memory(
+            memory_id=body.get("memory_id", ""),
+            reason=body.get("reason", "api_delete")
+        )
+        return JSONResponse({"ok": result.get("action") == "archived", **result})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/v1/reflect")
+async def api_reflect(request: Request):
+    """Session-end reflection: save context + admit learnings (P5)."""
+    if not _MEMORY_TOOLS_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "memory_tools not loaded"}, status_code=503)
+    try:
+        body = await request.json()
+        # Save session context
+        session_result = save_session_context(
+            session_id=body.get("session_id", f"reflect_{int(time.time())}"),
+            task=body.get("task", ""),
+            goal=body.get("goal", ""),
+            approaches=body.get("approaches", ""),
+            decisions=body.get("decisions", ""),
+            state=body.get("state", "")
+        )
+        # Admit any learnings
+        admitted = []
+        for learning in body.get("learnings", []):
+            if isinstance(learning, str):
+                r = admit_memory(learning, "learning", "reflection", 0.8)
+                admitted.append(r)
+            elif isinstance(learning, dict):
+                r = admit_memory(
+                    content=learning.get("content", ""),
+                    category=learning.get("category", "learning"),
+                    source="reflection",
+                    confidence=learning.get("confidence", 0.8)
+                )
+                admitted.append(r)
+        return JSONResponse({
+            "ok": True,
+            "session": session_result,
+            "learnings_processed": len(admitted),
+            "learnings": admitted
+        })
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
 @app.post("/v1/tools/execute")
 async def execute_tool(request: Request):
     """
@@ -1701,6 +1846,24 @@ async def websocket_chat(ws: WebSocket):
 
     except WebSocketDisconnect:
         print(f"[{session_id}] Disconnected")
+        # P5: Save session context on disconnect
+        if _MEMORY_TOOLS_AVAILABLE and conversation.history:
+            try:
+                # Extract 5-field session context from conversation
+                user_msgs = [m["content"] for m in conversation.history if m["role"] == "user"]
+                asst_msgs = [m["content"] for m in conversation.history if m["role"] == "assistant"]
+                save_session_context(
+                    session_id=session_id,
+                    task=user_msgs[0][:200] if user_msgs else "",
+                    goal="",
+                    approaches="",
+                    decisions="",
+                    state=f"turns={len(conversation.history)}, last_msg={user_msgs[-1][:100] if user_msgs else ''}",
+                    token_count=sum(len(m.get('content', '').split()) * 2 for m in conversation.history)
+                )
+                print(f"[{session_id}] Session context saved to SQLite")
+            except Exception as e:
+                print(f"[{session_id}] Failed to save session context: {e}")
     except Exception as e:
         print(f"[{session_id}] Error: {e}")
         try:
