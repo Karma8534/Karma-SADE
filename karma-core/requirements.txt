@@ -13,7 +13,10 @@ websockets>=14.0
 openai>=1.60
 redis>=5.0
 python-multipart>=0.0.9
-tiktoken>=0.7
 
 # SMS Notifications
 twilio>=9.0
+
+# Phase 0: Embedding model (Decision #2)
+sentence-transformers>=3.0
+numpy>=1.26

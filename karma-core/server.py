@@ -23,56 +23,86 @@ import uvicorn
 import config
 # # from token_budget import SessionBudget, count_tokens, count_message_tokens, check_budget, get_monthly_tracker
 
-# ─── Tools & Schema ────────────────────────────────────────────────────────
+# ─── 4-Tool Surface (P2, Phase 0 Step 0.9) ─────────────────────────────────
+# Decision: 4 tools only — Read/Write/Edit/Bash. No MCP. < 500 tokens total.
 
-SHELL_EXEC_TOOL = {
-    "name": "shell_exec",
-    "description": "Execute a read-only shell command on vault-neo for self-diagnosis. Supports: git log, systemctl status, docker ps, ls, cat, grep, wc, tail, head, ping. Useful for understanding system state, consciousness loop status, K2 connectivity, batch ingestion progress, etc.",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "command": {
-                "type": "string",
-                "description": "Shell command to execute (must be whitelisted). Example: 'git log --oneline -30' or 'systemctl status karma-consciousness'"
-            }
-        },
-        "required": ["command"]
-    }
-}
+import subprocess
+import asyncio as _asyncio
 
-AVAILABLE_TOOLS = {
-    "shell_exec": SHELL_EXEC_TOOL,
-}
+TOOL_DEFINITIONS = [
+    {"name": "read_file", "description": "Read a file from the droplet filesystem.",
+     "input_schema": {"type": "object", "properties": {"path": {"type": "string"}}, "required": ["path"]}},
+    {"name": "write_file", "description": "Write content to a file on the droplet.",
+     "input_schema": {"type": "object", "properties": {"path": {"type": "string"}, "content": {"type": "string"}}, "required": ["path", "content"]}},
+    {"name": "edit_file", "description": "Replace old_text with new_text in a file.",
+     "input_schema": {"type": "object", "properties": {"path": {"type": "string"}, "old_text": {"type": "string"}, "new_text": {"type": "string"}}, "required": ["path", "old_text", "new_text"]}},
+    {"name": "bash", "description": "Run a shell command on the droplet. Returns stdout, stderr, exit code.",
+     "input_schema": {"type": "object", "properties": {"command": {"type": "string"}}, "required": ["command"]}},
+]
 
+AVAILABLE_TOOLS = {t["name"]: t for t in TOOL_DEFINITIONS}
 
-async def execute_shell_command(command: str) -> dict:
-    """Execute whitelisted shell command via /v1/shell endpoint."""
-    hub_token = os.getenv('HUB_CHAT_TOKEN')
-    if not hub_token:
-        return {"ok": False, "error": "HUB_CHAT_TOKEN not set"}
+# Allowed base paths for file operations (security)
+ALLOWED_PATHS = ["/opt/seed-vault/", "/home/neo/", "/tmp/"]
 
-    url = "https://hub.arknexus.net/v1/shell"
-    headers = {"Authorization": f"Bearer {hub_token}"}
-    payload = {"command": command}
+def _check_path(path: str) -> bool:
+    """Verify path is within allowed directories."""
+    return any(path.startswith(p) for p in ALLOWED_PATHS)
 
+async def execute_tool_action(tool_name: str, tool_input: dict) -> dict:
+    """Execute one of the 4 tools. Returns {ok, result/error}."""
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, json=payload, headers=headers, timeout=10) as resp:
-                if resp.status == 200:
-                    result = await resp.json()
-                    return {
-                        "ok": result.get("ok", False),
-                        "command": result.get("command", command),
-                        "stdout": result.get("stdout", ""),
-                        "stderr": result.get("stderr", ""),
-                        "exitCode": result.get("exitCode"),
-                        "error": result.get("error")
-                    }
-                else:
-                    text = await resp.text()
-                    return {"ok": False, "error": f"HTTP {resp.status}: {text}"}
+        if tool_name == "read_file":
+            path = tool_input["path"]
+            if not _check_path(path):
+                return {"ok": False, "error": f"Path not allowed: {path}"}
+            with open(path, "r", encoding="utf-8", errors="replace") as f:
+                content = f.read(100_000)  # 100KB cap
+            return {"ok": True, "content": content, "bytes": len(content)}
+
+        elif tool_name == "write_file":
+            path = tool_input["path"]
+            if not _check_path(path):
+                return {"ok": False, "error": f"Path not allowed: {path}"}
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(tool_input["content"])
+            return {"ok": True, "bytes_written": len(tool_input["content"])}
+
+        elif tool_name == "edit_file":
+            path = tool_input["path"]
+            if not _check_path(path):
+                return {"ok": False, "error": f"Path not allowed: {path}"}
+            with open(path, "r", encoding="utf-8") as f:
+                content = f.read()
+            old_text = tool_input["old_text"]
+            if old_text not in content:
+                return {"ok": False, "error": "old_text not found in file"}
+            content = content.replace(old_text, tool_input["new_text"], 1)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(content)
+            return {"ok": True, "replaced": True}
+
+        elif tool_name == "bash":
+            command = tool_input["command"]
+            proc = await _asyncio.create_subprocess_shell(
+                command,
+                stdout=_asyncio.subprocess.PIPE,
+                stderr=_asyncio.subprocess.PIPE,
+                cwd="/opt/seed-vault/memory_v1"
+            )
+            stdout, stderr = await _asyncio.wait_for(proc.communicate(), timeout=30)
+            return {
+                "ok": proc.returncode == 0,
+                "stdout": stdout.decode("utf-8", errors="replace")[:50_000],
+                "stderr": stderr.decode("utf-8", errors="replace")[:10_000],
+                "exit_code": proc.returncode
+            }
+
+        else:
+            return {"ok": False, "error": f"Unknown tool: {tool_name}"}
     except Exception as e:
-        return {"ok": False, "error": f"shell_exec failed: {str(e)}"}
+        return {"ok": False, "error": str(e)}
 
 
 # ─── LLM Client ──────────────────────────────────────────────────────────
@@ -309,7 +339,7 @@ def query_knowledge_graph(query: str, limit: int = 10) -> list[dict]:
         # ── Pass 1: Name + entity_type match ──────────────────────────────
         pass1_conditions = []
         for word in search_words[:6]:
-            safe = word.replace("'", "\\'")
+            safe = word.replace("'", "\\'").replace('"', '\\"')
             # Exact name match (case-insensitive)
             pass1_conditions.append(f"toLower(n.name) = toLower('{safe}')")
             # Name contains (only for longer words to avoid noise)
@@ -333,7 +363,7 @@ def query_knowledge_graph(query: str, limit: int = 10) -> list[dict]:
         if len(entities) < limit:
             pass2_conditions = []
             for word in search_words[:6]:
-                safe = word.replace("'", "\\'")
+                safe = word.replace("'", "\\'").replace('"', '\\"')
                 if len(word) <= 4:
                     # Short words: match as whole word (space/punctuation boundaries)
                     pass2_conditions.append(
@@ -856,7 +886,7 @@ async def generate_response(user_message: str, conversation: ConversationManager
         return error_msg, "error"
 
 
-# ─── Log Conversations to Ledger ────────────────────────────────────────────────
+# ─── Log Conversations to Ledger ──────────────────────────────────────────
 
 def log_to_ledger(user_msg: str, assistant_msg: str, model_used: str = "unknown", source: str = "karma-terminal"):
     """Append conversation to the JSONL ledger for future learning."""
@@ -1589,20 +1619,8 @@ async def execute_tool(request: Request):
                 status_code=400
             )
 
-        # Execute the tool
-        if tool_name == "shell_exec":
-            command = tool_input.get("command", "")
-            if not command:
-                return JSONResponse(
-                    {"ok": False, "error": "command required for shell_exec"},
-                    status_code=400
-                )
-            result = await execute_shell_command(command)
-        else:
-            return JSONResponse(
-                {"ok": False, "error": f"Tool '{tool_name}' not implemented"},
-                status_code=501
-            )
+        # Execute the tool via unified handler
+        result = await execute_tool_action(tool_name, tool_input)
 
         return JSONResponse({
             "ok": result.get("ok", False),
@@ -1693,7 +1711,7 @@ async def websocket_chat(ws: WebSocket):
         active_conversations.pop(session_id, None)
 
 
-# ─── Command Handlers ─────────────────────────────────────────────────
+# ─── Command Handlers ─────────────────────────────────────────────────────
 
 def handle_command(command: str) -> str:
     """Handle special commands."""
@@ -1863,7 +1881,7 @@ def _reflect() -> str:
     return "\n".join(lines)
 
 
-# ─── Startup ──────────────────────────────────────────────────────────
+# ─── Startup ──────────────────────────────────────────────────────────────
 
 @app.on_event("startup")
 async def startup():
@@ -1901,9 +1919,7 @@ async def startup():
         app.state.consciousness = ConsciousnessLoop(
             get_falkor_fn=get_falkor,
             get_graph_stats_fn=get_graph_stats,
-            get_openai_client_fn=get_openai_client,
             active_conversations_ref=active_conversations,
-            router=app.state.router,
             ingest_episode_fn=ingest_episode,
             sms_notify_fn=app.state.sms.notify if app.state.sms.enabled else None,
         )
