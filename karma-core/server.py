@@ -264,8 +264,11 @@ def query_knowledge_graph(query: str, limit: int = 10) -> list[dict]:
         # Synonym map: bridges user language → graph entity names/types
         synonym_map = {
             'cat': ['cat', 'pet', 'ollie', 'kitten', 'feline'],
+            'cats': ['cat', 'pet', 'ollie', 'kitten', 'feline'],
             'dog': ['dog', 'pet', 'puppy', 'canine'],
+            'dogs': ['dog', 'pet', 'puppy', 'canine'],
             'pet': ['pet', 'cat', 'dog', 'ollie'],
+            'pets': ['pet', 'cat', 'dog', 'ollie'],
             'mom': ['mom', 'mother', 'mama'],
             'dad': ['dad', 'father', 'papa'],
             'brother': ['brother', 'sibling'],
@@ -278,11 +281,14 @@ def query_knowledge_graph(query: str, limit: int = 10) -> list[dict]:
         if not words:
             return []
 
-        # Expand with synonyms
+        # Expand with synonyms (try both original and singular form)
         expanded = set(words)
         for w in words:
             if w in synonym_map:
                 expanded.update(synonym_map[w])
+            # Basic plural stemming: try without trailing 's'
+            elif w.endswith('s') and len(w) > 3 and w[:-1] in synonym_map:
+                expanded.update(synonym_map[w[:-1]])
         search_words = list(expanded)[:8]
 
         entities = []
@@ -303,7 +309,7 @@ def query_knowledge_graph(query: str, limit: int = 10) -> list[dict]:
         # ── Pass 1: Name + entity_type match ──────────────────────────────
         pass1_conditions = []
         for word in search_words[:6]:
-            safe = word.replace("'", "\\'").replace('"', '\\"')
+            safe = word.replace("'", "\\'")
             # Exact name match (case-insensitive)
             pass1_conditions.append(f"toLower(n.name) = toLower('{safe}')")
             # Name contains (only for longer words to avoid noise)
@@ -327,7 +333,7 @@ def query_knowledge_graph(query: str, limit: int = 10) -> list[dict]:
         if len(entities) < limit:
             pass2_conditions = []
             for word in search_words[:6]:
-                safe = word.replace("'", "\\'").replace('"', '\\"')
+                safe = word.replace("'", "\\'")
                 if len(word) <= 4:
                     # Short words: match as whole word (space/punctuation boundaries)
                     pass2_conditions.append(
@@ -850,7 +856,7 @@ async def generate_response(user_message: str, conversation: ConversationManager
         return error_msg, "error"
 
 
-# ─── Log Conversations to Ledger ──────────────────────────────────────────
+# ─── Log Conversations to Ledger ────────────────────────────────────────────────
 
 def log_to_ledger(user_msg: str, assistant_msg: str, model_used: str = "unknown", source: str = "karma-terminal"):
     """Append conversation to the JSONL ledger for future learning."""
@@ -1687,7 +1693,7 @@ async def websocket_chat(ws: WebSocket):
         active_conversations.pop(session_id, None)
 
 
-# ─── Command Handlers ─────────────────────────────────────────────────────
+# ─── Command Handlers ─────────────────────────────────────────────────
 
 def handle_command(command: str) -> str:
     """Handle special commands."""
@@ -1857,7 +1863,7 @@ def _reflect() -> str:
     return "\n".join(lines)
 
 
-# ─── Startup ──────────────────────────────────────────────────────────────
+# ─── Startup ──────────────────────────────────────────────────────────
 
 @app.on_event("startup")
 async def startup():
