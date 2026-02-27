@@ -1000,9 +1000,9 @@ async function callGPTWithTools(messages, maxTokens, model) {
     let iterations = 0;
     const MAX_ITERATIONS = 5;
 
-    // Model validation: must be OpenAI model for tool-use
-    // (tool-calling via OpenAI is more reliable than Anthropic)
-    const actualModel = model && model.startsWith("gpt") ? model : "gpt-4o-mini";
+    // Model validation: permit OpenAI (gpt*) and GLM models; fallback to gpt-4o-mini for others
+    // (tool-calling via OpenAI/GLM is more reliable than Anthropic)
+    const actualModel = model && (model.startsWith("gpt") || model.startsWith("glm")) ? model : "gpt-4o-mini";
     console.log(`[TOOL-USE] Using model: ${actualModel} (requested: ${model})`);
 
     while (iterations < MAX_ITERATIONS) {
