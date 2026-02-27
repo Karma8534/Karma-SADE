@@ -246,8 +246,11 @@ def get_falkor():
 
 def query_knowledge_graph(query: str, limit: int = 10) -> list[dict]:
     """Search the knowledge graph for entities related to a query.
-    Two-pass: first searches entity_type and name matches, then broadens to summary content.
-    Filters stop words. Short words use word-boundary matching to avoid substring noise."""
+    Three-pass search:
+      1. Entity name (exact + contains) + entity_type match
+      2. Summary content search (word-boundary aware)
+      3. Relationship traversal — entities connected to Pass 1/2 hits
+    Includes synonym expansion for common terms. Zero LLM calls."""
     try:
         r = get_falkor()
         stop_words = {'what', 'who', 'where', 'when', 'how', 'why', 'the', 'is', 'are',
@@ -255,70 +258,150 @@ def query_knowledge_graph(query: str, limit: int = 10) -> list[dict]:
                       'has', 'have', 'had', 'will', 'about', 'your', 'you', 'my', 'me',
                       'this', 'that', 'with', 'for', 'from', 'not', 'but', 'and', 'tell',
                       'please', 'know', 'think', 'like', 'just', 'get', 'got', 'its',
-                      'also', 'some', 'any', 'all', 'other', 'than', 'then', 'there'}
-        words = [w.strip().lower() for w in query.split() if len(w.strip()) > 2 and w.strip().lower() not in stop_words]
+                      'also', 'some', 'any', 'all', 'other', 'than', 'then', 'there',
+                      'remember', 'want', 'need', 'much', 'many', 'really', 'thing'}
+
+        # Synonym map: bridges user language → graph entity names/types
+        synonym_map = {
+            'cat': ['cat', 'pet', 'ollie', 'kitten', 'feline'],
+            'cats': ['cat', 'pet', 'ollie', 'kitten', 'feline'],
+            'dog': ['dog', 'pet', 'puppy', 'canine'],
+            'dogs': ['dog', 'pet', 'puppy', 'canine'],
+            'pet': ['pet', 'cat', 'dog', 'ollie'],
+            'pets': ['pet', 'cat', 'dog', 'ollie'],
+            'mom': ['mom', 'mother', 'mama'],
+            'dad': ['dad', 'father', 'papa'],
+            'brother': ['brother', 'sibling'],
+            'sister': ['sister', 'sibling'],
+            'family': ['family', 'mom', 'dad', 'brother', 'sister', 'mother', 'father'],
+        }
+
+        words = [w.strip().lower() for w in query.split()
+                 if len(w.strip()) > 1 and w.strip().lower() not in stop_words]
         if not words:
             return []
 
-        entities = []
+        # Expand with synonyms (try both original and singular form)
+        expanded = set(words)
+        for w in words:
+            if w in synonym_map:
+                expanded.update(synonym_map[w])
+            # Basic plural stemming: try without trailing 's'
+            elif w.endswith('s') and len(w) > 3 and w[:-1] in synonym_map:
+                expanded.update(synonym_map[w[:-1]])
+        search_words = list(expanded)[:8]
 
-        # Pass 1: Search by entity name or entity_type (high precision)
-        name_conditions = []
-        for word in words[:5]:
-            safe = word.replace("'", "\\'").replace('"', '\\"')
-            name_conditions.append(f"toLower(n.name) = toLower('{safe}')")
-            name_conditions.append(f"toLower(COALESCE(n.entity_type,'')) CONTAINS toLower('{safe}')")
-        name_where = " OR ".join(name_conditions)
+        entities = []
+        seen_names = set()
+
+        def _decode(val):
+            if isinstance(val, bytes):
+                return val.decode()
+            return val or ""
+
+        def _add_entity(name_val, summary_val):
+            name = _decode(name_val)
+            summary = _decode(summary_val)
+            if name and name not in seen_names:
+                entities.append({"name": name, "summary": summary})
+                seen_names.add(name)
+
+        # ── Pass 1: Name + entity_type match ──────────────────────────────
+        pass1_conditions = []
+        for word in search_words[:6]:
+            safe = word.replace("'", "\\'")
+            # Exact name match (case-insensitive)
+            pass1_conditions.append(f"toLower(n.name) = toLower('{safe}')")
+            # Name contains (only for longer words to avoid noise)
+            if len(word) > 3:
+                pass1_conditions.append(f"toLower(n.name) CONTAINS toLower('{safe}')")
+            # Entity type match
+            pass1_conditions.append(f"toLower(COALESCE(n.entity_type,'')) CONTAINS toLower('{safe}')")
+
         cypher1 = f"""
             MATCH (n:Entity)
-            WHERE {name_where}
+            WHERE {' OR '.join(pass1_conditions)}
             RETURN n.name AS name, n.summary AS summary
             LIMIT {limit}
         """
         result1 = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher1)
-        seen_names = set()
         if len(result1) >= 2 and result1[1]:
             for row in result1[1]:
-                name = row[0].decode() if isinstance(row[0], bytes) else (row[0] or "")
-                summary = row[1].decode() if isinstance(row[1], bytes) else (row[1] or "")
-                if name not in seen_names:
-                    entities.append({"name": name, "summary": summary})
-                    seen_names.add(name)
+                _add_entity(row[0], row[1])
 
-        # Pass 2: Search summary content (broader, with word-boundary matching for short words)
+        # ── Pass 2: Summary content search ────────────────────────────────
         if len(entities) < limit:
-            summary_conditions = []
-            for word in words[:5]:
-                safe = word.replace("'", "\\'").replace('"', '\\"')
+            pass2_conditions = []
+            for word in search_words[:6]:
+                safe = word.replace("'", "\\'")
                 if len(word) <= 4:
-                    # Short words: match with surrounding spaces/punctuation to avoid substring noise
-                    # e.g., 'cat' should not match 'capture', 'catch', 'duplicate'
-                    summary_conditions.append(f"(toLower(COALESCE(n.summary,'')) CONTAINS ' {safe} ' OR toLower(COALESCE(n.summary,'')) CONTAINS ' {safe}.' OR toLower(COALESCE(n.summary,'')) CONTAINS ' {safe},' OR toLower(COALESCE(n.summary,'')) STARTS WITH '{safe} ')")
+                    # Short words: match as whole word (space/punctuation boundaries)
+                    pass2_conditions.append(
+                        f"(toLower(COALESCE(n.summary,'')) CONTAINS ' {safe} ' "
+                        f"OR toLower(COALESCE(n.summary,'')) CONTAINS ' {safe}.' "
+                        f"OR toLower(COALESCE(n.summary,'')) CONTAINS ' {safe},' "
+                        f"OR toLower(COALESCE(n.summary,'')) CONTAINS ' {safe}\\n' "
+                        f"OR toLower(COALESCE(n.summary,'')) ENDS WITH ' {safe}' "
+                        f"OR toLower(COALESCE(n.summary,'')) ENDS WITH ' {safe}.' "
+                        f"OR toLower(COALESCE(n.summary,'')) STARTS WITH '{safe} ')"
+                    )
                 else:
-                    summary_conditions.append(f"toLower(COALESCE(n.summary,'')) CONTAINS toLower('{safe}')")
-            if summary_conditions:
-                summary_where = " OR ".join(summary_conditions)
+                    pass2_conditions.append(
+                        f"toLower(COALESCE(n.summary,'')) CONTAINS toLower('{safe}')"
+                    )
+            if pass2_conditions:
                 remaining = limit - len(entities)
                 cypher2 = f"""
                     MATCH (n:Entity)
-                    WHERE {summary_where}
+                    WHERE {' OR '.join(pass2_conditions)}
                     RETURN n.name AS name, n.summary AS summary
                     LIMIT {remaining + 5}
                 """
                 result2 = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher2)
                 if len(result2) >= 2 and result2[1]:
                     for row in result2[1]:
-                        name = row[0].decode() if isinstance(row[0], bytes) else (row[0] or "")
-                        summary = row[1].decode() if isinstance(row[1], bytes) else (row[1] or "")
-                        if name not in seen_names and len(entities) < limit:
-                            entities.append({"name": name, "summary": summary})
-                            seen_names.add(name)
+                        if len(entities) < limit:
+                            _add_entity(row[0], row[1])
+
+        # ── Pass 3: Relationship traversal ────────────────────────────────
+        # Follow edges from entities found in Pass 1/2 to discover related ones
+        if seen_names and len(entities) < limit:
+            # Build a safe list of found entity names
+            name_list = ", ".join(
+                f"toLower('{n.replace(chr(39), chr(92)+chr(39))}')" for n in list(seen_names)[:5]
+            )
+            remaining = limit - len(entities)
+            cypher3 = f"""
+                MATCH (a:Entity)-[r]->(b:Entity)
+                WHERE toLower(a.name) IN [{name_list}]
+                RETURN b.name AS name, b.summary AS summary, type(r) AS rel
+                LIMIT {remaining + 3}
+            """
+            result3 = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher3)
+            if len(result3) >= 2 and result3[1]:
+                for row in result3[1]:
+                    if len(entities) < limit:
+                        _add_entity(row[0], row[1])
+
+            # Also check reverse direction (b→a where b is our entity)
+            if len(entities) < limit:
+                remaining = limit - len(entities)
+                cypher3r = f"""
+                    MATCH (a:Entity)-[r]->(b:Entity)
+                    WHERE toLower(b.name) IN [{name_list}]
+                    RETURN a.name AS name, a.summary AS summary, type(r) AS rel
+                    LIMIT {remaining + 3}
+                """
+                result3r = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher3r)
+                if len(result3r) >= 2 and result3r[1]:
+                    for row in result3r[1]:
+                        if len(entities) < limit:
+                            _add_entity(row[0], row[1])
 
         return entities
     except Exception as e:
         print(f"[WARN] FalkorDB query failed: {e}")
         return []
-
 def query_entity_relationships(entity_name: str, limit: int = 10) -> list[dict]:
     """Get relationships for a specific entity."""
     try:
@@ -443,10 +526,13 @@ def query_pending_cc_proposals() -> list:
 
 def query_identity_facts() -> str:
     """Build a concise identity summary from the knowledge graph.
-    Prioritizes real_name over aliases — Karma should always greet by real name."""
+    Follows relationships outward from identity entities to discover
+    connected entities (pets, family, projects).
+    Prioritizes real_name over aliases."""
     try:
         r = get_falkor()
-        # Get all identity-related entities and extract the KEY facts
+
+        # Get identity entities AND their direct relationships
         cypher = """
             MATCH (n:Entity)
             WHERE toLower(n.name) IN ['user', 'neo', 'colby']
@@ -454,13 +540,12 @@ def query_identity_facts() -> str:
         """
         result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
 
-        # Collect all sentences from all identity entities
         all_sentences = []
         entity_names = set()
         if len(result) >= 2 and result[1]:
             for row in result[1]:
-                name = row[0]
-                summary = row[1] or ""
+                name = row[0] if not isinstance(row[0], bytes) else row[0].decode()
+                summary = (row[1] if not isinstance(row[1], bytes) else row[1].decode()) or ""
                 entity_names.add(name)
                 for sentence in summary.replace(". ", ".\n").split("\n"):
                     sentence = sentence.strip()
@@ -470,7 +555,7 @@ def query_identity_facts() -> str:
         if not all_sentences:
             return ""
 
-        # Phase 1: Extract real name vs aliases from all sentences
+        # Phase 1: Extract real name vs aliases
         real_name = None
         aliases = set()
         personal_facts = []
@@ -478,47 +563,60 @@ def query_identity_facts() -> str:
         for entity_name, sentence in all_sentences:
             s_lower = sentence.lower()
 
-            # Detect real name declarations
             if "real name" in s_lower:
-                # "his real name as Colby", "real name is Colby"
                 for candidate in ["colby"]:
                     if candidate in s_lower:
                         real_name = candidate.title()
                         break
 
-            # Detect alias relationships
             if "also known as" in s_lower:
-                # "Colby is also known as Neo" → Colby=real, Neo=alias
                 if "colby" in s_lower and "neo" in s_lower:
                     real_name = real_name or "Colby"
                     aliases.add("Neo")
 
-            # "known as Neo" without "also" → alias detection
-            if "known as neo" in s_lower or "goes by" in s_lower and "neo" in s_lower:
+            if "known as neo" in s_lower or ("goes by" in s_lower and "neo" in s_lower):
                 aliases.add("Neo")
 
             if "identified as neo" in s_lower:
                 aliases.add("Neo")
 
-            # Personal facts about the user (life events, relationships, pets)
-            # Only from Colby entity — avoid generic "User is doing X" noise
-            if entity_name.lower() == "colby" and any(kw in s_lower for kw in [
-                "adopted", "cat", "pet", "lost", "mom", "cancer",
-                "family", "brother", "sister", "dad", "father",
-                "hobby", "lives in", "born", "age",
-            ]):
-                if sentence not in personal_facts:
-                    personal_facts.append(sentence)
-
-        # Phase 2: Infer real name if not explicitly stated
-        # If we found "Colby" entity with personal facts but no explicit real_name,
-        # and "Neo" only appears as "known as" / alias references, Colby is the real name
+        # Phase 2: Infer real name
         if not real_name:
             colby_entities = [s for n, s in all_sentences if n.lower() == "colby"]
             if colby_entities:
                 real_name = "Colby"
 
-        # Phase 3: Build structured identity output
+        # Phase 3: Discover connected entities via graph relationships
+        # This finds pets, family members, projects, etc.
+        connected_facts = []
+        try:
+            connected_cypher = """
+                MATCH (a:Entity)-[r]->(b:Entity)
+                WHERE toLower(a.name) IN ['user', 'neo', 'colby']
+                AND NOT toLower(b.name) IN ['user', 'neo', 'colby']
+                RETURN b.name AS name, b.summary AS summary,
+                       COALESCE(b.entity_type, '') AS etype, type(r) AS rel
+                LIMIT 10
+            """
+            conn_result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, connected_cypher)
+            if len(conn_result) >= 2 and conn_result[1]:
+                for row in conn_result[1]:
+                    b_name = row[0] if not isinstance(row[0], bytes) else row[0].decode()
+                    b_summary = (row[1] if not isinstance(row[1], bytes) else row[1].decode()) or ""
+                    b_etype = (row[2] if not isinstance(row[2], bytes) else row[2].decode()) or ""
+                    b_rel = (row[3] if not isinstance(row[3], bytes) else row[3].decode()) or ""
+
+                    # Build a natural-language fact from the relationship
+                    if b_etype.lower() == "pet" or b_rel == "HAS_PET":
+                        connected_facts.append(f"{b_name} is Colby's pet ({b_summary[:100]})")
+                    elif b_etype.lower() in ("person", "family"):
+                        connected_facts.append(f"{b_name}: {b_summary[:100]}")
+                    elif b_summary:
+                        connected_facts.append(f"{b_name}: {b_summary[:80]}")
+        except Exception as ce:
+            print(f"[WARN] Identity connected-entity query failed (non-fatal): {ce}")
+
+        # Phase 4: Build structured output
         parts = []
 
         if real_name:
@@ -527,26 +625,49 @@ def query_identity_facts() -> str:
                 alias_str = ", ".join(sorted(aliases))
                 parts.append(f"Aliases/handles: {alias_str} (secondary — the user prefers their real name)")
         else:
-            # Fallback: list all known names
             parts.append(f"Known names: {', '.join(sorted(entity_names))}")
 
-        # Add key personal facts (deduplicated, max 5)
-        seen_lower = set()
-        unique_personal = []
-        for f in personal_facts:
-            normalized = f.lower().strip().rstrip(".")
-            if normalized not in seen_lower:
-                seen_lower.add(normalized)
-                unique_personal.append(f)
-        if unique_personal:
-            parts.append("Key facts: " + " | ".join(unique_personal[:5]))
+        # Add connected entity facts (pets, family, etc.)
+        if connected_facts:
+            seen_lower = set()
+            unique = []
+            for f in connected_facts:
+                norm = f.lower().strip().rstrip(".")
+                if norm not in seen_lower:
+                    seen_lower.add(norm)
+                    unique.append(f)
+            if unique:
+                parts.append("Connected: " + " | ".join(unique[:5]))
+
+        # Add personal facts from Colby entity summaries (broader keyword match)
+        personal_keywords = [
+            "adopted", "cat", "pet", "lost", "mom", "cancer",
+            "family", "brother", "sister", "dad", "father",
+            "hobby", "lives in", "born", "age", "wife", "husband",
+            "partner", "child", "daughter", "son", "home",
+            "moved", "grew up", "school", "work", "job",
+        ]
+        for entity_name, sentence in all_sentences:
+            s_lower = sentence.lower()
+            if entity_name.lower() in ("colby", "neo") and any(kw in s_lower for kw in personal_keywords):
+                if sentence not in personal_facts:
+                    personal_facts.append(sentence)
+
+        if personal_facts:
+            seen_lower = set()
+            unique_personal = []
+            for f in personal_facts:
+                normalized = f.lower().strip().rstrip(".")
+                if normalized not in seen_lower:
+                    seen_lower.add(normalized)
+                    unique_personal.append(f)
+            if unique_personal:
+                parts.append("Key facts: " + " | ".join(unique_personal[:5]))
 
         return "\n".join(parts)
     except Exception as e:
         print(f"[WARN] Identity facts query failed: {e}")
         return ""
-
-
 def build_karma_context(user_message: str, episode_lane: str = "canonical") -> str:
     """Build context from knowledge graph + preferences + consciousness insights for the LLM.
     episode_lane: filter for Episodic nodes. 'canonical' = only promoted (default).
@@ -735,7 +856,7 @@ async def generate_response(user_message: str, conversation: ConversationManager
         return error_msg, "error"
 
 
-# ─── Log Conversations to Ledger ──────────────────────────────────────────
+# ─── Log Conversations to Ledger ────────────────────────────────────────────────
 
 def log_to_ledger(user_msg: str, assistant_msg: str, model_used: str = "unknown", source: str = "karma-terminal"):
     """Append conversation to the JSONL ledger for future learning."""
@@ -1572,7 +1693,7 @@ async def websocket_chat(ws: WebSocket):
         active_conversations.pop(session_id, None)
 
 
-# ─── Command Handlers ─────────────────────────────────────────────────────
+# ─── Command Handlers ─────────────────────────────────────────────────
 
 def handle_command(command: str) -> str:
     """Handle special commands."""
@@ -1742,7 +1863,7 @@ def _reflect() -> str:
     return "\n".join(lines)
 
 
-# ─── Startup ──────────────────────────────────────────────────────────────
+# ─── Startup ──────────────────────────────────────────────────────────
 
 @app.on_event("startup")
 async def startup():
