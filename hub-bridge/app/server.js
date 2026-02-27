@@ -719,28 +719,55 @@ else console.warn("[INIT] ZAI_API_KEY not set — GLM models will fall back to O
 // ── Tool-use via GPT-4o (Anthropic Claude doesn't reliably trigger tool_use) ─────
 // Karma's autonomous access to her own graph/memory requires tools.
 // GPT-4o has proven tool support. Using it for /v1/chat with tool definitions.
+// ── Phase 3: 4-Tool Surface (P2) ─────────────────────────────────────────
+// Decision: 4 tools only — Read/Write/Edit/Bash. No MCP. < 500 tokens total.
+// Tool calls route to karma-server /v1/tools/execute for sandboxed execution.
 const TOOL_DEFINITIONS = [
   {
-    name: "get_vault_file",
-    description: "Read a file from Karma vault. Whitelisted: MEMORY.md, consciousness, collab, candidates, system-prompt, session-handoff, session-summary, core-architecture",
+    name: "read_file",
+    description: "Read a file from the droplet filesystem. Returns file content (max 10KB).",
     input_schema: {
       type: "object",
       properties: {
-        alias: { type: "string", description: "File alias" },
-        tail: { type: "integer", description: "Optional: last N lines" },
+        path: { type: "string", description: "Absolute path to the file" },
       },
-      required: ["alias"],
+      required: ["path"],
     },
   },
   {
-    name: "graph_query",
-    description: "Execute Cypher query on FalkorDB neo_workspace graph to query Karma's knowledge.",
+    name: "write_file",
+    description: "Write content to a file on the droplet. Creates parent dirs if needed.",
     input_schema: {
       type: "object",
       properties: {
-        cypher: { type: "string", description: "Cypher query" },
+        path: { type: "string", description: "Absolute path to write" },
+        content: { type: "string", description: "File content to write" },
       },
-      required: ["cypher"],
+      required: ["path", "content"],
+    },
+  },
+  {
+    name: "edit_file",
+    description: "Replace old_text with new_text in a file. Fails if old_text not found.",
+    input_schema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Absolute path to the file" },
+        old_text: { type: "string", description: "Text to find and replace" },
+        new_text: { type: "string", description: "Replacement text" },
+      },
+      required: ["path", "old_text", "new_text"],
+    },
+  },
+  {
+    name: "bash",
+    description: "Execute a shell command on the droplet. Timeout: 30s. Max output: 10KB.",
+    input_schema: {
+      type: "object",
+      properties: {
+        command: { type: "string", description: "Shell command to execute" },
+      },
+      required: ["command"],
     },
   },
 ];
@@ -758,48 +785,35 @@ const VAULT_FILE_ALIASES = {
   "cc-brief": "/karma/repo/cc-session-brief.md",
 };
 
+// Phase 3: Tool execution proxied through karma-server /v1/tools/execute
+// Maps 4-tool surface names to karma-server tool names
+const TOOL_NAME_MAP = {
+  "read_file": "file_read",
+  "write_file": "file_write",
+  "edit_file": "file_edit",
+  "bash": "shell_exec",
+};
+
 async function executeToolCall(toolName, toolInput) {
   try {
-    if (toolName === "get_vault_file") {
-      const alias = (toolInput?.alias || "").toString().trim();
-      if (!alias) return { error: "missing_alias" };
-      if (!VAULT_FILE_ALIASES[alias]) return { error: "alias_not_found", available: Object.keys(VAULT_FILE_ALIASES) };
+    const serverToolName = TOOL_NAME_MAP[toolName] || toolName;
+    console.log(`[TOOL-API] Proxying tool '${toolName}' → karma-server '${serverToolName}'`);
 
-      const filePath = VAULT_FILE_ALIASES[alias];
-      console.log(`[TOOL-API] Reading file: ${filePath}`);
-      try {
-        let content = fs.readFileSync(filePath, "utf-8");
+    const proxyRes = await fetch("http://karma-server:8340/v1/tools/execute", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tool_name: serverToolName, tool_input: toolInput }),
+    });
 
-        // Handle tail parameter (last N lines)
-        if (toolInput?.tail && typeof toolInput.tail === "number" && toolInput.tail > 0) {
-          const lines = content.split("\n");
-          content = lines.slice(-toolInput.tail).join("\n");
-        }
-
-        return { ok: true, text: content.slice(0, 10000) };
-      } catch (readErr) {
-        console.log(`[TOOL-API] File read error: ${readErr.message}`);
-        return { error: "file_read_error", message: readErr.message };
-      }
-    } else if (toolName === "graph_query") {
-      const cypher = (toolInput?.cypher || "").toString().trim();
-      if (!cypher) return { error: "missing_cypher" };
-      // Query FalkorDB via internal vault API
-      console.log(`[TOOL-API] Querying graph: ${cypher.slice(0, 80)}...`);
-      const graphRes = await fetch(`http://karma:8340/v1/cypher`, {
-        method: "POST",
-        headers: { "content-type": "application/json", "authorization": `Bearer ${VAULT_BEARER}` },
-        body: JSON.stringify({ query: cypher }),
-      });
-      if (!graphRes.ok) {
-        const errBody = await graphRes.text().catch(() => "(no body)");
-        console.log(`[TOOL-API] Graph error response: ${graphRes.status}`);
-        return { error: `http_${graphRes.status}`, details: errBody.slice(0, 500) };
-      }
-      const result = await graphRes.json();
-      return { ok: true, result: JSON.stringify(result).slice(0, 5000) };
+    if (!proxyRes.ok) {
+      const errBody = await proxyRes.text().catch(() => "(no body)");
+      console.log(`[TOOL-API] karma-server error: ${proxyRes.status} ${errBody.slice(0, 200)}`);
+      return { error: `karma_server_${proxyRes.status}`, details: errBody.slice(0, 500) };
     }
-    return { error: "unknown_tool" };
+
+    const result = await proxyRes.json();
+    console.log(`[TOOL-API] Tool result: ok=${result.ok}, tool=${serverToolName}`);
+    return result;
   } catch (e) {
     console.log(`[TOOL-API] Exception: ${e.message}`);
     return { error: "execution_error", message: e.message };
@@ -1779,7 +1793,34 @@ const server = http.createServer(async (req, res) => {
 
     // ─── Memory API Proxy Routes (Phase 1) ─────────────────────────────
     // Proxy POST requests to karma-server for memory operations
-    const MEMORY_PROXY_ROUTES = ["/v1/admit", "/v1/retrieve", "/v1/memory/update", "/v1/memory/delete", "/v1/reflect"];
+    const MEMORY_PROXY_ROUTES = [
+      // Phase 1: Core memory operations
+      "/v1/admit", "/v1/retrieve", "/v1/memory/update", "/v1/memory/delete", "/v1/reflect",
+      // Phase 2: Quality gates & observations
+      "/v1/budget/log", "/v1/budget/check", "/v1/staleness/scan", "/v1/scenes/consolidate",
+      // Phase 3: Hooks & session management
+      "/v1/hooks/session_start", "/v1/hooks/session_end", "/v1/hooks/pre_tool_use",
+      // Phase 3: Compaction
+      "/v1/compact",
+    ];
+    // Also proxy GET routes for Phase 2
+    const MEMORY_GET_ROUTES = ["/v1/budget", "/v1/observations", "/v1/capability/info", "/v1/briefing", "/health"];
+    if (req.method === "GET" && MEMORY_GET_ROUTES.includes(req.url)) {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      try {
+        const proxyRes = await fetch(`http://karma-server:8340${req.url}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        const data = await proxyRes.json();
+        return json(res, proxyRes.status, data);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: "karma_server_unavailable", message: e.message });
+      }
+    }
     if (req.method === "POST" && MEMORY_PROXY_ROUTES.includes(req.url)) {
       const token = bearerToken(req);
       if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
