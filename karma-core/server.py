@@ -143,6 +143,17 @@ async def ingest_episode(user_msg: str, assistant_msg: str, source: str = "karma
     _episode_counter += 1
     episode_num = _episode_counter
 
+    # ── Dedup guard (Phase 4) ──
+    try:
+        from dedup import is_duplicate
+        episode_body_preview = f"[{source}] User: {user_msg[:500]}\nAssistant: {assistant_msg[:500]}"
+        is_dup, dup_reason = is_duplicate(episode_body_preview, get_falkor)
+        if is_dup:
+            print(f"[GRAPHITI] Episode #{episode_num} skipped — duplicate ({dup_reason})")
+            return
+    except Exception as dedup_err:
+        print(f"[GRAPHITI] Dedup check failed (non-fatal, continuing): {dedup_err}")
+
     try:
         graphiti = await get_graphiti()
         if graphiti is None:
@@ -726,15 +737,15 @@ async def generate_response(user_message: str, conversation: ConversationManager
 
 # ─── Log Conversations to Ledger ──────────────────────────────────────────
 
-def log_to_ledger(user_msg: str, assistant_msg: str, model_used: str = "unknown"):
+def log_to_ledger(user_msg: str, assistant_msg: str, model_used: str = "unknown", source: str = "karma-terminal"):
     """Append conversation to the JSONL ledger for future learning."""
     try:
         entry = {
             "id": f"karma_chat_{int(time.time())}_{hash(user_msg) % 10000:04d}",
             "type": "log",
-            "tags": ["capture", "karma-terminal", "conversation"],
+            "tags": ["capture", source, "conversation"],
             "content": {
-                "provider": "karma-terminal",
+                "provider": source,
                 "url": "terminal://karma-chat",
                 "thread_id": "karma-terminal-session",
                 "user_message": user_msg,
@@ -1180,6 +1191,25 @@ async def promote_candidates_endpoint(request: Request):
         })
     except Exception as e:
         print(f"[ERROR] /promote-candidates failed: {e}")
+        traceback.print_exc()
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/auto-promote")
+async def auto_promote_endpoint():
+    """Run auto-promotion scan on candidate episodes.
+    Promotes candidates that meet ALL criteria:
+      - lane=candidate (not conflict/raw)
+      - confidence >= AUTO_PROMOTE_THRESHOLD (default 0.90)
+      - age >= AUTO_PROMOTE_MIN_AGE_MINUTES (default 30)
+      - corroborated by >= AUTO_PROMOTE_MIN_CORROBORATION other episodes (default 2)
+    Called by consciousness loop every 10 cycles, or manually."""
+    try:
+        from auto_promote import run_auto_promote
+        result = run_auto_promote(get_falkor)
+        return JSONResponse({"ok": True, **result})
+    except Exception as e:
+        print(f"[ERROR] /auto-promote failed: {e}")
         traceback.print_exc()
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
