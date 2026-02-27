@@ -21,7 +21,7 @@ from fastapi.responses import JSONResponse, Response, HTMLResponse
 import uvicorn
 
 import config
-from token_budget import SessionBudget, count_tokens, count_message_tokens, check_budget, get_monthly_tracker
+# # from token_budget import SessionBudget, count_tokens, count_message_tokens, check_budget, get_monthly_tracker
 
 # ─── Tools & Schema ────────────────────────────────────────────────────────
 
@@ -234,39 +234,79 @@ def get_falkor():
 
 
 def query_knowledge_graph(query: str, limit: int = 10) -> list[dict]:
-    """Search the knowledge graph for entities related to a query."""
+    """Search the knowledge graph for entities related to a query.
+    Two-pass: first searches entity_type and name matches, then broadens to summary content.
+    Filters stop words. Short words use word-boundary matching to avoid substring noise."""
     try:
         r = get_falkor()
-        # Search for entities whose name or summary matches keywords
-        words = [w.strip() for w in query.split() if len(w.strip()) > 2]
+        stop_words = {'what', 'who', 'where', 'when', 'how', 'why', 'the', 'is', 'are',
+                      'was', 'were', 'can', 'could', 'would', 'should', 'does', 'did',
+                      'has', 'have', 'had', 'will', 'about', 'your', 'you', 'my', 'me',
+                      'this', 'that', 'with', 'for', 'from', 'not', 'but', 'and', 'tell',
+                      'please', 'know', 'think', 'like', 'just', 'get', 'got', 'its',
+                      'also', 'some', 'any', 'all', 'other', 'than', 'then', 'there'}
+        words = [w.strip().lower() for w in query.split() if len(w.strip()) > 2 and w.strip().lower() not in stop_words]
         if not words:
             return []
 
-        # Build a regex-like search across entity names and summaries
-        conditions = []
-        for word in words[:5]:  # limit to 5 keywords
-            safe = word.replace("'", "\\'").replace('"', '\\"')
-            conditions.append(f"(toLower(n.name) CONTAINS toLower('{safe}') OR toLower(n.summary) CONTAINS toLower('{safe}'))")
+        entities = []
 
-        where_clause = " OR ".join(conditions)
-        cypher = f"""
+        # Pass 1: Search by entity name or entity_type (high precision)
+        name_conditions = []
+        for word in words[:5]:
+            safe = word.replace("'", "\\'").replace('"', '\\"')
+            name_conditions.append(f"toLower(n.name) = toLower('{safe}')")
+            name_conditions.append(f"toLower(COALESCE(n.entity_type,'')) CONTAINS toLower('{safe}')")
+        name_where = " OR ".join(name_conditions)
+        cypher1 = f"""
             MATCH (n:Entity)
-            WHERE {where_clause}
+            WHERE {name_where}
             RETURN n.name AS name, n.summary AS summary
             LIMIT {limit}
         """
-        result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
-        # Parse FalkorDB response: [[headers], [rows], [stats]]
-        if len(result) >= 2 and result[1]:
-            entities = []
-            for row in result[1]:
-                entities.append({"name": row[0], "summary": row[1]})
-            return entities
-        return []
+        result1 = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher1)
+        seen_names = set()
+        if len(result1) >= 2 and result1[1]:
+            for row in result1[1]:
+                name = row[0].decode() if isinstance(row[0], bytes) else (row[0] or "")
+                summary = row[1].decode() if isinstance(row[1], bytes) else (row[1] or "")
+                if name not in seen_names:
+                    entities.append({"name": name, "summary": summary})
+                    seen_names.add(name)
+
+        # Pass 2: Search summary content (broader, with word-boundary matching for short words)
+        if len(entities) < limit:
+            summary_conditions = []
+            for word in words[:5]:
+                safe = word.replace("'", "\\'").replace('"', '\\"')
+                if len(word) <= 4:
+                    # Short words: match with surrounding spaces/punctuation to avoid substring noise
+                    # e.g., 'cat' should not match 'capture', 'catch', 'duplicate'
+                    summary_conditions.append(f"(toLower(COALESCE(n.summary,'')) CONTAINS ' {safe} ' OR toLower(COALESCE(n.summary,'')) CONTAINS ' {safe}.' OR toLower(COALESCE(n.summary,'')) CONTAINS ' {safe},' OR toLower(COALESCE(n.summary,'')) STARTS WITH '{safe} ')")
+                else:
+                    summary_conditions.append(f"toLower(COALESCE(n.summary,'')) CONTAINS toLower('{safe}')")
+            if summary_conditions:
+                summary_where = " OR ".join(summary_conditions)
+                remaining = limit - len(entities)
+                cypher2 = f"""
+                    MATCH (n:Entity)
+                    WHERE {summary_where}
+                    RETURN n.name AS name, n.summary AS summary
+                    LIMIT {remaining + 5}
+                """
+                result2 = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher2)
+                if len(result2) >= 2 and result2[1]:
+                    for row in result2[1]:
+                        name = row[0].decode() if isinstance(row[0], bytes) else (row[0] or "")
+                        summary = row[1].decode() if isinstance(row[1], bytes) else (row[1] or "")
+                        if name not in seen_names and len(entities) < limit:
+                            entities.append({"name": name, "summary": summary})
+                            seen_names.add(name)
+
+        return entities
     except Exception as e:
         print(f"[WARN] FalkorDB query failed: {e}")
         return []
-
 
 def query_entity_relationships(entity_name: str, limit: int = 10) -> list[dict]:
     """Get relationships for a specific entity."""
