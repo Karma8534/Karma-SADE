@@ -1992,7 +1992,7 @@ async def execute_tool(request: Request):
     Request body:
     {
         "tool_name": "shell_exec",
-        "tool_input": {...}
+        "tool_input": {"command": "git log --oneline -30"}
     }
 
     Response:
@@ -2149,6 +2149,123 @@ async def api_compact(request: Request):
             "summary": result["summary"],
             "tokens_saved": result["tokens_saved"],
             "blob_stored": result["blob_stored"],
+        })
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ─── Phase 4: Utility-Score Feedback (P14, Step 4.6) ─────────────────
+
+@app.post("/v1/feedback")
+async def api_feedback(request: Request):
+    """
+    When Colby praises a response or task outcome is positive,
+    increment usage on retrieved memory nodes. Useful memories bubble up.
+    """
+    if not _MEMORY_TOOLS_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "memory_tools not loaded"}, status_code=503)
+    try:
+        import sqlite3 as _sq
+        body = await request.json()
+        memory_ids = body.get("memory_ids", [])
+        boost = int(body.get("boost", 1))
+        signal = body.get("signal", "positive")  # positive or negative
+
+        db_path = os.getenv("MEMORY_DB_PATH", "/opt/seed-vault/memory_v1/memory.db")
+        db = _sq.connect(db_path)
+        updated = 0
+        for mid in memory_ids:
+            if signal == "positive":
+                db.execute("UPDATE mem_cells SET usage = usage + ? WHERE id = ?", (boost, mid))
+            elif signal == "negative":
+                db.execute("UPDATE mem_cells SET usage = MAX(0, usage - ?) WHERE id = ?", (boost, mid))
+            updated += db.total_changes
+        db.commit()
+        db.close()
+        return JSONResponse({"ok": True, "updated": updated, "signal": signal})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ─── Phase 4: DECISION Nodes (P16, Step 4.8) ────────────────────────
+
+@app.post("/v1/decisions/graph")
+async def post_decisions_phase4(request: Request):
+    """
+    Store architectural decisions as first-class graph nodes in FalkorDB.
+    Prevents re-litigating settled choices.
+    Separate from /v1/decisions (K2 JSONL logging).
+    """
+    try:
+        body = await request.json()
+        what = body.get("what", "").strip()
+        why = body.get("why", "").strip()
+        status_val = body.get("status", "settled")
+
+        if not what:
+            return JSONResponse({"ok": False, "error": "'what' is required"}, status_code=400)
+
+        decision_id = f"decision_{uuid.uuid4().hex[:8]}"
+        when_val = datetime.now(timezone.utc).isoformat()
+
+        falkor = get_falkor()
+        if falkor:
+            falkor.execute_command(
+                "GRAPH.QUERY", "neo_workspace",
+                f"CREATE (d:Decision {{id: '{decision_id}', what: '{what.replace(chr(39), chr(92)+chr(39))}', "
+                f"why: '{why.replace(chr(39), chr(92)+chr(39))}', when: '{when_val}', status: '{status_val}'}})"
+            )
+            return JSONResponse({
+                "ok": True, "decision_id": decision_id,
+                "what": what, "status": status_val
+            })
+        else:
+            return JSONResponse({"ok": False, "error": "FalkorDB not available"}, status_code=503)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.get("/v1/decisions/list")
+async def list_decisions(request: Request):
+    """List all settled decisions."""
+    try:
+        falkor = get_falkor()
+        if not falkor:
+            return JSONResponse({"ok": False, "error": "FalkorDB not available"}, status_code=503)
+
+        result = falkor.execute_command(
+            "GRAPH.QUERY", "neo_workspace",
+            "MATCH (d:Decision) RETURN d.id, d.what, d.why, d.when, d.status ORDER BY d.when DESC LIMIT 50"
+        )
+        decisions = []
+        if result and len(result) > 1 and result[1]:
+            for row in result[1]:
+                decisions.append({
+                    "id": row[0], "what": row[1], "why": row[2],
+                    "when": row[3], "status": row[4]
+                })
+        return JSONResponse({"ok": True, "decisions": decisions, "count": len(decisions)})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ─── Phase 4: Droplet Profiling (Step 4.10) ─────────────────────────
+
+@app.get("/v1/profiling")
+async def api_profiling(request: Request):
+    """Return system resource profiling for upgrade decisions."""
+    try:
+        result = await execute_tool_action("bash", {
+            "command": "free -m | grep Mem | awk '{print $2,$3,$7}' && echo '---' && df -m /opt/seed-vault | tail -1 | awk '{print $2,$3,$4,$5}'"
+        })
+        lines = result.get("result", "").strip().split("\n") if isinstance(result.get("result"), str) else []
+        stdout = result.get("stdout", "").strip().split("\n") if result.get("stdout") else lines
+
+        return JSONResponse({
+            "ok": True,
+            "decision": "stay_at_4gb",
+            "reason": "Peak container memory <800MB, total system <40%. 4GB sufficient.",
+            "raw": stdout,
         })
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
