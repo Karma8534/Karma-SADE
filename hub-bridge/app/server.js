@@ -708,6 +708,14 @@ try { HUB_HANDOFF_TOKEN = readFileTrim(HUB_HANDOFF_TOKEN_FILE); } catch (e) { co
 const openai    = new OpenAI({ apiKey: OPENAI_KEY });
 const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : null;
 
+// ── Z.ai client for GLM models (OpenAI-compatible endpoint) ───────────────
+const ZAI_API_KEY = process.env.ZAI_API_KEY || "";
+const zai = ZAI_API_KEY
+  ? new OpenAI({ apiKey: ZAI_API_KEY, baseURL: "https://api.z.ai/api/paas/v4/" })
+  : null;
+if (zai) console.log("[INIT] Z.ai client ready — GLM models available");
+else console.warn("[INIT] ZAI_API_KEY not set — GLM models will fall back to OpenAI (will 404)");
+
 // ── Tool-use via GPT-4o (Anthropic Claude doesn't reliably trigger tool_use) ─────
 // Karma's autonomous access to her own graph/memory requires tools.
 // GPT-4o has proven tool support. Using it for /v1/chat with tool definitions.
@@ -856,15 +864,20 @@ async function callGPTWithTools(messages, maxTokens, model) {
     let iterations = 0;
     const MAX_ITERATIONS = 5;
 
-    // Model validation: must be OpenAI model for tool-use
-    // (tool-calling via OpenAI is more reliable than Anthropic)
-    const actualModel = model && model.startsWith("gpt") ? model : "gpt-4o-mini";
+    // Model validation: permit OpenAI (gpt*) and GLM models; fallback to gpt-4o-mini for others
+    // (tool-calling via OpenAI/GLM is more reliable than Anthropic)
+    const actualModel = model && (model.startsWith("gpt") || model.startsWith("glm")) ? model : "gpt-4o-mini";
+    const isZaiModel = actualModel.startsWith("glm-");
+    const providerName = (isZaiModel && zai) ? "zai" : "openai";
     console.log(`[TOOL-USE] Using model: ${actualModel} (requested: ${model})`);
 
     while (iterations < MAX_ITERATIONS) {
       iterations++;
       console.log(`[TOOL-USE] GPT iteration ${iterations}, tools count: ${gptTools.length}`);
-      const resp = await openai.chat.completions.create({
+      // Route: Z.ai models go through zai client, everything else through openai
+      const isZaiModel = actualModel.startsWith("glm-");
+      const client = (isZaiModel && zai) ? zai : openai;
+      const resp = await client.chat.completions.create({
         model: actualModel,
         messages: allMessages,
         max_tokens: maxTokens,
@@ -882,7 +895,7 @@ async function callGPTWithTools(messages, maxTokens, model) {
         text: resp.choices[0]?.message?.content || "",
         usage: resp.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
         finish_reason: finishReason,
-        provider: "openai",
+        provider: providerName,
       };
     }
 
@@ -903,10 +916,10 @@ async function callGPTWithTools(messages, maxTokens, model) {
     allMessages.push(...toolResults);
   }
 
-    return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: "openai" };
+    return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: providerName };
   } catch (e) {
     console.error("[TOOL-USE] callGPTWithTools error:", e.message);
-    return { text: "(tool_use_error: " + e.message + ")", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "error", provider: "openai" };
+    return { text: "(tool_use_error: " + e.message + ")", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "error", provider: providerName };
   }
 }
 
@@ -927,13 +940,16 @@ async function callLLM(model, messages, maxTokens) {
       provider:     "anthropic",
     };
   }
-  // OpenAI path
-  const completion = await openai.chat.completions.create({ model, messages, max_completion_tokens: maxTokens });
+  // OpenAI/Z.ai path
+  // Route: Z.ai models go through zai client, everything else through openai
+  const isZaiModel = model.startsWith("glm-");
+  const client = (isZaiModel && zai) ? zai : openai;
+  const completion = await client.chat.completions.create({ model, messages, max_completion_tokens: maxTokens });
   return {
     text:         completion.choices?.[0]?.message?.content || "",
     usage:        completion.usage || {},
     finish_reason: completion.choices?.[0]?.finish_reason || null,
-    provider:     "openai",
+    provider:     isZaiModel ? "zai" : "openai",
   };
 }
 // ─────────────────────────────────────────────────────────────────────────────
