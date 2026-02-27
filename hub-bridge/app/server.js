@@ -867,6 +867,8 @@ async function callGPTWithTools(messages, maxTokens, model) {
     // Model validation: permit OpenAI (gpt*) and GLM models; fallback to gpt-4o-mini for others
     // (tool-calling via OpenAI/GLM is more reliable than Anthropic)
     const actualModel = model && (model.startsWith("gpt") || model.startsWith("glm")) ? model : "gpt-4o-mini";
+    const isZaiModel = actualModel.startsWith("glm-");
+    const providerName = (isZaiModel && zai) ? "zai" : "openai";
     console.log(`[TOOL-USE] Using model: ${actualModel} (requested: ${model})`);
 
     while (iterations < MAX_ITERATIONS) {
@@ -893,7 +895,7 @@ async function callGPTWithTools(messages, maxTokens, model) {
         text: resp.choices[0]?.message?.content || "",
         usage: resp.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
         finish_reason: finishReason,
-        provider: "openai",
+        provider: providerName,
       };
     }
 
@@ -914,10 +916,10 @@ async function callGPTWithTools(messages, maxTokens, model) {
     allMessages.push(...toolResults);
   }
 
-    return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: "openai" };
+    return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: providerName };
   } catch (e) {
     console.error("[TOOL-USE] callGPTWithTools error:", e.message);
-    return { text: "(tool_use_error: " + e.message + ")", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "error", provider: "openai" };
+    return { text: "(tool_use_error: " + e.message + ")", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "error", provider: providerName };
   }
 }
 
