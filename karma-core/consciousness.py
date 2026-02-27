@@ -44,18 +44,18 @@ class ConsciousnessLoop:
     K2 is a continuity substrate, not an agent — preserve, observe, sync only.
     """
 
-    def __init__(self, get_falkor_fn, get_graph_stats_fn, get_openai_client_fn,
-                 active_conversations_ref: dict, router=None,
+    def __init__(self, get_falkor_fn, get_graph_stats_fn,
+                 active_conversations_ref: dict,
                  ingest_episode_fn=None, sms_notify_fn=None):
         # Injected dependencies from server.py (no circular imports)
         self._get_falkor = get_falkor_fn
         self._get_graph_stats = get_graph_stats_fn
-        self._get_openai_client = get_openai_client_fn
         self._active_conversations = active_conversations_ref
-        # Router kept for interface compatibility but NOT used for autonomous calls
-        self._router = router
         self._ingest_episode = ingest_episode_fn
         self._sms_notify = sms_notify_fn  # Kept but only fires for rule-based alerts
+
+        # SQLite memory.db path for observations table (Phase 0, Step 0.5)
+        self._memory_db_path = '/opt/seed-vault/memory_v1/memory.db'
 
         # State
         self._running = False
@@ -302,15 +302,43 @@ class ConsciousnessLoop:
                   observations: dict):
         """Execute the decided action — LOG ONLY.
         No LLM calls, no autonomous graph ingest, no autonomous SMS.
-        Proposals written to collab.jsonl for Karma to review in-session."""
+        Primary: SQLite observations table. Secondary: consciousness.jsonl (legacy)."""
 
-        # Write to consciousness journal
+        now = datetime.now(timezone.utc)
+        now_ts = now.timestamp()
+
+        # Map action to event_type for observations table
+        event_type_map = {
+            Action.LOG_DISCOVERY: "episode_delta",
+            Action.LOG_INSIGHT: "entity_delta",
+            Action.LOG_ALERT: "alert",
+            Action.LOG_GROWTH: "episode_delta",
+            Action.LOG_ERROR: "error",
+        }
+        event_type = event_type_map.get(action, "metric")
+        description = f"Cycle #{cycle_num}: {action} — {reason}"
+        outcome = f"episodes={observations.get('episode_count', 0)}, delta={observations.get('time_delta_seconds', 0):.0f}s"
+
+        # PRIMARY: Write to SQLite observations table
+        try:
+            import sqlite3
+            db = sqlite3.connect(self._memory_db_path)
+            db.execute(
+                "INSERT INTO observations (event_type, description, outcome, observed_at) VALUES (?, ?, ?, ?)",
+                (event_type, description, outcome, now_ts)
+            )
+            db.commit()
+            db.close()
+        except Exception as e:
+            print(f"[CONSCIOUSNESS] SQLite observation write failed: {e}")
+
+        # SECONDARY: Also append to consciousness.jsonl (legacy ledger)
         entry = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": now.isoformat(),
             "cycle": cycle_num,
             "action": action,
             "reason": reason,
-            "model": "none",  # No LLM used
+            "model": "none",
             "observations": {
                 "episode_count": observations.get("episode_count", 0),
                 "time_delta_seconds": observations.get("time_delta_seconds", 0),
@@ -376,7 +404,22 @@ class ConsciousnessLoop:
                 "cycle_data": cycle_data
             }
 
-            # Append to consciousness.jsonl
+            # PRIMARY: Write cycle reflection to SQLite observations
+            try:
+                import sqlite3
+                db = sqlite3.connect(self._memory_db_path)
+                db.execute(
+                    "INSERT INTO observations (event_type, description, outcome, observed_at) VALUES (?, ?, ?, ?)",
+                    ("metric", f"CYCLE_REFLECTION #{cycle_num}",
+                     f"idle={is_idle}, action={action}, duration_ms={cycle_ms:.1f}",
+                     datetime.now(timezone.utc).timestamp())
+                )
+                db.commit()
+                db.close()
+            except Exception as e:
+                print(f"[CONSCIOUSNESS] SQLite reflection write failed: {e}")
+
+            # SECONDARY: Also append to consciousness.jsonl (legacy)
             consciousness_path = getattr(config, "CONSCIOUSNESS_JOURNAL",
                 "/opt/seed-vault/memory_v1/ledger/consciousness.jsonl")
             with open(consciousness_path, "a", encoding="utf-8") as f:
