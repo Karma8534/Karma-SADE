@@ -708,6 +708,14 @@ try { HUB_HANDOFF_TOKEN = readFileTrim(HUB_HANDOFF_TOKEN_FILE); } catch (e) { co
 const openai    = new OpenAI({ apiKey: OPENAI_KEY });
 const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : null;
 
+// ── Z.ai client for GLM models (OpenAI-compatible endpoint) ───────────────
+const ZAI_API_KEY = process.env.ZAI_API_KEY || "";
+const zai = ZAI_API_KEY
+  ? new OpenAI({ apiKey: ZAI_API_KEY, baseURL: "https://api.z.ai/api/paas/v4/" })
+  : null;
+if (zai) console.log("[INIT] Z.ai client ready — GLM models available");
+else console.warn("[INIT] ZAI_API_KEY not set — GLM models will fall back to OpenAI (will 404)");
+
 // ── Tool-use via GPT-4o (Anthropic Claude doesn't reliably trigger tool_use) ─────
 // Karma's autonomous access to her own graph/memory requires tools.
 // GPT-4o has proven tool support. Using it for /v1/chat with tool definitions.
@@ -864,7 +872,10 @@ async function callGPTWithTools(messages, maxTokens, model) {
     while (iterations < MAX_ITERATIONS) {
       iterations++;
       console.log(`[TOOL-USE] GPT iteration ${iterations}, tools count: ${gptTools.length}`);
-      const resp = await openai.chat.completions.create({
+      // Route: Z.ai models go through zai client, everything else through openai
+      const isZaiModel = actualModel.startsWith("glm-");
+      const client = (isZaiModel && zai) ? zai : openai;
+      const resp = await client.chat.completions.create({
         model: actualModel,
         messages: allMessages,
         max_tokens: maxTokens,
@@ -927,13 +938,16 @@ async function callLLM(model, messages, maxTokens) {
       provider:     "anthropic",
     };
   }
-  // OpenAI path
-  const completion = await openai.chat.completions.create({ model, messages, max_completion_tokens: maxTokens });
+  // OpenAI/Z.ai path
+  // Route: Z.ai models go through zai client, everything else through openai
+  const isZaiModel = model.startsWith("glm-");
+  const client = (isZaiModel && zai) ? zai : openai;
+  const completion = await client.chat.completions.create({ model, messages, max_completion_tokens: maxTokens });
   return {
     text:         completion.choices?.[0]?.message?.content || "",
     usage:        completion.usage || {},
     finish_reason: completion.choices?.[0]?.finish_reason || null,
-    provider:     "openai",
+    provider:     isZaiModel ? "zai" : "openai",
   };
 }
 // ─────────────────────────────────────────────────────────────────────────────
