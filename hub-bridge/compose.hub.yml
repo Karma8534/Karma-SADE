@@ -14,6 +14,8 @@ services:
       BRAVE_API_KEY_FILE: "/run/secrets/brave.api_key.txt"
       VAULT_BEARER_TOKEN_FILE: "/run/secrets/vault.bearer_token.txt"
       HUB_CHAT_TOKEN_FILE: "/run/secrets/hub.chat.token.txt"
+      # Z.ai client for GLM models (environment variable expansion from .env)
+      ZAI_API_KEY: "${ZAI_API_KEY}"
       # NEW: capture + handoff auth (secrets live in files; paths only here)
       HUB_CAPTURE_TOKEN_FILE: "/run/secrets/hub.capture.token.txt"
       HUB_HANDOFF_TOKEN_FILE: "/run/secrets/hub.handoff.token.txt"
