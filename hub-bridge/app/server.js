@@ -1643,8 +1643,8 @@ const server = http.createServer(async (req, res) => {
         return json(res, 401, { ok: false, error: "unauthorized" });
       }
 
-      // Accept up to 20MB body (base64 of large PDFs)
-      const raw = await parseBody(req, 20000000);
+      // Accept up to 30MB body (base64 of large PDFs; 22MB raw PDF = ~29.5MB base64)
+      const raw = await parseBody(req, 30000000);
       let body;
       try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
 

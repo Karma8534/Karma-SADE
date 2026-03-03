@@ -72,14 +72,14 @@
 **#5 LOW: gpt-5-mini vs gpt-4o-mini drift**
 - hub.env shows `MODEL_DEEP=gpt-5-mini` — verify if intentional or typo
 
-**#6 NEW: PDF ingestion pipeline broken — Karma_PDFs**
-- Path: `C:\Users\raest\Documents\Karma_SADE\Karma_PDFs`
-- `/v1/ingest` endpoint EXISTS in hub-bridge (server.js line 1902) — not missing
-- Inbox/ failures: "connection forcibly closed" — caller script unknown/dead
-- Gated/ failures: `file_b64 undefined` — body parsing failure, wrong Content-Type or missing body
-- Done/ has historical verdicts proving it worked previously
-- karma-k2-sync.py dead: wrong Tailscale DNS, wrong log path
-- Next session: find/rebuild the PDF caller script, fix both failure modes
+**#6 IN PROGRESS: PDF ingestion pipeline — fixing now**
+- Caller script: `Scripts/karma-inbox-watcher.ps1` — watches Inbox/ and Gated/, sends base64 PDF to /v1/ingest
+- Inbox/ failures: "connection forcibly closed" — large PDFs (up to 15MB raw = ~20MB base64) hit parseBody 20MB cap → req.destroy()
+- FIX: increased parseBody limit to 30MB in hub-bridge/app/server.js — deployed and rebuilt
+- Gated/ failures: old error from pre-reconciliation image (body destructure bug) — current code is correct
+- Token file: `C:\Users\raest\Documents\Karma_SADE\.hub-chat-token` (exists)
+- Script paths: run with -InboxPath and -GatedPath pointing to Karma_PDFs/Inbox/ and Karma_PDFs/Gated/
+- After rebuild: delete .error.txt files, run watcher to reprocess all PDFs
 
 ### Session 57 Accomplishments
 - ✅ Consciousness loop OBSERVE-only contract confirmed (CYCLE_REFLECTION = log type, not mode)
