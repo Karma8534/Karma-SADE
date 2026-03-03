@@ -1,68 +1,83 @@
-# Architecture — Universal AI Memory System
+# Architecture — Karma Peer Memory System
 
 ## System Overview
-A 4-layer pipeline that captures conversations from browser-based AI platforms,
-routes them through an intermediary hub, and stores them in an append-only ledger
-with semantic search capability.
+A multi-source capture pipeline that records git commits, Claude Code sessions,
+and direct chat interactions, routes them through the hub-bridge, and stores them
+in an append-only ledger. FalkorDB graph is populated by batch_ingest from the ledger.
 
-## Data Flow
-Browser (Chrome Extension) → Hub API (bridge) → Vault API (FastAPI) → JSONL Ledger + ChromaDB
+**Chrome extension: SHELVED.** Never reliably captured conversations. Not in active use.
+
+## Active Capture Sources (as of 2026-03-03)
+
+| Source | Mechanism | Last seen in ledger |
+|--------|-----------|---------------------|
+| Git commits | post-commit hook → /v1/ambient | 2026-03-03 (current) |
+| Claude Code sessions | session-end hook → /v1/ambient | 2026-03-03 (current) |
+| Direct chat (/v1/chat) | hub-bridge stores to ledger | 2026-03-03 18:22 |
+| Karma terminal | karma-terminal client | 2026-02-27 (stale) |
+| Chrome extension | **SHELVED** | 2026-02-26 (legacy data only) |
+
+## Data Flow (Current)
+
+```
+Git commit          → post-commit hook  ↘
+Claude Code session → session-end hook  → /v1/ambient → vault-api → ledger
+Direct chat         → /v1/chat          ↗
+
+Ledger → batch_ingest (manual) → FalkorDB neo_workspace graph
+```
 
 ## Layer Details
 
-### Layer 1: Chrome Extension
-- Content scripts monitor DOM via MutationObserver on claude.ai, chatgpt.com, gemini.google.com
-- Pairs user + assistant messages on assistant response completion
-- Sends via chrome.runtime.sendMessage to background.js service worker
-- background.js POSTs to Hub API with Bearer token auth
+### Capture Layer (Tier 1 — Ambient)
+- **post-commit hook** (`.git/hooks/post-commit`): fires on every git commit, POSTs commit metadata to `/v1/ambient`
+- **session-end hook** (`.claude/hooks/session-end.sh`): fires when Claude Code session ends, POSTs session summary to `/v1/ambient`
+- Auth: Bearer token read via SSH from vault-neo at hook runtime
 
-### Layer 2: Hub API (Bridge)
-- URL: https://hub.arknexus.net/v1/chatlog
-- Accepts POST with schema validation
-- Forwards to Vault API
-- Auth: Bearer token (stored in chrome-extension/.vault-token)
+### Hub API (Bridge)
+- URL: https://hub.arknexus.net
+- Endpoints in use: `/v1/ambient` (hook capture), `/v1/chat` (Karma chat), `/v1/context` (context query), `/v1/cypher` (graph query), `/v1/self-model`
+- Auth: Bearer token (hub.chat.token.txt for chat; hub.capture.token.txt for ambient hooks)
 
-### Layer 3: Vault API
-- FastAPI application running in Docker on arknexus.net
+### Vault API
+- FastAPI application running in Docker (anr-vault-api container)
 - Validates incoming data, assigns IDs, timestamps
-- Appends to JSONL ledger
-- Triggers embedding generation (Phase 2+)
+- Appends to JSONL ledger at `/opt/seed-vault/memory_v1/ledger/memory.jsonl`
 
-### Layer 4: Storage
-- Primary: /opt/seed-vault/memory_v1/ledger/memory.jsonl (append-only)
-- Search: ChromaDB for semantic vector search
-- Auto-reindex: Watches ledger for new entries, generates embeddings automatically
+### Storage
+- **Ledger**: `/opt/seed-vault/memory_v1/ledger/memory.jsonl` — 3980 entries (2026-03-03), append-only
+- **FalkorDB**: `neo_workspace` graph — 1570 nodes (frozen; batch_ingest not running)
+- **ChromaDB**: anr-vault-search container — semantic vector search (status: running but not recently updated)
+- **SQLite**: `/opt/seed-vault/memory_v1/memory.db` — observations table (consciousness loop writes here)
 
-## Capture Schema
-```json
-{
-  "id": "chatlog_[timestamp]_[random]",
-  "type": "log",
-  "tags": ["capture", "[provider]", "extension", "conversation"],
-  "content": {
-    "provider": "claude|openai|gemini",
-    "url": "full conversation URL",
-    "thread_id": "conversation ID from URL",
-    "user_message": "text",
-    "assistant_message": "text",
-    "metadata": {},
-    "captured_at": "ISO 8601 timestamp"
-  },
-  "source": {
-    "kind": "tool",
-    "ref": "chrome-extension:[provider]"
-  },
-  "confidence": 1.0,
-  "verification": {
-    "verifier": "hub-bridge-chatlog-endpoint",
-    "status": "verified"
-  }
-}
-```
+## Ledger Entry Distribution (actual, 2026-03-03)
 
-## Supporting Systems (Separate, Do Not Modify)
-- **Karma Memory System** — Python scripts (karma_chat_extractor.py, karma_memory.py)
-  that extract from local Open WebUI/Ollama and sync to same Vault. Runs every 30 min
-  via Windows Task Scheduler. Fully operational independently.
-- **Karma SADE Backend** — Multi-API routing (Ollama, Gemini, OpenAI, etc.) with dashboard
-  at localhost:9401. Separate project, do not touch unless explicitly asked.
+| Tags | Count | Source |
+|------|-------|--------|
+| chat, default, hub | 1521 | /v1/chat conversations |
+| capture, claude, conversation, extension | 750 | LEGACY — Chrome extension (shelved) |
+| karma-sade, log, sync | 614 | karma-sade sync log |
+| capture, conversation, extension, openai | 436 | LEGACY — Chrome extension (shelved) |
+| capture, conversation, karma-terminal | 115 | Karma terminal client |
+| capture, git, commit | ~10 | post-commit hook (active) |
+| capture, session-end, claude-code | ~10 | session-end hook (active) |
+
+## FalkorDB Growth Problem
+- batch_ingest is NOT running automatically
+- Graph has been frozen at 1570 nodes since last manual batch run
+- Consciousness loop observes FalkorDB but cannot grow it (OBSERVE-only by design)
+- **To grow the graph:** `docker exec -d karma-server sh -c 'LEDGER_PATH=/opt/seed-vault/memory_v1/ledger/memory.jsonl python3 /app/batch_ingest.py > /tmp/batch.log 2>&1'`
+
+## Consciousness Loop
+- Runs in karma-server container, 60s cycles
+- OBSERVE-only: pure rule-based delta scan, zero LLM calls
+- Writes to SQLite observations table (primary) + consciousness.jsonl (legacy)
+- LOG_GROWTH on startup = expected (first cycle always sees ~20 recent episodes, then goes idle)
+- `cycle: 1` on every active event = karma-server has been restarting; counter resets
+
+## What Is NOT Operational
+- Chrome extension (shelved — DOM scraping was unreliable)
+- Automatic batch_ingest (no scheduler configured)
+- Karma terminal (last capture 2026-02-27)
+- DPO preference pair accumulation (needs 20+ pairs, not yet started)
+- Ambient Tier 3 (screen capture daemon — not yet built)
