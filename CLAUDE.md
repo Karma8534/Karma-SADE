@@ -15,13 +15,18 @@
   context in /v1/chat, use Karma daily, PROMOTE aggressively
 
 ## Session Start (Do This First)
-1. Run `Scripts/resurrection/Get-KarmaContext.ps1` — generates `cc-session-brief.md` from live vault state
-2. Read `MEMORY.md` **ALWAYS** — Current state, blockers, last session's work, next steps. This is canonical.
-3. Read `cc-session-brief.md` — Active task, recent decisions, git state, failures. Complements MEMORY.md.
-4. Check claude-mem for context (run `mcp__plugin_claude-mem_mcp-search__search` if needed)
-5. Resume the active task listed in the brief — do not ask what to work on
 
-> MANDATORY: Every session starts by reading MEMORY.md. No exceptions. This is your continuity lifeline.
+**ONE STEP: Invoke the resurrect skill.**
+
+The resurrect skill IS the session start protocol. It runs the script, reads the brief, invokes `using-superpowers`, and resumes the active task. Do NOT manually replicate its steps.
+
+**Fallback (only if resurrect skill unavailable):**
+1. `powershell.exe Scripts/resurrection/Get-KarmaContext.ps1`
+2. Read `cc-session-brief.md`
+3. Invoke `superpowers:using-superpowers`
+4. Resume active task — do not ask what to work on
+
+> MANDATORY: The resurrect skill must be invoked before any work, questions, or file reads. No exceptions.
 
 ## Mandatory Superpowers Workflow
 
@@ -39,6 +44,29 @@
 - "This is simple, I don't need the skill" → Skills exist for simple things too
 - "I need context first, then I'll invoke the skill" → Skill comes BEFORE context gathering
 - "I know what this skill says" → Skills evolve. Invoke it.
+
+## Mandatory GSD Workflow
+
+Before implementing any non-trivial feature or phase of work:
+
+1. **Write `phase-X-CONTEXT.md`** — design decisions, constraints, what we're NOT doing
+2. **Write `phase-X-PLAN.md`** — atomic tasks, acceptance criteria per task
+3. **Execute** — one task at a time, mark done as you go
+4. **Write `phase-X-SUMMARY.md`** — what was built, pitfalls, what's pending
+
+> Skipping straight to code without a CONTEXT+PLAN doc is a protocol violation. "Small feature" is not an exception.
+
+## Mandatory Efficiency Rules
+
+**Token and credit efficiency is a first-class concern, not a courtesy.**
+
+| Rule | Enforcement |
+|------|-------------|
+| Parallel tool calls over sequential — always | Never chain reads/commands that can run together |
+| Summaries not walls of text | Max 5 bullet points per status update unless detail is explicitly requested |
+| Batch SSH operations — one session per logical unit | Never separate `ssh vault-neo X && ssh vault-neo Y` into two round-trips |
+| Read only what's needed — targeted reads with offset/limit | Never `cat` full files when a section suffices |
+| Cache-friendly patterns — large stable blocks at top of prompts | System prompt + CLAUDE.md are cached; volatile content goes last |
 
 ## Project Identity
 - **System:** Karma Peer — Universal AI Memory with persistent identity and continuity
@@ -336,11 +364,12 @@ If pack and MEMORY.md conflict on the same fact, surface it explicitly:
 `DRIFT DETECTED: Pack says X. MEMORY.md says Y (written [timestamp]). Confirm canonical before proceeding.`
 
 ## Session End Protocol
-1. Run: `grep -rn "Bearer\|token\|secret\|password\|api_key" --include="*.js" --include="*.py" --include="*.json" --include="*.md" . | grep -v node_modules | grep -v .git`
-2. If clean: git add, commit with descriptive message, push
-3. Update MEMORY.md with: what was done, current blockers, next task
-4. Format commit: `phase-N: brief description of what changed`
-5. Cherry-pick updated MEMORY.md to main and push: git checkout main -- MEMORY.md from current worktree, commit, push.
+1. **save_observation for any uncaptured events** — scan the session for DECISION/PROOF/PITFALL/DIRECTION moments not yet saved. Call `mcp__plugin_claude-mem_mcp-search__save_observation` for each. This is step 1 because it must happen before context is lost.
+2. Run secret scan: `grep -rn "Bearer\|token\|secret\|password\|api_key" --include="*.js" --include="*.py" --include="*.json" --include="*.md" . | grep -v node_modules | grep -v .git`
+3. If clean: git add, commit with descriptive message, push
+4. Update MEMORY.md with: what was done, current blockers, next task
+5. Format commit: `phase-N: brief description of what changed`
+6. Cherry-pick updated MEMORY.md to main and push: git checkout main -- MEMORY.md from current worktree, commit, push.
 
 ## File Layout
 ```
