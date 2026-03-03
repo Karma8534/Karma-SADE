@@ -83,6 +83,43 @@ else
   echo "     Consider .gitignore or cleanup"
 fi
 
+# CHECK 6: Droplet git state clean (CRITICAL — prevents droplet drift)
+echo ""
+echo "CHECK 6: Droplet (vault-neo) git state clean?"
+CHECKS_TOTAL=$((CHECKS_TOTAL + 1))
+DROPLET_STATUS=$(ssh vault-neo "cd /home/neo/karma-sade && git status --short" 2>/dev/null)
+DROPLET_BRANCH=$(ssh vault-neo "cd /home/neo/karma-sade && git rev-parse --abbrev-ref HEAD" 2>/dev/null)
+DROPLET_HEAD=$(ssh vault-neo "cd /home/neo/karma-sade && git rev-parse --short HEAD" 2>/dev/null)
+LOCAL_HEAD=$(git rev-parse --short HEAD 2>/dev/null)
+if [ -z "$DROPLET_STATUS" ] && [ "$DROPLET_HEAD" = "$LOCAL_HEAD" ]; then
+  echo "  ✅ PASS - Droplet clean, HEAD matches ($DROPLET_HEAD)"
+  CHECKS_PASSED=$((CHECKS_PASSED + 1))
+elif [ -z "$DROPLET_STATUS" ] && [ "$DROPLET_HEAD" != "$LOCAL_HEAD" ]; then
+  echo "  ❌ FAIL - Droplet clean but HEAD diverged"
+  echo "     Droplet: $DROPLET_HEAD  Local: $LOCAL_HEAD"
+  echo "     Run: ssh vault-neo 'cd /home/neo/karma-sade && git pull origin main'"
+  FAIL=1
+else
+  echo "  ❌ FAIL - Droplet has uncommitted changes:"
+  echo "$DROPLET_STATUS" | sed 's/^/     /'
+  echo "     Fix: ssh vault-neo 'cd /home/neo/karma-sade && git stash'"
+  echo "     OR commit them on droplet then push — but NEVER edit on droplet directly again"
+  FAIL=1
+fi
+
+# CHECK 7: No abandoned worktrees
+echo ""
+echo "CHECK 7: No abandoned worktrees?"
+CHECKS_TOTAL=$((CHECKS_TOTAL + 1))
+WT_COUNT=$(git worktree list 2>/dev/null | grep -v "^$(pwd)" | wc -l)
+if [ "$WT_COUNT" -eq 0 ]; then
+  echo "  ✅ PASS - No open worktrees"
+  CHECKS_PASSED=$((CHECKS_PASSED + 1))
+else
+  echo "  ⚠️  WARN - $WT_COUNT open worktrees (prune before next session)"
+  echo "     Run: git worktree list && git worktree remove --force <path>"
+fi
+
 # SUMMARY
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

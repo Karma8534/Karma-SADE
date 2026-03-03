@@ -104,6 +104,22 @@ Every session follows this exact frame. No deviations, no "good enough":
 - Push to GitHub after every significant change
 - Run pre-commit secret scan before every push
 
+## Droplet Is a Deployment Target — NEVER a Dev Environment
+
+**THE HARD RULE (no exceptions, ever):**
+> Never edit files directly on vault-neo. The droplet is a deployment target only.
+
+**The only permitted workflow for code changes:**
+1. Edit on P1 → `git commit` → `git push origin main`
+2. `ssh vault-neo "cd /home/neo/karma-sade && git pull origin main"`
+3. Rebuild Docker image if `karma-core/` changed
+
+**NEVER permitted on droplet:** `vim`, `nano`, any file write to source files, `docker cp` to inject code.
+
+**Why this rule exists:** Session-58 found 1754 lines of production code written directly on the droplet across multiple sessions — never in git. One `git checkout .` would have destroyed it permanently.
+
+**Enforcement:** session-end-verify.sh Check 6 SSHes to vault-neo and fails if dirty. Droplet cron alerts hourly if dirty.
+
 ## Decision Authority
 **Do without asking:** Code changes, file edits, running tests, git commit/push, reading docs, debugging, creating test files
 **Ask before doing:** Breaking changes to API contracts, new paid dependencies or services, infrastructure changes (Docker, server config), deleting files, modifying CLAUDE.md or rules files, any action that costs money
