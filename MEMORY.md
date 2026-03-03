@@ -49,6 +49,7 @@
 - ✅ LEDGER_PATH bug fixed in all docs (was wrong host path, correct = /ledger/memory.jsonl)
 - ✅ hub/chat → FalkorDB gap closed — extended batch_ingest with hub-chat support
 - ✅ 1538 Colby<->Karma conversations now ingesting into graph
+- ✅ Superpowers enforcement: CLAUDE.md mandatory workflow table added, save_observation added to capture protocol, resurrect skill updated to invoke using-superpowers
 
 ### Next Session — Step by Step (exact commands)
 1. `docker exec karma-server tail -30 /tmp/batch.log` — verify batch complete, check ok/err
