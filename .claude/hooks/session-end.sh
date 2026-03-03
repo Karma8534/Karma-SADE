@@ -46,12 +46,12 @@ PAYLOAD=$(cat <<ENDJSON
 ENDJSON
 )
 
-# POST to hub-bridge /v1/chatlog with Bearer token auth
+# POST to hub-bridge /v1/ambient with Bearer token auth
 # Non-blocking: runs in background, token fetched via SSH
 (
   TOKEN=$(ssh vault-neo "cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt" 2>/dev/null)
   if [ -n "$TOKEN" ]; then
-    curl -s -X POST "https://hub.arknexus.net/v1/chatlog" \
+    curl -s -X POST "https://hub.arknexus.net/v1/ambient" \
       -H "Content-Type: application/json" \
       -H "Authorization: Bearer ${TOKEN}" \
       -d "${PAYLOAD}" > /dev/null 2>&1
