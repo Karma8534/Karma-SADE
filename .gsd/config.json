@@ -1,0 +1,33 @@
+{
+  "project_name": "Karma Peer",
+  "mode": "interactive",
+  "depth": "standard",
+  "model_profile": "coherence-first",
+  "workflow": {
+    "research": true,
+    "discuss_phase": true,
+    "plan_check": true,
+    "verifier": true,
+    "nyquist_validation": true
+  },
+  "planning": {
+    "commit_docs": true,
+    "search_gitignored": false,
+    "state_file_path": ".gsd/STATE.md",
+    "requirements_path": ".gsd/REQUIREMENTS.md"
+  },
+  "git": {
+    "branching_strategy": "feature-branches",
+    "atomic_commits": true,
+    "require_verification_before_commit": true
+  },
+  "karma_specific": {
+    "consciousness_sync_interval_seconds": 60,
+    "canonical_state_source": "vault-neo droplet (FalkorDB + /home/neo/karma-sade/)",
+    "k2_cache_fallback": "optional (degraded coherence if droplet unavailable)",
+    "decision_journal": ".gsd/STATE.md (CANONICAL)",
+    "verify_before_shipping": true,
+    "context_rot_prevention": "fresh_subagent_per_task"
+  },
+  "notes": "GSD config for Karma Peer — context engineering layer on top of Claude Code. All state externalized to files. Decisions locked before planning. Verification before shipping."
+}
