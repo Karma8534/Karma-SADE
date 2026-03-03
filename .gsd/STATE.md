@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-03T19:30:00Z
-**Session:** 57 (Blocker Analysis + Doc Correction)
+**Last updated:** 2026-03-03T20:05:00Z
+**Session:** 57 (Blockers #1 #2 #3 Cleared)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -20,7 +20,7 @@
 | **Ambient Tier 2 Endpoint** | ✅ DEPLOYED | /v1/context endpoint working. |
 | **GSD File Structure** | ✅ ADOPTED | All .gsd/ files in place and being used. |
 | **Chrome Extension** | ❌ SHELVED | Never worked reliably. Removed from all docs. Legacy data only. |
-| **Conversation Capture** | 🔴 BROKEN | No reliable path to capture human conversations into memory. |
+| **Conversation Capture** | ✅ FIXED | batch_ingest extended — 1538 hub/chat entries now ingesting into FalkorDB. |
 | **batch_ingest Schedule** | ✅ CONFIGURED | Cron every 6h on vault-neo. Installed 2026-03-03. |
 
 ---
@@ -40,17 +40,20 @@
 
 ---
 
-### Blocker #2 — CRITICAL: No Conversation Capture Path
-**Problem:** Chrome extension was shelved. No mechanism captures Colby↔Karma conversations into the ledger. The 1521 existing /v1/chat entries are from when hub-bridge was logging chats — unclear if that's still happening.
+### ✅ Blocker #2 — RESOLVED: hub/chat entries now reach FalkorDB (2026-03-03)
+**Was:** 1543 /v1/chat entries in ledger (tagged hub/chat/default) never reached FalkorDB because batch_ingest only read `assistant_message` field; hub/chat entries use `assistant_text`.
 
-**Last /v1/chat entry:** 2026-03-03T18:22:33 — this may be a recent test or Karma still self-logging.
+**Root cause:** batch_ingest.py field mismatch + no hub/chat tag detection.
 
-**What's needed:**
-1. Verify: Is /v1/chat still writing to ledger? Check `ssh vault-neo "grep 'chat' /opt/seed-vault/memory_v1/ledger/memory.jsonl | tail -3 | python3 -c 'import sys,json; [print(json.loads(l).get(\"created_at\",\"?\")[:19], json.loads(l).get(\"content\",{}).get(\"user_message\",\"?\")[:60]) for l in sys.stdin]'"`
-2. If yes: Verify what triggers it and document the capture path
-3. If no: Design replacement — options: CLI wrapper for /v1/chat, karma-terminal revival, or server-side auto-log
+**Fix applied:**
+- Extended batch_ingest.py: detect hub/chat by tags, read `assistant_text` fallback
+- Episodes labeled `source_description="Karma hub-chat"` for idempotent re-runs
+- 1538 Colby↔Karma conversations now ingesting (batch running since 2026-03-03 ~20:00 UTC)
+- Dry-run confirmed: `hub-chat: 1538 total, 0 done, 1538 remaining`
 
-**Unlocks:** Karma can actually learn from conversations (the entire point of the system).
+**Option 2 (ASSIMILATE signals):** Earmarked as future quality layer — Karma can selectively promote high-value conversations with `[ASSIMILATE: ...]` signal in response. Not a blocker.
+
+**Unlocks:** Karma can accumulate knowledge from all past and future conversations.
 
 ---
 
