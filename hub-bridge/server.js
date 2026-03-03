@@ -24,7 +24,6 @@ const HUB_HANDOFF_TOKEN_FILE = process.env.HUB_HANDOFF_TOKEN_FILE || "/run/secre
 const DEEP_MODE_HEADER = (process.env.DEEP_MODE_HEADER || "x-karma-deep").toLowerCase();
 const HANDOFF_DIR = process.env.HANDOFF_DIR || "/data/handoff";
 const KARMA_CONTEXT_URL = process.env.KARMA_CONTEXT_URL || "http://karma-server:8340/raw-context";
-const ZAI_API_KEY = process.env.ZAI_API_KEY || "";
 
 // ── Within-session conversation history ──────────────────────────────────────
 // Keeps the last N exchange pairs in memory, keyed by a hash of the bearer token.
@@ -817,13 +816,8 @@ try { HUB_CAPTURE_TOKEN = readFileTrim(HUB_CAPTURE_TOKEN_FILE); } catch (e) {
 }
 try { HUB_HANDOFF_TOKEN = readFileTrim(HUB_HANDOFF_TOKEN_FILE); } catch (e) { console.error("WARN: cannot read HUB handoff token:", e.message); }
 
-// Z.ai (GLM models) API key
-let ZAI_KEY = "";
-try { ZAI_KEY = ZAI_API_KEY.trim(); if (ZAI_KEY) console.log("[INIT] ZAI_API_KEY loaded for GLM support"); } catch (e) { console.warn("WARN: ZAI_API_KEY not available (GLM models disabled):", e.message); }
-
 const openai    = new OpenAI({ apiKey: OPENAI_KEY });
 const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : null;
-const zai       = ZAI_KEY ? new OpenAI({ apiKey: ZAI_KEY, baseURL: "https://api.z.ai/api/paas/v4" }) : null;
 
 // ── Tool-use via GPT-4o (Anthropic Claude doesn't reliably trigger tool_use) ─────
 // Karma's autonomous access to her own graph/memory requires tools.
@@ -1008,24 +1002,13 @@ async function callGPTWithTools(messages, maxTokens, model) {
 
     // Model validation: permit OpenAI (gpt*) and GLM models; fallback to gpt-4o-mini for others
     // (tool-calling via OpenAI/GLM is more reliable than Anthropic)
-    // GLM requires working Z.ai API. If unavailable, fall back to gpt-4o-mini.
-    const isGLM = model && model.startsWith("glm");
-    let actualModel = isGLM || (model && model.startsWith("gpt")) ? model : "gpt-4o-mini";
-    let client = (isGLM && zai) ? zai : openai;
-    let clientName = (isGLM && zai) ? "zai" : "openai";
-    // If GLM requested but no Z.ai client, fall back to GPT
-    if (isGLM && !zai) {
-      console.warn(`[TOOL-USE] GLM requested but Z.ai unavailable, falling back to gpt-4o-mini`);
-      actualModel = "gpt-4o-mini";
-      client = openai;
-      clientName = "openai";
-    }
-    console.log(`[TOOL-USE] Using model: ${actualModel} (requested: ${model}), client: ${clientName}`);
+    const actualModel = model && (model.startsWith("gpt") || model.startsWith("glm")) ? model : "gpt-4o-mini";
+    console.log(`[TOOL-USE] Using model: ${actualModel} (requested: ${model})`);
 
     while (iterations < MAX_ITERATIONS) {
       iterations++;
       console.log(`[TOOL-USE] GPT iteration ${iterations}, tools count: ${gptTools.length}`);
-      const resp = await client.chat.completions.create({
+      const resp = await openai.chat.completions.create({
         model: actualModel,
         messages: allMessages,
         max_tokens: maxTokens,
@@ -1510,141 +1493,6 @@ const server = http.createServer(async (req, res) => {
         return json(res, 500, { ok: false, error: "vault_write_failed" });
       }
       return json(res, 200, { id: r.turn_id, stored: true, timestamp: nowIso() });
-    }
-
-    // --- POST /v1/ambient (Ambient Knowledge Layer Tier 1) ---
-    // Accepts ambient knowledge items (git commits, Claude Code sessions, etc.)
-    // Schema: { id, type, tags, content, source, confidence, verification }
-    if (req.method === "POST" && req.url === "/v1/ambient") {
-      console.log("[DEBUG] /v1/ambient endpoint hit");
-
-      const ip = getClientIp(req);
-      const rl = checkRateLimit("capture", ip);
-      if (rl) return json(res, 429, { ok: false, error: "rate_limited", retry_after_s: rl.retry_after_s });
-
-      const token = bearerToken(req);
-      if (!HUB_CAPTURE_TOKEN || !token || token !== HUB_CAPTURE_TOKEN) {
-        return json(res, 401, { ok: false, error: "unauthorized" });
-      }
-
-      const raw = await parseBody(req);
-      let payload;
-      try { payload = JSON.parse(raw); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
-
-      // Validate minimal ambient item structure
-      const { id, type, tags, content, source, confidence, verification } = payload || {};
-      if (!id || !type || !content) {
-        return json(res, 400, { ok: false, error: "missing_fields", required: ["id", "type", "content"] });
-      }
-
-      // Write directly to vault (ambient items don't need chatlog transformation)
-      const vaultUrl = `${VAULT_INTERNAL_URL}/v1/memory`;
-      const vaultRes = await fetch(vaultUrl, {
-        method: "POST",
-        headers: { "content-type": "application/json", "authorization": `Bearer ${VAULT_BEARER}` },
-        body: JSON.stringify(payload),
-      });
-
-      if (vaultRes.status !== 201 && vaultRes.status !== 200) {
-        const respText = await vaultRes.text();
-        console.error(`[AMBIENT] vault write failed: ${vaultRes.status}`, respText);
-        return json(res, 500, { ok: false, error: "vault_write_failed", vault_status: vaultRes.status });
-      }
-
-      const respText = await vaultRes.text();
-      let vpJson = {};
-      try { vpJson = JSON.parse(respText); } catch {}
-      const stored_id = vpJson?.id || id;
-
-      console.log(`[AMBIENT] ${id} stored successfully (vault status ${vaultRes.status})`);
-      return json(res, 201, { ok: true, id: stored_id, stored: true, timestamp: nowIso() });
-    }
-
-    // --- GET /v1/context (Ambient Knowledge Layer Tier 2) ---
-    if (req.method === "GET" && req.url.startsWith("/v1/context")) {
-      const token = bearerToken(req);
-      if (!HUB_CAPTURE_TOKEN || !token || token !== HUB_CAPTURE_TOKEN) {
-        return json(res, 401, { ok: false, error: "unauthorized" });
-      }
-
-      // Parse query parameters
-      const parsed = new URL(req.url, `http://localhost`);
-      const hours = parseInt(parsed.searchParams.get("hours") || "2", 10);
-      const source = (parsed.searchParams.get("source") || "all").toLowerCase();
-      const node = (parsed.searchParams.get("node") || "all").toLowerCase();
-      const limit = Math.min(parseInt(parsed.searchParams.get("limit") || "20", 10), 100);
-      const summary = parsed.searchParams.get("summary") === "true";
-
-      try {
-        // Calculate cutoff time
-        const now = new Date();
-        const cutoff = new Date(now.getTime() - hours * 3600 * 1000);
-        const cutoffIso = cutoff.toISOString();
-
-        // Read vault ledger (ambient entries only)
-        const ledgerPath = "/opt/seed-vault/memory_v1/ledger/memory.jsonl";
-        let entries = [];
-
-        // Attempt to read ledger (graceful fallback if unavailable)
-        try {
-          const fs = require("fs");
-          if (fs.existsSync(ledgerPath)) {
-            const lines = fs.readFileSync(ledgerPath, "utf-8").split("\n");
-            const recentLines = lines.slice(Math.max(0, lines.length - 500)); // Last 500 lines for efficiency
-
-            for (const line of recentLines) {
-              if (!line.trim()) continue;
-              try {
-                const rec = JSON.parse(line);
-                const content = rec.content || {};
-                const capturedAt = content.captured_at || "";
-
-                // Filter by time
-                if (capturedAt < cutoffIso) continue;
-
-                // Filter by source (ambient entries only)
-                const src = (content.source || "").toLowerCase();
-                if (src !== "git" && src !== "claude-code" && src !== "screen" && src !== "aria" && src !== "chrome-extension") continue;
-
-                // Filter by source parameter
-                if (source !== "all" && src !== source) continue;
-
-                // Filter by node
-                const nodeVal = (content.source_node || "").toLowerCase();
-                if (node !== "all" && nodeVal !== node) continue;
-
-                entries.push({
-                  id: rec.id || "",
-                  source: src,
-                  source_node: content.source_node || "",
-                  summary: content.summary || "",
-                  captured_at: capturedAt,
-                });
-
-                if (entries.length >= limit) break;
-              } catch (e) {
-                // Skip unparseable lines silently
-              }
-            }
-          }
-        } catch (e) {
-          console.warn("[/v1/context] Ledger read failed (non-fatal):", e.message);
-        }
-
-        // Reverse chronological order (most recent first)
-        entries.reverse();
-
-        return json(res, 200, {
-          ok: true,
-          window: `last ${hours} hour(s)`,
-          entries: entries.slice(0, limit),
-          count: entries.length,
-          filters: { hours, source, node, limit },
-        });
-      } catch (e) {
-        console.error("[/v1/context] Error:", e.message);
-        return json(res, 500, { ok: false, error: "context_query_failed" });
-      }
     }
 
     // --- POST /v1/handoff/save ---

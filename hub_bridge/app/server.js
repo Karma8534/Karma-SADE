@@ -1802,9 +1802,11 @@ const server = http.createServer(async (req, res) => {
       "/v1/hooks/session_start", "/v1/hooks/session_end", "/v1/hooks/pre_tool_use",
       // Phase 3: Compaction
       "/v1/compact",
+      // Phase 4: Hardening & Observability
+      "/v1/feedback", "/v1/decisions/graph",
     ];
     // Also proxy GET routes for Phase 2
-    const MEMORY_GET_ROUTES = ["/v1/budget", "/v1/observations", "/v1/capability/info", "/v1/briefing", "/health"];
+    const MEMORY_GET_ROUTES = ["/v1/budget", "/v1/observations", "/v1/capability/info", "/v1/briefing", "/health", "/v1/decisions/list", "/v1/profiling"];
     if (req.method === "GET" && MEMORY_GET_ROUTES.includes(req.url)) {
       const token = bearerToken(req);
       if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {

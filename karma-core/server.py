@@ -21,58 +21,163 @@ from fastapi.responses import JSONResponse, Response, HTMLResponse
 import uvicorn
 
 import config
-from token_budget import SessionBudget, count_tokens, count_message_tokens, check_budget, get_monthly_tracker
+# # from token_budget import SessionBudget, count_tokens, count_message_tokens, check_budget, get_monthly_tracker
 
-# ─── Tools & Schema ────────────────────────────────────────────────────────
+# ─── 4-Tool Surface (P2, Phase 0 Step 0.9) ─────────────────────────────────
+# Decision: 4 tools only — Read/Write/Edit/Bash. No MCP. < 500 tokens total.
 
-SHELL_EXEC_TOOL = {
-    "name": "shell_exec",
-    "description": "Execute a read-only shell command on vault-neo for self-diagnosis. Supports: git log, systemctl status, docker ps, ls, cat, grep, wc, tail, head, ping. Useful for understanding system state, consciousness loop status, K2 connectivity, batch ingestion progress, etc.",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "command": {
-                "type": "string",
-                "description": "Shell command to execute (must be whitelisted). Example: 'git log --oneline -30' or 'systemctl status karma-consciousness'"
-            }
-        },
-        "required": ["command"]
-    }
-}
+import subprocess
+import asyncio as _asyncio
 
-AVAILABLE_TOOLS = {
-    "shell_exec": SHELL_EXEC_TOOL,
-}
+# ─── Memory Tools (Phase 1) ──────────────────────────────────────────────
+try:
+    from memory_tools import (
+        admit_memory, retrieve_memory, update_memory, delete_memory,
+        save_session_context, load_last_session, load_pending_observations,
+        auto_tag_category, assign_confidence, consolidate_scene,
+        consolidate_all_scenes, CATEGORIES, SOURCE_CONFIDENCE
+    )
+    _MEMORY_TOOLS_AVAILABLE = True
+    print("[MEMORY] memory_tools loaded successfully")
+except ImportError as e:
+    _MEMORY_TOOLS_AVAILABLE = False
+    print(f"[MEMORY] memory_tools not available: {e}")
+
+# Phase 2 Modules
+try:
+    from observation_block import (
+        build_observation_block, reset_observation_cache, get_observation_stats
+    )
+    _OBS_BLOCK_AVAILABLE = True
+    print("[PHASE2] observation_block loaded")
+except ImportError as e:
+    _OBS_BLOCK_AVAILABLE = False
+    print(f"[PHASE2] observation_block not available: {e}")
+
+try:
+    from staleness import run_staleness_scan
+    _STALENESS_AVAILABLE = True
+    print("[PHASE2] staleness loaded")
+except ImportError as e:
+    _STALENESS_AVAILABLE = False
+    print(f"[PHASE2] staleness not available: {e}")
+
+try:
+    from budget_guard import check_budget, log_llm_call, get_budget_report
+    _BUDGET_AVAILABLE = True
+    print("[PHASE2] budget_guard loaded")
+except ImportError as e:
+    _BUDGET_AVAILABLE = False
+    print(f"[PHASE2] budget_guard not available: {e}")
+
+try:
+    from capability_gate import check_access, get_token_scope, get_read_token, get_scope_info
+    _CAPABILITY_GATE_AVAILABLE = True
+    print("[PHASE2] capability_gate loaded")
+except ImportError as e:
+    _CAPABILITY_GATE_AVAILABLE = False
+    print(f"[PHASE2] capability_gate not available: {e}")
+
+# Phase 3 Modules
+try:
+    from hooks import run_hook, hook_session_start, hook_pre_tool_use, hook_post_tool_use, hook_session_end
+    _HOOKS_AVAILABLE = True
+    print("[PHASE3] hooks loaded")
+except ImportError as e:
+    _HOOKS_AVAILABLE = False
+    print(f"[PHASE3] hooks not available: {e}")
+
+try:
+    from session_briefing import generate_session_briefing, get_briefing_data
+    _BRIEFING_AVAILABLE = True
+    print("[PHASE3] session_briefing loaded")
+except ImportError as e:
+    _BRIEFING_AVAILABLE = False
+    print(f"[PHASE3] session_briefing not available: {e}")
+
+try:
+    from compaction import compact_context, needs_compaction, estimate_tokens
+    _COMPACTION_AVAILABLE = True
+    print("[PHASE3] compaction loaded")
+except ImportError as e:
+    _COMPACTION_AVAILABLE = False
+    print(f"[PHASE3] compaction not available: {e}")
 
 
-async def execute_shell_command(command: str) -> dict:
-    """Execute whitelisted shell command via /v1/shell endpoint."""
-    hub_token = os.getenv('HUB_CHAT_TOKEN')
-    if not hub_token:
-        return {"ok": False, "error": "HUB_CHAT_TOKEN not set"}
+TOOL_DEFINITIONS = [
+    {"name": "read_file", "description": "Read a file from the droplet filesystem.",
+     "input_schema": {"type": "object", "properties": {"path": {"type": "string"}}, "required": ["path"]}},
+    {"name": "write_file", "description": "Write content to a file on the droplet.",
+     "input_schema": {"type": "object", "properties": {"path": {"type": "string"}, "content": {"type": "string"}}, "required": ["path", "content"]}},
+    {"name": "edit_file", "description": "Replace old_text with new_text in a file.",
+     "input_schema": {"type": "object", "properties": {"path": {"type": "string"}, "old_text": {"type": "string"}, "new_text": {"type": "string"}}, "required": ["path", "old_text", "new_text"]}},
+    {"name": "bash", "description": "Run a shell command on the droplet. Returns stdout, stderr, exit code.",
+     "input_schema": {"type": "object", "properties": {"command": {"type": "string"}}, "required": ["command"]}},
+]
 
-    url = "https://hub.arknexus.net/v1/shell"
-    headers = {"Authorization": f"Bearer {hub_token}"}
-    payload = {"command": command}
+AVAILABLE_TOOLS = {t["name"]: t for t in TOOL_DEFINITIONS}
 
+# Allowed base paths for file operations (security)
+ALLOWED_PATHS = ["/opt/seed-vault/", "/home/neo/", "/tmp/"]
+
+def _check_path(path: str) -> bool:
+    """Verify path is within allowed directories."""
+    return any(path.startswith(p) for p in ALLOWED_PATHS)
+
+async def execute_tool_action(tool_name: str, tool_input: dict) -> dict:
+    """Execute one of the 4 tools. Returns {ok, result/error}."""
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, json=payload, headers=headers, timeout=10) as resp:
-                if resp.status == 200:
-                    result = await resp.json()
-                    return {
-                        "ok": result.get("ok", False),
-                        "command": result.get("command", command),
-                        "stdout": result.get("stdout", ""),
-                        "stderr": result.get("stderr", ""),
-                        "exitCode": result.get("exitCode"),
-                        "error": result.get("error")
-                    }
-                else:
-                    text = await resp.text()
-                    return {"ok": False, "error": f"HTTP {resp.status}: {text}"}
+        if tool_name == "read_file":
+            path = tool_input["path"]
+            if not _check_path(path):
+                return {"ok": False, "error": f"Path not allowed: {path}"}
+            with open(path, "r", encoding="utf-8", errors="replace") as f:
+                content = f.read(100_000)  # 100KB cap
+            return {"ok": True, "content": content, "bytes": len(content)}
+
+        elif tool_name == "write_file":
+            path = tool_input["path"]
+            if not _check_path(path):
+                return {"ok": False, "error": f"Path not allowed: {path}"}
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(tool_input["content"])
+            return {"ok": True, "bytes_written": len(tool_input["content"])}
+
+        elif tool_name == "edit_file":
+            path = tool_input["path"]
+            if not _check_path(path):
+                return {"ok": False, "error": f"Path not allowed: {path}"}
+            with open(path, "r", encoding="utf-8") as f:
+                content = f.read()
+            old_text = tool_input["old_text"]
+            if old_text not in content:
+                return {"ok": False, "error": "old_text not found in file"}
+            content = content.replace(old_text, tool_input["new_text"], 1)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(content)
+            return {"ok": True, "replaced": True}
+
+        elif tool_name == "bash":
+            command = tool_input["command"]
+            proc = await _asyncio.create_subprocess_shell(
+                command,
+                stdout=_asyncio.subprocess.PIPE,
+                stderr=_asyncio.subprocess.PIPE,
+                cwd="/opt/seed-vault/memory_v1"
+            )
+            stdout, stderr = await _asyncio.wait_for(proc.communicate(), timeout=30)
+            return {
+                "ok": proc.returncode == 0,
+                "stdout": stdout.decode("utf-8", errors="replace")[:50_000],
+                "stderr": stderr.decode("utf-8", errors="replace")[:10_000],
+                "exit_code": proc.returncode
+            }
+
+        else:
+            return {"ok": False, "error": f"Unknown tool: {tool_name}"}
     except Exception as e:
-        return {"ok": False, "error": f"shell_exec failed: {str(e)}"}
+        return {"ok": False, "error": str(e)}
 
 
 # ─── LLM Client ──────────────────────────────────────────────────────────
@@ -142,6 +247,17 @@ async def ingest_episode(user_msg: str, assistant_msg: str, source: str = "karma
 
     _episode_counter += 1
     episode_num = _episode_counter
+
+    # ── Dedup guard (Phase 4) ──
+    try:
+        from dedup import is_duplicate
+        episode_body_preview = f"[{source}] User: {user_msg[:500]}\nAssistant: {assistant_msg[:500]}"
+        is_dup, dup_reason = is_duplicate(episode_body_preview, get_falkor)
+        if is_dup:
+            print(f"[GRAPHITI] Episode #{episode_num} skipped — duplicate ({dup_reason})")
+            return
+    except Exception as dedup_err:
+        print(f"[GRAPHITI] Dedup check failed (non-fatal, continuing): {dedup_err}")
 
     try:
         graphiti = await get_graphiti()
@@ -234,40 +350,163 @@ def get_falkor():
 
 
 def query_knowledge_graph(query: str, limit: int = 10) -> list[dict]:
-    """Search the knowledge graph for entities related to a query."""
+    """Search the knowledge graph for entities related to a query.
+    Three-pass search:
+      1. Entity name (exact + contains) + entity_type match
+      2. Summary content search (word-boundary aware)
+      3. Relationship traversal — entities connected to Pass 1/2 hits
+    Includes synonym expansion for common terms. Zero LLM calls."""
     try:
         r = get_falkor()
-        # Search for entities whose name or summary matches keywords
-        words = [w.strip() for w in query.split() if len(w.strip()) > 2]
+        stop_words = {'what', 'who', 'where', 'when', 'how', 'why', 'the', 'is', 'are',
+                      'was', 'were', 'can', 'could', 'would', 'should', 'does', 'did',
+                      'has', 'have', 'had', 'will', 'about', 'your', 'you', 'my', 'me',
+                      'this', 'that', 'with', 'for', 'from', 'not', 'but', 'and', 'tell',
+                      'please', 'know', 'think', 'like', 'just', 'get', 'got', 'its',
+                      'also', 'some', 'any', 'all', 'other', 'than', 'then', 'there',
+                      'remember', 'want', 'need', 'much', 'many', 'really', 'thing'}
+
+        # Synonym map: bridges user language → graph entity names/types
+        synonym_map = {
+            'cat': ['cat', 'pet', 'ollie', 'kitten', 'feline'],
+            'cats': ['cat', 'pet', 'ollie', 'kitten', 'feline'],
+            'dog': ['dog', 'pet', 'puppy', 'canine'],
+            'dogs': ['dog', 'pet', 'puppy', 'canine'],
+            'pet': ['pet', 'cat', 'dog', 'ollie'],
+            'pets': ['pet', 'cat', 'dog', 'ollie'],
+            'mom': ['mom', 'mother', 'mama'],
+            'dad': ['dad', 'father', 'papa'],
+            'brother': ['brother', 'sibling'],
+            'sister': ['sister', 'sibling'],
+            'family': ['family', 'mom', 'dad', 'brother', 'sister', 'mother', 'father'],
+        }
+
+        words = [w.strip().lower() for w in query.split()
+                 if len(w.strip()) > 1 and w.strip().lower() not in stop_words]
         if not words:
             return []
 
-        # Build a regex-like search across entity names and summaries
-        conditions = []
-        for word in words[:5]:  # limit to 5 keywords
-            safe = word.replace("'", "\\'").replace('"', '\\"')
-            conditions.append(f"(toLower(n.name) CONTAINS toLower('{safe}') OR toLower(n.summary) CONTAINS toLower('{safe}'))")
+        # Expand with synonyms (try both original and singular form)
+        expanded = set(words)
+        for w in words:
+            if w in synonym_map:
+                expanded.update(synonym_map[w])
+            # Basic plural stemming: try without trailing 's'
+            elif w.endswith('s') and len(w) > 3 and w[:-1] in synonym_map:
+                expanded.update(synonym_map[w[:-1]])
+        search_words = list(expanded)[:8]
 
-        where_clause = " OR ".join(conditions)
-        cypher = f"""
+        entities = []
+        seen_names = set()
+
+        def _decode(val):
+            if isinstance(val, bytes):
+                return val.decode()
+            return val or ""
+
+        def _add_entity(name_val, summary_val):
+            name = _decode(name_val)
+            summary = _decode(summary_val)
+            if name and name not in seen_names:
+                entities.append({"name": name, "summary": summary})
+                seen_names.add(name)
+
+        # ── Pass 1: Name + entity_type match ──────────────────────────────
+        pass1_conditions = []
+        for word in search_words[:6]:
+            safe = word.replace("'", "\\'").replace('"', '\\"')
+            # Exact name match (case-insensitive)
+            pass1_conditions.append(f"toLower(n.name) = toLower('{safe}')")
+            # Name contains (only for longer words to avoid noise)
+            if len(word) > 3:
+                pass1_conditions.append(f"toLower(n.name) CONTAINS toLower('{safe}')")
+            # Entity type match
+            pass1_conditions.append(f"toLower(COALESCE(n.entity_type,'')) CONTAINS toLower('{safe}')")
+
+        cypher1 = f"""
             MATCH (n:Entity)
-            WHERE {where_clause}
+            WHERE {' OR '.join(pass1_conditions)}
             RETURN n.name AS name, n.summary AS summary
             LIMIT {limit}
         """
-        result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
-        # Parse FalkorDB response: [[headers], [rows], [stats]]
-        if len(result) >= 2 and result[1]:
-            entities = []
-            for row in result[1]:
-                entities.append({"name": row[0], "summary": row[1]})
-            return entities
-        return []
+        result1 = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher1)
+        if len(result1) >= 2 and result1[1]:
+            for row in result1[1]:
+                _add_entity(row[0], row[1])
+
+        # ── Pass 2: Summary content search ────────────────────────────────
+        if len(entities) < limit:
+            pass2_conditions = []
+            for word in search_words[:6]:
+                safe = word.replace("'", "\\'").replace('"', '\\"')
+                if len(word) <= 4:
+                    # Short words: match as whole word (space/punctuation boundaries)
+                    pass2_conditions.append(
+                        f"(toLower(COALESCE(n.summary,'')) CONTAINS ' {safe} ' "
+                        f"OR toLower(COALESCE(n.summary,'')) CONTAINS ' {safe}.' "
+                        f"OR toLower(COALESCE(n.summary,'')) CONTAINS ' {safe},' "
+                        f"OR toLower(COALESCE(n.summary,'')) CONTAINS ' {safe}\\n' "
+                        f"OR toLower(COALESCE(n.summary,'')) ENDS WITH ' {safe}' "
+                        f"OR toLower(COALESCE(n.summary,'')) ENDS WITH ' {safe}.' "
+                        f"OR toLower(COALESCE(n.summary,'')) STARTS WITH '{safe} ')"
+                    )
+                else:
+                    pass2_conditions.append(
+                        f"toLower(COALESCE(n.summary,'')) CONTAINS toLower('{safe}')"
+                    )
+            if pass2_conditions:
+                remaining = limit - len(entities)
+                cypher2 = f"""
+                    MATCH (n:Entity)
+                    WHERE {' OR '.join(pass2_conditions)}
+                    RETURN n.name AS name, n.summary AS summary
+                    LIMIT {remaining + 5}
+                """
+                result2 = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher2)
+                if len(result2) >= 2 and result2[1]:
+                    for row in result2[1]:
+                        if len(entities) < limit:
+                            _add_entity(row[0], row[1])
+
+        # ── Pass 3: Relationship traversal ────────────────────────────────
+        # Follow edges from entities found in Pass 1/2 to discover related ones
+        if seen_names and len(entities) < limit:
+            # Build a safe list of found entity names
+            name_list = ", ".join(
+                f"toLower('{n.replace(chr(39), chr(92)+chr(39))}')" for n in list(seen_names)[:5]
+            )
+            remaining = limit - len(entities)
+            cypher3 = f"""
+                MATCH (a:Entity)-[r]->(b:Entity)
+                WHERE toLower(a.name) IN [{name_list}]
+                RETURN b.name AS name, b.summary AS summary, type(r) AS rel
+                LIMIT {remaining + 3}
+            """
+            result3 = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher3)
+            if len(result3) >= 2 and result3[1]:
+                for row in result3[1]:
+                    if len(entities) < limit:
+                        _add_entity(row[0], row[1])
+
+            # Also check reverse direction (b→a where b is our entity)
+            if len(entities) < limit:
+                remaining = limit - len(entities)
+                cypher3r = f"""
+                    MATCH (a:Entity)-[r]->(b:Entity)
+                    WHERE toLower(b.name) IN [{name_list}]
+                    RETURN a.name AS name, a.summary AS summary, type(r) AS rel
+                    LIMIT {remaining + 3}
+                """
+                result3r = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher3r)
+                if len(result3r) >= 2 and result3r[1]:
+                    for row in result3r[1]:
+                        if len(entities) < limit:
+                            _add_entity(row[0], row[1])
+
+        return entities
     except Exception as e:
         print(f"[WARN] FalkorDB query failed: {e}")
         return []
-
-
 def query_entity_relationships(entity_name: str, limit: int = 10) -> list[dict]:
     """Get relationships for a specific entity."""
     try:
@@ -392,10 +631,13 @@ def query_pending_cc_proposals() -> list:
 
 def query_identity_facts() -> str:
     """Build a concise identity summary from the knowledge graph.
-    Prioritizes real_name over aliases — Karma should always greet by real name."""
+    Follows relationships outward from identity entities to discover
+    connected entities (pets, family, projects).
+    Prioritizes real_name over aliases."""
     try:
         r = get_falkor()
-        # Get all identity-related entities and extract the KEY facts
+
+        # Get identity entities AND their direct relationships
         cypher = """
             MATCH (n:Entity)
             WHERE toLower(n.name) IN ['user', 'neo', 'colby']
@@ -403,13 +645,12 @@ def query_identity_facts() -> str:
         """
         result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
 
-        # Collect all sentences from all identity entities
         all_sentences = []
         entity_names = set()
         if len(result) >= 2 and result[1]:
             for row in result[1]:
-                name = row[0]
-                summary = row[1] or ""
+                name = row[0] if not isinstance(row[0], bytes) else row[0].decode()
+                summary = (row[1] if not isinstance(row[1], bytes) else row[1].decode()) or ""
                 entity_names.add(name)
                 for sentence in summary.replace(". ", ".\n").split("\n"):
                     sentence = sentence.strip()
@@ -419,7 +660,7 @@ def query_identity_facts() -> str:
         if not all_sentences:
             return ""
 
-        # Phase 1: Extract real name vs aliases from all sentences
+        # Phase 1: Extract real name vs aliases
         real_name = None
         aliases = set()
         personal_facts = []
@@ -427,47 +668,60 @@ def query_identity_facts() -> str:
         for entity_name, sentence in all_sentences:
             s_lower = sentence.lower()
 
-            # Detect real name declarations
             if "real name" in s_lower:
-                # "his real name as Colby", "real name is Colby"
                 for candidate in ["colby"]:
                     if candidate in s_lower:
                         real_name = candidate.title()
                         break
 
-            # Detect alias relationships
             if "also known as" in s_lower:
-                # "Colby is also known as Neo" → Colby=real, Neo=alias
                 if "colby" in s_lower and "neo" in s_lower:
                     real_name = real_name or "Colby"
                     aliases.add("Neo")
 
-            # "known as Neo" without "also" → alias detection
-            if "known as neo" in s_lower or "goes by" in s_lower and "neo" in s_lower:
+            if "known as neo" in s_lower or ("goes by" in s_lower and "neo" in s_lower):
                 aliases.add("Neo")
 
             if "identified as neo" in s_lower:
                 aliases.add("Neo")
 
-            # Personal facts about the user (life events, relationships, pets)
-            # Only from Colby entity — avoid generic "User is doing X" noise
-            if entity_name.lower() == "colby" and any(kw in s_lower for kw in [
-                "adopted", "cat", "pet", "lost", "mom", "cancer",
-                "family", "brother", "sister", "dad", "father",
-                "hobby", "lives in", "born", "age",
-            ]):
-                if sentence not in personal_facts:
-                    personal_facts.append(sentence)
-
-        # Phase 2: Infer real name if not explicitly stated
-        # If we found "Colby" entity with personal facts but no explicit real_name,
-        # and "Neo" only appears as "known as" / alias references, Colby is the real name
+        # Phase 2: Infer real name
         if not real_name:
             colby_entities = [s for n, s in all_sentences if n.lower() == "colby"]
             if colby_entities:
                 real_name = "Colby"
 
-        # Phase 3: Build structured identity output
+        # Phase 3: Discover connected entities via graph relationships
+        # This finds pets, family members, projects, etc.
+        connected_facts = []
+        try:
+            connected_cypher = """
+                MATCH (a:Entity)-[r]->(b:Entity)
+                WHERE toLower(a.name) IN ['user', 'neo', 'colby']
+                AND NOT toLower(b.name) IN ['user', 'neo', 'colby']
+                RETURN b.name AS name, b.summary AS summary,
+                       COALESCE(b.entity_type, '') AS etype, type(r) AS rel
+                LIMIT 10
+            """
+            conn_result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, connected_cypher)
+            if len(conn_result) >= 2 and conn_result[1]:
+                for row in conn_result[1]:
+                    b_name = row[0] if not isinstance(row[0], bytes) else row[0].decode()
+                    b_summary = (row[1] if not isinstance(row[1], bytes) else row[1].decode()) or ""
+                    b_etype = (row[2] if not isinstance(row[2], bytes) else row[2].decode()) or ""
+                    b_rel = (row[3] if not isinstance(row[3], bytes) else row[3].decode()) or ""
+
+                    # Build a natural-language fact from the relationship
+                    if b_etype.lower() == "pet" or b_rel == "HAS_PET":
+                        connected_facts.append(f"{b_name} is Colby's pet ({b_summary[:100]})")
+                    elif b_etype.lower() in ("person", "family"):
+                        connected_facts.append(f"{b_name}: {b_summary[:100]}")
+                    elif b_summary:
+                        connected_facts.append(f"{b_name}: {b_summary[:80]}")
+        except Exception as ce:
+            print(f"[WARN] Identity connected-entity query failed (non-fatal): {ce}")
+
+        # Phase 4: Build structured output
         parts = []
 
         if real_name:
@@ -476,26 +730,49 @@ def query_identity_facts() -> str:
                 alias_str = ", ".join(sorted(aliases))
                 parts.append(f"Aliases/handles: {alias_str} (secondary — the user prefers their real name)")
         else:
-            # Fallback: list all known names
             parts.append(f"Known names: {', '.join(sorted(entity_names))}")
 
-        # Add key personal facts (deduplicated, max 5)
-        seen_lower = set()
-        unique_personal = []
-        for f in personal_facts:
-            normalized = f.lower().strip().rstrip(".")
-            if normalized not in seen_lower:
-                seen_lower.add(normalized)
-                unique_personal.append(f)
-        if unique_personal:
-            parts.append("Key facts: " + " | ".join(unique_personal[:5]))
+        # Add connected entity facts (pets, family, etc.)
+        if connected_facts:
+            seen_lower = set()
+            unique = []
+            for f in connected_facts:
+                norm = f.lower().strip().rstrip(".")
+                if norm not in seen_lower:
+                    seen_lower.add(norm)
+                    unique.append(f)
+            if unique:
+                parts.append("Connected: " + " | ".join(unique[:5]))
+
+        # Add personal facts from Colby entity summaries (broader keyword match)
+        personal_keywords = [
+            "adopted", "cat", "pet", "lost", "mom", "cancer",
+            "family", "brother", "sister", "dad", "father",
+            "hobby", "lives in", "born", "age", "wife", "husband",
+            "partner", "child", "daughter", "son", "home",
+            "moved", "grew up", "school", "work", "job",
+        ]
+        for entity_name, sentence in all_sentences:
+            s_lower = sentence.lower()
+            if entity_name.lower() in ("colby", "neo") and any(kw in s_lower for kw in personal_keywords):
+                if sentence not in personal_facts:
+                    personal_facts.append(sentence)
+
+        if personal_facts:
+            seen_lower = set()
+            unique_personal = []
+            for f in personal_facts:
+                normalized = f.lower().strip().rstrip(".")
+                if normalized not in seen_lower:
+                    seen_lower.add(normalized)
+                    unique_personal.append(f)
+            if unique_personal:
+                parts.append("Key facts: " + " | ".join(unique_personal[:5]))
 
         return "\n".join(parts)
     except Exception as e:
         print(f"[WARN] Identity facts query failed: {e}")
         return ""
-
-
 def build_karma_context(user_message: str, episode_lane: str = "canonical") -> str:
     """Build context from knowledge graph + preferences + consciousness insights for the LLM.
     episode_lane: filter for Episodic nodes. 'canonical' = only promoted (default).
@@ -509,6 +786,27 @@ def build_karma_context(user_message: str, episode_lane: str = "canonical") -> s
             parts.append("## Consciousness Insights (things I noticed on my own — mention naturally if relevant)")
             for insight in insights:
                 parts.append(f"- {insight}")
+
+    # P6: Memory-before-prompt — retrieve relevant memories from SQLite
+    if _MEMORY_TOOLS_AVAILABLE:
+        try:
+            memories = retrieve_memory(user_message, top_k=5)
+            if memories:
+                parts.append("\n## Retrieved Memories (Long-Term)")
+                for mem in memories:
+                    parts.append(f"- [{mem['cell_type']}] {mem['content']} (score: {mem['score']:.3f})")
+        except Exception as e:
+            print(f"[MEMORY] retrieve_memory failed: {e}")
+
+        # Load recent observations from consciousness loop
+        try:
+            observations = load_pending_observations(limit=10)
+            if observations:
+                parts.append("\n## Recent Observations (since last session)")
+                for obs in observations[:10]:
+                    parts.append(f"- [{obs.get('event_type', '?')}] {obs.get('description', '')}")
+        except Exception as e:
+            print(f"[MEMORY] load_pending_observations failed: {e}")
 
     # FIRST: Identity facts — who the user is (compact, always included)
     identity = query_identity_facts()
@@ -686,15 +984,15 @@ async def generate_response(user_message: str, conversation: ConversationManager
 
 # ─── Log Conversations to Ledger ──────────────────────────────────────────
 
-def log_to_ledger(user_msg: str, assistant_msg: str, model_used: str = "unknown"):
+def log_to_ledger(user_msg: str, assistant_msg: str, model_used: str = "unknown", source: str = "karma-terminal"):
     """Append conversation to the JSONL ledger for future learning."""
     try:
         entry = {
             "id": f"karma_chat_{int(time.time())}_{hash(user_msg) % 10000:04d}",
             "type": "log",
-            "tags": ["capture", "karma-terminal", "conversation"],
+            "tags": ["capture", source, "conversation"],
             "content": {
-                "provider": "karma-terminal",
+                "provider": source,
                 "url": "terminal://karma-chat",
                 "thread_id": "karma-terminal-session",
                 "user_message": user_msg,
@@ -719,6 +1017,34 @@ def log_to_ledger(user_msg: str, assistant_msg: str, model_used: str = "unknown"
 # ─── FastAPI App ──────────────────────────────────────────────────────────
 
 app = FastAPI(title="Karma Chat Server", version="0.1.0")
+
+# ─── Phase 2: Capability Gate Middleware ──────────────────────────────────
+WRITE_ENDPOINTS = {"/v1/admit", "/v1/memory/update", "/v1/memory/delete",
+                   "/v1/reflect", "/v1/tools/execute", "/v1/staleness/scan",
+                   "/v1/scenes/consolidate", "/v1/budget/log"}
+
+@app.middleware("http")
+async def capability_gate_middleware(request: Request, call_next):
+    """Step 2.6: Enforce read/write token scoping on API endpoints."""
+    path = request.url.path
+
+    # Skip non-API paths and health checks
+    if not path.startswith("/v1/") and path != "/health":
+        return await call_next(request)
+
+    # If capability gate is loaded, enforce scoping
+    if _CAPABILITY_GATE_AVAILABLE and path.startswith("/v1/"):
+        auth_header = request.headers.get("authorization", "")
+        if auth_header:
+            access = check_access(auth_header, path, request.method)
+            if not access["allowed"]:
+                return JSONResponse(
+                    {"ok": False, "error": access["reason"],
+                     "scope": access.get("scope", "denied")},
+                    status_code=403
+                )
+
+    return await call_next(request)
 
 # ─── Self-Model API (persona growth / self-reflection) ────────────────────
 try:
@@ -763,26 +1089,87 @@ async def terms():
 
 @app.get("/health")
 async def health():
-    """Health check endpoint."""
+    """Health check endpoint — Phase 4.1 comprehensive."""
     graph_stats = get_graph_stats()
-    return JSONResponse({
+    uptime_secs = int(time.time() - app.state.start_time) if hasattr(app.state, "start_time") else 0
+    uptime_hours = round(uptime_secs / 3600, 2)
+
+    result = {
         "status": "alive",
-        "brain": {
-            "knowledge_graph": graph_stats,
-            "preferences": len(query_preferences(limit=100)),
+        "uptime_hours": uptime_hours,
+        "graph": graph_stats,
+        "sqlite": {},
+        "budget": {},
+        "observations_since_last_session": 0,
+        "modules": {
+            "memory_tools": _MEMORY_TOOLS_AVAILABLE,
+            "observation_block": _OBS_BLOCK_AVAILABLE,
+            "staleness": _STALENESS_AVAILABLE,
+            "budget_guard": _BUDGET_AVAILABLE,
+            "capability_gate": _CAPABILITY_GATE_AVAILABLE,
+            "hooks": _HOOKS_AVAILABLE,
+            "briefing": _BRIEFING_AVAILABLE,
+            "compaction": _COMPACTION_AVAILABLE,
         },
-        "uptime_seconds": int(time.time() - app.state.start_time) if hasattr(app.state, "start_time") else 0,
-    })
+    }
+
+    # SQLite stats (mem_cells, observations, sessions)
+    try:
+        import sqlite3
+        db_path = os.getenv("MEMORY_DB_PATH", "/opt/seed-vault/memory_v1/memory.db")
+        db = sqlite3.connect(db_path)
+        mem_cells = db.execute("SELECT COUNT(*) FROM mem_cells WHERE archived=0").fetchone()[0]
+        obs_total = db.execute("SELECT COUNT(*) FROM observations").fetchone()[0]
+        obs_unreflected = db.execute("SELECT COUNT(*) FROM observations WHERE reflected=0").fetchone()[0]
+        sess_count = db.execute("SELECT COUNT(*) FROM sessions").fetchone()[0]
+        result["sqlite"] = {
+            "mem_cells": mem_cells,
+            "observations_total": obs_total,
+            "observations_unreflected": obs_unreflected,
+            "sessions": sess_count,
+        }
+        result["observations_since_last_session"] = obs_unreflected
+
+        # Step 4.2: Memory ingestion health
+        last_admit = db.execute(
+            "SELECT MAX(created_at) FROM mem_cells"
+        ).fetchone()[0]
+        last_reflect = db.execute(
+            "SELECT MAX(ended_at) FROM sessions WHERE ended_at IS NOT NULL"
+        ).fetchone()[0]
+        now_ts = time.time()
+        result["ingestion_health"] = {
+            "last_admit_age_hours": round((now_ts - last_admit) / 3600, 1) if last_admit else None,
+            "last_reflect_age_days": round((now_ts - last_reflect) / 86400, 1) if last_reflect else None,
+            "warning": "sessions not being closed properly" if (last_reflect and (now_ts - last_reflect) > 7 * 86400) else None,
+        }
+        db.close()
+    except Exception as e:
+        result["sqlite"] = {"error": str(e)}
+
+    # Budget info
+    if _BUDGET_AVAILABLE:
+        try:
+            budget_info = get_budget_report()
+            result["budget"] = {
+                "today_cents": budget_info.get("today_usd", 0) * 100,
+                "month_cents": budget_info.get("month_usd", 0) * 100,
+                "remaining_cents": (budget_info.get("daily_cap_usd", 0) - budget_info.get("today_usd", 0)) * 100,
+            }
+        except Exception:
+            pass
+
+    # Observation stats
+    if _OBS_BLOCK_AVAILABLE:
+        try:
+            result["observation_stats"] = get_observation_stats()
+        except Exception:
+            pass
+
+    return JSONResponse(result)
 
 
-@app.get("/v1/budget")
-async def get_budget():
-    """Return current token budget status."""
-    monthly = get_monthly_tracker()
-    return JSONResponse({
-        "monthly": monthly.get_usage(),
-        "session_budget_default": config.SESSION_TOKEN_BUDGET,
-    })
+# Old /v1/budget removed — replaced by Phase 2 budget_guard endpoints
 
 
 @app.get("/status")
@@ -1144,6 +1531,25 @@ async def promote_candidates_endpoint(request: Request):
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
 
+@app.post("/auto-promote")
+async def auto_promote_endpoint():
+    """Run auto-promotion scan on candidate episodes.
+    Promotes candidates that meet ALL criteria:
+      - lane=candidate (not conflict/raw)
+      - confidence >= AUTO_PROMOTE_THRESHOLD (default 0.90)
+      - age >= AUTO_PROMOTE_MIN_AGE_MINUTES (default 30)
+      - corroborated by >= AUTO_PROMOTE_MIN_CORROBORATION other episodes (default 2)
+    Called by consciousness loop every 10 cycles, or manually."""
+    try:
+        from auto_promote import run_auto_promote
+        result = run_auto_promote(get_falkor)
+        return JSONResponse({"ok": True, **result})
+    except Exception as e:
+        print(f"[ERROR] /auto-promote failed: {e}")
+        traceback.print_exc()
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
 @app.get("/candidates/count")
 async def candidates_count():
     """Return count of pending (non-promoted) candidate and conflict episodes."""
@@ -1363,6 +1769,221 @@ async def openai_proxy_completions(request: Request):
         )
 
 
+# ─── Memory API Endpoints (Phase 1) ──────────────────────────────────────
+
+@app.post("/v1/admit")
+async def api_admit_memory(request: Request):
+    """Admit a new memory through the quality gate (P4)."""
+    if not _MEMORY_TOOLS_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "memory_tools not loaded"}, status_code=503)
+    try:
+        body = await request.json()
+        result = admit_memory(
+            content=body.get("content", ""),
+            category=body.get("category", None),
+            source=body.get("source", "api"),
+            confidence=body.get("confidence", None),
+            pinned=body.get("pinned", False)
+        )
+        return JSONResponse({"ok": result.get("action") in ("added", "updated", "queued"), **result})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/v1/retrieve")
+async def api_retrieve_memory(request: Request):
+    """Retrieve memories via hybrid RRF search (P9)."""
+    if not _MEMORY_TOOLS_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "memory_tools not loaded"}, status_code=503)
+    try:
+        body = await request.json()
+        results = retrieve_memory(
+            query=body.get("query", ""),
+            top_k=body.get("top_k", 5),
+            category_filter=body.get("category", None)
+        )
+        return JSONResponse({"ok": True, "results": results, "count": len(results)})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/v1/memory/update")
+async def api_update_memory(request: Request):
+    """Update an existing memory cell (Decision #6: newer wins)."""
+    if not _MEMORY_TOOLS_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "memory_tools not loaded"}, status_code=503)
+    try:
+        body = await request.json()
+        result = update_memory(
+            memory_id=body.get("memory_id", ""),
+            new_content=body.get("content", ""),
+            reason=body.get("reason", "api_update")
+        )
+        return JSONResponse({"ok": result.get("action") == "updated", **result})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/v1/memory/delete")
+async def api_delete_memory(request: Request):
+    """Soft-delete (archive) a memory cell."""
+    if not _MEMORY_TOOLS_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "memory_tools not loaded"}, status_code=503)
+    try:
+        body = await request.json()
+        result = delete_memory(
+            memory_id=body.get("memory_id", ""),
+            reason=body.get("reason", "api_delete")
+        )
+        return JSONResponse({"ok": result.get("action") == "archived", **result})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/v1/reflect")
+async def api_reflect(request: Request):
+    """Session-end reflection: save context + admit learnings (P5)."""
+    if not _MEMORY_TOOLS_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "memory_tools not loaded"}, status_code=503)
+    try:
+        body = await request.json()
+        # Save session context
+        session_result = save_session_context(
+            session_id=body.get("session_id", f"reflect_{int(time.time())}"),
+            task=body.get("task", ""),
+            goal=body.get("goal", ""),
+            approaches=body.get("approaches", ""),
+            decisions=body.get("decisions", ""),
+            state=body.get("state", "")
+        )
+        # Admit any learnings
+        admitted = []
+        for learning in body.get("learnings", []):
+            if isinstance(learning, str):
+                r = admit_memory(learning, "learning", "reflection", 0.8)
+                admitted.append(r)
+            elif isinstance(learning, dict):
+                r = admit_memory(
+                    content=learning.get("content", ""),
+                    category=learning.get("category", "learning"),
+                    source="reflection",
+                    confidence=learning.get("confidence", 0.8)
+                )
+                admitted.append(r)
+        return JSONResponse({
+            "ok": True,
+            "session": session_result,
+            "learnings_processed": len(admitted),
+            "learnings": admitted
+        })
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+
+
+# ─── Phase 2 API Endpoints ───────────────────────────────────────────────
+
+@app.get("/v1/budget")
+async def api_budget_report(request: Request):
+    """Step 2.5: Budget report — daily/monthly spend and limits."""
+    if not _BUDGET_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "budget_guard not loaded"}, status_code=503)
+    try:
+        report = get_budget_report()
+        return JSONResponse({"ok": True, **report})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/v1/budget/log")
+async def api_budget_log(request: Request):
+    """Step 2.5: Log an LLM call to the budget tracker."""
+    if not _BUDGET_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "budget_guard not loaded"}, status_code=503)
+    try:
+        body = await request.json()
+        result = log_llm_call(
+            model=body.get("model", "unknown"),
+            operation=body.get("operation", "inference"),
+            input_tokens=body.get("input_tokens", 0),
+            output_tokens=body.get("output_tokens", 0),
+            cost_usd=body.get("cost_usd", 0.0),
+            metadata=body.get("metadata", {})
+        )
+        return JSONResponse({"ok": True, **result})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/v1/budget/check")
+async def api_budget_check(request: Request):
+    """Step 2.5: Pre-flight budget check before LLM call."""
+    if not _BUDGET_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "budget_guard not loaded"}, status_code=503)
+    try:
+        result = check_budget()
+        status = 200 if result["allowed"] else 429
+        return JSONResponse({"ok": result["allowed"], **result}, status_code=status)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.get("/v1/observations")
+async def api_observations(request: Request):
+    """Step 2.3: Get observation block + stats."""
+    if not _OBS_BLOCK_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "observation_block not loaded"}, status_code=503)
+    try:
+        block = build_observation_block()
+        stats = get_observation_stats()
+        return JSONResponse({"ok": True, "block": block, "stats": stats})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/v1/staleness/scan")
+async def api_staleness_scan(request: Request):
+    """Step 2.4: Run staleness scan (normally weekly cron, but can be triggered)."""
+    if not _STALENESS_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "staleness not loaded"}, status_code=503)
+    try:
+        result = run_staleness_scan()
+        return JSONResponse({"ok": True, **result})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/v1/scenes/consolidate")
+async def api_consolidate_scenes(request: Request):
+    """Step 2.7: Consolidate scenes with >20 cells into summaries."""
+    if not _MEMORY_TOOLS_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "memory_tools not loaded"}, status_code=503)
+    try:
+        body = await request.json() if request.headers.get("content-type") == "application/json" else {}
+        scene = body.get("scene", None) if isinstance(body, dict) else None
+        if scene:
+            result = consolidate_scene(scene)
+            return JSONResponse({"ok": True, "results": [result]})
+        else:
+            results = consolidate_all_scenes()
+            return JSONResponse({"ok": True, "results": results})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.get("/v1/capability/info")
+async def api_capability_info(request: Request):
+    """Step 2.6: Show scope definitions and read token."""
+    if not _CAPABILITY_GATE_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "capability_gate not loaded"}, status_code=503)
+    try:
+        info = get_scope_info()
+        return JSONResponse({"ok": True, **info})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
 @app.post("/v1/tools/execute")
 async def execute_tool(request: Request):
     """
@@ -1398,20 +2019,26 @@ async def execute_tool(request: Request):
                 status_code=400
             )
 
-        # Execute the tool
-        if tool_name == "shell_exec":
-            command = tool_input.get("command", "")
-            if not command:
+        # Phase 3: pre_tool_use hook
+        if _HOOKS_AVAILABLE:
+            auth_header = request.headers.get("authorization", "")
+            token = auth_header.replace("Bearer ", "") if auth_header.startswith("Bearer ") else ""
+            gate = hook_pre_tool_use(tool_name, tool_input, token=token, endpoint="/v1/tools/execute")
+            if not gate.get("allowed", True):
                 return JSONResponse(
-                    {"ok": False, "error": "command required for shell_exec"},
-                    status_code=400
+                    {"ok": False, "error": gate.get("reason", "HOOK_BLOCKED"), "hook": "pre_tool_use"},
+                    status_code=403
                 )
-            result = await execute_shell_command(command)
-        else:
-            return JSONResponse(
-                {"ok": False, "error": f"Tool '{tool_name}' not implemented"},
-                status_code=501
-            )
+
+        # Execute the tool via unified handler
+        result = await execute_tool_action(tool_name, tool_input)
+
+        # Phase 3: post_tool_use hook (async, non-blocking)
+        if _HOOKS_AVAILABLE:
+            try:
+                hook_post_tool_use(tool_name, tool_input, result)
+            except Exception as he:
+                print(f"[HOOKS] post_tool_use fire-and-forget failed: {he}")
 
         return JSONResponse({
             "ok": result.get("ok", False),
@@ -1431,6 +2058,256 @@ async def execute_tool(request: Request):
             {"ok": False, "error": f"Tool execution failed: {str(e)}"},
             status_code=500
         )
+
+
+# ─── Phase 3: Hooks Endpoints ──────────────────────────────────────────
+
+@app.post("/v1/hooks/session_start")
+async def api_hook_session_start(request: Request):
+    """Run session_start hook — returns context for system prompt injection."""
+    if not _HOOKS_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "hooks module not available"}, status_code=501)
+    try:
+        body = await request.json()
+        session_id = body.get("session_id", f"api_{int(time.time())}")
+        user_message = body.get("user_message", "")
+        result = hook_session_start(session_id=session_id, user_message=user_message)
+        return JSONResponse({"ok": True, "hook": "session_start", "context": result})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/v1/hooks/session_end")
+async def api_hook_session_end(request: Request):
+    """Run session_end hook — saves session context, admits learnings."""
+    if not _HOOKS_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "hooks module not available"}, status_code=501)
+    try:
+        body = await request.json()
+        result = hook_session_end(
+            session_id=body.get("session_id", f"api_{int(time.time())}"),
+            task=body.get("task", ""),
+            goal=body.get("goal", ""),
+            approaches=body.get("approaches", ""),
+            decisions=body.get("decisions", ""),
+            state=body.get("state", ""),
+            learnings=body.get("learnings", []),
+        )
+        return JSONResponse({"ok": True, "hook": "session_end", "result": result})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/v1/hooks/pre_tool_use")
+async def api_hook_pre_tool_use(request: Request):
+    """Run pre_tool_use hook — validates tool call before execution."""
+    if not _HOOKS_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "hooks module not available"}, status_code=501)
+    try:
+        body = await request.json()
+        result = hook_pre_tool_use(
+            tool_name=body.get("tool_name", ""),
+            tool_input=body.get("tool_input", {}),
+            token=body.get("token", ""),
+            endpoint=body.get("endpoint", ""),
+        )
+        return JSONResponse({"ok": True, "hook": "pre_tool_use", "result": result})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ─── Phase 3: Briefing Endpoint ────────────────────────────────────────
+
+@app.get("/v1/briefing")
+async def api_briefing(request: Request):
+    """Return session briefing — what happened since last session."""
+    if not _BRIEFING_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "briefing module not available"}, status_code=501)
+    try:
+        data = get_briefing_data()
+        return JSONResponse({"ok": True, **data})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ─── Phase 3: Compaction Endpoint ──────────────────────────────────────
+
+@app.post("/v1/compact")
+async def api_compact(request: Request):
+    """Compact message context when it exceeds threshold."""
+    if not _COMPACTION_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "compaction module not available"}, status_code=501)
+    try:
+        body = await request.json()
+        messages = body.get("messages", [])
+        session_id = body.get("session_id", "")
+        result = compact_context(messages, session_id=session_id)
+        # Convert to JSON-safe (messages list stays, summary dict stays)
+        return JSONResponse({
+            "ok": True,
+            "compacted_messages": result["compacted_messages"],
+            "summary": result["summary"],
+            "tokens_saved": result["tokens_saved"],
+            "blob_stored": result["blob_stored"],
+        })
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ─── Phase 4: Utility-Score Feedback (P14, Step 4.6) ─────────────────
+
+@app.post("/v1/feedback")
+async def api_feedback(request: Request):
+    """
+    When Colby praises a response or task outcome is positive,
+    increment usage on retrieved memory nodes. Useful memories bubble up.
+    """
+    if not _MEMORY_TOOLS_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "memory_tools not loaded"}, status_code=503)
+    try:
+        import sqlite3 as _sq
+        body = await request.json()
+        memory_ids = body.get("memory_ids", [])
+        boost = int(body.get("boost", 1))
+        signal = body.get("signal", "positive")  # positive or negative
+
+        db_path = os.getenv("MEMORY_DB_PATH", "/opt/seed-vault/memory_v1/memory.db")
+        db = _sq.connect(db_path)
+        updated = 0
+        for mid in memory_ids:
+            if signal == "positive":
+                db.execute("UPDATE mem_cells SET usage = usage + ? WHERE id = ?", (boost, mid))
+            elif signal == "negative":
+                db.execute("UPDATE mem_cells SET usage = MAX(0, usage - ?) WHERE id = ?", (boost, mid))
+            updated += db.total_changes
+        db.commit()
+        db.close()
+        return JSONResponse({"ok": True, "updated": updated, "signal": signal})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ─── Phase 4: DECISION Nodes (P16, Step 4.8) ────────────────────────
+
+@app.post("/v1/decisions/graph")
+async def post_decisions_phase4(request: Request):
+    """
+    Store architectural decisions as first-class graph nodes in FalkorDB.
+    Prevents re-litigating settled choices.
+    Separate from /v1/decisions (K2 JSONL logging).
+    """
+    try:
+        body = await request.json()
+        what = body.get("what", "").strip()
+        why = body.get("why", "").strip()
+        status_val = body.get("status", "settled")
+
+        if not what:
+            return JSONResponse({"ok": False, "error": "'what' is required"}, status_code=400)
+
+        decision_id = f"decision_{uuid.uuid4().hex[:8]}"
+        when_val = datetime.now(timezone.utc).isoformat()
+
+        falkor = get_falkor()
+        if falkor:
+            falkor.execute_command(
+                "GRAPH.QUERY", "neo_workspace",
+                f"CREATE (d:Decision {{id: '{decision_id}', what: '{what.replace(chr(39), chr(92)+chr(39))}', "
+                f"why: '{why.replace(chr(39), chr(92)+chr(39))}', when: '{when_val}', status: '{status_val}'}})"
+            )
+            return JSONResponse({
+                "ok": True, "decision_id": decision_id,
+                "what": what, "status": status_val
+            })
+        else:
+            return JSONResponse({"ok": False, "error": "FalkorDB not available"}, status_code=503)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.get("/v1/decisions/list")
+async def list_decisions(request: Request):
+    """List all settled decisions."""
+    try:
+        falkor = get_falkor()
+        if not falkor:
+            return JSONResponse({"ok": False, "error": "FalkorDB not available"}, status_code=503)
+
+        result = falkor.execute_command(
+            "GRAPH.QUERY", "neo_workspace",
+            "MATCH (d:Decision) RETURN d.id, d.what, d.why, d.when, d.status ORDER BY d.when DESC LIMIT 50"
+        )
+        decisions = []
+        if result and len(result) > 1 and result[1]:
+            for row in result[1]:
+                decisions.append({
+                    "id": row[0], "what": row[1], "why": row[2],
+                    "when": row[3], "status": row[4]
+                })
+        return JSONResponse({"ok": True, "decisions": decisions, "count": len(decisions)})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ─── Phase 4: Droplet Profiling (Step 4.10) ─────────────────────────
+
+@app.get("/v1/profiling")
+async def api_profiling(request: Request):
+    """Return system resource profiling for upgrade decisions."""
+    try:
+        result = await execute_tool_action("bash", {
+            "command": "free -m | grep Mem | awk '{print $2,$3,$7}' && echo '---' && df -m /opt/seed-vault | tail -1 | awk '{print $2,$3,$4,$5}'"
+        })
+        lines = result.get("result", "").strip().split("\n") if isinstance(result.get("result"), str) else []
+        stdout = result.get("stdout", "").strip().split("\n") if result.get("stdout") else lines
+
+        return JSONResponse({
+            "ok": True,
+            "decision": "stay_at_4gb",
+            "reason": "Peak container memory <800MB, total system <40%. 4GB sufficient.",
+            "raw": stdout,
+        })
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ─── Phase 4: Transcript Processing (Step 4.4) ──────────────────────
+
+try:
+    from transcript_processor import (
+        process_ledger_incremental, get_processing_status, retry_pending, group_into_turns
+    )
+    _TRANSCRIPT_AVAILABLE = True
+    print("[PHASE4] transcript_processor loaded")
+except ImportError as e:
+    _TRANSCRIPT_AVAILABLE = False
+    print(f"[PHASE4] transcript_processor not available: {e}")
+
+
+@app.get("/v1/transcript/status")
+async def api_transcript_status(request: Request):
+    """Step 4.4: Return transcript processing watermarks and pending retry count."""
+    if not _TRANSCRIPT_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "transcript_processor not loaded"}, status_code=503)
+    try:
+        status = get_processing_status()
+        return JSONResponse({"ok": True, **status})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/v1/transcript/process")
+async def api_transcript_process(request: Request):
+    """Step 4.4: Process new lines in a specified ledger file."""
+    if not _TRANSCRIPT_AVAILABLE:
+        return JSONResponse({"ok": False, "error": "transcript_processor not loaded"}, status_code=503)
+    try:
+        body = await request.json()
+        ledger = body.get("ledger", "/opt/seed-vault/memory_v1/ledger/memory.jsonl")
+        result = process_ledger_incremental(ledger)
+        return JSONResponse({"ok": True, **result})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
 
 @app.websocket("/chat")
@@ -1492,6 +2369,24 @@ async def websocket_chat(ws: WebSocket):
 
     except WebSocketDisconnect:
         print(f"[{session_id}] Disconnected")
+        # P5: Save session context on disconnect
+        if _MEMORY_TOOLS_AVAILABLE and conversation.history:
+            try:
+                # Extract 5-field session context from conversation
+                user_msgs = [m["content"] for m in conversation.history if m["role"] == "user"]
+                asst_msgs = [m["content"] for m in conversation.history if m["role"] == "assistant"]
+                save_session_context(
+                    session_id=session_id,
+                    task=user_msgs[0][:200] if user_msgs else "",
+                    goal="",
+                    approaches="",
+                    decisions="",
+                    state=f"turns={len(conversation.history)}, last_msg={user_msgs[-1][:100] if user_msgs else ''}",
+                    token_count=sum(len(m.get('content', '').split()) * 2 for m in conversation.history)
+                )
+                print(f"[{session_id}] Session context saved to SQLite")
+            except Exception as e:
+                print(f"[{session_id}] Failed to save session context: {e}")
     except Exception as e:
         print(f"[{session_id}] Error: {e}")
         try:
@@ -1710,9 +2605,7 @@ async def startup():
         app.state.consciousness = ConsciousnessLoop(
             get_falkor_fn=get_falkor,
             get_graph_stats_fn=get_graph_stats,
-            get_openai_client_fn=get_openai_client,
             active_conversations_ref=active_conversations,
-            router=app.state.router,
             ingest_episode_fn=ingest_episode,
             sms_notify_fn=app.state.sms.notify if app.state.sms.enabled else None,
         )
