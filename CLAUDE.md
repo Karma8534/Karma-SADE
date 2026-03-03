@@ -16,10 +16,12 @@
 
 ## Session Start (Do This First)
 1. Run `Scripts/resurrection/Get-KarmaContext.ps1` — generates `cc-session-brief.md` from live vault state
-2. Read `cc-session-brief.md` — **this single file has everything**: active task, blockers, next agenda, git state, recent decisions, recent failures, and Karma's memory state. No other files needed to start.
-3. Resume the active task listed in the brief — do not ask what to work on
+2. Read `MEMORY.md` **ALWAYS** — Current state, blockers, last session's work, next steps. This is canonical.
+3. Read `cc-session-brief.md` — Active task, recent decisions, git state, failures. Complements MEMORY.md.
+4. Check claude-mem for context (run `mcp__plugin_claude-mem_mcp-search__search` if needed)
+5. Resume the active task listed in the brief — do not ask what to work on
 
-> If deep historical context is needed: read `MEMORY.md` and/or run `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"` manually.
+> MANDATORY: Every session starts by reading MEMORY.md. No exceptions. This is your continuity lifeline.
 
 ## Project Identity
 - **System:** Karma Peer — Universal AI Memory with persistent identity and continuity
@@ -87,6 +89,44 @@ Before recommending ANY path forward, I commit to:
 - This removes my judgment; USER decides scope, not me
 
 **Cannot be overridden except by explicit user instruction in the current message.**
+
+## Mandatory Verification Gates — No Work Gets Lost
+
+**These are HARD GATES. They block commits and sessions. They exist to prevent work from disappearing.**
+
+### Pre-Commit Gate (.git/hooks/pre-commit)
+**When:** Every `git commit`
+**Check:** MEMORY.md was updated before committing code
+**Fails if:** Code changed but MEMORY.md not staged or updated recently
+**Recovery:** Update MEMORY.md with what changed, then `git add MEMORY.md && git commit`
+**Cannot be skipped:** Git hook enforces at commit time
+
+### Session-End Verification (.claude/hooks/session-end-verify.sh)
+**When:** Before ending session
+**Checks:**
+- ✓ Git status clean (no uncommitted changes)
+- ✓ MEMORY.md recently updated
+- ✓ Recent git commits exist
+- ✓ On correct branch
+- ✓ No large untracked files
+
+**Fails if:** Any critical check fails
+**Recovery:** Follow on-screen checklist to fix issues
+**Run before ending:** `.claude/hooks/session-end-verify.sh`
+**Session cannot end if verification fails** — fixes are required
+
+### Why These Exist
+Previous sessions: work deployed but not documented, hooks committed but not synced to droplet, memory never saved. Result: every session starts confused about what's actually been done. These gates make it **impossible** to have undocumented work live in the repo.
+
+### Canonical State Rule
+After every session:
+1. ✅ Code committed locally
+2. ✅ Code deployed to droplet (if changed)
+3. ✅ MEMORY.md updated with what was done
+4. ✅ Memory entries saved (claude-mem) with IDs
+5. ✅ Session-end verification passed
+
+If any step missing: session doesn't end cleanly.
 
 ## Output Rules
 - **Full file replacements** when modifying a file — never partial patches unless explicitly requested
