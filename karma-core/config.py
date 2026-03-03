@@ -33,7 +33,12 @@ GLM_MODEL = os.getenv("GLM_MODEL", "glm-4-flash")
 GLM_BASE_URL = os.getenv("GLM_BASE_URL", "https://open.bigmodel.cn/api/paas/v4/")
 
 # ── LLM Tier 2: OpenAI gpt-4o-mini (reasoning + fallback, ~20% of traffic) ──
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+_OPENAI_KEY_FILE = "/opt/seed-vault/memory_v1/session/openai.api_key.txt"
+try:
+    with open(_OPENAI_KEY_FILE) as _f:
+        OPENAI_API_KEY = _f.read().strip()
+except OSError:
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 ANALYSIS_MODEL = os.getenv("ANALYSIS_MODEL", "gpt-4o-mini")
 
 # NOTE: MiniMax and Groq REMOVED per Decision #7 (two-tier lock).

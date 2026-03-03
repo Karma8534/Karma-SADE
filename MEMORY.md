@@ -73,6 +73,11 @@
 - Was `gpt-5-mini` (non-existent model) — every deep-analysis call was failing silently
 - Fixed to `gpt-4o-mini` in `/opt/seed-vault/memory_v1/hub_bridge/config/hub.env`; hub-bridge restarted and verified
 
+**#7 ✅ RESOLVED: OPENAI_API_KEY no longer exposed in docker inspect (2026-03-03)**
+- Root cause: key was injected as env var via compose.yml → visible in `docker inspect karma-server`
+- Fix: config.py reads from mounted file `/opt/seed-vault/memory_v1/session/openai.api_key.txt`; removed env var from compose.yml karma-server section
+- Rebuilt karma-core:latest image, restarted; verified PASS: OPENAI_API_KEY not in env
+
 **#6 ✅ RESOLVED: PDF ingestion pipeline restored (2026-03-03)**
 - Caller: `Scripts/karma-inbox-watcher.ps1` — watches Inbox/ and Gated/, sends base64 to /v1/ingest
 - Root cause: large PDFs (15MB raw = ~20MB base64) hit parseBody 20MB cap → req.destroy()
