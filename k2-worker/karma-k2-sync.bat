@@ -1,4 +1,5 @@
 @echo off
+REM DEPRECATED 2026-03-03: K2 is continuity substrate only. This script is not used.
 REM Karma K2 Sync Worker — Windows Task Scheduler wrapper
 
 setlocal

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# DEPRECATED 2026-03-03: K2 is continuity substrate only. Consciousness loop runs
+# inside karma-server container on vault-neo. This script is not used.
 """
 Karma K2 Sync Worker — Read droplet state, process locally, write back every 60s
 """

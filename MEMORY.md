@@ -78,6 +78,15 @@
 - Fix: config.py reads from mounted file `/opt/seed-vault/memory_v1/session/openai.api_key.txt`; removed env var from compose.yml karma-server section
 - Rebuilt karma-core:latest image, restarted; verified PASS: OPENAI_API_KEY not in env
 
+**#8 ✅ RESOLVED: karma-server restart loop (2026-03-03)**
+- Root cause: MODEL_DEEP=gpt-5-mini caused exceptions → container crashed → Docker restarted → cycle: 1 always
+- Fix: already resolved by #2 + #3. RestartCount: 0 confirmed post-rebuild.
+
+**#9 ✅ RESOLVED: misc cleanup (2026-03-03)**
+- compose.karma-server.yml: K2_PASSWORD/POSTGRES_PASSWORD replaced with env var references
+- karma-k2-sync: DEPRECATED header added to all 4 copies (Karma_PDFs/ + k2-worker/)
+- 10 stale claude/ remote branches deleted from GitHub
+
 **#6 ✅ RESOLVED: PDF ingestion pipeline restored (2026-03-03)**
 - Caller: `Scripts/karma-inbox-watcher.ps1` — watches Inbox/ and Gated/, sends base64 to /v1/ingest
 - Root cause: large PDFs (15MB raw = ~20MB base64) hit parseBody 20MB cap → req.destroy()
