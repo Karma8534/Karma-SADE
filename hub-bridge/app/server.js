@@ -956,27 +956,13 @@ async function callLLM(model, messages, maxTokens) {
   // Route: Z.ai models go through zai client, everything else through openai
   const isZaiModel = model.startsWith("glm-");
   const client = (isZaiModel && zai) ? zai : openai;
-  try {
-    const completion = await client.chat.completions.create({ model, messages, max_completion_tokens: maxTokens });
-    return {
-      text:         completion.choices?.[0]?.message?.content || "",
-      usage:        completion.usage || {},
-      finish_reason: completion.choices?.[0]?.finish_reason || null,
-      provider:     isZaiModel ? "zai" : "openai",
-    };
-  } catch (e) {
-    if (isZaiModel && openai && (e.status === 429 || (e.message && e.message.includes("429")))) {
-      console.warn("[callLLM] Z.ai rate-limited (429), falling back to gpt-4o-mini");
-      const fb = await openai.chat.completions.create({ model: "gpt-4o-mini", messages, max_completion_tokens: maxTokens });
-      return {
-        text:         fb.choices?.[0]?.message?.content || "",
-        usage:        fb.usage || {},
-        finish_reason: fb.choices?.[0]?.finish_reason || null,
-        provider:     "openai_fallback",
-      };
-    }
-    throw e;
-  }
+  const completion = await client.chat.completions.create({ model, messages, max_completion_tokens: maxTokens });
+  return {
+    text:         completion.choices?.[0]?.message?.content || "",
+    usage:        completion.usage || {},
+    finish_reason: completion.choices?.[0]?.finish_reason || null,
+    provider:     isZaiModel ? "zai" : "openai",
+  };
 }
 // ─────────────────────────────────────────────────────────────────────────────
 

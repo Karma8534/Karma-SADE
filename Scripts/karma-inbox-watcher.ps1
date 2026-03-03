@@ -20,7 +20,8 @@ param(
     [string]$DonePath       = "$env:USERPROFILE\OneDrive\Karma\Done",
     [string]$GatedPath      = "$env:USERPROFILE\OneDrive\Karma\Gated",
     [string]$HubUrl         = "https://hub.arknexus.net/v1/ingest",
-    [string]$TokenFile      = "$env:USERPROFILE\Documents\Karma_SADE\.hub-chat-token"
+    [string]$TokenFile      = "$env:USERPROFILE\Documents\Karma_SADE\.hub-chat-token",
+    [int]$IngestDelaySec    = 8   # seconds to wait between files — prevents GLM rate-limit starvation
 )
 
 $ErrorActionPreference = "Continue"
@@ -128,6 +129,7 @@ Get-ChildItem -Path $InboxPath -File | Where-Object {
     -not $_.Name.EndsWith('.verdict.txt')
 } | ForEach-Object {
     Send-ToKarma $_.FullName
+    Start-Sleep -Seconds $IngestDelaySec
 }
 
 # Process any files already in Gated at startup
@@ -138,6 +140,7 @@ Get-ChildItem -Path $GatedPath -File | Where-Object {
     -not $_.Name.EndsWith('.verdict.txt')
 } | ForEach-Object {
     Send-ToKarma $_.FullName -Priority
+    Start-Sleep -Seconds $IngestDelaySec
 }
 
 # Set up FileSystemWatcher for Inbox

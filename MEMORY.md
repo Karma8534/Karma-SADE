@@ -74,9 +74,10 @@
 - Fixed to `gpt-4o-mini` in `/opt/seed-vault/memory_v1/hub_bridge/config/hub.env`; hub-bridge restarted and verified
 
 **#10 ✅ RESOLVED: Karma chat internal_error on GLM 429 (2026-03-03)**
-- Root cause: PDF watcher exhausted Z.ai rate limit; callLLM had no fallback — threw 429 → internal_error
-- Fix: try/catch in callLLM — if Z.ai returns 429, falls back to gpt-4o-mini via OpenAI
-- hub-bridge rebuilt + restarted; /v1/chat verified ok:true
+- Root cause: PDF watcher hammered Z.ai with no delay → rate limit exhausted → /v1/chat 429 → internal_error
+- Wrong fix: added gpt-4o-mini fallback (violates Decision #7 — GLM always, other only emergency). REVERTED.
+- Correct fix: watcher now sleeps `$IngestDelaySec` (default 8s) between each file during startup batch
+- hub-bridge fallback reverted + rebuilt; watcher throttle committed
 
 **#7 ✅ RESOLVED: OPENAI_API_KEY no longer exposed in docker inspect (2026-03-03)**
 - Root cause: key was injected as env var via compose.yml → visible in `docker inspect karma-server`
