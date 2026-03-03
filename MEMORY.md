@@ -12,21 +12,21 @@
 
 **PDF primitives extraction filter:** (1) fits single-consciousness, (2) no dependency gravity, (3) no parallel truth, (4) implementable in existing vault-neo + Hub Bridge + FalkorDB stack
 
-## Session 58 (2026-03-03) — Repo Reconciliation
+## Session 58 (2026-03-03) — Repo Reconciliation + PDF Pipeline
 
-**Status:** 🔴 CRITICAL RECONCILIATION — GitHub, droplet, and P1 were in three different states
+**Status:** ✅ COMPLETE
 
-### Reconciliation (in progress)
-- **Root cause found:** Droplet used as dev environment — karma-core files written directly on vault-neo, never committed
-- **Droplet uncommitted:** hooks.py (334 lines), memory_tools.py (704 lines), router.py (292 lines), session_briefing.py, compaction.py, consciousness.py, identity.json
-- **P1 feature branch:** 20+ commits ahead of main (session-57 docs, batch_ingest, GSD workflow, ambient hooks)
-- **GitHub main:** stale at b778ef2 Phase 4.4 — predates all of the above
-- **Action:** SCP'd droplet files to P1, committing here, then merging feature branch → main → push → droplet pull
+### Accomplishments
+- ✅ Three-way repo divergence resolved — GitHub/P1/droplet all at commit 63df177, then 833c06a
+- ✅ 1754 lines of production karma-core rescued from droplet (hooks.py, memory_tools.py, router.py, session_briefing.py, compaction.py, consciousness.py, identity.json)
+- ✅ Drift prevention deployed: CLAUDE.md hard rule (droplet = deploy target only) + session-end Check 6 (SSH dirty check) + hourly cron on vault-neo
+- ✅ PDF pipeline restored: parseBody 30MB, hub-bridge rebuilt, watcher running against Karma_PDFs/
+- ✅ CRITICAL PITFALL documented: hub-bridge build context ≠ git repo (must cp server.js before rebuild)
 
-### Prevention being implemented this session
-- CLAUDE.md hard rule: droplet is deploy target only, never edit directly
-- Session-end hook: SSH to droplet, fail if dirty git status
-- Droplet cron: hourly dirty-check alert
+### What triggered reconciliation
+- Droplet used as dev environment across multiple sessions — karma-core files never committed
+- P1 feature branch 20+ commits ahead of GitHub main
+- Root cause fixed permanently via CLAUDE.md rule + session-end hook
 
 ## Session 57 (2026-03-03) — Current State
 
@@ -72,14 +72,12 @@
 **#5 LOW: gpt-5-mini vs gpt-4o-mini drift**
 - hub.env shows `MODEL_DEEP=gpt-5-mini` — verify if intentional or typo
 
-**#6 IN PROGRESS: PDF ingestion pipeline — fixing now**
-- Caller script: `Scripts/karma-inbox-watcher.ps1` — watches Inbox/ and Gated/, sends base64 PDF to /v1/ingest
-- Inbox/ failures: "connection forcibly closed" — large PDFs (up to 15MB raw = ~20MB base64) hit parseBody 20MB cap → req.destroy()
-- FIX: increased parseBody limit to 30MB in hub-bridge/app/server.js — deployed and rebuilt
-- Gated/ failures: old error from pre-reconciliation image (body destructure bug) — current code is correct
-- Token file: `C:\Users\raest\Documents\Karma_SADE\.hub-chat-token` (exists)
-- Script paths: run with -InboxPath and -GatedPath pointing to Karma_PDFs/Inbox/ and Karma_PDFs/Gated/
-- After rebuild: delete .error.txt files, run watcher to reprocess all PDFs
+**#6 ✅ RESOLVED: PDF ingestion pipeline restored (2026-03-03)**
+- Caller: `Scripts/karma-inbox-watcher.ps1` — watches Inbox/ and Gated/, sends base64 to /v1/ingest
+- Root cause: large PDFs (15MB raw = ~20MB base64) hit parseBody 20MB cap → req.destroy()
+- Fix: parseBody limit raised to 30MB — deployed + hub-bridge image rebuilt
+- Watcher running, processing ~80 PDF backlog, Done/ growing (108 → 112+), 0 new errors
+- Token: `C:\Users\raest\Documents\Karma_SADE\.hub-chat-token`; paths: Karma_PDFs/{Inbox,Gated,Processing,Done}
 
 ### Session 57 Accomplishments
 - ✅ Consciousness loop OBSERVE-only contract confirmed (CYCLE_REFLECTION = log type, not mode)
@@ -93,14 +91,15 @@
 - ✅ Session ritual table + claude-mem always-available section added to CLAUDE.md (dual-write rule, at-the-moment rule)
 
 ### Next Session — Step by Step (exact commands)
-1. `ssh vault-neo "docker exec karma-server tail -30 /tmp/batch.log"` — verify batch complete, check ok/err
-2. `ssh vault-neo "docker exec falkordb redis-cli -p 6379 GRAPH.QUERY neo_workspace 'MATCH (n) RETURN count(n)'"` — verify node count grew from 1642
-3. Rebuild karma-server image (URGENT — restart loop will kill docker cp'd fix):
-   `ssh vault-neo "cd /home/neo/karma-sade/karma-core && git pull && docker build -t karma-core:latest ."`
-   Then: `docker inspect anr-karma-server` → stop/remove/restart with same params
-4. `ssh vault-neo "docker logs anr-karma-server --tail=50 2>&1 | grep -i 'exit\|error\|crash\|oom'"` — diagnose Blocker #4
-5. `ssh vault-neo "grep MODEL_DEEP /opt/seed-vault/memory_v1/hub_bridge/config/hub.env"` — verify Blocker #5
-6. Triage Karma_PDFs pipeline — find caller script, fix Inbox + Gated failure modes
+1. `ssh vault-neo "docker exec karma-server tail -30 /tmp/batch.log"` — verify batch complete (running overnight, ETA ~03:30 UTC)
+2. `ssh vault-neo "docker exec falkordb redis-cli -p 6379 GRAPH.QUERY neo_workspace 'MATCH (n) RETURN count(n)'"` — verify node count grew from ~2010
+3. Rebuild karma-server image (**URGENT — do AFTER batch completes**, image doesn't have hub-chat fix):
+   ```
+   ssh vault-neo "docker inspect karma-server --format '{{.HostConfig.Binds}} {{json .HostConfig.PortBindings}} {{.Config.Env}}'"
+   ```
+   Then rebuild + restart with identical run params
+4. `ssh vault-neo "grep MODEL_DEEP /opt/seed-vault/memory_v1/hub_bridge/config/hub.env"` — verify Blocker #5 (gpt-5-mini typo?)
+5. Check PDF watcher progress: `ls Karma_PDFs/Done/ | wc -l` — should be growing from 112+
 
 ---
 
