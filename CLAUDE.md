@@ -315,6 +315,8 @@ This prevents: image naming mismatches, missing env vars, stale images, silent s
 - **`(empty_assistant_text)` on large FalkorDB context**: 3370 char context overflows gpt-5-mini reasoning budget.
   `KARMA_CTX_MAX_CHARS=1800` env var trims it. If still failing, reduce further or increase `max_output_tokens`.
 - **Hub chat token path**: `/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt` (NOT session/)
+- **hub-bridge Docker build uses `/opt/seed-vault/memory_v1/hub_bridge/app/` as source** — NOT the git repo at `/home/neo/karma-sade/hub-bridge/app/`. These WILL diverge. After `git pull`, ALWAYS sync before rebuilding: `cp /home/neo/karma-sade/hub-bridge/app/server.js /opt/seed-vault/memory_v1/hub_bridge/app/server.js`. Running `docker compose build` without this sync builds the OLD code.
+- **PDF inbox watcher** (`Scripts/karma-inbox-watcher.ps1`): correct runtime paths are `Karma_PDFs/Inbox`, `Karma_PDFs/Gated`, `Karma_PDFs/Processing`, `Karma_PDFs/Done`, token at `.hub-chat-token`. Run with explicit `-InboxPath`, `-GatedPath`, `-ProcessingPath`, `-DonePath`, `-TokenFile` params. parseBody limit is 30MB (handles PDFs up to 22MB raw).
 - **All containers on same network**: `anr-vault-net` (172.18.0.x). hub-bridge can reach karma-server,
   falkordb, anr-vault-search, anr-vault-api by container name.
 - **Python patches to server.js — escape sequences become literal bytes**: `"\\n\\n"` in a Python
