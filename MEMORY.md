@@ -51,6 +51,7 @@
 - ✅ 1538 Colby<->Karma conversations now ingesting into graph
 - ✅ Superpowers enforcement: CLAUDE.md mandatory workflow table added, save_observation added to capture protocol, resurrect skill updated to invoke using-superpowers
 - ✅ 4 structural gaps closed: Session Start → resurrect skill only (Gap 1), GSD enforcement rule (Gap 2), token efficiency table (Gap 3), save_observation as Session End step 1 (Gap 4)
+- ✅ Session ritual table + claude-mem always-available section added to CLAUDE.md (dual-write rule, at-the-moment rule)
 
 ### Next Session — Step by Step (exact commands)
 1. `docker exec karma-server tail -30 /tmp/batch.log` — verify batch complete, check ok/err

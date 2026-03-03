@@ -68,6 +68,26 @@ Before implementing any non-trivial feature or phase of work:
 | Read only what's needed — targeted reads with offset/limit | Never `cat` full files when a section suffices |
 | Cache-friendly patterns — large stable blocks at top of prompts | System prompt + CLAUDE.md are cached; volatile content goes last |
 
+## Mandatory Session Ritual (Colby's 3 phrases — enforce these)
+
+Every session follows this exact frame. No deviations, no "good enough":
+
+| Phase | Colby types | What I must do |
+|-------|-------------|----------------|
+| **Start** | `/resurrect` | Run script → read brief → invoke `using-superpowers` → resume active task |
+| **After resurrect** | `"check what was saved last session"` | Search claude-mem for prior session's observations; surface gaps |
+| **End** | `"wrap up — save any uncaptured observations and commit"` | Scan session for DECISION/PROOF/PITFALL/DIRECTION → call `save_observation` for each → commit + push |
+
+## claude-mem — Always Available, Always Use
+
+`claude-mem` is an **MCP-aware persistent memory store** accessible via `mcp__plugin_claude-mem_mcp-search__save_observation` and `mcp__plugin_claude-mem_mcp-search__search` at any point during a session.
+
+**Non-negotiable rules:**
+- `save_observation` is called **at the moment** a DECISION/PROOF/PITFALL/DIRECTION occurs — not batched at session end
+- `search` is called at session start (via resurrect) to surface prior context gaps
+- These tools are available and must be used. "I'll save it later" is a protocol violation.
+- claude-mem + vault MEMORY.md are dual writes — both happen on every capture event
+
 ## Project Identity
 - **System:** Karma Peer — Universal AI Memory with persistent identity and continuity
 - **Architecture:** Hub API → Vault API → JSONL Ledger + FalkorDB
