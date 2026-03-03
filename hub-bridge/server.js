@@ -1521,18 +1521,25 @@ const server = http.createServer(async (req, res) => {
       }
 
       // Write directly to vault (ambient items don't need chatlog transformation)
-      const vp = await vaultPost("/v1/memory", VAULT_BEARER, payload);
+      const vaultUrl = `${VAULT_INTERNAL_URL}/v1/memory`;
+      const vaultRes = await fetch(vaultUrl, {
+        method: "POST",
+        headers: { "content-type": "application/json", "authorization": `Bearer ${VAULT_BEARER}` },
+        body: JSON.stringify(payload),
+      });
 
-      if (vp.status !== 201 && vp.status !== 200) {
-        console.error(`[AMBIENT] vault write failed: ${vp.status}`, vp.text);
-        return json(res, 500, { ok: false, error: "vault_write_failed", vault_status: vp.status });
+      if (vaultRes.status !== 201 && vaultRes.status !== 200) {
+        const respText = await vaultRes.text();
+        console.error(`[AMBIENT] vault write failed: ${vaultRes.status}`, respText);
+        return json(res, 500, { ok: false, error: "vault_write_failed", vault_status: vaultRes.status });
       }
 
+      const respText = await vaultRes.text();
       let vpJson = {};
-      try { vpJson = JSON.parse(vp.text); } catch {}
+      try { vpJson = JSON.parse(respText); } catch {}
       const stored_id = vpJson?.id || id;
 
-      console.log(`[AMBIENT] ${id} stored successfully`);
+      console.log(`[AMBIENT] ${id} stored successfully (vault status ${vaultRes.status})`);
       return json(res, 201, { ok: true, id: stored_id, stored: true, timestamp: nowIso() });
     }
 
