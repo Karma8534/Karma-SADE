@@ -13,7 +13,7 @@
 | **Consciousness Loop** | ✅ WORKING | 60s OBSERVE-only cycles. Zero LLM calls confirmed in source. |
 | **Hub Bridge API** | ✅ WORKING | /v1/chat, /v1/ambient, /v1/context, /v1/cypher operational. |
 | **Voice & Persona** | ✅ DEPLOYED | Peer-level voice verified. No service-desk closers. gpt-4o default. |
-| **FalkorDB Graph** | 🔴 FROZEN | 1570 nodes. batch_ingest NOT running. Graph not growing. |
+| **FalkorDB Graph** | ✅ GROWING | 1642 nodes (was 1570). batch_ingest ran 2026-03-03, cron auto-schedule every 6h active. |
 | **Ledger** | ✅ GROWING | 3980 entries. Git commits + session-end hooks capturing actively. |
 | **Work-Loss Prevention** | ✅ GATES LIVE | Pre-commit hook + session-end hook both active and verified. |
 | **Ambient Tier 1 Hooks** | ✅ WORKING | Git + session-end captures verified in ledger (2026-03-03). |
@@ -21,23 +21,22 @@
 | **GSD File Structure** | ✅ ADOPTED | All .gsd/ files in place and being used. |
 | **Chrome Extension** | ❌ SHELVED | Never worked reliably. Removed from all docs. Legacy data only. |
 | **Conversation Capture** | 🔴 BROKEN | No reliable path to capture human conversations into memory. |
-| **batch_ingest Schedule** | 🔴 MISSING | No auto-scheduler. Graph will stay frozen without manual runs. |
+| **batch_ingest Schedule** | ✅ CONFIGURED | Cron every 6h on vault-neo. Installed 2026-03-03. |
 
 ---
 
 ## Active Blockers (Priority Order)
 
-### Blocker #1 — CRITICAL: FalkorDB Frozen (batch_ingest not running)
-**Problem:** Graph stuck at 1570 nodes. Karma's long-term memory is not growing. The consciousness loop observes new episodes but cannot ingest them (OBSERVE-only by design). batch_ingest is the only path from ledger → FalkorDB.
+### ✅ Blocker #1 — RESOLVED: FalkorDB Unfrozen (2026-03-03)
+**Was:** Graph stuck at 1570 nodes, batch_ingest not running.
 
-**Impact:** Karma cannot recall sessions, decisions, or conversations from after the last manual batch run. Every /v1/chat query that pulls FalkorDB context is returning stale data.
+**Fix applied:**
+- Discovered ledger path inside container is `/ledger/memory.jsonl` (not `/opt/seed-vault/...`)
+- Ran batch_ingest: 113 episodes processed (43 ok, 70 err — errors are malformed legacy Chrome extension entries, not blocking)
+- Graph grew from 1570 → 1642 nodes (256 entities, 1385 episodes, 1684 relationships)
+- Configured cron: `0 */6 * * *` on vault-neo to auto-run every 6 hours
 
-**Fix:**
-1. Run batch_ingest now: `docker exec -d karma-server sh -c 'LEDGER_PATH=/opt/seed-vault/memory_v1/ledger/memory.jsonl python3 /app/batch_ingest.py > /tmp/batch.log 2>&1'`
-2. Verify: `ssh vault-neo "tail -f /tmp/batch.log"` and check node count after
-3. Configure cron to auto-run (unlocks Blocker #3)
-
-**Unlocks:** Blocker #3 (auto-schedule), and enables Karma to actually use recent memory.
+**Note on 70 errors:** All errors are `'NoneType' object is not subscriptable` on legacy Chrome extension entries (openai captures with malformed content). These entries will always fail and can be skipped in future runs.
 
 ---
 
@@ -55,15 +54,11 @@
 
 ---
 
-### Blocker #3 — HIGH: No Auto-Schedule for batch_ingest
-**Problem:** Even when batch_ingest runs successfully, without a scheduler the graph will freeze again within hours/days.
+### ✅ Blocker #3 — RESOLVED: Auto-Schedule Configured (2026-03-03)
+**Was:** No scheduler, graph would re-freeze.
 
-**Fix (after Blocker #1):**
-```bash
-ssh vault-neo "crontab -l > /tmp/ct && echo '0 */6 * * * docker exec karma-server sh -c \"LEDGER_PATH=/opt/seed-vault/memory_v1/ledger/memory.jsonl python3 /app/batch_ingest.py >> /tmp/batch.log 2>&1\"' >> /tmp/ct && crontab /tmp/ct"
-```
-
-**Unlocks:** Karma's memory grows continuously without manual intervention.
+**Fix applied:** Cron installed on vault-neo:
+`0 */6 * * * docker exec karma-server sh -c "LEDGER_PATH=/ledger/memory.jsonl python3 /app/batch_ingest.py >> /tmp/batch.log 2>&1"`
 
 ---
 
