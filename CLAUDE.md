@@ -23,6 +23,23 @@
 
 > MANDATORY: Every session starts by reading MEMORY.md. No exceptions. This is your continuity lifeline.
 
+## Mandatory Superpowers Workflow
+
+**These are not optional. Invoke the Skill tool BEFORE the corresponding action, every time, no exceptions.**
+
+| Before doing this... | Invoke this skill first |
+|---------------------|------------------------|
+| Debugging any bug, test failure, or unexpected behavior | `superpowers:systematic-debugging` |
+| Creating features, building components, adding functionality | `superpowers:brainstorming` |
+| Claiming work is complete, fixed, or passing | `superpowers:verification-before-completion` |
+| Implementing any feature or bugfix | `superpowers:test-driven-development` |
+| Starting any session | `superpowers:using-superpowers` (via resurrect skill) |
+
+**Rationalization red flags** — if you think any of these, you're wrong:
+- "This is simple, I don't need the skill" → Skills exist for simple things too
+- "I need context first, then I'll invoke the skill" → Skill comes BEFORE context gathering
+- "I know what this skill says" → Skills evolve. Invoke it.
+
 ## Project Identity
 - **System:** Karma Peer — Universal AI Memory with persistent identity and continuity
 - **Architecture:** Hub API → Vault API → JSONL Ledger + FalkorDB
@@ -308,7 +325,11 @@ Not every exchange. Bar is: would losing this force reconstruction?
 `[1-3 sentences: what happened, what it means, what changed.]`
 
 ### Mechanism
-`PATCH /v1/vault-file/MEMORY.md {"append": "..."}` — at the moment it happens, not at session end.
+At the moment it happens, not at session end. Two writes, always together:
+1. `PATCH /v1/vault-file/MEMORY.md {"append": "..."}` — appends to vault spine
+2. `mcp__plugin_claude-mem_mcp-search__save_observation(text="...", title="[TYPE] title", project="Karma_SADE")` — saves to claude-mem cross-session index
+
+Both writes are mandatory. Missing either defeats the purpose.
 
 ### Session start drift check
 If pack and MEMORY.md conflict on the same fact, surface it explicitly:
