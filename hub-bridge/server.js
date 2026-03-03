@@ -1495,6 +1495,93 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { id: r.turn_id, stored: true, timestamp: nowIso() });
     }
 
+    // --- GET /v1/context (Ambient Knowledge Layer Tier 2) ---
+    if (req.method === "GET" && req.url.startsWith("/v1/context")) {
+      const token = bearerToken(req);
+      if (!HUB_CAPTURE_TOKEN || !token || token !== HUB_CAPTURE_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      // Parse query parameters
+      const parsed = new URL(req.url, `http://localhost`);
+      const hours = parseInt(parsed.searchParams.get("hours") || "2", 10);
+      const source = (parsed.searchParams.get("source") || "all").toLowerCase();
+      const node = (parsed.searchParams.get("node") || "all").toLowerCase();
+      const limit = Math.min(parseInt(parsed.searchParams.get("limit") || "20", 10), 100);
+      const summary = parsed.searchParams.get("summary") === "true";
+
+      try {
+        // Calculate cutoff time
+        const now = new Date();
+        const cutoff = new Date(now.getTime() - hours * 3600 * 1000);
+        const cutoffIso = cutoff.toISOString();
+
+        // Read vault ledger (ambient entries only)
+        const ledgerPath = "/opt/seed-vault/memory_v1/ledger/memory.jsonl";
+        let entries = [];
+
+        // Attempt to read ledger (graceful fallback if unavailable)
+        try {
+          const fs = require("fs");
+          if (fs.existsSync(ledgerPath)) {
+            const lines = fs.readFileSync(ledgerPath, "utf-8").split("\n");
+            const recentLines = lines.slice(Math.max(0, lines.length - 500)); // Last 500 lines for efficiency
+
+            for (const line of recentLines) {
+              if (!line.trim()) continue;
+              try {
+                const rec = JSON.parse(line);
+                const content = rec.content || {};
+                const capturedAt = content.captured_at || "";
+
+                // Filter by time
+                if (capturedAt < cutoffIso) continue;
+
+                // Filter by source (ambient entries only)
+                const src = (content.source || "").toLowerCase();
+                if (src !== "git" && src !== "claude-code" && src !== "screen" && src !== "aria" && src !== "chrome-extension") continue;
+
+                // Filter by source parameter
+                if (source !== "all" && src !== source) continue;
+
+                // Filter by node
+                const nodeVal = (content.source_node || "").toLowerCase();
+                if (node !== "all" && nodeVal !== node) continue;
+
+                entries.push({
+                  id: rec.id || "",
+                  source: src,
+                  source_node: content.source_node || "",
+                  summary: content.summary || "",
+                  captured_at: capturedAt,
+                });
+
+                if (entries.length >= limit) break;
+              } catch (e) {
+                // Skip unparseable lines silently
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("[/v1/context] Ledger read failed (non-fatal):", e.message);
+        }
+
+        // Reverse chronological order (most recent first)
+        entries.reverse();
+
+        return json(res, 200, {
+          ok: true,
+          window: `last ${hours} hour(s)`,
+          entries: entries.slice(0, limit),
+          count: entries.length,
+          filters: { hours, source, node, limit },
+        });
+      } catch (e) {
+        console.error("[/v1/context] Error:", e.message);
+        return json(res, 500, { ok: false, error: "context_query_failed" });
+      }
+    }
+
     // --- POST /v1/handoff/save ---
     if (req.method === "POST" && req.url === "/v1/handoff/save") {
       const ip = getClientIp(req);
