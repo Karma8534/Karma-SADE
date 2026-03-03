@@ -229,6 +229,9 @@ class ModelRouter:
                 )
                 elapsed_ms = (time.monotonic() - start) * 1000
                 reply = response.choices[0].message.content
+                # GLM-4.7-flash returns reasoning in reasoning_content, not content
+                if not reply:
+                    reply = getattr(response.choices[0].message, "reasoning_content", "") or ""
 
                 # Strip <think>...</think> reasoning blocks (some models expose CoT)
                 if reply and "<think>" in reply:
