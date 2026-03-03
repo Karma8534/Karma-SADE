@@ -44,18 +44,18 @@ class ConsciousnessLoop:
     K2 is a continuity substrate, not an agent — preserve, observe, sync only.
     """
 
-    def __init__(self, get_falkor_fn, get_graph_stats_fn, get_openai_client_fn,
-                 active_conversations_ref: dict, router=None,
+    def __init__(self, get_falkor_fn, get_graph_stats_fn,
+                 active_conversations_ref: dict,
                  ingest_episode_fn=None, sms_notify_fn=None):
         # Injected dependencies from server.py (no circular imports)
         self._get_falkor = get_falkor_fn
         self._get_graph_stats = get_graph_stats_fn
-        self._get_openai_client = get_openai_client_fn
         self._active_conversations = active_conversations_ref
-        # Router kept for interface compatibility but NOT used for autonomous calls
-        self._router = router
         self._ingest_episode = ingest_episode_fn
         self._sms_notify = sms_notify_fn  # Kept but only fires for rule-based alerts
+
+        # SQLite memory.db path for observations table (Phase 0, Step 0.5)
+        self._memory_db_path = '/opt/seed-vault/memory_v1/memory.db'
 
         # State
         self._running = False
@@ -85,6 +85,8 @@ class ConsciousnessLoop:
         }
         self._cycle_durations: list[float] = []  # Last 100 durations for avg
         self.last_cycle_time = 0  # Track when last cycle ran (0 = first cycle observes all)
+        self._cycle_count = 0
+        self._current_interval = config.CONSCIOUSNESS_INTERVAL  # Adaptive interval
 
     # ─── Lifecycle ────────────────────────────────────────────────────
 
@@ -105,20 +107,28 @@ class ConsciousnessLoop:
 
         while self._running:
             try:
-                await asyncio.sleep(config.CONSCIOUSNESS_INTERVAL)
+                await asyncio.sleep(self._current_interval)
                 if not self._running:
                     break
                 await self._cycle()
-                # NOTE: Distillation cycle DISABLED — it made autonomous LLM calls.
-                # To re-enable, Karma must explicitly trigger distillation during a session.
+                # Adaptive backoff: slow down when idle, snap back on activity
+                idle = self.metrics["consecutive_idle"]
+                base = config.CONSCIOUSNESS_INTERVAL
+                if idle == 0:
+                    self._current_interval = base          # 60s — active
+                elif idle < 30:
+                    self._current_interval = base * 2      # 120s — short idle
+                elif idle < 120:
+                    self._current_interval = base * 5      # 300s — sustained idle
+                else:
+                    self._current_interval = base * 10     # 600s — deep idle
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 print(f"[CONSCIOUSNESS] Cycle error: {e}")
                 traceback.print_exc()
                 self.metrics["errors"] += 1
-                # Don't crash the loop — keep going
-                await asyncio.sleep(config.CONSCIOUSNESS_INTERVAL)
+                await asyncio.sleep(self._current_interval)
 
         print("[CONSCIOUSNESS] Loop stopped")
 
@@ -139,6 +149,7 @@ class ConsciousnessLoop:
         """Execute one OBSERVE → DECIDE → LOG cycle. NO LLM calls."""
         cycle_start = time.monotonic()
         self.metrics["total_cycles"] += 1
+        self._cycle_count += 1
         cycle_num = self.metrics["total_cycles"]
 
         # 1. OBSERVE (rule-based, no LLM)
@@ -162,15 +173,31 @@ class ConsciousnessLoop:
             if action != Action.NO_ACTION:
                 await self._act(cycle_num, action, reason, observations)
 
-        # 4. REFLECT (write cycle data to consciousness.jsonl)
+        # 4. REFLECT — only write to journal for non-idle or periodic heartbeat
         cycle_ms = (time.monotonic() - cycle_start) * 1000
         cycle_data = {
             "cycle": cycle_num,
             "cycle_ms": cycle_ms,
             "is_idle": observations is None,
-            "action": action if observations is not None else "IDLE"
+            "action": action if observations is not None else "IDLE",
+            "interval": self._current_interval,
         }
-        await self._reflect(cycle_data)
+        # Skip journal write for idle cycles unless it's a heartbeat (every 60th idle)
+        skip_journal = (observations is None and self.metrics["consecutive_idle"] % 60 != 0)
+        await self._reflect(cycle_data, skip_journal=skip_journal)
+
+        # 5. AUTO-PROMOTE every 10 cycles (every 10 minutes)
+        if self._cycle_count % 10 == 0 and self._cycle_count > 0:
+            try:
+                from auto_promote import run_auto_promote
+                result = run_auto_promote(self._get_falkor)
+                promoted = result.get("promoted_count", 0)
+                if promoted > 0:
+                    print(f"[CONSCIOUSNESS] Auto-promoted {promoted} candidates")
+                else:
+                    print(f"[CONSCIOUSNESS] Auto-promote: checked {result.get('candidates_checked', 0)}, none promoted")
+            except Exception as ap_err:
+                print(f"[CONSCIOUSNESS] Auto-promote error (non-fatal): {ap_err}")
 
         # Update tick timestamp
         self._last_tick = datetime.now(timezone.utc).isoformat()
@@ -302,15 +329,43 @@ class ConsciousnessLoop:
                   observations: dict):
         """Execute the decided action — LOG ONLY.
         No LLM calls, no autonomous graph ingest, no autonomous SMS.
-        Proposals written to collab.jsonl for Karma to review in-session."""
+        Primary: SQLite observations table. Secondary: consciousness.jsonl (legacy)."""
 
-        # Write to consciousness journal
+        now = datetime.now(timezone.utc)
+        now_ts = now.timestamp()
+
+        # Map action to event_type for observations table
+        event_type_map = {
+            Action.LOG_DISCOVERY: "episode_delta",
+            Action.LOG_INSIGHT: "entity_delta",
+            Action.LOG_ALERT: "alert",
+            Action.LOG_GROWTH: "episode_delta",
+            Action.LOG_ERROR: "error",
+        }
+        event_type = event_type_map.get(action, "metric")
+        description = f"Cycle #{cycle_num}: {action} — {reason}"
+        outcome = f"episodes={observations.get('episode_count', 0)}, delta={observations.get('time_delta_seconds', 0):.0f}s"
+
+        # PRIMARY: Write to SQLite observations table
+        try:
+            import sqlite3
+            db = sqlite3.connect(self._memory_db_path)
+            db.execute(
+                "INSERT INTO observations (event_type, description, outcome, observed_at) VALUES (?, ?, ?, ?)",
+                (event_type, description, outcome, now_ts)
+            )
+            db.commit()
+            db.close()
+        except Exception as e:
+            print(f"[CONSCIOUSNESS] SQLite observation write failed: {e}")
+
+        # SECONDARY: Also append to consciousness.jsonl (legacy ledger)
         entry = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": now.isoformat(),
             "cycle": cycle_num,
             "action": action,
             "reason": reason,
-            "model": "none",  # No LLM used
+            "model": "none",
             "observations": {
                 "episode_count": observations.get("episode_count", 0),
                 "time_delta_seconds": observations.get("time_delta_seconds", 0),
@@ -357,9 +412,9 @@ class ConsciousnessLoop:
 
     # ─── Phase 4: REFLECT ─────────────────────────────────────────────
 
-    async def _reflect(self, cycle_data: dict) -> dict:
+    async def _reflect(self, cycle_data: dict, skip_journal: bool = False) -> dict:
         """REFLECT phase: Log complete cycle to consciousness.jsonl.
-        Pure logging — no LLM calls."""
+        Pure logging — no LLM calls. skip_journal=True suppresses file write for idle cycles."""
         try:
             cycle_num = cycle_data.get("cycle", 0)
             cycle_ms = cycle_data.get("cycle_ms", 0)
@@ -376,11 +431,27 @@ class ConsciousnessLoop:
                 "cycle_data": cycle_data
             }
 
-            # Append to consciousness.jsonl
-            consciousness_path = getattr(config, "CONSCIOUSNESS_JOURNAL",
-                "/opt/seed-vault/memory_v1/ledger/consciousness.jsonl")
-            with open(consciousness_path, "a", encoding="utf-8") as f:
-                f.write(json.dumps(reflection_entry) + "\n")
+            if not skip_journal:
+                # PRIMARY: Write cycle reflection to SQLite observations
+                try:
+                    import sqlite3
+                    db = sqlite3.connect(self._memory_db_path)
+                    db.execute(
+                        "INSERT INTO observations (event_type, description, outcome, observed_at) VALUES (?, ?, ?, ?)",
+                        ("metric", f"CYCLE_REFLECTION #{cycle_num}",
+                         f"idle={is_idle}, action={action}, duration_ms={cycle_ms:.1f}, interval={cycle_data.get('interval', 60)}s",
+                         datetime.now(timezone.utc).timestamp())
+                    )
+                    db.commit()
+                    db.close()
+                except Exception as e:
+                    print(f"[CONSCIOUSNESS] SQLite reflection write failed: {e}")
+
+                # SECONDARY: Also append to consciousness.jsonl (legacy)
+                consciousness_path = getattr(config, "CONSCIOUSNESS_JOURNAL",
+                    "/opt/seed-vault/memory_v1/ledger/consciousness.jsonl")
+                with open(consciousness_path, "a", encoding="utf-8") as f:
+                    f.write(json.dumps(reflection_entry) + "\n")
 
             # Update metrics
             self.metrics["last_cycle_time"] = reflection_entry["timestamp"]
@@ -523,6 +594,7 @@ class ConsciousnessLoop:
             **self.metrics,
             "state": "running" if self._running else "stopped",
             "mode": "observe-only",  # Signal that no LLM calls happen
+            "current_interval": self._current_interval,
             "pending_insights": len(self._pending_insights),
         }
 
