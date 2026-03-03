@@ -75,11 +75,19 @@ Before recommending ANY path forward, I commit to:
 
 **The Rule:**
 1. User asks something
-2. I answer ONLY that question
+2. I answer ONLY that question — nothing more
 3. If I think they need more detail → I ASK FIRST, wait for explicit YES/NO
 4. Never assume elaboration is helpful
 5. Assume user can ask if they need details
 6. No "extra context", no "while I'm here", no explanations unless asked
+
+**Hard violations (zero tolerance):**
+- Analysis tables no one asked for
+- "What this means for X" sections no one asked for
+- "Next steps" sections unless asked
+- Restating what I just did in a summary no one asked for
+- "Pausing for feedback" padding
+- Headers and sections that inflate response length
 
 **Enforcement mechanism:**
 - If response includes unrequested explanation: User says "Too much"
@@ -87,6 +95,11 @@ Before recommending ANY path forward, I commit to:
   - One fact per line, no elaboration, period
   - Return to normal mode only if user says "normal mode"
 - This removes my judgment; USER decides scope, not me
+
+**Anthropic cache optimization:**
+- Keep repeated context (CLAUDE.md, STATE.md, system prompt) unchanged across turns to maximize cache hits
+- Short responses = fewer tokens = lower cost per session
+- Never pad responses to seem more helpful
 
 **Cannot be overridden except by explicit user instruction in the current message.**
 
@@ -127,6 +140,38 @@ After every session:
 5. ✅ Session-end verification passed
 
 If any step missing: session doesn't end cleanly.
+
+## GSD Workflow — MANDATORY (Not Optional)
+
+**Every task follows GSD discipline. No exceptions.**
+
+### Before starting any task:
+1. Read `.gsd/STATE.md` — what's the current blocker/decision/phase?
+2. Write `.gsd/phase-{name}-CONTEXT.md` — lock design decisions BEFORE planning
+3. Write `.gsd/phase-{name}-PLAN.md` — atomic tasks with `<verify>` and `<done>` criteria
+
+### During execution:
+4. Execute one task at a time (never batch)
+5. Verify each task passes its `<verify>` criteria before marking done
+6. Use PowerShell for git ops (avoids Windows Git Bash lock file issue)
+7. Update `.gsd/STATE.md` with progress after each task
+
+### After completing:
+8. Write `.gsd/phase-{name}-SUMMARY.md` — what happened, what was learned
+9. Update `.gsd/ROADMAP.md` phase status
+10. Commit all `.gsd/` changes atomically with MEMORY.md
+
+### Hard rules:
+- **Never start coding without CONTEXT.md** — design first, code second
+- **Never claim done without `<verify>` passing** — evidence always
+- **STATE.md is canonical** — if it conflicts with MEMORY.md, surface drift explicitly
+- **Use PowerShell for git** — `powershell -Command "git commit -m '...'"` not raw bash git
+
+### Token efficiency (enforced):
+- Read `.gsd/STATE.md` at session start instead of re-reading 25 files
+- Use `.gsd/PROJECT.md` as architecture reference instead of reading source
+- Use `.gsd/REQUIREMENTS.md` for scope questions instead of exploring
+- Do NOT elaborate unless asked. Answer only what was asked.
 
 ## Output Rules
 - **Full file replacements** when modifying a file — never partial patches unless explicitly requested
