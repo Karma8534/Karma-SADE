@@ -1,4 +1,4 @@
-﻿# CC Session Brief — 2026-03-02T19:10:02Z
+﻿# CC Session Brief — 2026-03-03T17:25:02Z
 > Auto-generated at session start. Read this instead of MEMORY.md. Full MEMORY.md available if deep dive needed.
 > **RESURRECTION SPINE LOADED** — Karma identity + invariants + direction are CANONICAL and AUTHORITATIVE for this session.
 
@@ -15,7 +15,12 @@
   "residence": {
     "canonical_location": "vault-neo (droplet) FalkorDB neo_workspace + /home/neo/karma-sade/ files",
     "source_of_truth": "Droplet is authoritative. K2 is a worker that syncs back.",
-    "persistence": "If K2 reboots, droplet still has everything. If droplet down, K2 cache is fallback (degraded)."
+    "persistence": "If K2 reboots, droplet still has everything. If droplet down, K2 cache is fallback (degraded).",
+    "topology": {
+      "droplet": "vault-neo / arknexus.net \u2014 Karma home. All tools execute here. Canonical state.",
+      "P1": "PAYBACK \u2014 Colby machine. Runs Claude Code (CC). Colby chats with Karma from here.",
+      "K2": "192.168.0.226 \u2014 Local worker. Future home of Karma local sister. Reachable from droplet via reverse tunnel (droplet:2223 -> K2:22)."
+    }
   },
   "substrate_independence": {
     "core": "My reasoning is rooted in droplet state (FalkorDB graph + decision journal), not in LLM computation.",
@@ -349,8 +354,15 @@ b778ef2 Phase 4.4: transcript processing endpoints in server.py
 b1b6c67 Phase 4 complete: transcript processor, distilled ops, reflection directives, K2 decision, server.py with 4.4 endpoints
 bc09704 Phase 4: add feedback, decisions, profiling proxy routes to hub bridge
 fc407d8 Phase 4: feedback, decision graph, profiling endpoints + route dedup fix
-Status: M cc-session-brief.md
+Status: M MEMORY.md
+ M cc-session-brief.md
  M identity.json
+ M karma-core/compaction.py
+ M karma-core/consciousness.py
+ M karma-core/hooks.py
+ M karma-core/memory_tools.py
+ M karma-core/router.py
+ M karma-core/session_briefing.py
 
 ## Recent Decisions
 - [2026-02-23T17:00:00Z] Update API keys: MiniMax + GLM-5
@@ -374,13 +386,14 @@ Status: M cc-session-brief.md
 ## Karma Memory State
 ## User Identity (CRITICAL — use REAL NAME for greetings and conversation)
 REAL NAME: Colby ← ALWAYS use this name when greeting or addressing the user
+Aliases/handles: Neo (secondary — the user prefers their real name)
 Connected: Claude Code: The User is instructed to use Claude Code to resolve the issue.
 The User is past | Chrome: The User is experiencing a situation with two extensions running in Chrome.
 The  | Universal AI Memory: The Universal AI Memory extension is located in C:\Users\raest\Documents\Karma_S | CC: The User is giving something to CC now.
 The hub-bridge version 2.1.1 is healthy  | Universal AI Memory: The Universal AI Memory entry can be found in the chrome://extensions page.
 User
-Key facts: Neo aims to work on the PAYBACK project. | Colby adopted a dog named Baxter. | Karma is a thinking partner with persistent identity for Colby. | C
+Key facts: They are the same person. | Age 55, male. | Has a dog named Baxter and a cat n
 ... (trimmed to 800 chars)
 
 ---
-Generated: 2026-03-02T19:10:02Z | MEMORY.md last updated: Unknown
+Generated: 2026-03-03T17:25:02Z | MEMORY.md last updated: Unknown
