@@ -39,16 +39,27 @@
 
 **Goal:** Capture Karma's actions and context automatically. Three-tier approach: commit hooks (T1), context queries (T2), screen capture (T3).
 
-### Tier 1: Git Hooks → /v1/ambient ⏳ READY TO TEST
+### Tier 1: Git Hooks → /v1/ambient ✅ VERIFIED
 
-**What it does:** When Colby commits code, hook fires → POST to /v1/ambient → captures context (diff, message, files changed) → stored in vault ledger.
+**What it does:** When Colby commits code, hook fires → POST to /v1/ambient → captures context → stored in vault ledger.
+
+**Current status (verified 2026-03-03):**
+- [x] Hook created locally: `.git/hooks/post-commit`
+- [x] Session-end hook: `.claude/hooks/session-end.sh`
+- [x] Token auth working
+- [x] End-to-end verified: commits + session-end entries confirmed in ledger
+
+### Hub/Chat → FalkorDB Ingest ✅ COMPLETE (2026-03-03)
+
+**What it does:** 1538 Colby↔Karma /v1/chat conversations retroactively ingested into FalkorDB. All future conversations captured via cron batch_ingest every 6h.
+
+**Root cause fixed:** `batch_ingest.py` only read `assistant_message`; hub/chat uses `assistant_text`. Extended to detect hub/chat by tags.
 
 **Current status:**
-- [x] Hook created locally: `.git/hooks/post-commit`
-- [x] Hook endpoint verified: /v1/ambient receiving POSTs from hub-bridge
-- [x] Token auth working: Bearer token validated
-- [ ] Hooks synced to droplet (need `scp` to vault-neo)
-- [ ] End-to-end test: commit locally → ledger entry verified
+- [x] batch_ingest.py extended (hub-chat tag detection + assistant_text fallback)
+- [x] Committed + deployed to container
+- [x] Batch running (1538 conversations, wave 3/54 at time of writing)
+- [ ] karma-server image rebuild (CRITICAL — cron uses baked image, not live container file)
 
 **Next action:** Sync hooks to droplet, test capture flow.
 
@@ -203,7 +214,8 @@
 | Milestone | Phase | Effort | Status |
 |-----------|-------|--------|--------|
 | Foundation | 1-3 | ✅ DONE | Complete. Droplet operational. |
-| Ambient | Tier 1 | 2-4 hrs | Ready to test (hook sync + verify). |
+| Ambient | Tier 1 | ✅ DONE | Verified. Git + session-end hooks → ledger confirmed. |
+| Ambient | Hub/Chat Ingest | ✅ DONE | 1538 conversations ingesting. Image rebuild pending. |
 | Ambient | Tier 2 | ✅ DONE | Deployed. /v1/context working. |
 | Ambient | Tier 3 | 20-40 hrs | Deferred. Low priority. |
 | K2 Worker | Phase 1 | 4-8 hrs | Blocked (K2 offline). Test when online. |
@@ -256,6 +268,6 @@
 
 ---
 
-**Last updated:** 2026-03-03 (Session 56)
-**Next review:** After Tier 1 test complete
+**Last updated:** 2026-03-03 (Session 57)
+**Next review:** After karma-server image rebuild + Blocker #4 resolved
 **Owner:** Claude Code (updates on Colby approval)
