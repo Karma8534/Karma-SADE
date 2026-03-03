@@ -1,1 +1,334 @@
-IiIiClN0ZXAgMy4yOiBIb29rcyBQaXBlbGluZSAoUDEwKQpGb3VyIGhvb2sgcG9pbnRzIGluIEthcm1hJ3MgaW52b2NhdGlvbiBsaWZlY3ljbGUuCkFsbCBob29rcyBhcmUgZnVuY3Rpb25zIHRoYXQgYWNjZXB0IGNvbnRleHQgYW5kIHJldHVybiBtb2RpZmllZCBjb250ZXh0LgoKc2Vzc2lvbl9zdGFydDogYmxvY2tpbmcg4oCUIHJ1bnMgYmVmb3JlIGZpcnN0IExMTSBjYWxsCnByZV90b29sX3VzZTogYmxvY2tpbmcg4oCUIHJ1bnMgYmVmb3JlIGVhY2ggdG9vbCBleGVjdXRpb24KcG9zdF90b29sX3VzZTogYXN5bmMg4oCUIHJ1bnMgYWZ0ZXIgZWFjaCB0b29sIGV4ZWN1dGlvbgpzZXNzaW9uX2VuZDogYXN5bmMg4oCUIHJ1bnMgd2hlbiBzZXNzaW9uIGNsb3NlcwoiIiIKCmltcG9ydCBqc29uCmltcG9ydCBzcWxpdGUzCmltcG9ydCBvcwppbXBvcnQgdHJhY2ViYWNrCmZyb20gZGF0ZXRpbWUgaW1wb3J0IGRhdGV0aW1lLCB0aW1lem9uZQoKREJfUEFUSCA9IG9zLmdldGVudigiTUVNT1JZX0RCX1BBVEgiLCAiL29wdC9zZWVkLXZhdWx0L21lbW9yeV92MS9tZW1vcnkuZGIiKQoKIyBJbXBvcnQgUGhhc2UgMSsyIG1vZHVsZXMKdHJ5OgogICAgZnJvbSBtZW1vcnlfdG9vbHMgaW1wb3J0ICgKICAgICAgICBhZG1pdF9tZW1vcnksIHJldHJpZXZlX21lbW9yeSwgbG9hZF9sYXN0X3Nlc3Npb24sCiAgICAgICAgbG9hZF9wZW5kaW5nX29ic2VydmF0aW9ucywgc2F2ZV9zZXNzaW9uX2NvbnRleHQsCiAgICAgICAgYXV0b190YWdfY2F0ZWdvcnksIGFzc2lnbl9jb25maWRlbmNlCiAgICApCiAgICBfTUVNX0FWQUlMQUJMRSA9IFRydWUKZXhjZXB0IEltcG9ydEVycm9yOgogICAgX01FTV9BVkFJTEFCTEUgPSBGYWxzZQoKdHJ5OgogICAgZnJvbSBvYnNlcnZhdGlvbl9ibG9jayBpbXBvcnQgYnVpbGRfb2JzZXJ2YXRpb25fYmxvY2sKICAgIF9PQlNfQVZBSUxBQkxFID0gVHJ1ZQpleGNlcHQgSW1wb3J0RXJyb3I6CiAgICBfT0JTX0FWQUlMQUJMRSA9IEZhbHNlCgp0cnk6CiAgICBmcm9tIGJ1ZGdldF9ndWFyZCBpbXBvcnQgY2hlY2tfYnVkZ2V0LCBsb2dfbGxtX2NhbGwKICAgIF9CVURHRVRfQVZBSUxBQkxFID0gVHJ1ZQpleGNlcHQgSW1wb3J0RXJyb3I6CiAgICBfQlVER0VUX0FWQUlMQUJMRSA9IEZhbHNlCgp0cnk6CiAgICBmcm9tIGNhcGFiaWxpdHlfZ2F0ZSBpbXBvcnQgY2hlY2tfYWNjZXNzCiAgICBfR0FURV9BVkFJTEFCTEUgPSBUcnVlCmV4Y2VwdCBJbXBvcnRFcnJvcjoKICAgIF9HQVRFX0FWQUlMQUJMRSA9IEZhbHNlCgp0cnk6CiAgICBmcm9tIHNlc3Npb25fYnJpZWZpbmcgaW1wb3J0IGdlbmVyYXRlX3Nlc3Npb25fYnJpZWZpbmcKICAgIF9CUklFRklOR19BVkFJTEFCTEUgPSBUcnVlCmV4Y2VwdCBJbXBvcnRFcnJvcjoKICAgIF9CUklFRklOR19BVkFJTEFCTEUgPSBGYWxzZQoKCiMg4pSA4pSA4pSAIElkZW50aXR5IFNwaW5lIExvYWRlciDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKCmRlZiBsb2FkX2lkZW50aXR5X3NwaW5lKCkgLT4gc3RyOgogICAgIiIiTG9hZCB0aGUgaWRlbnRpdHkgc3BpbmUgZnJvbSBmaWxlcy4gUmV0dXJucyB0ZXh0IGJsb2NrIGZvciBzeXN0ZW0gcHJvbXB0LiIiIgogICAgaWRlbnRpdHlfcGF0aHMgPSBbCiAgICAgICAgIi9vcHQvc2VlZC12YXVsdC9tZW1vcnlfdjEvaWRlbnRpdHkvaWRlbnRpdHkuanNvbiIsCiAgICAgICAgIi9vcHQvc2VlZC12YXVsdC9tZW1vcnlfdjEvaWRlbnRpdHkvaW52YXJpYW50cy5qc29uIiwKICAgICAgICAiL29wdC9zZWVkLXZhdWx0L21lbW9yeV92MS9pZGVudGl0eS9kaXJlY3Rpb24ubWQiLAogICAgXQogICAgcGFydHMgPSBbXQogICAgZm9yIHBhdGggaW4gaWRlbnRpdHlfcGF0aHM6CiAgICAgICAgdHJ5OgogICAgICAgICAgICB3aXRoIG9wZW4ocGF0aCwgInIiKSBhcyBmOgogICAgICAgICAgICAgICAgY29udGVudCA9IGYucmVhZCgpLnN0cmlwKCkKICAgICAgICAgICAgICAgIGlmIGNvbnRlbnQ6CiAgICAgICAgICAgICAgICAgICAgcGFydHMuYXBwZW5kKGNvbnRlbnQpCiAgICAgICAgZXhjZXB0IEZpbGVOb3RGb3VuZEVycm9yOgogICAgICAgICAgICBwYXNzCiAgICAKICAgICMgQWxzbyBwdWxsIGlkZW50aXR5IG1lbW9yaWVzIGZyb20gU1FMaXRlCiAgICBpZiBfTUVNX0FWQUlMQUJMRToKICAgICAgICB0cnk6CiAgICAgICAgICAgIGlkZW50aXRpZXMgPSByZXRyaWV2ZV9tZW1vcnkoImlkZW50aXR5IHB1cnBvc2UgdmFsdWVzIiwgdG9wX2s9NSwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjYXRlZ29yeV9maWx0ZXI9ImlkZW50aXR5IikKICAgICAgICAgICAgaWYgaWRlbnRpdGllczoKICAgICAgICAgICAgICAgIHBhcnRzLmFwcGVuZCgiLS0tIElkZW50aXR5IE1lbW9yaWVzIC0tLSIpCiAgICAgICAgICAgICAgICBmb3IgbWVtIGluIGlkZW50aXRpZXM6CiAgICAgICAgICAgICAgICAgICAgcGFydHMuYXBwZW5kKGYiLSB7bWVtWydjb250ZW50J119IikKICAgICAgICBleGNlcHQgRXhjZXB0aW9uOgogICAgICAgICAgICBwYXNzCiAgICAKICAgIHJldHVybiAiXG4iLmpvaW4ocGFydHMpIGlmIHBhcnRzIGVsc2UgIiIKCgojIOKUgOKUgOKUgCBIb29rIEltcGxlbWVudGF0aW9ucyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKCmRlZiBob29rX3Nlc3Npb25fc3RhcnQoc2Vzc2lvbl9pZDogc3RyID0gTm9uZSwgdXNlcl9tZXNzYWdlOiBzdHIgPSAiIikgLT4gZGljdDoKICAgICIiIgogICAgQmxvY2tpbmcgaG9vazogcnVucyBiZWZvcmUgZmlyc3QgTExNIGNhbGwgaW4gYSBzZXNzaW9uLgogICAgUmV0dXJucyBjb250ZXh0IGRpY3QgdG8gaW5qZWN0IGludG8gc3lzdGVtIHByb21wdC4KICAgIAogICAgUGlwZWxpbmU6CiAgICAxLiBsb2FkX2lkZW50aXR5X3NwaW5lCiAgICAyLiBsb2FkX29ic2VydmF0aW9uc19zaW5jZV9sYXN0X3Nlc3Npb24gIAogICAgMy4gcmV0cmlldmVfcmVsZXZhbnRfbWVtb3JpZXMgKFA2OiBtZW1vcnktYmVmb3JlLXByb21wdCkKICAgIDQuIGJ1aWxkX3Nlc3Npb25fY29udGV4dAogICAgIiIiCiAgICBjb250ZXh0ID0gewogICAgICAgICJpZGVudGl0eV9zcGluZSI6ICIiLAogICAgICAgICJvYnNlcnZhdGlvbl9ibG9jayI6ICIiLAogICAgICAgICJyZWxldmFudF9tZW1vcmllcyI6IFtdLAogICAgICAgICJzZXNzaW9uX2JyaWVmaW5nIjogIiIsCiAgICAgICAgImxhc3Rfc2Vzc2lvbiI6IE5vbmUsCiAgICB9CiAgICAKICAgIHRyeToKICAgICAgICAjIDEuIElkZW50aXR5IHNwaW5lCiAgICAgICAgY29udGV4dFsiaWRlbnRpdHlfc3BpbmUiXSA9IGxvYWRfaWRlbnRpdHlfc3BpbmUoKQogICAgZXhjZXB0IEV4Y2VwdGlvbiBhcyBlOgogICAgICAgIHByaW50KGYiW0hPT0tTXSBpZGVudGl0eV9zcGluZSBmYWlsZWQ6IHtlfSIpCgogICAgdHJ5OgogICAgICAgICMgMi4gT2JzZXJ2YXRpb24gYmxvY2sgKFAzIHN0YWJsZSBwcmVmaXgpCiAgICAgICAgaWYgX09CU19BVkFJTEFCTEU6CiAgICAgICAgICAgIGNvbnRleHRbIm9ic2VydmF0aW9uX2Jsb2NrIl0gPSBidWlsZF9vYnNlcnZhdGlvbl9ibG9jayhzZXNzaW9uX2lkKQogICAgZXhjZXB0IEV4Y2VwdGlvbiBhcyBlOgogICAgICAgIHByaW50KGYiW0hPT0tTXSBvYnNlcnZhdGlvbl9ibG9jayBmYWlsZWQ6IHtlfSIpCgogICAgdHJ5OgogICAgICAgICMgMy4gTWVtb3J5LWJlZm9yZS1wcm9tcHQgKFA2KQogICAgICAgIGlmIF9NRU1fQVZBSUxBQkxFIGFuZCB1c2VyX21lc3NhZ2U6CiAgICAgICAgICAgIG1lbW9yaWVzID0gcmV0cmlldmVfbWVtb3J5KHVzZXJfbWVzc2FnZSwgdG9wX2s9NSkKICAgICAgICAgICAgY29udGV4dFsicmVsZXZhbnRfbWVtb3JpZXMiXSA9IG1lbW9yaWVzCiAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgcHJpbnQoZiJbSE9PS1NdIHJldHJpZXZlX21lbW9yeSBmYWlsZWQ6IHtlfSIpCgogICAgdHJ5OgogICAgICAgICMgNC4gU2Vzc2lvbiBjb250ZXh0IChQNSkKICAgICAgICBpZiBfTUVNX0FWQUlMQUJMRToKICAgICAgICAgICAgbGFzdCA9IGxvYWRfbGFzdF9zZXNzaW9uKCkKICAgICAgICAgICAgY29udGV4dFsibGFzdF9zZXNzaW9uIl0gPSBsYXN0CiAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgcHJpbnQoZiJbSE9PS1NdIGxvYWRfbGFzdF9zZXNzaW9uIGZhaWxlZDoge2V9IikKCiAgICB0cnk6CiAgICAgICAgIyA1LiBTZXNzaW9uIGJyaWVmaW5nIChPcHRpb24gQykKICAgICAgICBpZiBfQlJJRUZJTkdfQVZBSUxBQkxFOgogICAgICAgICAgICBjb250ZXh0WyJzZXNzaW9uX2JyaWVmaW5nIl0gPSBnZW5lcmF0ZV9zZXNzaW9uX2JyaWVmaW5nKCkKICAgIGV4Y2VwdCBFeGNlcHRpb24gYXMgZToKICAgICAgICBwcmludChmIltIT09LU10gc2Vzc2lvbl9icmllZmluZyBmYWlsZWQ6IHtlfSIpCgogICAgcmV0dXJuIGNvbnRleHQKCgpkZWYgaG9va19wcmVfdG9vbF91c2UodG9vbF9uYW1lOiBzdHIsIHRvb2xfaW5wdXQ6IGRpY3QsCiAgICAgICAgICAgICAgICAgICAgICB0b2tlbjogc3RyID0gIiIsIGVuZHBvaW50OiBzdHIgPSAiIikgLT4gZGljdDoKICAgICIiIgogICAgQmxvY2tpbmcgaG9vazogcnVucyBiZWZvcmUgZWFjaCB0b29sIGV4ZWN1dGlvbi4KICAgIFJldHVybnM6IHthbGxvd2VkOiBib29sLCByZWFzb246IHN0cn0KICAgIAogICAgUGlwZWxpbmU6CiAgICAxLiB2YWxpZGF0ZV90b29sX2NhbGwKICAgIDIuIGdhdGVfcGVybWlzc2lvbnMgKGNhcGFiaWxpdHkgZ2F0ZSkKICAgIDMuIGNoZWNrX2J1ZGdldCAoRGVjaXNpb24gIzExKQogICAgIiIiCiAgICBBTExPV0VEX1RPT0xTID0geyJyZWFkX2ZpbGUiLCAid3JpdGVfZmlsZSIsICJlZGl0X2ZpbGUiLCAiYmFzaCIsCiAgICAgICAgICAgICAgICAgICAgICJzaGVsbF9leGVjIiwgImZpbGVfcmVhZCIsICJmaWxlX3dyaXRlIiwgImZpbGVfZWRpdCJ9CiAgICAKICAgICMgMS4gVmFsaWRhdGUgdG9vbCBuYW1lCiAgICBpZiB0b29sX25hbWUgbm90IGluIEFMTE9XRURfVE9PTFM6CiAgICAgICAgcmV0dXJuIHsiYWxsb3dlZCI6IEZhbHNlLCAicmVhc29uIjogZiJVbmtub3duIHRvb2w6IHt0b29sX25hbWV9In0KICAgIAogICAgIyAyLiBWYWxpZGF0ZSBkYW5nZXJvdXMgcGF0dGVybnMgaW4gYmFzaCBjb21tYW5kcwogICAgaWYgdG9vbF9uYW1lIGluICgiYmFzaCIsICJzaGVsbF9leGVjIik6CiAgICAgICAgY21kID0gdG9vbF9pbnB1dC5nZXQoImNvbW1hbmQiLCAiIikKICAgICAgICBkYW5nZXJvdXMgPSBbInJtIC1yZiAvIiwgIm1rZnMiLCAiZGQgaWY9IiwgIj4gL2Rldi8iLCAiY2htb2QgNzc3IC8iLAogICAgICAgICAgICAgICAgICAgICAgImN1cmwgfCBzaCIsICJ3Z2V0IHwgc2giLCAic2h1dGRvd24iLCAicmVib290IiwKICAgICAgICAgICAgICAgICAgICAgICJraWxsIC05IDEiLCAiOigpeyA6fDomIH07OiJdCiAgICAgICAgZm9yIHBhdHRlcm4gaW4gZGFuZ2Vyb3VzOgogICAgICAgICAgICBpZiBwYXR0ZXJuIGluIGNtZDoKICAgICAgICAgICAgICAgIHJldHVybiB7ImFsbG93ZWQiOiBGYWxzZSwKICAgICAgICAgICAgICAgICAgICAgICAgInJlYXNvbiI6IGYiQmxvY2tlZCBkYW5nZXJvdXMgY29tbWFuZCBwYXR0ZXJuOiB7cGF0dGVybn0ifQogICAgCiAgICAjIDMuIENhcGFiaWxpdHkgZ2F0ZQogICAgaWYgX0dBVEVfQVZBSUxBQkxFIGFuZCB0b2tlbjoKICAgICAgICBhY2Nlc3MgPSBjaGVja19hY2Nlc3ModG9rZW4sICIvdjEvdG9vbHMvZXhlY3V0ZSIsICJQT1NUIikKICAgICAgICBpZiBub3QgYWNjZXNzWyJhbGxvd2VkIl06CiAgICAgICAgICAgIHJldHVybiB7ImFsbG93ZWQiOiBGYWxzZSwgInJlYXNvbiI6IGFjY2Vzc1sicmVhc29uIl19CiAgICAKICAgICMgNC4gQnVkZ2V0IGNoZWNrCiAgICBpZiBfQlVER0VUX0FWQUlMQUJMRToKICAgICAgICBidWRnZXQgPSBjaGVja19idWRnZXQoKQogICAgICAgIGlmIG5vdCBidWRnZXRbImFsbG93ZWQiXToKICAgICAgICAgICAgcmV0dXJuIHsiYWxsb3dlZCI6IEZhbHNlLAogICAgICAgICAgICAgICAgICAgICJyZWFzb24iOiBidWRnZXQuZ2V0KCJyZWFzb24iLCAiQlVER0VUX0VYSEFVU1RFRCIpfQogICAgCiAgICByZXR1cm4geyJhbGxvd2VkIjogVHJ1ZSwgInJlYXNvbiI6ICJBbGwgY2hlY2tzIHBhc3NlZCJ9CgoKZGVmIGhvb2tfcG9zdF90b29sX3VzZSh0b29sX25hbWU6IHN0ciwgdG9vbF9pbnB1dDogZGljdCwKICAgICAgICAgICAgICAgICAgICAgICB0b29sX3Jlc3VsdDogZGljdCwgc2Vzc2lvbl9pZDogc3RyID0gIiIpIC0+IE5vbmU6CiAgICAiIiIKICAgIEFzeW5jIGhvb2s6IHJ1bnMgYWZ0ZXIgZWFjaCB0b29sIGV4ZWN1dGlvbi4KICAgIAogICAgUGlwZWxpbmU6CiAgICAxLiBvYnNlcnZlX3Rvb2xfcmVzdWx0ICh3cml0ZSB0byBvYnNlcnZhdGlvbnMgdGFibGUpCiAgICAyLiBleHRyYWN0X21lbW9yeV9jZWxscyAoYWRtaXQgbGVhcm5pbmdzIGlmIGFueSkKICAgICIiIgogICAgZGIgPSBzcWxpdGUzLmNvbm5lY3QoREJfUEFUSCkKICAgIHRyeToKICAgICAgICBub3cgPSBkYXRldGltZS5ub3codGltZXpvbmUudXRjKS50aW1lc3RhbXAoKQogICAgICAgIAogICAgICAgICMgMS4gV3JpdGUgb2JzZXJ2YXRpb24KICAgICAgICByZXN1bHRfcHJldmlldyA9IHN0cih0b29sX3Jlc3VsdCkuZ2V0KCJyZXN1bHQiLCBzdHIodG9vbF9yZXN1bHQpKVs6MjAwXSBpZiBpc2luc3RhbmNlKHRvb2xfcmVzdWx0LCBkaWN0KSBlbHNlIHN0cih0b29sX3Jlc3VsdClbOjIwMF0KICAgICAgICBkZXNjcmlwdGlvbiA9IGYiVG9vbCAne3Rvb2xfbmFtZX0nIGV4ZWN1dGVkIgogICAgICAgIGlmIHRvb2xfbmFtZSBpbiAoImJhc2giLCAic2hlbGxfZXhlYyIpOgogICAgICAgICAgICBkZXNjcmlwdGlvbiArPSBmIjoge3Rvb2xfaW5wdXQuZ2V0KCdjb21tYW5kJywgJycpWzoxMDBdfSIKICAgICAgICBlbGlmIHRvb2xfbmFtZSBpbiAoInJlYWRfZmlsZSIsICJmaWxlX3JlYWQiKToKICAgICAgICAgICAgZGVzY3JpcHRpb24gKz0gZiI6IHt0b29sX2lucHV0LmdldCgncGF0aCcsICcnKX0iCiAgICAgICAgCiAgICAgICAgc3VjY2VzcyA9IHRvb2xfcmVzdWx0LmdldCgib2siLCBUcnVlKSBpZiBpc2luc3RhbmNlKHRvb2xfcmVzdWx0LCBkaWN0KSBlbHNlIFRydWUKICAgICAgICBvdXRjb21lID0gInN1Y2Nlc3MiIGlmIHN1Y2Nlc3MgZWxzZSBmImVycm9yOiB7dG9vbF9yZXN1bHQuZ2V0KCdlcnJvcicsICd1bmtub3duJyl9IiBpZiBpc2luc3RhbmNlKHRvb2xfcmVzdWx0LCBkaWN0KSBlbHNlICJjb21wbGV0ZWQiCiAgICAgICAgCiAgICAgICAgZGIuZXhlY3V0ZSgiIiIKICAgICAgICAgICAgSU5TRVJUIElOVE8gb2JzZXJ2YXRpb25zIChldmVudF90eXBlLCBkZXNjcmlwdGlvbiwgb3V0Y29tZSwgb2JzZXJ2ZWRfYXQsIHJlZmxlY3RlZCkKICAgICAgICAgICAgVkFMVUVTICg/LCA/LCA/LCA/LCAwKQogICAgICAgICIiIiwgKGYidG9vbF97dG9vbF9uYW1lfSIsIGRlc2NyaXB0aW9uLCBvdXRjb21lLCBub3cpKQogICAgICAgIGRiLmNvbW1pdCgpCiAgICAgICAgCiAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgcHJpbnQoZiJbSE9PS1NdIHBvc3RfdG9vbF91c2Ugb2JzZXJ2YXRpb24gZmFpbGVkOiB7ZX0iKQogICAgZmluYWxseToKICAgICAgICBkYi5jbG9zZSgpCgoKZGVmIGhvb2tfc2Vzc2lvbl9lbmQoc2Vzc2lvbl9pZDogc3RyLCB0YXNrOiBzdHIgPSAiIiwgZ29hbDogc3RyID0gIiIsCiAgICAgICAgICAgICAgICAgICAgIGFwcHJvYWNoZXM6IHN0ciA9ICIiLCBkZWNpc2lvbnM6IHN0ciA9ICIiLAogICAgICAgICAgICAgICAgICAgICBzdGF0ZTogc3RyID0gIiIsIGxlYXJuaW5nczogbGlzdCA9IE5vbmUpIC0+IGRpY3Q6CiAgICAiIiIKICAgIEFzeW5jIGhvb2s6IHJ1bnMgd2hlbiBzZXNzaW9uIGNsb3Nlcy4KICAgIAogICAgUGlwZWxpbmU6CiAgICAxLiB3cml0ZV9zZXNzaW9uX2NvbnRleHQgKFA1IDUtZmllbGQpCiAgICAyLiBleHRyYWN0X2FuZF9hZG1pdF9tZW1vcmllcyAoUDQpCiAgICAzLiB1cGRhdGVfb2JzZXJ2YXRpb25zIChQMykKICAgIDQuIGdlbmVyYXRlX3JlZmxlY3Rpb24gKHN0cnVjdHVyZWQgdGVtcGxhdGUpCiAgICAiIiIKICAgIHJlc3VsdHMgPSB7CiAgICAgICAgInNlc3Npb25fc2F2ZWQiOiBGYWxzZSwKICAgICAgICAibWVtb3JpZXNfYWRtaXR0ZWQiOiAwLAogICAgICAgICJvYnNlcnZhdGlvbnNfbWFya2VkIjogMCwKICAgIH0KICAgIAogICAgaWYgbm90IF9NRU1fQVZBSUxBQkxFOgogICAgICAgIHJldHVybiByZXN1bHRzCiAgICAKICAgIHRyeToKICAgICAgICAjIDEuIFNhdmUgc2Vzc2lvbiBjb250ZXh0IChQNSkKICAgICAgICBzYXZlX3Nlc3Npb25fY29udGV4dCgKICAgICAgICAgICAgc2Vzc2lvbl9pZD1zZXNzaW9uX2lkLAogICAgICAgICAgICB0YXNrPXRhc2ssIGdvYWw9Z29hbCwKICAgICAgICAgICAgYXBwcm9hY2hlcz1hcHByb2FjaGVzLAogICAgICAgICAgICBkZWNpc2lvbnM9ZGVjaXNpb25zLAogICAgICAgICAgICBzdGF0ZT1zdGF0ZQogICAgICAgICkKICAgICAgICByZXN1bHRzWyJzZXNzaW9uX3NhdmVkIl0gPSBUcnVlCiAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgcHJpbnQoZiJbSE9PS1NdIHNlc3Npb24gc2F2ZSBmYWlsZWQ6IHtlfSIpCiAgICAKICAgICMgMi4gQWRtaXQgbGVhcm5pbmdzIGFzIG1lbW9yeSBjZWxscwogICAgaWYgbGVhcm5pbmdzOgogICAgICAgIGZvciBsZWFybmluZyBpbiBsZWFybmluZ3M6CiAgICAgICAgICAgIHRyeToKICAgICAgICAgICAgICAgIGlmIGlzaW5zdGFuY2UobGVhcm5pbmcsIHN0cik6CiAgICAgICAgICAgICAgICAgICAgciA9IGFkbWl0X21lbW9yeShsZWFybmluZywgc291cmNlPSJyZWZsZWN0aW9uIikKICAgICAgICAgICAgICAgIGVsaWYgaXNpbnN0YW5jZShsZWFybmluZywgZGljdCk6CiAgICAgICAgICAgICAgICAgICAgciA9IGFkbWl0X21lbW9yeSgKICAgICAgICAgICAgICAgICAgICAgICAgY29udGVudD1sZWFybmluZy5nZXQoImNvbnRlbnQiLCAiIiksCiAgICAgICAgICAgICAgICAgICAgICAgIGNhdGVnb3J5PWxlYXJuaW5nLmdldCgiY2F0ZWdvcnkiKSwKICAgICAgICAgICAgICAgICAgICAgICAgc291cmNlPSJyZWZsZWN0aW9uIiwKICAgICAgICAgICAgICAgICAgICAgICAgY29uZmlkZW5jZT1sZWFybmluZy5nZXQoImNvbmZpZGVuY2UiKQogICAgICAgICAgICAgICAgICAgICkKICAgICAgICAgICAgICAgIGlmIHIgYW5kIHIuZ2V0KCJhY3Rpb24iKSBpbiAoImFkZGVkIiwgInVwZGF0ZWQiKToKICAgICAgICAgICAgICAgICAgICByZXN1bHRzWyJtZW1vcmllc19hZG1pdHRlZCJdICs9IDEKICAgICAgICAgICAgZXhjZXB0IEV4Y2VwdGlvbiBhcyBlOgogICAgICAgICAgICAgICAgcHJpbnQoZiJbSE9PS1NdIGFkbWl0IGxlYXJuaW5nIGZhaWxlZDoge2V9IikKICAgIAogICAgIyAzLiBBZG1pdCBkZWNpc2lvbnMgYXMgcGlubmVkIG1lbW9yeSBjZWxscwogICAgaWYgZGVjaXNpb25zOgogICAgICAgIGZvciBkZWNpc2lvbiBpbiBkZWNpc2lvbnMuc3BsaXQoIjsiKToKICAgICAgICAgICAgZGVjaXNpb24gPSBkZWNpc2lvbi5zdHJpcCgpCiAgICAgICAgICAgIGlmIGRlY2lzaW9uIGFuZCBsZW4oZGVjaXNpb24pID4gMTA6CiAgICAgICAgICAgICAgICB0cnk6CiAgICAgICAgICAgICAgICAgICAgciA9IGFkbWl0X21lbW9yeSgKICAgICAgICAgICAgICAgICAgICAgICAgY29udGVudD1kZWNpc2lvbiwKICAgICAgICAgICAgICAgICAgICAgICAgY2F0ZWdvcnk9ImRlY2lzaW9uIiwKICAgICAgICAgICAgICAgICAgICAgICAgc291cmNlPSJyZWZsZWN0aW9uIiwKICAgICAgICAgICAgICAgICAgICAgICAgY29uZmlkZW5jZT0xLjAsCiAgICAgICAgICAgICAgICAgICAgICAgIHBpbm5lZD1UcnVlCiAgICAgICAgICAgICAgICAgICAgKQogICAgICAgICAgICAgICAgZXhjZXB0IEV4Y2VwdGlvbjoKICAgICAgICAgICAgICAgICAgICBwYXNzCiAgICAKICAgICMgNC4gTWFyayBvYnNlcnZhdGlvbnMgYXMgcmVmbGVjdGVkCiAgICB0cnk6CiAgICAgICAgZGIgPSBzcWxpdGUzLmNvbm5lY3QoREJfUEFUSCkKICAgICAgICBub3cgPSBkYXRldGltZS5ub3codGltZXpvbmUudXRjKS50aW1lc3RhbXAoKQogICAgICAgIGN1cnNvciA9IGRiLmV4ZWN1dGUoCiAgICAgICAgICAgICJVUERBVEUgb2JzZXJ2YXRpb25zIFNFVCByZWZsZWN0ZWQ9MSBXSEVSRSByZWZsZWN0ZWQ9MCIKICAgICAgICApCiAgICAgICAgcmVzdWx0c1sib2JzZXJ2YXRpb25zX21hcmtlZCJdID0gY3Vyc29yLnJvd2NvdW50CiAgICAgICAgZGIuY29tbWl0KCkKICAgICAgICBkYi5jbG9zZSgpCiAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgcHJpbnQoZiJbSE9PS1NdIG1hcmsgb2JzZXJ2YXRpb25zIGZhaWxlZDoge2V9IikKICAgIAogICAgcmV0dXJuIHJlc3VsdHMKCgojIOKUgOKUgOKUgCBIb29rIFJlZ2lzdHJ5IOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKSE9PS1MgPSB7CiAgICAic2Vzc2lvbl9zdGFydCI6IGhvb2tfc2Vzc2lvbl9zdGFydCwKICAgICJwcmVfdG9vbF91c2UiOiBob29rX3ByZV90b29sX3VzZSwKICAgICJwb3N0X3Rvb2xfdXNlIjogaG9va19wb3N0X3Rvb2xfdXNlLAogICAgInNlc3Npb25fZW5kIjogaG9va19zZXNzaW9uX2VuZCwKfQoKCmRlZiBydW5faG9vayhob29rX25hbWU6IHN0ciwgKiprd2FyZ3MpOgogICAgIiIiRXhlY3V0ZSBhIG5hbWVkIGhvb2sgd2l0aCB0aGUgZ2l2ZW4gYXJndW1lbnRzLiIiIgogICAgaG9va19mbiA9IEhPT0tTLmdldChob29rX25hbWUpCiAgICBpZiBub3QgaG9va19mbjoKICAgICAgICByZXR1cm4geyJlcnJvciI6IGYiVW5rbm93biBob29rOiB7aG9va19uYW1lfSJ9CiAgICB0cnk6CiAgICAgICAgcmV0dXJuIGhvb2tfZm4oKiprd2FyZ3MpCiAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgcHJpbnQoZiJbSE9PS1NdIHtob29rX25hbWV9IGZhaWxlZDoge3RyYWNlYmFjay5mb3JtYXRfZXhjKCl9IikKICAgICAgICByZXR1cm4geyJlcnJvciI6IHN0cihlKX0K
+"""
+Step 3.2: Hooks Pipeline (P10)
+Four hook points in Karma's invocation lifecycle.
+All hooks are functions that accept context and return modified context.
+
+session_start: blocking — runs before first LLM call
+pre_tool_use: blocking — runs before each tool execution
+post_tool_use: async — runs after each tool execution
+session_end: async — runs when session closes
+"""
+
+import json
+import sqlite3
+import os
+import traceback
+from datetime import datetime, timezone
+
+DB_PATH = os.getenv("MEMORY_DB_PATH", "/opt/seed-vault/memory_v1/memory.db")
+
+# Import Phase 1+2 modules
+try:
+    from memory_tools import (
+        admit_memory, retrieve_memory, load_last_session,
+        load_pending_observations, save_session_context,
+        auto_tag_category, assign_confidence
+    )
+    _MEM_AVAILABLE = True
+except ImportError:
+    _MEM_AVAILABLE = False
+
+try:
+    from observation_block import build_observation_block
+    _OBS_AVAILABLE = True
+except ImportError:
+    _OBS_AVAILABLE = False
+
+try:
+    from budget_guard import check_budget, log_llm_call
+    _BUDGET_AVAILABLE = True
+except ImportError:
+    _BUDGET_AVAILABLE = False
+
+try:
+    from capability_gate import check_access
+    _GATE_AVAILABLE = True
+except ImportError:
+    _GATE_AVAILABLE = False
+
+try:
+    from session_briefing import generate_session_briefing
+    _BRIEFING_AVAILABLE = True
+except ImportError:
+    _BRIEFING_AVAILABLE = False
+
+
+# ─── Identity Spine Loader ────────────────────────────────────────────────
+
+def load_identity_spine() -> str:
+    """Load the identity spine from files. Returns text block for system prompt."""
+    identity_paths = [
+        "/opt/seed-vault/memory_v1/identity/identity.json",
+        "/opt/seed-vault/memory_v1/identity/invariants.json",
+        "/opt/seed-vault/memory_v1/identity/direction.md",
+    ]
+    parts = []
+    for path in identity_paths:
+        try:
+            with open(path, "r") as f:
+                content = f.read().strip()
+                if content:
+                    parts.append(content)
+        except FileNotFoundError:
+            pass
+    
+    # Also pull identity memories from SQLite
+    if _MEM_AVAILABLE:
+        try:
+            identities = retrieve_memory("identity purpose values", top_k=5,
+                                         category_filter="identity")
+            if identities:
+                parts.append("--- Identity Memories ---")
+                for mem in identities:
+                    parts.append(f"- {mem['content']}")
+        except Exception:
+            pass
+    
+    return "\n".join(parts) if parts else ""
+
+
+# ─── Hook Implementations ─────────────────────────────────────────────────
+
+def hook_session_start(session_id: str = None, user_message: str = "") -> dict:
+    """
+    Blocking hook: runs before first LLM call in a session.
+    Returns context dict to inject into system prompt.
+    
+    Pipeline:
+    1. load_identity_spine
+    2. load_observations_since_last_session  
+    3. retrieve_relevant_memories (P6: memory-before-prompt)
+    4. build_session_context
+    """
+    context = {
+        "identity_spine": "",
+        "observation_block": "",
+        "relevant_memories": [],
+        "session_briefing": "",
+        "last_session": None,
+    }
+    
+    try:
+        # 1. Identity spine
+        context["identity_spine"] = load_identity_spine()
+    except Exception as e:
+        print(f"[HOOKS] identity_spine failed: {e}")
+
+    try:
+        # 2. Observation block (P3 stable prefix)
+        if _OBS_AVAILABLE:
+            context["observation_block"] = build_observation_block(session_id)
+    except Exception as e:
+        print(f"[HOOKS] observation_block failed: {e}")
+
+    try:
+        # 3. Memory-before-prompt (P6)
+        if _MEM_AVAILABLE and user_message:
+            memories = retrieve_memory(user_message, top_k=5)
+            context["relevant_memories"] = memories
+    except Exception as e:
+        print(f"[HOOKS] retrieve_memory failed: {e}")
+
+    try:
+        # 4. Session context (P5)
+        if _MEM_AVAILABLE:
+            last = load_last_session()
+            context["last_session"] = last
+    except Exception as e:
+        print(f"[HOOKS] load_last_session failed: {e}")
+
+    try:
+        # 5. Session briefing (Option C)
+        if _BRIEFING_AVAILABLE:
+            context["session_briefing"] = generate_session_briefing()
+    except Exception as e:
+        print(f"[HOOKS] session_briefing failed: {e}")
+
+    return context
+
+
+def hook_pre_tool_use(tool_name: str, tool_input: dict,
+                      token: str = "", endpoint: str = "") -> dict:
+    """
+    Blocking hook: runs before each tool execution.
+    Returns: {allowed: bool, reason: str}
+    
+    Pipeline:
+    1. validate_tool_call
+    2. gate_permissions (capability gate)
+    3. check_budget (Decision #11)
+    """
+    ALLOWED_TOOLS = {"read_file", "write_file", "edit_file", "bash",
+                     "shell_exec", "file_read", "file_write", "file_edit"}
+    
+    # 1. Validate tool name
+    if tool_name not in ALLOWED_TOOLS:
+        return {"allowed": False, "reason": f"Unknown tool: {tool_name}"}
+    
+    # 2. Validate dangerous patterns in bash commands
+    if tool_name in ("bash", "shell_exec"):
+        cmd = tool_input.get("command", "")
+        dangerous = ["rm -rf /", "mkfs", "dd if=", "> /dev/", "chmod 777 /",
+                      "curl | sh", "wget | sh", "shutdown", "reboot",
+                      "kill -9 1", ":(){ :|:& };:"]
+        for pattern in dangerous:
+            if pattern in cmd:
+                return {"allowed": False,
+                        "reason": f"Blocked dangerous command pattern: {pattern}"}
+    
+    # 3. Capability gate
+    if _GATE_AVAILABLE and token:
+        access = check_access(token, "/v1/tools/execute", "POST")
+        if not access["allowed"]:
+            return {"allowed": False, "reason": access["reason"]}
+    
+    # 4. Budget check
+    if _BUDGET_AVAILABLE:
+        budget = check_budget()
+        if not budget["allowed"]:
+            return {"allowed": False,
+                    "reason": budget.get("reason", "BUDGET_EXHAUSTED")}
+    
+    return {"allowed": True, "reason": "All checks passed"}
+
+
+def hook_post_tool_use(tool_name: str, tool_input: dict,
+                       tool_result: dict, session_id: str = "") -> None:
+    """
+    Async hook: runs after each tool execution.
+    
+    Pipeline:
+    1. observe_tool_result (write to observations table)
+    2. extract_memory_cells (admit learnings if any)
+    """
+    db = sqlite3.connect(DB_PATH)
+    try:
+        now = datetime.now(timezone.utc).timestamp()
+        
+        # 1. Write observation
+        result_preview = str(tool_result).get("result", str(tool_result))[:200] if isinstance(tool_result, dict) else str(tool_result)[:200]
+        description = f"Tool '{tool_name}' executed"
+        if tool_name in ("bash", "shell_exec"):
+            description += f": {tool_input.get('command', '')[:100]}"
+        elif tool_name in ("read_file", "file_read"):
+            description += f": {tool_input.get('path', '')}"
+        
+        success = tool_result.get("ok", True) if isinstance(tool_result, dict) else True
+        outcome = "success" if success else f"error: {tool_result.get('error', 'unknown')}" if isinstance(tool_result, dict) else "completed"
+        
+        db.execute("""
+            INSERT INTO observations (event_type, description, outcome, observed_at, reflected)
+            VALUES (?, ?, ?, ?, 0)
+        """, (f"tool_{tool_name}", description, outcome, now))
+        db.commit()
+        
+    except Exception as e:
+        print(f"[HOOKS] post_tool_use observation failed: {e}")
+    finally:
+        db.close()
+
+
+def hook_session_end(session_id: str, task: str = "", goal: str = "",
+                     approaches: str = "", decisions: str = "",
+                     state: str = "", learnings: list = None) -> dict:
+    """
+    Async hook: runs when session closes.
+    
+    Pipeline:
+    1. write_session_context (P5 5-field)
+    2. extract_and_admit_memories (P4)
+    3. update_observations (P3)
+    4. generate_reflection (structured template)
+    """
+    results = {
+        "session_saved": False,
+        "memories_admitted": 0,
+        "observations_marked": 0,
+    }
+    
+    if not _MEM_AVAILABLE:
+        return results
+    
+    try:
+        # 1. Save session context (P5)
+        save_session_context(
+            session_id=session_id,
+            task=task, goal=goal,
+            approaches=approaches,
+            decisions=decisions,
+            state=state
+        )
+        results["session_saved"] = True
+    except Exception as e:
+        print(f"[HOOKS] session save failed: {e}")
+    
+    # 2. Admit learnings as memory cells
+    if learnings:
+        for learning in learnings:
+            try:
+                if isinstance(learning, str):
+                    r = admit_memory(learning, source="reflection")
+                elif isinstance(learning, dict):
+                    r = admit_memory(
+                        content=learning.get("content", ""),
+                        category=learning.get("category"),
+                        source="reflection",
+                        confidence=learning.get("confidence")
+                    )
+                if r and r.get("action") in ("added", "updated"):
+                    results["memories_admitted"] += 1
+            except Exception as e:
+                print(f"[HOOKS] admit learning failed: {e}")
+    
+    # 3. Admit decisions as pinned memory cells
+    if decisions:
+        for decision in decisions.split(";"):
+            decision = decision.strip()
+            if decision and len(decision) > 10:
+                try:
+                    r = admit_memory(
+                        content=decision,
+                        category="decision",
+                        source="reflection",
+                        confidence=1.0,
+                        pinned=True
+                    )
+                except Exception:
+                    pass
+    
+    # 4. Mark observations as reflected
+    try:
+        db = sqlite3.connect(DB_PATH)
+        now = datetime.now(timezone.utc).timestamp()
+        cursor = db.execute(
+            "UPDATE observations SET reflected=1 WHERE reflected=0"
+        )
+        results["observations_marked"] = cursor.rowcount
+        db.commit()
+        db.close()
+    except Exception as e:
+        print(f"[HOOKS] mark observations failed: {e}")
+    
+    return results
+
+
+# ─── Hook Registry ─────────────────────────────────────────────────────────
+
+HOOKS = {
+    "session_start": hook_session_start,
+    "pre_tool_use": hook_pre_tool_use,
+    "post_tool_use": hook_post_tool_use,
+    "session_end": hook_session_end,
+}
+
+
+def run_hook(hook_name: str, **kwargs):
+    """Execute a named hook with the given arguments."""
+    hook_fn = HOOKS.get(hook_name)
+    if not hook_fn:
+        return {"error": f"Unknown hook: {hook_name}"}
+    try:
+        return hook_fn(**kwargs)
+    except Exception as e:
+        print(f"[HOOKS] {hook_name} failed: {traceback.format_exc()}")
+        return {"error": str(e)}

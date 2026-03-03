@@ -44,3 +44,6 @@ chrome-extension/test-extension.js
 karma-context.md
 karma-context.md.tmp
 cc-session-brief.md
+
+# PDF knowledge base (local-only, not committed)
+Karma_PDFs/

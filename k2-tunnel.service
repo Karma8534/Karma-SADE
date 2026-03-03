@@ -1,0 +1,14 @@
+[Unit]
+Description=Reverse SSH tunnel to vault-neo
+After=network-online.target sshd-custom.service
+Wants=network-online.target
+
+[Service]
+User=karma
+Environment=AUTOSSH_GATETIME=0
+ExecStart=/usr/bin/autossh -M 0 -N -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -R 127.0.0.1:2223:127.0.0.1:2222 neo@64.225.13.144
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

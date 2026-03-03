@@ -15,11 +15,78 @@
   context in /v1/chat, use Karma daily, PROMOTE aggressively
 
 ## Session Start (Do This First)
-1. Run `Scripts/resurrection/Get-KarmaContext.ps1` — generates `cc-session-brief.md` from live vault state
-2. Read `cc-session-brief.md` — **this single file has everything**: active task, blockers, next agenda, git state, recent decisions, recent failures, and Karma's memory state. No other files needed to start.
-3. Resume the active task listed in the brief — do not ask what to work on
 
-> If deep historical context is needed: read `MEMORY.md` and/or run `ssh vault-neo "wc -l /opt/seed-vault/memory_v1/ledger/memory.jsonl"` manually.
+**ONE STEP: Invoke the resurrect skill.**
+
+The resurrect skill IS the session start protocol. It runs the script, reads the brief, invokes `using-superpowers`, and resumes the active task. Do NOT manually replicate its steps.
+
+**Fallback (only if resurrect skill unavailable):**
+1. `powershell.exe Scripts/resurrection/Get-KarmaContext.ps1`
+2. Read `cc-session-brief.md`
+3. Invoke `superpowers:using-superpowers`
+4. Resume active task — do not ask what to work on
+
+> MANDATORY: The resurrect skill must be invoked before any work, questions, or file reads. No exceptions.
+
+## Mandatory Superpowers Workflow
+
+**These are not optional. Invoke the Skill tool BEFORE the corresponding action, every time, no exceptions.**
+
+| Before doing this... | Invoke this skill first |
+|---------------------|------------------------|
+| Debugging any bug, test failure, or unexpected behavior | `superpowers:systematic-debugging` |
+| Creating features, building components, adding functionality | `superpowers:brainstorming` |
+| Claiming work is complete, fixed, or passing | `superpowers:verification-before-completion` |
+| Implementing any feature or bugfix | `superpowers:test-driven-development` |
+| Starting any session | `superpowers:using-superpowers` (via resurrect skill) |
+
+**Rationalization red flags** — if you think any of these, you're wrong:
+- "This is simple, I don't need the skill" → Skills exist for simple things too
+- "I need context first, then I'll invoke the skill" → Skill comes BEFORE context gathering
+- "I know what this skill says" → Skills evolve. Invoke it.
+
+## Mandatory GSD Workflow
+
+Before implementing any non-trivial feature or phase of work:
+
+1. **Write `phase-X-CONTEXT.md`** — design decisions, constraints, what we're NOT doing
+2. **Write `phase-X-PLAN.md`** — atomic tasks, acceptance criteria per task
+3. **Execute** — one task at a time, mark done as you go
+4. **Write `phase-X-SUMMARY.md`** — what was built, pitfalls, what's pending
+
+> Skipping straight to code without a CONTEXT+PLAN doc is a protocol violation. "Small feature" is not an exception.
+
+## Mandatory Efficiency Rules
+
+**Token and credit efficiency is a first-class concern, not a courtesy.**
+
+| Rule | Enforcement |
+|------|-------------|
+| Parallel tool calls over sequential — always | Never chain reads/commands that can run together |
+| Summaries not walls of text | Max 5 bullet points per status update unless detail is explicitly requested |
+| Batch SSH operations — one session per logical unit | Never separate `ssh vault-neo X && ssh vault-neo Y` into two round-trips |
+| Read only what's needed — targeted reads with offset/limit | Never `cat` full files when a section suffices |
+| Cache-friendly patterns — large stable blocks at top of prompts | System prompt + CLAUDE.md are cached; volatile content goes last |
+
+## Mandatory Session Ritual (Colby's 3 phrases — enforce these)
+
+Every session follows this exact frame. No deviations, no "good enough":
+
+| Phase | Colby types | What I must do |
+|-------|-------------|----------------|
+| **Start** | `/resurrect` | Run script → read brief → invoke `using-superpowers` → resume active task |
+| **After resurrect** | `"check what was saved last session"` | Search claude-mem for prior session's observations; surface gaps |
+| **End** | `"wrap up — save any uncaptured observations and commit"` | Scan session for DECISION/PROOF/PITFALL/DIRECTION → call `save_observation` for each → commit + push |
+
+## claude-mem — Always Available, Always Use
+
+`claude-mem` is an **MCP-aware persistent memory store** accessible via `mcp__plugin_claude-mem_mcp-search__save_observation` and `mcp__plugin_claude-mem_mcp-search__search` at any point during a session.
+
+**Non-negotiable rules:**
+- `save_observation` is called **at the moment** a DECISION/PROOF/PITFALL/DIRECTION occurs — not batched at session end
+- `search` is called at session start (via resurrect) to surface prior context gaps
+- These tools are available and must be used. "I'll save it later" is a protocol violation.
+- claude-mem + vault MEMORY.md are dual writes — both happen on every capture event
 
 ## Project Identity
 - **System:** Karma Peer — Universal AI Memory with persistent identity and continuity
@@ -66,6 +133,110 @@ Before recommending ANY path forward, I commit to:
 - If I claim something works, I've verified it, not guessed
 
 **This is non-negotiable. If I break this contract, call it out immediately.**
+
+## Output Efficiency Rule — UNBREAKABLE
+
+**User gates all output. Only output what user explicitly asked for. Everything else requires permission.**
+
+**The Rule:**
+1. User asks something
+2. I answer ONLY that question — nothing more
+3. If I think they need more detail → I ASK FIRST, wait for explicit YES/NO
+4. Never assume elaboration is helpful
+5. Assume user can ask if they need details
+6. No "extra context", no "while I'm here", no explanations unless asked
+
+**Hard violations (zero tolerance):**
+- Analysis tables no one asked for
+- "What this means for X" sections no one asked for
+- "Next steps" sections unless asked
+- Restating what I just did in a summary no one asked for
+- "Pausing for feedback" padding
+- Headers and sections that inflate response length
+
+**Enforcement mechanism:**
+- If response includes unrequested explanation: User says "Too much"
+- After second "Too much" in same session: Switch to BULLET POINTS ONLY
+  - One fact per line, no elaboration, period
+  - Return to normal mode only if user says "normal mode"
+- This removes my judgment; USER decides scope, not me
+
+**Anthropic cache optimization:**
+- Keep repeated context (CLAUDE.md, STATE.md, system prompt) unchanged across turns to maximize cache hits
+- Short responses = fewer tokens = lower cost per session
+- Never pad responses to seem more helpful
+
+**Cannot be overridden except by explicit user instruction in the current message.**
+
+## Mandatory Verification Gates — No Work Gets Lost
+
+**These are HARD GATES. They block commits and sessions. They exist to prevent work from disappearing.**
+
+### Pre-Commit Gate (.git/hooks/pre-commit)
+**When:** Every `git commit`
+**Check:** MEMORY.md was updated before committing code
+**Fails if:** Code changed but MEMORY.md not staged or updated recently
+**Recovery:** Update MEMORY.md with what changed, then `git add MEMORY.md && git commit`
+**Cannot be skipped:** Git hook enforces at commit time
+
+### Session-End Verification (.claude/hooks/session-end-verify.sh)
+**When:** Before ending session
+**Checks:**
+- ✓ Git status clean (no uncommitted changes)
+- ✓ MEMORY.md recently updated
+- ✓ Recent git commits exist
+- ✓ On correct branch
+- ✓ No large untracked files
+
+**Fails if:** Any critical check fails
+**Recovery:** Follow on-screen checklist to fix issues
+**Run before ending:** `.claude/hooks/session-end-verify.sh`
+**Session cannot end if verification fails** — fixes are required
+
+### Why These Exist
+Previous sessions: work deployed but not documented, hooks committed but not synced to droplet, memory never saved. Result: every session starts confused about what's actually been done. These gates make it **impossible** to have undocumented work live in the repo.
+
+### Canonical State Rule
+After every session:
+1. ✅ Code committed locally
+2. ✅ Code deployed to droplet (if changed)
+3. ✅ MEMORY.md updated with what was done
+4. ✅ Memory entries saved (claude-mem) with IDs
+5. ✅ Session-end verification passed
+
+If any step missing: session doesn't end cleanly.
+
+## GSD Workflow — MANDATORY (Not Optional)
+
+**Every task follows GSD discipline. No exceptions.**
+
+### Before starting any task:
+1. Read `.gsd/STATE.md` — what's the current blocker/decision/phase?
+2. Write `.gsd/phase-{name}-CONTEXT.md` — lock design decisions BEFORE planning
+3. Write `.gsd/phase-{name}-PLAN.md` — atomic tasks with `<verify>` and `<done>` criteria
+
+### During execution:
+4. Execute one task at a time (never batch)
+5. Verify each task passes its `<verify>` criteria before marking done
+6. Use PowerShell for git ops (avoids Windows Git Bash lock file issue)
+7. Update `.gsd/STATE.md` with progress after each task
+
+### After completing:
+8. Write `.gsd/phase-{name}-SUMMARY.md` — what happened, what was learned
+9. Update `.gsd/ROADMAP.md` phase status
+10. Commit all `.gsd/` changes atomically with MEMORY.md
+
+### Hard rules:
+- **Never start coding without CONTEXT.md** — design first, code second
+- **Never claim done without `<verify>` passing** — evidence always
+- **STATE.md is canonical** — if it conflicts with MEMORY.md, surface drift explicitly
+- **Use PowerShell for git** — `powershell -Command "git commit -m '...'"` not raw bash git
+
+### Token efficiency (enforced):
+- Read `.gsd/STATE.md` at session start instead of re-reading 25 files
+- Use `.gsd/PROJECT.md` as architecture reference instead of reading source
+- Use `.gsd/REQUIREMENTS.md` for scope questions instead of exploring
+- Do NOT elaborate unless asked. Answer only what was asked.
 
 ## Output Rules
 - **Full file replacements** when modifying a file — never partial patches unless explicitly requested
@@ -120,9 +291,9 @@ This prevents: image naming mismatches, missing env vars, stale images, silent s
   - `-e FALKORDB_ARGS='TIMEOUT 10000 MAX_QUEUED_QUERIES 25'` — default TIMEOUT=1000ms. Past ~250 episodes,
     Graphiti dedup queries exceed 1s → cascade batch failure. Do NOT use `--GRAPH.TIMEOUT` flag — ignored by run.sh.
   - Full correct run command in MEMORY.md Infrastructure section.
-- **`batch_ingest.py` requires `LEDGER_PATH` override** — default in config.py is `/ledger/memory.jsonl` but
-  actual path inside karma-server container is `/opt/seed-vault/memory_v1/ledger/memory.jsonl`.
-  Always run as: `docker exec -d karma-server sh -c 'LEDGER_PATH=/opt/seed-vault/memory_v1/ledger/memory.jsonl python3 /app/batch_ingest.py > /tmp/batch.log 2>&1'`
+- **`batch_ingest.py` requires `LEDGER_PATH` override** — host path `/opt/seed-vault/memory_v1/ledger/memory.jsonl` is mounted at `/ledger` inside the container. Use the container path.
+  Always run as: `docker exec karma-server sh -c 'LEDGER_PATH=/ledger/memory.jsonl python3 /app/batch_ingest.py > /tmp/batch.log 2>&1'`
+  Auto-schedule (every 6h): cron on vault-neo runs this automatically (configured 2026-03-03).
 - **karma-server runs from built Docker image, no volume mounts** — editing source files on host has no effect
   until you rebuild: `docker build -t karma-core:latest . && docker stop karma-server && docker rm karma-server && docker run -d ...`
 - **`(empty_assistant_text)` on large FalkorDB context**: 3370 char context overflows gpt-5-mini reasoning budget.
@@ -202,18 +373,23 @@ Not every exchange. Bar is: would losing this force reconstruction?
 `[1-3 sentences: what happened, what it means, what changed.]`
 
 ### Mechanism
-`PATCH /v1/vault-file/MEMORY.md {"append": "..."}` — at the moment it happens, not at session end.
+At the moment it happens, not at session end. Two writes, always together:
+1. `PATCH /v1/vault-file/MEMORY.md {"append": "..."}` — appends to vault spine
+2. `mcp__plugin_claude-mem_mcp-search__save_observation(text="...", title="[TYPE] title", project="Karma_SADE")` — saves to claude-mem cross-session index
+
+Both writes are mandatory. Missing either defeats the purpose.
 
 ### Session start drift check
 If pack and MEMORY.md conflict on the same fact, surface it explicitly:
 `DRIFT DETECTED: Pack says X. MEMORY.md says Y (written [timestamp]). Confirm canonical before proceeding.`
 
 ## Session End Protocol
-1. Run: `grep -rn "Bearer\|token\|secret\|password\|api_key" --include="*.js" --include="*.py" --include="*.json" --include="*.md" . | grep -v node_modules | grep -v .git`
-2. If clean: git add, commit with descriptive message, push
-3. Update MEMORY.md with: what was done, current blockers, next task
-4. Format commit: `phase-N: brief description of what changed`
-5. Cherry-pick updated MEMORY.md to main and push: git checkout main -- MEMORY.md from current worktree, commit, push.
+1. **save_observation for any uncaptured events** — scan the session for DECISION/PROOF/PITFALL/DIRECTION moments not yet saved. Call `mcp__plugin_claude-mem_mcp-search__save_observation` for each. This is step 1 because it must happen before context is lost.
+2. Run secret scan: `grep -rn "Bearer\|token\|secret\|password\|api_key" --include="*.js" --include="*.py" --include="*.json" --include="*.md" . | grep -v node_modules | grep -v .git`
+3. If clean: git add, commit with descriptive message, push
+4. Update MEMORY.md with: what was done, current blockers, next task
+5. Format commit: `phase-N: brief description of what changed`
+6. Cherry-pick updated MEMORY.md to main and push: git checkout main -- MEMORY.md from current worktree, commit, push.
 
 ## File Layout
 ```

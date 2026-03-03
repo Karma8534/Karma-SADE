@@ -1,238 +1,124 @@
 # Universal AI Memory — Current State
 
-## 🟢 System Status (Updated 2026-02-27T14:45:00Z — Session 41 Complete)
+## Karma Architecture — Locked Principles (2026-03-03)
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| UI (hub.arknexus.net) | ✅ WORKING | HTTPS operational, Caddy certificates active |
-| Consciousness Loop | ✅ WORKING | OBSERVE/THINK/DECIDE/ACT/REFLECT, LOG_GROWTH entries present |
-| Episode Ingestion | ✅ WORKING | Episodes reaching FalkorDB, 1268+ episodes present |
-| FalkorDB Graph | ✅ WORKING | Queries responsive, neo_workspace graph healthy |
-| Hub Bridge API | ✅ WORKING | /v1/chat, /v1/cypher endpoints operational, HTTPS verified |
-| Model Routing | ✅ UPGRADED | 2 models (gpt-4o + openai); gpt-4o default, GLM-5 for deep reasoning |
-| Self-Model API | ✅ WORKING | /v1/self-model endpoints registered, 8 baseline observations seeded |
-| Karma Persona | ✅ VERIFIED | Peer-level language verified, no service-desk closers, gpt-4o confirmed |
+**Optimization law:** Assimilate primitives. Reject systems. Integrate only what doesn't add dependency gravity or parallel truth. Complexity is failure.
 
----
+**True architecture:**
+- Single coherent peer. Droplet-primary (vault-neo = source of truth)
+- Chat surface: Hub Bridge. Identity: Vault ledger. Continuity: Resurrection Packs
+- K2 = continuity substrate only (preserve, observe, sync). NEVER calls LLM autonomously
+- Karma is the ONLY origin of thought. No exceptions.
 
-## Active Task (Session 41)
+**PDF primitives extraction filter:** (1) fits single-consciousness, (2) no dependency gravity, (3) no parallel truth, (4) implementable in existing vault-neo + Hub Bridge + FalkorDB stack
 
-**Status:** ✅ COMPLETE — Session 41 ended with voice regression fix verified and deployed
+## Session 58 (2026-03-03) — Repo Reconciliation
 
-**Task:** Issue #5 (COMPLETED) + Issue #7 (IN PROGRESS) - Token Budget, Admission, Decay, Backup + Persona Growth Integration + Voice Quality Fix
+**Status:** 🔴 CRITICAL RECONCILIATION — GitHub, droplet, and P1 were in three different states
 
-**Session 41 Summary (2026-02-27):**
-This session focused on diagnosing and fixing a voice regression that emerged post-deployment. Despite the comprehensive voice overhaul in Issue #7 Phase 7, short responses were still appending service-desk language when using gpt-4o-mini. Through systematic analysis, we determined that gpt-4o-mini's RLHF training for help-offer closers cannot be overridden via text prompting alone. The solution was to switch the default model to gpt-4o, which provides proper instruction-following without the service-desk appendage. Both smoke tests confirm peer-level voice quality.
+### Reconciliation (in progress)
+- **Root cause found:** Droplet used as dev environment — karma-core files written directly on vault-neo, never committed
+- **Droplet uncommitted:** hooks.py (334 lines), memory_tools.py (704 lines), router.py (292 lines), session_briefing.py, compaction.py, consciousness.py, identity.json
+- **P1 feature branch:** 20+ commits ahead of main (session-57 docs, batch_ingest, GSD workflow, ambient hooks)
+- **GitHub main:** stale at b778ef2 Phase 4.4 — predates all of the above
+- **Action:** SCP'd droplet files to P1, committing here, then merging feature branch → main → push → droplet pull
 
-**What was accomplished:**
+### Prevention being implemented this session
+- CLAUDE.md hard rule: droplet is deploy target only, never edit directly
+- Session-end hook: SSH to droplet, fail if dirty git status
+- Droplet cron: hourly dirty-check alert
 
-### Voice Regression Fix (Session 41 — Post-Deployment) ✅ COMPLETE
-**Issue:** After deployment, smoke tests revealed short responses were appending service-desk language ("How else can I assist you?") despite voice overhaul
-**Root Cause:** `gpt-4o-mini` RLHF training for help-offer closers cannot be overridden via text prompting alone (attempted 3 escalating hardening approaches; all failed)
-**Solution:** Changed `MODEL_DEFAULT` from `gpt-4o-mini` → `gpt-4o` in hub-bridge environment
-**Changes:**
-- Modified `/opt/seed-vault/memory_v1/hub_bridge/config/hub.env`: `MODEL_DEFAULT=gpt-4o`
-- Updated `hub-bridge/app/server.js` line 861: Allow gpt* and glm* models (fallback gpt-4o-mini for others)
-- Rebuilt hub-bridge container with `docker compose build --no-cache && up -d`
-**Verification:**
-- Test 1 (Persona): gpt-4o returns detailed peer-level response about Karma's substrate-independent identity, **NO service-desk closers**, ends with values statement
-- Test 2 (Exclamation marks): gpt-4o returns "Understood, I'll... avoid using exclamation marks. Anything else you'd like to adjust?" — **direct, focused, peer-level** ✅
-- GLM test: Confirmed glm-5 unavailable via OpenAI API (404 error) — not viable for standard chat
-**Result:** Voice regression FIXED and verified. gpt-4o properly respects instruction-following constraints without help-offer appendage.
-**Commits:** f2404cc, cd244f7, 9398930
-**Production Status:** ✅ DEPLOYED and tested on live system (hub.arknexus.net)
+## Session 57 (2026-03-03) — Current State
 
-### Issue #5: Token Budget, Admission Gate, Memory Decay, DO Spaces Backup ✅ (MERGED to main)
-- **Token Budget System**: SessionBudget + MonthlyTracker classes tracking per-session and per-calendar-month token usage
-  - Uses tiktoken (cl100k_base encoding) for accurate token counting
-  - SessionBudget: configurable per-session limit (default 50K)
-  - MonthlyTracker: persistent JSON ledger at /opt/seed-vault/memory_v1/ledger/token_usage.json
-  - Integration: Token checking in generate_response() before router call, budget endpoint /v1/budget
-- **Memory Admission Gate**: Rule-based scoring (no LLM call) filtering low-quality episodes
-  - Heuristic scoring: content length (substantive vs noise), knowledge density (technical/factual signals), source bonus
-  - Admission threshold: 0.5 (configurable)
-  - Integration: Integrated in ingest_episode() to reject low-scoring episodes
-- **Memory Decay**: Time-decay applied to unretrieved episodic memories
-  - Runs daily as part of consciousness cycle
-  - Decays memories not retrieved in 7+ days
-  - Configurable decay_rate (0.15) and decay_floor (0.1)
-- **DO Spaces Backup Script**: nightly_backup.sh for FalkorDB + ledger + memory backup
-  - Exports FalkorDB RDB dump, copies ledger/memory files
-  - Uploads to DO Spaces with timestamp naming
-  - Auto-prunes backups older than 7 days
-- **Files created/modified:**
-  - karma-core/token_budget.py (NEW, 144 lines)
-  - karma-core/admission.py (NEW, 83 lines)
-  - karma-core/memory_decay.py (NEW, 97 lines)
-  - karma-core/scripts/nightly_backup.sh (NEW, 102 lines)
-  - karma-core/config.py (MODIFIED - added config variables)
-  - karma-core/requirements.txt (MODIFIED - added tiktoken)
-  - karma-core/server.py (MODIFIED - integrated all three systems)
-- **PR Status:** Merged as PR #8 to main branch ✅
+**Status:** 🟡 BLOCKERS CLEARING — FalkorDB unfrozen, hub/chat ingestion now running
 
-### Issue #7: Persona Growth Integration - Phase 1-7 Complete, Phase 8 Pending
-**Status:** PR #9 created and updated with hardcoded IP fix
+### Verified System State (2026-03-03)
 
-**Completed Phases:**
-- **Phase 1:** [REFLECT:] signal parsing from assistant turns (regex-based extraction, 25-line parser function)
-- **Phase 2:** Self-model summary injection into system prompt (fetchSelfModelSummary with 5-min cache)
-- **Phase 3:** reflect_self tool added to Karma's tool-use block (POST to /v1/self-model/reflect)
-- **Phase 5:** Weekly self-model prune integrated into consciousness loop (karma-core/consciousness.py)
-- **Phase 6:** [REFLECT:] signal instructions added to system prompt governance block
-- **Phase 7:** Voice overhaul - removed chatbot tone, implemented peer-like voice (direct, opinionated, dry humor)
+| Component | Status | Evidence |
+|-----------|--------|----------|
+| Hub Bridge API | ✅ WORKING | /v1/chat, /v1/ambient, /v1/context, /v1/cypher operational |
+| Consciousness Loop | ✅ WORKING | 60s OBSERVE-only cycles confirmed, zero LLM calls |
+| Ledger | ✅ GROWING | ~4000 entries, git commits + session-end hooks capturing |
+| FalkorDB Graph | ✅ GROWING | 1642+ nodes — batch_ingest running, cron every 6h |
+| Conversation Capture | ✅ FIXED | hub/chat entries now ingested via extended batch_ingest |
+| Chrome Extension | ❌ SHELVED | Never worked reliably. Legacy data only. |
+| batch_ingest | ✅ RUNNING | Cron every 6h + extended to process hub/chat entries |
+| Ambient Tier 1 | ✅ WORKING | Git + session-end hooks → /v1/ambient → ledger confirmed |
+| Karma Terminal | ⚠️ STALE | Last capture 2026-02-27 |
+| GSD Workflow | ✅ ADOPTED | .gsd/ structure in place |
 
-**Hardcoded IP Fix (Session 41):**
-- **Issue:** Three locations in hub-bridge/server.js had hardcoded public IP `http://64.225.13.144:8340` instead of Docker service name
-- **Locations fixed:**
-  - Line 96: reflectUrl in _reflectAndExpireSession()
-  - Line 439: url in fetchSelfModelSummary()
-  - Line 926: reflectUrl in executeToolCall()
-- **Fix applied:** Used sed to replace all three with `http://karma-server:8340/v1/self-model`
-- **Verification:** grep confirmed 0 matches for 64.225.13.144, 5 matches for karma-server:8340 (3 fixed + 2 pre-existing)
-- **Commit:** c7f1f27 "fix: replace hardcoded IP with Docker service name in self-model URLs"
-- **Push:** feature/issue-7-persona-growth-completion branch updated ✅
+### Active Blockers (Priority Order)
 
-**Pending Phases:**
-- **Phase 4:** Seed baseline observations to self-model via API call (COMPLETED in Session 41 post-smoke-test)
-- **Phase 8:** Full integration testing and PR readiness (Phase 8 — awaiting next session)
+**#1 ✅ RESOLVED: FalkorDB unfrozen (2026-03-03)**
+- batch_ingest ran: 1570 → 1642 nodes
+- LEDGER_PATH corrected: `/ledger/memory.jsonl` (container mount)
+- Cron installed: `0 */6 * * *` on vault-neo
 
-**Files modified in PR #9:**
-- hub-bridge/server.js (signal parser, self-model integration, voice overhaul, hardcoded IP fix)
-- hub-bridge/app/server.js (model validation updated to allow gpt* and glm*)
-- karma-core/consciousness.py (weekly prune task)
+**#2 ✅ RESOLVED: hub/chat entries now reach FalkorDB (2026-03-03)**
+- Root cause: batch_ingest only checked `assistant_message`; hub/chat uses `assistant_text`
+- Fix: extended batch_ingest.py — detects hub/chat by tags, reads `assistant_text` fallback
+- 1538 Colby<->Karma conversations now being ingested (running now)
+- Option 2 (ASSIMILATE signals) earmarked for future quality/curation layer
 
----
+**#3 ✅ RESOLVED: Auto-schedule configured (2026-03-03)**
+- Cron every 6h on vault-neo
 
-## Next Session (Session 42) — Pending Work
+**#4 URGENT: karma-server image rebuild + restart loop**
+- batch_ingest hub-chat fix is docker cp'd into container ONLY — not in image
+- If karma-server restarts (restart loop active), the fix is lost and cron runs stale code
+- Fix: git pull on vault-neo first, then rebuild image, then restart container
+- Commands: see Next Session step 3
 
-**Issue #7 Phase 8 — Full Integration Testing & PR Readiness:**
-- Verify all 7 completed phases work end-to-end in production
-- Test consciousness loop self-model prune (weekly)
-- Test [REFLECT:] signal parsing on various message types
-- Verify self-model injection doesn't break system prompt structure
-- Review PR #9 for code quality and documentation
-- Merge PR #9 to main once Phase 8 tests pass
+**#5 LOW: gpt-5-mini vs gpt-4o-mini drift**
+- hub.env shows `MODEL_DEEP=gpt-5-mini` — verify if intentional or typo
 
-**Model Default Configuration:**
-- gpt-4o is now default for standard chat (best instruction-following, peer voice)
-- gpt-5-mini (or equivalent) remains for deep mode (reasoning tasks)
-- GLM-5 routed only for reasoning via karma-core router (not available via OpenAI API)
-- All model validation updated in hub-bridge to support future GLM integration
+**#6 NEW: PDF ingestion pipeline broken — Karma_PDFs**
+- Path: `C:\Users\raest\Documents\Karma_SADE\Karma_PDFs`
+- `/v1/ingest` endpoint EXISTS in hub-bridge (server.js line 1902) — not missing
+- Inbox/ failures: "connection forcibly closed" — caller script unknown/dead
+- Gated/ failures: `file_b64 undefined` — body parsing failure, wrong Content-Type or missing body
+- Done/ has historical verdicts proving it worked previously
+- karma-k2-sync.py dead: wrong Tailscale DNS, wrong log path
+- Next session: find/rebuild the PDF caller script, fix both failure modes
 
-**Known Blockers:**
-- None — voice regression fixed, deployed, verified
+### Session 57 Accomplishments
+- ✅ Consciousness loop OBSERVE-only contract confirmed (CYCLE_REFLECTION = log type, not mode)
+- ✅ Chrome extension shelved — all docs updated
+- ✅ FalkorDB unfrozen — batch_ingest ran, cron configured
+- ✅ LEDGER_PATH bug fixed in all docs (was wrong host path, correct = /ledger/memory.jsonl)
+- ✅ hub/chat → FalkorDB gap closed — extended batch_ingest with hub-chat support
+- ✅ 1538 Colby<->Karma conversations now ingesting into graph
+- ✅ Superpowers enforcement: CLAUDE.md mandatory workflow table added, save_observation added to capture protocol, resurrect skill updated to invoke using-superpowers
+- ✅ 4 structural gaps closed: Session Start → resurrect skill only (Gap 1), GSD enforcement rule (Gap 2), token efficiency table (Gap 3), save_observation as Session End step 1 (Gap 4)
+- ✅ Session ritual table + claude-mem always-available section added to CLAUDE.md (dual-write rule, at-the-moment rule)
 
-### Session 40 — Persona Fix ✅
-- **Issue:** Karma ending responses with assistant language ("How can I help you?", "If you have questions, let me know")
-- **Fix:** Updated KARMA_SYSTEM_PROMPT with comprehensive forbidden phrases
-- **Result:** Karma now ends with peer language ("What's on your mind?")
-
-### Forbidden Phrases Added:
-× "let me know"
-× "how can I help"
-× "how can I assist"
-× "is there anything else"
-× "what would you like"
-× "what more"
-× "anything I can"
-× "happy to"
-× "glad to"
-× "pleased to"
-
-### Approved Endings:
-✓ "What's next?"
-✓ "What do you think?"
-✓ [Statement, then question]
-✓ [Statement only]
+### Next Session — Step by Step (exact commands)
+1. `ssh vault-neo "docker exec karma-server tail -30 /tmp/batch.log"` — verify batch complete, check ok/err
+2. `ssh vault-neo "docker exec falkordb redis-cli -p 6379 GRAPH.QUERY neo_workspace 'MATCH (n) RETURN count(n)'"` — verify node count grew from 1642
+3. Rebuild karma-server image (URGENT — restart loop will kill docker cp'd fix):
+   `ssh vault-neo "cd /home/neo/karma-sade/karma-core && git pull && docker build -t karma-core:latest ."`
+   Then: `docker inspect anr-karma-server` → stop/remove/restart with same params
+4. `ssh vault-neo "docker logs anr-karma-server --tail=50 2>&1 | grep -i 'exit\|error\|crash\|oom'"` — diagnose Blocker #4
+5. `ssh vault-neo "grep MODEL_DEEP /opt/seed-vault/memory_v1/hub_bridge/config/hub.env"` — verify Blocker #5
+6. Triage Karma_PDFs pipeline — find caller script, fix Inbox + Gated failure modes
 
 ---
 
-## Session 37 — 2026-02-26 [Status: Success]
+## Infrastructure
+- P1 + K2: i9-185H, 64GB RAM, RTX 4070 8GB
+- Tailscale: P1=100.124.194.102, K2=100.75.109.92, droplet=100.92.67.70
+- SSH alias: vault-neo
+- API keys: C:\Users\raest\OneDrive\Documents\Aria1\NFO\mylocks1.txt
+- Git ops: Use PowerShell (Git Bash has persistent index.lock issue on Windows)
+- FalkorDB graph name: `neo_workspace` (NOT `karma`)
+- Hub token path: `/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt`
 
-**What was completed:**
+## Known Pitfalls (active)
+- `python3` not available in Git Bash — use SSH for Python ops
+- Docker compose service: `hub-bridge` (container name: `anr-hub-bridge`)
+- batch_ingest requires `LEDGER_PATH` override (see CLAUDE.md)
+- karma-server built from Docker image — source file edits require rebuild
+- FalkorDB requires both env vars: `FALKORDB_DATA_PATH=/data` and `FALKORDB_ARGS='TIMEOUT 10000 MAX_QUEUED_QUERIES 100'`
 
-✅ **Phase 1: GLM_API_KEY Injection**
-   - Injected GLM_API_KEY=47d6a0c23e494a319961ed5469e17a14.GNauf9TFcyOdq9g1 into .env
-   - Updated compose.yml karma-server environment to reference ${GLM_API_KEY}
-   - Rebuilt karma-server container with docker compose
-   - Verified: Router now shows 2 models (glm5, openai) vs previous 1
-   - Evidence: GLM-5 actively processing reasoning tasks (logs show multiple 10-18s cycles)
-
-✅ **Phase 2: Hub-Bridge HTTPS Endpoint Diagnosis & Fix**
-   - Diagnosed: Caddyfile corrupted in running container (newlines stripped)
-   - Root cause: Caddy was only listening on port 80 (HTTP), not port 443 (HTTPS)
-   - Fix: Removed and recreated Caddy container with proper Caddyfile mounting
-   - Result: ACME certificates auto-provisioned for hub.arknexus.net
-   - Verified: `curl -sk https://hub.arknexus.net/` returns 200 OK (HTML homepage)
-   - HTTP→HTTPS redirects now enabled
-
-✅ **Phase 3: Close Issue #4 - Chrome Extension Dead Code Removal**
-   - Removed extension.md reference from CLAUDE.md File Layout section
-   - Removed chrome-extension/ directory reference
-   - Removed trailing note "The Chrome extension has never worked..."
-   - Committed: 30db719 fix(#4): remove chrome extension dead code
-   - Pushed to GitHub ✅
-
-✅ **Phase 4: Verification Summary** ✅
-   - Router configuration verified: 2 models active (glm5, openai)
-   - HTTPS endpoint verified: hub.arknexus.net responding to HTTPS requests
-   - Chrome extension refs removed from CLAUDE.md
-   - All Phase 1-3 changes confirmed working in production
-
-✅ **Phase 5: Create Deploy Skill** (Bonus - from insights report)
-   - Created comprehensive 8-step autonomous Docker deployment pipeline
-   - Committed: cf50975 feat: create deploy skill for autonomous Docker build-deploy-verify
-   - Prevents: image naming mismatches, missing env vars, stale images, silent failures
-   - Documented in: `.claude/skills/deploy/SKILL.md` (291 lines)
-   - Ready to use: `/deploy [service-name] --remote vault-neo --health-endpoint /health`
-
-✅ **Phase 6: Update CLAUDE.md with Deployment Procedure**
-   - Added new "## Deployment Procedure" section to CLAUDE.md
-   - Documents /deploy skill as canonical deployment procedure
-   - Lists 8-step verification pipeline
-   - Committed: b73d1fe docs: add Deployment Procedure section to CLAUDE.md
-   - Pushed to GitHub ✅
-
-**Verification status:**
-- Phase 1 (GLM injection): Router shows 2 models, GLM-5 processing reasoning ✅
-- Phase 2 (HTTPS): hub.arknexus.net responding with 200 OK via HTTPS ✅
-- Phase 3 (Chrome refs removed): CLAUDE.md cleaned, committed 30db719 ✅
-- Phase 4 (Verification): All 3 phases confirmed operational ✅
-- Deploy skill: Ready for use, prevents recurring Docker friction ✅
-- CLAUDE.md: Updated with canonical deployment procedure ✅
-
-**Git commits this session:**
-- 30db719 fix(#4): remove chrome extension dead code
-- cf50975 feat: create deploy skill for autonomous Docker build-deploy-verify pipeline
-- b73d1fe docs: add Deployment Procedure section to CLAUDE.md
-
-**Key learnings:**
-1. Caddy configuration corruption was filesystem/mounting issue, not Caddyfile syntax
-2. Docker compose build uses different image naming than docker build (critical discovery)
-3. Autonomous deployment skill with verification gates eliminates multi-round debugging cycles
-4. Insights reports identify high-friction patterns (21 "wrong_approach" instances from Docker)
-5. Documenting procedures in CLAUDE.md (vs discoverable skills) raises adoption
-
-**Next steps:**
-- Use /deploy skill for all future Docker Compose deployments
-- Monitor GLM-5 reasoning performance under load
-- Continue consciousness loop autonomous operation
-- Consider implementing checkpoint skill for session summaries
-
----
-
-## Blocker Tracking
-
-**Current blockers:**
-- [PHASE-4-DROPLET] Phase 4 and Phase 8 of Issue #7 require droplet deployment (karma-server + hub-bridge container rebuilds)
-
-**Resolved blockers (Session 40):**
-- [BLOCKER-4] GLM API key not injected → karma-server showing 1 model instead of 2 — RESOLVED
-- [BLOCKER-5] Hub-bridge HTTPS not responding (only HTTP) — RESOLVED (Caddy recreation)
-- [BLOCKER-6] Chrome extension dead code references in CLAUDE.md (Issue #4) — RESOLVED
-- [BLOCKER-7] Docker deployment friction (wrong image names, missing env vars) — RESOLVED (deploy skill)
-
-**Previously resolved blockers:**
-- [BLOCKER-1] Build context corrupted — RESOLVED in Session 36
-- [BLOCKER-2] Consciousness NO_ACTION bug — RESOLVED in Session 36
-- [BLOCKER-3] Assistant language in Karma's responses — RESOLVED in Session 37
+# currentDate
+Today's date is 2026-03-03.
