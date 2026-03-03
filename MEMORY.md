@@ -25,7 +25,8 @@
 - Graph stuck at 1570 nodes since last manual run
 - Karma cannot recall recent work, sessions, or decisions from memory
 - Fix: Run batch_ingest + configure auto-schedule
-- Command: `docker exec -d karma-server sh -c 'LEDGER_PATH=/opt/seed-vault/memory_v1/ledger/memory.jsonl python3 /app/batch_ingest.py > /tmp/batch.log 2>&1'`
+- Command: `docker exec karma-server sh -c 'LEDGER_PATH=/ledger/memory.jsonl python3 /app/batch_ingest.py > /tmp/batch.log 2>&1'`
+- Auto-schedule: cron configured on vault-neo (every 6h, installed 2026-03-03)
 
 **#2 CRITICAL: No conversation capture path**
 - Chrome extension SHELVED (never worked)

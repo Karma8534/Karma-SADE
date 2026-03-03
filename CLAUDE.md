@@ -226,9 +226,9 @@ This prevents: image naming mismatches, missing env vars, stale images, silent s
   - `-e FALKORDB_ARGS='TIMEOUT 10000 MAX_QUEUED_QUERIES 25'` — default TIMEOUT=1000ms. Past ~250 episodes,
     Graphiti dedup queries exceed 1s → cascade batch failure. Do NOT use `--GRAPH.TIMEOUT` flag — ignored by run.sh.
   - Full correct run command in MEMORY.md Infrastructure section.
-- **`batch_ingest.py` requires `LEDGER_PATH` override** — default in config.py is `/ledger/memory.jsonl` but
-  actual path inside karma-server container is `/opt/seed-vault/memory_v1/ledger/memory.jsonl`.
-  Always run as: `docker exec -d karma-server sh -c 'LEDGER_PATH=/opt/seed-vault/memory_v1/ledger/memory.jsonl python3 /app/batch_ingest.py > /tmp/batch.log 2>&1'`
+- **`batch_ingest.py` requires `LEDGER_PATH` override** — host path `/opt/seed-vault/memory_v1/ledger/memory.jsonl` is mounted at `/ledger` inside the container. Use the container path.
+  Always run as: `docker exec karma-server sh -c 'LEDGER_PATH=/ledger/memory.jsonl python3 /app/batch_ingest.py > /tmp/batch.log 2>&1'`
+  Auto-schedule (every 6h): cron on vault-neo runs this automatically (configured 2026-03-03).
 - **karma-server runs from built Docker image, no volume mounts** — editing source files on host has no effect
   until you rebuild: `docker build -t karma-core:latest . && docker stop karma-server && docker rm karma-server && docker run -d ...`
 - **`(empty_assistant_text)` on large FalkorDB context**: 3370 char context overflows gpt-5-mini reasoning budget.
