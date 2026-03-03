@@ -73,6 +73,11 @@
 - Was `gpt-5-mini` (non-existent model) — every deep-analysis call was failing silently
 - Fixed to `gpt-4o-mini` in `/opt/seed-vault/memory_v1/hub_bridge/config/hub.env`; hub-bridge restarted and verified
 
+**#10 ✅ RESOLVED: Karma chat internal_error on GLM 429 (2026-03-03)**
+- Root cause: PDF watcher exhausted Z.ai rate limit; callLLM had no fallback — threw 429 → internal_error
+- Fix: try/catch in callLLM — if Z.ai returns 429, falls back to gpt-4o-mini via OpenAI
+- hub-bridge rebuilt + restarted; /v1/chat verified ok:true
+
 **#7 ✅ RESOLVED: OPENAI_API_KEY no longer exposed in docker inspect (2026-03-03)**
 - Root cause: key was injected as env var via compose.yml → visible in `docker inspect karma-server`
 - Fix: config.py reads from mounted file `/opt/seed-vault/memory_v1/session/openai.api_key.txt`; removed env var from compose.yml karma-server section
