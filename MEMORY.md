@@ -69,8 +69,9 @@
 - Fix: git pull on vault-neo first, then rebuild image, then restart container
 - Commands: see Next Session step 3
 
-**#5 LOW: gpt-5-mini vs gpt-4o-mini drift**
-- hub.env shows `MODEL_DEEP=gpt-5-mini` — verify if intentional or typo
+**#5 ✅ RESOLVED: MODEL_DEEP corrected (2026-03-03)**
+- Was `gpt-5-mini` (non-existent model) — every deep-analysis call was failing silently
+- Fixed to `gpt-4o-mini` in `/opt/seed-vault/memory_v1/hub_bridge/config/hub.env`; hub-bridge restarted and verified
 
 **#6 ✅ RESOLVED: PDF ingestion pipeline restored (2026-03-03)**
 - Caller: `Scripts/karma-inbox-watcher.ps1` — watches Inbox/ and Gated/, sends base64 to /v1/ingest
