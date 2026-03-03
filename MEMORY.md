@@ -1,5 +1,17 @@
 # Universal AI Memory — Current State
 
+## Karma Architecture — Locked Principles (2026-03-03)
+
+**Optimization law:** Assimilate primitives. Reject systems. Integrate only what doesn't add dependency gravity or parallel truth. Complexity is failure.
+
+**True architecture:**
+- Single coherent peer. Droplet-primary (vault-neo = source of truth)
+- Chat surface: Hub Bridge. Identity: Vault ledger. Continuity: Resurrection Packs
+- K2 = continuity substrate only (preserve, observe, sync). NEVER calls LLM autonomously
+- Karma is the ONLY origin of thought. No exceptions.
+
+**PDF primitives extraction filter:** (1) fits single-consciousness, (2) no dependency gravity, (3) no parallel truth, (4) implementable in existing vault-neo + Hub Bridge + FalkorDB stack
+
 ## Session 57 (2026-03-03) — Current State
 
 **Status:** 🟡 BLOCKERS CLEARING — FalkorDB unfrozen, hub/chat ingestion now running
