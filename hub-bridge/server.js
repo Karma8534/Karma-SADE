@@ -1495,6 +1495,47 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { id: r.turn_id, stored: true, timestamp: nowIso() });
     }
 
+    // --- POST /v1/ambient (Ambient Knowledge Layer Tier 1) ---
+    // Accepts ambient knowledge items (git commits, Claude Code sessions, etc.)
+    // Schema: { id, type, tags, content, source, confidence, verification }
+    if (req.method === "POST" && req.url === "/v1/ambient") {
+      console.log("[DEBUG] /v1/ambient endpoint hit");
+
+      const ip = getClientIp(req);
+      const rl = checkRateLimit("capture", ip);
+      if (rl) return json(res, 429, { ok: false, error: "rate_limited", retry_after_s: rl.retry_after_s });
+
+      const token = bearerToken(req);
+      if (!HUB_CAPTURE_TOKEN || !token || token !== HUB_CAPTURE_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      const raw = await parseBody(req);
+      let payload;
+      try { payload = JSON.parse(raw); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+
+      // Validate minimal ambient item structure
+      const { id, type, tags, content, source, confidence, verification } = payload || {};
+      if (!id || !type || !content) {
+        return json(res, 400, { ok: false, error: "missing_fields", required: ["id", "type", "content"] });
+      }
+
+      // Write directly to vault (ambient items don't need chatlog transformation)
+      const vp = await vaultPost("/v1/memory", VAULT_BEARER, payload);
+
+      if (vp.status !== 201 && vp.status !== 200) {
+        console.error(`[AMBIENT] vault write failed: ${vp.status}`, vp.text);
+        return json(res, 500, { ok: false, error: "vault_write_failed", vault_status: vp.status });
+      }
+
+      let vpJson = {};
+      try { vpJson = JSON.parse(vp.text); } catch {}
+      const stored_id = vpJson?.id || id;
+
+      console.log(`[AMBIENT] ${id} stored successfully`);
+      return json(res, 201, { ok: true, id: stored_id, stored: true, timestamp: nowIso() });
+    }
+
     // --- GET /v1/context (Ambient Knowledge Layer Tier 2) ---
     if (req.method === "GET" && req.url.startsWith("/v1/context")) {
       const token = bearerToken(req);
