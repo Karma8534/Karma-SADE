@@ -46,9 +46,16 @@ PAYLOAD=$(cat <<ENDJSON
 ENDJSON
 )
 
-# POST to vault via SSH (same path as git hook)
-ssh vault-neo "curl -s -X POST http://127.0.0.1:8080/v1/memory \
-  -H 'Content-Type: application/json' \
-  -d '${PAYLOAD}'" > /dev/null 2>&1 &
+# POST to hub-bridge /v1/chatlog with Bearer token auth
+# Non-blocking: runs in background, token fetched via SSH
+(
+  TOKEN=$(ssh vault-neo "cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt" 2>/dev/null)
+  if [ -n "$TOKEN" ]; then
+    curl -s -X POST "https://hub.arknexus.net/v1/chatlog" \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer ${TOKEN}" \
+      -d "${PAYLOAD}" > /dev/null 2>&1
+  fi
+) &
 
 exit 0
