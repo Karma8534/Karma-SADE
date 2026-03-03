@@ -12,6 +12,22 @@
 
 **PDF primitives extraction filter:** (1) fits single-consciousness, (2) no dependency gravity, (3) no parallel truth, (4) implementable in existing vault-neo + Hub Bridge + FalkorDB stack
 
+## Session 58 (2026-03-03) — Repo Reconciliation
+
+**Status:** 🔴 CRITICAL RECONCILIATION — GitHub, droplet, and P1 were in three different states
+
+### Reconciliation (in progress)
+- **Root cause found:** Droplet used as dev environment — karma-core files written directly on vault-neo, never committed
+- **Droplet uncommitted:** hooks.py (334 lines), memory_tools.py (704 lines), router.py (292 lines), session_briefing.py, compaction.py, consciousness.py, identity.json
+- **P1 feature branch:** 20+ commits ahead of main (session-57 docs, batch_ingest, GSD workflow, ambient hooks)
+- **GitHub main:** stale at b778ef2 Phase 4.4 — predates all of the above
+- **Action:** SCP'd droplet files to P1, committing here, then merging feature branch → main → push → droplet pull
+
+### Prevention being implemented this session
+- CLAUDE.md hard rule: droplet is deploy target only, never edit directly
+- Session-end hook: SSH to droplet, fail if dirty git status
+- Droplet cron: hourly dirty-check alert
+
 ## Session 57 (2026-03-03) — Current State
 
 **Status:** 🟡 BLOCKERS CLEARING — FalkorDB unfrozen, hub/chat ingestion now running
