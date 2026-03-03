@@ -59,14 +59,7 @@
 - [x] batch_ingest.py extended (hub-chat tag detection + assistant_text fallback)
 - [x] Committed + deployed to container
 - [x] Batch running (1538 conversations, wave 3/54 at time of writing)
-- [ ] karma-server image rebuild (CRITICAL — cron uses baked image, not live container file)
-
-**Next action:** Sync hooks to droplet, test capture flow.
-
-**Files involved:**
-- `.git/hooks/post-commit` (local, captures commit metadata)
-- `hub-bridge/server.js` (endpoint /v1/ambient, sends to vault)
-- `/opt/seed-vault/memory_v1/ledger/memory.jsonl` (ledger, receives capture)
+- [ ] karma-server image rebuild (CRITICAL — cron uses baked image, not live container file — do next session after batch completes)
 
 ---
 
@@ -220,7 +213,7 @@
 | Ambient | Tier 3 | 20-40 hrs | Deferred. Low priority. |
 | K2 Worker | Phase 1 | 4-8 hrs | Blocked (K2 offline). Test when online. |
 | K2 Worker | Phase 2 | 10-20 hrs | Future. Requires Phase 1 complete. |
-| GSD Workflow | Phase 1 | READY | Manual workflow now. First phase-CONTEXT.md this session. |
+| GSD Workflow | Phase 1 | ✅ ADOPTED | Manual workflow in use. STATE/ROADMAP/SUMMARY docs active. |
 | GSD Workflow | Phase 2 | 30 min | Optional. Install GSD if manual not sufficient. |
 | Self-Improvement | Phase 1 | 2-4 hrs | Mechanism needed. Implement in verify-work. |
 | Self-Improvement | Phase 2 | TBD | Blocked on data collection. |
@@ -229,42 +222,27 @@
 
 ## Decision Points (Upcoming)
 
-### Decision #6: Tier 1 Test Approach
-**Question:** After syncing hooks to droplet, how to test end-to-end?
-**Options:**
-1. Make local commit, verify appears in droplet ledger
-2. Make commit in hub-bridge repo (if editable), verify capture works
-3. Simulate POST to /v1/ambient, verify ledger entry created
-
-**Recommendation:** Option 1 (local commit → droplet ledger) is most authentic test.
-
----
-
-### Decision #7: GSD CLI Install
-**Question:** Install GSD framework or continue manual workflow?
-**Tradeoff:**
-- **Manual:** Slower upfront, full control, no dependency on external tool
-- **CLI:** Faster execution, built-in verification, parallel execution support
-
-**Recommendation:** Prove manual workflow first (Tier 1). Install GSD CLI if Tier 1 test passes and we're confident in approach.
-
----
-
 ### Decision #8: K2 Availability
 **Question:** When is K2 coming online?
-**Implication:** K2 online unlocks Phase 2 (Tier 3 ambient, K2 sync protocol, multi-agent consciousness).
-
+**Implication:** K2 online unlocks: K2 sync protocol, multi-agent consciousness, Tier 3 ambient.
 **Next step:** Check with Colby on K2 status.
+
+### Decision #9: karma-server Image Rebuild Approach
+**Question:** Rebuild from local source (karma-core/) on vault-neo, or push updated image from P1?
+**Recommendation:** Build directly on vault-neo (`docker build` in `/home/neo/karma-sade/karma-core/`) — simpler, no registry needed.
+**Action:** Next session, after batch completes.
 
 ---
 
 ## Constraints & Unknowns
 
-- **K2 status:** Offline in Session 56. When coming online?
+- **K2 status:** Offline. When coming online? (Unlocks K2 sync + multi-agent consciousness)
 - **Tier 3 infrastructure:** Screen capture requires new tooling. Approved by Colby?
-- **GSD CLI:** Not installed. Should we? When?
-- **Fine-tuning budget:** Cost per DPO fine-tuning job? Approved by Colby?
-- **Droplet capacity:** FalkorDB at 1268 episodes. Growth ceiling? When does cleanup start?
+- **GSD CLI:** Not installed. Manual workflow sufficient. Install if needed.
+- **Fine-tuning budget:** Conversation capture now working. DPO accumulation begins. Budget TBD.
+- **Droplet capacity:** FalkorDB at ~2000+ episodes (batch in progress). Growth ceiling unknown — monitor.
+- **karma-server image rebuild:** PENDING next session. Cron uses stale image until rebuilt.
+- **karma-server restart loop (Blocker #4):** Root cause unknown. Investigate next session.
 
 ---
 

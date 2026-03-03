@@ -143,24 +143,37 @@ Git Bash has persistent index.lock issue on Windows. All git operations via Powe
 ### Session 57 Accomplishments
 - [x] Analyzed consciousness loop source — OBSERVE-only contract confirmed
 - [x] Identified CYCLE_REFLECTION is a log type, not a behavioral mode (false drift)
-- [x] Discovered FalkorDB frozen (batch_ingest not running)
 - [x] Confirmed Chrome extension shelved — updated all docs
-- [x] Updated architecture.md, MEMORY.md, STATE.md with verified state
-- [ ] Run batch_ingest to unfreeze FalkorDB (Blocker #1)
-- [ ] Verify conversation capture path (Blocker #2)
-- [ ] Configure auto-schedule for batch_ingest (Blocker #3)
+- [x] LEDGER_PATH corrected in all docs (`/ledger/memory.jsonl` not host path)
+- [x] Ran batch_ingest — FalkorDB unfrozen (1570 → 1642 nodes) — Blocker #1
+- [x] Extended batch_ingest.py for hub/chat entries (1538 conversations) — Blocker #2
+- [x] Cron configured on vault-neo every 6h — Blocker #3
+- [x] GSD docs updated: phase-hubchat-SUMMARY, ROADMAP, MEMORY.md, auto-memory
+- [ ] Rebuild karma-server image (NEXT SESSION — batch must complete first)
+- [ ] Verify batch run results (node count after 1538 conversations ingested)
+
+### Next Session Step-by-Step
+1. `docker exec karma-server tail -30 /tmp/batch.log` — verify batch complete, check ok/err counts
+2. `ssh vault-neo "docker exec falkordb redis-cli -p 6379 GRAPH.QUERY neo_workspace 'MATCH (n) RETURN count(n)'"` — verify node count grew
+3. Rebuild karma-server image on vault-neo:
+   - `ssh vault-neo "cd /home/neo/karma-sade/karma-core && docker build -t karma-core:latest ."`
+   - Get current run params: `docker inspect anr-karma-server`
+   - Stop/remove/restart with same params
+4. Verify cron will use new image: run `--dry-run` via cron manually
+5. Investigate Blocker #4 (restart loop): `docker logs anr-karma-server --tail=50 | grep -i 'exit\|error\|crash\|oom'`
+6. Verify Blocker #5 (model drift): `grep MODEL_DEEP /opt/seed-vault/memory_v1/hub_bridge/config/hub.env`
 
 ---
 
 ## Known Limitations
 - **Chrome extension:** Shelved permanently (never worked)
-- **batch_ingest:** Must be run manually until auto-schedule configured
+- **karma-server image:** Updated batch_ingest.py in container only — image rebuild pending
 - **K2 not online:** Consciousness loop runs on droplet only
-- **No fine-tuning yet:** Need 20+ DPO preference pairs (blocked on conversation capture)
+- **No fine-tuning yet:** Need 20+ DPO preference pairs (conversation capture now working, accumulation begins)
 - **Ambient Tier 3:** Screen capture daemon not built
 
 ---
 
-**Last updated:** 2026-03-03T19:30:00Z (Session 57)
+**Last updated:** 2026-03-03T20:30:00Z (Session 57)
 **Owner:** Claude Code (writes on Colby approval)
 **Canonical location:** C:\Users\raest\Documents\Karma_SADE\.gsd\STATE.md

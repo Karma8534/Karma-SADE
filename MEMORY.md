@@ -50,12 +50,15 @@
 - ✅ hub/chat → FalkorDB gap closed — extended batch_ingest with hub-chat support
 - ✅ 1538 Colby<->Karma conversations now ingesting into graph
 
-### Next Session Actions (Priority)
-1. Verify batch_ingest run completed: `docker exec karma-server tail -20 /tmp/batch.log`
-2. Check node count grew: `ssh vault-neo "docker exec falkordb redis-cli -p 6379 GRAPH.QUERY neo_workspace 'MATCH (n) RETURN count(n)'"`
-3. Rebuild karma-server image with updated batch_ingest.py baked in
-4. Investigate karma-server restart loop (#4)
-5. Verify gpt-5-mini vs gpt-4o-mini (#5)
+### Next Session — Step by Step (exact commands)
+1. `docker exec karma-server tail -30 /tmp/batch.log` — verify batch complete, check ok/err
+2. `ssh vault-neo "docker exec falkordb redis-cli -p 6379 GRAPH.QUERY neo_workspace 'MATCH (n) RETURN count(n)'"` — verify node count grew from 1642
+3. Rebuild karma-server image on vault-neo:
+   `ssh vault-neo "cd /home/neo/karma-sade/karma-core && docker build -t karma-core:latest ."`
+   Then get current run params (`docker inspect anr-karma-server`), stop/remove/restart
+4. Verify rebuild: cron dry-run works with new image
+5. `ssh vault-neo "docker logs anr-karma-server --tail=50 2>&1 | grep -i 'exit\|error\|crash\|oom'"` — diagnose Blocker #4
+6. `ssh vault-neo "grep MODEL_DEEP /opt/seed-vault/memory_v1/hub_bridge/config/hub.env"` — verify Blocker #5
 
 ---
 
