@@ -24,6 +24,7 @@ const HUB_HANDOFF_TOKEN_FILE = process.env.HUB_HANDOFF_TOKEN_FILE || "/run/secre
 const DEEP_MODE_HEADER = (process.env.DEEP_MODE_HEADER || "x-karma-deep").toLowerCase();
 const HANDOFF_DIR = process.env.HANDOFF_DIR || "/data/handoff";
 const KARMA_CONTEXT_URL = process.env.KARMA_CONTEXT_URL || "http://karma-server:8340/raw-context";
+const ZAI_API_KEY = process.env.ZAI_API_KEY || "";
 
 // ── Within-session conversation history ──────────────────────────────────────
 // Keeps the last N exchange pairs in memory, keyed by a hash of the bearer token.
@@ -816,8 +817,13 @@ try { HUB_CAPTURE_TOKEN = readFileTrim(HUB_CAPTURE_TOKEN_FILE); } catch (e) {
 }
 try { HUB_HANDOFF_TOKEN = readFileTrim(HUB_HANDOFF_TOKEN_FILE); } catch (e) { console.error("WARN: cannot read HUB handoff token:", e.message); }
 
+// Z.ai (GLM models) API key
+let ZAI_KEY = "";
+try { ZAI_KEY = ZAI_API_KEY.trim(); if (ZAI_KEY) console.log("[INIT] ZAI_API_KEY loaded for GLM support"); } catch (e) { console.warn("WARN: ZAI_API_KEY not available (GLM models disabled):", e.message); }
+
 const openai    = new OpenAI({ apiKey: OPENAI_KEY });
 const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : null;
+const zai       = ZAI_KEY ? new OpenAI({ apiKey: ZAI_KEY, baseURL: "https://api.z.ai/api/paas/v4" }) : null;
 
 // ── Tool-use via GPT-4o (Anthropic Claude doesn't reliably trigger tool_use) ─────
 // Karma's autonomous access to her own graph/memory requires tools.
@@ -1002,13 +1008,24 @@ async function callGPTWithTools(messages, maxTokens, model) {
 
     // Model validation: permit OpenAI (gpt*) and GLM models; fallback to gpt-4o-mini for others
     // (tool-calling via OpenAI/GLM is more reliable than Anthropic)
-    const actualModel = model && (model.startsWith("gpt") || model.startsWith("glm")) ? model : "gpt-4o-mini";
-    console.log(`[TOOL-USE] Using model: ${actualModel} (requested: ${model})`);
+    // GLM requires working Z.ai API. If unavailable, fall back to gpt-4o-mini.
+    const isGLM = model && model.startsWith("glm");
+    let actualModel = isGLM || (model && model.startsWith("gpt")) ? model : "gpt-4o-mini";
+    let client = (isGLM && zai) ? zai : openai;
+    let clientName = (isGLM && zai) ? "zai" : "openai";
+    // If GLM requested but no Z.ai client, fall back to GPT
+    if (isGLM && !zai) {
+      console.warn(`[TOOL-USE] GLM requested but Z.ai unavailable, falling back to gpt-4o-mini`);
+      actualModel = "gpt-4o-mini";
+      client = openai;
+      clientName = "openai";
+    }
+    console.log(`[TOOL-USE] Using model: ${actualModel} (requested: ${model}), client: ${clientName}`);
 
     while (iterations < MAX_ITERATIONS) {
       iterations++;
       console.log(`[TOOL-USE] GPT iteration ${iterations}, tools count: ${gptTools.length}`);
-      const resp = await openai.chat.completions.create({
+      const resp = await client.chat.completions.create({
         model: actualModel,
         messages: allMessages,
         max_tokens: maxTokens,
