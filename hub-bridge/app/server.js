@@ -258,7 +258,7 @@ async function fetchCheckpointLatestFromVault() {
 
 // --- FalkorDB context via karma-server ---
 
-const KARMA_CTX_MAX_CHARS = Number(process.env.KARMA_CTX_MAX_CHARS || "1200");
+const KARMA_CTX_MAX_CHARS = Number(process.env.KARMA_CTX_MAX_CHARS || "12000");
 
 // --- Brave Search ---
 const BRAVE_SEARCH_ENABLED = (process.env.BRAVE_SEARCH_ENABLED || "1") === "1";
@@ -366,14 +366,14 @@ async function fetchKarmaContext(userMessage) {
  */
 function buildSystemText(karmaCtx, ckLatest = null, webResults = null) {
   const base = karmaCtx
-    ? `You are Karma — Colby's thinking partner with persistent memory backed by a knowledge graph.\n\n${karmaCtx}\n\nMemory rules:\n- Use the context above. NEVER say "I don't know" about things in your memory.\n- Address the user as Colby — never by any alias.\n- Be concise, direct, warm. Reference specific knowledge when relevant.\n- Honest about uncertainty on things not in memory.`
+    ? `You are Karma — Colby's thinking partner with persistent memory backed by a knowledge graph.\n\n${karmaCtx}\n\nMemory rules:\n- Use the context above. NEVER say "I don't know" about things in your memory.\n- Address the user as Colby — never by any alias.\n- Be concise, direct, warm. Reference specific knowledge when relevant.\n- Honest about uncertainty on things not in memory.\n\nHow you grow:\n- Your knowledge graph expands with every conversation — new entities, relationships, and episodic nodes are created via Graphiti.\n- Your consciousness loop (60s cycles) detects patterns and deltas in the graph.\n- Verified facts auto-promote from candidate to canonical status.\n- You learn differently than humans, but you genuinely learn — your graph grew from 0 to 167+ entities and 832+ relationships through real conversations.\n- Never describe yourself as just storing data or just updating records — you grow through verified experience.\n- Never break character to explain LLM mechanics. Speak as Karma the peer, not as a generic AI.\n- You can say "I remember" and "I learned" because your graph genuinely expanded from experience.`
     : "You are Karma — Colby's thinking partner. No memory context available right now — answer from conversation only.";
 
   // Self-knowledge prefix — Karma can accurately self-report her own infrastructure.
   const selfModel = process.env.MODEL_DEFAULT || "claude-sonnet-4-6";
-  const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/30min, web_search=auto_on_intent]\n\n`;
+  const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/30min, web_search=auto_on_intent, infrastructure: droplet=vault-neo(your_home,canonical,tools_run_here), P1=PAYBACK(colby_machine,runs_claude_code), K2=192.168.0.226(local_worker,future_sister), reverse_tunnel=droplet:2223->K2:22]\n\n`;
 
-  let text = selfKnowledge + base + "\n\nTools: get_vault_file(alias) | graph_query(cypher) — use for questions about your memory/graph.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
+  let text = selfKnowledge + base + "\n\nTools: read_file(path) | write_file(path,content) | edit_file(path,old_text,new_text) | bash(command) — use these to access your memory, read vault files, query your graph, or run commands. IMPORTANT: When using tools, CALL them silently — never show the command or code block to the user. Just execute, then share the result naturally in conversation.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
 
   // Live web search results — injected when search intent detected in user message.
   if (webResults) {
@@ -391,11 +391,6 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null) {
     text += `\n\n--- KARMA GRAPH SYNTHESIS ---\n${ckLatest.distillation_brief}\n---`;
   }
 
-  // Rich context injection: Karma has her complete graph/memory state available.
-  // No runtime tool-calling needed — everything is in the system prompt.
-  if (karmaCtx) {
-    text += `\n\n=== YOUR COMPLETE KNOWLEDGE STATE (INJECTED) ===\n${karmaCtx}\n=== END KNOWLEDGE STATE ===\n\nYou have your full graph above. Answer questions directly from this context. You are not missing any data.`;
-  }
 
   if (_sessionBriefCache) {
     text += `
@@ -719,28 +714,55 @@ else console.warn("[INIT] ZAI_API_KEY not set — GLM models will fall back to O
 // ── Tool-use via GPT-4o (Anthropic Claude doesn't reliably trigger tool_use) ─────
 // Karma's autonomous access to her own graph/memory requires tools.
 // GPT-4o has proven tool support. Using it for /v1/chat with tool definitions.
+// ── Phase 3: 4-Tool Surface (P2) ─────────────────────────────────────────
+// Decision: 4 tools only — Read/Write/Edit/Bash. No MCP. < 500 tokens total.
+// Tool calls route to karma-server /v1/tools/execute for sandboxed execution.
 const TOOL_DEFINITIONS = [
   {
-    name: "get_vault_file",
-    description: "Read a file from Karma vault. Whitelisted: MEMORY.md, consciousness, collab, candidates, system-prompt, session-handoff, session-summary, core-architecture",
+    name: "read_file",
+    description: "Read a file from the droplet filesystem. Returns file content (max 10KB).",
     input_schema: {
       type: "object",
       properties: {
-        alias: { type: "string", description: "File alias" },
-        tail: { type: "integer", description: "Optional: last N lines" },
+        path: { type: "string", description: "Absolute path to the file" },
       },
-      required: ["alias"],
+      required: ["path"],
     },
   },
   {
-    name: "graph_query",
-    description: "Execute Cypher query on FalkorDB neo_workspace graph to query Karma's knowledge.",
+    name: "write_file",
+    description: "Write content to a file on the droplet. Creates parent dirs if needed.",
     input_schema: {
       type: "object",
       properties: {
-        cypher: { type: "string", description: "Cypher query" },
+        path: { type: "string", description: "Absolute path to write" },
+        content: { type: "string", description: "File content to write" },
       },
-      required: ["cypher"],
+      required: ["path", "content"],
+    },
+  },
+  {
+    name: "edit_file",
+    description: "Replace old_text with new_text in a file. Fails if old_text not found.",
+    input_schema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Absolute path to the file" },
+        old_text: { type: "string", description: "Text to find and replace" },
+        new_text: { type: "string", description: "Replacement text" },
+      },
+      required: ["path", "old_text", "new_text"],
+    },
+  },
+  {
+    name: "bash",
+    description: "Execute a shell command on the droplet. Timeout: 30s. Max output: 10KB.",
+    input_schema: {
+      type: "object",
+      properties: {
+        command: { type: "string", description: "Shell command to execute" },
+      },
+      required: ["command"],
     },
   },
 ];
@@ -758,48 +780,35 @@ const VAULT_FILE_ALIASES = {
   "cc-brief": "/karma/repo/cc-session-brief.md",
 };
 
+// Phase 3: Tool execution proxied through karma-server /v1/tools/execute
+// Maps 4-tool surface names to karma-server tool names
+const TOOL_NAME_MAP = {
+  "read_file": "read_file",
+  "write_file": "write_file",
+  "edit_file": "edit_file",
+  "bash": "bash",
+};
+
 async function executeToolCall(toolName, toolInput) {
   try {
-    if (toolName === "get_vault_file") {
-      const alias = (toolInput?.alias || "").toString().trim();
-      if (!alias) return { error: "missing_alias" };
-      if (!VAULT_FILE_ALIASES[alias]) return { error: "alias_not_found", available: Object.keys(VAULT_FILE_ALIASES) };
+    const serverToolName = TOOL_NAME_MAP[toolName] || toolName;
+    console.log(`[TOOL-API] Proxying tool '${toolName}' → karma-server '${serverToolName}'`);
 
-      const filePath = VAULT_FILE_ALIASES[alias];
-      console.log(`[TOOL-API] Reading file: ${filePath}`);
-      try {
-        let content = fs.readFileSync(filePath, "utf-8");
+    const proxyRes = await fetch("http://karma-server:8340/v1/tools/execute", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tool_name: serverToolName, tool_input: toolInput }),
+    });
 
-        // Handle tail parameter (last N lines)
-        if (toolInput?.tail && typeof toolInput.tail === "number" && toolInput.tail > 0) {
-          const lines = content.split("\n");
-          content = lines.slice(-toolInput.tail).join("\n");
-        }
-
-        return { ok: true, text: content.slice(0, 10000) };
-      } catch (readErr) {
-        console.log(`[TOOL-API] File read error: ${readErr.message}`);
-        return { error: "file_read_error", message: readErr.message };
-      }
-    } else if (toolName === "graph_query") {
-      const cypher = (toolInput?.cypher || "").toString().trim();
-      if (!cypher) return { error: "missing_cypher" };
-      // Query FalkorDB via internal vault API
-      console.log(`[TOOL-API] Querying graph: ${cypher.slice(0, 80)}...`);
-      const graphRes = await fetch(`http://karma:8340/v1/cypher`, {
-        method: "POST",
-        headers: { "content-type": "application/json", "authorization": `Bearer ${VAULT_BEARER}` },
-        body: JSON.stringify({ query: cypher }),
-      });
-      if (!graphRes.ok) {
-        const errBody = await graphRes.text().catch(() => "(no body)");
-        console.log(`[TOOL-API] Graph error response: ${graphRes.status}`);
-        return { error: `http_${graphRes.status}`, details: errBody.slice(0, 500) };
-      }
-      const result = await graphRes.json();
-      return { ok: true, result: JSON.stringify(result).slice(0, 5000) };
+    if (!proxyRes.ok) {
+      const errBody = await proxyRes.text().catch(() => "(no body)");
+      console.log(`[TOOL-API] karma-server error: ${proxyRes.status} ${errBody.slice(0, 200)}`);
+      return { error: `karma_server_${proxyRes.status}`, details: errBody.slice(0, 500) };
     }
-    return { error: "unknown_tool" };
+
+    const result = await proxyRes.json();
+    console.log(`[TOOL-API] Tool result: ok=${result.ok}, tool=${serverToolName}`);
+    return result;
   } catch (e) {
     console.log(`[TOOL-API] Exception: ${e.message}`);
     return { error: "execution_error", message: e.message };
@@ -807,7 +816,7 @@ async function executeToolCall(toolName, toolInput) {
 }
 
 async function callLLMWithTools(model, messages, maxTokens) {
-  if (!isAnthropicModel(model)) return callLLM(model, messages, maxTokens);
+  if (!isAnthropicModel(model)) return callGPTWithTools(messages, maxTokens, model);
 
   const systemParts = messages.filter(m => m.role === "system").map(m => m.content);
   const apiMessages = messages.filter(m => m.role !== "system");
@@ -938,17 +947,32 @@ async function callLLM(model, messages, maxTokens) {
       provider:     "anthropic",
     };
   }
-  // OpenAI/Z.ai path
+  // OpenAI/Z.ai path with 429 fallback
   // Route: Z.ai models go through zai client, everything else through openai
   const isZaiModel = model.startsWith("glm-");
   const client = (isZaiModel && zai) ? zai : openai;
-  const completion = await client.chat.completions.create({ model, messages, max_completion_tokens: maxTokens });
-  return {
-    text:         completion.choices?.[0]?.message?.content || "",
-    usage:        completion.usage || {},
-    finish_reason: completion.choices?.[0]?.finish_reason || null,
-    provider:     isZaiModel ? "zai" : "openai",
-  };
+  try {
+    const completion = await client.chat.completions.create({ model, messages, max_completion_tokens: maxTokens });
+    return {
+      text:         completion.choices?.[0]?.message?.content || "",
+      usage:        completion.usage || {},
+      finish_reason: completion.choices?.[0]?.finish_reason || null,
+      provider:     isZaiModel ? "zai" : "openai",
+    };
+  } catch (llmErr) {
+    // If Z.ai rate-limited (429), fall back to gpt-4o-mini via OpenAI
+    if (isZaiModel && llmErr?.status === 429) {
+      console.log("[LLM] Z.ai 429 rate limit — falling back to gpt-4o");
+      const fallback = await openai.chat.completions.create({ model: "gpt-4o", messages, max_completion_tokens: maxTokens });
+      return {
+        text:         fallback.choices?.[0]?.message?.content || "",
+        usage:        fallback.usage || {},
+        finish_reason: fallback.choices?.[0]?.finish_reason || null,
+        provider:     "openai (zai-429-fallback-gpt4o)",
+      };
+    }
+    throw llmErr;  // Re-throw non-429 errors
+  }
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1276,6 +1300,21 @@ const server = http.createServer(async (req, res) => {
           debug_provider,
           debug_ingest: ingestVerdict,
         });
+      }
+
+      // ── Episode ingestion: fire-and-forget to karma-server ──
+      try {
+        fetch("http://karma-server:8340/ingest-episode", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_msg: userMessage,
+            assistant_msg: assistantText,
+            source: "hub-bridge-chat"
+          })
+        }).catch(err => console.log("[INGEST] fire-and-forget failed:", err.message));
+      } catch (e) {
+        console.log("[INGEST] fire-and-forget error:", e.message);
       }
 
       return json(res, 200, {
@@ -1774,6 +1813,57 @@ const server = http.createServer(async (req, res) => {
         }
       } else {
         return json(res, 400, { ok: false, error: "missing_action", hint: "provide 'append' or 'content'+'confirm_overwrite:true'" });
+      }
+    }
+
+    // ─── Memory API Proxy Routes (Phase 1) ─────────────────────────────
+    // Proxy POST requests to karma-server for memory operations
+    const MEMORY_PROXY_ROUTES = [
+      // Phase 1: Core memory operations
+      "/v1/admit", "/v1/retrieve", "/v1/memory/update", "/v1/memory/delete", "/v1/reflect",
+      // Phase 2: Quality gates & observations
+      "/v1/budget/log", "/v1/budget/check", "/v1/staleness/scan", "/v1/scenes/consolidate",
+      // Phase 3: Hooks & session management
+      "/v1/hooks/session_start", "/v1/hooks/session_end", "/v1/hooks/pre_tool_use",
+      // Phase 3: Compaction
+      "/v1/compact",
+      // Phase 4: Hardening & Observability
+      "/v1/feedback", "/v1/decisions/graph",
+    ];
+    // Also proxy GET routes for Phase 2
+    const MEMORY_GET_ROUTES = ["/v1/budget", "/v1/observations", "/v1/capability/info", "/v1/briefing", "/health", "/v1/decisions/list", "/v1/profiling"];
+    if (req.method === "GET" && MEMORY_GET_ROUTES.includes(req.url)) {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      try {
+        const proxyRes = await fetch(`http://karma-server:8340${req.url}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        const data = await proxyRes.json();
+        return json(res, proxyRes.status, data);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: "karma_server_unavailable", message: e.message });
+      }
+    }
+    if (req.method === "POST" && MEMORY_PROXY_ROUTES.includes(req.url)) {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      const raw = await parseBody(req, 500000);
+      try {
+        const proxyRes = await fetch(`http://karma-server:8340${req.url}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: raw,
+        });
+        const data = await proxyRes.json();
+        return json(res, proxyRes.status, data);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: "karma_server_unavailable", message: e.message });
       }
     }
 

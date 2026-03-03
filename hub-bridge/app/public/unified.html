@@ -120,8 +120,20 @@
   .msg.user  .msg-bubble { background: var(--user-bubble); color: var(--text-primary); border-bottom-right-radius: 3px; }
   .msg.karma .msg-bubble { background: var(--karma-bubble); color: var(--text-primary); border: 1px solid var(--border); border-bottom-left-radius: 3px; }
   .msg.system .msg-bubble { background: transparent; color: var(--text-secondary); font-size: 12px; font-style: italic; border: none; padding: 4px 0; }
-  .msg-meta { font-size: 11px; color: var(--text-secondary); padding: 0 4px; }
-  .msg.user .msg-meta { text-align: right; }
+  .msg-meta { font-size: 11px; color: var(--text-secondary); padding: 0 4px; display: flex; align-items: center; gap: 8px; }
+  .msg.user .msg-meta { justify-content: flex-end; }
+
+  /* ── Feedback buttons ── */
+  .feedback-btns { display: inline-flex; gap: 2px; margin-left: 4px; }
+  .feedback-btns button {
+    background: none; border: none; cursor: pointer;
+    font-size: 13px; opacity: 0.35; padding: 0 2px;
+    transition: opacity 0.15s;
+  }
+  .feedback-btns button:hover { opacity: 0.8; }
+  .feedback-btns button.active { opacity: 1; }
+  .feedback-btns button.active.up { color: var(--accent-green); }
+  .feedback-btns button.active.down { color: var(--status-err); }
 
   /* ── Input area ── */
   .chat-input-area {
@@ -468,19 +480,50 @@
   }
 
   // ── Add message ──────────────────────────────────────────────────────────
-  function addMessage(role, content) {
+  function addMessage(role, content, turnId) {
     const wrap    = document.createElement('div');
     wrap.className = 'msg ' + role;
+    if (turnId) wrap.dataset.turnId = turnId;
     const bubble  = document.createElement('div');
     bubble.className = 'msg-bubble';
     bubble.textContent = content;
     const meta    = document.createElement('div');
     meta.className = 'msg-meta';
-    meta.textContent = (role === 'user' ? 'You' : role === 'karma' ? 'Karma' : '') + ' · ' + new Date().toLocaleTimeString();
+    const label = (role === 'user' ? 'You' : role === 'karma' ? 'Karma' : '');
+    const timeStr = new Date().toLocaleTimeString();
+    meta.innerHTML = '<span>' + label + ' &middot; ' + timeStr + '</span>';
+    // Add feedback buttons for Karma messages
+    if (role === 'karma' && turnId) {
+      const btns = document.createElement('span');
+      btns.className = 'feedback-btns';
+      btns.innerHTML = '<button class="up" title="Good response">&#x1F44D;</button><button class="down" title="Bad response">&#x1F44E;</button>';
+      btns.querySelector('.up').onclick = function() { sendFeedback(turnId, 'up', this); };
+      btns.querySelector('.down').onclick = function() { sendFeedback(turnId, 'down', this); };
+      meta.appendChild(btns);
+    }
     wrap.appendChild(bubble);
     if (role !== 'system') wrap.appendChild(meta);
     $messages.appendChild(wrap);
     setTimeout(() => { $messages.scrollTop = $messages.scrollHeight; }, 10);
+  }
+
+  // ── Send feedback ─────────────────────────────────────────────────────────
+  async function sendFeedback(turnId, signal, btnEl) {
+    const token = getToken();
+    if (!token) return;
+    // Visual: highlight clicked, dim sibling
+    const btns = btnEl.parentElement;
+    btns.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btnEl.classList.add('active');
+    try {
+      await fetch('/v1/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ turn_id: turnId, signal: signal })
+      });
+    } catch (err) {
+      console.warn('[UI] Feedback send failed:', err.message);
+    }
   }
 
   // ── Handle response ──────────────────────────────────────────────────────
@@ -489,7 +532,8 @@
     console.log('[UI] handleMessage received:', data);
     if (data.assistant_text || data.response || data.content) {
       const text = data.assistant_text || data.response || data.content;
-      addMessage('karma', text);
+      const turnId = data.canonical?.turn_id || data.vault_write?.id || null;
+      addMessage('karma', text, turnId);
       updateSidebar(data);
       setConnStatus('Connected', true);
     } else if (data.error) {
