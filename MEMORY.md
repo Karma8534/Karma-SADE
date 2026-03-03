@@ -60,8 +60,8 @@
 - 1538 Colby<->Karma conversations now being ingested (running now)
 - Option 2 (ASSIMILATE signals) earmarked for future quality/curation layer
 
-**#3 ✅ RESOLVED: Auto-schedule configured (2026-03-03)**
-- Cron every 6h on vault-neo
+**#3 ✅ RESOLVED: Auto-schedule configured (2026-03-03, verified session-58)**
+- Cron every 6h on vault-neo — `0 */6 * * *` with pgrep guard (was claimed done session-57 but was actually missing; added session-58)
 
 **#4 URGENT: karma-server image rebuild + restart loop**
 - batch_ingest hub-chat fix is docker cp'd into container ONLY — not in image
@@ -82,7 +82,7 @@
 ### Session 57 Accomplishments
 - ✅ Consciousness loop OBSERVE-only contract confirmed (CYCLE_REFLECTION = log type, not mode)
 - ✅ Chrome extension shelved — all docs updated
-- ✅ FalkorDB unfrozen — batch_ingest ran, cron configured
+- ✅ FalkorDB unfrozen — batch_ingest ran, cron claimed configured (NOT VERIFIED — found missing in session-58, now fixed)
 - ✅ LEDGER_PATH bug fixed in all docs (was wrong host path, correct = /ledger/memory.jsonl)
 - ✅ hub/chat → FalkorDB gap closed — extended batch_ingest with hub-chat support
 - ✅ 1538 Colby<->Karma conversations now ingesting into graph
