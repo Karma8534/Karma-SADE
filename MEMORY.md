@@ -47,12 +47,23 @@
 **#3 ✅ RESOLVED: Auto-schedule configured (2026-03-03)**
 - Cron every 6h on vault-neo
 
-**#4 MEDIUM: karma-server restart loop**
-- `cycle: 1` on every LOG_GROWTH event = container restarting
-- Fix: `ssh vault-neo "docker logs anr-karma-server --tail=50 2>&1 | grep -i 'exit\|error\|crash\|oom'"`
+**#4 URGENT: karma-server image rebuild + restart loop**
+- batch_ingest hub-chat fix is docker cp'd into container ONLY — not in image
+- If karma-server restarts (restart loop active), the fix is lost and cron runs stale code
+- Fix: git pull on vault-neo first, then rebuild image, then restart container
+- Commands: see Next Session step 3
 
 **#5 LOW: gpt-5-mini vs gpt-4o-mini drift**
 - hub.env shows `MODEL_DEEP=gpt-5-mini` — verify if intentional or typo
+
+**#6 NEW: PDF ingestion pipeline broken — Karma_PDFs**
+- Path: `C:\Users\raest\Documents\Karma_SADE\Karma_PDFs`
+- `/v1/ingest` endpoint EXISTS in hub-bridge (server.js line 1902) — not missing
+- Inbox/ failures: "connection forcibly closed" — caller script unknown/dead
+- Gated/ failures: `file_b64 undefined` — body parsing failure, wrong Content-Type or missing body
+- Done/ has historical verdicts proving it worked previously
+- karma-k2-sync.py dead: wrong Tailscale DNS, wrong log path
+- Next session: find/rebuild the PDF caller script, fix both failure modes
 
 ### Session 57 Accomplishments
 - ✅ Consciousness loop OBSERVE-only contract confirmed (CYCLE_REFLECTION = log type, not mode)
@@ -66,14 +77,14 @@
 - ✅ Session ritual table + claude-mem always-available section added to CLAUDE.md (dual-write rule, at-the-moment rule)
 
 ### Next Session — Step by Step (exact commands)
-1. `docker exec karma-server tail -30 /tmp/batch.log` — verify batch complete, check ok/err
+1. `ssh vault-neo "docker exec karma-server tail -30 /tmp/batch.log"` — verify batch complete, check ok/err
 2. `ssh vault-neo "docker exec falkordb redis-cli -p 6379 GRAPH.QUERY neo_workspace 'MATCH (n) RETURN count(n)'"` — verify node count grew from 1642
-3. Rebuild karma-server image on vault-neo:
-   `ssh vault-neo "cd /home/neo/karma-sade/karma-core && docker build -t karma-core:latest ."`
-   Then get current run params (`docker inspect anr-karma-server`), stop/remove/restart
-4. Verify rebuild: cron dry-run works with new image
-5. `ssh vault-neo "docker logs anr-karma-server --tail=50 2>&1 | grep -i 'exit\|error\|crash\|oom'"` — diagnose Blocker #4
-6. `ssh vault-neo "grep MODEL_DEEP /opt/seed-vault/memory_v1/hub_bridge/config/hub.env"` — verify Blocker #5
+3. Rebuild karma-server image (URGENT — restart loop will kill docker cp'd fix):
+   `ssh vault-neo "cd /home/neo/karma-sade/karma-core && git pull && docker build -t karma-core:latest ."`
+   Then: `docker inspect anr-karma-server` → stop/remove/restart with same params
+4. `ssh vault-neo "docker logs anr-karma-server --tail=50 2>&1 | grep -i 'exit\|error\|crash\|oom'"` — diagnose Blocker #4
+5. `ssh vault-neo "grep MODEL_DEEP /opt/seed-vault/memory_v1/hub_bridge/config/hub.env"` — verify Blocker #5
+6. Triage Karma_PDFs pipeline — find caller script, fix Inbox + Gated failure modes
 
 ---
 
