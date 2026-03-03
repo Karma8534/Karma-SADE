@@ -2,7 +2,7 @@
 
 ## Session 57 (2026-03-03) — Current State
 
-**Status:** 🔴 CRITICAL BLOCKERS IDENTIFIED — FalkorDB frozen, conversation capture broken
+**Status:** 🟡 BLOCKERS CLEARING — FalkorDB unfrozen, hub/chat ingestion now running
 
 ### Verified System State (2026-03-03)
 
@@ -10,57 +10,52 @@
 |-----------|--------|----------|
 | Hub Bridge API | ✅ WORKING | /v1/chat, /v1/ambient, /v1/context, /v1/cypher operational |
 | Consciousness Loop | ✅ WORKING | 60s OBSERVE-only cycles confirmed, zero LLM calls |
-| Ledger | ✅ GROWING | 3980 entries, git commits + session-end hooks capturing |
-| FalkorDB Graph | 🔴 FROZEN | 1570 nodes — batch_ingest NOT running, no growth |
-| Conversation Capture | 🔴 BROKEN | No new /v1/chat entries from human conversations since 2026-02-27 |
-| Chrome Extension | ❌ SHELVED | Never worked reliably. Legacy data only (last: 2026-02-26) |
-| batch_ingest | 🔴 NOT RUNNING | No scheduler configured. Manual run required. |
+| Ledger | ✅ GROWING | ~4000 entries, git commits + session-end hooks capturing |
+| FalkorDB Graph | ✅ GROWING | 1642+ nodes — batch_ingest running, cron every 6h |
+| Conversation Capture | ✅ FIXED | hub/chat entries now ingested via extended batch_ingest |
+| Chrome Extension | ❌ SHELVED | Never worked reliably. Legacy data only. |
+| batch_ingest | ✅ RUNNING | Cron every 6h + extended to process hub/chat entries |
 | Ambient Tier 1 | ✅ WORKING | Git + session-end hooks → /v1/ambient → ledger confirmed |
 | Karma Terminal | ⚠️ STALE | Last capture 2026-02-27 |
-| GSD Workflow | ✅ ADOPTED | .gsd/ structure in place, phase-tier1 complete |
+| GSD Workflow | ✅ ADOPTED | .gsd/ structure in place |
 
 ### Active Blockers (Priority Order)
 
-**#1 CRITICAL: FalkorDB frozen — batch_ingest not running**
-- Graph stuck at 1570 nodes since last manual run
-- Karma cannot recall recent work, sessions, or decisions from memory
-- Fix: Run batch_ingest + configure auto-schedule
-- Command: `docker exec karma-server sh -c 'LEDGER_PATH=/ledger/memory.jsonl python3 /app/batch_ingest.py > /tmp/batch.log 2>&1'`
-- Auto-schedule: cron configured on vault-neo (every 6h, installed 2026-03-03)
+**#1 ✅ RESOLVED: FalkorDB unfrozen (2026-03-03)**
+- batch_ingest ran: 1570 → 1642 nodes
+- LEDGER_PATH corrected: `/ledger/memory.jsonl` (container mount)
+- Cron installed: `0 */6 * * *` on vault-neo
 
-**#2 CRITICAL: No conversation capture path**
-- Chrome extension SHELVED (never worked)
-- /v1/chat conversations reaching hub-bridge but last human conversation captured was 2026-02-27
-- Karma has no way to accumulate conversation memory without a capture mechanism
-- Fix: Design and implement replacement capture path (karma-terminal, CLI wrapper, or direct /v1/chat logging)
+**#2 ✅ RESOLVED: hub/chat entries now reach FalkorDB (2026-03-03)**
+- Root cause: batch_ingest only checked `assistant_message`; hub/chat uses `assistant_text`
+- Fix: extended batch_ingest.py — detects hub/chat by tags, reads `assistant_text` fallback
+- 1538 Colby<->Karma conversations now being ingested (running now)
+- Option 2 (ASSIMILATE signals) earmarked for future quality/curation layer
 
-**#3 HIGH: No auto-schedule for batch_ingest**
-- Even if batch_ingest runs now, the graph will freeze again
-- Fix: Configure cron job or consciousness-loop-triggered ingest
+**#3 ✅ RESOLVED: Auto-schedule configured (2026-03-03)**
+- Cron every 6h on vault-neo
 
 **#4 MEDIUM: karma-server restart loop**
 - `cycle: 1` on every LOG_GROWTH event = container restarting
-- Metrics reset on restart = no reliable cycle tracking
-- Fix: Investigate restart cause (OOM? crash? intentional?)
+- Fix: `ssh vault-neo "docker logs anr-karma-server --tail=50 2>&1 | grep -i 'exit\|error\|crash\|oom'"`
 
 **#5 LOW: gpt-5-mini vs gpt-4o-mini drift**
-- hub.env shows `MODEL_DEEP=gpt-5-mini` but docs say gpt-4o-mini
-- Verify: Is gpt-5-mini a real model or a typo?
+- hub.env shows `MODEL_DEEP=gpt-5-mini` — verify if intentional or typo
 
-### Session 56 Accomplishments
-- ✅ GSD documentation framework adopted (.gsd/ directory)
-- ✅ Ambient Tier 1 verified end-to-end (git hooks → ledger confirmed)
-- ✅ Consciousness loop analyzed: OBSERVE-only contract confirmed, no LLM calls
-- ✅ Discovered Chrome extension is shelved — docs updated
-- ✅ Discovered FalkorDB frozen — batch_ingest not running
-- ✅ PowerShell required for git ops (Git Bash has persistent lock issue on Windows)
+### Session 57 Accomplishments
+- ✅ Consciousness loop OBSERVE-only contract confirmed (CYCLE_REFLECTION = log type, not mode)
+- ✅ Chrome extension shelved — all docs updated
+- ✅ FalkorDB unfrozen — batch_ingest ran, cron configured
+- ✅ LEDGER_PATH bug fixed in all docs (was wrong host path, correct = /ledger/memory.jsonl)
+- ✅ hub/chat → FalkorDB gap closed — extended batch_ingest with hub-chat support
+- ✅ 1538 Colby<->Karma conversations now ingesting into graph
 
 ### Next Session Actions (Priority)
-1. Run batch_ingest manually — unfreeze FalkorDB NOW
-2. Verify batch_ingest results (check /tmp/batch.log, node count before/after)
-3. Configure auto-schedule for batch_ingest (cron on vault-neo)
-4. Design conversation capture replacement (what replaces the Chrome extension?)
-5. Investigate karma-server restart loop
+1. Verify batch_ingest run completed: `docker exec karma-server tail -20 /tmp/batch.log`
+2. Check node count grew: `ssh vault-neo "docker exec falkordb redis-cli -p 6379 GRAPH.QUERY neo_workspace 'MATCH (n) RETURN count(n)'"`
+3. Rebuild karma-server image with updated batch_ingest.py baked in
+4. Investigate karma-server restart loop (#4)
+5. Verify gpt-5-mini vs gpt-4o-mini (#5)
 
 ---
 

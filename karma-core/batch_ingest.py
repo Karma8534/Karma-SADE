@@ -10,9 +10,14 @@ Usage:
   docker exec karma-server tail -f /tmp/batch.log
 
 Skips:
-  - Entries without user_message + assistant_message
+  - Entries without user_message + assistant content
   - karma-terminal entries (already ingested live via chat server)
   - Entries already processed by bootstrap + previous batch runs
+
+Hub/chat support (2026-03-03):
+  - hub/chat/default tagged entries use assistant_text (not assistant_message)
+  - Treated as provider "hub-chat", source_description "Karma hub-chat"
+  - Retroactively ingests all 1543 existing Colby<->Karma conversations
 """
 import argparse
 import asyncio
@@ -45,7 +50,8 @@ def read_conversation_pairs(ledger_path: str) -> list[dict]:
             try:
                 entry = json.loads(line)
                 content = entry.get("content", {})
-                if content.get("user_message") and content.get("assistant_message"):
+                assistant = content.get("assistant_message") or content.get("assistant_text", "")
+                if content.get("user_message") and assistant:
                     pairs.append(entry)
             except json.JSONDecodeError:
                 pass
@@ -79,10 +85,16 @@ def filter_unprocessed(pairs: list[dict], already: dict) -> list[dict]:
         elif "Batch ingest from" in src:
             provider = src.replace("Batch ingest from ", "")
             done_counts[provider] = done_counts.get(provider, 0) + cnt
+        elif "Karma hub-chat" in src:
+            done_counts["hub-chat"] = done_counts.get("hub-chat", 0) + cnt
 
     by_provider = {}
     for entry in pairs:
-        provider = entry.get("content", {}).get("provider", "unknown")
+        tags = entry.get("tags", [])
+        if "hub" in tags and "chat" in tags:
+            provider = "hub-chat"
+        else:
+            provider = entry.get("content", {}).get("provider", "unknown")
         if provider not in by_provider:
             by_provider[provider] = []
         by_provider[provider].append(entry)
@@ -97,7 +109,7 @@ def filter_unprocessed(pairs: list[dict], already: dict) -> list[dict]:
         log(f"  {provider}: {len(entries)} total, {already_done} done, {len(to_add)} remaining")
         remaining.extend(to_add)
 
-    remaining.sort(key=lambda x: x.get("content", {}).get("captured_at", ""))
+    remaining.sort(key=lambda x: x.get("content", {}).get("captured_at", "") or x.get("created_at", ""))
     return remaining
 
 
@@ -130,12 +142,18 @@ async def create_graphiti():
 async def ingest_one(graphiti, sem: asyncio.Semaphore, entry: dict, idx: int, max_retries: int = 3):
     content = entry.get("content", {})
     user_msg = content.get("user_message", "")
-    assistant_msg = content.get("assistant_message", "")
-    provider = content.get("provider", "unknown")
-    captured_at = content.get("captured_at", "")
-    thread_id = content.get("thread_id", "unknown")
-
-    episode_body = f"[{provider}] User: {user_msg[:500]}\nAssistant: {assistant_msg[:500]}"
+    assistant_msg = content.get("assistant_message", "") or content.get("assistant_text", "")
+    tags = entry.get("tags", [])
+    if "hub" in tags and "chat" in tags:
+        provider = "hub-chat"
+        source_desc = "Karma hub-chat"
+        episode_body = "[karma-chat] User: " + user_msg[:500] + "\nKarma: " + assistant_msg[:500]
+    else:
+        provider = content.get("provider", "unknown")
+        source_desc = "Batch ingest from " + provider
+        episode_body = "[" + provider + "] User: " + user_msg[:500] + "\nAssistant: " + assistant_msg[:500]
+    captured_at = content.get("captured_at", "") or entry.get("created_at", "")
+    thread_id = content.get("thread_id", "karma-hub") if provider == "hub-chat" else content.get("thread_id", "unknown")
 
     async with sem:
         for attempt in range(max_retries):
@@ -148,7 +166,7 @@ async def ingest_one(graphiti, sem: asyncio.Semaphore, entry: dict, idx: int, ma
                 await graphiti.add_episode(
                     name=f"p_{provider[:3]}_{thread_id[:16]}_{idx}",
                     episode_body=episode_body,
-                    source_description=f"Batch ingest from {provider}",
+                    source_description=source_desc,
                     reference_time=ref_time,
                     group_id=config.GRAPHITI_GROUP_ID,
                 )
