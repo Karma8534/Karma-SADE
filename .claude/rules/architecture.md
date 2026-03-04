@@ -57,7 +57,7 @@ Ledger → batch_ingest (cron every 6h on vault-neo) → FalkorDB neo_workspace 
 
 ### Storage
 - **Ledger**: `/opt/seed-vault/memory_v1/ledger/memory.jsonl` — ~4000+ entries (2026-03-03), append-only
-- **FalkorDB**: `neo_workspace` graph — 2293 nodes (batch_ingest cron running every 6h)
+- **FalkorDB**: `neo_workspace` graph — 3621 nodes (3049 Episodic + 571 Entity + 1 Decision) — fully caught up 2026-03-04
 - **ChromaDB**: anr-vault-search container — semantic vector search (status: running but not recently updated)
 - **SQLite**: `/opt/seed-vault/memory_v1/memory.db` — observations table (consciousness loop writes here)
 
@@ -78,6 +78,10 @@ Ledger → batch_ingest (cron every 6h on vault-neo) → FalkorDB neo_workspace 
 - Command: `docker exec karma-server sh -c 'LEDGER_PATH=/ledger/memory.jsonl python3 /app/batch_ingest.py --skip-dedup > /tmp/batch.log 2>&1'`
 - LEDGER_PATH inside container: `/ledger/memory.jsonl` (NOT `/opt/seed-vault/...`)
 - Extended to handle hub/chat entries (2026-03-03): detects `hub+chat` tags, reads `assistant_text` fallback
+- **`--skip-dedup` is the correct mode for bulk backfill**: direct Cypher write, 899 eps/s, 0 errors
+- **Without `--skip-dedup`**: Graphiti dedup queries time out at scale (~0.01 eps/s, 85% error rate)
+- **FalkorDB has no `datetime()` function**: timestamps stored as ISO strings (plain string property, not datetime type)
+- **`OPENAI_API_KEY` env propagation**: batch_ingest.py sets `os.environ.setdefault()` after config import so Graphiti embedder sees it (Graphiti reads env var directly, not config.py)
 
 ## karma-server Build Context
 - **Compose file**: `/opt/seed-vault/memory_v1/compose/compose.yml`

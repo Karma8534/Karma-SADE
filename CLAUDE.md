@@ -332,6 +332,14 @@ This prevents: image naming mismatches, missing env vars, stale images, silent s
   (concurrency=3) + karma-server live queries (consciousness loop, chats) can exceed 25 queued
   queries → "Max pending queries exceeded" errors. Use `MAX_QUEUED_QUERIES 100`. Verified batch4
   (2026-02-23) with 40% error rate before fix, clean after recreating with 100.
+- **batch_ingest: always use `--skip-dedup` for bulk backfill**: Graphiti dedup mode times out at
+  scale (~0.01 eps/s, 85% error rate past ~250 episodes). `--skip-dedup` writes Episodic nodes
+  directly via Cypher: 899 eps/s, 0 errors. Cron already uses `--skip-dedup` by default.
+- **FalkorDB has no `datetime()` Cypher function**: Use plain ISO string properties instead.
+  `datetime('2026-03-04T...')` throws "Unknown function 'datetime'". Store as `created_at: '2026-03-04T...'`.
+- **Graphiti embedder reads `OPENAI_API_KEY` from env directly**: Removing env var from compose
+  (security fix) breaks batch_ingest Graphiti init. Fix: `os.environ.setdefault("OPENAI_API_KEY", config.OPENAI_API_KEY)`
+  in batch_ingest.py after importing config, BEFORE any Graphiti import or initialisation.
 
 ## Karma File Locations
 Canonical paths for Karma's files on vault-neo. These must never drift.

@@ -12,9 +12,39 @@
 
 **PDF primitives extraction filter:** (1) fits single-consciousness, (2) no dependency gravity, (3) no parallel truth, (4) implementable in existing vault-neo + Hub Bridge + FalkorDB stack
 
-## Session 58 (2026-03-03) — Repo Reconciliation + PDF Pipeline
+## Session 59 (2026-03-04) — batch_ingest Hotfixes + Full Backfill Complete
 
-**Status:** ✅ COMPLETE — HOTFIX session-59: batch_ingest --skip-dedup added; cron updated; OPENAI_API_KEY env propagation fixed
+**Status:** ✅ COMPLETE
+
+### Verified System State (2026-03-04)
+
+| Component | Status | Evidence |
+|-----------|--------|----------|
+| Hub Bridge API | ✅ WORKING | /v1/chat, /v1/ambient, /v1/context, /v1/cypher, /v1/ingest |
+| Consciousness Loop | ✅ WORKING | 60s OBSERVE-only, RestartCount: 0 |
+| FalkorDB Graph | ✅ FULLY CAUGHT UP | 3049 Episodic + 571 Entity + 1 Decision = 3621 nodes |
+| batch_ingest | ✅ FIXED + FAST | --skip-dedup: 899 eps/s, 0 errors; cron updated |
+| karma-server image | ✅ REBUILT | All fixes baked in |
+| PDF Watcher | ✅ REDESIGNED | Rate-limit backoff + jam notification + time-window |
+| Conversation Capture | ✅ COMPLETE | 3049 episodes ingested (was 1749) |
+
+### Session 59 Fixes
+1. **batch_ingest OPENAI_API_KEY** — `os.environ.setdefault()` after config import; Graphiti embedder needs env var, not just config.py
+2. **batch_ingest --skip-dedup** — direct FalkorDB Cypher write bypasses Graphiti dedup queries; 899 eps/s vs 0.01 eps/s
+3. **FalkorDB datetime() incompatibility** — FalkorDB has no `datetime()` function; timestamps stored as strings
+4. **Cron updated** — now uses `--skip-dedup` by default
+5. **Image rebuilt** — all three fixes baked in; cron-safe
+
+### Pitfalls Discovered (add to CLAUDE.md)
+- **Graphiti embedder reads `OPENAI_API_KEY` env var directly** — removing from compose env requires `os.environ.setdefault()` in any script that initialises Graphiti before the env var is set
+- **FalkorDB has no `datetime()` Cypher function** — store timestamps as ISO strings; `datetime('...')` throws "Unknown function"
+- **Graphiti dedup queries time out at scale** — `--skip-dedup` (direct Cypher write) is the correct mode for bulk backfill; Graphiti mode only for small targeted runs
+
+---
+
+## Session 58 (2026-03-03) — All Blockers Resolved
+
+**Status:** ✅ COMPLETE
 
 ### Accomplishments
 - ✅ Three-way repo divergence resolved — GitHub/P1/droplet all at commit 63df177, then 833c06a
