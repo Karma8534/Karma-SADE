@@ -12,14 +12,18 @@
 
 **PDF primitives extraction filter:** (1) fits single-consciousness, (2) no dependency gravity, (3) no parallel truth, (4) implementable in existing vault-neo + Hub Bridge + FalkorDB stack
 
-## Session 60 (2026-03-04) — STATE.md Brought Current, All Blockers Verified Resolved
+## Session 60 (2026-03-04) — drift-fix Phase: Architecture Realignment IN PROGRESS
 
-**Status:** IN PROGRESS
+**Status:** IN PROGRESS — Phase C (GREEN) next
 
-- STATE.md updated: was 2 sessions stale (S57), now reflects S60 reality
-- Blockers #4 + #5 verified resolved: RestartCount=0 confirmed, MODEL_DEEP=gpt-4o-mini confirmed
-- direction.md flagged stale (2026-02-23, 9 days old) — location not confirmed yet on vault-neo
-- No drift between brief and claude-mem (latest observation pre-dates brief timestamp)
+### Completed This Session
+- STATE.md + direction.md updated (both stale — S57 and Feb 23 respectively)
+- Blockers #4 + #5 verified resolved (RestartCount=0, MODEL_DEEP=gpt-4o-mini)
+- Audit revealed deeper drift vs Decision #2: spend tracking wrong, tool-use hardcoded to OpenAI
+- GSD: phase-drift-fix CONTEXT.md + PLAN.md written
+- Phase A preflight complete: GLM tool-capability PROVEN SUPPORTED (Z.ai probe)
+- Phase B RED: all critical drift tests failing (B1: 9 fail, B2/B3: 8 fail, B4: 1 fail)
+- Next: Phase C GREEN — implement C1-C4 fixes
 
 ## Session 59 (2026-03-04) — batch_ingest Hotfixes + Full Backfill Complete
 
