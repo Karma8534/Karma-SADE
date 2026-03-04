@@ -25,9 +25,15 @@ import json
 import sys
 import time
 from datetime import datetime, timezone
+import os
 from pathlib import Path
 
 import config
+
+# Graphiti's OpenAIEmbedder reads OPENAI_API_KEY from the environment directly.
+# config.py loads it from a mounted file — propagate it here so Graphiti sees it.
+if config.OPENAI_API_KEY:
+    os.environ.setdefault("OPENAI_API_KEY", config.OPENAI_API_KEY)
 
 # ─── Globals ────────────────────────────────────────────────────────────
 _progress = {"done": 0, "errors": 0, "total": 0, "start": 0.0}

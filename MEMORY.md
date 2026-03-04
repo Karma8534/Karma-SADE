@@ -14,7 +14,7 @@
 
 ## Session 58 (2026-03-03) — Repo Reconciliation + PDF Pipeline
 
-**Status:** ✅ COMPLETE
+**Status:** ✅ COMPLETE — HOTFIX: batch_ingest OPENAI_API_KEY env propagation (2026-03-03 session-59)
 
 ### Accomplishments
 - ✅ Three-way repo divergence resolved — GitHub/P1/droplet all at commit 63df177, then 833c06a
