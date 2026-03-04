@@ -54,8 +54,8 @@ This model solves it:
 **Integration (Hub-bridge / Karma-server):**
 - Anthropic tool-use unreliable (OpenAI gpt-4o-mini used instead)
 - Schema mismatch on graph queries (looking for colby:User, but entity structure different)
-- API keys live in plaintext in docker run (should migrate to secure files)
-- LEDGER_PATH must be explicitly set in karma-server (defaults wrong)
+- API keys secured: read from mounted volume files (not env vars, docker inspect clean) — resolved 2026-03-03
+- LEDGER_PATH must be `/ledger/memory.jsonl` inside karma-server container (host path is wrong)
 
 **LLM / Substrate:**
 - Any LLM can run Karma's responses (Claude, GPT, Gemini, etc.)
@@ -64,59 +64,42 @@ This model solves it:
 
 ## What Changed Recently
 
-**2026-02-23 (this session):**
-- ✅ Batch ingestion fixed: --skip-dedup mode deployed, 1268 episodes ingested with 0 timeouts
-- ✅ Hub-bridge restored: reverted syntax error, confirmed operational
-- ✅ API keys updated: MiniMax and GLM-5 keys replaced, both models registering and responding
-- ✅ Consciousness loop verified: running 60s cycle, loop started message logged
-- ✅ Tool-use tested end-to-end: graph_query attempted, graceful fallback on 404
-- ✅ Resurrection architecture locked: .claude/rules/resurrection-architecture.md created and committed
-- ✅ Foundation verified: full request-response-persist cycle working (hub-bridge → karma-server → FalkorDB → vault)
+**2026-03-04 (session 60):**
+- ✅ STATE.md brought current (was 2 sessions stale at S57, now reflects S60)
+- ✅ Blockers #4 + #5 verified resolved: RestartCount=0, MODEL_DEEP=gpt-4o-mini confirmed
+- ✅ direction.md refreshed (was 9 days stale)
 
-**2026-02-22 (session 4):**
-- KarmaInboxWatcher restarted (old PID killed, scheduled task relaunched)
-- batch5 started with MAX_QUEUED_QUERIES=100 (previous 40% failure at 25)
-- Gated/ priority ingest deployed (files in Gated/ get priority:true flag)
+**2026-03-03/04 (sessions 57–59):**
+- ✅ FalkorDB: 1570 → 3621 nodes (full backfill, all 3049 hub/chat episodes ingested)
+- ✅ --skip-dedup mode: 899 eps/s, 0 errors (Graphiti dedup was 85% timeout rate)
+- ✅ FalkorDB datetime() fix: store timestamps as ISO strings (no datetime() Cypher function)
+- ✅ OpenAI API key secured: file-mounted volume (docker inspect clean)
+- ✅ karma-server restart loop fixed: gpt-5-mini → gpt-4o-mini
+- ✅ GLM rate-limit handling: throttle watcher, no paid fallback (Decision #7)
+- ✅ Cron every 6h on vault-neo, --skip-dedup by default
+- ✅ PDF watcher: rate-limit backoff + jam notification + time-window scheduling
+- ✅ karma-server image rebuilt with all session-58/59 fixes
 
-## Next Immediate Steps
+**2026-02-23 (sessions 1–5):**
+- Foundation verified: end-to-end test passed (hub-bridge → karma-server → FalkorDB → vault)
+- Resurrection architecture locked: droplet-primary, K2-worker model
+- Spine files written: identity.json, invariants.json, direction.md
 
-**Priority 1: Session-Start Loader (Next Session)**
-- Query droplet: GET identity.json, invariants.json, direction.md
-- Query droplet FalkorDB: last 50 decisions, last 5 episodes
-- Query droplet consciousness.jsonl: tail 10 entries
-- Build resume_prompt with full context
-- Inject into session
+## Current Focus (Session 60+)
 
-**Priority 2: K2 Sync (If K2 Worker Used)**
-- K2 reads droplet state at startup (cache locally)
-- K2 consciousness loop runs 60s cycles, makes decisions
-- K2 writes changes back to droplet continuously (or periodic batches)
-- If K2 reboots, no data loss (droplet still has everything)
+System is in **maintenance/growth mode**. All blockers resolved. Graph growing via cron.
 
-**Priority 3: Checkpoint Snapshots (Optional)**
-- At session end, optionally snapshot droplet state to checkpoint/known_good_vN/
-- Format: state_export.json + reasoning_summary.md
-- Good for audit trail, but not required for continuity (droplet is always current)
+**Active directions (no blockers):**
+1. ChromaDB vector index — stale, not recently updated (low priority)
+2. DPO preference pair accumulation — needs 20+ pairs to enable fine-tuning
+3. Ambient Tier 3 — screen capture daemon not built
+4. karma-terminal capture — stale since 2026-02-27 (not a blocker)
 
 ## Open Questions
 
-1. **Graph schema**: Why is entity structure different from tool's expected schema (colby:User)? Map actual structure.
-2. **Consciousness integration**: Should consciousness loop insights auto-feed back into decisions, or wait for approval?
-3. **API key storage**: Should keys move from plaintext docker run → secure files mounted in compose?
-4. **Tool-use in Karma's system prompt**: Should we explicitly tell Karma to use tools, or let her decide based on queries?
-
-## Vision (This Session)
-
-**Completed:**
-- ✅ Foundation is verified operational (end-to-end test passed)
-- ✅ Resurrection architecture redesigned: droplet-primary (not K2-primary)
-- ✅ Spine files written: identity.json, invariants.json, direction.md
-- ✅ Model flipped: K2 is optional worker, droplet is canonical source of truth
-
-**Next Session:**
-- Session start: Query droplet → load identity + state → Karma has full context
-- Session active: K2 offloads computation (if available), syncs back to droplet
-- Session end: Droplet already has all state; no complex extraction needed
+1. **Graph schema**: Entity structure vs expected schema (colby:User) — not yet mapped.
+2. **Consciousness integration**: Should loop insights auto-feed into decisions, or wait for approval?
+3. **Tool-use in Karma's system prompt**: Should we explicitly tell Karma to use tools?
 
 **Long-term Vision:**
 Karma wakes up every session knowing:
@@ -130,6 +113,6 @@ Karma wakes up every session knowing:
 
 ---
 
-**Last updated:** 2026-02-23T21:00:00Z
-**Status:** Architecture locked (droplet-primary, K2-worker). Spine files v2.0.0 written. Foundation ready.
-**Next move:** Build K2 session-start loader. Test full cycle: load from droplet → work → optional K2 sync → next session loads fresh.
+**Last updated:** 2026-03-04T15:15:00Z
+**Status:** Operational. All blockers resolved (S59). 3621 nodes in FalkorDB. System in maintenance/growth mode.
+**Next move:** DPO preference pair accumulation, ChromaDB reindex, or Ambient Tier 3 — no blockers on any of these.
