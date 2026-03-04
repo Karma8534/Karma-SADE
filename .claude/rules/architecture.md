@@ -75,7 +75,7 @@ Ledger → batch_ingest (cron every 6h on vault-neo) → FalkorDB neo_workspace 
 
 ## batch_ingest
 - Runs on cron: `0 */6 * * *` on vault-neo
-- Command: `docker exec karma-server sh -c 'LEDGER_PATH=/ledger/memory.jsonl python3 /app/batch_ingest.py > /tmp/batch.log 2>&1'`
+- Command: `docker exec karma-server sh -c 'LEDGER_PATH=/ledger/memory.jsonl python3 /app/batch_ingest.py --skip-dedup > /tmp/batch.log 2>&1'`
 - LEDGER_PATH inside container: `/ledger/memory.jsonl` (NOT `/opt/seed-vault/...`)
 - Extended to handle hub/chat entries (2026-03-03): detects `hub+chat` tags, reads `assistant_text` fallback
 

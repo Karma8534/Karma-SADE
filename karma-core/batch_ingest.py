@@ -1,12 +1,19 @@
 """
 Karma Batch Ingest — Parallel processor for remaining ledger conversations.
 
-Runs concurrent Graphiti add_episode calls with semaphore-limited parallelism.
+Runs concurrent episode writes with semaphore-limited parallelism.
 FalkorDB has a low concurrent query limit, so concurrency is capped at 3.
-Each episode that hits "Max pending queries" is retried with backoff.
+
+Modes:
+  --skip-dedup (default, RECOMMENDED): writes Episodic nodes directly to FalkorDB.
+    Fast (~1 eps/s), 0 timeouts, no Graphiti dedup overhead. No entity extraction.
+    Use this for bulk historical backfill.
+
+  (no flag): uses Graphiti add_episode with full dedup + entity extraction.
+    Very slow at scale (timeouts at ~250+ episodes). Use only for small targeted runs.
 
 Usage:
-  docker exec -d karma-server sh -c 'python3 batch_ingest.py > /tmp/batch.log 2>&1'
+  docker exec karma-server sh -c 'LEDGER_PATH=/ledger/memory.jsonl python3 /app/batch_ingest.py --skip-dedup > /tmp/batch.log 2>&1'
   docker exec karma-server tail -f /tmp/batch.log
 
 Skips:
@@ -24,6 +31,7 @@ import asyncio
 import json
 import sys
 import time
+import uuid as uuid_mod
 from datetime import datetime, timezone
 import os
 from pathlib import Path
@@ -143,7 +151,80 @@ async def create_graphiti():
     return graphiti
 
 
-# ─── Single Episode Ingestion with Retry ─────────────────────────────────
+# ─── Skip-Dedup: Direct FalkorDB Write ──────────────────────────────────
+
+def _escape_cypher(s: str) -> str:
+    return (s
+        .replace("\\", "\\\\")
+        .replace("'", "\\'")
+        .replace("\n", "\\n")
+        .replace("\r", "\\r"))
+
+
+def _log_progress():
+    done = _progress["done"] + _progress["errors"]
+    if done > 0 and done % 10 == 0:
+        elapsed = time.monotonic() - _progress["start"]
+        rate = _progress["done"] / elapsed if elapsed > 0 else 0
+        pct = done / _progress["total"] * 100
+        eta_s = ((_progress["total"] - done) / rate) if rate > 0 else 0
+        log(f"  [{done}/{_progress['total']}] {pct:.0f}% | {rate:.2f} eps/s | "
+            f"ETA {eta_s/60:.1f}m | ok:{_progress['done']} err:{_progress['errors']}")
+
+
+async def ingest_one_direct(r, sem: asyncio.Semaphore, entry: dict, idx: int):
+    """Write Episodic node directly to FalkorDB — no Graphiti dedup queries."""
+    content = entry.get("content", {})
+    user_msg = content.get("user_message", "")
+    assistant_msg = content.get("assistant_message", "") or content.get("assistant_text", "")
+    tags = entry.get("tags", [])
+
+    if "hub" in tags and "chat" in tags:
+        provider = "hub-chat"
+        source_desc = "Karma hub-chat"
+        body = f"[karma-chat] User: {user_msg[:500]}\nKarma: {assistant_msg[:500]}"
+    else:
+        provider = content.get("provider", "unknown")
+        source_desc = f"Batch ingest from {provider}"
+        body = f"[{provider}] User: {user_msg[:500]}\nAssistant: {assistant_msg[:500]}"
+
+    captured_at = content.get("captured_at", "") or entry.get("created_at", "")
+    try:
+        ts = (datetime.fromisoformat(captured_at.replace("Z", "+00:00"))
+              .isoformat() if captured_at else datetime.now(timezone.utc).isoformat())
+    except Exception:
+        ts = datetime.now(timezone.utc).isoformat()
+
+    ep_uuid = str(uuid_mod.uuid4())
+    group = config.GRAPHITI_GROUP_ID
+
+    cypher = (
+        f"CREATE (e:Episodic {{"
+        f"uuid: '{ep_uuid}', "
+        f"name: 'ep_{_escape_cypher(provider[:8])}_{idx}', "
+        f"content: '{_escape_cypher(body)}', "
+        f"source_description: '{_escape_cypher(source_desc)}', "
+        f"source: 'message', "
+        f"group_id: '{group}', "
+        f"created_at: datetime('{_escape_cypher(ts)}'), "
+        f"valid_at: datetime('{_escape_cypher(ts)}')"
+        f"}})"
+    )
+
+    async with sem:
+        try:
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, r.execute_command, "GRAPH.QUERY", group, cypher)
+            _progress["done"] += 1
+        except Exception as e:
+            _progress["errors"] += 1
+            if _progress["errors"] <= 10:
+                log(f"    ERR #{idx} [{provider}]: {str(e)[:80]}")
+
+    _log_progress()
+
+
+# ─── Graphiti Episode Ingestion with Retry ────────────────────────────────
 
 async def ingest_one(graphiti, sem: asyncio.Semaphore, entry: dict, idx: int, max_retries: int = 3):
     content = entry.get("content", {})
@@ -177,12 +258,11 @@ async def ingest_one(graphiti, sem: asyncio.Semaphore, entry: dict, idx: int, ma
                     group_id=config.GRAPHITI_GROUP_ID,
                 )
                 _progress["done"] += 1
-                break  # Success
+                break
 
             except Exception as e:
                 err_str = str(e)
                 if "Max pending queries" in err_str and attempt < max_retries - 1:
-                    # FalkorDB overloaded — backoff and retry
                     wait = 2 ** attempt
                     await asyncio.sleep(wait)
                     continue
@@ -192,22 +272,16 @@ async def ingest_one(graphiti, sem: asyncio.Semaphore, entry: dict, idx: int, ma
                         log(f"    ERR #{idx} [{provider}] (attempt {attempt+1}): {err_str[:80]}")
                     break
 
-    # Log every 10
-    done = _progress["done"] + _progress["errors"]
-    if done > 0 and done % 10 == 0:
-        elapsed = time.monotonic() - _progress["start"]
-        rate = _progress["done"] / elapsed if elapsed > 0 else 0
-        pct = done / _progress["total"] * 100
-        eta_s = ((_progress["total"] - done) / rate) if rate > 0 else 0
-        log(f"  [{done}/{_progress['total']}] {pct:.0f}% | {rate:.2f} eps/s | "
-            f"ETA {eta_s/60:.1f}m | ok:{_progress['done']} err:{_progress['errors']}")
+    _log_progress()
 
 
 # ─── Main ────────────────────────────────────────────────────────────────
 
 async def run(args):
+    mode = "SKIP-DEDUP (direct write)" if args.skip_dedup else "Graphiti (dedup + entity extraction)"
     log("=" * 60)
     log("KARMA BATCH INGEST — Parallel (FalkorDB-safe)")
+    log(f"  Mode:        {mode}")
     log(f"  Concurrency: {args.concurrency}  |  Retry: 3x with backoff")
     log("=" * 60)
 
@@ -235,7 +309,6 @@ async def run(args):
         return
 
     log(f"\n  Starting ingestion...")
-    graphiti = await create_graphiti()
     sem = asyncio.Semaphore(args.concurrency)
 
     _progress["total"] = len(remaining)
@@ -243,22 +316,32 @@ async def run(args):
     _progress["errors"] = 0
     _progress["start"] = time.monotonic()
 
-    # Process in waves of 30 (small enough to avoid task pile-up)
     wave_size = 30
     total_waves = -(-len(remaining) // wave_size)
+
+    if args.skip_dedup:
+        import redis as redis_mod
+        r = redis_mod.Redis(host=config.FALKORDB_HOST, port=config.FALKORDB_PORT, decode_responses=True)
+        graphiti = None
+    else:
+        r = None
+        graphiti = await create_graphiti()
+
     for wave_start in range(0, len(remaining), wave_size):
         wave = remaining[wave_start:wave_start + wave_size]
         wave_num = wave_start // wave_size + 1
         log(f"  Wave {wave_num}/{total_waves} ({len(wave)} eps)...")
 
-        tasks = [
-            ingest_one(graphiti, sem, entry, wave_start + i)
-            for i, entry in enumerate(wave)
-        ]
+        if args.skip_dedup:
+            tasks = [ingest_one_direct(r, sem, entry, wave_start + i) for i, entry in enumerate(wave)]
+        else:
+            tasks = [ingest_one(graphiti, sem, entry, wave_start + i) for i, entry in enumerate(wave)]
+
         await asyncio.gather(*tasks)
 
     elapsed = time.monotonic() - _progress["start"]
-    await graphiti.close()
+    if graphiti:
+        await graphiti.close()
 
     log("")
     log("=" * 60)
@@ -269,12 +352,12 @@ async def run(args):
     if _progress["done"] > 0:
         log(f"  Rate:   {_progress['done']/elapsed:.2f} eps/s")
 
-    import redis
+    import redis as redis_mod
     try:
-        r = redis.Redis(host=config.FALKORDB_HOST, port=config.FALKORDB_PORT, decode_responses=True)
-        ep = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, "MATCH (n:Episodic) RETURN count(n)")
-        ent = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, "MATCH (n:Entity) RETURN count(n)")
-        rel = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, "MATCH ()-[r]->() RETURN count(r)")
+        r2 = redis_mod.Redis(host=config.FALKORDB_HOST, port=config.FALKORDB_PORT, decode_responses=True)
+        ep = r2.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, "MATCH (n:Episodic) RETURN count(n)")
+        ent = r2.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, "MATCH (n:Entity) RETURN count(n)")
+        rel = r2.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, "MATCH ()-[r]->() RETURN count(r)")
         log(f"  Graph: {ent[1][0][0]} entities | {ep[1][0][0]} episodes | {rel[1][0][0]} relationships")
     except Exception:
         pass
@@ -284,6 +367,9 @@ async def run(args):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--skip-dedup", action="store_true",
+                        help="Write episodes directly to FalkorDB (fast, no entity extraction). "
+                             "RECOMMENDED for bulk backfill. Avoids Graphiti dedup timeouts at scale.")
     parser.add_argument("--concurrency", type=int, default=3,
                         help="Concurrent episodes (default: 3, FalkorDB safe)")
     asyncio.run(run(parser.parse_args()))
