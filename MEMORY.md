@@ -278,3 +278,14 @@ Karma can recall (FAISS) but cannot reason across sessions (no Entity/relationsh
 
 # currentDate
 Today's date is 2026-03-04.
+
+## Session 62 Task 2 — Graphiti Watermark Wired into run() (2026-03-04T22:23:29Z)
+
+**Status:** COMPLETE
+
+- Wired  /  /  into  for Graphiti mode.
+-  path is unchanged (count-based dedup, bulk backfill).
+- Graphiti mode now uses watermark-based episode selection: reads from last watermark, caps at  (default 200), writes watermark after wave loop.
+- Added  CLI argument to .
+- Added  env var read (default ).
+- All 7 watermark tests pass. Dry-run validation passes. Syntax OK.

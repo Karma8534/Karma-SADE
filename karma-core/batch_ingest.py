@@ -337,19 +337,30 @@ async def run(args):
     log("=" * 60)
 
     ledger_path = config.LEDGER_PATH
+    watermark_path = os.environ.get("WATERMARK_PATH", "/ledger/.batch_watermark")
     if not Path(ledger_path).exists():
         log(f"  ERROR: Ledger not found at {ledger_path}")
         sys.exit(1)
 
-    all_pairs = read_conversation_pairs(ledger_path)
-    log(f"  Conversation pairs in ledger: {len(all_pairs)}")
-
-    already = get_already_ingested_count()
-    total_ingested = sum(already.values())
-    log(f"  Already ingested: {total_ingested} episodes")
-
-    remaining = filter_unprocessed(all_pairs, already)
-    log(f"  TO PROCESS: {len(remaining)}")
+    if args.skip_dedup:
+        # count-based dedup for bulk historical backfill (unchanged)
+        all_pairs = read_conversation_pairs(ledger_path)
+        log(f"  Conversation pairs in ledger: {len(all_pairs)}")
+        already = get_already_ingested_count()
+        total_ingested = sum(already.values())
+        log(f"  Already ingested: {total_ingested} episodes")
+        remaining = filter_unprocessed(all_pairs, already)
+        log(f"  TO PROCESS: {len(remaining)}")
+        start_watermark = None
+        end_watermark = None
+    else:
+        # watermark-based selection for Graphiti mode
+        start_watermark = read_watermark(watermark_path, ledger_path)
+        remaining, end_watermark = read_new_episodes(ledger_path, start_watermark, args.max_batch)
+        log(f"  Watermark: line {start_watermark}")
+        log(f"  TO PROCESS: {len(remaining)} new episodes (cap: {args.max_batch})")
+        if len(remaining) == args.max_batch:
+            log(f"  NOTE: Batch capped at {args.max_batch} — remainder picked up next run")
 
     if not remaining:
         log("  All caught up!")
@@ -390,6 +401,11 @@ async def run(args):
 
         await asyncio.gather(*tasks)
 
+    # Write final watermark for Graphiti mode
+    if not args.skip_dedup and start_watermark is not None and end_watermark is not None:
+        write_watermark(watermark_path, end_watermark)
+        log(f"  Watermark advanced: line {start_watermark} → {end_watermark}")
+
     elapsed = time.monotonic() - _progress["start"]
     if graphiti:
         await graphiti.close()
@@ -423,6 +439,8 @@ def main():
                              "RECOMMENDED for bulk backfill. Avoids Graphiti dedup timeouts at scale.")
     parser.add_argument("--concurrency", type=int, default=3,
                         help="Concurrent episodes (default: 3, FalkorDB safe)")
+    parser.add_argument("--max-batch", type=int, default=200,
+                        help="Max episodes per Graphiti run (default: 200, hard cap — Graphiti timeouts start ~250)")
     asyncio.run(run(parser.parse_args()))
 
 
