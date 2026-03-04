@@ -74,7 +74,9 @@ fi
 echo ""
 echo "CHECK 5: No large untracked files?"
 CHECKS_TOTAL=$((CHECKS_TOTAL + 1))
-LARGE_FILES=$(find . -type f -size +10M ! -path "./.git/*" ! -path "./.claude/worktrees/*" 2>/dev/null | wc -l)
+LARGE_FILES=$(find . -type f -size +10M ! -path "./.git/*" ! -path "./.claude/worktrees/*" 2>/dev/null \
+  | while read -r f; do git check-ignore -q "$f" 2>/dev/null || echo "$f"; done \
+  | wc -l)
 if [ $LARGE_FILES -eq 0 ]; then
   echo "  ✅ PASS - No large files untracked"
   CHECKS_PASSED=$((CHECKS_PASSED + 1))
@@ -111,7 +113,7 @@ fi
 echo ""
 echo "CHECK 7: No abandoned worktrees?"
 CHECKS_TOTAL=$((CHECKS_TOTAL + 1))
-WT_COUNT=$(git worktree list 2>/dev/null | grep -v "^$(pwd)" | wc -l)
+WT_COUNT=$(git worktree list 2>/dev/null | tail -n +2 | wc -l)
 if [ "$WT_COUNT" -eq 0 ]; then
   echo "  ✅ PASS - No open worktrees"
   CHECKS_PASSED=$((CHECKS_PASSED + 1))

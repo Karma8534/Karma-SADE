@@ -31,6 +31,7 @@
 - G2 GREEN: ALLOWED_DEFAULT_MODELS added, validateModelEnv extended, try/catch startup wrapper — 27/27 ✅
 - G3 VERIFIED: [CONFIG ERROR] fires on bad MODEL_DEFAULT + docker exit_code=1 confirmed ✅
 - claude-mem #3497 saved
+- session-end-verify.sh: Check 5 now respects .gitignore (git check-ignore filter); Check 7 uses tail -n +2 (Windows pwd mismatch fix) → 7/7 PASS
 
 ### Completed This Session
 - STATE.md + direction.md updated (both stale — S57 and Feb 23 respectively)
