@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-04T21:00:00Z
-**Session:** 62 (v8 ALL PHASES COMPLETE)
+**Last updated:** 2026-03-04T23:30:00Z
+**Session:** 64 (Entity Relationship Context deployed)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -33,6 +33,8 @@
 | **Correction Capture Protocol** | ✅ LIVE | Memory/corrections-log.md + CC Session End step 2. Session-62. |
 | **FalkorDB lane backfill** | ✅ DONE | 3040 Episodic nodes with lane=NULL → lane="episodic". 0 remaining. Session-62. |
 | **anr-vault-search** | ✅ FAISS | Custom search_service.py (NOT ChromaDB). FAISS + text-embedding-3-small. Auto-reindex on ledger change. |
+| **Entity Relationships** | ✅ LIVE | RELATES_TO edges surfaced in karmaCtx. query_relevant_relationships() per-message. Session-64. |
+| **Recurring Topics** | ✅ LIVE | Top-10 entities by episode count. _pattern_cache refreshed every 30min at startup. Session-64. |
 
 ---
 

@@ -2,18 +2,14 @@
 
 ## Session 64 (2026-03-04) — Entity Relationship Context (Gap 1)
 
-**Status:** 🟡 IN PROGRESS — Executing plan (Task 1 complete, Tasks 2-4 pending)
+**Status:** ✅ COMPLETE — Entity Relationship Context deployed and verified in production
 
-### Active Task
-Wire RELATES_TO edges + pattern detection into /v1/chat via karma-server `build_karma_context()`.
-Design: `docs/plans/2026-03-04-entity-relationship-context-design.md`
-Plan: `docs/plans/2026-03-04-entity-relationship-context.md`
-
-### Progress
-- Task 1 ✅ — `_pattern_cache` + `_refresh_pattern_cache()` added to server.py; 3 tests pass
-- Task 2 ✅ — `query_relevant_relationships()` bulk edge query; 6 tests pass
-- Task 3 ✅ — Wired into `build_karma_context()` + `startup()`; 9/9 new tests pass, 27/28 total (1 pre-existing FalkorDB ConnectionError)
-- Task 4 🔄 — Deploy to vault-neo (in progress)
+### What Was Built
+- `_pattern_cache` + `_refresh_pattern_cache()` — top-10 entities by episode count, 30min refresh
+- `query_relevant_relationships()` — bulk RELATES_TO edge query using r.fact (not type(rel))
+- Both wired into `build_karma_context()` + startup refresh loop
+- 9 new tests, 27/28 total (1 pre-existing FalkorDB ConnectionError unrelated)
+- Deployed to vault-neo. Verified: Entity Relationships (20 edges for "Karma") + Recurring Topics (Karma:357, User:315, Colby:138...) both in /raw-context response.
 - Approach C: per-message edge query + 30min cached pattern query
 - hub-bridge: zero changes
 - One file: `karma-core/server.py`
