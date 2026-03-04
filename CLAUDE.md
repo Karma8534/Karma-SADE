@@ -422,11 +422,12 @@ If pack and MEMORY.md conflict on the same fact, surface it explicitly:
 
 ## Session End Protocol
 1. **save_observation for any uncaptured events** — scan the session for DECISION/PROOF/PITFALL/DIRECTION moments not yet saved. Call `mcp__plugin_claude-mem_mcp-search__save_observation` for each. This is step 1 because it must happen before context is lost.
-2. Run secret scan: `grep -rn "Bearer\|token\|secret\|password\|api_key" --include="*.js" --include="*.py" --include="*.json" --include="*.md" . | grep -v node_modules | grep -v .git`
-3. If clean: git add, commit with descriptive message, push
-4. Update MEMORY.md with: what was done, current blockers, next task
-5. Format commit: `phase-N: brief description of what changed`
-6. Cherry-pick updated MEMORY.md to main and push: git checkout main -- MEMORY.md from current worktree, commit, push.
+2. **Correction capture (v8 Phase 3 discipline)** — scan the session for moments Karma stated something wrong and was corrected. For each correction: append to `Memory/corrections-log.md` using the format in that file. If 3+ corrections exist that aren't yet in the system prompt: flag to Colby for system prompt update cycle (CC drafts addition → Colby approves → CC commits + deploys + restarts hub-bridge).
+3. Run secret scan: `grep -rn "Bearer\|token\|secret\|password\|api_key" --include="*.js" --include="*.py" --include="*.json" --include="*.md" . | grep -v node_modules | grep -v .git`
+4. If clean: git add, commit with descriptive message, push
+5. Update MEMORY.md with: what was done, current blockers, next task
+6. Format commit: `phase-N: brief description of what changed`
+7. Cherry-pick updated MEMORY.md to main and push: git checkout main -- MEMORY.md from current worktree, commit, push.
 
 ## File Layout
 ```
