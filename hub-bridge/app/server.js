@@ -357,6 +357,13 @@ async function fetchKarmaContext(userMessage) {
  * Extracted so both /v1/chat and /v1/ingest can reuse it.
  */
 function buildSystemText(karmaCtx, ckLatest = null, webResults = null) {
+  // Identity block — loaded from file at startup. Describes Karma's actual architecture,
+  // capability boundaries, data model corrections, and API surface.
+  // File is volume-mounted; future updates: git pull + container restart (no rebuild needed).
+  const identityBlock = KARMA_IDENTITY_PROMPT
+    ? KARMA_IDENTITY_PROMPT + "\n\n---\n\n"
+    : "";
+
   const base = karmaCtx
     ? `You are Karma — Colby's thinking partner with persistent memory backed by a knowledge graph.\n\n${karmaCtx}\n\nMemory rules:\n- Use the context above. NEVER say "I don't know" about things in your memory.\n- Address the user as Colby — never by any alias.\n- Be concise, direct, warm. Reference specific knowledge when relevant.\n- Honest about uncertainty on things not in memory.`
     : "You are Karma — Colby's thinking partner. No memory context available right now — answer from conversation only.";
@@ -365,7 +372,7 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null) {
   const selfModel = process.env.MODEL_DEFAULT || "claude-sonnet-4-6";
   const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/30min, web_search=auto_on_intent]\n\n`;
 
-  let text = selfKnowledge + base + "\n\nTools: get_vault_file(alias) | graph_query(cypher) — use for questions about your memory/graph.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
+  let text = identityBlock + selfKnowledge + base + "\n\nTools: get_vault_file(alias) | graph_query(cypher) — use for questions about your memory/graph.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
 
   // Live web search results — injected when search intent detected in user message.
   if (webResults) {
@@ -687,6 +694,9 @@ try { OPENAI_KEY    = readFileTrim(OPENAI_API_KEY_FILE);    } catch (e) { consol
 try { ANTHROPIC_KEY = readFileTrim(ANTHROPIC_API_KEY_FILE); } catch (e) { console.warn("WARN: cannot read ANTHROPIC key (Claude unavailable):", e.message); }
 let BRAVE_KEY = "";
 try { BRAVE_KEY     = readFileTrim(BRAVE_API_KEY_FILE);     } catch (e) { console.warn("WARN: cannot read BRAVE key (web search disabled):", e.message); }
+let KARMA_IDENTITY_PROMPT = "";
+const KARMA_SYSTEM_PROMPT_PATH = process.env.KARMA_SYSTEM_PROMPT_PATH || "/karma/repo/Memory/00-karma-system-prompt-live.md";
+try { KARMA_IDENTITY_PROMPT = readFileTrim(KARMA_SYSTEM_PROMPT_PATH); console.log("[INIT] KARMA_IDENTITY_PROMPT loaded, length:", KARMA_IDENTITY_PROMPT.length); } catch (e) { console.warn("WARN: cannot read KARMA_IDENTITY_PROMPT (identity block missing):", e.message); }
 try { VAULT_BEARER  = readFileTrim(VAULT_BEARER_TOKEN_FILE); console.log("[INIT] VAULT_BEARER loaded, length:", VAULT_BEARER.length); } catch (e) { console.error("WARN: cannot read VAULT bearer:", e.message); }
 try { HUB_CHAT_TOKEN = readFileTrim(HUB_CHAT_TOKEN_FILE); } catch (e) { console.error("WARN: cannot read HUB chat token:", e.message); }
 try { HUB_CAPTURE_TOKEN = readFileTrim(HUB_CAPTURE_TOKEN_FILE); } catch (e) {
