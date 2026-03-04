@@ -201,25 +201,25 @@
 - Changing routing behavior — fail-fast only
 
 ### G1 — RED (write 2 failing tests)
-- [ ] test G-a: `validateModelEnv` throws when `MODEL_DEFAULT="glm-unknown-model"` → `/MODEL_DEFAULT.*not in allowed/`
-- [ ] test G-b: `validateModelEnv` throws when `MODEL_DEEP="gpt-5"` → `/MODEL_DEEP.*not in allowed/`
-- [ ] Confirm both FAIL (feature missing, not syntax error)
-- <verify> `node --test hub-bridge/tests/test_routing.js 2>&1 | grep -E "G-a|G-b|fail"` shows 2 failures </verify>
+- [x] test G-a: `validateModelEnv` throws when `MODEL_DEFAULT="glm-unknown-model"` → `/MODEL_DEFAULT.*not in allowed/`
+- [x] test G-b: `validateModelEnv` throws when `MODEL_DEEP="gpt-5"` → already passing (existing guard)
+- [x] Confirm G-a FAILS, G-b passes (feature missing, correct failure reason)
+- <done> G-a: `Missing expected exception` — MODEL_DEFAULT check absent. G-b: existing MODEL_DEEP guard catches gpt-5. </done>
 
 ### G2 — GREEN (implement)
-- [ ] routing.js: add `ALLOWED_DEFAULT_MODELS = ["glm-4.7-flash"]`, extend `validateModelEnv` to check MODEL_DEFAULT
-- [ ] routing.js: change error prefix from `[ROUTING]` to `[CONFIG]` for consistency
-- [ ] server.js: wrap startup validators in try/catch → `console.error("[CONFIG ERROR] ...")` → `process.exit(1)`
-- [ ] server.js: make `validatePricingEnv` conditional — only call when `MODEL_DEEP` is a paid model (`!env.MODEL_DEEP?.startsWith("glm-")`)
-- <verify> All tests pass: `node --test hub-bridge/tests/test_routing.js hub-bridge/tests/test_pricing.js hub-bridge/tests/test_ratelimit.js` → 27/27 GREEN </verify>
+- [x] routing.js: add `ALLOWED_DEFAULT_MODELS = ["glm-4.7-flash"]`, extend `validateModelEnv` to check MODEL_DEFAULT
+- [x] routing.js: error prefix changed from `[ROUTING]` to `[CONFIG]`
+- [x] server.js: startup validators wrapped in try/catch → `[CONFIG ERROR]` log → `process.exit(1)`
+- [x] server.js: `validatePricingEnv` now conditional on MODEL_DEEP not starting with `glm-`
+- <done> 27/27 GREEN (e4f80ed RED, cb88626 GREEN) </done>
 
 ### G3 — Deploy + Proof
-- [ ] git commit RED, then GREEN (two separate commits — TDD discipline)
-- [ ] git push → vault-neo pull → cp + rebuild → compose up -d
-- [ ] Log proof: start container with `MODEL_DEFAULT=bad-model` → confirm `[CONFIG ERROR]` line in logs + exit
-- [ ] Update hub.env comments with allowed values
-- [ ] MEMORY.md updated, claude-mem observation saved
+- [x] Two commits: e4f80ed (RED), cb88626 (GREEN), bf838d0 (docs)
+- [x] git push → vault-neo pull → cp routing.js + server.js → rebuild → compose up -d
+- [x] Log proof: `docker run MODEL_DEFAULT=gpt-4o-mini` → `[CONFIG ERROR]...not in allowed list` + `docker_exit_code: 1`
+- [x] hub.env comments added (allowed values inline on vault-neo)
+- [x] MEMORY.md updated, claude-mem #3497 saved
 
-**Gate: 27/27 tests GREEN + startup log proof before close.**
+**Gate: 27/27 tests GREEN + startup log proof before close. ✅ COMPLETE**
 - [ ] Regenerate cc-session-brief.md
 - [ ] Run session-end-verify.sh

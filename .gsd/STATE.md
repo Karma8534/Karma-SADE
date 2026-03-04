@@ -25,6 +25,7 @@
 | **karma-server image** | ✅ REBUILT | Session-60 drift-fix: ANALYSIS_MODEL default corrected. |
 | **Routing/Pricing (Decision #2)** | ✅ CORRECTED | GLM=$0, tool-use respects deep_mode, MODEL_DEEP default fixed. Session-60. |
 | **GLM Rate Limiter** | ✅ LIVE | 20 RPM global sliding-window. /v1/chat=429, /v1/ingest=waitForSlot. 25/25 tests. V1-V5 verified. |
+| **Config Validation Gate** | ✅ LIVE | MODEL_DEFAULT + MODEL_DEEP allow-lists. [CONFIG ERROR] + exit(1) on bad config. 27/27 tests. |
 | **OpenAI API key** | ✅ SECURED | File-based read (mounted volume), not env var (docker inspect clean). |
 | **PDF Watcher** | ✅ WORKING | Rate-limit backoff + jam notification + time-window scheduling. |
 
@@ -138,6 +139,14 @@ System is in maintenance/growth mode. No urgent fixes. Possible work:
 
 ---
 
-**Last updated:** 2026-03-04T18:00:00Z (Session 60 COMPLETE)
+### Session 61 Accomplishments
+- Phase G Config Validation Gate: MODEL_DEFAULT allow-list + [CONFIG ERROR] structured log + process.exit(1)
+- 27/27 tests GREEN (up from 25/25); two commits RED→GREEN per TDD discipline
+- Production verified: docker exit_code=1 on bad MODEL_DEFAULT confirmed
+- hub.env inline allowed-value comments added on vault-neo
+
+---
+
+**Last updated:** 2026-03-04T19:00:00Z (Session 61 COMPLETE)
 **Owner:** Claude Code (writes on Colby approval)
 **Canonical location:** C:\Users\raest\Documents\Karma_SADE\.gsd\STATE.md
