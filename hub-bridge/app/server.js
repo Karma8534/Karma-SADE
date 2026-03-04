@@ -4,8 +4,8 @@ import fs from "fs";
 import { URL } from "url";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
-import { pricePer1M, estimateUsd, validatePricingEnv } from "../lib/pricing.js";
-import { chooseModel, validateModelEnv } from "../lib/routing.js";
+import { pricePer1M, estimateUsd, validatePricingEnv } from "./lib/pricing.js";
+import { chooseModel, validateModelEnv } from "./lib/routing.js";
 
 // CJS interop for pdf-parse (CommonJS module in ESM context)
 import { createRequire } from 'module';

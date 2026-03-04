@@ -6,8 +6,9 @@ WORKDIR /app
 RUN npm install openai @anthropic-ai/sdk pdf-parse@1.1.1
 
 # Copy application
-COPY server.js ./
-COPY public/ ./public/
+COPY app/server.js ./
+COPY app/public/ ./public/
+COPY lib/ ./lib/
 
 ENV NODE_ENV=production
 

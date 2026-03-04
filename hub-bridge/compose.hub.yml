@@ -1,8 +1,8 @@
 services:
   hub-bridge:
     build:
-      context: ./app
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: app/Dockerfile
     container_name: anr-hub-bridge
     env_file:
       - /opt/seed-vault/memory_v1/hub_bridge/config/hub.env
