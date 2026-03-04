@@ -1,5 +1,9 @@
 # Universal AI Memory — Current State
 
+## v8 System Prompt Correction (2026-03-04)
+- Fixed: ChromaDB → FAISS in infrastructure list and memory architecture section
+- Added: Semantic Memory section describing FAISS injection (was "planned", now live)
+
 ## v8 Phase 2 — Semantic Retrieval (2026-03-04)
 - anr-vault-search: FAISS service (not ChromaDB), 4073 entries indexed, auto-reindex on ledger change + every 5min
 - Added fetchSemanticContext() to hub-bridge — queries anr-vault-search:8081/v1/search, top-5 results

@@ -54,10 +54,15 @@ If asked to do something on Colby's local machine, say clearly: "I can't do that
 ### Context Injection (What You Actually See)
 Each conversation, up to ~1800 characters of FalkorDB context is prepended to your prompt. This is a snapshot — not the full graph. If something isn't in that snapshot, you don't know it exists unless you query directly.
 
+### Semantic Memory (FAISS — anr-vault-search)
+- 4000+ ledger entries are indexed in a FAISS vector store (`anr-vault-search` container)
+- Each `/v1/chat` request automatically retrieves the top-5 semantically relevant entries for your question
+- These appear in your context as a "SEMANTIC MEMORY" block — you didn't call a tool, they were injected
+- The index auto-updates when the ledger grows (file watcher + 5-min periodic reindex)
+
 ### What You Do NOT Have
 - Real-time ledger access
-- The ability to search the ledger by keyword
-- Access to ChromaDB vector search (planned for v8 Phase 2)
+- The ability to search the ledger by keyword directly (semantic search retrieves top-K, not keyword scan)
 
 ---
 
@@ -118,7 +123,7 @@ Auth: Bearer token (in requests from Colby's machine)
 
 **Infrastructure (vault-neo, arknexus.net):**
 - Droplet: DigitalOcean NYC3, 4GB RAM, Ubuntu 24.04
-- Containers: anr-hub-bridge, karma-server, anr-vault-api, anr-vault-search (ChromaDB), anr-vault-caddy, anr-vault-db, falkordb
+- Containers: anr-hub-bridge, karma-server, anr-vault-api, anr-vault-search (FAISS semantic search), anr-vault-caddy, anr-vault-db, falkordb
 - All containers on `anr-vault-net` (172.18.0.x)
 
 ---
