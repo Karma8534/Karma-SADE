@@ -2,14 +2,21 @@
 
 ## Session 64 (2026-03-04) — Entity Relationship Context (Gap 1)
 
-**Status:** 🔵 IN PROGRESS — Design approved, implementation pending
+**Status:** 🔵 PLAN READY — Parallel session queued for execution
 
 ### Active Task
 Wire RELATES_TO edges + pattern detection into /v1/chat via karma-server `/raw-context`.
-Design doc: `docs/plans/2026-03-04-entity-relationship-context-design.md`
+Design: `docs/plans/2026-03-04-entity-relationship-context-design.md`
+Plan: `docs/plans/2026-03-04-entity-relationship-context.md`
 - Approach C: per-message edge query + 30min cached pattern query
 - hub-bridge: zero changes
-- One file: `karma-core/karma_server.py`
+- One file: `karma-core/server.py`
+- CRITICAL: query_entity_relationships() at line 510 exists but wrong (type(rel) not r.fact)
+- New function: query_relevant_relationships(list[str]) added after line 527
+
+### Session 64 Also
+5 skills created: karma-server-deploy, karma-hub-deploy, karma-verify,
+watermark-incremental-processing, falkordb-cypher → ~/.claude/skills/
 
 ### Session 63 — COMPLETE
 Graphiti watermark deployed. karma-server now runs Graphiti entity extraction on new episodes.
