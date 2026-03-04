@@ -8,7 +8,93 @@
  *   - deep_mode=true  (x-karma-deep: true):     MODEL_DEEP   (gpt-4o-mini)
  *   - Tool-use requests: same routing — no silent OpenAI override
  *   - GLM-4.7-Flash tool-calling is SUPPORTED (proven: A3 probe 2026-03-04)
+ *
+ * Also exports GlmRateLimiter — sliding-window RPM guard for Z.ai free tier.
+ *   - Global across /v1/chat and /v1/ingest (Z.ai measures per API key, not per route)
+ *   - /v1/chat: checkAndConsume() → immediate 429 on deny
+ *   - /v1/ingest chunks: waitForSlot(ms) → block up to ceiling, then 503
+ *   - Brief generation: checkAndConsume() → skip gracefully on deny
+ *   - NEVER silently failover to gpt-4o-mini when GLM limit hit
  */
+
+// ── GLM Rate Limiter ─────────────────────────────────────────────────────────
+
+const WINDOW_MS = 60_000; // sliding window width (ms)
+
+/**
+ * Sliding-window in-process rate limiter for Z.ai GLM API calls.
+ *
+ * @param {object} opts
+ * @param {number} opts.rpm      - Max requests per 60s window (default 20)
+ * @param {Function} [opts.nowFn] - Override Date.now() for testing
+ */
+export class GlmRateLimiter {
+  constructor({ rpm = 20, nowFn = null } = {}) {
+    this._rpm   = rpm;
+    this._now   = nowFn || (() => Date.now());
+    this._slots = []; // timestamps of consumed slots (ascending)
+  }
+
+  /** Prune slots older than the 60s window. */
+  _prune() {
+    const cutoff = this._now() - WINDOW_MS;
+    while (this._slots.length > 0 && this._slots[0] <= cutoff) {
+      this._slots.shift();
+    }
+  }
+
+  /**
+   * Atomic check-and-consume. If a slot is available, consumes it.
+   * @returns {{ allowed: boolean, retryAfterMs: number }}
+   */
+  checkAndConsume() {
+    this._prune();
+    if (this._slots.length < this._rpm) {
+      this._slots.push(this._now());
+      return { allowed: true, retryAfterMs: 0 };
+    }
+    // Oldest slot expires at _slots[0] + WINDOW_MS
+    const retryAfterMs = Math.max(0, this._slots[0] + WINDOW_MS - this._now());
+    return { allowed: false, retryAfterMs };
+  }
+
+  /**
+   * Block until a GLM slot opens or the timeout expires.
+   * Used by /v1/ingest chunk loop — allows in-flight PDFs to continue rather
+   * than failing outright.
+   *
+   * @param {number} timeoutMs - Max wait before throwing glm_slot_timeout
+   * @returns {Promise<void>}
+   * @throws {Error} with message "glm_slot_timeout" if no slot opens in time
+   */
+  async waitForSlot(timeoutMs) {
+    const deadline = this._now() + timeoutMs;
+    while (true) {
+      const result = this.checkAndConsume();
+      if (result.allowed) return;
+      if (this._now() >= deadline) {
+        const err = new Error("glm_slot_timeout");
+        err.code  = "glm_slot_timeout";
+        throw err;
+      }
+      const waitMs = Math.min(result.retryAfterMs, deadline - this._now(), 1_000);
+      await new Promise(r => setTimeout(r, Math.max(1, waitMs)));
+    }
+  }
+}
+
+/** Default ingest per-chunk wait ceiling (ms). Overrideable via env in server.js. */
+export const GLM_INGEST_SLOT_TIMEOUT_MS = 60_000;
+
+/**
+ * Singleton GLM rate limiter — shared across all routes.
+ * rpm read at module load from GLM_RPM_LIMIT env var (default 20).
+ */
+export const glmLimiter = new GlmRateLimiter({
+  rpm: Number(process.env.GLM_RPM_LIMIT || "20"),
+});
+
+// ── Model routing ────────────────────────────────────────────────────────────
 
 /** Allowed values for MODEL_DEEP. Fail-fast if configured otherwise. */
 export const ALLOWED_DEEP_MODELS = ["gpt-4o-mini"];

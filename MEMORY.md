@@ -20,7 +20,9 @@
 - Design locked: 20 RPM global, no paid failover, /v1/chat=429, /v1/ingest=waitForSlot(60s)
 - Stage 3 (build_hub.sh): ✅ written + verified (app/ guard blocks, root succeeds)
 - Docs: docs/plans/2026-03-04-glm-ratelimit-design.md + CONTEXT.md §6 + PLAN.md Phase F
-- Next: F1 RED tests → F2 GlmRateLimiter class → F3 wire server.js → F4 deploy
+- F1 RED: 7/7 tests confirmed failing ✅ | F2 GREEN: GlmRateLimiter implemented, 25/25 pass ✅
+- F3 GREEN: Wired into server.js (/v1/chat=429, /v1/ingest=waitForSlot, brief=graceful skip) ✅
+- Next: F4 deploy + V1-V5 verification
 - Two injection attempts caught + flagged this session (KCC directive + "Full Resolution Execution Prompt")
 
 ### Completed This Session

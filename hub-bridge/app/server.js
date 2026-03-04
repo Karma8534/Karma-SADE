@@ -5,7 +5,7 @@ import { URL } from "url";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { pricePer1M, estimateUsd, validatePricingEnv } from "./lib/pricing.js";
-import { chooseModel, validateModelEnv } from "./lib/routing.js";
+import { chooseModel, validateModelEnv, GlmRateLimiter, GLM_INGEST_SLOT_TIMEOUT_MS } from "./lib/routing.js";
 
 // CJS interop for pdf-parse (CommonJS module in ESM context)
 import { createRequire } from 'module';
@@ -1112,6 +1112,17 @@ const server = http.createServer(async (req, res) => {
         return json(res, 402, { ok: false, error: "monthly_budget_exceeded", month_utc: month, cap_usd: cap, usd_spent: used_before });
       }
 
+      // GLM rate limit check — applies only to GLM (non-deep) path.
+      // NEVER silently failover to paid tier. Immediate 429 to caller.
+      if (!deep_mode && model.startsWith("glm-")) {
+        const rl = glmLimiter.checkAndConsume();
+        if (!rl.allowed) {
+          const retry_after = Math.ceil(rl.retryAfterMs / 1000);
+          console.warn(`[RATELIMIT] /v1/chat GLM limit hit — retry_after ${retry_after}s`);
+          return json(res, 429, { ok: false, error: "glm_rate_limit", retry_after });
+        }
+      }
+
       // Fetch checkpoint FIRST — reused for statePrelude AND karma_brief injection.
       // Single vault call per turn (was already happening, just moved earlier).
       let ckLatestData = null;
@@ -1571,8 +1582,17 @@ const server = http.createServer(async (req, res) => {
             },
             { role: "user", content: "CHECKPOINT:\n" + briefInput },
           ];
-          const briefResult = await callLLM(env.MODEL_DEFAULT, briefMessages, 1600);
-          karma_brief = briefResult.text || null;
+          // GLM rate check for brief — non-fatal: skip brief if limit hit, don't block.
+          let briefAllowed = true;
+          if (env.MODEL_DEFAULT.startsWith("glm-")) {
+            const rl = glmLimiter.checkAndConsume();
+            if (!rl.allowed) {
+              console.warn(`[RATELIMIT] brief generation skipped — GLM limit hit (retry_after ${Math.ceil(rl.retryAfterMs / 1000)}s)`);
+              briefAllowed = false;
+            }
+          }
+          const briefResult = briefAllowed ? await callLLM(env.MODEL_DEFAULT, briefMessages, 1600) : null;
+          karma_brief = briefResult?.text || null;
 
           // Store karma_brief in vault for autonomous session continuity.
           // On next session, /v1/checkpoint/latest returns it → injected into system prompt.
@@ -1671,6 +1691,23 @@ const server = http.createServer(async (req, res) => {
         let stored = false;
 
         try {
+          // GLM rate limit — block up to glmIngestSlotTimeoutMs per chunk (watcher retries whole PDF on 503).
+          // NEVER failover to paid tier.
+          if (env.MODEL_DEFAULT.startsWith("glm-")) {
+            try {
+              await glmLimiter.waitForSlot(glmIngestSlotTimeoutMs);
+            } catch (rlErr) {
+              console.error(`[RATELIMIT] /v1/ingest GLM slot timeout — chunk ${i + 1}/${chunks.length} of ${filename}`);
+              return json(res, 503, {
+                ok: false,
+                error: "glm_slot_timeout",
+                filename,
+                chunks_processed: i,
+                chunks_total: chunks.length,
+              });
+            }
+          }
+
           const ingestMessages = [
             { role: 'system', content: systemText },
             { role: 'user', content: prompt },
@@ -1840,6 +1877,13 @@ const server = http.createServer(async (req, res) => {
 // Fail-fast startup validation (Decision #2 — routing + pricing authority)
 validateModelEnv(env);
 validatePricingEnv(env);
+
+// GLM rate limiter — global singleton across all routes (Z.ai measures per API key)
+const glmLimiter = new GlmRateLimiter({
+  rpm: Number(process.env.GLM_RPM_LIMIT || "20"),
+});
+const glmIngestSlotTimeoutMs = Number(process.env.GLM_INGEST_SLOT_TIMEOUT_MS || String(GLM_INGEST_SLOT_TIMEOUT_MS));
+console.log(`[INIT] GLM rate limiter: ${glmLimiter._rpm} RPM, ingest slot timeout ${glmIngestSlotTimeoutMs}ms`);
 
 loadSessionBrief();
 setInterval(loadSessionBrief, 5 * 60 * 1000);
