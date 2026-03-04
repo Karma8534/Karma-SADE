@@ -127,6 +127,57 @@ def filter_unprocessed(pairs: list[dict], already: dict) -> list[dict]:
     return remaining
 
 
+
+# ─── Watermark (forward-only Graphiti mode) ────────────────────────────────
+
+def read_watermark(watermark_path: str, ledger_path: str) -> int:
+    """Return the ledger line to start from. Initializes to current line count on first run."""
+    if not os.path.exists(watermark_path):
+        with open(ledger_path, "r", encoding="utf-8") as f:
+            count = sum(1 for _ in f)
+        write_watermark(watermark_path, count)
+        log(f"  Watermark initialized at line {count} — all historical episodes skipped")
+        return count
+    with open(watermark_path, "r") as f:
+        return int(f.read().strip())
+
+
+def write_watermark(watermark_path: str, line_num: int) -> None:
+    """Atomically write watermark to disk."""
+    tmp = watermark_path + ".tmp"
+    with open(tmp, "w") as f:
+        f.write(str(line_num))
+    os.replace(tmp, watermark_path)
+
+
+def read_new_episodes(ledger_path: str, start_line: int, max_batch: int = 200) -> tuple[list[dict], int]:
+    """
+    Read up to max_batch valid conversation pairs from ledger starting at start_line.
+    Returns (episodes, end_line) where end_line is the new watermark position.
+    """
+    episodes = []
+    end_line = start_line
+    with open(ledger_path, "r", encoding="utf-8") as f:
+        for i, raw in enumerate(f):
+            if i < start_line:
+                continue
+            end_line = i + 1
+            if len(episodes) >= max_batch:
+                break
+            raw = raw.strip()
+            if not raw:
+                continue
+            try:
+                entry = json.loads(raw)
+                content = entry.get("content", {})
+                assistant = content.get("assistant_message") or content.get("assistant_text", "")
+                if content.get("user_message") and assistant:
+                    episodes.append(entry)
+            except json.JSONDecodeError:
+                pass
+    return episodes, end_line
+
+
 # ─── Graphiti Setup ─────────────────────────────────────────────────────
 
 async def create_graphiti():
