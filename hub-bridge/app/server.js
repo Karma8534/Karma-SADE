@@ -252,6 +252,11 @@ async function fetchCheckpointLatestFromVault() {
 
 const KARMA_CTX_MAX_CHARS = Number(process.env.KARMA_CTX_MAX_CHARS || "1200");
 
+// --- Semantic search via anr-vault-search (FAISS) ---
+const FAISS_SEARCH_URL    = process.env.FAISS_SEARCH_URL || "http://anr-vault-search:8081/v1/search";
+const FAISS_SEARCH_K      = Number(process.env.FAISS_SEARCH_K || "5");
+const FAISS_ENABLED       = (process.env.FAISS_ENABLED || "1") === "1";
+
 // --- Brave Search ---
 const BRAVE_SEARCH_ENABLED = (process.env.BRAVE_SEARCH_ENABLED || "1") === "1";
 const BRAVE_MAX_RESULTS    = 3;
@@ -353,10 +358,43 @@ async function fetchKarmaContext(userMessage) {
 }
 
 /**
+ * Query the FAISS semantic search service for relevant ledger entries.
+ * Returns a formatted string of top-K results, or null on failure.
+ */
+async function fetchSemanticContext(userMessage, topK = FAISS_SEARCH_K) {
+  if (!FAISS_ENABLED || !userMessage) return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4000);
+  try {
+    const r = await fetch(FAISS_SEARCH_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: userMessage.slice(0, 500), limit: topK }),
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!r.ok) return null;
+    const body = await r.json();
+    if (!body.results || body.results.length === 0) return null;
+    const lines = body.results.map((res) => {
+      const ts = res.timestamp ? res.timestamp.slice(0, 10) : "?";
+      const score = res.similarity_score ? `(rel: ${res.similarity_score})` : "";
+      return `[${ts}] ${score} ${res.content_preview}`;
+    });
+    return `--- SEMANTIC MEMORY (relevant to current question, ${body.total_indexed} total indexed) ---\n` +
+      lines.join("\n") +
+      "\n---";
+  } catch {
+    clearTimeout(timer);
+    return null;
+  }
+}
+
+/**
  * Build Karma's system prompt from FalkorDB context.
  * Extracted so both /v1/chat and /v1/ingest can reuse it.
  */
-function buildSystemText(karmaCtx, ckLatest = null, webResults = null) {
+function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticCtx = null) {
   // Identity block — loaded from file at startup. Describes Karma's actual architecture,
   // capability boundaries, data model corrections, and API surface.
   // File is volume-mounted; future updates: git pull + container restart (no rebuild needed).
@@ -373,6 +411,12 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null) {
   const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/30min, web_search=auto_on_intent]\n\n`;
 
   let text = identityBlock + selfKnowledge + base + "\n\nTools: get_vault_file(alias) | graph_query(cypher) — use for questions about your memory/graph.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
+
+  // Semantic memory — top-K ledger entries most relevant to the current question.
+  // Retrieved from FAISS search service (anr-vault-search:8081).
+  if (semanticCtx) {
+    text += `\n\n${semanticCtx}`;
+  }
 
   // Live web search results — injected when search intent detected in user message.
   if (webResults) {
@@ -1140,8 +1184,11 @@ const server = http.createServer(async (req, res) => {
         ckLatestData = await fetchCheckpointLatestFromVault();
       } catch (e) { /* non-fatal — Karma runs without checkpoint if vault is down */ }
 
-      // Pull live FalkorDB + PostgreSQL context from karma-server (replaces stale vault facts)
-      const karmaCtx = await fetchKarmaContext(userMessage);
+      // Pull live FalkorDB context + semantic search in parallel (non-blocking)
+      const [karmaCtx, semanticCtx] = await Promise.all([
+        fetchKarmaContext(userMessage),
+        fetchSemanticContext(userMessage),
+      ]);
 
       // Web search — fires when message contains clear search-intent keywords
       let webSearchResults = null;
@@ -1151,7 +1198,7 @@ const server = http.createServer(async (req, res) => {
         debug_search = webSearchResults ? "hit" : "miss";
       }
 
-      const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults);
+      const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults, semanticCtx);
 
       const extractedFacts = extractExplicitFacts(userMessage);
       let factWriteResults = [];

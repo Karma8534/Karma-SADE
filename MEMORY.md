@@ -1,5 +1,12 @@
 # Universal AI Memory — Current State
 
+## v8 Phase 2 — Semantic Retrieval (2026-03-04)
+- anr-vault-search: FAISS service (not ChromaDB), 4073 entries indexed, auto-reindex on ledger change + every 5min
+- Added fetchSemanticContext() to hub-bridge — queries anr-vault-search:8081/v1/search, top-5 results
+- karmaCtx + semanticCtx fetched in parallel (Promise.all), both injected into buildSystemText
+- Task 2.4 NOT NEEDED — service already auto-reindexes (file watcher + periodic)
+- Phase 2 complete pending rebuild verification
+
 ## v8 Phase 1 — System Prompt Deploy (2026-03-04)
 - Task 1.1 DONE: Audited live system prompt — confirmed Open WebUI/Ollama persona from Feb 2026
 - Task 1.2 DONE: Drafted replacement (Current_Plan/v8/00-karma-system-prompt-DRAFT.md) — accurate hub-bridge arch, Brave Search enabled, 5 data model corrections
