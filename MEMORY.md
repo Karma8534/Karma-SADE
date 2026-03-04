@@ -1,5 +1,11 @@
 # Universal AI Memory — Current State
 
+## v8 Phase 1 — System Prompt Deploy (2026-03-04)
+- Task 1.1 DONE: Audited live system prompt — confirmed Open WebUI/Ollama persona from Feb 2026
+- Task 1.2 DONE: Drafted replacement (Current_Plan/v8/00-karma-system-prompt-DRAFT.md) — accurate hub-bridge arch, Brave Search enabled, 5 data model corrections
+- Task 1.3 IN PROGRESS: Deploying to Memory/00-karma-system-prompt-live.md on vault-neo
+- Brave Search: BSA key configured, debug_search:hit confirmed working
+
 ## Karma Architecture — Locked Principles (2026-03-03)
 
 **Optimization law:** Assimilate primitives. Reject systems. Integrate only what doesn't add dependency gravity or parallel truth. Complexity is failure.
