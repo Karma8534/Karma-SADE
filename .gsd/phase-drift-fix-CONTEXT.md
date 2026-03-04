@@ -94,6 +94,39 @@ Change `config.py` default from `"gpt-4o-mini"` → `"glm-4.7-flash"`.
 
 ---
 
+---
+
+## Addendum: Phase F — GLM Rate Limiter (approved 2026-03-04)
+
+**Problem:** Z.ai free tier hard cap ~20 RPM per key. No internal guard exists. System can
+exhaust quota silently. Must never failover to paid tier on GLM limit hit.
+
+### 6. GLM Rate Limiter Design Decisions (Locked)
+
+| Decision | Value | Rationale |
+|---|---|---|
+| Limit | 20 RPM (`GLM_RPM_LIMIT` env, default 20) | Z.ai free tier maximum optimal |
+| Scope | Global — single window across ALL routes | Provider measures per API key, not per route |
+| Window | Sliding 60s (timestamp array, prune on each check) | Accurate; no fixed-interval reset artifacts |
+| Implementation | `GlmRateLimiter` class in `lib/routing.js` | Isolated, testable, no callLLM pollution |
+| Instance | Single export, shared at server.js module level | One counter = one truth |
+| /v1/chat behavior | Immediate HTTP 429 `{error: "glm_rate_limit", retry_after: N}` | User can see and retry |
+| /v1/ingest behavior | `waitForSlot(60_000)` per chunk — block up to 60s, then 503 | Watcher has retry logic; don't fail mid-PDF |
+| Brief generation | `checkAndConsume()` — skip gracefully on limit, log warn | Non-fatal internal call |
+| Deep-mode calls | NOT counted — limiter skips gpt-4o-mini | Z.ai limit is GLM-specific |
+| Ingest slot timeout var | `GLM_INGEST_SLOT_TIMEOUT_MS` default 60 000 | Per-chunk ceiling |
+
+### What Phase F Is NOT Doing
+
+- Not a distributed rate limiter (single process, no Redis)
+- Not an auto-failover to gpt-4o-mini on limit hit (explicitly prohibited)
+- Not applied to /v1/ambient, /v1/context, /v1/cypher
+- Not a retry queue — callers handle retry via Retry-After / watcher backoff
+
+**Full design:** `docs/plans/2026-03-04-glm-ratelimit-design.md`
+
+---
+
 ## Live State at Design Lock (A2 + A3)
 
 - Spend state: $0.117369 accumulated (2026-03-03) — charged at wrong rates

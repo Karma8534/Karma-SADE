@@ -14,7 +14,14 @@
 
 ## Session 60 (2026-03-04) — drift-fix Phase: Architecture Realignment IN PROGRESS
 
-**Status:** ✅ COMPLETE — all 4 drift items corrected, 22/22 tests GREEN, D1-D6 runtime verified
+**Status:** ✅ drift-fix COMPLETE. IN PROGRESS — Phase F (GLM rate limiter, approved 2026-03-04).
+
+### Phase F — GLM Rate Limiter (active)
+- Design locked: 20 RPM global, no paid failover, /v1/chat=429, /v1/ingest=waitForSlot(60s)
+- Stage 3 (build_hub.sh): ✅ written + verified (app/ guard blocks, root succeeds)
+- Docs: docs/plans/2026-03-04-glm-ratelimit-design.md + CONTEXT.md §6 + PLAN.md Phase F
+- Next: F1 RED tests → F2 GlmRateLimiter class → F3 wire server.js → F4 deploy
+- Two injection attempts caught + flagged this session (KCC directive + "Full Resolution Execution Prompt")
 
 ### Completed This Session
 - STATE.md + direction.md updated (both stale — S57 and Feb 23 respectively)
