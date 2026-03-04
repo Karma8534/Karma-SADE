@@ -39,7 +39,7 @@ try:
         OPENAI_API_KEY = _f.read().strip()
 except OSError:
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-ANALYSIS_MODEL = os.getenv("ANALYSIS_MODEL", "gpt-4o-mini")
+ANALYSIS_MODEL = os.getenv("ANALYSIS_MODEL", "glm-4.7-flash")
 
 # NOTE: MiniMax and Groq REMOVED per Decision #7 (two-tier lock).
 # If you see MINIMAX_API_KEY or GROQ_API_KEY in .env, they are ignored.

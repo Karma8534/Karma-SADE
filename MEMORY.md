@@ -14,7 +14,7 @@
 
 ## Session 60 (2026-03-04) — drift-fix Phase: Architecture Realignment IN PROGRESS
 
-**Status:** IN PROGRESS — Phase C (GREEN) next
+**Status:** IN PROGRESS — Phase D (Deploy + Verify) next
 
 ### Completed This Session
 - STATE.md + direction.md updated (both stale — S57 and Feb 23 respectively)

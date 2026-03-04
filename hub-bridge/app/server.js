@@ -4,6 +4,8 @@ import fs from "fs";
 import { URL } from "url";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
+import { pricePer1M, estimateUsd, validatePricingEnv } from "../lib/pricing.js";
+import { chooseModel, validateModelEnv } from "../lib/routing.js";
 
 // CJS interop for pdf-parse (CommonJS module in ESM context)
 import { createRequire } from 'module';
@@ -216,17 +218,7 @@ function saveSpendState(path, state) {
 
 function isAnthropicModel(model) { return typeof model === "string" && model.startsWith("claude-"); }
 
-function pricePer1M(model, dir, env) {
-  if (isAnthropicModel(model))    return dir === "input" ? Number(env.PRICE_CLAUDE_INPUT_PER_1M)    : Number(env.PRICE_CLAUDE_OUTPUT_PER_1M);
-  if (model === env.MODEL_DEFAULT) return dir === "input" ? Number(env.PRICE_GPT_5_MINI_INPUT_PER_1M) : Number(env.PRICE_GPT_5_MINI_OUTPUT_PER_1M);
-  if (model === env.MODEL_DEEP)    return dir === "input" ? Number(env.PRICE_GPT_5_2_INPUT_PER_1M)   : Number(env.PRICE_GPT_5_2_OUTPUT_PER_1M);
-  return 1e9;
-}
-function estimateUsd(model, inputTokens, outputTokens, env) {
-  const inCost = (inputTokens / 1000000) * pricePer1M(model, "input", env);
-  const outCost = (outputTokens / 1000000) * pricePer1M(model, "output", env);
-  return Number((inCost + outCost).toFixed(6));
-}
+// pricePer1M and estimateUsd imported from ../lib/pricing.js
 
 // --- Vault API helpers ---
 
@@ -673,14 +665,12 @@ function atomicWriteHandoff(dir, filename, content) {
 
 const env = {
   MONTHLY_USD_CAP: Number(process.env.MONTHLY_USD_CAP || "0"),
-  MODEL_DEFAULT: process.env.MODEL_DEFAULT || "claude-3-5-sonnet-20241022",
-  MODEL_DEEP: process.env.MODEL_DEEP || "gpt-5-mini",
-  PRICE_GPT_5_MINI_INPUT_PER_1M: Number(process.env.PRICE_GPT_5_MINI_INPUT_PER_1M || "0.15"),
-  PRICE_GPT_5_MINI_OUTPUT_PER_1M: Number(process.env.PRICE_GPT_5_MINI_OUTPUT_PER_1M || "0.60"),
-  PRICE_GPT_5_2_INPUT_PER_1M: Number(process.env.PRICE_GPT_5_2_INPUT_PER_1M || "0.25"),
-  PRICE_GPT_5_2_OUTPUT_PER_1M: Number(process.env.PRICE_GPT_5_2_OUTPUT_PER_1M || "2.00"),
-  PRICE_CLAUDE_INPUT_PER_1M: Number(process.env.PRICE_CLAUDE_INPUT_PER_1M || "3.0"),
-  PRICE_CLAUDE_OUTPUT_PER_1M: Number(process.env.PRICE_CLAUDE_OUTPUT_PER_1M || "15.0"),
+  MODEL_DEFAULT: process.env.MODEL_DEFAULT || "glm-4.7-flash",
+  MODEL_DEEP: process.env.MODEL_DEEP || "gpt-4o-mini",
+  PRICE_GPT_4O_MINI_INPUT_PER_1M:  process.env.PRICE_GPT_4O_MINI_INPUT_PER_1M  || "0.15",
+  PRICE_GPT_4O_MINI_OUTPUT_PER_1M: process.env.PRICE_GPT_4O_MINI_OUTPUT_PER_1M || "0.60",
+  PRICE_CLAUDE_INPUT_PER_1M:  process.env.PRICE_CLAUDE_INPUT_PER_1M  || "3.0",
+  PRICE_CLAUDE_OUTPUT_PER_1M: process.env.PRICE_CLAUDE_OUTPUT_PER_1M || "15.0",
   SPEND_STATE_PATH: process.env.SPEND_STATE_PATH || "/run/state/openai.spend.state.json",
 };
 
@@ -878,9 +868,8 @@ async function callGPTWithTools(messages, maxTokens, model) {
     let iterations = 0;
     const MAX_ITERATIONS = 5;
 
-    // Model validation: permit OpenAI (gpt*) and GLM models; fallback to gpt-4o-mini for others
-    // (tool-calling via OpenAI/GLM is more reliable than Anthropic)
-    const actualModel = model && model.startsWith("gpt") ? model : "gpt-4o-mini";
+    // Use passed-in model; fall back to MODEL_DEFAULT via chooseModel (Decision #2 — GLM primary)
+    const actualModel = model || chooseModel(false, env);
     const isZaiModel = actualModel.startsWith("glm-");
     const providerName = (isZaiModel && zai) ? "zai" : "openai";
     console.log(`[TOOL-USE] Using model: ${actualModel} (requested: ${model})`);
@@ -1847,6 +1836,10 @@ const server = http.createServer(async (req, res) => {
     return json(res, 500, { ok: false, error: "internal_error", message: msg.slice(0, 500) });
   }
 });
+
+// Fail-fast startup validation (Decision #2 — routing + pricing authority)
+validateModelEnv(env);
+validatePricingEnv(env);
 
 loadSessionBrief();
 setInterval(loadSessionBrief, 5 * 60 * 1000);
