@@ -15,6 +15,15 @@ Append-only log of facts Karma got wrong in conversation. Used to update the sys
 
 ---
 
+## Correction 2026-03-04 (Session 63)
+**Was wrong:** Documentation (STATE.md + direction.md) claimed "New episodes (post-cron) get Graphiti entity extraction"
+**Actually:** Cron has used --skip-dedup since Session 59. ALL episodes since then were Episodic-only. No entity extraction has occurred for any episode since Session 59. 571 Entity nodes are legacy from pre-Session-59 runs.
+**Source:** Code inspection of cron command + batch_ingest.py --skip-dedup behavior. Colby confirmed the gap.
+**Applies to:** System prompt section: Karma's learning/growth capabilities
+**Status:** FIXED in code (Session 63 watermark deployment). System prompt update pending (next cycle).
+
+---
+
 ## Known Corrections (Backlog — 2026-03-04)
 
 ## Correction 2026-03-04

@@ -120,8 +120,8 @@ API key read from mounted volume file, not injected as env var. docker inspect s
 - **K2 not online:** Consciousness loop runs on droplet only
 - **No fine-tuning yet:** Need 20+ DPO preference pairs (accumulation in progress)
 - **Ambient Tier 3:** Screen capture daemon not built
-- **direction.md:** STALE — last updated 2026-02-23 (>7 days). Needs refresh to reflect sessions 57–59 reality.
-- **ChromaDB:** Vector index not recently updated
+- **Entity graph growth lag:** Graphiti runs every 6h via cron. New episodes take up to 6h before entity nodes appear in FalkorDB.
+- **Per-episode Graphiti failures:** Watermark advances past failed episodes — silently lost at high error rates. Acceptable at low error rates.
 
 ---
 
@@ -215,6 +215,14 @@ karmaCtx (FalkorDB recency) + semanticCtx (FAISS top-5) fetched via Promise.all 
 
 ---
 
-**Last updated:** 2026-03-04T21:00:00Z (Session 62 COMPLETE — v8 ALL PHASES)
+### Session 63 Accomplishments (2026-03-04)
+- Discovered entity graph frozen since Session 59 (--skip-dedup bypasses Graphiti entirely)
+- Implemented watermark-based Graphiti mode for forward-only entity extraction
+- Deployed: watermark at line 4075, cron updated (--skip-dedup removed), karma-server rebuilt
+- Karma's knowledge graph now grows with every new conversation (6h lag via cron)
+
+---
+
+**Last updated:** 2026-03-04T22:15:00Z (Session 63 — Graphiti watermark deployed)
 **Owner:** Claude Code (writes on Colby approval)
 **Canonical location:** C:\Users\raest\Documents\Karma_SADE\.gsd\STATE.md
