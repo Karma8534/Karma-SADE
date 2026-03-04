@@ -33,7 +33,7 @@ Karma can recall (FAISS) but cannot reason across sessions (no Entity/relationsh
 | Correction Capture | ✅ LIVE — corrections-log.md + CC Session End step 2 |
 | FalkorDB Graph | ✅ 3049 Episodic + 571 Entity + 1 Decision = 3621 nodes. lane=NULL backfill done (3040 nodes fixed). |
 | Consciousness Loop | ✅ OBSERVE-only, 60s cycles, RestartCount: 0 |
-| batch_ingest | ✅ --skip-dedup, cron every 6h, image current |
+| batch_ingest | ✅ Watermark-based Graphiti mode. Entity extraction live for new episodes. Cron: WATERMARK_PATH set, --skip-dedup removed. |
 | GLM Rate Limiter | ✅ 20 RPM global. 429 on chat, waitForSlot on ingest. |
 | Config Validation Gate | ✅ MODEL_DEFAULT + MODEL_DEEP allow-lists. Exit(1) on bad config. |
 | PDF Watcher | ✅ Rate-limit backoff + jam notification + time-window |
