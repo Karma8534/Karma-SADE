@@ -29,7 +29,8 @@
 - Net-new: MODEL_DEFAULT allow-list validation (MODEL_DEEP check already existed)
 - G1 RED: G-a failing (MODEL_DEFAULT check missing), G-b already passes ✅
 - G2 GREEN: ALLOWED_DEFAULT_MODELS added, validateModelEnv extended, try/catch startup wrapper — 27/27 ✅
-- Next: G3 deploy + log proof
+- G3 VERIFIED: [CONFIG ERROR] fires on bad MODEL_DEFAULT + docker exit_code=1 confirmed ✅
+- claude-mem #3497 saved
 
 ### Completed This Session
 - STATE.md + direction.md updated (both stale — S57 and Feb 23 respectively)
