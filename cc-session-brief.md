@@ -338,62 +338,56 @@ Karma wakes up every session knowing:
 ---
 
 ## Active Task
-Not found.
+None. System is clean — all blockers resolved, graph fully caught up.
 
 ## Blockers
-None.
+None. Sessions 58+59 resolved all 10 active blockers.
 
 ## Next Session Agenda
-Not found.
+System is in maintenance/growth mode. No urgent fixes. Possible directions:
+- ChromaDB vector index hasn't been updated recently (low priority)
+- DPO preference pair accumulation (needs 20+ pairs to start)
+- Ambient Tier 3 screen capture daemon (not yet built)
+- karma-terminal capture is stale (last: 2026-02-27) — not a blocker
+
+## System State (2026-03-04)
+
+| Component | Status |
+|-----------|--------|
+| Hub Bridge API | ✅ /v1/chat, /v1/ambient, /v1/context, /v1/cypher, /v1/ingest |
+| Consciousness Loop | ✅ OBSERVE-only, 60s cycles, RestartCount: 0 |
+| FalkorDB Graph | ✅ 3621 nodes (3049 Episodic + 571 Entity + 1 Decision) — fully caught up |
+| batch_ingest | ✅ --skip-dedup, cron every 6h, image current |
+| PDF Watcher | ✅ Rate-limit backoff + jam notification + time-window scheduling |
+| karma-server image | ✅ All session-58/59 fixes baked in |
+| Chrome Extension | ❌ SHELVED permanently |
 
 ## Code State
 Branch: main
 Last 5 commits:
-b778ef2 Phase 4.4: transcript processing endpoints in server.py
-14b0335 Phase 4.4: transcript processing endpoints in server.py
-b1b6c67 Phase 4 complete: transcript processor, distilled ops, reflection directives, K2 decision, server.py with 4.4 endpoints
-bc09704 Phase 4: add feedback, decisions, profiling proxy routes to hub bridge
-fc407d8 Phase 4: feedback, decision graph, profiling endpoints + route dedup fix
-Status: M MEMORY.md
- M cc-session-brief.md
- M identity.json
- M karma-core/compaction.py
- M karma-core/consciousness.py
- M karma-core/hooks.py
- M karma-core/memory_tools.py
- M karma-core/router.py
- M karma-core/session_briefing.py
+c64c8e9 session-59: update all docs — session-59 state, FalkorDB pitfalls, --skip-dedup notes, 3621 node count
+2e51c0b session-59: fix --skip-dedup datetime() -> string for FalkorDB compatibility
+c74182d session-59: add --skip-dedup to batch_ingest (direct FalkorDB write, no dedup timeouts); update cron + docs
+11f1677 session-59 hotfix: batch_ingest propagates file-loaded OPENAI_API_KEY to env for Graphiti embedder
+acd57d6 session-58: update architecture.md + MEMORY.md to reflect current truth — all blockers resolved
+Status: clean (local = remote = c64c8e9)
 
 ## Recent Decisions
-- [2026-02-23T17:00:00Z] Update API keys: MiniMax + GLM-5
-  Outcome: Both keys updated and restarted karma-server. Router now shows all 4 models registered.
-- [2026-02-23T18:00:00Z] Test full stack end-to-end before building resurrection spine
-  Outcome: Hub-bridge /v1/chat responds ok:true. Tool-use infrastructure works. Consciousness loop confirmed running. Vault writes confirmed.
-- [2026-02-23T19:00:00Z] Build resurrection spine files: identity.json, invariants.json, direction.md, checkpoint/
-  Outcome: Created all spine files and committed to git. Ready for extraction + resurrection scripts.
+- [2026-03-03] GLM rate-limit handling: throttle watcher, never add paid fallback (Decision #7 enforced)
+- [2026-03-03] batch_ingest --skip-dedup is correct mode for bulk backfill (899 eps/s, 0 errors vs Graphiti's 85% timeout rate)
+- [2026-03-03] OpenAI API key: file-based read (mounted volume), not env var injection (docker inspect security)
+- [2026-03-03] karma-server build context sync pattern: git pull → cp to /opt/seed-vault/memory_v1/karma-core/ → docker compose build
 
 ## Recent Failures (learn from these)
-- [2026-02-23T12:00:00Z] ?
-  Root cause: Attempted to inject autonomy messaging into system prompt string. Literal newlines in JavaScript string literal created unterminated string error.
-  Fix: Reverted server.js to backup (server.js.bak). Confirmed syntax valid.
-- [2026-02-23T13:00:00Z] ?
-  Root cause: GLM-5 and MiniMax API keys expired or became invalid between sessions. OpenAI fallback still working.
-  Fix: User provided fresh keys. Restarted karma-server with updated credentials.
-- [2026-02-23T14:30:00Z] ?
-  Root cause: Entity schema mismatch. Expected colby:User node but FalkorDB uses different entity structure.
-  Fix: Tool error handled gracefully. GPT iteration 1: tool_calls attempted, 404 response. GPT iteration 2: saw error, decided not to retry, returned response from context.
+- [2026-03-03] Graphiti dedup queries time out at scale: 85% error rate, ETA 47h. Fix: --skip-dedup direct Cypher write.
+- [2026-03-03] FalkorDB has no datetime() Cypher function: throws "Unknown function". Fix: store timestamps as plain ISO strings.
+- [2026-03-03] Graphiti embedder reads OPENAI_API_KEY env var directly: removing from compose broke batch_ingest init. Fix: os.environ.setdefault() after config import.
+- [2026-03-03] Wrong fix for GLM 429: added gpt-4o-mini fallback (violates Decision #7). Immediately reverted. Correct fix: throttle watcher.
 
 ## Karma Memory State
-## User Identity (CRITICAL — use REAL NAME for greetings and conversation)
-REAL NAME: Colby ← ALWAYS use this name when greeting or addressing the user
-Aliases/handles: Neo (secondary — the user prefers their real name)
-Connected: Claude Code: The User is instructed to use Claude Code to resolve the issue.
-The User is past | Chrome: The User is experiencing a situation with two extensions running in Chrome.
-The  | Universal AI Memory: The Universal AI Memory extension is located in C:\Users\raest\Documents\Karma_S | CC: The User is giving something to CC now.
-The hub-bridge version 2.1.1 is healthy  | Universal AI Memory: The Universal AI Memory entry can be found in the chrome://extensions page.
-User
-Key facts: They are the same person. | Age 55, male. | Has a dog named Baxter and a cat n
-... (trimmed to 800 chars)
+REAL NAME: Colby ← ALWAYS use this name
+Age 55, male. Dog: Baxter. System builder. Wants brutal honesty, not politeness.
+Output efficiency rule enforced: answer only what was asked, nothing more.
 
 ---
-Generated: 2026-03-03T17:25:02Z | MEMORY.md last updated: Unknown
+Generated: 2026-03-04T14:30:00Z | Sessions 58+59 complete | All blockers resolved

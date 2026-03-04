@@ -140,17 +140,6 @@
 - ✅ 4 structural gaps closed: Session Start → resurrect skill only (Gap 1), GSD enforcement rule (Gap 2), token efficiency table (Gap 3), save_observation as Session End step 1 (Gap 4)
 - ✅ Session ritual table + claude-mem always-available section added to CLAUDE.md (dual-write rule, at-the-moment rule)
 
-### Next Session — Step by Step (exact commands)
-1. `ssh vault-neo "docker exec karma-server tail -30 /tmp/batch.log"` — verify batch complete (running overnight, ETA ~03:30 UTC)
-2. `ssh vault-neo "docker exec falkordb redis-cli -p 6379 GRAPH.QUERY neo_workspace 'MATCH (n) RETURN count(n)'"` — verify node count grew from ~2010
-3. Rebuild karma-server image (**URGENT — do AFTER batch completes**, image doesn't have hub-chat fix):
-   ```
-   ssh vault-neo "docker inspect karma-server --format '{{.HostConfig.Binds}} {{json .HostConfig.PortBindings}} {{.Config.Env}}'"
-   ```
-   Then rebuild + restart with identical run params
-4. `ssh vault-neo "grep MODEL_DEEP /opt/seed-vault/memory_v1/hub_bridge/config/hub.env"` — verify Blocker #5 (gpt-5-mini typo?)
-5. Check PDF watcher progress: `ls Karma_PDFs/Done/ | wc -l` — should be growing from 112+
-
 ---
 
 ## Infrastructure
@@ -171,4 +160,4 @@
 - **hub-bridge build context ≠ git repo**: build uses `/opt/seed-vault/memory_v1/hub_bridge/app/`, NOT `/home/neo/karma-sade/hub-bridge/app/`. After any git pull, sync first: `cp /home/neo/karma-sade/hub-bridge/app/server.js /opt/seed-vault/memory_v1/hub_bridge/app/server.js`
 
 # currentDate
-Today's date is 2026-03-03.
+Today's date is 2026-03-04.
