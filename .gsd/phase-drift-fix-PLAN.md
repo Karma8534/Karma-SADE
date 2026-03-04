@@ -157,12 +157,12 @@
 - <done> All 25 tests GREEN, committed `phase-glm-ratelimit: C — implemented [RED→GREEN]` </done>
 
 ### F4 — Deploy + Verify (V1-V5)
-- [ ] git push → vault-neo git pull → cp lib/ to build context → `./build_hub.sh` → compose up -d
-- [ ] V1: 21 rapid curl → /v1/chat → 1-20: 200, 21: 429 `glm_rate_limit`
-- [ ] V2: x-karma-deep:true during GLM limit → 200 (gpt-4o-mini unaffected)
-- [ ] V3: /v1/ingest during GLM limit → blocks, resolves on slot
-- [ ] V4: spend delta after 20 GLM requests → $0
-- [ ] V5: startup logs → no ERROR from limiter init
+- [x] git push → vault-neo git pull → cp lib/ to build context → `./build_hub.sh` → compose up -d
+- [x] V1: 21 rapid curl → /v1/chat → 1-20: 200, 21: 429 `glm_rate_limit`
+- [x] V2: x-karma-deep:true during GLM limit → 200 (gpt-4o-mini unaffected)
+- [x] V3: /v1/ingest during GLM limit → blocks, resolves on slot
+- [x] V4: spend delta after 20 GLM requests → $0
+- [x] V5: startup logs → `[INIT] GLM rate limiter: 20 RPM, ingest slot timeout 60000ms`
 - <done> All V1-V5 PASS, committed `phase-glm-ratelimit: D — verified in production` </done>
 
 ### F5 — Docs + Close

@@ -24,6 +24,7 @@
 | **batch_ingest Schedule** | ✅ CONFIGURED | Cron every 6h on vault-neo. --skip-dedup mode. |
 | **karma-server image** | ✅ REBUILT | Session-60 drift-fix: ANALYSIS_MODEL default corrected. |
 | **Routing/Pricing (Decision #2)** | ✅ CORRECTED | GLM=$0, tool-use respects deep_mode, MODEL_DEEP default fixed. Session-60. |
+| **GLM Rate Limiter** | ✅ LIVE | 20 RPM global sliding-window. /v1/chat=429, /v1/ingest=waitForSlot. 25/25 tests. V1-V5 verified. |
 | **OpenAI API key** | ✅ SECURED | File-based read (mounted volume), not env var (docker inspect clean). |
 | **PDF Watcher** | ✅ WORKING | Rate-limit backoff + jam notification + time-window scheduling. |
 
@@ -128,6 +129,15 @@ System is in maintenance/growth mode. No urgent fixes. Possible work:
 
 ---
 
-**Last updated:** 2026-03-04T15:00:00Z (Session 60)
+### Session 60 Accomplishments
+- drift-fix Phase complete: pricing, routing, MODEL_DEEP defaults, ANALYSIS_MODEL all corrected
+- Stage 3 build_hub.sh: safeguarded build script, app/ guard verified
+- Phase F GLM Rate Limiter: GlmRateLimiter class, 25/25 tests GREEN, wired into server.js
+- F4 deployed + V1-V5 all verified in production: 429 on burst, deep unaffected, ingest normal, $0 delta
+- Two injection attempts caught + flagged (security posture verified)
+
+---
+
+**Last updated:** 2026-03-04T18:00:00Z (Session 60 COMPLETE)
 **Owner:** Claude Code (writes on Colby approval)
 **Canonical location:** C:\Users\raest\Documents\Karma_SADE\.gsd\STATE.md
