@@ -172,7 +172,18 @@
       "Bash(powershell -Command \"git add MEMORY.md; git commit -m ''session-58: close blocker #4 — karma-server image rebuilt with hub-chat batch_ingest fix''\")",
       "Bash(powershell -Command \"git add .claude/rules/architecture.md MEMORY.md; git commit -m ''session-58: update architecture.md + MEMORY.md to reflect current truth — all blockers resolved''\")",
       "Bash(powershell.exe Scripts/resurrection/Get-KarmaContext.ps1)",
-      "Bash(powershell.exe -Command \"git add direction.md MEMORY.md; git commit -m ''session-60: refresh direction.md \\(was 9 days stale\\) — reflect sessions 57-59 reality, all blockers resolved''\")"
+      "Bash(powershell.exe -Command \"git add direction.md MEMORY.md; git commit -m ''session-60: refresh direction.md \\(was 9 days stale\\) — reflect sessions 57-59 reality, all blockers resolved''\")",
+      "Bash(powershell -Command \"cd C:\\\\Users\\\\raest\\\\Documents\\\\Karma_SADE; git add docs/plans/2026-03-04-graphiti-watermark-design.md; git commit -m ''design: watermark-based Graphiti entity extraction \\(forward-only\\)''\")",
+      "Bash(powershell -Command \"cd C:\\\\Users\\\\raest\\\\Documents\\\\Karma_SADE; git add docs/plans/2026-03-04-graphiti-watermark-design.md MEMORY.md; git commit -m ''design: watermark-based Graphiti entity extraction \\(forward-only\\)''\")",
+      "Bash(powershell -Command \"cd C:\\\\Users\\\\raest\\\\Documents\\\\Karma_SADE; git add docs/plans/2026-03-04-graphiti-watermark.md MEMORY.md; git commit -m ''plan: graphiti watermark implementation plan \\(Tasks 1-5\\)''; git push origin main\")",
+      "Bash(/c/Users/raest/Documents/Karma_SADE/karma-core/tests/test_watermark.py:*)",
+      "Bash(python -m pytest karma-core/tests/test_watermark.py -v)",
+      "Bash(python -:*)",
+      "Bash(PYTHONIOENCODING=utf-8 python /tmp/insert_watermark.py)",
+      "Bash(PYTHONIOENCODING=utf-8 python -c \":*)",
+      "Bash(PYTHONIOENCODING=utf-8 python -m pytest karma-core/tests/test_watermark.py -v)",
+      "Bash(powershell -Command \"cd C:\\\\Users\\\\raest\\\\Documents\\\\Karma_SADE; git add karma-core/batch_ingest.py karma-core/tests/test_watermark.py; git add karma-core/tests/__init__.py 2>$null; git commit -m ''feat: add watermark helpers to batch_ingest \\(read/write/read_new_episodes\\) + tests''\")",
+      "Bash(powershell -Command \"cd C:\\\\Users\\\\raest\\\\Documents\\\\Karma_SADE; git add karma-core/batch_ingest.py karma-core/tests/test_watermark.py karma-core/tests/__init__.py; git commit -m ''feat: add watermark helpers to batch_ingest \\(read/write/read_new_episodes\\) + tests''\")"
     ]
   }
 }
