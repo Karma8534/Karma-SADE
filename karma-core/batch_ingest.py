@@ -206,8 +206,8 @@ async def ingest_one_direct(r, sem: asyncio.Semaphore, entry: dict, idx: int):
         f"source_description: '{_escape_cypher(source_desc)}', "
         f"source: 'message', "
         f"group_id: '{group}', "
-        f"created_at: datetime('{_escape_cypher(ts)}'), "
-        f"valid_at: datetime('{_escape_cypher(ts)}')"
+        f"created_at: '{_escape_cypher(ts)}', "
+        f"valid_at: '{_escape_cypher(ts)}'"
         f"}})"
     )
 
