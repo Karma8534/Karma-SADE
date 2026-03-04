@@ -336,6 +336,31 @@ def query_task_history(limit: int = 10) -> list[dict]:
 
 _falkor_client = None
 
+# ─── Pattern Cache (recurring topics, 30min refresh) ──────────────────────────
+_pattern_cache: list[dict] = []  # [{"entity": str, "mentions": int}]
+
+
+def _refresh_pattern_cache() -> None:
+    """Query FalkorDB for top-10 most-mentioned entities. Updates module-level cache.
+    Non-fatal: on FalkorDB error, existing cache is preserved."""
+    global _pattern_cache
+    try:
+        r = get_falkor()
+        cypher = (
+            "MATCH (ep:Episodic)-[:MENTIONS]->(e:Entity) "
+            "RETURN e.name AS entity, count(ep) AS mentions "
+            "ORDER BY mentions DESC LIMIT 10"
+        )
+        result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
+        if len(result) >= 2 and result[1]:
+            _pattern_cache = [{"entity": row[0], "mentions": row[1]} for row in result[1]]
+        else:
+            _pattern_cache = []
+    except Exception as e:
+        print(f"[PATTERN] cache refresh failed (non-fatal): {e}")
+        # Intentionally preserve existing cache on error
+
+
 def get_falkor():
     """Get FalkorDB connection via redis."""
     global _falkor_client

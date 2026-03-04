@@ -2,12 +2,18 @@
 
 ## Session 64 (2026-03-04) — Entity Relationship Context (Gap 1)
 
-**Status:** 🔵 PLAN READY — Parallel session queued for execution
+**Status:** 🟡 IN PROGRESS — Executing plan (Task 1 complete, Tasks 2-4 pending)
 
 ### Active Task
-Wire RELATES_TO edges + pattern detection into /v1/chat via karma-server `/raw-context`.
+Wire RELATES_TO edges + pattern detection into /v1/chat via karma-server `build_karma_context()`.
 Design: `docs/plans/2026-03-04-entity-relationship-context-design.md`
 Plan: `docs/plans/2026-03-04-entity-relationship-context.md`
+
+### Progress
+- Task 1 ✅ — `_pattern_cache` + `_refresh_pattern_cache()` added to server.py (line ~337); 3 tests pass
+- Task 2 🔄 — `query_relevant_relationships()` bulk edge query (in progress)
+- Task 3 ⏳ — Wire into `build_karma_context()` + `startup()`
+- Task 4 ⏳ — Deploy to vault-neo
 - Approach C: per-message edge query + 30min cached pattern query
 - hub-bridge: zero changes
 - One file: `karma-core/server.py`
