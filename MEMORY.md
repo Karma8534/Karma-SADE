@@ -63,11 +63,10 @@
 **#3 ✅ RESOLVED: Auto-schedule configured (2026-03-03, verified session-58)**
 - Cron every 6h on vault-neo — `0 */6 * * *` with pgrep guard (was claimed done session-57 but was actually missing; added session-58)
 
-**#4 URGENT: karma-server image rebuild + restart loop**
-- batch_ingest hub-chat fix is docker cp'd into container ONLY — not in image
-- If karma-server restarts (restart loop active), the fix is lost and cron runs stale code
-- Fix: git pull on vault-neo first, then rebuild image, then restart container
-- Commands: see Next Session step 3
+**#4 ✅ RESOLVED: karma-server image rebuilt (2026-03-03)**
+- Synced batch_ingest.py + config.py from git repo to /opt/seed-vault/memory_v1/karma-core/
+- Rebuilt compose-karma-server:latest via docker compose build --no-cache
+- Restarted: RestartCount=0, clean startup, consciousness loop active
 
 **#5 ✅ RESOLVED: MODEL_DEEP corrected (2026-03-03)**
 - Was `gpt-5-mini` (non-existent model) — every deep-analysis call was failing silently
