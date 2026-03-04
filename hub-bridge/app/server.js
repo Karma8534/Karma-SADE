@@ -1875,8 +1875,17 @@ const server = http.createServer(async (req, res) => {
 });
 
 // Fail-fast startup validation (Decision #2 — routing + pricing authority)
-validateModelEnv(env);
-validatePricingEnv(env);
+// Structured single-line error + process.exit(1) so Docker restart logs are clear.
+try {
+  validateModelEnv(env);
+  // Price validation only applies when MODEL_DEEP is a paid model (not GLM).
+  if (!((env.MODEL_DEEP || "gpt-4o-mini").startsWith("glm-"))) {
+    validatePricingEnv(env);
+  }
+} catch (e) {
+  console.error(`[CONFIG ERROR] ${e.message}`);
+  process.exit(1);
+}
 
 // GLM rate limiter — global singleton across all routes (Z.ai measures per API key)
 const glmLimiter = new GlmRateLimiter({

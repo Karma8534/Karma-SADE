@@ -27,8 +27,9 @@
 
 ### Phase G — Config Validation Gate (Session 61, active)
 - Net-new: MODEL_DEFAULT allow-list validation (MODEL_DEEP check already existed)
-- G1 RED: G-a failing (MODEL_DEFAULT check missing), G-b already passes
-- Next: GREEN — ALLOWED_DEFAULT_MODELS constant + extend validateModelEnv + try/catch startup wrapper
+- G1 RED: G-a failing (MODEL_DEFAULT check missing), G-b already passes ✅
+- G2 GREEN: ALLOWED_DEFAULT_MODELS added, validateModelEnv extended, try/catch startup wrapper — 27/27 ✅
+- Next: G3 deploy + log proof
 
 ### Completed This Session
 - STATE.md + direction.md updated (both stale — S57 and Feb 23 respectively)

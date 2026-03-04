@@ -96,21 +96,32 @@ export const glmLimiter = new GlmRateLimiter({
 
 // ── Model routing ────────────────────────────────────────────────────────────
 
-/** Allowed values for MODEL_DEEP. Fail-fast if configured otherwise. */
+/** Allowed values for MODEL_DEFAULT (free tier). Fail-fast if configured otherwise. */
+export const ALLOWED_DEFAULT_MODELS = ["glm-4.7-flash"];
+
+/** Allowed values for MODEL_DEEP (paid tier). Fail-fast if configured otherwise. */
 export const ALLOWED_DEEP_MODELS = ["gpt-4o-mini"];
 
 const DEFAULT_MODEL_DEFAULT = "glm-4.7-flash";
 const DEFAULT_MODEL_DEEP    = "gpt-4o-mini";
 
 /**
- * Validate model env vars at startup. Throws if MODEL_DEEP is not in allowed set.
+ * Validate model env vars at startup. Throws if either model is not in its allowed set.
  * @param {Record<string,string>} env
  */
 export function validateModelEnv(env) {
+  const defaultModel = env.MODEL_DEFAULT || DEFAULT_MODEL_DEFAULT;
+  if (!ALLOWED_DEFAULT_MODELS.includes(defaultModel)) {
+    throw new Error(
+      `[CONFIG] MODEL_DEFAULT="${defaultModel}" not in allowed list: [${ALLOWED_DEFAULT_MODELS.join(", ")}]. ` +
+      "Fix MODEL_DEFAULT in hub.env. Refusing to start."
+    );
+  }
+
   const deepModel = env.MODEL_DEEP || DEFAULT_MODEL_DEEP;
   if (!ALLOWED_DEEP_MODELS.includes(deepModel)) {
     throw new Error(
-      `[ROUTING] MODEL_DEEP="${deepModel}" is not in allowed set: [${ALLOWED_DEEP_MODELS.join(", ")}]. ` +
+      `[CONFIG] MODEL_DEEP="${deepModel}" not in allowed list: [${ALLOWED_DEEP_MODELS.join(", ")}]. ` +
       "Fix MODEL_DEEP in hub.env. Refusing to start."
     );
   }
