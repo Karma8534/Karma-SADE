@@ -12,6 +12,18 @@
 
 **PDF primitives extraction filter:** (1) fits single-consciousness, (2) no dependency gravity, (3) no parallel truth, (4) implementable in existing vault-neo + Hub Bridge + FalkorDB stack
 
+## Aria Plan Documents — Path (2026-03-04)
+
+**Location:** `C:\Users\raest\OneDrive\Documents\AgenticKarma\FromAnthropicComputer`
+
+**Contents:**
+- `v7/` — Aria's v7 architecture docs (2026-02-28): `KARMA_BUILD_PLAN_v7.md`, `KARMA_MEMORY_ARCHITECTURE_v7.md`, `KARMA_PEER_ARCHITECTURE_v7.md`, `KARMA_HARDENED_REVIEW_v7.md`, `KARMA_VERIFICATION_CHAT_TEST.md` (2026-03-03)
+- `KarmaPlans1/` — Earlier plans (2026-02-26): `KARMA_BUILD_PLAN.md`, `KARMA_PEER_ARCHITECTURE.md`, `KARMA_MEMORY_ARCHITECTURE.md`, `K2_INTEGRATION_ANALYSIS.md`
+- `AsherMemRev.md`, `MemoryApproach.PDF` — Aria memory review docs
+- Reconciliation rule (CLAUDE.md): read fully before applying, check against disk/git, merge additively, flag drift
+
+---
+
 ## Session 60 (2026-03-04) — drift-fix Phase: Architecture Realignment IN PROGRESS
 
 **Status:** ✅ drift-fix COMPLETE. ✅ Phase F (GLM rate limiter) COMPLETE — all V1-V5 verified.

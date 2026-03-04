@@ -363,6 +363,17 @@ Canonical paths for Karma's files on vault-neo. These must never drift.
 
 **`aria.md`**: Not found on droplet (Feb 2026). If Aria writes a file by this name, canonical location will be `/home/neo/karma-sade/aria.md`.
 
+## Local File Locations (Colby's Machine)
+
+| What | Path |
+|------|------|
+| API keys / secrets | `C:\Users\raest\OneDrive\Documents\Aria1\NFO\mylocks1.txt` |
+| Aria plan documents | `C:\Users\raest\OneDrive\Documents\AgenticKarma\FromAnthropicComputer` |
+| → v7 architecture docs | `...\FromAnthropicComputer\v7\` — `KARMA_BUILD_PLAN_v7.md`, `KARMA_MEMORY_ARCHITECTURE_v7.md`, `KARMA_PEER_ARCHITECTURE_v7.md`, `KARMA_HARDENED_REVIEW_v7.md` (2026-02-28) |
+| → Earlier plans | `...\FromAnthropicComputer\KarmaPlans1\` — v1/v2 build plans, K2 integration analysis (2026-02-26) |
+| PDF knowledge base | `C:\Users\raest\Documents\Karma_SADE\Karma_PDFs\` (gitignored) |
+| Karma SADE repo | `C:\Users\raest\Documents\Karma_SADE\` |
+
 ## Aria Reconciliation Protocol
 Aria (ChatGPT co-creator) writes intent from her model of the system. Her model drifts
 from actual spine state between sessions — she may generate steps already completed or
