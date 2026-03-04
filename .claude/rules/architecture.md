@@ -37,7 +37,7 @@ Ledger → batch_ingest (cron every 6h on vault-neo) → FalkorDB neo_workspace 
 - Auth: Bearer token read via SSH from vault-neo at hook runtime
 
 ### PDF/Image Ingestion (Tier 2 — Enrichment)
-- **karma-inbox-watcher.ps1**: PowerShell FileSystemWatcher on `OneDrive\Karma\Inbox` and `OneDrive\Karma\Gated`
+- **karma-inbox-watcher.ps1**: PowerShell FileSystemWatcher on `Karma_PDFs/Inbox` and `Karma_PDFs/Gated` (Processing: `Karma_PDFs/Processing`, Done: `Karma_PDFs/Done`)
 - POSTs base64-encoded files to `/v1/ingest` on hub-bridge
 - Rate-limit aware: detects 429, backs off 60s, retries up to 3x, writes `.jammed.txt` if exhausted
 - Time-window scheduling: optional params `$ProcessingWindowStart`/`$ProcessingWindowEnd` for off-peak batch
