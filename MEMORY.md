@@ -1,21 +1,30 @@
 # Universal AI Memory — Current State
 
-## v8 System Prompt Correction (2026-03-04)
-- Fixed: ChromaDB → FAISS in infrastructure list and memory architecture section
-- Added: Semantic Memory section describing FAISS injection (was "planned", now live)
+## v8 COMPLETE — All Phases Done (2026-03-04)
 
-## v8 Phase 2 — Semantic Retrieval (2026-03-04)
+| Phase | Goal | Status |
+|-------|------|--------|
+| Phase 1: Fix self-knowledge | System prompt describes actual hub-bridge system | ✅ COMPLETE |
+| Phase 3: Correction capture | corrections-log.md + CC session-end protocol | ✅ COMPLETE |
+| Phase 2: Semantic retrieval | FAISS fetchSemanticContext() wired into hub-bridge | ✅ COMPLETE |
+| Phase 4: v7 cleanup | Budget guard verified, capability gate verified, 3040 lane=NULL fixed | ✅ COMPLETE |
+
+### Phase 4 details (2026-03-04)
+- MONTHLY_USD_CAP=35.00 already in hub.env — no change needed
+- x-karma-deep capability gate already in server.js — no change needed
+- lane=NULL backfill: SET lane="episodic" on 3040 Episodic nodes in neo_workspace — 0 remaining
+
+### Phase 2 details (2026-03-04)
 - anr-vault-search: FAISS service (not ChromaDB), 4073 entries indexed, auto-reindex on ledger change + every 5min
 - Added fetchSemanticContext() to hub-bridge — queries anr-vault-search:8081/v1/search, top-5 results
 - karmaCtx + semanticCtx fetched in parallel (Promise.all), both injected into buildSystemText
-- Task 2.4 NOT NEEDED — service already auto-reindexes (file watcher + periodic)
-- Phase 2 complete pending rebuild verification
 
-## v8 Phase 1 — System Prompt Deploy (2026-03-04)
-- Task 1.1 DONE: Audited live system prompt — confirmed Open WebUI/Ollama persona from Feb 2026
-- Task 1.2 DONE: Drafted replacement (Current_Plan/v8/00-karma-system-prompt-DRAFT.md) — accurate hub-bridge arch, Brave Search enabled, 5 data model corrections
-- Task 1.3 IN PROGRESS: Deploying to Memory/00-karma-system-prompt-live.md on vault-neo
+### Phase 1 details (2026-03-04)
+- Audited live system prompt — was Open WebUI/Ollama persona from Feb 2026
+- Rewrote: accurate hub-bridge arch, Brave Search, FAISS semantic memory, 5 data model corrections
+- Wired KARMA_IDENTITY_PROMPT into hub-bridge buildSystemText() (was NOT being loaded before)
 - Brave Search: BSA key configured, debug_search:hit confirmed working
+- 4/4 acceptance tests pass
 
 ## Karma Architecture — Locked Principles (2026-03-03)
 
