@@ -7,7 +7,7 @@ in an append-only ledger. FalkorDB graph is populated by batch_ingest running on
 
 **Chrome extension: SHELVED.** Never reliably captured conversations. Not in active use.
 
-## Active Capture Sources (as of 2026-03-03)
+## Active Capture Sources (as of 2026-03-04)
 
 | Source | Mechanism | Last seen in ledger |
 |--------|-----------|---------------------|
@@ -27,6 +27,11 @@ Direct chat         → /v1/chat          ↗
 PDF/images          → /v1/ingest        ↗
 
 Ledger → batch_ingest (cron every 6h on vault-neo) → FalkorDB neo_workspace graph
+Ledger → anr-vault-search (auto-reindex on change + every 5min) → FAISS vector index
+
+/v1/chat request → [karmaCtx via karma-server, semanticCtx via anr-vault-search] in parallel
+                 → buildSystemText(karmaCtx, ckLatest, webResults, semanticCtx)
+                 → GLM-4.7-Flash (primary) or gpt-4o-mini (deep mode)
 ```
 
 ## Layer Details
@@ -49,6 +54,9 @@ Ledger → batch_ingest (cron every 6h on vault-neo) → FalkorDB neo_workspace 
 - Endpoints in use: `/v1/ambient` (hook capture), `/v1/chat` (Karma chat), `/v1/context` (context query), `/v1/cypher` (graph query), `/v1/self-model`, `/v1/ingest` (PDF pipeline)
 - Auth: Bearer token (hub.chat.token.txt for chat; hub.capture.token.txt for ambient hooks)
 - Model routing: GLM-4.7-Flash primary (~80%), gpt-4o-mini fallback (~20%) — Decision #7
+- **System prompt**: Loaded from `Memory/00-karma-system-prompt-live.md` at startup via `KARMA_IDENTITY_PROMPT`. Injected as `identityBlock` at top of `buildSystemText()`. Future updates: git pull + `docker restart anr-hub-bridge` only (no rebuild needed).
+- **Context assembly**: Each `/v1/chat` fetches `karmaCtx` (FalkorDB recency via karma-server) + `semanticCtx` (FAISS top-5 via anr-vault-search) in parallel via `Promise.all`.
+- **Brave Search**: Auto-triggered by `SEARCH_INTENT_REGEX` on user message. Top-3 results injected into context. API key at `/opt/seed-vault/memory_v1/session/brave.api_key.txt`.
 
 ### Vault API
 - FastAPI application running in Docker (anr-vault-api container)
@@ -56,9 +64,9 @@ Ledger → batch_ingest (cron every 6h on vault-neo) → FalkorDB neo_workspace 
 - Appends to JSONL ledger at `/opt/seed-vault/memory_v1/ledger/memory.jsonl`
 
 ### Storage
-- **Ledger**: `/opt/seed-vault/memory_v1/ledger/memory.jsonl` — ~4000+ entries (2026-03-03), append-only
-- **FalkorDB**: `neo_workspace` graph — 3621 nodes (3049 Episodic + 571 Entity + 1 Decision) — fully caught up 2026-03-04
-- **ChromaDB**: anr-vault-search container — semantic vector search (status: running but not recently updated)
+- **Ledger**: `/opt/seed-vault/memory_v1/ledger/memory.jsonl` — ~4000+ entries (2026-03-04), append-only
+- **FalkorDB**: `neo_workspace` graph — 3621 nodes (3049 Episodic + 571 Entity + 1 Decision) — lane=NULL backfill complete 2026-03-04
+- **anr-vault-search (FAISS)**: NOT ChromaDB — custom `search_service.py` using FAISS + OpenAI `text-embedding-3-small`. 4073+ entries indexed. Endpoint: `POST localhost:8081/v1/search`. Auto-reindexes on ledger file change (FileSystemWatcher) + every 5 min.
 - **SQLite**: `/opt/seed-vault/memory_v1/memory.db` — observations table (consciousness loop writes here)
 
 ## Ledger Entry Distribution (actual, 2026-03-03)

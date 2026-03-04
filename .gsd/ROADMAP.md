@@ -1,18 +1,16 @@
 # ROADMAP: Karma Peer — Phases & Milestones
 
-**Last updated:** 2026-03-03
-**Current phase:** Tier 2 (Ambient Context Endpoint) — IN PROGRESS
-**Next major phase:** Tier 1 Ambient Hooks — READY TO TEST
+**Last updated:** 2026-03-04
+**Current phase:** v8 COMPLETE — all phases done
+**Next major phase:** v9 (TBD — see Decision Points below)
 
 ---
 
 ## Milestone 1: Foundation (✅ COMPLETE)
 
-**Goal:** Establish Karma's persistent identity on droplet.
-
 ### Phase 1: Core Infrastructure ✅
 - [x] Droplet setup (vault-neo, DigitalOcean NYC3)
-- [x] Hub-bridge API (HTTP at localhost:8340, HTTPS at hub.arknexus.net)
+- [x] Hub-bridge API (HTTPS at hub.arknexus.net)
 - [x] FalkorDB neo_workspace graph initialized
 - [x] JSONL ledger at /opt/seed-vault/memory_v1/ledger/memory.jsonl
 - [x] Consciousness.jsonl for growth logging
@@ -22,230 +20,172 @@
 - [x] invariants.json locked (truth alignment, substrate independence)
 - [x] direction.md documented (mission, architecture, constraints)
 - [x] Voice overhaul: peer-level language, no service-desk closers
-- [x] Self-model system seeded (8 baseline observations)
+- [x] Self-model system seeded
 
 ### Phase 3: Continuity (Work-Loss Prevention) ✅
 - [x] Pre-commit hook: blocks commits without MEMORY.md
-- [x] Session-end hook: 6-point verification checklist
+- [x] Session-end hook: 7-point verification checklist
 - [x] CLAUDE.md updated: mandatory gates documented
-- [x] Resurrection script working: Get-KarmaContext.ps1 loads session state
+- [x] Resurrection script working: Get-KarmaContext.ps1 loads session state from vault-neo cron brief
 - [x] GSD file structure: PROJECT.md, REQUIREMENTS.md, STATE.md, ROADMAP.md
 
-**Status:** Foundation solid. Ready for Tier 1-3.
-
 ---
 
-## Milestone 2: Ambient Capture Layer (IN PROGRESS)
+## Milestone 2: Ambient Capture Layer (✅ COMPLETE)
 
-**Goal:** Capture Karma's actions and context automatically. Three-tier approach: commit hooks (T1), context queries (T2), screen capture (T3).
+### Tier 1: Git Hooks → /v1/ambient ✅
+- [x] post-commit hook fires on every git commit → /v1/ambient → vault ledger
+- [x] session-end hook fires when CC session ends → /v1/ambient → vault ledger
+- [x] Token auth working; end-to-end verified in ledger
 
-### Tier 1: Git Hooks → /v1/ambient ✅ VERIFIED
-
-**What it does:** When Colby commits code, hook fires → POST to /v1/ambient → captures context → stored in vault ledger.
-
-**Current status (verified 2026-03-03):**
-- [x] Hook created locally: `.git/hooks/post-commit`
-- [x] Session-end hook: `.claude/hooks/session-end.sh`
-- [x] Token auth working
-- [x] End-to-end verified: commits + session-end entries confirmed in ledger
-
-### Hub/Chat → FalkorDB Ingest ✅ COMPLETE (2026-03-03)
-
-**What it does:** 1538 Colby↔Karma /v1/chat conversations retroactively ingested into FalkorDB. All future conversations captured via cron batch_ingest every 6h.
-
-**Root cause fixed:** `batch_ingest.py` only read `assistant_message`; hub/chat uses `assistant_text`. Extended to detect hub/chat by tags.
-
-**Current status:**
-- [x] batch_ingest.py extended (hub-chat tag detection + assistant_text fallback)
-- [x] Committed + deployed to container
-- [x] Batch running (1538 conversations, wave 3/54 at time of writing)
-- [ ] karma-server image rebuild (CRITICAL — cron uses baked image, not live container file — do next session after batch completes)
-
----
-
-### Tier 2: /v1/context Endpoint ✅ DEPLOYED
-
-**What it does:** Karma queries her own context. "What happened in the last session?" → /v1/context returns consciousness.jsonl tail + FalkorDB graph state.
-
-**Current status:**
+### Tier 2: /v1/context Endpoint ✅
 - [x] Endpoint implemented in hub-bridge
-- [x] Queries consciousness.jsonl (last N entries)
-- [x] Queries FalkorDB (entity count, relationship count, recent changes)
-- [x] Verified working in Session 55
+- [x] Queries consciousness.jsonl + FalkorDB graph state
+- [x] Verified working
 
-**Response format:**
-```json
-{
-  "consciousness_tail": [
-    {"timestamp": "2026-03-03T01:00:00Z", "type": "LOG_GROWTH", "message": "..."},
-    ...
-  ],
-  "graph_state": {
-    "episodes": 1268,
-    "entities": 167,
-    "relationships": 832,
-    "recent_changes": {...}
-  }
-}
-```
-
-**Status:** Tier 2 complete. Karma can query her own state.
-
----
+### Hub/Chat → FalkorDB Ingest ✅ (Sessions 57–59)
+- [x] batch_ingest.py extended for hub/chat tags + assistant_text fallback
+- [x] --skip-dedup mode deployed (899 eps/s, 0 errors vs 85% timeout rate with Graphiti)
+- [x] Cron every 6h on vault-neo
+- [x] karma-server image rebuilt
+- [x] 3049 episodes fully ingested into FalkorDB neo_workspace
 
 ### Tier 3: Screen Capture Daemon ⏳ FUTURE
-
-**What it does:** Passive observation daemon. Periodically screenshots P1 and K2 desktops. Stores as ambient context (what was visible, what was being worked on).
-
-**Current status:**
 - [ ] Daemon not yet implemented
-- [ ] Infrastructure: needs screen capture tool + storage + cleanup
-- [ ] Privacy: explicit permission from Colby required
-
-**Estimated effort:** 20-40 hours (daemon + API endpoint + UI integration).
-
-**Status:** Deferred to post-Tier-1-test. Low priority for now.
+- [ ] Requires Colby explicit approval (privacy)
+- [ ] Estimated effort: 20-40 hrs
 
 ---
 
-## Milestone 3: K2 Worker Integration (FUTURE)
+## Milestone 3: Architecture Correctness (✅ COMPLETE — Sessions 57–62)
 
-**Goal:** K2 (192.168.0.226) becomes active worker. Consciousness loop syncs to droplet. Decisions respected across K2 reboots.
+### Phase A: Blocker Resolution ✅ (Sessions 57–59)
+- [x] FalkorDB unfrozen (LEDGER_PATH corrected)
+- [x] Hub/chat entries reach FalkorDB (batch_ingest extended)
+- [x] Auto-schedule cron configured (every 6h)
+- [x] karma-server restart loop fixed (gpt-5-mini → gpt-4o-mini)
+- [x] OpenAI API key secured (file-based, not docker inspect-visible)
 
-### Phase 1: K2 Sync Protocol ⏳ PENDING
+### Phase B: Drift Fix ✅ (Session 60)
+- [x] Pricing/routing aligned with Decision #2 (GLM=$0, deep=gpt-4o-mini)
+- [x] MODEL_DEEP default corrected in hub.env
+- [x] ANALYSIS_MODEL default corrected in karma-server
+- [x] build_hub.sh: app/ guard added to prevent building from wrong directory
 
-**What it does:**
-1. K2 at startup reads STATE.md from droplet (decisions, blockers)
-2. K2 consciousness loop respects {phase}-CONTEXT.md design locks
-3. K2 updates FalkorDB locally
-4. K2 syncs changes back to droplet on interval (60s) or on-commit
+### Phase F: GLM Rate Limiter ✅ (Session 60)
+- [x] GlmRateLimiter class: 20 RPM global sliding-window
+- [x] /v1/chat: 429 on rate limit
+- [x] /v1/ingest: waitForSlot (60s)
+- [x] 25/25 TDD tests GREEN; V1-V5 production verified
 
-**Current status:**
-- [ ] K2 not online (offline in current session)
-- [ ] Reverse tunnel not configured (droplet:2223 → K2:22)
-- [ ] Sync protocol not implemented
-
-**Blocker:** K2 unavailable. Test when K2 online.
-
----
-
-### Phase 2: Multi-Agent Consciousness ⏳ FUTURE
-
-**What it does:**
-- K2 runs primary consciousness loop (OBSERVE on FalkorDB deltas)
-- Claude Code runs secondary loop (session-driven reasoning)
-- Both sync to droplet
-- Colby acts as final authority (DECIDE, ACT, REFLECT)
-
-**Status:** Architectural sketch only. Requires Phase 1 complete.
+### Phase G: Config Validation Gate ✅ (Session 61)
+- [x] MODEL_DEFAULT allow-list validation (MODEL_DEEP check was already present)
+- [x] [CONFIG ERROR] structured log + process.exit(1) on bad config
+- [x] 27/27 TDD tests GREEN
+- [x] docker exit_code=1 on bad MODEL_DEFAULT verified in production
 
 ---
 
-## Milestone 4: GSD Workflow Mastery (FUTURE)
+## Milestone 4: v8 — Self-Knowledge & Semantic Retrieval (✅ COMPLETE — Session 62)
 
-**Goal:** Use GSD commands to structure feature work. Reduce context rot. Improve reliability.
+### Phase 1: Fix self-knowledge ✅
+- [x] Audited live system prompt — confirmed stale Open WebUI/Ollama persona from Feb 2026
+- [x] Rewrote Memory/00-karma-system-prompt-live.md: accurate hub-bridge arch, Brave Search, FAISS, 5 data model corrections
+- [x] Discovered + fixed: hub-bridge was NOT loading the system prompt file — wired KARMA_IDENTITY_PROMPT at startup
+- [x] 4/4 acceptance tests pass
+- [x] direction.md on droplet refreshed to current reality
 
-### Phase 1: Manual GSD Workflow ✅ READY NOW
+### Phase 3: Correction Capture Protocol ✅
+- [x] Memory/corrections-log.md created with 6 backlog corrections
+- [x] CLAUDE.md Session End Protocol step 2 added
 
-**What it does:** Use files (not CLI commands) to structure work.
-1. /gsd:discuss-phase (manual) — write design decisions to {phase}-CONTEXT.md
-2. /gsd:plan-phase (manual) — write atomic tasks to {phase}-PLAN.md
-3. /gsd:execute-phase (manual) — execute plans, fresh context per task
-4. /gsd:verify-work (manual) — UAT, log results
+### Phase 2: Semantic Retrieval ✅
+- [x] Confirmed: anr-vault-search is FAISS not ChromaDB
+- [x] fetchSemanticContext() added to hub-bridge (4s timeout, top-5, POST :8081/v1/search)
+- [x] karmaCtx + semanticCtx fetched in parallel (Promise.all) per /v1/chat request
+- [x] Semantic memory injected into buildSystemText()
+- [x] All ChromaDB references corrected to FAISS across all docs
 
-**Current status:**
-- [x] File structure created (.gsd directory)
-- [x] PROJECT.md, REQUIREMENTS.md, STATE.md, ROADMAP.md in place
-- [ ] First {phase}-CONTEXT.md (for Ambient Tier 1 completion)
-- [ ] First {phase}-PLAN.md (atomic task breakdown)
-
-**Next action:** Use for Tier 1 work (discuss → plan → execute → verify).
-
----
-
-### Phase 2: GSD CLI Commands (OPTIONAL) ⏳ FUTURE
-
-**What it does:** Install GSD framework. Get /gsd:discuss-phase, /gsd:plan-phase, /gsd:execute-phase commands.
-
-**Current status:**
-- [ ] GSD not installed in Claude Code
-- [ ] Manual workflow sufficient for now
-- [ ] Consider installing after Tier 1 verified
-
-**Effort:** 30 minutes (install) + learning curve.
+### Phase 4: v7 Cleanup ✅
+- [x] MONTHLY_USD_CAP=35.00 verified in hub.env (pre-existing)
+- [x] x-karma-deep capability gate verified in server.js (pre-existing)
+- [x] 3040 Episodic nodes with lane=NULL backfilled → lane="episodic". 0 remaining.
 
 ---
 
-## Milestone 5: Self-Improvement Loop (FUTURE)
-
-**Goal:** Karma learns from experience. DPO pairs → fine-tuning → improved responses.
-
-### Phase 1: DPO Data Collection ⏳ IN PROGRESS
-
-**What it does:** Collect preference pairs (response A vs response B, which is better?). Target: 20+ pairs for initial fine-tuning.
-
-**Current status:**
-- [ ] 0/20 pairs collected
-- [ ] Mechanism not yet in place (manual or automatic?)
-
-**Next action:** Implement during /gsd:verify-work (ask Colby: "Is this response better than the alternative?").
+## Milestone 5: GSD Workflow (✅ ADOPTED — Session 57)
+- [x] Manual GSD workflow in use (CONTEXT.md, PLAN.md, SUMMARY.md per phase)
+- [x] STATE.md, ROADMAP.md, PROJECT.md, REQUIREMENTS.md maintained
 
 ---
 
-### Phase 2: Fine-Tuning (FUTURE) ⏳ BLOCKED
+## Milestone 6: Self-Improvement Loop (FUTURE)
 
-**What it does:** Use DPO pairs to fine-tune Karma's model. Better instruction-following. More peer-like voice.
+### Phase 1: DPO Data Collection ⏳
+- [ ] 0/20 preference pairs collected
+- [ ] Mechanism not yet in place
+- [ ] Needs explicit Colby approval on pair collection approach
 
-**Current status:**
-- [ ] Blocked on Phase 1 (need data first)
-- [ ] Decision: fine-tune on gpt-4o-mini or separate custom model?
-
----
-
-## Timeline Estimate
-
-| Milestone | Phase | Effort | Status |
-|-----------|-------|--------|--------|
-| Foundation | 1-3 | ✅ DONE | Complete. Droplet operational. |
-| Ambient | Tier 1 | ✅ DONE | Verified. Git + session-end hooks → ledger confirmed. |
-| Ambient | Hub/Chat Ingest | ✅ DONE | 1538 conversations ingesting. Image rebuild pending. |
-| Ambient | Tier 2 | ✅ DONE | Deployed. /v1/context working. |
-| Ambient | Tier 3 | 20-40 hrs | Deferred. Low priority. |
-| K2 Worker | Phase 1 | 4-8 hrs | Blocked (K2 offline). Test when online. |
-| K2 Worker | Phase 2 | 10-20 hrs | Future. Requires Phase 1 complete. |
-| GSD Workflow | Phase 1 | ✅ ADOPTED | Manual workflow in use. STATE/ROADMAP/SUMMARY docs active. |
-| GSD Workflow | Phase 2 | 30 min | Optional. Install GSD if manual not sufficient. |
-| Self-Improvement | Phase 1 | 2-4 hrs | Mechanism needed. Implement in verify-work. |
-| Self-Improvement | Phase 2 | TBD | Blocked on data collection. |
+### Phase 2: Fine-Tuning ⏳ BLOCKED
+- [ ] Blocked on Phase 1 (data first)
+- [ ] Decision pending: fine-tune gpt-4o-mini or separate model
 
 ---
 
-## Decision Points (Upcoming)
+## Milestone 7: K2 Worker Integration (FUTURE)
 
-### Decision #8: K2 Availability
-**Question:** When is K2 coming online?
-**Implication:** K2 online unlocks: K2 sync protocol, multi-agent consciousness, Tier 3 ambient.
-**Next step:** Check with Colby on K2 status.
+### Phase 1: K2 Sync Protocol ⏳
+- [ ] K2 (192.168.0.226) not currently used as active worker
+- [ ] Consciousness loop runs on droplet only (OBSERVE-only, 60s)
+- [ ] Blocker: K2 not configured with sync protocol
 
-### Decision #9: karma-server Image Rebuild Approach
-**Question:** Rebuild from local source (karma-core/) on vault-neo, or push updated image from P1?
-**Recommendation:** Build directly on vault-neo (`docker build` in `/home/neo/karma-sade/karma-core/`) — simpler, no registry needed.
-**Action:** Next session, after batch completes.
+### Phase 2: Multi-Agent Consciousness ⏳
+- [ ] Requires Phase 1 complete
 
 ---
 
-## Constraints & Unknowns
+## Timeline — Current
 
-- **K2 status:** Offline. When coming online? (Unlocks K2 sync + multi-agent consciousness)
-- **Tier 3 infrastructure:** Screen capture requires new tooling. Approved by Colby?
-- **GSD CLI:** Not installed. Manual workflow sufficient. Install if needed.
-- **Fine-tuning budget:** Conversation capture now working. DPO accumulation begins. Budget TBD.
-- **Droplet capacity:** FalkorDB at ~2000+ episodes (batch in progress). Growth ceiling unknown — monitor.
-- **karma-server image rebuild:** PENDING next session. Cron uses stale image until rebuilt.
-- **karma-server restart loop (Blocker #4):** Root cause unknown. Investigate next session.
+| Milestone | Phase | Status |
+|-----------|-------|--------|
+| Foundation | Core + Identity + Continuity | ✅ DONE |
+| Ambient | Tier 1 + Tier 2 + Hub/Chat Ingest | ✅ DONE |
+| Ambient | Tier 3 (screen capture) | ⏳ FUTURE |
+| Architecture Correctness | Blockers + Drift + Rate Limiter + Config Gate | ✅ DONE |
+| v8 | Self-knowledge + Semantic retrieval + Correction capture + Cleanup | ✅ DONE |
+| GSD Workflow | Manual | ✅ ADOPTED |
+| Self-Improvement | DPO collection | ⏳ 0/20 pairs |
+| Self-Improvement | Fine-tuning | ⏳ BLOCKED |
+| K2 Worker | Sync protocol | ⏳ K2 not configured |
+| K2 Worker | Multi-agent | ⏳ FUTURE |
 
 ---
 
-**Last updated:** 2026-03-03 (Session 57)
-**Next review:** After karma-server image rebuild + Blocker #4 resolved
+## Decision Points (Open)
+
+### v9 Direction
+**Question:** What is v9? Possible directions:
+- Ambient Tier 3 (screen capture daemon)
+- DPO preference pair accumulation mechanism
+- karma-terminal capture refresh (stale since 2026-02-27)
+- K2 worker integration
+**Next step:** Colby decides priority.
+
+### K2 Availability
+**Question:** Is K2 (192.168.0.226) intended as active worker anytime soon?
+**Implication:** Unlocks K2 sync protocol, multi-agent consciousness, potential Tier 3.
+
+---
+
+## Known Quality Gaps (Active)
+
+- **--skip-dedup = no entity extraction**: batch_ingest in --skip-dedup mode writes Episodic nodes directly via Cypher, bypassing Graphiti. This means NO entity/relationship extraction for bulk-ingested episodes. Only Episodic nodes exist for those 3049 episodes — no cross-session Entity nodes derived from them. Acceptable for now (entities come from real-time Graphiti for new episodes), but long-term the bulk episodes have no entity graph.
+- **karma-terminal capture stale**: last capture 2026-02-27. Not a blocker but gap in capture continuity.
+- **DPO pairs**: 0/20 collected. Fine-tuning loop not started.
+- **Brave Search**: auto-triggered by regex on message content. No manual override or session-level toggle. Low priority.
+
+---
+
+**Last updated:** 2026-03-04 (Session 62 — v8 complete)
+**Next review:** When v9 direction is decided
 **Owner:** Claude Code (updates on Colby approval)

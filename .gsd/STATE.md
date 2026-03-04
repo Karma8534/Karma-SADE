@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-04T16:00:00Z
-**Session:** 60 (drift-fix Phase COMPLETE)
+**Last updated:** 2026-03-04T21:00:00Z
+**Session:** 62 (v8 ALL PHASES COMPLETE)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -28,6 +28,11 @@
 | **Config Validation Gate** | ✅ LIVE | MODEL_DEFAULT + MODEL_DEEP allow-lists. [CONFIG ERROR] + exit(1) on bad config. 27/27 tests. |
 | **OpenAI API key** | ✅ SECURED | File-based read (mounted volume), not env var (docker inspect clean). |
 | **PDF Watcher** | ✅ WORKING | Rate-limit backoff + jam notification + time-window scheduling. |
+| **System Prompt Accuracy** | ✅ CORRECT | Memory/00-karma-system-prompt-live.md wired via KARMA_IDENTITY_PROMPT. 4/4 acceptance tests pass. Session-62. |
+| **FAISS Semantic Retrieval** | ✅ LIVE | fetchSemanticContext() in hub-bridge. karmaCtx + semanticCtx via Promise.all. 4073 entries indexed. Session-62. |
+| **Correction Capture Protocol** | ✅ LIVE | Memory/corrections-log.md + CC Session End step 2. Session-62. |
+| **FalkorDB lane backfill** | ✅ DONE | 3040 Episodic nodes with lane=NULL → lane="episodic". 0 remaining. Session-62. |
+| **anr-vault-search** | ✅ FAISS | Custom search_service.py (NOT ChromaDB). FAISS + text-embedding-3-small. Auto-reindex on ledger change. |
 
 ---
 
@@ -147,6 +152,69 @@ System is in maintenance/growth mode. No urgent fixes. Possible work:
 
 ---
 
-**Last updated:** 2026-03-04T19:00:00Z (Session 61 COMPLETE)
+### Session 62 Accomplishments (v8 — 2026-03-04)
+
+**v8 Phase 1: Fix self-knowledge**
+- Audited live system prompt — confirmed it was describing Open WebUI/Ollama from Feb 2026, not actual hub-bridge system
+- Rewrote Memory/00-karma-system-prompt-live.md: accurate arch, Brave Search, FAISS, 5 data model corrections
+- Discovered: hub-bridge was NOT loading the system prompt file — buildSystemText() was fully hardcoded
+- Wired KARMA_IDENTITY_PROMPT via fs.readFileSync at startup, injected as identityBlock in buildSystemText()
+- Future system prompt updates: git pull + docker restart only (no rebuild needed)
+- 4/4 acceptance tests pass: tools list, .verdict.txt location, batch_ingest direction, GLM-4.7-Flash identity
+
+**v8 Phase 3: Correction capture**
+- Memory/corrections-log.md created with format template + 6 backlog corrections (all INCORPORATED)
+- CLAUDE.md Session End Protocol step 2 added: scan session for Karma errors → corrections-log.md
+
+**v8 Phase 2: Semantic retrieval**
+- Discovered: anr-vault-search is NOT ChromaDB — it is custom search_service.py using FAISS + OpenAI text-embedding-3-small
+- 4073 entries indexed, auto-reindex on ledger FileSystemWatcher + every 5min periodic
+- Added fetchSemanticContext() to hub-bridge (4s timeout, POST localhost:8081/v1/search, top-5)
+- karmaCtx + semanticCtx now fetched in parallel via Promise.all before each /v1/chat response
+- Tasks 2.2 (new indexer) and 2.4 (cron sync) NOT NEEDED — service already handles these
+- All architecture.md, system prompt, MEMORY.md references corrected from ChromaDB → FAISS
+
+**v8 Phase 4: v7 cleanup**
+- MONTHLY_USD_CAP=35.00 — already in hub.env (no change needed)
+- x-karma-deep capability gate — already in server.js (no change needed)
+- lane=NULL backfill: 3040 Episodic nodes set to lane="episodic" via Cypher. 0 remaining.
+
+### Decision #10: KARMA_IDENTITY_PROMPT file-loaded at startup (2026-03-04, LOCKED)
+Hub-bridge reads Memory/00-karma-system-prompt-live.md via KARMA_SYSTEM_PROMPT_PATH env var at startup.
+Injected as identityBlock at top of buildSystemText(). File is volume-mounted read-only.
+Future persona changes require only: git pull on vault-neo + docker restart anr-hub-bridge. No rebuild.
+
+### Decision #11: anr-vault-search is FAISS (confirmed 2026-03-04)
+anr-vault-search container runs custom search_service.py — FAISS + OpenAI text-embedding-3-small.
+NOT ChromaDB. Endpoint: POST localhost:8081/v1/search. All ChromaDB references removed from all docs.
+
+### Decision #12: Semantic context injected in parallel (2026-03-04, LOCKED)
+karmaCtx (FalkorDB recency) + semanticCtx (FAISS top-5) fetched via Promise.all before every /v1/chat.
+4s timeout on FAISS call — graceful null if service unavailable. No serial dependency.
+
+---
+
+---
+
+## Next Session Agenda (v9)
+
+**What v8 unblocked:**
+1. **System prompt iteration is now cheap**: git pull + `docker restart anr-hub-bridge` only. No rebuild needed. First meaningful persona iteration cycle can begin.
+2. **Semantic memory gives Karma recall**: 4073 entries indexed; Karma can now draw on relevant past episodes in every response. First real continuity-in-conversation mechanism.
+3. **Correction capture is operational**: When Karma says something wrong and is corrected, that goes to corrections-log.md → eventually into system prompt. Self-improvement cycle is now closed.
+4. **FalkorDB lane consistency**: All 3049 Episodic nodes now have lane="episodic". Graph queries by lane now return correct results.
+
+**Open quality gap (pre-existing, not new):**
+- --skip-dedup = no entity extraction for bulk-ingested 3049 episodes. Only Episodic nodes. No cross-session Entity/relationship graph derived from historical episodes. New episodes (post-cron) get Graphiti entity extraction. Gap exists but acceptable.
+
+**v9 candidates (Colby decides):**
+1. DPO preference pair accumulation mechanism (0/20, needs Colby decision on how to collect)
+2. Ambient Tier 3 screen capture daemon
+3. karma-terminal capture refresh (stale 2026-02-27)
+4. First persona iteration: test system prompt improvement cycle now that it's cheap
+
+---
+
+**Last updated:** 2026-03-04T21:00:00Z (Session 62 COMPLETE — v8 ALL PHASES)
 **Owner:** Claude Code (writes on Colby approval)
 **Canonical location:** C:\Users\raest\Documents\Karma_SADE\.gsd\STATE.md

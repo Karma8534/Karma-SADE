@@ -1,6 +1,31 @@
 # Universal AI Memory — Current State
 
-## v8 COMPLETE — All Phases Done (2026-03-04)
+## Session 62 (2026-03-04) — v8 ALL PHASES COMPLETE
+
+**Status:** ✅ COMPLETE
+
+### Verified System State (2026-03-04)
+
+| Component | Status |
+|-----------|--------|
+| Hub Bridge API | ✅ /v1/chat, /v1/ambient, /v1/context, /v1/cypher, /v1/ingest operational |
+| System Prompt | ✅ ACCURATE — Memory/00-karma-system-prompt-live.md wired via KARMA_IDENTITY_PROMPT. 4/4 acceptance tests. |
+| FAISS Semantic Retrieval | ✅ LIVE — fetchSemanticContext() in hub-bridge. 4073 entries. Parallel with FalkorDB context. |
+| Correction Capture | ✅ LIVE — corrections-log.md + CC Session End step 2 |
+| FalkorDB Graph | ✅ 3049 Episodic + 571 Entity + 1 Decision = 3621 nodes. lane=NULL backfill done (3040 nodes fixed). |
+| Consciousness Loop | ✅ OBSERVE-only, 60s cycles, RestartCount: 0 |
+| batch_ingest | ✅ --skip-dedup, cron every 6h, image current |
+| GLM Rate Limiter | ✅ 20 RPM global. 429 on chat, waitForSlot on ingest. |
+| Config Validation Gate | ✅ MODEL_DEFAULT + MODEL_DEEP allow-lists. Exit(1) on bad config. |
+| PDF Watcher | ✅ Rate-limit backoff + jam notification + time-window |
+| Chrome Extension | ❌ SHELVED permanently |
+
+### v8 Key Pitfalls (new this session)
+- **hub-bridge was NOT loading system prompt from file** — buildSystemText() was fully hardcoded. File existed as vault-file alias only. Fix: KARMA_IDENTITY_PROMPT loaded via fs.readFileSync at startup.
+- **anr-vault-search is FAISS not ChromaDB** — all architecture docs had wrong service type. POST :8081/v1/search, not ChromaDB API. Auto-reindexes on ledger change + every 5min.
+- **KARMA_IDENTITY_PROMPT path**: env var `KARMA_SYSTEM_PROMPT_PATH` defaults to `/karma/repo/Memory/00-karma-system-prompt-live.md`. File is volume-mounted read-only. Future persona changes: git pull + docker restart (no rebuild).
+
+### v8 COMPLETE — All Phases Done (2026-03-04)
 
 | Phase | Goal | Status |
 |-------|------|--------|
@@ -223,7 +248,8 @@
 
 ## Known Pitfalls (active)
 - **hub-bridge Dockerfile build context = hub-bridge root (not app/)**: compose.hub.yml uses `context: .` + `dockerfile: app/Dockerfile`. Dockerfile COPYs `app/server.js` + `lib/`. server.js imports `./lib/pricing.js` (from /app). Tests import `../lib/pricing.js` (from hub-bridge/tests/).
-
+- **KARMA_IDENTITY_PROMPT**: hub-bridge reads system prompt from file at startup via `KARMA_SYSTEM_PROMPT_PATH`. File = `/karma/repo/Memory/00-karma-system-prompt-live.md` (volume-mounted). If file missing, WARN logged, identity block empty (hub still runs). Update cycle: git pull + docker restart only.
+- **anr-vault-search is FAISS not ChromaDB**: endpoint POST :8081/v1/search, body `{query, limit}`. Auto-reindex on ledger FileSystemWatcher + every 5min. Not a ChromaDB API.
 - `python3` not available in Git Bash — use SSH for Python ops
 - Docker compose service: `hub-bridge` (container name: `anr-hub-bridge`)
 - batch_ingest requires `LEDGER_PATH` override (see CLAUDE.md)

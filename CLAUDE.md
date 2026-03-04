@@ -340,6 +340,15 @@ This prevents: image naming mismatches, missing env vars, stale images, silent s
 - **Graphiti embedder reads `OPENAI_API_KEY` from env directly**: Removing env var from compose
   (security fix) breaks batch_ingest Graphiti init. Fix: `os.environ.setdefault("OPENAI_API_KEY", config.OPENAI_API_KEY)`
   in batch_ingest.py after importing config, BEFORE any Graphiti import or initialisation.
+- **hub-bridge system prompt is file-loaded, not hardcoded** (verified 2026-03-04): `KARMA_IDENTITY_PROMPT`
+  is loaded from `Memory/00-karma-system-prompt-live.md` at startup via `fs.readFileSync`. Volume-mounted
+  read-only at `/karma/repo`. To update Karma's persona: edit the file → git commit → git push →
+  `ssh vault-neo 'cd /home/neo/karma-sade && git pull'` → `docker restart anr-hub-bridge`. NO rebuild needed.
+  If the file is missing at startup, hub-bridge logs a WARN and runs with empty identity block (still operational).
+- **anr-vault-search is FAISS, not ChromaDB** (confirmed 2026-03-04): container runs custom `search_service.py`
+  using FAISS + OpenAI `text-embedding-3-small`. Endpoint: `POST localhost:8081/v1/search`
+  body: `{"query": "...", "limit": 5}`. Auto-reindexes on ledger FileSystemWatcher + every 5 min.
+  Do NOT try to call ChromaDB-style API endpoints (`/api/v1/collections`) — they don't exist here.
 
 ## Karma File Locations
 Canonical paths for Karma's files on vault-neo. These must never drift.
