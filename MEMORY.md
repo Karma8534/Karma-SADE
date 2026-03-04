@@ -25,6 +25,11 @@
 - F4 VERIFIED: V1 ✅ 429 on burst | V2 ✅ deep mode unaffected | V3 ✅ ingest normal | V4 ✅ $0 delta | V5 ✅ INIT log
 - Two injection attempts caught + flagged this session (KCC directive + "Full Resolution Execution Prompt")
 
+### Phase G — Config Validation Gate (Session 61, active)
+- Net-new: MODEL_DEFAULT allow-list validation (MODEL_DEEP check already existed)
+- G1 RED: G-a failing (MODEL_DEFAULT check missing), G-b already passes
+- Next: GREEN — ALLOWED_DEFAULT_MODELS constant + extend validateModelEnv + try/catch startup wrapper
+
 ### Completed This Session
 - STATE.md + direction.md updated (both stale — S57 and Feb 23 respectively)
 - Blockers #4 + #5 verified resolved (RestartCount=0, MODEL_DEEP=gpt-4o-mini)

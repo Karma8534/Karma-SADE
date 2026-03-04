@@ -1,5 +1,6 @@
 // Phase B — RED tests for DRIFT #2 (MODEL_DEEP default) and DRIFT #3 (routing)
-// These tests must FAIL against stubs, then PASS after Phase C implementation.
+// Phase G — RED tests for Config Validation Gate (MODEL_DEFAULT allow-list)
+// These tests must FAIL against stubs, then PASS after implementation.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -80,4 +81,24 @@ test("B3-e: chooseModel handles undefined MODEL_DEFAULT gracefully", () => {
   const env = mockEnv({ MODEL_DEFAULT: undefined });
   // Should not throw; return some safe default
   assert.doesNotThrow(() => chooseModel(false, env));
+});
+
+// ── G: Config Validation Gate — MODEL_DEFAULT allow-list ─────────────────────
+
+test("G-a: validateModelEnv throws if MODEL_DEFAULT is not in allowed list", () => {
+  const env = mockEnv({ MODEL_DEFAULT: "glm-unknown-model" });
+  assert.throws(
+    () => validateModelEnv(env),
+    /MODEL_DEFAULT.*not in allowed/,
+    "validateModelEnv must reject glm-unknown-model as MODEL_DEFAULT"
+  );
+});
+
+test("G-b: validateModelEnv throws if MODEL_DEEP is gpt-5 (not in allowed list)", () => {
+  const env = mockEnv({ MODEL_DEEP: "gpt-5" });
+  assert.throws(
+    () => validateModelEnv(env),
+    /MODEL_DEEP.*not in allowed/,
+    "validateModelEnv must reject gpt-5 as MODEL_DEEP"
+  );
 });

@@ -185,5 +185,41 @@
 - [ ] save_observation for Phase B, C, D milestones
 - [ ] Write phase-drift-fix-SUMMARY.md
 - [ ] Commit all doc changes + push + vault-neo sync
+
+---
+
+## Phase G — Config Validation Gate (MODEL_DEFAULT allow-list)
+
+**Scope (net-new only):**
+- `validateModelEnv` today checks MODEL_DEEP only. MODEL_DEFAULT has no allow-list check.
+- Startup validators fire as bare throws — no structured `[CONFIG ERROR]` single-line log.
+- Price validation always runs; should be conditional on MODEL_DEEP being a paid model.
+
+**What we are NOT doing:**
+- Re-testing MODEL_DEEP rejection (already covered by B2-b with gpt-5-mini)
+- Re-testing price env validation (already covered by B1-a/b)
+- Changing routing behavior — fail-fast only
+
+### G1 — RED (write 2 failing tests)
+- [ ] test G-a: `validateModelEnv` throws when `MODEL_DEFAULT="glm-unknown-model"` → `/MODEL_DEFAULT.*not in allowed/`
+- [ ] test G-b: `validateModelEnv` throws when `MODEL_DEEP="gpt-5"` → `/MODEL_DEEP.*not in allowed/`
+- [ ] Confirm both FAIL (feature missing, not syntax error)
+- <verify> `node --test hub-bridge/tests/test_routing.js 2>&1 | grep -E "G-a|G-b|fail"` shows 2 failures </verify>
+
+### G2 — GREEN (implement)
+- [ ] routing.js: add `ALLOWED_DEFAULT_MODELS = ["glm-4.7-flash"]`, extend `validateModelEnv` to check MODEL_DEFAULT
+- [ ] routing.js: change error prefix from `[ROUTING]` to `[CONFIG]` for consistency
+- [ ] server.js: wrap startup validators in try/catch → `console.error("[CONFIG ERROR] ...")` → `process.exit(1)`
+- [ ] server.js: make `validatePricingEnv` conditional — only call when `MODEL_DEEP` is a paid model (`!env.MODEL_DEEP?.startsWith("glm-")`)
+- <verify> All tests pass: `node --test hub-bridge/tests/test_routing.js hub-bridge/tests/test_pricing.js hub-bridge/tests/test_ratelimit.js` → 27/27 GREEN </verify>
+
+### G3 — Deploy + Proof
+- [ ] git commit RED, then GREEN (two separate commits — TDD discipline)
+- [ ] git push → vault-neo pull → cp + rebuild → compose up -d
+- [ ] Log proof: start container with `MODEL_DEFAULT=bad-model` → confirm `[CONFIG ERROR]` line in logs + exit
+- [ ] Update hub.env comments with allowed values
+- [ ] MEMORY.md updated, claude-mem observation saved
+
+**Gate: 27/27 tests GREEN + startup log proof before close.**
 - [ ] Regenerate cc-session-brief.md
 - [ ] Run session-end-verify.sh
