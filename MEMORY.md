@@ -1,13 +1,19 @@
 # Universal AI Memory — Current State
 
-## Session 63 (2026-03-04) — Graphiti Watermark Design
+## Session 64 (2026-03-04) — Entity Relationship Context (Gap 1)
 
 **Status:** 🔵 IN PROGRESS — Design approved, implementation pending
 
 ### Active Task
-Watermark-based Graphiti entity extraction (forward-only).
-Design doc: `docs/plans/2026-03-04-graphiti-watermark-design.md`
-- Watermark file at `/opt/seed-vault/memory_v1/ledger/.batch_watermark`
+Wire RELATES_TO edges + pattern detection into /v1/chat via karma-server `/raw-context`.
+Design doc: `docs/plans/2026-03-04-entity-relationship-context-design.md`
+- Approach C: per-message edge query + 30min cached pattern query
+- hub-bridge: zero changes
+- One file: `karma-core/karma_server.py`
+
+### Session 63 — COMPLETE
+Graphiti watermark deployed. karma-server now runs Graphiti entity extraction on new episodes.
+Watermark at line 4075 in `/opt/seed-vault/memory_v1/ledger/.batch_watermark`.
 - batch_ingest.py: watermark logic + Graphiti as default + 200 episode cap
 - Cron: drop --skip-dedup
 - Deployment requires karma-server rebuild + watermark init
