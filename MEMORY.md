@@ -1,5 +1,24 @@
 # Universal AI Memory — Current State
 
+## Session 63 (2026-03-04) — Graphiti Watermark Design
+
+**Status:** 🔵 IN PROGRESS — Design approved, implementation pending
+
+### Active Task
+Watermark-based Graphiti entity extraction (forward-only).
+Design doc: `docs/plans/2026-03-04-graphiti-watermark-design.md`
+- Watermark file at `/opt/seed-vault/memory_v1/ledger/.batch_watermark`
+- batch_ingest.py: watermark logic + Graphiti as default + 200 episode cap
+- Cron: drop --skip-dedup
+- Deployment requires karma-server rebuild + watermark init
+
+### Key Discovery
+Entity graph NOT growing since Session 59. --skip-dedup bypasses Graphiti entirely.
+571 Entity nodes are legacy (pre-Session-59). All 3049 Episodic nodes have zero cross-session entity extraction.
+Karma can recall (FAISS) but cannot reason across sessions (no Entity/relationship graph growth).
+
+---
+
 ## Session 62 (2026-03-04) — v8 ALL PHASES COMPLETE
 
 **Status:** ✅ COMPLETE
