@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-04T15:00:00Z
-**Session:** 60 (Post-Session-59 — All Blockers Resolved)
+**Last updated:** 2026-03-04T16:00:00Z
+**Session:** 60 (drift-fix Phase COMPLETE)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -22,7 +22,8 @@
 | **Chrome Extension** | ❌ SHELVED | Never worked reliably. Legacy data only. |
 | **Conversation Capture** | ✅ WORKING | All 3049 hub/chat episodes ingested via --skip-dedup. |
 | **batch_ingest Schedule** | ✅ CONFIGURED | Cron every 6h on vault-neo. --skip-dedup mode. |
-| **karma-server image** | ✅ REBUILT | All session-58/59 fixes baked in. |
+| **karma-server image** | ✅ REBUILT | Session-60 drift-fix: ANALYSIS_MODEL default corrected. |
+| **Routing/Pricing (Decision #2)** | ✅ CORRECTED | GLM=$0, tool-use respects deep_mode, MODEL_DEEP default fixed. Session-60. |
 | **OpenAI API key** | ✅ SECURED | File-based read (mounted volume), not env var (docker inspect clean). |
 | **PDF Watcher** | ✅ WORKING | Rate-limit backoff + jam notification + time-window scheduling. |
 

@@ -14,16 +14,18 @@
 
 ## Session 60 (2026-03-04) — drift-fix Phase: Architecture Realignment IN PROGRESS
 
-**Status:** IN PROGRESS — Phase D (Deploy + Verify) next
+**Status:** ✅ COMPLETE — all 4 drift items corrected, 22/22 tests GREEN, D1-D6 runtime verified
 
 ### Completed This Session
 - STATE.md + direction.md updated (both stale — S57 and Feb 23 respectively)
 - Blockers #4 + #5 verified resolved (RestartCount=0, MODEL_DEEP=gpt-4o-mini)
 - Audit revealed deeper drift vs Decision #2: spend tracking wrong, tool-use hardcoded to OpenAI
-- GSD: phase-drift-fix CONTEXT.md + PLAN.md written
-- Phase A preflight complete: GLM tool-capability PROVEN SUPPORTED (Z.ai probe)
-- Phase B RED: all critical drift tests failing (B1: 9 fail, B2/B3: 8 fail, B4: 1 fail)
-- Next: Phase C GREEN — implement C1-C4 fixes
+- GSD: phase-drift-fix CONTEXT.md + PLAN.md + SUMMARY.md written
+- Phase A preflight: GLM tool-capability PROVEN SUPPORTED (Z.ai probe)
+- Phase B RED: 22 tests written, all failing
+- Phase C GREEN: lib/pricing.js + lib/routing.js implemented; server.js + config.py + Dockerfile updated
+- Phase D VERIFIED: D1-D6 all PASS (GLM=$0, deep=gpt-4o-mini, startup validation, spend frozen)
+- PITFALL: Dockerfile build context must be hub-bridge root, not app/ (lib/ was unreachable)
 
 ## Session 59 (2026-03-04) — batch_ingest Hotfixes + Full Backfill Complete
 
@@ -165,6 +167,8 @@
 - Hub token path: `/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt`
 
 ## Known Pitfalls (active)
+- **hub-bridge Dockerfile build context = hub-bridge root (not app/)**: compose.hub.yml uses `context: .` + `dockerfile: app/Dockerfile`. Dockerfile COPYs `app/server.js` + `lib/`. server.js imports `./lib/pricing.js` (from /app). Tests import `../lib/pricing.js` (from hub-bridge/tests/).
+
 - `python3` not available in Git Bash — use SSH for Python ops
 - Docker compose service: `hub-bridge` (container name: `anr-hub-bridge`)
 - batch_ingest requires `LEDGER_PATH` override (see CLAUDE.md)
