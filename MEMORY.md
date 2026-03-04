@@ -10,10 +10,10 @@ Design: `docs/plans/2026-03-04-entity-relationship-context-design.md`
 Plan: `docs/plans/2026-03-04-entity-relationship-context.md`
 
 ### Progress
-- Task 1 ✅ — `_pattern_cache` + `_refresh_pattern_cache()` added to server.py (line ~337); 3 tests pass
-- Task 2 🔄 — `query_relevant_relationships()` bulk edge query (in progress)
-- Task 3 ⏳ — Wire into `build_karma_context()` + `startup()`
-- Task 4 ⏳ — Deploy to vault-neo
+- Task 1 ✅ — `_pattern_cache` + `_refresh_pattern_cache()` added to server.py; 3 tests pass
+- Task 2 ✅ — `query_relevant_relationships()` bulk edge query; 6 tests pass
+- Task 3 ✅ — Wired into `build_karma_context()` + `startup()`; 9/9 new tests pass, 27/28 total (1 pre-existing FalkorDB ConnectionError)
+- Task 4 🔄 — Deploy to vault-neo (in progress)
 - Approach C: per-message edge query + 30min cached pattern query
 - hub-bridge: zero changes
 - One file: `karma-core/server.py`

@@ -86,3 +86,66 @@ def test_query_relevant_relationships_graceful_on_error():
         mock_get_falkor.side_effect = Exception("timeout")
         result = server.query_relevant_relationships(["Karma"])
     assert result == []
+
+
+def test_build_karma_context_includes_relationship_section():
+    """build_karma_context includes Entity Relationships section when edges exist."""
+    import server
+
+    # Mock entity query to return known entities
+    mock_entities = [{"name": "Karma", "summary": "AI system"}, {"name": "FalkorDB", "summary": "graph DB"}]
+    # Mock relationship query to return edges
+    mock_rels = [{"from": "Karma", "relationship": "stores data in", "to": "FalkorDB"}]
+
+    with patch.object(server, "query_knowledge_graph", return_value=mock_entities), \
+         patch.object(server, "query_relevant_relationships", return_value=mock_rels), \
+         patch.object(server, "_pattern_cache", []), \
+         patch.object(server, "query_identity_facts", return_value=""), \
+         patch.object(server, "query_recent_episodes", return_value=[]), \
+         patch.object(server, "query_recent_ingest_episodes", return_value=[]), \
+         patch.object(server, "query_pending_cc_proposals", return_value=[]), \
+         patch.object(server, "query_preferences", return_value=[]):
+        ctx = server.build_karma_context("test message")
+
+    assert "## Entity Relationships" in ctx
+    assert "Karma → stores data in → FalkorDB" in ctx
+
+
+def test_build_karma_context_includes_recurring_topics():
+    """build_karma_context includes Recurring Topics section when pattern cache has data."""
+    import server
+
+    mock_entities = [{"name": "Karma", "summary": "AI system"}]
+    mock_pattern = [{"entity": "Karma", "mentions": 47}, {"entity": "FalkorDB", "mentions": 31}]
+
+    with patch.object(server, "query_knowledge_graph", return_value=mock_entities), \
+         patch.object(server, "query_relevant_relationships", return_value=[]), \
+         patch.object(server, "_pattern_cache", mock_pattern), \
+         patch.object(server, "query_identity_facts", return_value=""), \
+         patch.object(server, "query_recent_episodes", return_value=[]), \
+         patch.object(server, "query_recent_ingest_episodes", return_value=[]), \
+         patch.object(server, "query_pending_cc_proposals", return_value=[]), \
+         patch.object(server, "query_preferences", return_value=[]):
+        ctx = server.build_karma_context("test message")
+
+    assert "## Recurring Topics" in ctx
+    assert "1. Karma (47 episodes)" in ctx
+    assert "2. FalkorDB (31 episodes)" in ctx
+
+
+def test_build_karma_context_omits_sections_when_empty():
+    """build_karma_context omits both sections when no data available."""
+    import server
+
+    with patch.object(server, "query_knowledge_graph", return_value=[]), \
+         patch.object(server, "query_relevant_relationships", return_value=[]), \
+         patch.object(server, "_pattern_cache", []), \
+         patch.object(server, "query_identity_facts", return_value=""), \
+         patch.object(server, "query_recent_episodes", return_value=[]), \
+         patch.object(server, "query_recent_ingest_episodes", return_value=[]), \
+         patch.object(server, "query_pending_cc_proposals", return_value=[]), \
+         patch.object(server, "query_preferences", return_value=[]):
+        ctx = server.build_karma_context("test message")
+
+    assert "## Entity Relationships" not in ctx
+    assert "## Recurring Topics" not in ctx

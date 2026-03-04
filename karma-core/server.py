@@ -877,6 +877,20 @@ def build_karma_context(user_message: str, episode_lane: str = "canonical") -> s
             summary = (e["summary"] or "")[:200]
             parts.append(f"- **{e['name']}**: {summary}")
 
+        # Entity relationships — RELATES_TO edges between relevant entities
+        entity_names = [e["name"] for e in entities]
+        relationships = query_relevant_relationships(entity_names)
+        if relationships:
+            parts.append("\n## Entity Relationships")
+            for rel in relationships:
+                parts.append(f"- {rel['from']} → {rel['relationship']} → {rel['to']}")
+
+    # Recurring topics — top entities by episode count (cached, 30min refresh)
+    if _pattern_cache:
+        parts.append("\n## Recurring Topics")
+        for i, entry in enumerate(_pattern_cache, 1):
+            parts.append(f"{i}. {entry['entity']} ({entry['mentions']} episodes)")
+
     # Get recent conversation memories for continuity
     recent = query_recent_episodes(limit=3, lane=episode_lane)
     recent_names = {ep["name"] for ep in recent}
@@ -2672,6 +2686,17 @@ async def startup():
     else:
         app.state.consciousness = None
         print("  Consciousness: DISABLED")
+
+    # Start pattern cache refresh loop (recurring topics for entity context)
+    _refresh_pattern_cache()
+
+    async def _pattern_refresh_loop():
+        while True:
+            await asyncio.sleep(1800)  # 30 minutes
+            _refresh_pattern_cache()
+
+    asyncio.create_task(_pattern_refresh_loop())
+    print("  Pattern cache: ACTIVE (30min refresh, recurring topics)")
     print("=" * 50)
 
 
