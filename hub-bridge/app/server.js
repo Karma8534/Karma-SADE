@@ -1476,13 +1476,13 @@ const server = http.createServer(async (req, res) => {
           const timestamp = new Date().toISOString();
           fs.appendFileSync(filePath, `
 [${timestamp}] [KARMA-WRITE] ${write_content}`);
-          console.log(`[FEEDBACK] write executed: ${write_content.length} chars appended to MEMORY.md`);
+          console.log(`[FEEDBACK] 👍 write executed: ${write_content.length} chars appended to MEMORY.md`);
         } catch (e) {
           console.error(`[FEEDBACK] MEMORY.md write failed: ${e.message}`);
           // Don't surface filesystem error to UI -- still store DPO pair
         }
       } else {
-        console.log(`[FEEDBACK] write discarded for write_id=${write_id}`);
+        console.log(`[FEEDBACK] 👎 write discarded for write_id=${write_id}`);
       }
 
       // Store DPO pair in vault ledger
