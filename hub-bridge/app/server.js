@@ -141,6 +141,10 @@ setInterval(() => {
   for (const [k, v] of rlBuckets) {
     if (now - v.last_ms > 5 * 60 * 1000) rlBuckets.delete(k);
   }
+  // Expire pending writes older than 30 minutes
+  for (const [k, v] of pending_writes) {
+    if (now - v.ts > 30 * 60 * 1000) pending_writes.delete(k);
+  }
 }, 5 * 60 * 1000).unref();
 
 function getClientIp(req) {
@@ -876,7 +880,7 @@ async function executeToolCall(toolName, toolInput, writeId = null) {
     if (toolName === "write_memory") {
       const content = (toolInput.content || "").trim();
       if (!content) return { error: "empty_content", message: "content is required" };
-      const id = writeId || (("wr_") + Date.now() + "_" + Math.random().toString(36).slice(2, 8));
+      const id = writeId || "wr_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
       pending_writes.set(id, { content, ts: Date.now() });
       console.log("[TOOL-API] write_memory proposed: write_id=" + id + ", " + content.length + " chars");
       return { proposed: true, write_id: id, message: "Memory write proposed. Awaiting approval via thumbs-up -- or thumbs-down to discard." };
@@ -1291,7 +1295,9 @@ const server = http.createServer(async (req, res) => {
       ];
 
       // Tool-calling is deep-mode only. Standard requests go through callLLM (no tools).
-      const req_write_id = ("wr_") + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+      const req_write_id = deep_mode
+        ? "wr_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8)
+        : null;
       const llmResult = deep_mode
         ? await callLLMWithTools(model, messages, max_output_tokens, req_write_id)
         : await callLLM(model, messages, max_output_tokens);
