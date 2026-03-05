@@ -497,8 +497,8 @@
     const label = (role === 'user' ? 'You' : role === 'karma' ? 'Karma' : '');
     const timeStr = new Date().toLocaleTimeString();
     meta.innerHTML = '<span>' + label + ' &middot; ' + timeStr + '</span>';
-    // Add feedback buttons for Karma messages
-    if (role === 'karma') {
+    // Add feedback buttons for Karma messages (only when writeId is available)
+    if (role === 'karma' && writeId) {
       const btns = document.createElement('span');
       btns.className = 'feedback-btns';
       btns.innerHTML = '<button class="up" title="Good response">&#x1F44D;</button><button class="down" title="Bad response">&#x1F44E;</button>';
@@ -538,6 +538,8 @@
       setTimeout(() => { $messages.scrollTop = $messages.scrollHeight; }, 10);
 
       noteDiv.querySelector('button').onclick = async function() {
+        this.disabled = true;
+        const token = getToken();
         const note = noteDiv.querySelector('textarea').value.trim() || undefined;
         const payload = { write_id: writeId, signal: 'down' };
         if (note) payload.note = note;

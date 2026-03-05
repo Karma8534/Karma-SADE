@@ -64,6 +64,12 @@
 - Feedback-note div ID: `fn-{writeId}` (or `fn-unknown` if write_id is null)
 - CSS added: `.feedback-note`, `.feedback-note textarea`, `.feedback-note button`
 
+### Task 7 Quality Fixes Applied (code review pass)
+Three bugs fixed in unified.html (feedback buttons, stale token, double-submit guard):
+1. Feedback buttons only rendered when `writeId` is truthy — no more 400s in standard mode
+2. Submit onclick calls `getToken()` fresh — not captured in outer closure
+3. `this.disabled = true` at start of Submit onclick — double-submit guard
+
 ### Next Task
 Task 8: Deploy unified.html to vault-neo (git push → vault-neo git pull → docker restart anr-hub-bridge).
 
