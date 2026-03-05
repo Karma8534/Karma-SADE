@@ -18,6 +18,7 @@
   - Fixed `Memory/00-karma-system-prompt-live.md`: corrected context size (1800→12,000), added tool-mode gate (standard GLM = no tools), added rate-limit honesty, removed misleading /v1/cypher "can call yourself" language
   - Added GLM_RPM_LIMIT=40 to `/opt/seed-vault/memory_v1/hub_bridge/config/hub.env`
   - Phase 2 changes (in branch, pre-deploy): server.js line 868 → callGPTWithTools (GLM now gets real tool-calling); line 413 fixed (honest tool text, no false declarations); TOOL_DEFINITIONS + graph_query + get_vault_file; TOOL_NAME_MAP simplified (identity passthrough); get_vault_file handled directly in executeToolCall via VAULT_FILE_ALIASES; karma-core/server.py: graph_query added to TOOL_DEFINITIONS + execute_tool_action handler (Cypher via get_falkor())
+  - karma-core/hooks.py: graph_query + get_vault_file added to ALLOWED_TOOLS whitelist (hook was gatekeeping and rejecting new tool names — pre-existing oversight)
 
 ---
 
