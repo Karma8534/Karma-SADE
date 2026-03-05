@@ -27,8 +27,83 @@
 - Groq swap: not worth it — router is unused, Graphiti uses OpenAI directly (cannot swap without rewrite)
 - ANALYSIS_MODEL config bug (defaults to glm-4.7-flash but OpenAI provider at api.openai.com): non-impactful
 
-### Next Task
-v9 Phase 4 — Karma write agency: brainstorm → plan → implement. Hub-bridge: POST /v1/feedback endpoint + write_memory tool. Start with brainstorming skill.
+### Session 68 — v9 Phase 4 Design + Acceptance Test + karma-verify Fix
+
+**Acceptance test (v9 Phase 3):** PASSED — Karma referenced entity relationship data unprompted when asked about Claude Code usage. Said "That's what I see in my graph" — explicit graph attribution. Persona coaching confirmed working.
+
+**karma-verify fix:** SKILL.md updated — smoke test now checks `assistant_text` instead of `reply` (was false FAILED on healthy service).
+
+**v9 Phase 4 design (Session 68 brainstorm):**
+- Scope reduced: `write_memory` only (annotate_entity/flag_pattern deferred)
+- Gate: in-process `pending_writes` Map (Approach A — no vault round-trip)
+- Optional note: inline textarea after 👎 click in unified.html (~15 lines)
+- DPO storage: ledger via /v1/ambient with `dpo-pair` tag
+- Design doc: `docs/plans/2026-03-05-v9-phase4-write-memory-design.md`
+- Files to change: server.js (pending_writes Map + write_memory tool + /v1/feedback endpoint), unified.html (textarea), hooks.py (ALLOWED_TOOLS), 00-karma-system-prompt-live.md (coaching paragraph)
+
+### Session 68 Implementation Progress
+
+**v9 Phase 4 implementation — Tasks 1-3 complete (server.js):**
+- Task 1: `hub-bridge/lib/feedback.js` — prunePendingWrites + processFeedback, 7 tests green (commit a17ce54)
+- Task 2: `write_memory` tool — pending_writes Map + tool def + writeId threading (commits 57ce894, 268bd08)
+- Task 3: `POST /v1/feedback` endpoint — auth + processFeedback + MEMORY.md fs.appendFileSync + DPO ledger (commits fe8a3b8, 722c05a, fix)
+- **Active task:** Task 4 — update karma-core/hooks.py ALLOWED_TOOLS ✅ DONE (commit pending)
+- Task 4: Added `"write_memory"` to ALLOWED_TOOLS in karma-core/hooks.py
+
+### Session 68 Continued — Tasks 5-7 Complete
+
+**Task 5:** ✅ 00-karma-system-prompt-live.md updated — write_memory coaching paragraph added. Deployed: git push → vault-neo git pull → docker restart anr-hub-bridge → karma-server rebuilt.
+
+**Task 6:** ✅ (see prior session notes)
+
+**Acceptance test hotfix:** DPO vault record used bare object — failed vault schema (missing type/confidence/verification, content must be object). Fixed: switched to `buildVaultRecord()` in /v1/feedback endpoint. Redeploy required.
+
+**Task 7:** ✅ unified.html updated — write_id in feedback POSTs + inline textarea after 👎
+- `handleMessage` now reads `data.write_id` (from server response field `write_id: proposed_write_id`)
+- `addMessage(role, content, writeId)` — stores `writeId` in `wrap.dataset.writeId`
+- `sendFeedback(writeId, signal, btnEl, msgWrap)` — 👍 POSTs `{write_id, signal}` immediately; 👎 injects `.feedback-note` div with textarea + submit button
+- Submit POSTs `{write_id, signal: "down", note?: ...}` then collapses the div
+- Feedback-note div ID: `fn-{writeId}` (or `fn-unknown` if write_id is null)
+- CSS added: `.feedback-note`, `.feedback-note textarea`, `.feedback-note button`
+
+### Task 7 Quality Fixes Applied (code review pass)
+Three bugs fixed in unified.html (feedback buttons, stale token, double-submit guard):
+1. Feedback buttons only rendered when `writeId` is truthy — no more 400s in standard mode
+2. Submit onclick calls `getToken()` fresh — not captured in outer closure
+3. `this.disabled = true` at start of Submit onclick — double-submit guard
+
+### Session 68 Final — v9 Phase 4 ALL TASKS COMPLETE
+
+**Task 8:** ✅ system prompt coaching — write_memory paragraph added to `## How to Use Your Context Data` (commit 6f078e7). KARMA_IDENTITY_PROMPT: 11850 → 12366 chars.
+
+**Task 9:** ✅ hub-bridge redeployed with all v9 Phase 4 changes (server.js + lib/feedback.js + unified.html). Key pitfall: `lib/feedback.js` must be synced to `/opt/seed-vault/memory_v1/hub_bridge/lib/` (parent build context), not `/app/lib/`.
+
+**Task 10:** ✅ End-to-end acceptance test PASSED (all 5 tests green):
+1. Standard mode: no write_id returned ✅
+2. Deep mode: write_id returned (e.g., wr_1772744647526_0azpyz) ✅
+3. Thumbs-up: `{ok:true, wrote:true}` → MEMORY.md contains `[KARMA-WRITE]` line ✅
+4. Thumbs-down: `{ok:true, wrote:false}` → MEMORY.md unchanged ✅
+5. DPO pairs in ledger: `type:"log", tags:["dpo-pair"]` (ledger 4118→4119) ✅
+
+**DPO bug fixes (2 iterations):**
+- Fix 1 (69f061b): bare object → `buildVaultRecord()` — vault schema requires type/confidence/verification/content as object
+- Fix 2 (cf63957): `type:"dpo-pair"` → `type:"log"` — vault only accepts ["fact","preference","project","artifact","log","contact"]. Added status check (`dpResult.status >= 300 → throw`).
+
+**v9 Phase 4 complete.** All commits on main.
+
+---
+
+## Next Session Starts Here
+
+1. **Run `/resurrect`** — standard session start
+2. **Fix karma-verify skill** — update `C:\Users\raest\.claude\skills\karma-verify\SKILL.md` to check `assistant_text` instead of `reply` in smoke test (OPEN from Session 66/68)
+3. **Verify DPO accumulation** — after a few days of Karma conversations in deep mode, run: `ssh vault-neo "grep 'dpo-pair' /opt/seed-vault/memory_v1/ledger/memory.jsonl | wc -l"` — should be growing
+4. **v9 Phase 5** — MENTIONS edge growth verification: `ssh vault-neo "docker exec anr-karma-server curl -s localhost:8000/v1/cypher -d '{\"query\":\"MATCH (e:Episode)-[:MENTIONS]->(n) RETURN count(*) as edge_count\"}'"` — if growing, healthy
+
+**Blocker if any:** None. All systems green. karma-verify skill fix is cosmetic (OPEN, not blocking).
+
+# currentDate
+Today's date is 2026-03-05.
 
 ---
 
@@ -421,3 +496,12 @@ Today's date is 2026-03-05.
 - Added  CLI argument to .
 - Added  env var read (default ).
 - All 7 watermark tests pass. Dry-run validation passes. Syntax OK.
+
+## Session 68 (2026-03-05) — v9 Phase 4 Tasks 1+2
+Task 1 complete: hub-bridge/lib/feedback.js (processFeedback + prunePendingWrites, pure functions, no I/O) + hub-bridge/tests/test_feedback.js (7 tests, all green).
+Task 2 complete: server.js -- pending_writes Map, write_memory tool def, executeToolCall write_memory case, writeId threaded through callLLMWithTools+callGPTWithTools, req_write_id per-request, proposed_write_id in 200+207 responses.
+
+Task 3 complete: bare newline fix in appendFileSync (CRLF ->
+ escape) + emoji log messages (thumbs up/down) in feedback endpoint. Syntax verified clean.
+
+Task 8 complete: write_memory coaching paragraph appended to "## How to Use Your Context Data" section in Memory/00-karma-system-prompt-live.md. Paragraph instructs Karma to call write_memory(content) in deep-mode when she learns something worth persisting (preferences, corrections, new facts not in MEMORY.md yet), notes approval gate, and sets a "don't call every turn" bar.

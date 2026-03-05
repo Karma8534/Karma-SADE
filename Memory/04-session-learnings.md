@@ -63,3 +63,25 @@ requested system optimizations
 
 ## [2026-02-12 01:48:36] CONTEXT (normal)
 The last timestamp mentioned in the conversation is 2026-02-12
+
+---
+
+## Session 68 Patterns (2026-03-05) — v9 Phase 4 Implementation
+
+**Pattern: vault-api has a closed type enum**
+`vaultPost()` with `type:"dpo-pair"` returns 422. Only `["fact","preference","project","artifact","log","contact"]` allowed. Use `type:"log"` with `tags:["custom-type"]` for custom record categories. Always check `dpResult.status >= 300` — fire-and-forget swallows vault rejections silently with no user-visible error.
+
+**Pattern: hub-bridge build context is the PARENT directory**
+`/opt/seed-vault/memory_v1/hub_bridge/` is the build context, not `hub_bridge/app/`. `COPY lib/ ./lib/` in Dockerfile resolves relative to the parent. New lib files must be at the parent level (`hub_bridge/lib/`) — not under `app/lib/`. Check Dockerfile COPY paths when adding new directories.
+
+**Pattern: subagent SSH writes violate the never-edit-on-droplet rule**
+Subagents with SSH access can accidentally write tracked files on vault-neo, making `git pull` abort. When giving subagents deployment instructions, explicitly forbid file writes under `/home/neo/karma-sade/`. Deployment should only use `cp` to build contexts (untracked paths), never to git-tracked directories.
+
+**Pattern: buildVaultRecord() is mandatory for all vault writes**
+Raw objects passed to `vaultPost()` fail schema validation. `buildVaultRecord({type, content, tags, source, confidence})` generates the required structure. This is true for DPO pairs, ambient records, and any new record types. Never call `vaultPost()` with a bare object.
+
+**Pattern: two-review discipline catches bugs subagents miss**
+Quality review after spec review caught 3 bugs in unified.html (null write_id guard, stale token capture, double-submit). Neither the implementer nor the spec reviewer found them — the code quality pass exists specifically for this class of subtle behavioral bug. The two-review pipeline is worth the token cost.
+
+**Pattern: in-process Map is sufficient for single-node write gating**
+`pending_writes` Map in server.js (module-level) is stateless-across-restarts but correct for the use case: write_id expires with TTL or on feedback. No Redis/external state needed. If hub-bridge is ever scaled horizontally (multiple instances), this breaks — but single-node is the current deployment.

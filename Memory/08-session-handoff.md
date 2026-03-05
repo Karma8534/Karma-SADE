@@ -1,9 +1,9 @@
 # Karma SADE — Session Handoff
 
 **Date**: 2026-03-05
-**Session**: 67
+**Session**: 68
 **GitHub**: https://github.com/Karma8534/Karma-SADE (PUBLIC)
-**Last commit**: ed9adfe (main, synced to vault-neo)
+**Last commit**: 9d68c0d (main, synced to vault-neo)
 
 ---
 
@@ -19,7 +19,8 @@ vault-neo (DigitalOcean NYC3, 4GB RAM, SSH alias: vault-neo)
 │   ├── /v1/ambient       ─── Git hook + session-end capture
 │   ├── /v1/ingest        ─── PDF/media ingestion
 │   ├── /v1/context       ─── Context query
-│   └── /v1/cypher        ─── Direct graph query
+│   ├── /v1/cypher        ─── Direct graph query
+│   └── /v1/feedback      ─── write_memory approval gate (Session 68)
 ├── karma-server          ─── Python consciousness loop + tool execution
 │   ├── OBSERVE-only, 60s cycles, zero LLM calls
 │   ├── execute_tool_action(): graph_query, get_vault_file, read_file, write_file, edit_file, bash
@@ -51,6 +52,22 @@ vault-neo (DigitalOcean NYC3, 4GB RAM, SSH alias: vault-neo)
 | Hub chat token | `/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt` |
 | System prompt | `/home/neo/karma-sade/Memory/00-karma-system-prompt-live.md` |
 | MEMORY.md (vault) | `/home/neo/karma-sade/MEMORY.md` (also accessible at `/karma/MEMORY.md` in hub-bridge container) |
+
+---
+
+## What Changed in Session 68
+
+### Code Changes (deployed to main + vault-neo)
+1. `hub-bridge/lib/feedback.js` (NEW — commit a17ce54): `processFeedback()` + `prunePendingWrites()`, 7 TDD tests
+2. `hub-bridge/app/server.js` (multiple commits): `pending_writes` Map, `write_memory` tool def, `writeId` threading, `POST /v1/feedback` endpoint, bare-newline fix (b002b5b), buildVaultRecord DPO fix (69f061b), type:log fix (cf63957)
+3. `hub-bridge/app/public/unified.html` (commits 0618fbb, 314d301): write_id in response, feedback buttons only when writeId truthy, thumbs-down textarea, fresh token on submit, double-submit guard
+4. `karma-core/hooks.py` (commit 362de7e): `"write_memory"` added to ALLOWED_TOOLS
+5. `Memory/00-karma-system-prompt-live.md` (commit 6f078e7): write_memory coaching paragraph; KARMA_IDENTITY_PROMPT 11,850 → 12,366 chars
+
+### Deployments
+- karma-server rebuilt (hooks.py change)
+- hub-bridge rebuilt twice (server.js + lib/ + unified.html changes)
+- Both services verified healthy (RestartCount=0)
 
 ---
 
@@ -87,18 +104,23 @@ vault-neo (DigitalOcean NYC3, 4GB RAM, SSH alias: vault-neo)
 
 ---
 
-## Current State (All Verified 2026-03-05 Session 67)
+## Current State (All Verified 2026-03-05 Session 68)
 
 | Component | Status |
 |-----------|--------|
+| write_memory tool + pending_writes gate | ✅ LIVE — in-process Map, write_id threading (Session 68) |
+| POST /v1/feedback endpoint | ✅ LIVE — auth + approve/reject + DPO (Session 68) |
+| unified.html feedback UI | ✅ LIVE — 👍/👎 buttons + thumbs-down textarea (Session 68) |
+| DPO pairs in vault ledger | ✅ LIVE — type:log, tags:["dpo-pair"], 0/20 accumulated (Session 68) |
+| System prompt write_memory coaching | ✅ LIVE — 12,366 chars (Session 68) |
 | Deep-mode tool gate | ✅ LIVE — standard chat no longer gets tools (Session 67) |
 | v9 Phase 3 persona coaching | ✅ LIVE — behavioral coaching deployed (Session 67) |
 | GLM tool-calling | ✅ LIVE — end-to-end verified Session 66 |
-| graph_query tool | ✅ LIVE — Karma can query FalkorDB in standard GLM mode |
+| graph_query tool | ✅ LIVE — Karma can query FalkorDB in deep mode |
 | get_vault_file tool | ✅ LIVE — Karma can read MEMORY.md, system-prompt, etc. |
 | System prompt | ✅ HONEST + COACHED — accurate tool list + behavioral guidance |
 | GLM_RPM_LIMIT | ✅ 40 RPM |
-| hooks.py whitelist | ✅ Updated with new tools |
+| hooks.py whitelist | ✅ Updated: graph_query, get_vault_file, write_memory |
 | TOOL_NAME_MAP | ✅ Fixed (empty dict) |
 | K2_PASSWORD | ✅ Secured (env var) |
 | Main branch protection | ✅ Enabled |
@@ -109,29 +131,27 @@ vault-neo (DigitalOcean NYC3, 4GB RAM, SSH alias: vault-neo)
 
 ---
 
-## Next Session (Session 68)
+## Next Session (Session 69)
 
-**Primary task:** v9 Phase 4 — Karma write agency + feedback mechanism
+**Primary task:** karma-verify skill fix + v9 Phase 5 MENTIONS verification
 
-1. Run acceptance test for v9 Phase 3: Ask Karma about a Recurring Topic → verify she references entity relationships unprompted (no code needed, just conversation test)
-2. Start Phase 4 with `/brainstorm` skill → design doc → implementation plan
-3. Phase 4 scope:
-   - `POST /v1/feedback {turn_id, rating: +1/-1, note?: string}` endpoint in hub-bridge
-   - New tools for Karma: `write_memory(content)`, `annotate_entity(name, note)`, `flag_pattern(description)`
-   - Write routing: 👍 → PATCH /v1/vault-file/MEMORY.md; 👎 + text → corrections-log.md
-   - DPO: every rated response = preference pair
-4. Fix karma-verify skill: update smoke test to check `assistant_text` instead of `reply`
+1. Fix karma-verify skill — update `C:\Users\raest\.claude\skills\karma-verify\SKILL.md` to check `assistant_text` instead of `reply`
+2. v9 Phase 5 — Verify MENTIONS edge growth: `ssh vault-neo "docker exec anr-karma-server curl -s localhost:8000/v1/cypher -d '{\"query\":\"MATCH ()-[:MENTIONS]->() RETURN count(*) as edges\"}'"`
+3. Check DPO accumulation: `ssh vault-neo "grep -c 'dpo-pair' /opt/seed-vault/memory_v1/ledger/memory.jsonl"` — should be growing with use
 
-**Blocker if any:** None. Design approved. Brainstorming can start immediately.
+**Blocker if any:** None. All systems green.
 
 ---
 
 ## Known Pitfalls (Active — Must Not Forget)
 
-1. **Hub-bridge build context ≠ git repo** — after `git pull` on vault-neo, must `cp server.js` to build context before rebuild
-2. **hooks.py ALLOWED_TOOLS** — new tools silently rejected without whitelist entry
-3. **TOOL_NAME_MAP must stay empty** — any entries will remap tool names to wrong values
-4. **docker restart ≠ compose up -d** — hub.env changes require `compose up -d` to take effect
-5. **vault-neo git pull after squash merge** — use `git reset --hard origin/main`, not `git pull`
-6. **FalkorDB graph name is `neo_workspace`** — NOT `karma` (karma graph is empty)
-7. **karma-verify smoke test checks wrong key** — skill checks `reply` but hub returns `assistant_text`; false FAILED on healthy service
+1. **Hub-bridge build context ≠ git repo** — after `git pull` on vault-neo, must cp server.js + lib/ to build context (parent `/opt/.../hub_bridge/`, NOT under `app/`)
+2. **hub-bridge lib/ files go at parent level** — `lib/feedback.js` must be at `/opt/.../hub_bridge/lib/` not under `app/lib/`
+3. **hooks.py ALLOWED_TOOLS** — new tools silently rejected without whitelist entry
+4. **TOOL_NAME_MAP must stay empty** — any entries will remap tool names to wrong values
+5. **docker restart ≠ compose up -d** — hub.env changes require `compose up -d` to take effect
+6. **vault-neo git pull after squash merge** — use `git reset --hard origin/main`, not `git pull`
+7. **FalkorDB graph name is `neo_workspace`** — NOT `karma` (karma graph is empty)
+8. **karma-verify smoke test checks wrong key** — skill checks `reply` but hub returns `assistant_text`; false FAILED on healthy service (OPEN)
+9. **vault-api type enum is closed** — only ["fact","preference","project","artifact","log","contact"]; use type:"log" + tags for custom types
+10. **buildVaultRecord() required for all vault writes** — bare objects fail schema validation silently (vaultPost fire-and-forget swallows 422)

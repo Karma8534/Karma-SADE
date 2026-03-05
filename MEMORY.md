@@ -89,7 +89,21 @@ Three bugs fixed in unified.html (feedback buttons, stale token, double-submit g
 - Fix 1 (69f061b): bare object → `buildVaultRecord()` — vault schema requires type/confidence/verification/content as object
 - Fix 2 (cf63957): `type:"dpo-pair"` → `type:"log"` — vault only accepts ["fact","preference","project","artifact","log","contact"]. Added status check (`dpResult.status >= 300 → throw`).
 
-**v9 Phase 4 complete.** All commits on main. Next: v9 Phase 5 (deferred tools: annotate_entity, flag_pattern) or DPO dataset accumulation (need 20+ pairs).
+**v9 Phase 4 complete.** All commits on main.
+
+---
+
+## Next Session Starts Here
+
+1. **Run `/resurrect`** — standard session start
+2. **Fix karma-verify skill** — update `C:\Users\raest\.claude\skills\karma-verify\SKILL.md` to check `assistant_text` instead of `reply` in smoke test (OPEN from Session 66/68)
+3. **Verify DPO accumulation** — after a few days of Karma conversations in deep mode, run: `ssh vault-neo "grep 'dpo-pair' /opt/seed-vault/memory_v1/ledger/memory.jsonl | wc -l"` — should be growing
+4. **v9 Phase 5** — MENTIONS edge growth verification: `ssh vault-neo "docker exec anr-karma-server curl -s localhost:8000/v1/cypher -d '{\"query\":\"MATCH (e:Episode)-[:MENTIONS]->(n) RETURN count(*) as edge_count\"}'"` — if growing, healthy
+
+**Blocker if any:** None. All systems green. karma-verify skill fix is cosmetic (OPEN, not blocking).
+
+# currentDate
+Today's date is 2026-03-05.
 
 ---
 

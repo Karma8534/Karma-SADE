@@ -1,69 +1,55 @@
 # Karma SADE Session Summary (Latest)
 
 **Date**: 2026-03-05
-**Session**: 67
-**Focus**: Security fix (deep-mode tool gate) + v9 Phase 3 persona coaching + v9 Phase 4 design
+**Session**: 68
+**Focus**: v9 Phase 4 — Karma write agency + feedback mechanism (ALL 10 TASKS COMPLETE)
 
 ---
 
 ## What Was Done
 
-### 1. Security Fix — Deep-Mode Tool Gate (commit 41b2c06)
-**Problem:** Session 66 wired GLM tool-calling but called `callLLMWithTools()` unconditionally at line 1271. Standard chat requests (deep_mode=false) got full tool execution capability.
+### v9 Phase 4: write_memory gate + DPO feedback mechanism — SHIPPED
 
-**Fix:** Branched at call site:
-```javascript
-const llmResult = deep_mode
-  ? await callLLMWithTools(model, messages, max_output_tokens)
-  : await callLLM(model, messages, max_output_tokens);
+All 10 tasks implemented, reviewed (spec + quality), deployed, and acceptance-tested.
+
+**Architecture built:**
+- `hub-bridge/lib/feedback.js` — `processFeedback()` + `prunePendingWrites()` (pure functions, 7 TDD tests)
+- `server.js` — `pending_writes` module-level Map, `write_memory` tool definition, `writeId` threading through request flow, `POST /v1/feedback` endpoint
+- `unified.html` — `write_id` read from server response, feedback buttons only when writeId present, thumbs-down expands inline textarea, Submit sends note + write_id
+- `hooks.py` — `write_memory` added to ALLOWED_TOOLS whitelist
+- `00-karma-system-prompt-live.md` — write_memory coaching paragraph (when to call, approval gate, don't call every turn)
+
+**Flow:**
+```
+deep-mode /v1/chat → Karma calls write_memory(content)
+→ hub-bridge stores {content, messages} in pending_writes[req_write_id]
+→ response includes write_id field
+→ unified.html shows 👍/👎 buttons
+→ user clicks 👍 → POST /v1/feedback {write_id, signal:"up"}
+  → MEMORY.md gets [KARMA-WRITE] line appended
+  → DPO pair written to vault ledger (type:"log", tags:["dpo-pair"])
+→ user clicks 👎 → textarea appears → user writes correction note
+  → POST /v1/feedback {write_id, signal:"down", note:"..."}
+  → MEMORY.md unchanged
+  → DPO pair written to vault ledger with signal:"down"
 ```
 
-**Verified:** Standard smoke test returned ok:True, no tool execution, deep_mode:false in telemetry.
+### Acceptance Test Results (All 5 Green)
+1. Standard mode → write_id: null (no feedback buttons rendered) ✅
+2. Deep mode → write_id returned in response ✅
+3. 👍 → `{ok:true, wrote:true}` → MEMORY.md contains `[KARMA-WRITE]` line ✅
+4. 👎 → `{ok:true, wrote:false}` → MEMORY.md unchanged ✅
+5. Ledger 4118→4119, `grep dpo-pair` returns 1 hit ✅
 
----
-
-### 2. v9 Phase 3 — Persona Coaching (commit f90cea7)
-**Deployed to:** `Memory/00-karma-system-prompt-live.md` → git pull + docker restart anr-hub-bridge
-
-**Changes:**
-1. Fixed stale tool list on line 26: `read_file, write_file, edit_file, bash` → `` `graph_query`, `get_vault_file` ``
-2. New section **"How to Use Your Context Data"** added after "Your Memory Architecture":
-   - When `## Entity Relationships` in karmaCtx → weave connections unprompted
-   - When `## Recurring Topics` in karmaCtx → calibrate depth to top topics
-   - When deep mode → proactively call `graph_query` before answering strategic questions
-
-**Result:** KARMA_IDENTITY_PROMPT: 10,415 → 11,850 chars. Behavioral coaching deployed.
-**Acceptance test PENDING:** Ask Karma about a Recurring Topic; verify she references relationship data unprompted.
-
----
-
-### 3. karma-server LLM Analysis (no code changes)
-- router.py confirmed dead code path (karma-terminal last capture 2026-02-27)
-- Graphiti uses OpenAI directly — cannot swap without rewrite
-- Current spend: $0.12/month. Model swap not worth it.
-- ANALYSIS_MODEL config bug (defaults to glm-4.7-flash but OpenAI client at api.openai.com): non-impactful
-
----
-
-### 4. v9 Phase 4 Design — Karma Write Agency
-**Design approved (obs #4032).** Three-in-one mechanism:
-- **Write gate**: thumbs up/down gates whether Karma's proposed memory note lands
-- **DPO signal**: every rated response = preference pair (goal: 20+)
-- **Corrections pipeline**: 👎 + text → corrections-log.md
-
-**API:** `POST /v1/feedback {turn_id, rating: +1/-1, note?: string}` (turn_id already in every /v1/chat response)
-
-**New tools for Karma:** `write_memory(content)`, `annotate_entity(name, note)`, `flag_pattern(description)`
-
-**Routing:**
-- 👍 no text → write Karma's proposed note verbatim
-- 👍 + text → write user's phrasing instead
-- 👎 no text → discard
-- 👎 + text → corrections-log.md
-
-**Web UI:** Thumbs up/down already present at hub.arknexus.net. Text box already opens on click. No UI build needed initially.
-
-**NOT YET IMPLEMENTED.** Design approved, next session starts implementation.
+### Bugs Fixed In This Session
+1. **Bare newline in appendFileSync** — subagent embedded CRLF instead of `\n` escape (b002b5b)
+2. **DPO record missing buildVaultRecord** — bare object fails vault schema (69f061b)
+3. **DPO type "dpo-pair" rejected** — vault only allows ["fact","preference","project","artifact","log","contact"]; fixed to type:"log" + tags:["dpo-pair"] (cf63957)
+4. **Feedback buttons rendered when write_id null** — 400 errors in standard mode (314d301)
+5. **Stale token in Submit closure** — fresh `getToken()` must be called inside onclick (314d301)
+6. **No double-submit guard** — `this.disabled = true` added as first statement (314d301)
+7. **hub-bridge lib/ directory missing from build context** — needed at parent `/hub_bridge/lib/`, not under `app/lib/`
+8. **vault-neo MEMORY.md dirty from subagent SSH** — `git checkout -- MEMORY.md && git pull` fixed it
 
 ---
 
@@ -71,25 +57,25 @@ const llmResult = deep_mode
 
 | Component | Status |
 |-----------|--------|
-| Deep-mode tool gate | ✅ LIVE (commit 41b2c06) |
-| v9 Phase 3 persona coaching | ✅ LIVE (commit f90cea7) |
-| GLM tool-calling (Session 66) | ✅ LIVE |
-| graph_query + get_vault_file tools | ✅ LIVE |
-| Entity Relationships + Recurring Topics | ✅ LIVE |
-| FalkorDB: 3621+ nodes | ✅ LIVE |
-| batch_ingest cron (every 6h, Graphiti watermark) | ✅ LIVE |
-| FAISS semantic search | ✅ LIVE |
-| Brave Search | ✅ LIVE |
+| write_memory tool + pending_writes gate | ✅ LIVE (hub-bridge) |
+| POST /v1/feedback endpoint | ✅ LIVE (hub-bridge) |
+| unified.html feedback UI | ✅ LIVE (hub-bridge) |
+| DPO pairs in vault ledger | ✅ LIVE (type:log, tags:dpo-pair) |
+| hooks.py write_memory whitelist | ✅ LIVE (karma-server) |
+| System prompt coaching | ✅ LIVE (12,366 chars) |
+| All prior components (FalkorDB, FAISS, graph_query, get_vault_file, etc.) | ✅ LIVE |
 
 ## What's Broken / OPEN
 
 | Problem | Status |
 |---------|--------|
-| karma-verify smoke test checks wrong response key (reply vs assistant_text) | OPEN |
-| v9 Phase 3 acceptance test not yet run | PENDING |
+| karma-verify smoke test checks `reply` instead of `assistant_text` | OPEN (cosmetic, false alarm only) |
+| 3049 bulk episodes lack MENTIONS edges | OPEN (acceptable, Graphiti watermark covers new ones) |
+| 0/20 DPO pairs collected | ACCUMULATING (mechanism live, need regular deep-mode usage) |
 
 ## What's Next
 
-1. **Run acceptance test for v9 Phase 3**: Ask Karma about a topic in her Recurring Topics → verify she references entity relationship data unprompted
-2. **v9 Phase 4 kickoff**: `/brainstorm` → design doc → plan → implement write_memory tool + POST /v1/feedback endpoint
-3. **Fix karma-verify skill**: Update smoke test key from "reply" to "assistant_text"
+1. **Fix karma-verify skill** — update `assistant_text` key check (OPEN since Session 66)
+2. **DPO accumulation** — use Karma in deep mode regularly; verify pair count growing after a week
+3. **v9 Phase 5** — MENTIONS edge growth verification (confirm Graphiti watermark is growing entity graph)
+4. **v9 Phase 5b** — annotate_entity + flag_pattern tools (deferred from Phase 4 scope)

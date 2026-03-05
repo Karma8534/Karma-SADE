@@ -154,22 +154,24 @@
 - [x] Fix: deep_mode flag gates callLLMWithTools vs callLLM at line 1271
 - [x] Deployed + verified: standard chat returns ok:True without tool access
 
-### Phase 4: Write Agency + Feedback Mechanism ⏳ NEXT
-- [ ] Design approved (Session 67, obs #4032): thumbs up/down gates write + DPO signal + corrections
-- [ ] POST /v1/feedback {turn_id, rating: +1/-1, note?: string} endpoint
-- [ ] New tools: write_memory(content), annotate_entity(name, note), flag_pattern(description)
-- [ ] Write routing: 👍 → write Karma's note; 👍 + text → write user's phrasing; 👎 + text → corrections-log.md
-- [ ] Web UI: thumbs up/down already present at hub.arknexus.net (text box already opens on click)
-- [ ] Safe target: PATCH /v1/vault-file/MEMORY.md (append-only, auditable)
-- [ ] DPO pairs: each rated response = preference pair; goal 20+ pairs
+### Phase 4: Write Agency + Feedback Mechanism ✅ (Session 68)
+- [x] Design approved (Session 67, obs #4032): thumbs up/down gates write + DPO signal + corrections
+- [x] POST /v1/feedback endpoint in hub-bridge (auth + processFeedback + MEMORY.md append + vault DPO)
+- [x] write_memory tool: pending_writes Map + tool def + writeId threading through callGPTWithTools
+- [x] hub-bridge/lib/feedback.js: processFeedback + prunePendingWrites, 7 TDD tests green
+- [x] unified.html: write_id threading + thumbs-down textarea + quality guards (null guard, fresh token, no double-submit)
+- [x] hooks.py ALLOWED_TOOLS: write_memory added; karma-server rebuilt
+- [x] System prompt coaching: write_memory usage guidance in "How to Use Your Context Data" section
+- [x] End-to-end verified: write_id → 👍 writes MEMORY.md [KARMA-WRITE] → 👎 suppresses → DPO pair in ledger
+- [x] DPO mechanism live (type:"log", tags:["dpo-pair"]); accumulation begins (0/20 goal)
 
 ### Phase 5: MENTIONS Edge Growth Verification ⏳
 - [ ] Confirm :MENTIONS edge counts growing since Session 63 watermark
 - [ ] If growing: healthy. If stagnant: investigate watermark mode.
 
-### Phase 6: DPO Preference Pairs (via Phase 4) ⏳ UNBLOCKED by Phase 4
-- [ ] Phase 4 feedback mechanism IS the DPO collection mechanism
-- [ ] Goal: 20+ pairs before fine-tuning consideration
+### Phase 6: DPO Preference Pairs ⏳ UNBLOCKED (mechanism live since Session 68)
+- [x] Phase 4 feedback mechanism IS the DPO collection mechanism — NOW LIVE
+- [ ] Goal: 20+ pairs before fine-tuning consideration (0 collected so far — accumulation begins Session 68)
 
 ---
 
@@ -214,7 +216,7 @@
 | v9 | Write Agency + Feedback Mechanism | ⏳ NEXT (design approved) |
 | v9 | MENTIONS verification | ⏳ PENDING |
 | GSD Workflow | Manual | ✅ ADOPTED |
-| Self-Improvement | DPO collection (via Phase 4 feedback) | ⏳ UNBLOCKED by Phase 4 |
+| Self-Improvement | DPO collection (mechanism live) | ⏳ ACCUMULATING (0/20 pairs) |
 | Self-Improvement | Fine-tuning | ⏳ BLOCKED on 20+ DPO pairs |
 | K2 Worker | Sync protocol | ⏳ K2 not configured |
 | K2 Worker | Multi-agent | ⏳ FUTURE |

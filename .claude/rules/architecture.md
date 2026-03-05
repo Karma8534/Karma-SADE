@@ -51,15 +51,16 @@ Ledger → anr-vault-search (auto-reindex on change + every 5min) → FAISS vect
 
 ### Hub API (Bridge)
 - URL: https://hub.arknexus.net
-- Endpoints in use: `/v1/ambient` (hook capture), `/v1/chat` (Karma chat), `/v1/context` (context query), `/v1/cypher` (graph query), `/v1/self-model`, `/v1/ingest` (PDF pipeline)
+- Endpoints in use: `/v1/ambient` (hook capture), `/v1/chat` (Karma chat), `/v1/context` (context query), `/v1/cypher` (graph query), `/v1/self-model`, `/v1/ingest` (PDF pipeline), `/v1/feedback` (write_memory approval gate — Session 68)
 - Auth: Bearer token (hub.chat.token.txt for chat; hub.capture.token.txt for ambient hooks)
 - Model routing: GLM-4.7-Flash primary (~80%), gpt-4o-mini fallback (~20%) — Decision #7
-- **System prompt**: Loaded from `Memory/00-karma-system-prompt-live.md` at startup via `KARMA_IDENTITY_PROMPT`. Injected as `identityBlock` at top of `buildSystemText()`. Future updates: git pull + `docker restart anr-hub-bridge` only (no rebuild needed).
+- **System prompt**: Loaded from `Memory/00-karma-system-prompt-live.md` at startup via `KARMA_IDENTITY_PROMPT`. Injected as `identityBlock` at top of `buildSystemText()`. 12,366 chars as of Session 68. Future updates: git pull + `docker restart anr-hub-bridge` only (no rebuild needed).
 - **Context assembly**: Each `/v1/chat` fetches `karmaCtx` (FalkorDB recency via karma-server) + `semanticCtx` (FAISS top-5 via anr-vault-search) in parallel via `Promise.all`.
 - **karmaCtx sections** (as of Session 64): User Identity, Relevant Knowledge, Entity Relationships (RELATES_TO r.fact), Recurring Topics (top-10 by episode count, 30min cache), Recent Memories, Recently Learned, What I Know About The User.
 - **Brave Search**: Auto-triggered by `SEARCH_INTENT_REGEX` on user message. Top-3 results injected into context. API key at `/opt/seed-vault/memory_v1/session/brave.api_key.txt`.
-- **Tool-calling** (Session 66): GLM-4.7-Flash gets tool-calling via `callGPTWithTools()`. Tools: `graph_query(cypher)` → proxied to karma-server; `get_vault_file(alias)` → handled directly in hub-bridge using /karma/ volume mount. `hooks.py ALLOWED_TOOLS` must be updated when adding new tools.
+- **Tool-calling** (Session 66): GLM-4.7-Flash gets tool-calling via `callGPTWithTools()`. Tools: `graph_query(cypher)` → proxied to karma-server; `get_vault_file(alias)` → handled directly in hub-bridge using /karma/ volume mount; `write_memory(content)` → handled in hub-bridge via pending_writes Map (Session 68). `hooks.py ALLOWED_TOOLS` must be updated when adding new tools.
 - **Deep-mode tool gate** (Session 67): Tool-calling ONLY for `x-karma-deep: true` requests. Standard chat (deep_mode=false) routes to `callLLM()` — no tools. Line 1269-1272 in server.js: `deep_mode ? callLLMWithTools() : callLLM()`.
+- **write_memory gate** (Session 68): Karma calls `write_memory(content)` in deep mode → hub-bridge stores in `pending_writes` Map with TTL → returns `write_id` in response → user 👍/👎 at `/v1/feedback` → if approved: MEMORY.md appended + DPO pair written to vault ledger (`type:"log"`, `tags:["dpo-pair"]`).
 - **GLM_RPM_LIMIT**: 40 RPM (raised from 20 in Session 66). Set in hub.env.
 
 ### Vault API
@@ -116,5 +117,5 @@ Ledger → anr-vault-search (auto-reindex on change + every 5min) → FAISS vect
 ## What Is NOT Operational
 - Chrome extension (shelved — DOM scraping was unreliable)
 - Karma terminal (last capture 2026-02-27)
-- DPO preference pair accumulation (needs 20+ pairs, not yet started)
+- DPO preference pair accumulation: mechanism LIVE (Session 68) — pairs stored as `type:"log"`, `tags:["dpo-pair"]` in ledger. 0/20 goal. Accumulation begins with regular deep-mode usage.
 - Ambient Tier 3 (screen capture daemon — not yet built)

@@ -272,3 +272,38 @@ karmaCtx (FalkorDB recency) + semanticCtx (FAISS top-5) fetched via Promise.all 
 **Last updated:** 2026-03-05T20:00:00Z (Session 67 — Security fix + v9 Phase 3 persona coaching + Phase 4 design)
 **Owner:** Claude Code (writes on Colby approval)
 **Canonical location:** C:\Users\raest\Documents\Karma_SADE\.gsd\STATE.md
+
+### Session 68 Accomplishments (2026-03-05)
+
+**v9 Phase 4 — Karma Write Agency: ALL 10 TASKS COMPLETE**
+
+- Task 1: `hub-bridge/lib/feedback.js` — processFeedback + prunePendingWrites, 7 tests green (commit a17ce54)
+- Task 2: `write_memory` tool in server.js — pending_writes Map + tool def + writeId threading through callLLMWithTools→callGPTWithTools (commits 57ce894, 268bd08)
+- Task 3: `POST /v1/feedback` endpoint — auth + processFeedback + MEMORY.md fs.appendFileSync + DPO vault write (commits fe8a3b8, 722c05a, b002b5b)
+- Task 4: `karma-core/hooks.py` — `"write_memory"` added to ALLOWED_TOOLS (commit 362de7e)
+- Task 5: karma-server deployed — hooks.py synced to build context, image rebuilt, container healthy (RestartCount=0)
+- Task 6: hub-bridge deployed — server.js + lib/feedback.js synced, `lib/` created in parent build context, image rebuilt
+- Task 7: `unified.html` — write_id threading + thumbs-down textarea + quality fixes (no 400s, fresh token, double-submit guard) (commits 0618fbb, 314d301)
+- Task 8: system prompt — write_memory coaching paragraph in "How to Use Your Context Data" (commit 6f078e7); prompt: 11850→12366 chars
+- Task 9: hub-bridge redeployed with all UI changes; RestartCount=0; prompt length confirmed 12366
+- Task 10: End-to-end acceptance test PASSED — all 5 tests green:
+  1. Standard mode: no write_id ✅
+  2. Deep mode: write_id returned ✅
+  3. 👍 → `{wrote:true}` + MEMORY.md [KARMA-WRITE] line ✅
+  4. 👎 → `{wrote:false}` + MEMORY.md unchanged ✅
+  5. DPO pair in ledger: `type:"log", tags:["dpo-pair"]`, ledger 4118→4119 ✅
+
+**DPO bug fixes (2 iterations):**
+- Fix 1 (69f061b): bare object → `buildVaultRecord()` (vault requires type/confidence/verification/content as object)
+- Fix 2 (cf63957): `type:"dpo-pair"` → `type:"log"` (vault only allows ["fact","preference","project","artifact","log","contact"]); added status check
+
+### Decision #19: write_memory gate uses in-process pending_writes Map (2026-03-05, LOCKED)
+Approach A selected: `pending_writes` is a module-level Map in server.js. Key = `req_write_id` (generated pre-LLM). No vault round-trip for pending state. Entries removed on /v1/feedback approval/rejection or on TTL expiry (prunePendingWrites). No Redis or external state needed. Simpler, faster, sufficient for single-process hub-bridge.
+
+### Decision #20: DPO vault records use type:"log" with tags:["dpo-pair"] (2026-03-05, LOCKED)
+Vault-api schema only allows types: ["fact","preference","project","artifact","log","contact"]. "dpo-pair" is not a valid type. Correct pattern: `type:"log"`, `tags:["dpo-pair"]`. buildVaultRecord() required — bare objects fail schema validation (missing type/confidence/verification/content-as-object). Always check response status after vaultPost() — fire-and-forget swallows 422 errors silently.
+
+### Decision #21: hub-bridge lib/ files belong in build context parent, not app/ (2026-03-05, LOCKED)
+Build context is `/opt/seed-vault/memory_v1/hub_bridge/` (the parent). Dockerfile COPY commands are relative to this parent. `COPY lib/ ./lib/` requires `lib/feedback.js` at `/opt/seed-vault/memory_v1/hub_bridge/lib/` — NOT under `app/`. Must `mkdir -p` this directory first, then `cp`. Easy to get wrong because server.js lives under `app/`.
+
+**Last updated:** 2026-03-05T21:30:00Z (Session 68 — v9 Phase 4 complete)
