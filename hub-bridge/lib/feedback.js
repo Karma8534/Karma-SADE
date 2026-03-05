@@ -1,7 +1,7 @@
 // lib/feedback.js — pure logic for /v1/feedback endpoint (no I/O)
 
 /**
- * Remove pending_writes entries older than max_age_ms.
+ * Remove pending_writes entries older than max_age_ms. Mutates `map` in place.
  */
 export function prunePendingWrites(map, max_age_ms = 30 * 60 * 1000) {
   const cutoff = Date.now() - max_age_ms;
@@ -18,6 +18,7 @@ export function processFeedback(pending_writes, write_id, signal, note) {
   const entry = pending_writes.get(write_id) || null;
   const proposed = entry?.content || null;
   const preferred = note || (signal === "up" ? proposed : null);
+  // down always suppresses the write; note (if any) is captured in dpo_pair.preferred only
   const write_content = signal === "up" ? (note || proposed) : null;
 
   const dpo_pair = {
