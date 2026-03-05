@@ -1474,8 +1474,7 @@ const server = http.createServer(async (req, res) => {
         try {
           const filePath = VAULT_FILE_ALIASES["MEMORY.md"];
           const timestamp = new Date().toISOString();
-          fs.appendFileSync(filePath, `
-[${timestamp}] [KARMA-WRITE] ${write_content}`);
+          fs.appendFileSync(filePath, `\n[${timestamp}] [KARMA-WRITE] ${write_content}`);
           console.log(`[FEEDBACK] 👍 write executed: ${write_content.length} chars appended to MEMORY.md`);
         } catch (e) {
           console.error(`[FEEDBACK] MEMORY.md write failed: ${e.message}`);

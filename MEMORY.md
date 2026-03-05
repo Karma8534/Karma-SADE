@@ -41,8 +41,16 @@
 - Design doc: `docs/plans/2026-03-05-v9-phase4-write-memory-design.md`
 - Files to change: server.js (pending_writes Map + write_memory tool + /v1/feedback endpoint), unified.html (textarea), hooks.py (ALLOWED_TOOLS), 00-karma-system-prompt-live.md (coaching paragraph)
 
+### Session 68 Implementation Progress
+
+**v9 Phase 4 implementation — Tasks 1-3 complete (server.js):**
+- Task 1: `hub-bridge/lib/feedback.js` — prunePendingWrites + processFeedback, 7 tests green (commit a17ce54)
+- Task 2: `write_memory` tool — pending_writes Map + tool def + writeId threading (commits 57ce894, 268bd08)
+- Task 3: `POST /v1/feedback` endpoint — auth + processFeedback + MEMORY.md fs.appendFileSync + DPO ledger (commits fe8a3b8, 722c05a, fix)
+- **Active task:** Task 4 — update karma-core/hooks.py ALLOWED_TOOLS
+
 ### Next Task
-v9 Phase 4 — implement per design doc. Invoke writing-plans → atomic task plan.
+Task 4: Add "write_memory" to ALLOWED_TOOLS in karma-core/hooks.py → rebuild karma-server.
 
 ---
 
