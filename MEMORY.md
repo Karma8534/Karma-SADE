@@ -72,8 +72,24 @@ Three bugs fixed in unified.html (feedback buttons, stale token, double-submit g
 2. Submit onclick calls `getToken()` fresh — not captured in outer closure
 3. `this.disabled = true` at start of Submit onclick — double-submit guard
 
-### Next Task
-Task 8: Deploy unified.html to vault-neo (git push → vault-neo git pull → docker restart anr-hub-bridge).
+### Session 68 Final — v9 Phase 4 ALL TASKS COMPLETE
+
+**Task 8:** ✅ system prompt coaching — write_memory paragraph added to `## How to Use Your Context Data` (commit 6f078e7). KARMA_IDENTITY_PROMPT: 11850 → 12366 chars.
+
+**Task 9:** ✅ hub-bridge redeployed with all v9 Phase 4 changes (server.js + lib/feedback.js + unified.html). Key pitfall: `lib/feedback.js` must be synced to `/opt/seed-vault/memory_v1/hub_bridge/lib/` (parent build context), not `/app/lib/`.
+
+**Task 10:** ✅ End-to-end acceptance test PASSED (all 5 tests green):
+1. Standard mode: no write_id returned ✅
+2. Deep mode: write_id returned (e.g., wr_1772744647526_0azpyz) ✅
+3. Thumbs-up: `{ok:true, wrote:true}` → MEMORY.md contains `[KARMA-WRITE]` line ✅
+4. Thumbs-down: `{ok:true, wrote:false}` → MEMORY.md unchanged ✅
+5. DPO pairs in ledger: `type:"log", tags:["dpo-pair"]` (ledger 4118→4119) ✅
+
+**DPO bug fixes (2 iterations):**
+- Fix 1 (69f061b): bare object → `buildVaultRecord()` — vault schema requires type/confidence/verification/content as object
+- Fix 2 (cf63957): `type:"dpo-pair"` → `type:"log"` — vault only accepts ["fact","preference","project","artifact","log","contact"]. Added status check (`dpResult.status >= 300 → throw`).
+
+**v9 Phase 4 complete.** All commits on main. Next: v9 Phase 5 (deferred tools: annotate_entity, flag_pattern) or DPO dataset accumulation (need 20+ pairs).
 
 ---
 
