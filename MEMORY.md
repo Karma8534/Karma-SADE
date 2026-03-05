@@ -1,3 +1,9 @@
+## Session 69 post-wrap #3 (2026-03-05) — primitives context priority + FalkorDB schema
+
+**Active task:** COMPLETE
+1. "Recently Learned" priority rule: read block FIRST, never skip to "run this query yourself"
+2. Correction #8: FalkorDB Episodic real fields — e.source/e.title/e.timestamp do NOT exist
+
 ## Session 69 post-wrap #2 (2026-03-05) — SIGNAL_REGEX + primitives coaching
 
 **Active task:** COMPLETE
