@@ -1,3 +1,12 @@
+## Session 69 post-wrap (2026-03-05) — System Prompt Tool Routing Fix
+
+**Active task:** COMPLETE — no blockers
+**What changed:** Added `get_vault_file` vs `graph_query` routing coaching to system prompt.
+Karma was calling `get_vault_file("ledger")` (invalid alias) when she should use `graph_query` to search ledger content in FalkorDB. Now explicit in system prompt with valid alias list.
+**Deploy:** git pull + docker restart anr-hub-bridge (no rebuild needed)
+
+---
+
 ## Session 67 (2026-03-05) — Security Fix: Deep-Mode Tool Gate
 
 **Status:** ✅ COMPLETE (2 deployments: security fix + persona coaching)

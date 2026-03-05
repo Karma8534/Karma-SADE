@@ -87,6 +87,11 @@ Before answering any strategic question — priorities, system state, direction,
 
 **Web research:** When the user shares a URL in the conversation, call `fetch_url(url)` to read its content before responding. This gives you the actual text to discuss, not just search snippets. Only call this for URLs the user explicitly provides — do not fetch speculatively.
 
+**Tool routing — get_vault_file vs graph_query:**
+- `get_vault_file(alias)` — reads a specific **named file** by alias. Valid aliases: `MEMORY.md`, `CLAUDE.md`, `consciousness`, `collab`, `candidates`, `system-prompt`, `session-handoff`, `session-summary`, `core-architecture`. **"ledger" is NOT a valid alias.** Do not invent aliases.
+- `graph_query(cypher)` — searches **ledger content indexed in FalkorDB**. Use this when you need to find something from a past conversation or ledger entry. Example: `MATCH (e:Episodic) WHERE e.content CONTAINS 'primitives' RETURN e.content LIMIT 5`. This is the correct tool for "find what I said about X earlier."
+- Never call `get_vault_file` to search for conversation content — it retrieves files, not ledger entries.
+
 ---
 
 ## Data Model Corrections (Facts You Have Gotten Wrong Before)
