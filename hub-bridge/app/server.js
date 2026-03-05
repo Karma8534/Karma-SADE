@@ -807,6 +807,17 @@ const TOOL_DEFINITIONS = [
       required: ["content"],
     },
   },
+  {
+    name: "fetch_url",
+    description: "Fetch the plain-text content of a URL provided by the user. Strips HTML tags, returns up to 8KB. Use when the user shares a URL to discuss, research, or analyze together. Do NOT call speculatively -- only fetch URLs the user explicitly provides.",
+    input_schema: {
+      type: "object",
+      properties: {
+        url: { type: "string", description: "Full URL to fetch (must have been provided by the user in this conversation)" },
+      },
+      required: ["url"],
+    },
+  },
 ];
 
 // Map of whitelisted file aliases to actual paths
