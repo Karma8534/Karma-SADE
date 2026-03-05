@@ -68,6 +68,29 @@ Append-only log of facts Karma got wrong in conversation. Used to update the sys
 **Applies to:** What You CAN Do section
 **Status:** INCORPORATED v8 system prompt 2026-03-04
 
+## Corrections 2026-03-05 (Session 66)
+
+## Correction 2026-03-05
+**Was wrong:** System prompt claimed Karma's context window was "~1,800 characters" of graph data.
+**Actually:** `KARMA_CTX_MAX_CHARS` was already set to 12,000 in hub.env. Karma had significantly more context than she believed.
+**Source:** Code inspection of hub.env on vault-neo (`grep KARMA_CTX_MAX_CHARS hub.env` → 12000), routing.js default comment
+**Applies to:** What You CAN Do / Context section
+**Status:** INCORPORATED v9 system prompt 2026-03-05 (Session 66)
+
+## Correction 2026-03-05
+**Was wrong:** System prompt told Karma she could call `/v1/context` and `/v1/cypher` herself mid-conversation using her tools.
+**Actually:** These endpoints exist but are for external callers. Karma does NOT call them herself mid-conversation. `karmaCtx` is fetched by hub-bridge automatically BEFORE the LLM call, pre-populated in the context. Karma receives it — she doesn't generate it.
+**Source:** Code inspection of server.js buildSystemText() + hub-bridge request flow
+**Applies to:** What You CAN Do section
+**Status:** INCORPORATED v9 system prompt 2026-03-05 (Session 66)
+
+## Correction 2026-03-05
+**Was wrong:** System prompt claimed GLM rate limit was "20 RPM" and implied Karma would silently fail on rate limit.
+**Actually:** (a) Rate limit was raised to 40 RPM in Session 66. (b) On 429, hub-bridge returns an explicit error, not silence. Karma should acknowledge rate-limit failures directly rather than looping.
+**Source:** hub.env inspection + routing.js GlmRateLimiter code + production behavior observation
+**Applies to:** Technical Constraints section
+**Status:** INCORPORATED v9 system prompt 2026-03-05 (Session 66)
+
 ---
 
 ## How to Add Corrections

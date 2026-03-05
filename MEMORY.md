@@ -1,6 +1,6 @@
-## Session 66 (2026-03-05) — Session Wrap-Up (Docs Update)
+## Session 66 (2026-03-05) — Session Wrap-Up (Final)
 
-**Status:** ✅ COMPLETE
+**Status:** ✅ COMPLETE (10-step protocol done)
 
 ### What Changed
 - STATE.md: Session 66 accomplishments, 3 new decisions (#13-#15), GLM Tool-Calling/graph_query/get_vault_file component rows, GLM_RPM_LIMIT corrected to 40
@@ -8,6 +8,17 @@
 - CLAUDE.md: 4 new pitfalls (hooks.py whitelist, TOOL_NAME_MAP identity passthrough, callGPTWithTools param order, docker restart vs compose up)
 - architecture.md: tool-calling section added to Hub API description
 - direction.md: status updated to Session 66, GLM_RPM_LIMIT updated to 40
+- Memory/problems-log.md: CREATED — 4 problems from Session 66 documented with root causes
+- Memory/11-session-summary-latest.md: OVERWRITTEN with Session 66 summary
+- Memory/08-session-handoff.md: OVERWRITTEN with current system state + Session 67 next steps
+- Memory/02-stable-decisions.md: Decisions #13-#18 appended
+- Memory/04-session-learnings.md: Session 66 patterns appended
+- Memory/corrections-log.md: 3 new corrections (context size, karmaCtx fetch, RPM limit)
+- .gitignore: Fixed malformed .env.secrets pattern (had spaces between chars); added clean pattern
+- vault MEMORY.md: "Next Session Starts Here (Session 67)" section appended via hub API
+
+### Next Task (Session 67)
+v9 Phase 3 — Persona coaching: edit Memory/00-karma-system-prompt-live.md to add behavioral guidance for Entity Relationships + Recurring Topics. Deploy: git push → vault-neo git pull → docker restart anr-hub-bridge.
 - vault MEMORY.md (on droplet): Session 66 summary appended via hub API
 
 ### Why
