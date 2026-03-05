@@ -352,6 +352,15 @@ This prevents: image naming mismatches, missing env vars, stale images, silent s
   using FAISS + OpenAI `text-embedding-3-small`. Endpoint: `POST localhost:8081/v1/search`
   body: `{"query": "...", "limit": 5}`. Auto-reindexes on ledger FileSystemWatcher + every 5 min.
   Do NOT try to call ChromaDB-style API endpoints (`/api/v1/collections`) — they don't exist here.
+- **hooks.py ALLOWED_TOOLS whitelist gates all tool calls** (discovered Session 66): `karma-core/hooks.py`
+  has an `ALLOWED_TOOLS` set. Any tool name NOT in this set is rejected with `{"ok":false,"error":"Unknown tool: X"}` BEFORE reaching `execute_tool_action()`. When adding new tools to TOOL_DEFINITIONS in server.js, you MUST also add them to `ALLOWED_TOOLS` in hooks.py + rebuild karma-server.
+- **TOOL_NAME_MAP must be empty dict (identity passthrough)** (fixed Session 66): Pre-existing bug had
+  `{ "read_file": "file_read", "write_file": "file_write", ... }` — wrong names (karma-server checks for
+  `read_file`, not `file_read`). Correct pattern: `const TOOL_NAME_MAP = {};` which falls through to
+  `|| toolName` in the mapping code. Any non-empty mapping with name aliases = likely broken.
+- **callGPTWithTools parameter order differs from callLLMWithTools** (Session 66): `callLLMWithTools(model, messages, maxTokens)` but `callGPTWithTools(messages, maxTokens, model)`. Line 868 fix: `return callGPTWithTools(messages, maxTokens, model)` — note the different order.
+- **docker restart does NOT re-read hub.env** (Session 66): `docker restart anr-hub-bridge` reuses the existing container's environment. To pick up new env_file entries (like GLM_RPM_LIMIT), must run `docker compose -f compose.hub.yml up -d` to recreate the container.
+- **Gitignore patterns can be silently malformed** (Session 66): `.env.secrets` was added to .gitignore via a non-ASCII editor that inserted spaced chars (`. e n v . s e c r e t s`). Git couldn't match it — file with live K2_PASSWORD stayed untracked with no warning. ALWAYS verify after adding a sensitive file: `git check-ignore -v <filename>`. Exit code 1 = pattern not matching. Fix: `printf '\n.pattern\n' >> .gitignore`.
 
 ## Karma File Locations
 Canonical paths for Karma's files on vault-neo. These must never drift.

@@ -17,6 +17,12 @@
 - .gitignore: Fixed malformed .env.secrets pattern (had spaces between chars); added clean pattern
 - vault MEMORY.md: "Next Session Starts Here (Session 67)" section appended via hub API
 
+### Addendum Changes (same session)
+- CLAUDE.md: +1 pitfall (gitignore malformed patterns), +1 superpowers row (karma-verify for post-deploy), Known Pitfalls moved to END of file (cache optimization)
+- Memory/03-sentinel-and-health.md: fully rewritten to Docker-based monitoring (was stale Ollama/OpenWebUI)
+- Memory/12-resource-inventory.json: models/containers/hub_bridge updated; Z.ai added as subscription
+- Current_Plan/v9/: synced 7 canonical files
+
 ### Next Task (Session 67)
 v9 Phase 3 — Persona coaching: edit Memory/00-karma-system-prompt-live.md to add behavioral guidance for Entity Relationships + Recurring Topics. Deploy: git push → vault-neo git pull → docker restart anr-hub-bridge.
 - vault MEMORY.md (on droplet): Session 66 summary appended via hub API

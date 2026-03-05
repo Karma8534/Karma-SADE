@@ -1,76 +1,94 @@
-﻿# Karma SADE - Sentinel and Health Monitoring (Design)
+# Karma SADE — Health Monitoring (Current System)
 
-This file describes the Sentinel/watchdog concept for Karma SADE.
-It is a design document and source of truth for what "healthy" means in this system.
+**Last updated:** 2026-03-05 (Session 66)
 
-## 1. Purpose of Sentinel
+> Previously described Ollama + Open WebUI monitoring. That system is DEPRECATED.
+> Current system is vault-neo Docker containers. This document reflects actual production.
 
-- Monitor the health of key services and resources.
-- Detect problems early (stopped services, high resource usage, repeated errors).
-- Provide simple, clear status signals for the human (Neo) and for Karma SADE Architect.
+---
 
-Sentinel itself should be simple, transparent, and easy to disable or adjust.
+## 1. What "Healthy" Means
 
-## 2. Initial Scope of Monitoring
+All 7 containers on vault-neo must show "Up" (not "Restarting" or "Exited"):
 
-Sentinel should focus on:
+| Container | Role | Healthy = |
+|-----------|------|-----------|
+| `anr-hub-bridge` | API surface (/v1/chat, /v1/ambient, /v1/ingest, etc.) | `Up` + responds to POST /v1/chat |
+| `karma-server` | Consciousness loop + tool executor | `Up (healthy)` + RestartCount=0 |
+| `falkordb` | Graph database (neo_workspace, 3621+ nodes) | `Up` + accepts Cypher queries |
+| `anr-vault-api` | JSONL ledger write endpoint | `Up (healthy)` |
+| `anr-vault-db` | PostgreSQL backing store | `Up (healthy)` |
+| `anr-vault-search` | FAISS vector search (text-embedding-3-small) | `Up (healthy)` |
+| `anr-vault-caddy` | Reverse proxy → hub.arknexus.net | `Up` |
 
-- Service health:
-  - Ollama service.
-  - Open WebUI service.
-  - Any future Karma SADE services (to be listed here as they are added).
-- Resource health:
-  - Disk usage on main drives.
-  - Basic CPU/memory load ranges (to be defined later).
-- Log signals:
-  - Repeated errors in key logs (e.g., Open WebUI logs, sentinel logs).
+## 2. Health Check Commands
 
-## 3. Health Checks (Implemented)
+```bash
+# Quick: all 7 containers
+ssh vault-neo "docker ps --format 'table {{.Names}}\t{{.Status}}' | grep -E 'karma|hub|vault|falkor|caddy'"
 
-The Sentinel script performs the following checks:
+# Detail: restart counts (karma-server must be 0)
+ssh vault-neo "docker inspect karma-server --format 'RestartCount: {{.RestartCount}} | State: {{.State.Status}}'"
 
-- Ollama process: Is the ollama process running?
-- Ollama HTTP: Is http://localhost:11434 responding?
-- Open WebUI process: Is the open-webui process running?
-- Open WebUI HTTP: Is http://localhost:8080 responding?
-- Disk C: usage (warning at 80%, critical at 90%)
+# Smoke test hub-bridge (requires auth token)
+TOKEN=$(ssh vault-neo "cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt")
+curl -s -o /dev/null -w "%{http_code}" -X POST https://hub.arknexus.net/v1/chat \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"ping"}]}'
+# Expected: 200
 
-### Thresholds
-- Disk warning: 80% used
-- Disk critical: 90% used
-- HTTP timeout: 10 seconds
+# FalkorDB node count
+ssh vault-neo "docker exec falkordb redis-cli -p 6379 GRAPH.QUERY neo_workspace 'MATCH (n) RETURN count(n)'"
+```
 
-## 4. Sentinel Scripts and Schedule
+## 3. Session-End Verification Gate
 
-### Scripts
-- Main script: C:\Users\raest\Documents\Karma_SADE\Scripts\sentinel.ps1
-- Daily summary: C:\Users\raest\Documents\Karma_SADE\Scripts\sentinel-daily-summary.ps1
+`.claude/hooks/session-end-verify.sh` runs 7 checks before ending any session:
 
-### Scheduled Tasks
-- KarmaSADE-Sentinel: runs every 15 minutes
-- KarmaSADE-DailySummary: runs daily at 11:59 PM
+| Check | What it verifies |
+|-------|-----------------|
+| 1 | Git status clean (no uncommitted changes) |
+| 2 | MEMORY.md recently updated |
+| 3 | Recent commits exist |
+| 4 | On correct branch (main) |
+| 5 | No large untracked files (WARN only — PDFs in gitignored dirs ok) |
+| 6 | vault-neo HEAD matches local HEAD |
+| 7 | No abandoned worktrees |
 
-## 5. Sentinel Outputs and Logs
+**Run before ending every session:** `.claude/hooks/session-end-verify.sh`
 
-Log locations:
+All FAIL checks must be resolved. Check 5 WARN is acceptable (gitignored PDF dirs).
 
-- Sentinel logs directory: C:\Users\raest\Documents\Karma_SADE\Logs
-- Runtime log: sentinel-runtime.log (appended every 15 minutes)
-- Latest status: sentinel-latest.json (overwritten each run, JSON format)
-- Daily summary: sentinel-daily-summary.log (appended nightly)
+## 4. Tool Health (Session 66+)
 
-These logs can be summarized into memory documents and added to Open WebUI Knowledge for historical analysis.
+Karma's tools require specific health conditions beyond container status:
 
-## 5. Interaction with Karma SADE Architect
+| Tool | Health requirement |
+|------|-------------------|
+| `graph_query` | falkordb Up + karma-server Up + hooks.py whitelist includes `graph_query` |
+| `get_vault_file` | anr-hub-bridge Up + `/karma/` volume mount active |
+| `read_file`, `write_file`, `edit_file`, `bash` | karma-server Up + hooks.py whitelist |
 
-- Karma SADE Architect should be aware of the Sentinel design and log locations.
-- When the user asks about "health" or "recent issues", Architect should:
-  1) Refer to this document for design intent,
-  2) Read actual Sentinel logs (via tools, when configured),
-  3) Combine both to provide advice.
+**If tool calls return `{"ok":false,"error":"Unknown tool: X"}`**: check `karma-core/hooks.py` ALLOWED_TOOLS set first — this is the silent whitelist gate before `execute_tool_action()`.
 
-## 6. Future Work
+## 5. Cron-Based Health
 
-- Define precise thresholds for "warning" and "critical" states.
-- Define notification methods (e.g., simple text files, desktop notifications, or emails).
-- Document any scripts or scheduled tasks used to run Sentinel and update this file accordingly.
+| Job | Schedule | What |
+|-----|----------|------|
+| `batch_ingest` cron | Every 6h | Reads ledger → writes Episodic nodes to FalkorDB `neo_workspace` via Graphiti watermark mode |
+| Vault-neo dirty-check cron | Hourly | Alerts if vault-neo git repo has uncommitted edits (enforces droplet-is-deployment-only rule) |
+
+**Check batch_ingest last run:**
+```bash
+ssh vault-neo "docker exec karma-server cat /tmp/batch.log 2>/dev/null | tail -5"
+```
+
+## 6. Deprecated Monitoring (No Longer Applicable)
+
+- ~~Ollama (localhost:11434)~~ — not running on current system
+- ~~Open WebUI (localhost:8080)~~ — not running on current system
+- ~~Disk usage checks on C: drive~~ — monitoring target is vault-neo, not PAYBACK
+- ~~sentinel.ps1 / sentinel-daily-summary.ps1~~ — Windows-local scripts for old system
+
+Windows disk health and local machine monitoring is not part of the current Karma SADE production scope.

@@ -3,7 +3,7 @@
     "schema": "arknexus.resources.v1",
     "description": "Canonical ArkNexus Resource & Subscription Inventory — Aria Single Source of Truth",
     "created": "2026-02-11T19:42:00Z",
-    "updated": "2026-02-11T22:14:34Z",
+    "updated": "2026-03-05T00:00:00Z",
     "owner": "Neo"
   },
   "subscriptions": {
@@ -21,10 +21,21 @@
       "provider": "OpenAI",
       "tier": "pay-as-you-go",
       "status": "active",
-      "use": "Hub Bridge model routing — GPT-5-mini (default), GPT-5.2 (deep mode)",
+      "use": "Hub Bridge deep mode only — gpt-4o-mini triggered by x-karma-deep:true header. Primary model is GLM-4.7-Flash (Z.ai, free).",
       "endpoint": "https://hub.arknexus.net/v1/chat",
       "spend_cap": "$35/mo",
       "student_discount": false
+    },
+    "zai": {
+      "name": "Z.ai GLM API",
+      "provider": "Z.ai (Zhipu)",
+      "tier": "free",
+      "status": "active",
+      "use": "Hub Bridge primary model — GLM-4.7-Flash, ~80% of all requests. Supports native function calling (tool-calling). 40 RPM self-imposed limit (GLM_RPM_LIMIT env var).",
+      "endpoint": "https://open.bigmodel.cn/api/paas/v4/",
+      "monthly_cost": 0,
+      "student_discount": false,
+      "notes": "Configured Session 66. ZAI_API_KEY in hub.env on vault-neo."
     },
     "perplexity": {
       "name": "Perplexity",
@@ -182,8 +193,20 @@
         "os": "Ubuntu 24.04",
         "ssh_alias": "vault-neo",
         "ssh_user": "neo",
-        "containers": ["anr-vault-api", "anr-vault-db", "anr-vault-caddy", "anr-hub-bridge"],
-        "seed_vault_path": "/opt/seed-vault/"
+        "containers": [
+          "anr-hub-bridge",
+          "karma-server",
+          "falkordb",
+          "anr-vault-api",
+          "anr-vault-db",
+          "anr-vault-search",
+          "anr-vault-caddy"
+        ],
+        "seed_vault_path": "/opt/seed-vault/",
+        "repo_path": "/home/neo/karma-sade",
+        "hub_build_context": "/opt/seed-vault/memory_v1/hub_bridge/app/",
+        "karma_build_context": "/opt/seed-vault/memory_v1/karma-core/",
+        "key_env_vars": ["ZAI_API_KEY", "OPENAI_API_KEY", "BRAVE_API_KEY", "GLM_RPM_LIMIT", "K2_PASSWORD", "HUB_CHAT_TOKEN", "KARMA_CTX_MAX_CHARS"]
       }
     },
     "domains": {
@@ -224,10 +247,21 @@
     },
     "hub_bridge": {
       "name": "Karma Hub Bridge",
-      "version": "2.0.0",
+      "version": "2.2.0",
       "domain": "hub.arknexus.net",
-      "endpoint": "/v1/chat",
-      "features": ["spend cap enforcement", "vault turn logging", "two-tier model routing", "fact-based system prompt"]
+      "endpoints": ["/v1/chat", "/v1/ambient", "/v1/ingest", "/v1/context", "/v1/cypher"],
+      "features": [
+        "GLM tool-calling via callGPTWithTools (Session 66)",
+        "graph_query tool — Cypher queries against FalkorDB neo_workspace",
+        "get_vault_file tool — read canonical Karma files by alias",
+        "Brave Search auto-inject (SEARCH_INTENT_REGEX)",
+        "FAISS semantic context (anr-vault-search, top-5)",
+        "karmaCtx: Entity Relationships + Recurring Topics (Session 64)",
+        "two-tier model routing: GLM primary, gpt-4o-mini deep mode",
+        "system prompt file-loaded from Memory/00-karma-system-prompt-live.md",
+        "KARMA_CTX_MAX_CHARS=12000 context budget"
+      ],
+      "updated": "2026-03-05"
     },
     "seed_vault": {
       "name": "Seed Vault (Local Canon)",

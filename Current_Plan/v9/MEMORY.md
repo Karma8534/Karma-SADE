@@ -1,8 +1,62 @@
+## Session 66 (2026-03-05) — Session Wrap-Up (Final)
+
+**Status:** ✅ COMPLETE (10-step protocol done)
+
+### What Changed
+- STATE.md: Session 66 accomplishments, 3 new decisions (#13-#15), GLM Tool-Calling/graph_query/get_vault_file component rows, GLM_RPM_LIMIT corrected to 40
+- ROADMAP.md: v9 Phase 2 (Promise Loop Fix) marked DONE, persona coaching Phase 3, quality gaps updated
+- CLAUDE.md: 4 new pitfalls (hooks.py whitelist, TOOL_NAME_MAP identity passthrough, callGPTWithTools param order, docker restart vs compose up)
+- architecture.md: tool-calling section added to Hub API description
+- direction.md: status updated to Session 66, GLM_RPM_LIMIT updated to 40
+- Memory/problems-log.md: CREATED — 4 problems from Session 66 documented with root causes
+- Memory/11-session-summary-latest.md: OVERWRITTEN with Session 66 summary
+- Memory/08-session-handoff.md: OVERWRITTEN with current system state + Session 67 next steps
+- Memory/02-stable-decisions.md: Decisions #13-#18 appended
+- Memory/04-session-learnings.md: Session 66 patterns appended
+- Memory/corrections-log.md: 3 new corrections (context size, karmaCtx fetch, RPM limit)
+- .gitignore: Fixed malformed .env.secrets pattern (had spaces between chars); added clean pattern
+- vault MEMORY.md: "Next Session Starts Here (Session 67)" section appended via hub API
+
+### Next Task (Session 67)
+v9 Phase 3 — Persona coaching: edit Memory/00-karma-system-prompt-live.md to add behavioral guidance for Entity Relationships + Recurring Topics. Deploy: git push → vault-neo git pull → docker restart anr-hub-bridge.
+- vault MEMORY.md (on droplet): Session 66 summary appended via hub API
+
+### Why
+Session 66 implemented promise loop fix + GLM tool-calling. Docs needed to reflect verified system state.
+
+### Blockers / Next Steps
+- [ ] Git pull on vault-neo to deploy doc changes
+- [ ] Re-run Get-KarmaContext.ps1 to regenerate cc-session-brief.md with current vault state
+- [ ] Session 67: persona coaching (teach Karma WHAT TO DO with Entity Relationships + Recurring Topics data)
+
+---
+
+## Session 66 (2026-03-05) — Open-Source Release Prep
+
+**Status:** ✅ COMPLETE (done earlier in session)
+
+### What Changed
+- Repository visibility changed from PRIVATE to PUBLIC on GitHub
+- README.md fully rewritten — reframed from personal desktop tool to open-source memory backbone for AI agents
+- Old README preserved as README.old.md
+- MIT LICENSE file added
+- karma-core/.env.example created (safe config template, no secrets)
+- Applying for Anthropic Claude for Open Source Program (Track 2: Ecosystem Impact)
+
+### Why
+- Claude for Open Source Program requires public repo + ecosystem impact narrative
+- Old README contained personal Windows paths, desktop shortcuts, and personal framing — would fail reviewer inspection
+- LICENSE required for credible open-source project
+
+### Blockers / Next Steps
+- [ ] Submit application at claude.com/contact-sales/claude-for-oss
+- [ ] Polish repo structure if reviewer feedback requires it
+
 # Universal AI Memory — Current State
 
-## Session 65 (2026-03-05) — CLAUDE.md Rules + v9 Plan Snapshot
+## Session 65 (2026-03-05) — CLAUDE.md Rules + v9 Plan Snapshot + Fix Karma Promise Loop (Phase 1)
 
-**Status:** ✅ IN PROGRESS
+**Status:** ✅ IN PROGRESS — Phase 1 deployed; Phase 2 pending
 
 ### What Was Done
 - Added strategic-question pre-read rule to CLAUDE.md GSD hard rules
@@ -12,6 +66,14 @@
 - Integrated PDF insights into 5 docs: direction.md (external validation table), ROADMAP.md (Known Quality Gap: corrections trigger), 00-karma-system-prompt-live.md (How You Improve section), CLAUDE.md (constitution principle), REQUIREMENTS.md (systematic mistake-capture requirement)
 - Re-copied all updated files to Current_Plan/v9/
 - Key insight: Cherny independently validates Karma's two-tier architecture (identity.json=global, direction.md=project). Gap documented: corrections capture is session-based, not event-driven.
+- **Phase 1 — Karma promise loop fix (deploy: branch fix/karma-tool-calling)**:
+  - Root causes confirmed: RC1 (false tool declarations in server.js line 413), RC2 (line 868 gates tool-calling to Anthropic-only), RC3 (system prompt said 1800 chars context, actually 12,000), RC4 (GLM_RPM_LIMIT self-imposed, was 20)
+  - KARMA_CTX_MAX_CHARS=12000 already in hub.env (was already fixed, plan said raise from 1200)
+  - Fixed `Memory/00-karma-system-prompt-live.md`: corrected context size (1800→12,000), added tool-mode gate (standard GLM = no tools), added rate-limit honesty, removed misleading /v1/cypher "can call yourself" language
+  - Added GLM_RPM_LIMIT=40 to `/opt/seed-vault/memory_v1/hub_bridge/config/hub.env`
+  - Phase 2 changes (in branch, pre-deploy): server.js line 868 → callGPTWithTools (GLM now gets real tool-calling); line 413 fixed (honest tool text, no false declarations); TOOL_DEFINITIONS + graph_query + get_vault_file; TOOL_NAME_MAP simplified (identity passthrough); get_vault_file handled directly in executeToolCall via VAULT_FILE_ALIASES; karma-core/server.py: graph_query added to TOOL_DEFINITIONS + execute_tool_action handler (Cypher via get_falkor())
+  - karma-core/hooks.py: graph_query + get_vault_file added to ALLOWED_TOOLS whitelist (hook was gatekeeping and rejecting new tool names — pre-existing oversight)
+  - Security: docker-compose.karma.yml K2_PASSWORD moved from plaintext to ${K2_PASSWORD}; value in hub.env on vault-neo
 
 ---
 
