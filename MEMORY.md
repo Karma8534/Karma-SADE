@@ -1,3 +1,24 @@
+## Session 66 (2026-03-05) — Open-Source Release Prep
+
+**Status:** ✅ IN PROGRESS
+
+### What Changed
+- Repository visibility changed from PRIVATE to PUBLIC on GitHub
+- README.md fully rewritten — reframed from personal desktop tool to open-source memory backbone for AI agents
+- Old README preserved as README.old.md
+- MIT LICENSE file added
+- karma-core/.env.example created (safe config template, no secrets)
+- Applying for Anthropic Claude for Open Source Program (Track 2: Ecosystem Impact)
+
+### Why
+- Claude for Open Source Program requires public repo + ecosystem impact narrative
+- Old README contained personal Windows paths, desktop shortcuts, and personal framing — would fail reviewer inspection
+- LICENSE required for credible open-source project
+
+### Blockers / Next Steps
+- [ ] Submit application at claude.com/contact-sales/claude-for-oss
+- [ ] Polish repo structure if reviewer feedback requires it
+
 # Universal AI Memory — Current State
 
 ## Session 65 (2026-03-05) — CLAUDE.md Rules + v9 Plan Snapshot
