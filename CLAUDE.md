@@ -248,6 +248,7 @@ If any step missing: session doesn't end cleanly.
 - **STATE.md is canonical** — if it conflicts with MEMORY.md, surface drift explicitly
 - **Use PowerShell for git** — `powershell -Command "git commit -m '...'"` not raw bash git
 - **Before answering any strategic question** (priority, next steps, optimal path forward): read `.gsd/STATE.md` and `.gsd/ROADMAP.md` first. No exceptions. Strategic questions require ground-truth state, not context-window inference.
+- **Version snapshot on every new vX phase**: when a new version begins (v9, v10, etc.), create `Current_Plan/vX/` and copy exact files: `.gsd/STATE.md`, `.gsd/ROADMAP.md`, `.gsd/PROJECT.md`, `.gsd/REQUIREMENTS.md`, `MEMORY.md`, `direction.md`, `CLAUDE.md`, `Memory/00-karma-system-prompt-live.md`, `.claude/rules/architecture.md`. Write a `README.md` summarizing the snapshot. These are redundancy copies — originals remain canonical.
 
 ### Token efficiency (enforced):
 - Read `.gsd/STATE.md` at session start instead of re-reading 25 files

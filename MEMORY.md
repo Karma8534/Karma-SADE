@@ -1,5 +1,17 @@
 # Universal AI Memory — Current State
 
+## Session 65 (2026-03-05) — CLAUDE.md Rules + v9 Plan Snapshot
+
+**Status:** ✅ IN PROGRESS
+
+### What Was Done
+- Added strategic-question pre-read rule to CLAUDE.md GSD hard rules: read STATE.md + ROADMAP.md before answering priority/next-steps/path questions
+- Added version snapshot rule to CLAUDE.md GSD hard rules: create `Current_Plan/vX/` at start of each new version with exact copies of 9 key files
+- Created `Current_Plan/v9/` snapshot: 10 files (STATE, ROADMAP, PROJECT, REQUIREMENTS, MEMORY, direction, CLAUDE, system-prompt, architecture, README)
+- Commits: 49f510a (strategic-question rule), current (version snapshot rule)
+
+---
+
 ## Session 64 (2026-03-04) — Entity Relationship Context (Gap 1)
 
 **Status:** ✅ COMPLETE — Entity Relationship Context deployed and verified in production
