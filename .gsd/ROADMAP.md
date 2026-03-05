@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-03-05
 **Current phase:** v9 IN PROGRESS — persona iteration next
-**Previous phase:** v8 COMPLETE — all phases done
+**Previous phase:** v9 Phase 1 (Entity Relationships) + Session 66 (Promise Loop Fix) COMPLETE
 
 ---
 
@@ -129,16 +129,29 @@
 - [x] Wired into build_karma_context() — Entity Relationships + Recurring Topics sections
 - [x] 9 new tests (TDD), 27/28 full suite, deployed + verified in production
 
-### Phase 2: Persona Iteration ⏳ NEXT
-- [ ] System prompt update: teach Karma to USE Entity Relationships + Recurring Topics
+### Phase 2: Promise Loop Fix (GLM Tool-Calling) ✅ (Session 66)
+- [x] RC1 fix: Line 413 false tool declaration corrected in buildSystemText()
+- [x] RC2 fix: Line 868 callLLMWithTools() now calls callGPTWithTools() for all non-Anthropic models
+- [x] RC3 fix: System prompt context size corrected (1800 → 12,000 chars per KARMA_CTX_MAX_CHARS)
+- [x] RC4 fix: GLM_RPM_LIMIT raised 20 → 40 in hub.env; system prompt documents honest 429 behavior
+- [x] graph_query tool: Karma can run Cypher against FalkorDB neo_workspace in standard GLM mode
+- [x] get_vault_file tool: Karma can read canonical files by alias (MEMORY.md, system-prompt, etc.)
+- [x] hooks.py ALLOWED_TOOLS updated; TOOL_NAME_MAP pre-existing bug fixed (identity passthrough)
+- [x] K2_PASSWORD plaintext removed from docker-compose.karma.yml
+- [x] End-to-end verified: GLM calls graph_query, gets real FalkorDB results in same response
+- [x] 25 stale branches deleted; main branch protection enabled
+
+### Phase 3: Full Persona Iteration ⏳ NEXT
+- [ ] System prompt update: teach Karma to USE Entity Relationships + Recurring Topics sections in karmaCtx
 - [ ] Acceptance criteria: Karma references relationship data in responses when relevant
 - [ ] Cost: zero infra — git pull + docker restart only
+- Note: Honesty fixes from Session 66 are DONE (tool list, context size, rate-limit behavior). Remaining: behavioral coaching on how to USE the graph data.
 
-### Phase 3: MENTIONS Edge Growth Verification ⏳
+### Phase 4: MENTIONS Edge Growth Verification ⏳
 - [ ] Confirm :MENTIONS edge counts growing since Session 63 watermark
 - [ ] If growing: healthy. If stagnant: investigate watermark mode.
 
-### Phase 4: DPO Preference Pairs ⏳ BLOCKED
+### Phase 5: DPO Preference Pairs ⏳ BLOCKED
 - [ ] 0/20 pairs — needs mechanism design + Colby approval
 - [ ] Not started
 
@@ -179,7 +192,9 @@
 | Architecture Correctness | Blockers + Drift + Rate Limiter + Config Gate | ✅ DONE |
 | v8 | Self-knowledge + Semantic retrieval + Correction capture + Cleanup | ✅ DONE |
 | v9 | Entity Relationship Context | ✅ DONE (Session 64) |
-| v9 | Persona iteration | ⏳ NEXT |
+| v9 | Promise Loop Fix + GLM Tool-Calling | ✅ DONE (Session 66) |
+| v9 | Full Persona Iteration (behavioral coaching on graph data) | ⏳ NEXT |
+| v9 | MENTIONS verification | ⏳ PENDING |
 | GSD Workflow | Manual | ✅ ADOPTED |
 | Self-Improvement | DPO collection | ⏳ 0/20 pairs |
 | Self-Improvement | Fine-tuning | ⏳ BLOCKED |
@@ -190,17 +205,13 @@
 
 ## Decision Points (Open)
 
-### v9 Direction
-**Question:** What is v9? Possible directions:
-- Ambient Tier 3 (screen capture daemon)
-- DPO preference pair accumulation mechanism
-- karma-terminal capture refresh (stale since 2026-02-27)
-- K2 worker integration
-**Next step:** Colby decides priority.
+### v9 Direction (Session 64 — DECIDED, updated Session 66)
+Sequence: persona iteration first → MENTIONS verification → DPO mechanism → karma-terminal → Ambient Tier 3.
+Session 66 delivered: promise loop fix + GLM tool-calling (unblocks Karma from false promises).
+Remaining: teach Karma HOW to use Entity Relationships + Recurring Topics data in her responses.
 
 ### K2 Availability
-**Question:** Is K2 (192.168.0.226) intended as active worker anytime soon?
-**Implication:** Unlocks K2 sync protocol, multi-agent consciousness, potential Tier 3.
+K2 (192.168.0.226) not intended as active worker. Consciousness loop runs on droplet only.
 
 ---
 
@@ -212,17 +223,13 @@
 - **Brave Search**: auto-triggered by regex only, no manual override. Low priority.
 - **Entity Relationships limit**: query_relevant_relationships() uses LIMIT 20. Dense entity nodes may miss edges. Acceptable for now.
 - **Corrections capture lacks systematic trigger**: corrections-log.md + Session End Protocol step 2 captures mistakes session-by-session. Boris Cherny's validated method uses PR-review as the trigger ("every mistake becomes a rule" at review time, not session-end). A PR-diff → rule pipeline would make this more systematic and event-driven. Natural companion to DPO mechanism design. Not blocking; no scheduled work yet. (Session 65, CreatorInfo.pdf ingestion)
-
-## Decision Points (Open)
-
-### v9 Priority (Session 64 — DECIDED)
-Persona iteration first → MENTIONS verification → DPO mechanism → karma-terminal → Ambient Tier 3.
-
-### K2 Availability
-K2 (192.168.0.226) not intended as active worker. Consciousness loop runs on droplet only.
+- **graph_query 100-row cap**: Returns max 100 rows. Dense graphs may miss edges. Acceptable for now.
+- **get_vault_file 20KB cap**: Large files truncated at 20,000 chars. Acceptable for current vault files.
+- **hooks.py legacy aliases**: file_read, shell_exec remain in ALLOWED_TOOLS (pre-existing, unused, harmless). Could be cleaned up in future.
+- **Persona coaching still pending**: Karma now tells the truth about what she can/can't do (Session 66). But she hasn't been taught WHAT TO DO when she sees Entity Relationships + Recurring Topics sections in karmaCtx. That behavioral coaching is v9 Phase 3.
 
 ---
 
-**Last updated:** 2026-03-05 (Session 64 — v9 started)
-**Next review:** Session 65 (persona iteration)
+**Last updated:** 2026-03-05 (Session 66 — Promise loop fixed, GLM tool-calling live)
+**Next review:** Session 67 (full persona iteration)
 **Owner:** Claude Code (updates on Colby approval)

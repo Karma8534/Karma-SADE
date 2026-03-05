@@ -1,12 +1,12 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-05T00:00:00Z
-**Session:** 64 (Entity Relationship Context deployed + v9 direction set)
+**Last updated:** 2026-03-05T14:00:00Z
+**Session:** 66 (GLM tool-calling + system prompt honesty + K2_PASSWORD cleanup merged)
 **Canonical source:** This file. Read at session start.
 
 ---
 
-## Current Status (Verified 2026-03-04)
+## Current Status (Verified 2026-03-05)
 
 | Component | Status | Notes |
 |-----------|--------|-------|
@@ -22,13 +22,13 @@
 | **Chrome Extension** | ❌ SHELVED | Never worked reliably. Legacy data only. |
 | **Conversation Capture** | ✅ WORKING | All 3049 hub/chat episodes ingested via --skip-dedup. |
 | **batch_ingest Schedule** | ✅ CONFIGURED | Cron every 6h on vault-neo. --skip-dedup mode. |
-| **karma-server image** | ✅ REBUILT | Session-60 drift-fix: ANALYSIS_MODEL default corrected. |
+| **karma-server image** | ✅ REBUILT | Session-66: graph_query handler + hooks.py whitelist fix. |
 | **Routing/Pricing (Decision #2)** | ✅ CORRECTED | GLM=$0, tool-use respects deep_mode, MODEL_DEEP default fixed. Session-60. |
-| **GLM Rate Limiter** | ✅ LIVE | 20 RPM global sliding-window. /v1/chat=429, /v1/ingest=waitForSlot. 25/25 tests. V1-V5 verified. |
+| **GLM Rate Limiter** | ✅ LIVE | 40 RPM (raised from 20 in Session 66). /v1/chat=429, /v1/ingest=waitForSlot. V1-V5 verified. |
 | **Config Validation Gate** | ✅ LIVE | MODEL_DEFAULT + MODEL_DEEP allow-lists. [CONFIG ERROR] + exit(1) on bad config. 27/27 tests. |
 | **OpenAI API key** | ✅ SECURED | File-based read (mounted volume), not env var (docker inspect clean). |
 | **PDF Watcher** | ✅ WORKING | Rate-limit backoff + jam notification + time-window scheduling. |
-| **System Prompt Accuracy** | ✅ CORRECT | Memory/00-karma-system-prompt-live.md wired via KARMA_IDENTITY_PROMPT. 4/4 acceptance tests pass. Session-62. |
+| **System Prompt Accuracy** | ✅ CORRECT | Memory/00-karma-system-prompt-live.md wired via KARMA_IDENTITY_PROMPT. Session-62. Session-66: honesty fixes (tool list, context size, rate-limit behavior). |
 | **FAISS Semantic Retrieval** | ✅ LIVE | fetchSemanticContext() in hub-bridge. karmaCtx + semanticCtx via Promise.all. 4073 entries indexed. Session-62. |
 | **Correction Capture Protocol** | ✅ LIVE | Memory/corrections-log.md + CC Session End step 2. Session-62. |
 | **FalkorDB lane backfill** | ✅ DONE | 3040 Episodic nodes with lane=NULL → lane="episodic". 0 remaining. Session-62. |
@@ -37,27 +37,19 @@
 | **Recurring Topics** | ✅ LIVE | Top-10 entities by episode count. _pattern_cache refreshed every 30min at startup. Session-64. |
 | **Graphiti Watermark** | ✅ LIVE | batch_ingest watermark mode (Session 63). New episodes get entity extraction. :MENTIONS edges grow. |
 | **batch_ingest cron** | ✅ Graphiti mode | WATERMARK_PATH set. No --skip-dedup. Entity extraction enabled for incremental. |
+| **GLM Tool-Calling** | ✅ LIVE | callGPTWithTools() now handles all non-Anthropic models (line 868 fix). Session-66. |
+| **graph_query tool** | ✅ LIVE | Karma can run Cypher against FalkorDB neo_workspace in standard GLM mode. End-to-end verified. Session-66. |
+| **get_vault_file tool** | ✅ LIVE | Karma can read canonical files by alias (MEMORY.md, system-prompt, etc.). Handled in hub-bridge. Session-66. |
+| **hooks.py whitelist** | ✅ UPDATED | graph_query + get_vault_file added to ALLOWED_TOOLS. Session-66. |
+| **TOOL_NAME_MAP** | ✅ FIXED | Pre-existing bug: was mapping read_file→file_read (wrong names). Now empty dict = identity passthrough. Session-66. |
+| **K2_PASSWORD secret** | ✅ SECURED | Removed plaintext from docker-compose.karma.yml → ${K2_PASSWORD} env var. Value in hub.env. Session-66. |
+| **Main branch protection** | ✅ ENABLED | allow_force_pushes=false, allow_deletions=false. Session-66. |
 
 ---
 
 ## Active Blockers
 
-**None.** All 5 blockers resolved as of sessions 58–59.
-
-### ✅ Blocker #1 — RESOLVED (2026-03-03): FalkorDB Unfrozen
-LEDGER_PATH corrected to `/ledger/memory.jsonl`. Graph grew from 1570 → 1642 nodes. Cron configured.
-
-### ✅ Blocker #2 — RESOLVED (2026-03-03): hub/chat entries reach FalkorDB
-batch_ingest.py extended for hub/chat tags + assistant_text fallback. 1538 conversations ingested.
-
-### ✅ Blocker #3 — RESOLVED (2026-03-03): Auto-Schedule Configured
-Cron: `0 */6 * * *` on vault-neo, `--skip-dedup` mode.
-
-### ✅ Blocker #4 — RESOLVED (2026-03-03, verified 2026-03-04): karma-server Restart Loop
-Root cause was gpt-5-mini model reference (bad model name). Fixed in session 58. RestartCount=0 confirmed.
-
-### ✅ Blocker #5 — RESOLVED (verified 2026-03-04): MODEL_DEEP Drift
-`grep MODEL_DEEP hub.env` → `gpt-4o-mini`. Matches Decision #2. Not a typo.
+**None.**
 
 ---
 
@@ -89,6 +81,32 @@ Graphiti dedup queries time out at scale (85% error rate). Direct Cypher write v
 
 ### Decision #9: OpenAI API Key File-Based (2026-03-03, LOCKED)
 API key read from mounted volume file, not injected as env var. docker inspect stays clean.
+
+### Decision #10: KARMA_IDENTITY_PROMPT file-loaded at startup (2026-03-04, LOCKED)
+Hub-bridge reads Memory/00-karma-system-prompt-live.md via KARMA_SYSTEM_PROMPT_PATH env var at startup.
+Injected as identityBlock at top of buildSystemText(). File is volume-mounted read-only.
+Future persona changes require only: git pull on vault-neo + docker restart anr-hub-bridge. No rebuild.
+
+### Decision #11: anr-vault-search is FAISS (confirmed 2026-03-04)
+anr-vault-search container runs custom search_service.py — FAISS + OpenAI text-embedding-3-small.
+NOT ChromaDB. Endpoint: POST localhost:8081/v1/search. All ChromaDB references removed from all docs.
+
+### Decision #12: Semantic context injected in parallel (2026-03-04, LOCKED)
+karmaCtx (FalkorDB recency) + semanticCtx (FAISS top-5) fetched via Promise.all before every /v1/chat.
+4s timeout on FAISS call — graceful null if service unavailable. No serial dependency.
+
+### Decision #13: callGPTWithTools routes ALL non-Anthropic models (2026-03-05, LOCKED)
+Line 868 in server.js changed from `return callLLM()` → `return callGPTWithTools()`. GLM-4.7-Flash
+natively supports function calling via Z.ai OpenAI-compatible API. No provider switch needed.
+
+### Decision #14: TOOL_NAME_MAP is identity passthrough (2026-03-05, LOCKED)
+Pre-existing bug found: TOOL_NAME_MAP had file_read/file_write/file_edit/shell_exec (wrong names —
+karma-server uses read_file/write_file/edit_file/bash). Fixed to empty dict `{}` which falls through to
+`|| toolName` in the mapping code. Empty dict = correct. Any non-empty mapping = likely wrong.
+
+### Decision #15: get_vault_file handled in hub-bridge, not karma-server (2026-03-05, LOCKED)
+Hub-bridge has /karma/ volume mount access (read-only). karma-server ALLOWED_PATHS doesn't cover /karma/ paths.
+graph_query stays proxied to karma-server (needs FalkorDB access). Architecture split by access path.
 
 ---
 
@@ -126,13 +144,16 @@ API key read from mounted volume file, not injected as env var. docker inspect s
 - **Ambient Tier 3:** Screen capture daemon not built
 - **Entity graph growth lag:** Graphiti runs every 6h via cron. New episodes take up to 6h before entity nodes appear in FalkorDB.
 - **Per-episode Graphiti failures:** Watermark advances past failed episodes — silently lost at high error rates. Acceptable at low error rates.
+- **graph_query 100-row cap:** query_relevant_relationships() returns max 100 rows. Dense graphs may miss edges. Acceptable for now.
+- **get_vault_file 20KB cap:** Large files truncated at 20,000 chars. Acceptable for current vault files.
+- **hooks.py legacy aliases:** file_read, shell_exec still in ALLOWED_TOOLS but unused (pre-existing, harmless).
 
 ---
 
-## Next Session Agenda (Session 65)
+## Next Session Agenda (Session 67)
 
-1. **Persona iteration** — system prompt update to reference and use Entity Relationships + Recurring Topics sections in karmaCtx. Cheap: edit Memory/00-karma-system-prompt-live.md → git pull → docker restart anr-hub-bridge. No rebuild. Design first (what should Karma say when she sees these sections?).
-2. **MENTIONS gap assessment** — confirm :MENTIONS edge counts are growing since Session 63 watermark. Run query on FalkorDB to verify.
+1. **v9 Phase 2 — Full Persona Iteration**: System prompt still needs deeper update to teach Karma HOW to use Entity Relationships + Recurring Topics data when she sees them in karmaCtx. Session 66 fixed honesty (what she can/can't do). Still pending: what should she say/do when she sees relationship data?
+2. **MENTIONS gap assessment** — confirm :MENTIONS edge counts growing since Session 63 watermark.
 3. **DPO mechanism design** — only if Colby approves.
 
 ---
@@ -195,6 +216,22 @@ API key read from mounted volume file, not injected as env var. docker inspect s
 - x-karma-deep capability gate — already in server.js (no change needed)
 - lane=NULL backfill: 3040 Episodic nodes set to lane="episodic" via Cypher. 0 remaining.
 
+### Session 66 Accomplishments (2026-03-05)
+
+**Promise Loop Fix — Phases 1 & 2:**
+- RC1 fix: Line 413 (buildSystemText) false tool declaration corrected — accurate tool list with deep-mode gate
+- RC2 fix: Line 868 `callLLMWithTools()` — changed `callLLM()` → `callGPTWithTools()` for all non-Anthropic models
+- RC3 fix: System prompt context size corrected "~1800 chars" → "~12,000 chars (KARMA_CTX_MAX_CHARS)"
+- RC4 fix: GLM_RPM_LIMIT raised from 20 → 40 in hub.env; honest 429 behavior documented in system prompt
+- graph_query + get_vault_file added to TOOL_DEFINITIONS + TOOL_NAME_MAP + executeToolCall() in server.js
+- graph_query handler added to karma-core/server.py execute_tool_action()
+- graph_query + get_vault_file added to hooks.py ALLOWED_TOOLS whitelist (pre-existing pitfall: whitelist gates ALL tools)
+- TOOL_NAME_MAP pre-existing bug fixed: file_read/file_write/file_edit/shell_exec → empty dict (identity passthrough)
+- K2_PASSWORD moved from plaintext in docker-compose.karma.yml → ${K2_PASSWORD} env var + hub.env on vault-neo
+- End-to-end verified: hub-bridge logs show callGPTWithTools → finish_reason=tool_calls → execute → finish_reason=stop
+- 25 stale remote branches deleted; main branch protection enabled (no force push, no deletion)
+- PR #14 squash-merged to main (squash commit: 357bcb9)
+
 ### Decision #10: KARMA_IDENTITY_PROMPT file-loaded at startup (2026-03-04, LOCKED)
 Hub-bridge reads Memory/00-karma-system-prompt-live.md via KARMA_SYSTEM_PROMPT_PATH env var at startup.
 Injected as identityBlock at top of buildSystemText(). File is volume-mounted read-only.
@@ -210,35 +247,6 @@ karmaCtx (FalkorDB recency) + semanticCtx (FAISS top-5) fetched via Promise.all 
 
 ---
 
----
-
-## Next Session Agenda (v9)
-
-**What v8 unblocked:**
-1. **System prompt iteration is now cheap**: git pull + `docker restart anr-hub-bridge` only. No rebuild needed. First meaningful persona iteration cycle can begin.
-2. **Semantic memory gives Karma recall**: 4073 entries indexed; Karma can now draw on relevant past episodes in every response. First real continuity-in-conversation mechanism.
-3. **Correction capture is operational**: When Karma says something wrong and is corrected, that goes to corrections-log.md → eventually into system prompt. Self-improvement cycle is now closed.
-4. **FalkorDB lane consistency**: All 3049 Episodic nodes now have lane="episodic". Graph queries by lane now return correct results.
-
-**Open quality gap (pre-existing, not new):**
-- --skip-dedup = no entity extraction for bulk-ingested 3049 episodes. Only Episodic nodes. No cross-session Entity/relationship graph derived from historical episodes. New episodes (post-cron) get Graphiti entity extraction. Gap exists but acceptable.
-
-**v9 candidates (Colby decides):**
-1. DPO preference pair accumulation mechanism (0/20, needs Colby decision on how to collect)
-2. Ambient Tier 3 screen capture daemon
-3. karma-terminal capture refresh (stale 2026-02-27)
-4. First persona iteration: test system prompt improvement cycle now that it's cheap
-
----
-
-### Session 63 Accomplishments (2026-03-04)
-- Discovered entity graph frozen since Session 59 (--skip-dedup bypasses Graphiti entirely)
-- Implemented watermark-based Graphiti mode for forward-only entity extraction
-- Deployed: watermark at line 4075, cron updated (--skip-dedup removed), karma-server rebuilt
-- Karma's knowledge graph now grows with every new conversation (6h lag via cron)
-
----
-
-**Last updated:** 2026-03-04T22:15:00Z (Session 63 — Graphiti watermark deployed)
+**Last updated:** 2026-03-05T14:00:00Z (Session 66 — Promise loop fixed, GLM tool-calling live)
 **Owner:** Claude Code (writes on Colby approval)
 **Canonical location:** C:\Users\raest\Documents\Karma_SADE\.gsd\STATE.md

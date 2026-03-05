@@ -1,6 +1,28 @@
+## Session 66 (2026-03-05) — Session Wrap-Up (Docs Update)
+
+**Status:** ✅ COMPLETE
+
+### What Changed
+- STATE.md: Session 66 accomplishments, 3 new decisions (#13-#15), GLM Tool-Calling/graph_query/get_vault_file component rows, GLM_RPM_LIMIT corrected to 40
+- ROADMAP.md: v9 Phase 2 (Promise Loop Fix) marked DONE, persona coaching Phase 3, quality gaps updated
+- CLAUDE.md: 4 new pitfalls (hooks.py whitelist, TOOL_NAME_MAP identity passthrough, callGPTWithTools param order, docker restart vs compose up)
+- architecture.md: tool-calling section added to Hub API description
+- direction.md: status updated to Session 66, GLM_RPM_LIMIT updated to 40
+- vault MEMORY.md (on droplet): Session 66 summary appended via hub API
+
+### Why
+Session 66 implemented promise loop fix + GLM tool-calling. Docs needed to reflect verified system state.
+
+### Blockers / Next Steps
+- [ ] Git pull on vault-neo to deploy doc changes
+- [ ] Re-run Get-KarmaContext.ps1 to regenerate cc-session-brief.md with current vault state
+- [ ] Session 67: persona coaching (teach Karma WHAT TO DO with Entity Relationships + Recurring Topics data)
+
+---
+
 ## Session 66 (2026-03-05) — Open-Source Release Prep
 
-**Status:** ✅ IN PROGRESS
+**Status:** ✅ COMPLETE (done earlier in session)
 
 ### What Changed
 - Repository visibility changed from PRIVATE to PUBLIC on GitHub

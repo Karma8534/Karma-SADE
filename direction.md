@@ -1,7 +1,7 @@
 # Direction — What We're Building
 
 **Last updated:** 2026-03-05
-**Status:** v9 IN PROGRESS — entity relationship context + Graphiti watermark live. Next: persona iteration.
+**Status:** v9 IN PROGRESS — GLM tool-calling live + promise loop fixed (Session 66). Next: persona coaching on graph data usage.
 
 ---
 
@@ -30,7 +30,7 @@ v8 made this true in practice, not just in documentation.
 | **Chrome extension** | SHELVED permanently — DOM scraping unreliable | ❌ Shelved |
 
 **Models:**
-- Primary: GLM-4.7-Flash (Z.ai) — ~80% of requests, free, 20 RPM limit
+- Primary: GLM-4.7-Flash (Z.ai) — ~80% of requests, free, 40 RPM self-imposed limit (raised Session 66)
 - Deep/fallback: gpt-4o-mini (OpenAI) — triggered by `x-karma-deep: true` header only, paid
 
 **Context pipeline (per /v1/chat request):**
@@ -132,3 +132,4 @@ After v8: the DPO/fine-tuning question becomes meaningful — a foundation worth
 v9: what does Karma DO with her memories? Not just recall — reason, connect, surface patterns.
 Session 64 answered this partially: entity relationships and topic patterns are now in every response context. The persona must now be taught to USE them.
 Session 65: external validation confirms architecture is sound. Gap: corrections capture needs systematic trigger (currently session-based, not event-driven).
+Session 66: promise loop fixed — Karma no longer makes false promises. GLM-4.7-Flash now has real tool-calling (graph_query, get_vault_file). System prompt corrected for honesty (tool list, context size, rate-limit behavior). Next: behavioral coaching — teach Karma WHAT TO DO when she sees Entity Relationships + Recurring Topics data in karmaCtx.
