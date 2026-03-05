@@ -6,6 +6,7 @@ import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { pricePer1M, estimateUsd, validatePricingEnv } from "./lib/pricing.js";
 import { chooseModel, validateModelEnv, GlmRateLimiter, GLM_INGEST_SLOT_TIMEOUT_MS } from "./lib/routing.js";
+import { processFeedback, prunePendingWrites } from "./lib/feedback.js";
 
 // CJS interop for pdf-parse (CommonJS module in ESM context)
 import { createRequire } from 'module';
@@ -1443,6 +1444,66 @@ const server = http.createServer(async (req, res) => {
         debug_search,
         debug_ingest: ingestVerdict,
       });
+    }
+
+    // --- POST /v1/feedback ---
+    // Approve or reject a pending write_memory proposal. Always stores a DPO pair.
+    if (req.method === "POST" && req.url === "/v1/feedback") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      const raw = await parseBody(req, 50000);
+      let body;
+      try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+
+      const { write_id, signal, note } = body;
+      if (!write_id || !["up", "down"].includes(signal)) {
+        return json(res, 400, { ok: false, error: "missing_fields", hint: "write_id and signal ('up'|'down') required" });
+      }
+
+      // Lazy prune: remove writes older than 30 minutes
+      prunePendingWrites(pending_writes, 30 * 60 * 1000);
+
+      // Process feedback -- pure logic, no I/O
+      const { write_content, dpo_pair, delete_key } = processFeedback(pending_writes, write_id, signal, note);
+
+      // Execute write if approved
+      if (write_content) {
+        try {
+          const filePath = VAULT_FILE_ALIASES["MEMORY.md"];
+          const timestamp = new Date().toISOString();
+          fs.appendFileSync(filePath, `
+[${timestamp}] [KARMA-WRITE] ${write_content}`);
+          console.log(`[FEEDBACK] write executed: ${write_content.length} chars appended to MEMORY.md`);
+        } catch (e) {
+          console.error(`[FEEDBACK] MEMORY.md write failed: ${e.message}`);
+          // Don't surface filesystem error to UI -- still store DPO pair
+        }
+      } else {
+        console.log(`[FEEDBACK] write discarded for write_id=${write_id}`);
+      }
+
+      // Store DPO pair in vault ledger
+      try {
+        const dpoRecord = {
+          content: JSON.stringify(dpo_pair),
+          tags: ["dpo-pair"],
+          source: "feedback",
+          metadata: { write_id, signal, has_note: !!note },
+        };
+        await vaultPost("/v1/memory", VAULT_BEARER, dpoRecord);
+        console.log(`[FEEDBACK] DPO pair stored: signal=${signal}, has_note=${!!note}`);
+      } catch (e) {
+        console.error(`[FEEDBACK] DPO vault write failed: ${e.message}`);
+        // Non-critical -- don't fail the request
+      }
+
+      // Cleanup
+      if (delete_key) pending_writes.delete(delete_key);
+
+      return json(res, 200, { ok: true, signal, wrote: !!write_content });
     }
 
     // --- POST /v1/chatlog (single or batch) ---
