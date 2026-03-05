@@ -449,5 +449,7 @@ Today's date is 2026-03-05.
 Task 1 complete: hub-bridge/lib/feedback.js (processFeedback + prunePendingWrites, pure functions, no I/O) + hub-bridge/tests/test_feedback.js (7 tests, all green).
 Task 2 complete: server.js -- pending_writes Map, write_memory tool def, executeToolCall write_memory case, writeId threaded through callLLMWithTools+callGPTWithTools, req_write_id per-request, proposed_write_id in 200+207 responses.
 
-Task 3 complete: bare newline fix in appendFileSync (CRLF -> 
+Task 3 complete: bare newline fix in appendFileSync (CRLF ->
  escape) + emoji log messages (thumbs up/down) in feedback endpoint. Syntax verified clean.
+
+Task 8 complete: write_memory coaching paragraph appended to "## How to Use Your Context Data" section in Memory/00-karma-system-prompt-live.md. Paragraph instructs Karma to call write_memory(content) in deep-mode when she learns something worth persisting (preferences, corrections, new facts not in MEMORY.md yet), notes approval gate, and sets a "don't call every turn" bar.
