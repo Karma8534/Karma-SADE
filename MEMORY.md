@@ -1,8 +1,8 @@
 # Universal AI Memory — Current State
 
-## Session 65 (2026-03-05) — CLAUDE.md Rules + v9 Plan Snapshot
+## Session 65 (2026-03-05) — CLAUDE.md Rules + v9 Plan Snapshot + Fix Karma Promise Loop (Phase 1)
 
-**Status:** ✅ IN PROGRESS
+**Status:** ✅ IN PROGRESS — Phase 1 deployed; Phase 2 pending
 
 ### What Was Done
 - Added strategic-question pre-read rule to CLAUDE.md GSD hard rules
@@ -12,6 +12,12 @@
 - Integrated PDF insights into 5 docs: direction.md (external validation table), ROADMAP.md (Known Quality Gap: corrections trigger), 00-karma-system-prompt-live.md (How You Improve section), CLAUDE.md (constitution principle), REQUIREMENTS.md (systematic mistake-capture requirement)
 - Re-copied all updated files to Current_Plan/v9/
 - Key insight: Cherny independently validates Karma's two-tier architecture (identity.json=global, direction.md=project). Gap documented: corrections capture is session-based, not event-driven.
+- **Phase 1 — Karma promise loop fix (deploy: branch fix/karma-tool-calling)**:
+  - Root causes confirmed: RC1 (false tool declarations in server.js line 413), RC2 (line 868 gates tool-calling to Anthropic-only), RC3 (system prompt said 1800 chars context, actually 12,000), RC4 (GLM_RPM_LIMIT self-imposed, was 20)
+  - KARMA_CTX_MAX_CHARS=12000 already in hub.env (was already fixed, plan said raise from 1200)
+  - Fixed `Memory/00-karma-system-prompt-live.md`: corrected context size (1800→12,000), added tool-mode gate (standard GLM = no tools), added rate-limit honesty, removed misleading /v1/cypher "can call yourself" language
+  - Added GLM_RPM_LIMIT=40 to `/opt/seed-vault/memory_v1/hub_bridge/config/hub.env`
+  - Phase 2 pending: fix server.js line 868 + line 413 false tools + add graph_query/get_vault_file
 
 ---
 
