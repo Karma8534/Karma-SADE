@@ -1,8 +1,11 @@
-## Session 69 post-wrap (2026-03-05) — System Prompt Tool Routing Fix
+## Session 69 post-wrap (2026-03-05) — Karma Self-Model Corrections
 
 **Active task:** COMPLETE — no blockers
-**What changed:** Added `get_vault_file` vs `graph_query` routing coaching to system prompt.
-Karma was calling `get_vault_file("ledger")` (invalid alias) when she should use `graph_query` to search ledger content in FalkorDB. Now explicit in system prompt with valid alias list.
+**What changed:** 3 additional system prompt corrections based on live Karma analysis:
+1. fetch_url capability: "cannot browse URLs" bullet corrected — she can in deep mode w/ user-provided URLs
+2. K2 deprecated: explicit correction added — K2 is not running, not a sync worker
+3. Session continuity: added "How Session Continuity Actually Works" — no identity.json/invariants.json loading, actual mechanism is system prompt + FalkorDB karmaCtx injection per request
+4. Corrections 6 & 7 added to Data Model Corrections section
 **Deploy:** git pull + docker restart anr-hub-bridge (no rebuild needed)
 
 ---
