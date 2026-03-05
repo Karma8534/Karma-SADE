@@ -1,3 +1,37 @@
+## Session 67 (2026-03-05) — Security Fix: Deep-Mode Tool Gate
+
+**Status:** ✅ COMPLETE (2 deployments: security fix + persona coaching)
+
+### What Changed
+1. **Security fix** (commit 41b2c06): server.js line 1271 — gate tool-calling to deep-mode only
+   - `deep_mode ? callLLMWithTools() : callLLM()` — standard GLM requests no longer get tools
+2. **v9 Phase 3 persona coaching** (commit f90cea7): Memory/00-karma-system-prompt-live.md
+   - Fixed stale tool list: read_file/write_file → graph_query/get_vault_file
+   - New section "## How to Use Your Context Data": Entity Relationships, Recurring Topics, deep-mode graph_query rules
+   - KARMA_IDENTITY_PROMPT: 10415 → 11850 chars
+
+### Session 67 Extended — v9 Phase 4 Design Finalized
+
+**v9 Phase 4: Karma Write Agency** (design complete, not yet implemented)
+- Karma gets write tools: `write_memory(content)`, `annotate_entity(name, note)`, `flag_pattern(description)`
+- Write gate: thumbs up/down in web UI gates whether Karma's proposed memory note actually lands
+- Optional text box: 👍 + text → write user's phrasing instead of Karma's; 👎 + text → corrections-log.md
+- Three-in-one: write gate + DPO preference pairs + corrections pipeline
+- API: `POST /v1/feedback {turn_id, rating: +1/-1, note?: string}` — turn_id already in every /v1/chat response
+- Web UI: thumbs up/down already present at hub.arknexus.net, text box already opens on click
+- Safe target: PATCH /v1/vault-file/MEMORY.md (append-only, auditable)
+- obs #4032 saved
+
+**Also confirmed during Session 67 analysis:**
+- karma-server router.py is dead code (karma-terminal stale since 2026-02-27; spend = $0.12/month)
+- Groq swap: not worth it — router is unused, Graphiti uses OpenAI directly (cannot swap without rewrite)
+- ANALYSIS_MODEL config bug (defaults to glm-4.7-flash but OpenAI provider at api.openai.com): non-impactful
+
+### Next Task
+v9 Phase 4 — Karma write agency: brainstorm → plan → implement. Hub-bridge: POST /v1/feedback endpoint + write_memory tool. Start with brainstorming skill.
+
+---
+
 ## Session 66 (2026-03-05) — Session Wrap-Up (Final)
 
 **Status:** ✅ COMPLETE (10-step protocol done)
@@ -16,6 +50,12 @@
 - Memory/corrections-log.md: 3 new corrections (context size, karmaCtx fetch, RPM limit)
 - .gitignore: Fixed malformed .env.secrets pattern (had spaces between chars); added clean pattern
 - vault MEMORY.md: "Next Session Starts Here (Session 67)" section appended via hub API
+
+### Addendum Changes (same session)
+- CLAUDE.md: +1 pitfall (gitignore malformed patterns), +1 superpowers row (karma-verify for post-deploy), Known Pitfalls moved to END of file (cache optimization)
+- Memory/03-sentinel-and-health.md: fully rewritten to Docker-based monitoring (was stale Ollama/OpenWebUI)
+- Memory/12-resource-inventory.json: models/containers/hub_bridge updated; Z.ai added as subscription
+- Current_Plan/v9/: synced 7 canonical files
 
 ### Next Task (Session 67)
 v9 Phase 3 — Persona coaching: edit Memory/00-karma-system-prompt-live.md to add behavioral guidance for Entity Relationships + Recurring Topics. Deploy: git push → vault-neo git pull → docker restart anr-hub-bridge.

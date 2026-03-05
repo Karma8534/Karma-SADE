@@ -58,7 +58,8 @@ Ledger → anr-vault-search (auto-reindex on change + every 5min) → FAISS vect
 - **Context assembly**: Each `/v1/chat` fetches `karmaCtx` (FalkorDB recency via karma-server) + `semanticCtx` (FAISS top-5 via anr-vault-search) in parallel via `Promise.all`.
 - **karmaCtx sections** (as of Session 64): User Identity, Relevant Knowledge, Entity Relationships (RELATES_TO r.fact), Recurring Topics (top-10 by episode count, 30min cache), Recent Memories, Recently Learned, What I Know About The User.
 - **Brave Search**: Auto-triggered by `SEARCH_INTENT_REGEX` on user message. Top-3 results injected into context. API key at `/opt/seed-vault/memory_v1/session/brave.api_key.txt`.
-- **Tool-calling** (Session 66): GLM-4.7-Flash now gets real tool-calling. `callLLMWithTools()` line 868 routes all non-Anthropic models to `callGPTWithTools()`. Tools: `graph_query(cypher)` → proxied to karma-server; `get_vault_file(alias)` → handled directly in hub-bridge using /karma/ volume mount. `hooks.py ALLOWED_TOOLS` must be updated when adding new tools.
+- **Tool-calling** (Session 66): GLM-4.7-Flash gets tool-calling via `callGPTWithTools()`. Tools: `graph_query(cypher)` → proxied to karma-server; `get_vault_file(alias)` → handled directly in hub-bridge using /karma/ volume mount. `hooks.py ALLOWED_TOOLS` must be updated when adding new tools.
+- **Deep-mode tool gate** (Session 67): Tool-calling ONLY for `x-karma-deep: true` requests. Standard chat (deep_mode=false) routes to `callLLM()` — no tools. Line 1269-1272 in server.js: `deep_mode ? callLLMWithTools() : callLLM()`.
 - **GLM_RPM_LIMIT**: 40 RPM (raised from 20 in Session 66). Set in hub.env.
 
 ### Vault API

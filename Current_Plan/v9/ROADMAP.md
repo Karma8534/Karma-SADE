@@ -1,8 +1,8 @@
 # ROADMAP: Karma Peer — Phases & Milestones
 
 **Last updated:** 2026-03-05
-**Current phase:** v9 IN PROGRESS — persona iteration next
-**Previous phase:** v9 Phase 1 (Entity Relationships) + Session 66 (Promise Loop Fix) COMPLETE
+**Current phase:** v9 IN PROGRESS — Phase 4 (write agency) next
+**Previous phase:** v9 Phase 3 (persona coaching) COMPLETE — Session 67
 
 ---
 
@@ -141,19 +141,35 @@
 - [x] End-to-end verified: GLM calls graph_query, gets real FalkorDB results in same response
 - [x] 25 stale branches deleted; main branch protection enabled
 
-### Phase 3: Full Persona Iteration ⏳ NEXT
-- [ ] System prompt update: teach Karma to USE Entity Relationships + Recurring Topics sections in karmaCtx
-- [ ] Acceptance criteria: Karma references relationship data in responses when relevant
-- [ ] Cost: zero infra — git pull + docker restart only
-- Note: Honesty fixes from Session 66 are DONE (tool list, context size, rate-limit behavior). Remaining: behavioral coaching on how to USE the graph data.
+### Phase 3: Full Persona Iteration ✅ (Session 67)
+- [x] System prompt update: teach Karma to USE Entity Relationships + Recurring Topics sections in karmaCtx
+- [x] Fixed stale tool list: read_file/write_file → graph_query/get_vault_file
+- [x] New section "How to Use Your Context Data": Entity Relationships, Recurring Topics, deep-mode proactivity
+- [x] KARMA_IDENTITY_PROMPT: 10,415 → 11,850 chars
+- [x] Deployed: git pull + docker restart anr-hub-bridge (no rebuild needed)
+- [ ] Acceptance test PENDING: Ask Karma about a Recurring Topic; verify she references relationship data unprompted
 
-### Phase 4: MENTIONS Edge Growth Verification ⏳
+### Phase 3b: Deep-Mode Security Gate ✅ (Session 67)
+- [x] Bug: callLLMWithTools called unconditionally for all GLM requests — standard chat got tools
+- [x] Fix: deep_mode flag gates callLLMWithTools vs callLLM at line 1271
+- [x] Deployed + verified: standard chat returns ok:True without tool access
+
+### Phase 4: Write Agency + Feedback Mechanism ⏳ NEXT
+- [ ] Design approved (Session 67, obs #4032): thumbs up/down gates write + DPO signal + corrections
+- [ ] POST /v1/feedback {turn_id, rating: +1/-1, note?: string} endpoint
+- [ ] New tools: write_memory(content), annotate_entity(name, note), flag_pattern(description)
+- [ ] Write routing: 👍 → write Karma's note; 👍 + text → write user's phrasing; 👎 + text → corrections-log.md
+- [ ] Web UI: thumbs up/down already present at hub.arknexus.net (text box already opens on click)
+- [ ] Safe target: PATCH /v1/vault-file/MEMORY.md (append-only, auditable)
+- [ ] DPO pairs: each rated response = preference pair; goal 20+ pairs
+
+### Phase 5: MENTIONS Edge Growth Verification ⏳
 - [ ] Confirm :MENTIONS edge counts growing since Session 63 watermark
 - [ ] If growing: healthy. If stagnant: investigate watermark mode.
 
-### Phase 5: DPO Preference Pairs ⏳ BLOCKED
-- [ ] 0/20 pairs — needs mechanism design + Colby approval
-- [ ] Not started
+### Phase 6: DPO Preference Pairs (via Phase 4) ⏳ UNBLOCKED by Phase 4
+- [ ] Phase 4 feedback mechanism IS the DPO collection mechanism
+- [ ] Goal: 20+ pairs before fine-tuning consideration
 
 ---
 
@@ -193,11 +209,13 @@
 | v8 | Self-knowledge + Semantic retrieval + Correction capture + Cleanup | ✅ DONE |
 | v9 | Entity Relationship Context | ✅ DONE (Session 64) |
 | v9 | Promise Loop Fix + GLM Tool-Calling | ✅ DONE (Session 66) |
-| v9 | Full Persona Iteration (behavioral coaching on graph data) | ⏳ NEXT |
+| v9 | Deep-Mode Security Gate | ✅ DONE (Session 67) |
+| v9 | Full Persona Iteration (behavioral coaching on graph data) | ✅ DONE (Session 67) |
+| v9 | Write Agency + Feedback Mechanism | ⏳ NEXT (design approved) |
 | v9 | MENTIONS verification | ⏳ PENDING |
 | GSD Workflow | Manual | ✅ ADOPTED |
-| Self-Improvement | DPO collection | ⏳ 0/20 pairs |
-| Self-Improvement | Fine-tuning | ⏳ BLOCKED |
+| Self-Improvement | DPO collection (via Phase 4 feedback) | ⏳ UNBLOCKED by Phase 4 |
+| Self-Improvement | Fine-tuning | ⏳ BLOCKED on 20+ DPO pairs |
 | K2 Worker | Sync protocol | ⏳ K2 not configured |
 | K2 Worker | Multi-agent | ⏳ FUTURE |
 
@@ -226,10 +244,11 @@ K2 (192.168.0.226) not intended as active worker. Consciousness loop runs on dro
 - **graph_query 100-row cap**: Returns max 100 rows. Dense graphs may miss edges. Acceptable for now.
 - **get_vault_file 20KB cap**: Large files truncated at 20,000 chars. Acceptable for current vault files.
 - **hooks.py legacy aliases**: file_read, shell_exec remain in ALLOWED_TOOLS (pre-existing, unused, harmless). Could be cleaned up in future.
-- **Persona coaching still pending**: Karma now tells the truth about what she can/can't do (Session 66). But she hasn't been taught WHAT TO DO when she sees Entity Relationships + Recurring Topics sections in karmaCtx. That behavioral coaching is v9 Phase 3.
+- **Persona coaching acceptance test pending**: v9 Phase 3 deployed (Session 67). Acceptance test not yet run: ask Karma about Recurring Topic, verify relationship data referenced unprompted.
+- **karma-verify smoke test wrong key**: Skill checks for "reply" but hub-bridge returns "assistant_text". False "FAILED" on healthy service. Needs skill update.
 
 ---
 
-**Last updated:** 2026-03-05 (Session 66 — Promise loop fixed, GLM tool-calling live)
-**Next review:** Session 67 (full persona iteration)
+**Last updated:** 2026-03-05 (Session 67 — security gate + v9 Phase 3 + Phase 4 design approved)
+**Next review:** Session 68 (Phase 4 implementation kickoff)
 **Owner:** Claude Code (updates on Colby approval)
