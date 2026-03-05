@@ -1,3 +1,18 @@
+## Session 67 (2026-03-05) — Security Fix: Deep-Mode Tool Gate
+
+**Status:** 🔴 IN PROGRESS
+
+### What Changed
+- hub-bridge/app/server.js line 1269-1272: gate tool-calling to deep-mode only
+  - Before: `callLLMWithTools()` called unconditionally → GLM got tools on ALL requests
+  - After: `deep_mode ? callLLMWithTools() : callLLM()` — tools only when x-karma-deep header present
+  - Root cause: Session 66 fix routed all non-Anthropic models to callGPTWithTools (which always sends tools), never checking deep_mode flag
+
+### Next Task
+v9 Phase 3 — Persona coaching (after security fix deployed)
+
+---
+
 ## Session 66 (2026-03-05) — Session Wrap-Up (Final)
 
 **Status:** ✅ COMPLETE (10-step protocol done)

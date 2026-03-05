@@ -1266,9 +1266,10 @@ const server = http.createServer(async (req, res) => {
         { role: "user", content: userMessage },
       ];
 
-      // Use GPT-4o for tool-calling (Anthropic unreliable). Karma needs real tool-use.
-      console.log("[DIAGNOSTIC] About to call callGPTWithTools, model:", model, "max_output_tokens:", max_output_tokens);
-      const llmResult    = await callLLMWithTools(model, messages, max_output_tokens);
+      // Tool-calling is deep-mode only. Standard requests go through callLLM (no tools).
+      const llmResult = deep_mode
+        ? await callLLMWithTools(model, messages, max_output_tokens)
+        : await callLLM(model, messages, max_output_tokens);
       const assistantText = llmResult.text || "(empty_assistant_text)";
       const usage         = llmResult.usage;
       const debug_provider   = llmResult.provider;
