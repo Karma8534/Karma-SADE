@@ -50,8 +50,22 @@
 - **Active task:** Task 4 — update karma-core/hooks.py ALLOWED_TOOLS ✅ DONE (commit pending)
 - Task 4: Added `"write_memory"` to ALLOWED_TOOLS in karma-core/hooks.py
 
+### Session 68 Continued — Tasks 5-7 Complete
+
+**Task 5:** ✅ 00-karma-system-prompt-live.md updated — write_memory coaching paragraph added. Deployed: git push → vault-neo git pull → docker restart anr-hub-bridge → karma-server rebuilt.
+
+**Task 6:** ✅ (see prior session notes)
+
+**Task 7:** ✅ unified.html updated — write_id in feedback POSTs + inline textarea after 👎
+- `handleMessage` now reads `data.write_id` (from server response field `write_id: proposed_write_id`)
+- `addMessage(role, content, writeId)` — stores `writeId` in `wrap.dataset.writeId`
+- `sendFeedback(writeId, signal, btnEl, msgWrap)` — 👍 POSTs `{write_id, signal}` immediately; 👎 injects `.feedback-note` div with textarea + submit button
+- Submit POSTs `{write_id, signal: "down", note?: ...}` then collapses the div
+- Feedback-note div ID: `fn-{writeId}` (or `fn-unknown` if write_id is null)
+- CSS added: `.feedback-note`, `.feedback-note textarea`, `.feedback-note button`
+
 ### Next Task
-Task 5: Update 00-karma-system-prompt-live.md — add write_memory coaching paragraph. Deploy: git push → vault-neo git pull → docker restart anr-hub-bridge → rebuild karma-server.
+Task 8: Deploy unified.html to vault-neo (git push → vault-neo git pull → docker restart anr-hub-bridge).
 
 ---
 

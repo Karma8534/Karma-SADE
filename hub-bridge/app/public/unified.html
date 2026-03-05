@@ -135,6 +135,11 @@
   .feedback-btns button.active.up { color: var(--accent-green); }
   .feedback-btns button.active.down { color: var(--status-err); }
 
+  /* ── Feedback note (inline correction after thumbs-down) ── */
+  .feedback-note { margin-top: 4px; }
+  .feedback-note textarea { width: 100%; font-size: 0.9em; }
+  .feedback-note button { margin-top: 4px; font-size: 0.85em; }
+
   /* ── Input area ── */
   .chat-input-area {
     border-top: 1px solid var(--border);
@@ -480,10 +485,10 @@
   }
 
   // ── Add message ──────────────────────────────────────────────────────────
-  function addMessage(role, content, turnId) {
+  function addMessage(role, content, writeId) {
     const wrap    = document.createElement('div');
     wrap.className = 'msg ' + role;
-    if (turnId) wrap.dataset.turnId = turnId;
+    if (writeId) wrap.dataset.writeId = writeId;
     const bubble  = document.createElement('div');
     bubble.className = 'msg-bubble';
     bubble.textContent = content;
@@ -493,12 +498,12 @@
     const timeStr = new Date().toLocaleTimeString();
     meta.innerHTML = '<span>' + label + ' &middot; ' + timeStr + '</span>';
     // Add feedback buttons for Karma messages
-    if (role === 'karma' && turnId) {
+    if (role === 'karma') {
       const btns = document.createElement('span');
       btns.className = 'feedback-btns';
       btns.innerHTML = '<button class="up" title="Good response">&#x1F44D;</button><button class="down" title="Bad response">&#x1F44E;</button>';
-      btns.querySelector('.up').onclick = function() { sendFeedback(turnId, 'up', this); };
-      btns.querySelector('.down').onclick = function() { sendFeedback(turnId, 'down', this); };
+      btns.querySelector('.up').onclick = function() { sendFeedback(writeId, 'up', this); };
+      btns.querySelector('.down').onclick = function() { sendFeedback(writeId, 'down', this, wrap); };
       meta.appendChild(btns);
     }
     wrap.appendChild(bubble);
@@ -508,18 +513,54 @@
   }
 
   // ── Send feedback ─────────────────────────────────────────────────────────
-  async function sendFeedback(turnId, signal, btnEl) {
+  async function sendFeedback(writeId, signal, btnEl, msgWrap) {
     const token = getToken();
     if (!token) return;
     // Visual: highlight clicked, dim sibling
     const btns = btnEl.parentElement;
     btns.querySelectorAll('button').forEach(b => b.classList.remove('active'));
     btnEl.classList.add('active');
+
+    if (signal === 'down' && msgWrap) {
+      // Remove any existing feedback-note first (re-click)
+      const existingNote = msgWrap.querySelector('.feedback-note');
+      if (existingNote) existingNote.remove();
+
+      // Inject inline correction textarea below the message
+      const noteId = 'fn-' + (writeId || 'unknown');
+      const noteDiv = document.createElement('div');
+      noteDiv.className = 'feedback-note';
+      noteDiv.id = noteId;
+      noteDiv.innerHTML =
+        '<textarea placeholder="What should Karma have said? (optional)" rows="2"></textarea>' +
+        '<button>Submit</button>';
+      msgWrap.appendChild(noteDiv);
+      setTimeout(() => { $messages.scrollTop = $messages.scrollHeight; }, 10);
+
+      noteDiv.querySelector('button').onclick = async function() {
+        const note = noteDiv.querySelector('textarea').value.trim() || undefined;
+        const payload = { write_id: writeId, signal: 'down' };
+        if (note) payload.note = note;
+        try {
+          await fetch('/v1/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify(payload)
+          });
+        } catch (err) {
+          console.warn('[UI] Feedback note send failed:', err.message);
+        }
+        noteDiv.remove();
+      };
+      return; // Don't POST immediately for down — wait for note submit
+    }
+
+    // 👍 (or down without msgWrap): POST immediately
     try {
       await fetch('/v1/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({ turn_id: turnId, signal: signal })
+        body: JSON.stringify({ write_id: writeId, signal: signal })
       });
     } catch (err) {
       console.warn('[UI] Feedback send failed:', err.message);
@@ -532,8 +573,8 @@
     console.log('[UI] handleMessage received:', data);
     if (data.assistant_text || data.response || data.content) {
       const text = data.assistant_text || data.response || data.content;
-      const turnId = data.canonical?.turn_id || data.vault_write?.id || null;
-      addMessage('karma', text, turnId);
+      const writeId = data.write_id ?? null;
+      addMessage('karma', text, writeId);
       updateSidebar(data);
       setConnStatus('Connected', true);
     } else if (data.error) {
