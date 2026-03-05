@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-04T23:30:00Z
-**Session:** 64 (Entity Relationship Context deployed)
+**Last updated:** 2026-03-05T00:00:00Z
+**Session:** 64 (Entity Relationship Context deployed + v9 direction set)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -35,6 +35,8 @@
 | **anr-vault-search** | ✅ FAISS | Custom search_service.py (NOT ChromaDB). FAISS + text-embedding-3-small. Auto-reindex on ledger change. |
 | **Entity Relationships** | ✅ LIVE | RELATES_TO edges surfaced in karmaCtx. query_relevant_relationships() per-message. Session-64. |
 | **Recurring Topics** | ✅ LIVE | Top-10 entities by episode count. _pattern_cache refreshed every 30min at startup. Session-64. |
+| **Graphiti Watermark** | ✅ LIVE | batch_ingest watermark mode (Session 63). New episodes get entity extraction. :MENTIONS edges grow. |
+| **batch_ingest cron** | ✅ Graphiti mode | WATERMARK_PATH set. No --skip-dedup. Entity extraction enabled for incremental. |
 
 ---
 
@@ -127,13 +129,11 @@ API key read from mounted volume file, not injected as env var. docker inspect s
 
 ---
 
-## Next Session Agenda (Session 60)
+## Next Session Agenda (Session 65)
 
-System is in maintenance/growth mode. No urgent fixes. Possible work:
-1. **direction.md refresh** — 9 days stale, doesn't reflect post-session-59 state. Karma reads this.
-2. **ChromaDB reindex** — vector search index stale (low priority)
-3. **DPO preference pair accumulation** — needs 20+ pairs to start fine-tuning
-4. **Ambient Tier 3** — screen capture daemon (not started)
+1. **Persona iteration** — system prompt update to reference and use Entity Relationships + Recurring Topics sections in karmaCtx. Cheap: edit Memory/00-karma-system-prompt-live.md → git pull → docker restart anr-hub-bridge. No rebuild. Design first (what should Karma say when she sees these sections?).
+2. **MENTIONS gap assessment** — confirm :MENTIONS edge counts are growing since Session 63 watermark. Run query on FalkorDB to verify.
+3. **DPO mechanism design** — only if Colby approves.
 
 ---
 
@@ -153,6 +153,20 @@ System is in maintenance/growth mode. No urgent fixes. Possible work:
 - hub.env inline allowed-value comments added on vault-neo
 
 ---
+
+### Session 64 Accomplishments (2026-03-05)
+- Entity Relationships: query_relevant_relationships() — bulk RELATES_TO edge query using r.fact
+- Recurring Topics: _pattern_cache + _refresh_pattern_cache() — top-10 by episode count, 30min refresh
+- Both wired into build_karma_context() + startup loop; 9 new tests, 27/28 suite (1 pre-existing)
+- Deployed + verified: 20 edges for Karma query; Karma:357, User:315, Colby:138 in recurring topics
+- v9 direction set: persona iteration first (cheap + highest leverage)
+- Corrected: Session 63 Graphiti watermark WAS deployed (cc-session-brief only showed top-5 commits)
+
+### Session 63 Accomplishments (2026-03-04)
+- Graphiti watermark deployed to vault-neo: entity extraction enabled for new episodes
+- batch_ingest.py: watermark logic + Graphiti as default + 200 episode cap
+- Cron: --skip-dedup removed, WATERMARK_PATH=/ledger/.batch_watermark set
+- corrections-log.md updated
 
 ### Session 62 Accomplishments (v8 — 2026-03-04)
 

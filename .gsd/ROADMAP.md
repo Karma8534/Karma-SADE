@@ -1,8 +1,8 @@
 # ROADMAP: Karma Peer — Phases & Milestones
 
-**Last updated:** 2026-03-04
-**Current phase:** v8 COMPLETE — all phases done
-**Next major phase:** v9 (TBD — see Decision Points below)
+**Last updated:** 2026-03-05
+**Current phase:** v9 IN PROGRESS — persona iteration next
+**Previous phase:** v8 COMPLETE — all phases done
 
 ---
 
@@ -119,6 +119,31 @@
 
 ---
 
+---
+
+## Milestone 5b: v9 — Context Quality & Reasoning (IN PROGRESS)
+
+### Phase 1: Entity Relationship Context ✅ (Session 64)
+- [x] query_relevant_relationships() — bulk RELATES_TO edge query, r.fact property
+- [x] _pattern_cache + _refresh_pattern_cache() — top-10 entities by episode count, 30min refresh
+- [x] Wired into build_karma_context() — Entity Relationships + Recurring Topics sections
+- [x] 9 new tests (TDD), 27/28 full suite, deployed + verified in production
+
+### Phase 2: Persona Iteration ⏳ NEXT
+- [ ] System prompt update: teach Karma to USE Entity Relationships + Recurring Topics
+- [ ] Acceptance criteria: Karma references relationship data in responses when relevant
+- [ ] Cost: zero infra — git pull + docker restart only
+
+### Phase 3: MENTIONS Edge Growth Verification ⏳
+- [ ] Confirm :MENTIONS edge counts growing since Session 63 watermark
+- [ ] If growing: healthy. If stagnant: investigate watermark mode.
+
+### Phase 4: DPO Preference Pairs ⏳ BLOCKED
+- [ ] 0/20 pairs — needs mechanism design + Colby approval
+- [ ] Not started
+
+---
+
 ## Milestone 6: Self-Improvement Loop (FUTURE)
 
 ### Phase 1: DPO Data Collection ⏳
@@ -153,6 +178,8 @@
 | Ambient | Tier 3 (screen capture) | ⏳ FUTURE |
 | Architecture Correctness | Blockers + Drift + Rate Limiter + Config Gate | ✅ DONE |
 | v8 | Self-knowledge + Semantic retrieval + Correction capture + Cleanup | ✅ DONE |
+| v9 | Entity Relationship Context | ✅ DONE (Session 64) |
+| v9 | Persona iteration | ⏳ NEXT |
 | GSD Workflow | Manual | ✅ ADOPTED |
 | Self-Improvement | DPO collection | ⏳ 0/20 pairs |
 | Self-Improvement | Fine-tuning | ⏳ BLOCKED |
@@ -179,13 +206,22 @@
 
 ## Known Quality Gaps (Active)
 
-- **--skip-dedup = no entity extraction**: batch_ingest in --skip-dedup mode writes Episodic nodes directly via Cypher, bypassing Graphiti. This means NO entity/relationship extraction for bulk-ingested episodes. Only Episodic nodes exist for those 3049 episodes — no cross-session Entity nodes derived from them. Acceptable for now (entities come from real-time Graphiti for new episodes), but long-term the bulk episodes have no entity graph.
-- **karma-terminal capture stale**: last capture 2026-02-27. Not a blocker but gap in capture continuity.
+- **3049 bulk episodes lack MENTIONS edges**: bulk-ingested episodes (Sessions 57–59 --skip-dedup) have no entity extraction. Graphiti watermark (Session 63) fixes this for NEW episodes only. Historical gap remains. Acceptable.
+- **karma-terminal capture stale**: last capture 2026-02-27. Not a blocker.
 - **DPO pairs**: 0/20 collected. Fine-tuning loop not started.
-- **Brave Search**: auto-triggered by regex on message content. No manual override or session-level toggle. Low priority.
+- **Brave Search**: auto-triggered by regex only, no manual override. Low priority.
+- **Entity Relationships limit**: query_relevant_relationships() uses LIMIT 20. Dense entity nodes may miss edges. Acceptable for now.
+
+## Decision Points (Open)
+
+### v9 Priority (Session 64 — DECIDED)
+Persona iteration first → MENTIONS verification → DPO mechanism → karma-terminal → Ambient Tier 3.
+
+### K2 Availability
+K2 (192.168.0.226) not intended as active worker. Consciousness loop runs on droplet only.
 
 ---
 
-**Last updated:** 2026-03-04 (Session 62 — v8 complete)
-**Next review:** When v9 direction is decided
+**Last updated:** 2026-03-05 (Session 64 — v9 started)
+**Next review:** Session 65 (persona iteration)
 **Owner:** Claude Code (updates on Colby approval)

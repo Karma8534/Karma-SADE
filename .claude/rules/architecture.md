@@ -56,6 +56,7 @@ Ledger → anr-vault-search (auto-reindex on change + every 5min) → FAISS vect
 - Model routing: GLM-4.7-Flash primary (~80%), gpt-4o-mini fallback (~20%) — Decision #7
 - **System prompt**: Loaded from `Memory/00-karma-system-prompt-live.md` at startup via `KARMA_IDENTITY_PROMPT`. Injected as `identityBlock` at top of `buildSystemText()`. Future updates: git pull + `docker restart anr-hub-bridge` only (no rebuild needed).
 - **Context assembly**: Each `/v1/chat` fetches `karmaCtx` (FalkorDB recency via karma-server) + `semanticCtx` (FAISS top-5 via anr-vault-search) in parallel via `Promise.all`.
+- **karmaCtx sections** (as of Session 64): User Identity, Relevant Knowledge, Entity Relationships (RELATES_TO r.fact), Recurring Topics (top-10 by episode count, 30min cache), Recent Memories, Recently Learned, What I Know About The User.
 - **Brave Search**: Auto-triggered by `SEARCH_INTENT_REGEX` on user message. Top-3 results injected into context. API key at `/opt/seed-vault/memory_v1/session/brave.api_key.txt`.
 
 ### Vault API
@@ -83,7 +84,8 @@ Ledger → anr-vault-search (auto-reindex on change + every 5min) → FAISS vect
 
 ## batch_ingest
 - Runs on cron: `0 */6 * * *` on vault-neo
-- Command: `docker exec karma-server sh -c 'LEDGER_PATH=/ledger/memory.jsonl python3 /app/batch_ingest.py --skip-dedup > /tmp/batch.log 2>&1'`
+- **Current command** (Session 63+): `LEDGER_PATH=/ledger/memory.jsonl WATERMARK_PATH=/ledger/.batch_watermark python3 /app/batch_ingest.py` (Graphiti watermark mode — entity extraction for new episodes)
+- **Bulk backfill only**: `python3 /app/batch_ingest.py --skip-dedup` (bypasses Graphiti, direct Cypher, 899 eps/s — use for one-off recovery only, NOT regular cron)
 - LEDGER_PATH inside container: `/ledger/memory.jsonl` (NOT `/opt/seed-vault/...`)
 - Extended to handle hub/chat entries (2026-03-03): detects `hub+chat` tags, reads `assistant_text` fallback
 - **`--skip-dedup` is the correct mode for bulk backfill**: direct Cypher write, 899 eps/s, 0 errors

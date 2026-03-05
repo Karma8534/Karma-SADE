@@ -292,7 +292,7 @@ Karma can recall (FAISS) but cannot reason across sessions (no Entity/relationsh
 - **hub-bridge build context ≠ git repo**: build uses `/opt/seed-vault/memory_v1/hub_bridge/app/`, NOT `/home/neo/karma-sade/hub-bridge/app/`. After any git pull, sync first: `cp /home/neo/karma-sade/hub-bridge/app/server.js /opt/seed-vault/memory_v1/hub_bridge/app/server.js`
 
 # currentDate
-Today's date is 2026-03-04.
+Today's date is 2026-03-05.
 
 ## Session 62 Task 2 — Graphiti Watermark Wired into run() (2026-03-04T22:23:29Z)
 

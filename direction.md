@@ -1,7 +1,7 @@
 # Direction — What We're Building
 
-**Last updated:** 2026-03-04
-**Status:** v8 ALL PHASES COMPLETE. System fully operational. No blockers.
+**Last updated:** 2026-03-05
+**Status:** v9 IN PROGRESS — entity relationship context + Graphiti watermark live. Next: persona iteration.
 
 ---
 
@@ -23,7 +23,7 @@ v8 made this true in practice, not just in documentation.
 | **FalkorDB** | Graph: `neo_workspace` — 3621 nodes (Episodic + Entity + Decision) | ✅ Running |
 | **Ledger** | `/opt/seed-vault/memory_v1/ledger/memory.jsonl` — 4000+ entries, append-only | ✅ Growing |
 | **anr-vault-search (FAISS)** | Custom search_service.py — FAISS + text-embedding-3-small, 4073+ entries, auto-reindex | ✅ Live |
-| **batch_ingest** | Cron every 6h: ledger → FalkorDB `neo_workspace` (--skip-dedup) | ✅ Scheduled |
+| **batch_ingest** | Cron every 6h: Graphiti watermark mode (entity extraction for new episodes) | ✅ Scheduled |
 | **PDF watcher** | `karma-inbox-watcher.ps1` → /v1/ingest (rate-limit aware, jam detection) | ✅ Active |
 | **Brave Search** | Auto-triggered on search intent, top-3 results injected into context | ✅ Enabled |
 | **K2 local worker** | DEPRECATED 2026-03-03 — not operational, not needed | ❌ Shelved |
@@ -34,19 +34,22 @@ v8 made this true in practice, not just in documentation.
 - Deep/fallback: gpt-4o-mini (OpenAI) — triggered by `x-karma-deep: true` header only, paid
 
 **Context pipeline (per /v1/chat request):**
-1. `karmaCtx` — FalkorDB recency via karma-server
+1. `karmaCtx` — FalkorDB recency via karma-server (includes Entity Relationships + Recurring Topics as of Session 64)
 2. `semanticCtx` — FAISS top-5 relevant entries via anr-vault-search (POST :8081/v1/search)
 3. `webResults` — Brave Search (if SEARCH_INTENT_REGEX matches)
 4. `identityBlock` — Memory/00-karma-system-prompt-live.md (loaded at hub-bridge startup)
 All four injected into buildSystemText() before LLM call.
 
+**karmaCtx sections (build_karma_context output):**
+- User Identity, Relevant Knowledge, Entity Relationships (RELATES_TO edges), Recurring Topics (top-10 by episode count), Recent Memories, Recently Learned, What I Know About The User
+
 ---
 
-## What Changed — Sessions 57–62 (2026-03-03/04)
+## What Changed — Sessions 57–64 (2026-03-03/05)
 
 - ✅ FalkorDB: full backfill complete — 1268 → 3621 nodes (3049 Episodic + 571 Entity + 1 Decision)
-- ✅ batch_ingest: --skip-dedup mode (899 eps/s, 0 errors vs 85% timeout in Graphiti mode)
-- ✅ Cron every 6h on vault-neo, --skip-dedup by default
+- ✅ batch_ingest: --skip-dedup bulk backfill (899 eps/s); then watermark Graphiti mode for incremental
+- ✅ Graphiti watermark deployed (Session 63): new episodes get entity extraction; :MENTIONS edges growing
 - ✅ FalkorDB datetime() fix: timestamps stored as ISO strings (no datetime() Cypher function)
 - ✅ OpenAI API key secured: file-mounted volume (docker inspect clean)
 - ✅ karma-server restart loop fixed: gpt-5-mini → gpt-4o-mini
@@ -57,6 +60,7 @@ All four injected into buildSystemText() before LLM call.
 - ✅ v8 Phase 3: corrections-log.md created, CC session-end step 2 added
 - ✅ v8 Phase 2: FAISS semantic retrieval live — fetchSemanticContext() in hub-bridge, parallel fetch
 - ✅ v8 Phase 4: Budget guard + capability gate verified; 3040 lane=NULL nodes → lane="episodic"
+- ✅ Session 64: Entity Relationships (RELATES_TO r.fact) + Recurring Topics (top-10 by episode count) live in karmaCtx
 
 ---
 
@@ -90,12 +94,14 @@ None. System fully operational. v8 complete.
 
 ---
 
-## Open Directions (v9 candidates — Colby decides)
+## v9 — IN PROGRESS
 
-1. **DPO preference pair accumulation** — 0/20 pairs; need mechanism + Colby approval on approach
-2. **Ambient Tier 3** — screen capture daemon; requires Colby explicit approval (privacy)
-3. **karma-terminal capture refresh** — stale since 2026-02-27, not a blocker
-4. **First persona iteration** — test system prompt improvement cycle (now cheap: git pull + docker restart)
+**Priority order (Session 64 decision):**
+1. **Persona iteration** ← NEXT — system prompt must learn to USE entity relationships + recurring topics in karmaCtx. Cheap: git pull + docker restart only. Zero infra changes.
+2. **MENTIONS edge growth** — 3049 bulk episodes lack MENTIONS. New episodes get extraction via watermark cron. Acceptable for now; historical gap won't be addressed until explicit backfill decision.
+3. **DPO preference pairs** — 0/20; needs mechanism design + Colby approval on approach.
+4. **karma-terminal refresh** — stale since 2026-02-27, low priority.
+5. **Ambient Tier 3** — screen capture daemon; blocked on Colby privacy approval.
 
 ---
 
@@ -108,3 +114,4 @@ Karma wakes up every session knowing:
 
 After v8: the DPO/fine-tuning question becomes meaningful — a foundation worth fine-tuning on.
 v9: what does Karma DO with her memories? Not just recall — reason, connect, surface patterns.
+Session 64 answered this partially: entity relationships and topic patterns are now in every response context. The persona must now be taught to USE them.
