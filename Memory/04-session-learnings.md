@@ -5,6 +5,20 @@ It is automatically updated by Karma when important information is shared.
 
 ---
 
+## [2026-03-05] SESSION 69 LEARNINGS (high)
+
+**Pattern: TOOL_DEFINITIONS entries without handlers cause LLM confabulation**
+If a tool is listed in TOOL_DEFINITIONS but has no handler in executeToolCall, it falls through to the karma-server proxy (which rejects it). The LLM sees it in the tool list and tells users it can use that capability. Rule: NEVER add a tool to TOOL_DEFINITIONS without either (a) an executeToolCall handler, or (b) a verified karma-server handler + hooks.py whitelist entry. Remove stale tools immediately when discovered.
+
+**Pattern: hub-bridge-native tool handlers don't need hooks.py whitelist**
+Tools handled directly in executeToolCall BEFORE the proxy fallthrough (like get_vault_file, write_memory, fetch_url) bypass karma-server entirely. They don't need to be in hooks.py ALLOWED_TOOLS. Only proxied tools (graph_query) need the whitelist. This is easy to confuse — check which path the tool takes before updating hooks.py.
+
+**Pattern: compose.hub.yml lives in the build context directory**
+`/opt/seed-vault/memory_v1/hub_bridge/compose.hub.yml` is the correct path. There's also one at `/home/neo/karma-sade/hub-bridge/compose.hub.yml` (in git). Build/deploy commands must use the build context path. The skill had the wrong path for months — verified by find on vault-neo.
+
+**Pattern: fetch_url is the bridge between search snippets and research-grade context**
+Brave Search gives title+URL+3-line snippet (good for factual lookups). fetch_url gives full page text (good for reading articles, evaluating sources, comparing options). The right usage split: Brave handles ambient search intent; fetch_url handles explicit "read this" requests from the user.
+
 ## [2026-03-05] SESSION 67 LEARNINGS (high)
 
 **Pattern: GLM tool-calling gate must be at the CALL SITE, not inside the routing function**

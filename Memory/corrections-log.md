@@ -93,6 +93,15 @@ Append-only log of facts Karma got wrong in conversation. Used to update the sys
 
 ---
 
+## Correction 2026-03-05 [Session 69]
+**Was wrong:** Karma said "like I can call bash commands on vault-neo" when explaining web search vs tool differences.
+**Actually:** Karma has NO bash tool. Active deep-mode tools: `graph_query`, `get_vault_file`, `write_memory`, `fetch_url`. Stale definitions (bash/read_file/write_file/edit_file) caused confabulation.
+**Source:** server.js TOOL_DEFINITIONS inspection + executeToolCall code review.
+**Applies to:** What You CAN Do section — tool list
+**Status:** INCORPORATED — stale tools removed + system prompt tool list corrected Session 69
+
+---
+
 ## How to Add Corrections
 
 At session end (CC protocol — Task 3.3):

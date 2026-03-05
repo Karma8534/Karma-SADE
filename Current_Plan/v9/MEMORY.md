@@ -91,6 +91,24 @@ Three bugs fixed in unified.html (feedback buttons, stale token, double-submit g
 
 **v9 Phase 4 complete.** All commits on main.
 
+### Session 69 — fetch_url Tool + Stale Tool Cleanup
+
+**v9 Phase 5:** ✅ MENTIONS edges verified — 2,363 in neo_workspace (healthy/growing)
+
+**fetch_url tool (v9 Phase 5b):** ✅ LIVE — hub-bridge v2.11.0
+- Handles `fetch_url(url)` in executeToolCall before proxy fallthrough (same as get_vault_file)
+- Strips HTML (script/style/tags), collapses whitespace, 8KB cap, 10s timeout
+- Returns `{ok, url, content, chars}` or `{error, message, url}`
+- Only for URLs explicitly provided by user — coaching added to system prompt
+
+**Stale tool cleanup:** ✅ Removed `read_file`, `write_file`, `edit_file`, `bash` from TOOL_DEFINITIONS — these had no handler, proxied to karma-server (rejected), caused Karma to claim bash capabilities she didn't have.
+
+**Active tools (deep mode):** `graph_query`, `get_vault_file`, `write_memory`, `fetch_url`
+
+**karma-hub-deploy skill:** ✅ Fixed — compose.hub.yml path corrected to `/opt/seed-vault/memory_v1/hub_bridge/`
+
+**Next session:** Run Phase 3 acceptance test (still PENDING from Session 67) — ask Karma about a Recurring Topic in deep mode, verify relationship data referenced unprompted. DPO accumulation: 3/20 (time-gated).
+
 ---
 
 ## Next Session Starts Here
@@ -505,3 +523,11 @@ Task 3 complete: bare newline fix in appendFileSync (CRLF ->
  escape) + emoji log messages (thumbs up/down) in feedback endpoint. Syntax verified clean.
 
 Task 8 complete: write_memory coaching paragraph appended to "## How to Use Your Context Data" section in Memory/00-karma-system-prompt-live.md. Paragraph instructs Karma to call write_memory(content) in deep-mode when she learns something worth persisting (preferences, corrections, new facts not in MEMORY.md yet), notes approval gate, and sets a "don't call every turn" bar.
+
+
+## Session 68+ Fix: Remove Stale Tool Definitions
+
+- Removed 4 stale tool objects from TOOL_DEFINITIONS in hub-bridge/app/server.js: read_file, write_file, edit_file, bash
+- These had no handler and caused Karma to confabulate capabilities
+- TOOL_DEFINITIONS now contains only 3 active tools: graph_query, get_vault_file, write_memory
+- Updated stale comment from "4 tools only" to reflect current 3-tool reality

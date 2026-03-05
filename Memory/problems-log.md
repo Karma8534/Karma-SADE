@@ -4,6 +4,24 @@ Append-only. Every problem debugged in any session gets an entry here. If we deb
 
 ---
 
+## 2026-03-05 [Session 69] Karma confabulates bash/file tool capabilities
+
+**Symptom:** Karma said "like I can call bash commands on vault-neo" — claimed a tool capability she doesn't have.
+**Root cause:** `read_file`, `write_file`, `edit_file`, `bash` were defined in `TOOL_DEFINITIONS` in server.js (lines 779-824) but had no handler in `executeToolCall`. They fell through to karma-server proxy, which rejected them. GLM saw them listed in TOOL_DEFINITIONS and told users it could use these tools.
+**Fix:** Removed all 4 stale tool definitions from TOOL_DEFINITIONS (commit 7d2f034). Active tools are now: `graph_query`, `get_vault_file`, `write_memory`, `fetch_url`.
+**Verified by:** `node -e "... TOOL_DEFINITIONS ..."` → `ok 3 tools` (before fetch_url), then `ok 4 tools` (after fetch_url added). No bash/file refs in server.js logic.
+**Residual risk:** Any future tool added to TOOL_DEFINITIONS without an executeToolCall handler will cause the same confabulation. Lesson: only add tools to TOOL_DEFINITIONS if they have a handler OR are known-good via karma-server proxy.
+**Status:** RESOLVED
+
+## 2026-03-05 [Session 69] karma-hub-deploy skill had wrong compose.hub.yml path
+
+**Symptom:** Skill instructed `cd /home/neo/karma-sade && docker compose -f compose.hub.yml build` — fails silently because file doesn't exist there.
+**Root cause:** `compose.hub.yml` is at `/opt/seed-vault/memory_v1/hub_bridge/compose.hub.yml`, not in the git repo root. Skill was written with wrong path assumption.
+**Fix:** Updated karma-hub-deploy SKILL.md to use `cd /opt/seed-vault/memory_v1/hub_bridge && docker compose -f compose.hub.yml ...` for build/deploy steps. Key Names table also updated.
+**Verified by:** Confirmed file exists at `/opt/seed-vault/memory_v1/hub_bridge/compose.hub.yml` via `find` on vault-neo. Deploy subagent used correct path; build succeeded.
+**Residual risk:** None — skill now has correct path. Would resurface if compose.hub.yml is moved.
+**Status:** RESOLVED
+
 ## 2026-03-05 Promise Loop — Karma says "Let me query that now" then never completes
 
 **Symptom:** Karma responds with "Let me query the graph now" / "Let me check that" and then produces no result, forcing Colby to wait 20–30 minutes with no output. Loops indefinitely.

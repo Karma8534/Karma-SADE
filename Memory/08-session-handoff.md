@@ -1,9 +1,9 @@
 # Karma SADE — Session Handoff
 
 **Date**: 2026-03-05
-**Session**: 68
+**Session**: 69
 **GitHub**: https://github.com/Karma8534/Karma-SADE (PUBLIC)
-**Last commit**: 9d68c0d (main, synced to vault-neo)
+**Last commit**: 0005aef (main, synced to vault-neo)
 
 ---
 
@@ -23,7 +23,7 @@ vault-neo (DigitalOcean NYC3, 4GB RAM, SSH alias: vault-neo)
 │   └── /v1/feedback      ─── write_memory approval gate (Session 68)
 ├── karma-server          ─── Python consciousness loop + tool execution
 │   ├── OBSERVE-only, 60s cycles, zero LLM calls
-│   ├── execute_tool_action(): graph_query, get_vault_file, read_file, write_file, edit_file, bash
+│   ├── execute_tool_action(): graph_query (only proxied tool — others handled in hub-bridge directly)
 │   └── batch_ingest: cron every 6h, Graphiti watermark mode
 ├── FalkorDB              ─── Graph: neo_workspace (3621+ nodes)
 ├── anr-vault-api         ─── FastAPI, appends to JSONL ledger
@@ -52,6 +52,20 @@ vault-neo (DigitalOcean NYC3, 4GB RAM, SSH alias: vault-neo)
 | Hub chat token | `/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt` |
 | System prompt | `/home/neo/karma-sade/Memory/00-karma-system-prompt-live.md` |
 | MEMORY.md (vault) | `/home/neo/karma-sade/MEMORY.md` (also accessible at `/karma/MEMORY.md` in hub-bridge container) |
+
+---
+
+## What Changed in Session 69
+
+### Code Changes (deployed to main + vault-neo)
+1. `hub-bridge/app/server.js` (commits 7d2f034, 9235627, 1cc8c99): removed stale TOOL_DEFINITIONS (read_file/write_file/edit_file/bash), added fetch_url definition + handler, fixed buildSystemText() hardcoded tool string
+2. `Memory/00-karma-system-prompt-live.md` (commit be27047): tool list updated to include write_memory + fetch_url; fetch_url coaching paragraph added
+
+### Skill Fixes
+- `karma-hub-deploy/SKILL.md`: corrected compose.hub.yml path to `/opt/seed-vault/memory_v1/hub_bridge/`
+
+### Deployments
+- hub-bridge rebuilt + deployed (v2.11.0, RestartCount=0, /v1/chat verified)
 
 ---
 
@@ -104,10 +118,12 @@ vault-neo (DigitalOcean NYC3, 4GB RAM, SSH alias: vault-neo)
 
 ---
 
-## Current State (All Verified 2026-03-05 Session 68)
+## Current State (All Verified 2026-03-05 Session 69)
 
 | Component | Status |
 |-----------|--------|
+| fetch_url tool | ✅ LIVE — deep mode, user-provided URLs, 8KB cap, HTML stripped (Session 69) |
+| TOOL_DEFINITIONS | ✅ CLEAN — stale tools removed (Session 69); active: graph_query, get_vault_file, write_memory, fetch_url |
 | write_memory tool + pending_writes gate | ✅ LIVE — in-process Map, write_id threading (Session 68) |
 | POST /v1/feedback endpoint | ✅ LIVE — auth + approve/reject + DPO (Session 68) |
 | unified.html feedback UI | ✅ LIVE — 👍/👎 buttons + thumbs-down textarea (Session 68) |
@@ -131,13 +147,13 @@ vault-neo (DigitalOcean NYC3, 4GB RAM, SSH alias: vault-neo)
 
 ---
 
-## Next Session (Session 69)
+## Next Session (Session 70)
 
-**Primary task:** karma-verify skill fix + v9 Phase 5 MENTIONS verification
+**Primary task:** Phase 3 acceptance test (PENDING since Session 67) + DPO accumulation check
 
-1. Fix karma-verify skill — update `C:\Users\raest\.claude\skills\karma-verify\SKILL.md` to check `assistant_text` instead of `reply`
-2. v9 Phase 5 — Verify MENTIONS edge growth: `ssh vault-neo "docker exec anr-karma-server curl -s localhost:8000/v1/cypher -d '{\"query\":\"MATCH ()-[:MENTIONS]->() RETURN count(*) as edges\"}'"`
-3. Check DPO accumulation: `ssh vault-neo "grep -c 'dpo-pair' /opt/seed-vault/memory_v1/ledger/memory.jsonl"` — should be growing with use
+1. **Phase 3 acceptance test**: In deep mode, ask Karma about a Recurring Topic (e.g. "what have we been working on with FalkorDB?") — verify she references entity relationship data unprompted, not just episodic recall.
+2. **DPO check**: `ssh vault-neo "grep -c 'dpo-pair' /opt/seed-vault/memory_v1/ledger/memory.jsonl"` — currently 3/20. Accumulates with deep-mode 👍 approvals.
+3. **MENTIONS growth re-check**: `ssh vault-neo "docker exec falkordb redis-cli GRAPH.QUERY neo_workspace 'MATCH ()-[r:MENTIONS]->() RETURN count(r) AS edges'"` — was 2,363 at Session 69. Should be growing with each 6h cron.
 
 **Blocker if any:** None. All systems green.
 
@@ -152,6 +168,6 @@ vault-neo (DigitalOcean NYC3, 4GB RAM, SSH alias: vault-neo)
 5. **docker restart ≠ compose up -d** — hub.env changes require `compose up -d` to take effect
 6. **vault-neo git pull after squash merge** — use `git reset --hard origin/main`, not `git pull`
 7. **FalkorDB graph name is `neo_workspace`** — NOT `karma` (karma graph is empty)
-8. **karma-verify smoke test checks wrong key** — skill checks `reply` but hub returns `assistant_text`; false FAILED on healthy service (OPEN)
+8. **karma-verify smoke test** — was checking `reply`, now correctly checks `assistant_text` (RESOLVED Session 69 — was already fixed)
 9. **vault-api type enum is closed** — only ["fact","preference","project","artifact","log","contact"]; use type:"log" + tags for custom types
 10. **buildVaultRecord() required for all vault writes** — bare objects fail schema validation silently (vaultPost fire-and-forget swallows 422)

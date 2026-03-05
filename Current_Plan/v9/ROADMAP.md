@@ -165,9 +165,14 @@
 - [x] End-to-end verified: write_id → 👍 writes MEMORY.md [KARMA-WRITE] → 👎 suppresses → DPO pair in ledger
 - [x] DPO mechanism live (type:"log", tags:["dpo-pair"]); accumulation begins (0/20 goal)
 
-### Phase 5: MENTIONS Edge Growth Verification ⏳
-- [ ] Confirm :MENTIONS edge counts growing since Session 63 watermark
-- [ ] If growing: healthy. If stagnant: investigate watermark mode.
+### Phase 5: MENTIONS Edge Growth Verification ✅ (Session 69)
+- [x] Confirmed 2,363 :MENTIONS edges in neo_workspace — healthy and growing
+
+### Phase 5b: fetch_url Deep-Mode Tool ✅ (Session 69)
+- [x] fetch_url(url) tool added to hub-bridge — user provides URL, Karma fetches full text (8KB cap)
+- [x] Removed stale TOOL_DEFINITIONS (read_file/write_file/edit_file/bash) that caused confabulation
+- [x] System prompt updated with accurate tool list + fetch_url coaching
+- [x] Deployed and verified (RestartCount=0, /v1/chat smoke test passing)
 
 ### Phase 6: DPO Preference Pairs ⏳ UNBLOCKED (mechanism live since Session 68)
 - [x] Phase 4 feedback mechanism IS the DPO collection mechanism — NOW LIVE
@@ -251,6 +256,6 @@ K2 (192.168.0.226) not intended as active worker. Consciousness loop runs on dro
 
 ---
 
-**Last updated:** 2026-03-05 (Session 67 — security gate + v9 Phase 3 + Phase 4 design approved)
+**Last updated:** 2026-03-05 (Session 69 — Phase 5 verified, fetch_url live, stale tools removed)
 **Next review:** Session 68 (Phase 4 implementation kickoff)
 **Owner:** Claude Code (updates on Colby approval)
