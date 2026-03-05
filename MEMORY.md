@@ -47,10 +47,11 @@
 - Task 1: `hub-bridge/lib/feedback.js` — prunePendingWrites + processFeedback, 7 tests green (commit a17ce54)
 - Task 2: `write_memory` tool — pending_writes Map + tool def + writeId threading (commits 57ce894, 268bd08)
 - Task 3: `POST /v1/feedback` endpoint — auth + processFeedback + MEMORY.md fs.appendFileSync + DPO ledger (commits fe8a3b8, 722c05a, fix)
-- **Active task:** Task 4 — update karma-core/hooks.py ALLOWED_TOOLS
+- **Active task:** Task 4 — update karma-core/hooks.py ALLOWED_TOOLS ✅ DONE (commit pending)
+- Task 4: Added `"write_memory"` to ALLOWED_TOOLS in karma-core/hooks.py
 
 ### Next Task
-Task 4: Add "write_memory" to ALLOWED_TOOLS in karma-core/hooks.py → rebuild karma-server.
+Task 5: Update 00-karma-system-prompt-live.md — add write_memory coaching paragraph. Deploy: git push → vault-neo git pull → docker restart anr-hub-bridge → rebuild karma-server.
 
 ---
 
