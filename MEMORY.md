@@ -1,3 +1,10 @@
+## Session 70 (2026-03-05) — System prompt trim to fix 429 rate limits
+
+**Active task:** COMPLETE
+1. System prompt trimmed: 16,519 → 11,674 chars (−29%) — reduces TPM per request, fixes recurring 429s
+2. Removed: API Surface table, 3 low-value corrections (#1 verdict.txt, #2 batch_ingest direction, #5 consciousness loop), infrastructure container list, machine specs, verbose coaching
+3. Preserved exactly: session continuity mechanism, Recently Learned priority rules, tool routing, all critical corrections, ASSIMILATE/DEFER/DISCARD, Behavioral Contract
+
 ## Session 69 post-wrap #3 (2026-03-05) — primitives context priority + FalkorDB schema
 
 **Active task:** COMPLETE
