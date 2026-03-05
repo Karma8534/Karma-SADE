@@ -342,7 +342,7 @@ async function fetchWebSearch(query) {
 }
 
 // Ingest pipeline: signal detection and FalkorDB write-back
-const SIGNAL_REGEX = /^\[(ASSIMILATE|DEFER|DISCARD):\s*(.+?)\]$/m;
+const SIGNAL_REGEX = /\[(ASSIMILATE|DEFER|DISCARD):\s*([\s\S]+?)\]/;
 const WRITE_PRIMITIVE_URL = process.env.WRITE_PRIMITIVE_URL || 'http://karma-server:8340/write-primitive';
 
 async function fetchKarmaContext(userMessage) {

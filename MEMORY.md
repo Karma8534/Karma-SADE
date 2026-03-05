@@ -1,3 +1,10 @@
+## Session 69 post-wrap #2 (2026-03-05) — SIGNAL_REGEX + primitives coaching
+
+**Active task:** COMPLETE
+1. SIGNAL_REGEX: `/^\[...\]$/m` → `/\[...\]/` — multi-line synthesis no longer silently dropped. 44 canonical primitives confirmed in FalkorDB.
+2. System prompt: duplicate `---` removed, "How You Improve Over Time" rewritten (identity.json analogy gone), primitives coaching added ("Recently Learned" = primitive list)
+3. Corrections log: 4 new entries appended
+
 ## Session 69 post-wrap (2026-03-05) — Karma Self-Model Corrections
 
 **Active task:** COMPLETE — no blockers

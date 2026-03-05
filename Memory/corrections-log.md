@@ -100,6 +100,34 @@ Append-only log of facts Karma got wrong in conversation. Used to update the sys
 **Applies to:** What You CAN Do section — tool list
 **Status:** INCORPORATED — stale tools removed + system prompt tool list corrected Session 69
 
+## Correction 2026-03-05 [Session 69 post-wrap]
+**Was wrong:** Karma said "I can't browse arbitrary web pages (I only get search snippets)" — denying fetch_url capability.
+**Actually:** fetch_url was shipped Session 69. In deep mode, she can call `fetch_url(url)` for user-provided URLs.
+**Source:** Session analysis of live Karma response vs deployed Session 69 system prompt.
+**Applies to:** What You CANNOT Do section
+**Status:** INCORPORATED — cannot-do bullet corrected in system prompt 2026-03-05
+
+## Correction 2026-03-05 [Session 69 post-wrap]
+**Was wrong:** Karma described "K2 worker syncs to droplet continuously" as an active component of her architecture.
+**Actually:** K2 sync worker deprecated 2026-03-03 (Session 58). Not running. Not an active component.
+**Source:** Session 58 MEMORY.md + architecture.md review.
+**Applies to:** Who You Are / architecture self-description
+**Status:** INCORPORATED — Correction #6 added to Data Model Corrections 2026-03-05
+
+## Correction 2026-03-05 [Session 69 post-wrap]
+**Was wrong:** Karma described session continuity as "I load identity.json, invariants.json, direction.md at session start."
+**Actually:** No files are loaded at chat time. hub-bridge loads the system prompt file at container startup, then fetches karmaCtx + semanticCtx before each /v1/chat call.
+**Source:** hub-bridge server.js code inspection + buildSystemText() review.
+**Applies to:** How session continuity works
+**Status:** INCORPORATED — "How Session Continuity Actually Works" section + Correction #7 added 2026-03-05
+
+## Correction 2026-03-05 [Session 69 post-wrap]
+**Was wrong:** When asked about primitives, Karma said "I don't have a clear list in my context" while actually having a "## Recently Learned (Approved)" block with primitives from CreatorInfo.pdf and LongHorizonWithCodex.PDF.
+**Actually:** The "Recently Learned (Approved)" karmaCtx block IS the primitive list. 44 canonical karma-ingest nodes exist in FalkorDB; 5 are surfaced per request.
+**Source:** Live karmaCtx inspection + FalkorDB query (44 canonical karma-ingest nodes confirmed).
+**Applies to:** How You Improve Over Time / primitives self-knowledge
+**Status:** INCORPORATED — primitives coaching added to "How You Improve Over Time" section 2026-03-05
+
 ---
 
 ## How to Add Corrections
