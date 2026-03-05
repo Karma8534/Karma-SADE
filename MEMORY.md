@@ -436,5 +436,6 @@ Today's date is 2026-03-05.
 - Added  env var read (default ).
 - All 7 watermark tests pass. Dry-run validation passes. Syntax OK.
 
-## Session 68 (2026-03-05) — v9 Phase 4 Task 1
+## Session 68 (2026-03-05) — v9 Phase 4 Tasks 1+2
 Task 1 complete: hub-bridge/lib/feedback.js (processFeedback + prunePendingWrites, pure functions, no I/O) + hub-bridge/tests/test_feedback.js (7 tests, all green).
+Task 2 complete: server.js -- pending_writes Map, write_memory tool def, executeToolCall write_memory case, writeId threaded through callLLMWithTools+callGPTWithTools, req_write_id per-request, proposed_write_id in 200+207 responses.

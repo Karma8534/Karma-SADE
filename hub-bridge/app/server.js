@@ -133,6 +133,9 @@ const RL_CONFIG = {
 
 const rlBuckets = new Map();
 
+// Pending memory writes -- keyed by write_id, awaiting /v1/feedback approval
+const pending_writes = new Map();
+
 setInterval(() => {
   const now = Date.now();
   for (const [k, v] of rlBuckets) {
@@ -836,6 +839,17 @@ const TOOL_DEFINITIONS = [
       required: ["alias"],
     },
   },
+  {
+    name: "write_memory",
+    description: "Propose appending a note to MEMORY.md. Gated -- executes only if Colby approves. Use in deep-mode only when learning something worth preserving across sessions.",
+    input_schema: {
+      type: "object",
+      properties: {
+        content: { type: "string", description: "Concise note to append to MEMORY.md (1-3 sentences max)" },
+      },
+      required: ["content"],
+    },
+  },
 ];
 
 // Map of whitelisted file aliases to actual paths
@@ -856,8 +870,18 @@ const VAULT_FILE_ALIASES = {
 // All other tools proxy to karma-server with the same name
 const TOOL_NAME_MAP = {}; // identity passthrough — tool names match karma-server names
 
-async function executeToolCall(toolName, toolInput) {
+async function executeToolCall(toolName, toolInput, writeId = null) {
   try {
+    // write_memory -- propose a MEMORY.md append, gated by /v1/feedback
+    if (toolName === "write_memory") {
+      const content = (toolInput.content || "").trim();
+      if (!content) return { error: "empty_content", message: "content is required" };
+      const id = writeId || (("wr_") + Date.now() + "_" + Math.random().toString(36).slice(2, 8));
+      pending_writes.set(id, { content, ts: Date.now() });
+      console.log("[TOOL-API] write_memory proposed: write_id=" + id + ", " + content.length + " chars");
+      return { proposed: true, write_id: id, message: "Memory write proposed. Awaiting approval via thumbs-up -- or thumbs-down to discard." };
+    }
+
     // get_vault_file is handled directly — hub-bridge has volume access to /karma/
     if (toolName === "get_vault_file") {
       const alias = (toolInput.alias || "").trim();
@@ -900,8 +924,8 @@ async function executeToolCall(toolName, toolInput) {
   }
 }
 
-async function callLLMWithTools(model, messages, maxTokens) {
-  if (!isAnthropicModel(model)) return callGPTWithTools(messages, maxTokens, model);
+async function callLLMWithTools(model, messages, maxTokens, writeId = null) {
+  if (!isAnthropicModel(model)) return callGPTWithTools(messages, maxTokens, model, writeId);
 
   const systemParts = messages.filter(m => m.role === "system").map(m => m.content);
   const apiMessages = messages.filter(m => m.role !== "system");
@@ -932,7 +956,7 @@ async function callLLMWithTools(model, messages, maxTokens) {
     allMessages.push({ role: "assistant", content: resp.content });
     const toolResults = [];
     for (const toolUse of toolUseBlocks) {
-      const toolResult = await executeToolCall(toolUse.name, toolUse.input);
+      const toolResult = await executeToolCall(toolUse.name, toolUse.input, writeId);
       toolResults.push({ type: "tool_result", tool_use_id: toolUse.id, content: JSON.stringify(toolResult) });
     }
     allMessages.push({ role: "user", content: toolResults });
@@ -943,7 +967,7 @@ async function callLLMWithTools(model, messages, maxTokens) {
 
 // ── OpenAI GPT tool-calling (production tool-use for Karma) ────────────────────
 // OpenAI tool format differs from Anthropic. GPT-4o has reliable tool support.
-async function callGPTWithTools(messages, maxTokens, model) {
+async function callGPTWithTools(messages, maxTokens, model, writeId = null) {
   try {
     // Transform Anthropic schema (input_schema) to OpenAI schema (parameters)
     const gptTools = TOOL_DEFINITIONS.map(t => ({
@@ -996,7 +1020,7 @@ async function callGPTWithTools(messages, maxTokens, model) {
     for (const call of toolCalls) {
       const parsedArgs = call.function.arguments ? JSON.parse(call.function.arguments) : {};
       console.log(`[TOOL-USE] Executing tool: ${call.function.name} with args:`, JSON.stringify(parsedArgs));
-      const result = await executeToolCall(call.function.name, parsedArgs);
+      const result = await executeToolCall(call.function.name, parsedArgs, writeId);
       if (result.error) {
         console.log(`[TOOL-USE] Tool ERROR: ${call.function.name} → ${result.error}`);
       } else {
@@ -1267,8 +1291,9 @@ const server = http.createServer(async (req, res) => {
       ];
 
       // Tool-calling is deep-mode only. Standard requests go through callLLM (no tools).
+      const req_write_id = ("wr_") + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
       const llmResult = deep_mode
-        ? await callLLMWithTools(model, messages, max_output_tokens)
+        ? await callLLMWithTools(model, messages, max_output_tokens, req_write_id)
         : await callLLM(model, messages, max_output_tokens);
       const assistantText = llmResult.text || "(empty_assistant_text)";
       const usage         = llmResult.usage;
@@ -1342,6 +1367,9 @@ const server = http.createServer(async (req, res) => {
       try { vpJson = JSON.parse(vp.text); } catch {}
       const turn_id = vpJson?.id || null;
 
+      // Include write_id in response only if a memory write was proposed this turn
+      const proposed_write_id = pending_writes.has(req_write_id) ? req_write_id : null;
+
       const canonical = {
         ok: vp.status === 201,
         model,
@@ -1370,6 +1398,7 @@ const server = http.createServer(async (req, res) => {
           warning: "vault_log_failed",
           vault_status: vp.status,
           canonical,
+          write_id: proposed_write_id,
           assistant_text: assistantText,
           assistant_json,
           model,
@@ -1389,6 +1418,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, {
         ok: true,
         canonical,
+        write_id: proposed_write_id,
         assistant_text: assistantText,
         vault_write: { status: vp.status, id: turn_id },
         model,
