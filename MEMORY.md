@@ -56,6 +56,8 @@
 
 **Task 6:** ✅ (see prior session notes)
 
+**Acceptance test hotfix:** DPO vault record used bare object — failed vault schema (missing type/confidence/verification, content must be object). Fixed: switched to `buildVaultRecord()` in /v1/feedback endpoint. Redeploy required.
+
 **Task 7:** ✅ unified.html updated — write_id in feedback POSTs + inline textarea after 👎
 - `handleMessage` now reads `data.write_id` (from server response field `write_id: proposed_write_id`)
 - `addMessage(role, content, writeId)` — stores `writeId` in `wrap.dataset.writeId`
