@@ -28,7 +28,9 @@
 | **Config Validation Gate** | ✅ LIVE | MODEL_DEFAULT + MODEL_DEEP allow-lists. [CONFIG ERROR] + exit(1) on bad config. 27/27 tests. |
 | **OpenAI API key** | ✅ SECURED | File-based read (mounted volume), not env var (docker inspect clean). |
 | **PDF Watcher** | ✅ WORKING | Rate-limit backoff + jam notification + time-window scheduling. |
-| **System Prompt Accuracy** | ✅ CORRECT | Memory/00-karma-system-prompt-live.md wired via KARMA_IDENTITY_PROMPT. Session-62. Session-66: honesty fixes (tool list, context size, rate-limit behavior). |
+| **System Prompt Accuracy** | ✅ CORRECT | Memory/00-karma-system-prompt-live.md wired via KARMA_IDENTITY_PROMPT. Session-62. Session-66: honesty fixes. Session-67: v9 Phase 3 behavioral coaching added (Entity Relationships, Recurring Topics, deep-mode graph_query proactivity). |
+| **Deep-Mode Tool Gate** | ✅ SECURED | Session-67: standard GLM requests no longer get tool execution. deep_mode flag gates callLLMWithTools vs callLLM at line 1271. Security fix commit 41b2c06. |
+| **v9 Phase 3 Persona Coaching** | ✅ DEPLOYED | Session-67: "How to Use Your Context Data" section in system prompt. KARMA_IDENTITY_PROMPT: 10,415 → 11,850 chars. docker restart only. |
 | **FAISS Semantic Retrieval** | ✅ LIVE | fetchSemanticContext() in hub-bridge. karmaCtx + semanticCtx via Promise.all. 4073 entries indexed. Session-62. |
 | **Correction Capture Protocol** | ✅ LIVE | Memory/corrections-log.md + CC Session End step 2. Session-62. |
 | **FalkorDB lane backfill** | ✅ DONE | 3040 Episodic nodes with lane=NULL → lane="episodic". 0 remaining. Session-62. |
@@ -108,6 +110,15 @@ karma-server uses read_file/write_file/edit_file/bash). Fixed to empty dict `{}`
 Hub-bridge has /karma/ volume mount access (read-only). karma-server ALLOWED_PATHS doesn't cover /karma/ paths.
 graph_query stays proxied to karma-server (needs FalkorDB access). Architecture split by access path.
 
+### Decision #16: Tool-calling gated to deep-mode only (2026-03-05, LOCKED)
+Standard GLM requests (deep_mode=false) route to callLLM() — no tools. Deep requests (x-karma-deep: true header) route to callLLMWithTools(). Security fix deployed in Session 67 (commit 41b2c06). Prevents unauthorized tool access in standard chat mode.
+
+### Decision #17: v9 Phase 4 — Karma write agency via thumbs up/down gate (2026-03-05, APPROVED)
+Design validated with user. Three-in-one mechanism: (1) thumbs up/down gates Karma's memory writes; (2) accumulates DPO preference pairs; (3) 👎 + text feeds corrections pipeline.
+API: POST /v1/feedback {turn_id, rating: +1/-1, note?: string}. turn_id already in every /v1/chat response.
+New tools: write_memory(content), annotate_entity(name, note), flag_pattern(description).
+Safe target: PATCH /v1/vault-file/MEMORY.md (append-only). Web UI thumbs up/down already present. NOT YET IMPLEMENTED — design only.
+
 ---
 
 ## Session History
@@ -150,11 +161,22 @@ graph_query stays proxied to karma-server (needs FalkorDB access). Architecture 
 
 ---
 
-## Next Session Agenda (Session 67)
+### Session 67 Accomplishments (2026-03-05)
+- Security fix: deep-mode tool gate — standard GLM no longer gets tool execution (commit 41b2c06)
+- v9 Phase 3 persona coaching deployed: "How to Use Your Context Data" section in system prompt (commit f90cea7)
+  - Fixed stale tool list (read_file/write_file → graph_query/get_vault_file)
+  - Entity Relationships behavioral coaching: weave connections unprompted
+  - Recurring Topics behavioral coaching: calibrate depth to top topics
+  - Deep mode proactivity: call graph_query before answering strategic questions
+- karma-server LLM analysis: router.py confirmed dead code (karma-terminal stale since 2026-02-27)
+- v9 Phase 4 design approved: Karma write agency via thumbs up/down gate (obs #4032)
+- karma-verify smoke test false alarm documented (obs #4035) — checks "reply" but hub returns "assistant_text"
 
-1. **v9 Phase 2 — Full Persona Iteration**: System prompt still needs deeper update to teach Karma HOW to use Entity Relationships + Recurring Topics data when she sees them in karmaCtx. Session 66 fixed honesty (what she can/can't do). Still pending: what should she say/do when she sees relationship data?
-2. **MENTIONS gap assessment** — confirm :MENTIONS edge counts growing since Session 63 watermark.
-3. **DPO mechanism design** — only if Colby approves.
+## Next Session Agenda (Session 68)
+
+1. **Acceptance test for v9 Phase 3**: Ask Karma about a Recurring Topic — verify she references relationship data unprompted. This validates persona coaching actually changed behavior.
+2. **v9 Phase 4 kickoff**: Brainstorming skill → design doc → implementation plan for write_memory tool + POST /v1/feedback endpoint.
+3. **Fix karma-verify skill**: Update smoke test to check "assistant_text" instead of "reply".
 
 ---
 
@@ -247,6 +269,6 @@ karmaCtx (FalkorDB recency) + semanticCtx (FAISS top-5) fetched via Promise.all 
 
 ---
 
-**Last updated:** 2026-03-05T14:00:00Z (Session 66 — Promise loop fixed, GLM tool-calling live)
+**Last updated:** 2026-03-05T20:00:00Z (Session 67 — Security fix + v9 Phase 3 persona coaching + Phase 4 design)
 **Owner:** Claude Code (writes on Colby approval)
 **Canonical location:** C:\Users\raest\Documents\Karma_SADE\.gsd\STATE.md

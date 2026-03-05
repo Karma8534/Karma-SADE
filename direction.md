@@ -1,7 +1,7 @@
 # Direction — What We're Building
 
 **Last updated:** 2026-03-05
-**Status:** v9 IN PROGRESS — GLM tool-calling live + promise loop fixed (Session 66). Next: persona coaching on graph data usage.
+**Status:** v9 IN PROGRESS — Phase 3 persona coaching deployed (Session 67). Next: Phase 4 write agency.
 
 ---
 
@@ -133,3 +133,4 @@ v9: what does Karma DO with her memories? Not just recall — reason, connect, s
 Session 64 answered this partially: entity relationships and topic patterns are now in every response context. The persona must now be taught to USE them.
 Session 65: external validation confirms architecture is sound. Gap: corrections capture needs systematic trigger (currently session-based, not event-driven).
 Session 66: promise loop fixed — Karma no longer makes false promises. GLM-4.7-Flash now has real tool-calling (graph_query, get_vault_file). System prompt corrected for honesty (tool list, context size, rate-limit behavior). Next: behavioral coaching — teach Karma WHAT TO DO when she sees Entity Relationships + Recurring Topics data in karmaCtx.
+Session 67: behavioral coaching deployed (v9 Phase 3) — Karma now has explicit instructions to USE Entity Relationships + Recurring Topics data. Security fix: deep-mode tool gate prevents standard chat from accessing tools. v9 Phase 4 design approved: write agency via thumbs up/down (write_memory tool + POST /v1/feedback). Not yet implemented.

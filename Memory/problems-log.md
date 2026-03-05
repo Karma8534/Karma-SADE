@@ -94,3 +94,41 @@ ALLOWED_TOOLS = {"read_file", "write_file", "edit_file", "bash",
 **Residual risk:** This pattern will recur with every squash merge. Vault-neo will always need `reset --hard` rather than `pull` when a squash merge lands. Alternative: configure vault-neo with `git config pull.rebase false` (merge strategy) or use `git fetch && git reset --hard origin/main` as the standard pull command.
 
 **Status:** RESOLVED (workaround documented — consider making `reset --hard` the standard pull command on vault-neo)
+
+---
+
+## 2026-03-05 Standard GLM chat requests got full tool-calling access (security)
+
+**Symptom:** Any standard chat request to /v1/chat (deep_mode=false) could trigger tool calls. Session 66's GLM tool-calling fix enabled tools for ALL requests, not just deep-mode ones.
+
+**Root cause:** In Session 66, `callLLMWithTools()` was wired correctly for non-Anthropic models. But the call site at line 1271 called `callLLMWithTools()` unconditionally — no check of `deep_mode`. Standard requests with `deep_mode=false` went through the full tool execution path.
+
+**Fix:** Branched at the call site (hub-bridge server.js line 1269-1272):
+```javascript
+const llmResult = deep_mode
+  ? await callLLMWithTools(model, messages, max_output_tokens)
+  : await callLLM(model, messages, max_output_tokens);
+```
+Also removed stale DIAGNOSTIC log that was left in from Session 66 debugging.
+
+**Verified by:** Smoke test: `curl -s -X POST localhost:18090/v1/chat -d '{"message":"ping"}'` returned `ok:True` with no tool execution. `deep_mode` was false in response telemetry.
+
+**Residual risk:** Any future routing changes at the callLLMWithTools call site must preserve the deep_mode gate.
+
+**Status:** RESOLVED (commit 41b2c06)
+
+---
+
+## 2026-03-05 karma-verify smoke test returns FAILED on healthy hub-bridge
+
+**Symptom:** karma-verify skill smoke test command returned "FAILED" even though hub-bridge was healthy and returning valid responses.
+
+**Root cause:** karma-verify skill checks `/v1/chat` response for `r.get("reply")`. But hub-bridge returns `assistant_text`, not `reply`. The key name drifted at some point without updating the skill.
+
+**Fix:** For this session, rewrote the check inline: `r["ok"] and bool(r.get("assistant_text"))`. The skill file itself still uses the wrong key.
+
+**Verified by:** Manual smoke test with corrected check showed ok:True, assistant_text returned.
+
+**Residual risk:** karma-verify skill will continue to false-alarm on every smoke test until the skill is updated. Action: update `C:\Users\raest\.claude\skills\karma-verify\SKILL.md` to check `assistant_text` instead of `reply`.
+
+**Status:** OPEN — skill not yet updated

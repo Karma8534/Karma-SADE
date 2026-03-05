@@ -197,7 +197,10 @@
       "Bash(powershell -Command \"git fetch origin main; git log origin/main --oneline -5\")",
       "Bash(powershell -Command \"git pull origin main; git worktree remove .worktrees/fix-karma-tools --force 2>&1\")",
       "Bash(powershell -Command \"git worktree remove .worktrees\\\\fix-karma-tools --force 2>&1\")",
-      "Bash(powershell -Command \"git worktree list\")"
+      "Bash(powershell -Command \"git worktree list\")",
+      "Bash(powershell -Command \"git add hub-bridge/app/server.js && git commit -m ''fix: gate tool-calling to deep-mode only — standard GLM requests no longer get tool execution''\")",
+      "Bash(powershell -Command \"git add hub-bridge/app/server.js; git commit -m ''fix: gate tool-calling to deep-mode only — standard GLM requests no longer get tool execution''\")",
+      "Bash(powershell -Command \"git add hub-bridge/app/server.js MEMORY.md; git commit -m ''fix: gate tool-calling to deep-mode only — standard GLM requests no longer get tool execution''\")"
     ]
   }
 }

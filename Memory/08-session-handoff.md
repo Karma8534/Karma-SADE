@@ -1,9 +1,9 @@
 # Karma SADE — Session Handoff
 
 **Date**: 2026-03-05
-**Session**: 66
+**Session**: 67
 **GitHub**: https://github.com/Karma8534/Karma-SADE (PUBLIC)
-**Last commit**: 1ece3fb (main, synced to vault-neo)
+**Last commit**: ed9adfe (main, synced to vault-neo)
 
 ---
 
@@ -54,6 +54,19 @@ vault-neo (DigitalOcean NYC3, 4GB RAM, SSH alias: vault-neo)
 
 ---
 
+## What Changed in Session 67
+
+### Code Changes (deployed)
+1. `hub-bridge/app/server.js` (commit 41b2c06):
+   - Lines 1269-1272: `deep_mode ? callLLMWithTools() : callLLM()` — standard chat no longer gets tools
+   - Removed stale DIAGNOSTIC log left from Session 66 debugging
+2. `Memory/00-karma-system-prompt-live.md` (commit f90cea7):
+   - Line 26: fixed stale tool list (read_file/write_file → graph_query/get_vault_file)
+   - New section "How to Use Your Context Data": behavioral coaching for Entity Relationships, Recurring Topics, deep-mode graph_query proactivity
+   - KARMA_IDENTITY_PROMPT: 10,415 → 11,850 chars
+
+---
+
 ## What Changed in Session 66
 
 ### Code Changes (merged to main, deployed)
@@ -74,14 +87,16 @@ vault-neo (DigitalOcean NYC3, 4GB RAM, SSH alias: vault-neo)
 
 ---
 
-## Current State (All Verified 2026-03-05)
+## Current State (All Verified 2026-03-05 Session 67)
 
 | Component | Status |
 |-----------|--------|
-| GLM tool-calling | ✅ LIVE — end-to-end verified this session |
+| Deep-mode tool gate | ✅ LIVE — standard chat no longer gets tools (Session 67) |
+| v9 Phase 3 persona coaching | ✅ LIVE — behavioral coaching deployed (Session 67) |
+| GLM tool-calling | ✅ LIVE — end-to-end verified Session 66 |
 | graph_query tool | ✅ LIVE — Karma can query FalkorDB in standard GLM mode |
 | get_vault_file tool | ✅ LIVE — Karma can read MEMORY.md, system-prompt, etc. |
-| System prompt | ✅ HONEST — tool list, context size, rate-limit behavior accurate |
+| System prompt | ✅ HONEST + COACHED — accurate tool list + behavioral guidance |
 | GLM_RPM_LIMIT | ✅ 40 RPM |
 | hooks.py whitelist | ✅ Updated with new tools |
 | TOOL_NAME_MAP | ✅ Fixed (empty dict) |
@@ -94,20 +109,20 @@ vault-neo (DigitalOcean NYC3, 4GB RAM, SSH alias: vault-neo)
 
 ---
 
-## Next Session (Session 67)
+## Next Session (Session 68)
 
-**Primary task:** v9 Phase 3 — Persona coaching
+**Primary task:** v9 Phase 4 — Karma write agency + feedback mechanism
 
-Edit `Memory/00-karma-system-prompt-live.md` to add behavioral guidance:
-- When Karma sees `## Entity Relationships` in karmaCtx → weave relevant connections into response
-- When Karma sees `## Recurring Topics` in karmaCtx → use to calibrate depth/focus
-- When Karma has tools available (deep mode) → proactively query graph for context before answering
+1. Run acceptance test for v9 Phase 3: Ask Karma about a Recurring Topic → verify she references entity relationships unprompted (no code needed, just conversation test)
+2. Start Phase 4 with `/brainstorm` skill → design doc → implementation plan
+3. Phase 4 scope:
+   - `POST /v1/feedback {turn_id, rating: +1/-1, note?: string}` endpoint in hub-bridge
+   - New tools for Karma: `write_memory(content)`, `annotate_entity(name, note)`, `flag_pattern(description)`
+   - Write routing: 👍 → PATCH /v1/vault-file/MEMORY.md; 👎 + text → corrections-log.md
+   - DPO: every rated response = preference pair
+4. Fix karma-verify skill: update smoke test to check `assistant_text` instead of `reply`
 
-Deploy: `git push` → `ssh vault-neo "cd /home/neo/karma-sade && git pull && docker restart anr-hub-bridge"` → verify response quality improvement.
-
-**No rebuild needed** — system prompt is file-loaded at startup.
-
-**Acceptance criteria:** Ask Karma a question about a topic that appears in Recurring Topics. She should reference the relationship data in her response without being prompted.
+**Blocker if any:** None. Design approved. Brainstorming can start immediately.
 
 ---
 
@@ -119,3 +134,4 @@ Deploy: `git push` → `ssh vault-neo "cd /home/neo/karma-sade && git pull && do
 4. **docker restart ≠ compose up -d** — hub.env changes require `compose up -d` to take effect
 5. **vault-neo git pull after squash merge** — use `git reset --hard origin/main`, not `git pull`
 6. **FalkorDB graph name is `neo_workspace`** — NOT `karma` (karma graph is empty)
+7. **karma-verify smoke test checks wrong key** — skill checks `reply` but hub returns `assistant_text`; false FAILED on healthy service
