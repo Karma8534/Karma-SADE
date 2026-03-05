@@ -1487,13 +1487,14 @@ const server = http.createServer(async (req, res) => {
       // Store DPO pair in vault ledger
       try {
         const dpoRecord = buildVaultRecord({
-          type: "dpo-pair",
+          type: "log",
           content: dpo_pair,
           tags: ["dpo-pair"],
           source: "feedback",
           confidence: 0.9,
         });
-        await vaultPost("/v1/memory", VAULT_BEARER, dpoRecord);
+        const dpResult = await vaultPost("/v1/memory", VAULT_BEARER, dpoRecord);
+        if (dpResult.status >= 300) throw new Error(`vault ${dpResult.status}: ${dpResult.text.slice(0, 120)}`);
         console.log(`[FEEDBACK] DPO pair stored: signal=${signal}, has_note=${!!note}`);
       } catch (e) {
         console.error(`[FEEDBACK] DPO vault write failed: ${e.message}`);
