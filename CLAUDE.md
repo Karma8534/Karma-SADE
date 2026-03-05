@@ -247,6 +247,7 @@ If any step missing: session doesn't end cleanly.
 - **Never claim done without `<verify>` passing** — evidence always
 - **STATE.md is canonical** — if it conflicts with MEMORY.md, surface drift explicitly
 - **Use PowerShell for git** — `powershell -Command "git commit -m '...'"` not raw bash git
+- **Before answering any strategic question** (priority, next steps, optimal path forward): read `.gsd/STATE.md` and `.gsd/ROADMAP.md` first. No exceptions. Strategic questions require ground-truth state, not context-window inference.
 
 ### Token efficiency (enforced):
 - Read `.gsd/STATE.md` at session start instead of re-reading 25 files
