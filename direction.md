@@ -1,7 +1,7 @@
 # Direction — What We're Building
 
 **Last updated:** 2026-03-05
-**Status:** v9 IN PROGRESS — Phase 3 persona coaching deployed (Session 67). Next: Phase 4 write agency.
+**Status:** v9 IN PROGRESS — Phase 4 write_memory gate COMPLETE (Session 68). Next: karma-verify fix + Phase 5 MENTIONS verification.
 
 ---
 
@@ -134,3 +134,4 @@ Session 64 answered this partially: entity relationships and topic patterns are 
 Session 65: external validation confirms architecture is sound. Gap: corrections capture needs systematic trigger (currently session-based, not event-driven).
 Session 66: promise loop fixed — Karma no longer makes false promises. GLM-4.7-Flash now has real tool-calling (graph_query, get_vault_file). System prompt corrected for honesty (tool list, context size, rate-limit behavior). Next: behavioral coaching — teach Karma WHAT TO DO when she sees Entity Relationships + Recurring Topics data in karmaCtx.
 Session 67: behavioral coaching deployed (v9 Phase 3) — Karma now has explicit instructions to USE Entity Relationships + Recurring Topics data. Security fix: deep-mode tool gate prevents standard chat from accessing tools. v9 Phase 4 design approved: write agency via thumbs up/down (write_memory tool + POST /v1/feedback). Not yet implemented.
+Session 68: v9 Phase 4 COMPLETE — write_memory tool + POST /v1/feedback gate + unified.html thumbs UI + DPO pairs in vault ledger (type:"log", tags:["dpo-pair"]). All 10 tasks implemented, tested, deployed. Acceptance test passed (5/5). 0/20 DPO pairs accumulated so far — mechanism now live. Next: karma-verify skill fix + Phase 5 MENTIONS edge growth verification.
