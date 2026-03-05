@@ -772,56 +772,8 @@ else console.warn("[INIT] ZAI_API_KEY not set — GLM models will fall back to O
 // Karma's autonomous access to her own graph/memory requires tools.
 // GPT-4o has proven tool support. Using it for /v1/chat with tool definitions.
 // ── Phase 3: 4-Tool Surface (P2) ─────────────────────────────────────────
-// Decision: 4 tools only — Read/Write/Edit/Bash. No MCP. < 500 tokens total.
-// Tool calls route to karma-server /v1/tools/execute for sandboxed execution.
+// Active tools: graph_query, get_vault_file, write_memory (3 tools — no unhandled stubs)
 const TOOL_DEFINITIONS = [
-  {
-    name: "read_file",
-    description: "Read a file from the droplet filesystem. Returns file content (max 10KB).",
-    input_schema: {
-      type: "object",
-      properties: {
-        path: { type: "string", description: "Absolute path to the file" },
-      },
-      required: ["path"],
-    },
-  },
-  {
-    name: "write_file",
-    description: "Write content to a file on the droplet. Creates parent dirs if needed.",
-    input_schema: {
-      type: "object",
-      properties: {
-        path: { type: "string", description: "Absolute path to write" },
-        content: { type: "string", description: "File content to write" },
-      },
-      required: ["path", "content"],
-    },
-  },
-  {
-    name: "edit_file",
-    description: "Replace old_text with new_text in a file. Fails if old_text not found.",
-    input_schema: {
-      type: "object",
-      properties: {
-        path: { type: "string", description: "Absolute path to the file" },
-        old_text: { type: "string", description: "Text to find and replace" },
-        new_text: { type: "string", description: "Replacement text" },
-      },
-      required: ["path", "old_text", "new_text"],
-    },
-  },
-  {
-    name: "bash",
-    description: "Execute a shell command on the droplet. Timeout: 30s. Max output: 10KB.",
-    input_schema: {
-      type: "object",
-      properties: {
-        command: { type: "string", description: "Shell command to execute" },
-      },
-      required: ["command"],
-    },
-  },
   {
     name: "graph_query",
     description: "Run a raw Cypher query against FalkorDB neo_workspace graph. Returns results as formatted text. Use to retrieve memories, entities, relationships, decisions. Note: no datetime() function — use string comparisons for dates.",
