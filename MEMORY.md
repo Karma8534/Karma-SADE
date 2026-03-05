@@ -27,8 +27,22 @@
 - Groq swap: not worth it — router is unused, Graphiti uses OpenAI directly (cannot swap without rewrite)
 - ANALYSIS_MODEL config bug (defaults to glm-4.7-flash but OpenAI provider at api.openai.com): non-impactful
 
+### Session 68 — v9 Phase 4 Design + Acceptance Test + karma-verify Fix
+
+**Acceptance test (v9 Phase 3):** PASSED — Karma referenced entity relationship data unprompted when asked about Claude Code usage. Said "That's what I see in my graph" — explicit graph attribution. Persona coaching confirmed working.
+
+**karma-verify fix:** SKILL.md updated — smoke test now checks `assistant_text` instead of `reply` (was false FAILED on healthy service).
+
+**v9 Phase 4 design (Session 68 brainstorm):**
+- Scope reduced: `write_memory` only (annotate_entity/flag_pattern deferred)
+- Gate: in-process `pending_writes` Map (Approach A — no vault round-trip)
+- Optional note: inline textarea after 👎 click in unified.html (~15 lines)
+- DPO storage: ledger via /v1/ambient with `dpo-pair` tag
+- Design doc: `docs/plans/2026-03-05-v9-phase4-write-memory-design.md`
+- Files to change: server.js (pending_writes Map + write_memory tool + /v1/feedback endpoint), unified.html (textarea), hooks.py (ALLOWED_TOOLS), 00-karma-system-prompt-live.md (coaching paragraph)
+
 ### Next Task
-v9 Phase 4 — Karma write agency: brainstorm → plan → implement. Hub-bridge: POST /v1/feedback endpoint + write_memory tool. Start with brainstorming skill.
+v9 Phase 4 — implement per design doc. Invoke writing-plans → atomic task plan.
 
 ---
 
