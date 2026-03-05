@@ -183,7 +183,21 @@
       "Bash(PYTHONIOENCODING=utf-8 python -c \":*)",
       "Bash(PYTHONIOENCODING=utf-8 python -m pytest karma-core/tests/test_watermark.py -v)",
       "Bash(powershell -Command \"cd C:\\\\Users\\\\raest\\\\Documents\\\\Karma_SADE; git add karma-core/batch_ingest.py karma-core/tests/test_watermark.py; git add karma-core/tests/__init__.py 2>$null; git commit -m ''feat: add watermark helpers to batch_ingest \\(read/write/read_new_episodes\\) + tests''\")",
-      "Bash(powershell -Command \"cd C:\\\\Users\\\\raest\\\\Documents\\\\Karma_SADE; git add karma-core/batch_ingest.py karma-core/tests/test_watermark.py karma-core/tests/__init__.py; git commit -m ''feat: add watermark helpers to batch_ingest \\(read/write/read_new_episodes\\) + tests''\")"
+      "Bash(powershell -Command \"cd C:\\\\Users\\\\raest\\\\Documents\\\\Karma_SADE; git add karma-core/batch_ingest.py karma-core/tests/test_watermark.py karma-core/tests/__init__.py; git commit -m ''feat: add watermark helpers to batch_ingest \\(read/write/read_new_episodes\\) + tests''\")",
+      "Bash(powershell -Command \"git commit -m ''fix: Phase 1 - system prompt honesty \\(tool-mode gate, context size, rate-limit clarity\\)''\")",
+      "Bash(powershell -Command \"git push origin fix/karma-tool-calling\")",
+      "Bash(powershell -Command \"git add hub-bridge/app/server.js karma-core/server.py MEMORY.md; git status --short\")",
+      "Bash(powershell -Command \"git commit -m ''fix: Phase 2 - wire GLM tool-calling + add graph_query/get_vault_file tools''\")",
+      "Bash(powershell -Command \"git add karma-core/hooks.py MEMORY.md; git commit -m ''fix: add graph_query + get_vault_file to hooks.py ALLOWED_TOOLS whitelist''; git push origin fix/karma-tool-calling\")",
+      "Bash(powershell -Command \"git add karma-core/hooks.py MEMORY.md; git commit -m ''fix: add graph_query + get_vault_file to hooks.py ALLOWED_TOOLS''; git push origin fix/karma-tool-calling\")",
+      "Bash(python -m pytest karma-core/tests/ -q)",
+      "Bash(powershell -Command \"git merge-base HEAD main\")",
+      "Bash(powershell -Command \"git add docker-compose.karma.yml MEMORY.md; git commit -m ''fix: move K2_PASSWORD to env var -- remove plaintext secret from compose''; git push origin fix/karma-tool-calling\")",
+      "Bash(gh pr:*)",
+      "Bash(powershell -Command \"git fetch origin main; git log origin/main --oneline -5\")",
+      "Bash(powershell -Command \"git pull origin main; git worktree remove .worktrees/fix-karma-tools --force 2>&1\")",
+      "Bash(powershell -Command \"git worktree remove .worktrees\\\\fix-karma-tools --force 2>&1\")",
+      "Bash(powershell -Command \"git worktree list\")"
     ]
   }
 }
