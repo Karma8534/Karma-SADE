@@ -113,6 +113,8 @@ TOOL_DEFINITIONS = [
      "input_schema": {"type": "object", "properties": {"path": {"type": "string"}, "old_text": {"type": "string"}, "new_text": {"type": "string"}}, "required": ["path", "old_text", "new_text"]}},
     {"name": "bash", "description": "Run a shell command on the droplet. Returns stdout, stderr, exit code.",
      "input_schema": {"type": "object", "properties": {"command": {"type": "string"}}, "required": ["command"]}},
+    {"name": "graph_query", "description": "Run a raw Cypher query against FalkorDB neo_workspace graph. Returns results as formatted text. Use for memory retrieval, entity lookup, relationship exploration.",
+     "input_schema": {"type": "object", "properties": {"cypher": {"type": "string", "description": "Cypher query to run against neo_workspace. No datetime() function — use string comparisons for dates."}}, "required": ["cypher"]}},
 ]
 
 AVAILABLE_TOOLS = {t["name"]: t for t in TOOL_DEFINITIONS}
@@ -173,6 +175,25 @@ async def execute_tool_action(tool_name: str, tool_input: dict) -> dict:
                 "stderr": stderr.decode("utf-8", errors="replace")[:10_000],
                 "exit_code": proc.returncode
             }
+
+        elif tool_name == "graph_query":
+            cypher = tool_input.get("cypher", "").strip()
+            if not cypher:
+                return {"ok": False, "error": "cypher parameter required"}
+            r = get_falkor()
+            result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
+            # FalkorDB returns [headers, rows] — headers is result[0], rows is result[1]
+            if len(result) < 2 or not result[1]:
+                return {"ok": True, "result": "(no rows returned)", "row_count": 0}
+            headers = result[0] if result[0] else []
+            rows = result[1]
+            lines = []
+            if headers:
+                lines.append(" | ".join(str(h) for h in headers))
+                lines.append("-" * len(lines[0]))
+            for row in rows[:100]:  # cap at 100 rows
+                lines.append(" | ".join(str(v) if v is not None else "null" for v in row))
+            return {"ok": True, "result": "\n".join(lines), "row_count": len(rows)}
 
         else:
             return {"ok": False, "error": f"Unknown tool: {tool_name}"}

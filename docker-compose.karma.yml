@@ -18,7 +18,7 @@ services:
       K2_HOST: 100.75.109.92
       K2_WINRM_PORT: 5985
       K2_USERNAME: karma
-      K2_PASSWORD: REDACTED
+      K2_PASSWORD: ${K2_PASSWORD}
     volumes:
       - /opt/seed-vault/memory_v1/ledger:/ledger
     restart: unless-stopped

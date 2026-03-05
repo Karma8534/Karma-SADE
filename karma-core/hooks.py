@@ -159,7 +159,8 @@ def hook_pre_tool_use(tool_name: str, tool_input: dict,
     3. check_budget (Decision #11)
     """
     ALLOWED_TOOLS = {"read_file", "write_file", "edit_file", "bash",
-                     "shell_exec", "file_read", "file_write", "file_edit"}
+                     "shell_exec", "file_read", "file_write", "file_edit",
+                     "graph_query", "get_vault_file"}
     
     # 1. Validate tool name
     if tool_name not in ALLOWED_TOOLS:
