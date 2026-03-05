@@ -410,7 +410,7 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
   const selfModel = process.env.MODEL_DEFAULT || "claude-sonnet-4-6";
   const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/30min, web_search=auto_on_intent]\n\n`;
 
-  let text = identityBlock + selfKnowledge + base + "\n\nTools: get_vault_file(alias) | graph_query(cypher) — use for questions about your memory/graph.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
+  let text = identityBlock + selfKnowledge + base + "\n\nTools available in deep mode (x-karma-deep: true) only: graph_query(cypher), get_vault_file(alias), read_file(path), write_file(path,content), edit_file(path,old,new), bash(command). In standard GLM mode: NO tools — do not promise to run queries or fetch files.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
 
   // Semantic memory — top-K ledger entries most relevant to the current question.
   // Retrieved from FAISS search service (anr-vault-search:8081).
@@ -814,6 +814,28 @@ const TOOL_DEFINITIONS = [
       required: ["command"],
     },
   },
+  {
+    name: "graph_query",
+    description: "Run a raw Cypher query against FalkorDB neo_workspace graph. Returns results as formatted text. Use to retrieve memories, entities, relationships, decisions. Note: no datetime() function — use string comparisons for dates.",
+    input_schema: {
+      type: "object",
+      properties: {
+        cypher: { type: "string", description: "Cypher query to run against neo_workspace graph" },
+      },
+      required: ["cypher"],
+    },
+  },
+  {
+    name: "get_vault_file",
+    description: "Read a canonical Karma file by alias. Available aliases: MEMORY.md, consciousness, collab, candidates, system-prompt, session-handoff, session-summary, core-architecture, cc-brief.",
+    input_schema: {
+      type: "object",
+      properties: {
+        alias: { type: "string", description: "File alias (e.g. 'MEMORY.md', 'system-prompt', 'session-handoff')" },
+      },
+      required: ["alias"],
+    },
+  },
 ];
 
 // Map of whitelisted file aliases to actual paths
@@ -829,17 +851,31 @@ const VAULT_FILE_ALIASES = {
   "cc-brief": "/karma/repo/cc-session-brief.md",
 };
 
-// Phase 3: Tool execution proxied through karma-server /v1/tools/execute
-// Maps 4-tool surface names to karma-server tool names
-const TOOL_NAME_MAP = {
-  "read_file": "file_read",
-  "write_file": "file_write",
-  "edit_file": "file_edit",
-  "bash": "shell_exec",
-};
+// Tool execution proxied through karma-server /v1/tools/execute
+// get_vault_file is handled directly in executeToolCall (hub-bridge has file access)
+// All other tools proxy to karma-server with the same name
+const TOOL_NAME_MAP = {}; // identity passthrough — tool names match karma-server names
 
 async function executeToolCall(toolName, toolInput) {
   try {
+    // get_vault_file is handled directly — hub-bridge has volume access to /karma/
+    if (toolName === "get_vault_file") {
+      const alias = (toolInput.alias || "").trim();
+      const filePath = VAULT_FILE_ALIASES[alias];
+      if (!filePath) {
+        return { error: "unknown_alias", message: `Alias '${alias}' not found. Available: ${Object.keys(VAULT_FILE_ALIASES).join(", ")}` };
+      }
+      const { readFileSync } = await import("fs");
+      try {
+        const content = readFileSync(filePath, "utf8");
+        const trimmed = content.slice(0, 20_000); // 20KB cap
+        console.log(`[TOOL-API] get_vault_file '${alias}' → ${filePath} (${trimmed.length} chars)`);
+        return { ok: true, alias, path: filePath, content: trimmed };
+      } catch (e) {
+        return { error: "file_read_error", message: e.message };
+      }
+    }
+
     const serverToolName = TOOL_NAME_MAP[toolName] || toolName;
     console.log(`[TOOL-API] Proxying tool '${toolName}' → karma-server '${serverToolName}'`);
 
@@ -865,7 +901,7 @@ async function executeToolCall(toolName, toolInput) {
 }
 
 async function callLLMWithTools(model, messages, maxTokens) {
-  if (!isAnthropicModel(model)) return callLLM(model, messages, maxTokens);
+  if (!isAnthropicModel(model)) return callGPTWithTools(messages, maxTokens, model);
 
   const systemParts = messages.filter(m => m.role === "system").map(m => m.content);
   const apiMessages = messages.filter(m => m.role !== "system");
