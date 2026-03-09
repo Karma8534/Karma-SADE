@@ -1,3 +1,12 @@
+## Session 70 (2026-03-09) — FalkorDB catchup + cron fix + resurrection spine ban
+
+**Active task:** COMPLETE
+1. Root cause: cron was using Graphiti mode (no --skip-dedup) → silently failing at scale → 0 new nodes for March 5-9 entries despite watermark advancing
+2. Fix: added --skip-dedup to vault-neo crontab; reset watermark to 4100; manual run: 118 entries, 0 errors, 879 eps/s
+3. Verified: 76 March-5 nodes + March-9 nodes now in FalkorDB
+4. System prompt: added explicit "resurrection spine" ban + context lag explanation (0-6h lag is normal)
+5. **PITFALL**: Graphiti mode silently fails for incremental ingest at scale. --skip-dedup MUST be in cron.
+
 ## Session 70 (2026-03-05) — System prompt trim to fix 429 rate limits
 
 **Active task:** COMPLETE
