@@ -88,8 +88,9 @@ Ledger → anr-vault-search (auto-reindex on change + every 5min) → FAISS vect
 
 ## batch_ingest
 - Runs on cron: `0 */6 * * *` on vault-neo
-- **Current command** (Session 63+): `LEDGER_PATH=/ledger/memory.jsonl WATERMARK_PATH=/ledger/.batch_watermark python3 /app/batch_ingest.py` (Graphiti watermark mode — entity extraction for new episodes)
-- **Bulk backfill only**: `python3 /app/batch_ingest.py --skip-dedup` (bypasses Graphiti, direct Cypher, 899 eps/s — use for one-off recovery only, NOT regular cron)
+- **Current command** (Session 70, FIXED): `LEDGER_PATH=/ledger/memory.jsonl WATERMARK_PATH=/ledger/.batch_watermark python3 /app/batch_ingest.py --skip-dedup`
+- **CRITICAL**: `--skip-dedup` is MANDATORY for cron, not just bulk backfill. Graphiti mode silently fails at scale (3200+ nodes) — watermark advances, 0 nodes created, no error. Verified Session 70.
+- **Recovery**: reset watermark: `docker exec karma-server sh -c 'echo N > /ledger/.batch_watermark'`
 - LEDGER_PATH inside container: `/ledger/memory.jsonl` (NOT `/opt/seed-vault/...`)
 - Extended to handle hub/chat entries (2026-03-03): detects `hub+chat` tags, reads `assistant_text` fallback
 - **`--skip-dedup` is the correct mode for bulk backfill**: direct Cypher write, 899 eps/s, 0 errors

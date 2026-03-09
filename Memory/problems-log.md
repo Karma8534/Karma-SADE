@@ -4,6 +4,33 @@ Append-only. Every problem debugged in any session gets an entry here. If we deb
 
 ---
 
+## 2026-03-09 [Session 70] batch_ingest cron silently failing — FalkorDB months behind
+
+**Symptom:** Karma reported "my latest context is Session 66" despite batch cron reporting "all caught up" at watermark 4155.
+**Root cause:** crontab was using Graphiti mode (no `--skip-dedup`). At 3200+ Episodic nodes, Graphiti dedup queries exceed TIMEOUT → all episodes fail silently → watermark advances to end of ledger → 0 FalkorDB nodes created. Batch log shows "all caught up" with no error.
+**Fix:** Added `--skip-dedup` to vault-neo crontab: `crontab -l | sed 's|python3 /app/batch_ingest.py|python3 /app/batch_ingest.py --skip-dedup|' | crontab -`. Reset watermark to 4100 via `docker exec karma-server sh -c 'echo 4100 > /ledger/.batch_watermark'`. Ran manual catchup: 118 entries, 0 errors, 879 eps/s.
+**Verified by:** FalkorDB query `MATCH (e:Episodic) WHERE e.created_at > "2026-03-05" RETURN count(e)` → 76 nodes (was 0). March 9 nodes confirmed present.
+**Residual risk:** If karma-server is rebuilt and crontab is reconfigured, --skip-dedup could be omitted again. Verify with `crontab -l | grep batch` after any cron changes.
+**Status:** RESOLVED
+
+## 2026-03-09 [Session 70] System prompt 429 rate limits from bloat
+
+**Symptom:** Karma returning `internal_error` (hub 429 from Z.ai) frequently. Each request consuming 67,388 input chars.
+**Root cause:** System prompt grew to 16,519 chars across multiple fix sessions (was ~12,366). Higher chars → higher TPM per request → faster rate limit exhaustion at 40 RPM.
+**Fix:** Trimmed system prompt to 11,674 chars (-29%). Removed: API Surface table, 3 low-value corrections, infrastructure container list, machine specs. All critical coaching preserved.
+**Verified by:** `/v1/chat` smoke test → `ok`, `debug_input_chars: 56,843` (was 67,388). RestartCount=0.
+**Residual risk:** System prompt will grow again as corrections are added. Monitor `debug_input_chars` — if consistently >65K, trim again.
+**Status:** RESOLVED
+
+## 2026-03-09 [Session 70] Karma using "resurrection spine" terminology
+
+**Symptom:** Karma described session continuity as "resurrection spine loading checkpoint" — language from old architecture design docs, not live behavior.
+**Root cause:** Old architecture design documents (resurrection-architecture.md concept) indexed in FalkorDB as Episodic nodes. karmaCtx served these stale docs as context. System prompt corrections existed for identity.json/invariants.json but didn't explicitly ban the "resurrection spine" term.
+**Fix:** Added explicit paragraph to system prompt: "There is no 'resurrection spine.' ... Do not use this term. If context feels stale, correct explanation is: FalkorDB updates every 6h."
+**Verified by:** System prompt deployed, hub-bridge restarted (RestartCount=0).
+**Residual risk:** Old architecture docs remain in FalkorDB. If served in karmaCtx, Karma may still reference them. Mitigation: explicit system prompt ban is now in place.
+**Status:** RESOLVED
+
 ## 2026-03-05 [Session 69] Karma confabulates bash/file tool capabilities
 
 **Symptom:** Karma said "like I can call bash commands on vault-neo" — claimed a tool capability she doesn't have.

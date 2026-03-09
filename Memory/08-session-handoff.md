@@ -1,9 +1,9 @@
 # Karma SADE — Session Handoff
 
-**Date**: 2026-03-05
-**Session**: 69
+**Date**: 2026-03-09
+**Session**: 70
 **GitHub**: https://github.com/Karma8534/Karma-SADE (PUBLIC)
-**Last commit**: 0005aef (main, synced to vault-neo)
+**Last commit**: 59408af (main, synced to vault-neo)
 
 ---
 
@@ -24,10 +24,10 @@ vault-neo (DigitalOcean NYC3, 4GB RAM, SSH alias: vault-neo)
 ├── karma-server          ─── Python consciousness loop + tool execution
 │   ├── OBSERVE-only, 60s cycles, zero LLM calls
 │   ├── execute_tool_action(): graph_query (only proxied tool — others handled in hub-bridge directly)
-│   └── batch_ingest: cron every 6h, Graphiti watermark mode
-├── FalkorDB              ─── Graph: neo_workspace (3621+ nodes)
+│   └── batch_ingest: cron every 6h, --skip-dedup mode (FIXED Session 70)
+├── FalkorDB              ─── Graph: neo_workspace (3200+ Episodic + 570 Entity nodes)
 ├── anr-vault-api         ─── FastAPI, appends to JSONL ledger
-├── anr-vault-search      ─── FAISS vector search (text-embedding-3-small, 4073+ entries)
+├── anr-vault-search      ─── FAISS vector search (text-embedding-3-small, 4000+ entries)
 └── Nginx                 ─── Reverse proxy → hub.arknexus.net
 ```
 
@@ -49,111 +49,55 @@ vault-neo (DigitalOcean NYC3, 4GB RAM, SSH alias: vault-neo)
 | Compose (hub) | `/opt/seed-vault/memory_v1/hub_bridge/compose.hub.yml` |
 | Compose (vault) | `/opt/seed-vault/memory_v1/compose/compose.yml` |
 | Ledger | `/opt/seed-vault/memory_v1/ledger/memory.jsonl` |
+| Batch watermark | `/opt/seed-vault/memory_v1/ledger/.batch_watermark` |
 | Hub chat token | `/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt` |
 | System prompt | `/home/neo/karma-sade/Memory/00-karma-system-prompt-live.md` |
-| MEMORY.md (vault) | `/home/neo/karma-sade/MEMORY.md` (also accessible at `/karma/MEMORY.md` in hub-bridge container) |
+| MEMORY.md (vault) | `/home/neo/karma-sade/MEMORY.md` (also `/karma/MEMORY.md` in hub-bridge container) |
 
 ---
 
-## What Changed in Session 69
+## What Changed in Session 70
 
-### Code Changes (deployed to main + vault-neo)
-1. `hub-bridge/app/server.js` (commits 7d2f034, 9235627, 1cc8c99): removed stale TOOL_DEFINITIONS (read_file/write_file/edit_file/bash), added fetch_url definition + handler, fixed buildSystemText() hardcoded tool string
-2. `Memory/00-karma-system-prompt-live.md` (commit be27047): tool list updated to include write_memory + fetch_url; fetch_url coaching paragraph added
+### System Prompt Changes
+1. `Memory/00-karma-system-prompt-live.md` (commits 8b989dc, 59408af):
+   - Trimmed: 16,519 → 11,674 chars (-29%)
+   - Removed: API Surface table, corrections #1/#2/#5 (verdict.txt, batch_ingest direction, consciousness loop), infrastructure container list, machine specs
+   - Added: explicit "resurrection spine" ban paragraph
+   - Added: context lag explanation ("0-6h lag is normal")
+   - Per-request input chars: 67,388 → 56,843
 
-### Skill Fixes
-- `karma-hub-deploy/SKILL.md`: corrected compose.hub.yml path to `/opt/seed-vault/memory_v1/hub_bridge/`
-
-### Deployments
-- hub-bridge rebuilt + deployed (v2.11.0, RestartCount=0, /v1/chat verified)
-
----
-
-## What Changed in Session 68
-
-### Code Changes (deployed to main + vault-neo)
-1. `hub-bridge/lib/feedback.js` (NEW — commit a17ce54): `processFeedback()` + `prunePendingWrites()`, 7 TDD tests
-2. `hub-bridge/app/server.js` (multiple commits): `pending_writes` Map, `write_memory` tool def, `writeId` threading, `POST /v1/feedback` endpoint, bare-newline fix (b002b5b), buildVaultRecord DPO fix (69f061b), type:log fix (cf63957)
-3. `hub-bridge/app/public/unified.html` (commits 0618fbb, 314d301): write_id in response, feedback buttons only when writeId truthy, thumbs-down textarea, fresh token on submit, double-submit guard
-4. `karma-core/hooks.py` (commit 362de7e): `"write_memory"` added to ALLOWED_TOOLS
-5. `Memory/00-karma-system-prompt-live.md` (commit 6f078e7): write_memory coaching paragraph; KARMA_IDENTITY_PROMPT 11,850 → 12,366 chars
-
-### Deployments
-- karma-server rebuilt (hooks.py change)
-- hub-bridge rebuilt twice (server.js + lib/ + unified.html changes)
-- Both services verified healthy (RestartCount=0)
+### Infrastructure Fix (vault-neo only, not in git)
+- vault-neo crontab: added `--skip-dedup` to batch_ingest command
+- Manual catchup: watermark reset to 4100, 118 entries ingested at 879 eps/s, 0 errors
+- FalkorDB: 76 March-5 nodes + March-9 nodes now present
 
 ---
 
-## What Changed in Session 67
-
-### Code Changes (deployed)
-1. `hub-bridge/app/server.js` (commit 41b2c06):
-   - Lines 1269-1272: `deep_mode ? callLLMWithTools() : callLLM()` — standard chat no longer gets tools
-   - Removed stale DIAGNOSTIC log left from Session 66 debugging
-2. `Memory/00-karma-system-prompt-live.md` (commit f90cea7):
-   - Line 26: fixed stale tool list (read_file/write_file → graph_query/get_vault_file)
-   - New section "How to Use Your Context Data": behavioral coaching for Entity Relationships, Recurring Topics, deep-mode graph_query proactivity
-   - KARMA_IDENTITY_PROMPT: 10,415 → 11,850 chars
-
----
-
-## What Changed in Session 66
-
-### Code Changes (merged to main, deployed)
-1. `hub-bridge/app/server.js`:
-   - Line 868: `callLLM()` → `callGPTWithTools(messages, maxTokens, model)` — GLM gets tool definitions
-   - Line 413: False tool declaration replaced with accurate deep-mode-gated tool list
-   - `TOOL_DEFINITIONS`: added `graph_query` + `get_vault_file`
-   - `TOOL_NAME_MAP`: was `{read_file: "file_read", ...}` (wrong) → `{}` (identity passthrough)
-   - `executeToolCall()`: direct handler for `get_vault_file` using VAULT_FILE_ALIASES + /karma/ volume
-2. `karma-core/server.py`: `graph_query` handler in `execute_tool_action()` — runs Cypher via get_falkor()
-3. `karma-core/hooks.py`: `graph_query` + `get_vault_file` added to `ALLOWED_TOOLS` whitelist
-4. `docker-compose.karma.yml`: K2_PASSWORD plaintext → `${K2_PASSWORD}` env var
-5. `Memory/00-karma-system-prompt-live.md`: tool list, context size, rate-limit honesty fixes
-
-### Config Changes (on vault-neo hub.env, not in git)
-- `GLM_RPM_LIMIT=40` (was defaulting to 20)
-- `K2_PASSWORD=just4us2use` (moved from plaintext compose)
-
----
-
-## Current State (All Verified 2026-03-05 Session 69)
+## Current State (All Verified 2026-03-09 Session 70)
 
 | Component | Status |
 |-----------|--------|
-| fetch_url tool | ✅ LIVE — deep mode, user-provided URLs, 8KB cap, HTML stripped (Session 69) |
-| TOOL_DEFINITIONS | ✅ CLEAN — stale tools removed (Session 69); active: graph_query, get_vault_file, write_memory, fetch_url |
-| write_memory tool + pending_writes gate | ✅ LIVE — in-process Map, write_id threading (Session 68) |
-| POST /v1/feedback endpoint | ✅ LIVE — auth + approve/reject + DPO (Session 68) |
-| unified.html feedback UI | ✅ LIVE — 👍/👎 buttons + thumbs-down textarea (Session 68) |
-| DPO pairs in vault ledger | ✅ LIVE — type:log, tags:["dpo-pair"], 0/20 accumulated (Session 68) |
-| System prompt write_memory coaching | ✅ LIVE — 12,366 chars (Session 68) |
-| Deep-mode tool gate | ✅ LIVE — standard chat no longer gets tools (Session 67) |
-| v9 Phase 3 persona coaching | ✅ LIVE — behavioral coaching deployed (Session 67) |
-| GLM tool-calling | ✅ LIVE — end-to-end verified Session 66 |
-| graph_query tool | ✅ LIVE — Karma can query FalkorDB in deep mode |
-| get_vault_file tool | ✅ LIVE — Karma can read MEMORY.md, system-prompt, etc. |
-| System prompt | ✅ HONEST + COACHED — accurate tool list + behavioral guidance |
-| GLM_RPM_LIMIT | ✅ 40 RPM |
-| hooks.py whitelist | ✅ Updated: graph_query, get_vault_file, write_memory |
-| TOOL_NAME_MAP | ✅ Fixed (empty dict) |
-| K2_PASSWORD | ✅ Secured (env var) |
-| Main branch protection | ✅ Enabled |
-| Entity Relationships | ✅ LIVE in karmaCtx (Session 64) |
-| Recurring Topics | ✅ LIVE in karmaCtx (Session 64) |
+| /v1/chat | ✅ ok, 56,843 input chars (was 67,388) |
+| System prompt | ✅ 11,674 chars, no resurrection spine, context lag noted |
+| batch_ingest cron | ✅ --skip-dedup PERMANENT — Graphiti mode was silently failing |
+| FalkorDB catchup | ✅ March 5+9 entries ingested — Karma context current |
+| hub-bridge | ✅ RestartCount=0, v2.11.0 |
+| fetch_url tool | ✅ LIVE — deep mode, user-provided URLs (Session 69) |
+| write_memory + /v1/feedback | ✅ LIVE — pending_writes gate + DPO pairs (Session 68) |
+| unified.html | ✅ LIVE — write_memory 👍/👎 buttons (Session 68) |
+| Deep-mode tool gate | ✅ standard chat no longer gets tools (Session 67) |
+| graph_query / get_vault_file | ✅ LIVE (Session 66) |
 | FAISS semantic search | ✅ LIVE (Session 62) |
-| Graphiti watermark | ✅ LIVE, new episodes get entity extraction (Session 63) |
 
 ---
 
-## Next Session (Session 70)
+## Next Session (Session 71)
 
-**Primary task:** Phase 3 acceptance test (PENDING since Session 67) + DPO accumulation check
+**Primary task:** Thumbs up/down general feedback UI for Karma chat
 
-1. **Phase 3 acceptance test**: In deep mode, ask Karma about a Recurring Topic (e.g. "what have we been working on with FalkorDB?") — verify she references entity relationship data unprompted, not just episodic recall.
-2. **DPO check**: `ssh vault-neo "grep -c 'dpo-pair' /opt/seed-vault/memory_v1/ledger/memory.jsonl"` — currently 3/20. Accumulates with deep-mode 👍 approvals.
-3. **MENTIONS growth re-check**: `ssh vault-neo "docker exec falkordb redis-cli GRAPH.QUERY neo_workspace 'MATCH ()-[r:MENTIONS]->() RETURN count(r) AS edges'"` — was 2,363 at Session 69. Should be growing with each 6h cron.
+1. **Explore hub-bridge UI source**: Read `hub-bridge/app/public/unified.html` + `hub-bridge/app/server.js` /v1/feedback endpoint to understand what's already there from Session 68
+2. **Complete brainstorming**: The write_memory feedback (Session 68) is thumbs on memory writes only. The user wants general per-message thumbs on ALL responses. Brainstorming was started last session — pick up at "explore project context" step.
+3. **writing-plans → implement**
 
 **Blocker if any:** None. All systems green.
 
@@ -166,8 +110,8 @@ vault-neo (DigitalOcean NYC3, 4GB RAM, SSH alias: vault-neo)
 3. **hooks.py ALLOWED_TOOLS** — new tools silently rejected without whitelist entry
 4. **TOOL_NAME_MAP must stay empty** — any entries will remap tool names to wrong values
 5. **docker restart ≠ compose up -d** — hub.env changes require `compose up -d` to take effect
-6. **vault-neo git pull after squash merge** — use `git reset --hard origin/main`, not `git pull`
-7. **FalkorDB graph name is `neo_workspace`** — NOT `karma` (karma graph is empty)
-8. **karma-verify smoke test** — was checking `reply`, now correctly checks `assistant_text` (RESOLVED Session 69 — was already fixed)
-9. **vault-api type enum is closed** — only ["fact","preference","project","artifact","log","contact"]; use type:"log" + tags for custom types
-10. **buildVaultRecord() required for all vault writes** — bare objects fail schema validation silently (vaultPost fire-and-forget swallows 422)
+6. **FalkorDB graph name is `neo_workspace`** — NOT `karma` (karma graph is empty)
+7. **vault-api type enum is closed** — only ["fact","preference","project","artifact","log","contact"]; use type:"log" + tags for custom types
+8. **buildVaultRecord() required for all vault writes** — bare objects fail schema validation silently
+9. **batch_ingest cron MUST use --skip-dedup** — Graphiti mode silently fails at scale (watermark advances, 0 nodes created, no error logged). Verify: `crontab -l | grep batch` must show `--skip-dedup`
+10. **Watermark file is root-owned** — can't write directly; use `docker exec karma-server sh -c 'echo N > /ledger/.batch_watermark'`

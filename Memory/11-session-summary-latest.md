@@ -1,60 +1,63 @@
 # Karma SADE Session Summary (Latest)
 
-**Date**: 2026-03-05
-**Session**: 69
-**Focus**: fetch_url tool (research collaboration) + stale tool cleanup + skill/doc fixes
+**Date**: 2026-03-09
+**Session**: 70
+**Focus**: System prompt trim (fix 429 rate limits) + FalkorDB cron bug fix + context catchup + "resurrection spine" ban
 
 ---
 
 ## What Was Done
 
-### 1. fetch_url deep-mode tool — SHIPPED
-- New tool: `fetch_url(url)` in hub-bridge executeToolCall (same pattern as get_vault_file)
-- Fetches full page text (HTML stripped, 8KB cap, 10s timeout)
-- Returns `{ok, url, content, chars}` or `{error, message, url}`
-- User-provided URLs only — coaching added to system prompt
-- Deployed: hub-bridge v2.11.0, RestartCount=0, /v1/chat verified
+### 1. System Prompt Trimmed (16,519 → 11,674 chars)
+- Root cause: System prompt had grown to 16,519 chars across multiple fix sessions → 67K+ input chars per request → recurring 429 rate limits from Z.ai
+- Removed: API Surface table, 3 low-value corrections (#1 verdict.txt, #2 batch_ingest direction, #5 consciousness loop), infrastructure container list, machine specs
+- All critical coaching preserved: session continuity, Recently Learned priority, tool routing, K2 deprecated, FalkorDB fields, ASSIMILATE/DEFER/DISCARD, Behavioral Contract
+- Result: 56,843 input chars per request (was 67,388), 429 pressure significantly reduced
 
-### 2. Stale tool definitions removed — FIXED
-- `read_file`, `write_file`, `edit_file`, `bash` removed from TOOL_DEFINITIONS
-- Had no handler → proxied to karma-server → rejected silently → GLM listed as real capabilities → confabulation
-- Active tools now: `graph_query`, `get_vault_file`, `write_memory`, `fetch_url`
+### 2. batch_ingest Cron Bug Fixed
+- Root cause: crontab was using Graphiti mode (no --skip-dedup). At 3200+ Episodic nodes, Graphiti dedup queries exceed 10s timeout → silent failure → watermark advances → 0 FalkorDB nodes created
+- Symptom: Karma reporting "my latest context is Session 66" despite cron running every 6h and reporting "all caught up"
+- Fix: `--skip-dedup` added permanently to vault-neo crontab
+- Manual catchup: reset watermark to 4100, 118 entries ingested, 0 errors, 879 eps/s
 
-### 3. buildSystemText() hardcoded tool string fixed
-- Was listing bash/read_file/write_file/edit_file. Now: graph_query, get_vault_file, write_memory, fetch_url
+### 3. FalkorDB Context Verified
+- March 5 entries: 76 nodes now in FalkorDB
+- March 9 entries: present (ep_hub-chat_108 through ep_hub-chat_117)
+- Karma's context now includes recent conversations
 
-### 4. karma-hub-deploy skill path corrected
-- compose.hub.yml is at `/opt/seed-vault/memory_v1/hub_bridge/`, not in git repo root
+### 4. "Resurrection Spine" Language Banned
+- Karma was using "resurrection spine", "checkpoint loading", "session ID mismatch" — fiction from old architecture docs in her graph
+- Fixed: explicit ban added to system prompt with correct explanation (FalkorDB 0-6h lag is normal)
 
-### 5. v9 Phase 5 verified — 2,363 MENTIONS edges in neo_workspace
-
-### 6. DPO accumulation: 3/20
+### 5. DRL/RL Article Noted for Future
+- Article: https://kuriko-iwai.com/deep-reinforcement-learning
+- Connection to Karma: DPO pairs = reward signal infrastructure; corrections pipeline = manual policy iteration; write_memory gate = RL loop
+- Saved to claude-mem #4248 — revisit when DPO pair count is meaningful
 
 ---
 
-## What's Live
+## What's Live (Verified)
 
 | Component | Status |
 |-----------|--------|
-| fetch_url tool | ✅ LIVE — deep mode, 8KB, HTML stripped |
-| TOOL_DEFINITIONS | ✅ CLEAN — 4 active tools |
-| write_memory + feedback gate | ✅ LIVE |
-| graph_query, get_vault_file | ✅ LIVE |
-| System prompt tool coaching | ✅ ACCURATE |
-| hub-bridge v2.11.0 | ✅ Running, RestartCount=0 |
-| MENTIONS edges | ✅ 2,363 growing |
-| DPO pairs | ⏳ 3/20 |
+| Hub Bridge | ✅ RestartCount=0, listening |
+| /v1/chat | ✅ ok, 56,843 input chars |
+| System prompt | ✅ 11,674 chars, deployed |
+| FalkorDB | ✅ 76+ March-5 nodes, caught up |
+| batch_ingest cron | ✅ --skip-dedup permanent |
 
 ---
 
-## Open
+## What's NOT Done (Next Session)
 
-- **Phase 3 acceptance test PENDING**: Ask Karma about Recurring Topic in deep mode → verify entity relationship data referenced unprompted. Deferred from Session 67.
+1. **Thumbs up/down general feedback UI** — brainstorming started but NOT complete. Need to:
+   - Explore hub-bridge/app/ for unified.html and existing /v1/feedback endpoint
+   - Complete brainstorming → writing-plans → implement
+   - The write_memory thumbs (Session 68) is different from general per-message feedback
 
 ---
 
-## Next Session
+## Commits This Session
 
-1. Run Phase 3 acceptance test (deep mode + Recurring Topic)
-2. DPO count check
-3. MENTIONS growth re-verify
+- `8b989dc` — session-70: trim system prompt 16519→11674 chars to fix 429 rate limits
+- `59408af` — fix(karma-prompt): ban 'resurrection spine' + fix cron --skip-dedup + FalkorDB catchup

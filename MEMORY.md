@@ -572,3 +572,9 @@ Task 8 complete: write_memory coaching paragraph appended to "## How to Use Your
 - These had no handler and caused Karma to confabulate capabilities
 - TOOL_DEFINITIONS now contains only 3 active tools: graph_query, get_vault_file, write_memory
 - Updated stale comment from "4 tools only" to reflect current 3-tool reality
+
+## Session 70 Wrap-up (2026-03-09)
+
+Completed: batch_ingest --skip-dedup PITFALL added to CLAUDE.md + architecture.md. STATE.md, problems-log.md, session-handoff (Session 71), session-summary updated. cc-session-brief.md regenerated. Secret scan clean.
+
+Next: Session 71 — thumbs up/down general feedback UI for Karma chat.
