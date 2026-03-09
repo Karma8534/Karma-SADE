@@ -1,3 +1,44 @@
+## Session 70 (2026-03-09) — FalkorDB catchup + cron fix + resurrection spine ban
+
+**Active task:** COMPLETE
+1. Root cause: cron was using Graphiti mode (no --skip-dedup) → silently failing at scale → 0 new nodes for March 5-9 entries despite watermark advancing
+2. Fix: added --skip-dedup to vault-neo crontab; reset watermark to 4100; manual run: 118 entries, 0 errors, 879 eps/s
+3. Verified: 76 March-5 nodes + March-9 nodes now in FalkorDB
+4. System prompt: added explicit "resurrection spine" ban + context lag explanation (0-6h lag is normal)
+5. **PITFALL**: Graphiti mode silently fails for incremental ingest at scale. --skip-dedup MUST be in cron.
+
+## Session 70 (2026-03-05) — System prompt trim to fix 429 rate limits
+
+**Active task:** COMPLETE
+1. System prompt trimmed: 16,519 → 11,674 chars (−29%) — reduces TPM per request, fixes recurring 429s
+2. Removed: API Surface table, 3 low-value corrections (#1 verdict.txt, #2 batch_ingest direction, #5 consciousness loop), infrastructure container list, machine specs, verbose coaching
+3. Preserved exactly: session continuity mechanism, Recently Learned priority rules, tool routing, all critical corrections, ASSIMILATE/DEFER/DISCARD, Behavioral Contract
+
+## Session 69 post-wrap #3 (2026-03-05) — primitives context priority + FalkorDB schema
+
+**Active task:** COMPLETE
+1. "Recently Learned" priority rule: read block FIRST, never skip to "run this query yourself"
+2. Correction #8: FalkorDB Episodic real fields — e.source/e.title/e.timestamp do NOT exist
+
+## Session 69 post-wrap #2 (2026-03-05) — SIGNAL_REGEX + primitives coaching
+
+**Active task:** COMPLETE
+1. SIGNAL_REGEX: `/^\[...\]$/m` → `/\[...\]/` — multi-line synthesis no longer silently dropped. 44 canonical primitives confirmed in FalkorDB.
+2. System prompt: duplicate `---` removed, "How You Improve Over Time" rewritten (identity.json analogy gone), primitives coaching added ("Recently Learned" = primitive list)
+3. Corrections log: 4 new entries appended
+
+## Session 69 post-wrap (2026-03-05) — Karma Self-Model Corrections
+
+**Active task:** COMPLETE — no blockers
+**What changed:** 3 additional system prompt corrections based on live Karma analysis:
+1. fetch_url capability: "cannot browse URLs" bullet corrected — she can in deep mode w/ user-provided URLs
+2. K2 deprecated: explicit correction added — K2 is not running, not a sync worker
+3. Session continuity: added "How Session Continuity Actually Works" — no identity.json/invariants.json loading, actual mechanism is system prompt + FalkorDB karmaCtx injection per request
+4. Corrections 6 & 7 added to Data Model Corrections section
+**Deploy:** git pull + docker restart anr-hub-bridge (no rebuild needed)
+
+---
+
 ## Session 67 (2026-03-05) — Security Fix: Deep-Mode Tool Gate
 
 **Status:** ✅ COMPLETE (2 deployments: security fix + persona coaching)
@@ -531,3 +572,9 @@ Task 8 complete: write_memory coaching paragraph appended to "## How to Use Your
 - These had no handler and caused Karma to confabulate capabilities
 - TOOL_DEFINITIONS now contains only 3 active tools: graph_query, get_vault_file, write_memory
 - Updated stale comment from "4 tools only" to reflect current 3-tool reality
+
+## Session 70 Wrap-up (2026-03-09)
+
+Completed: batch_ingest --skip-dedup PITFALL added to CLAUDE.md + architecture.md. STATE.md, problems-log.md, session-handoff (Session 71), session-summary updated. cc-session-brief.md regenerated. Secret scan clean.
+
+Next: Session 71 — thumbs up/down general feedback UI for Karma chat.

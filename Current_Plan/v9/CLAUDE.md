@@ -446,9 +446,11 @@ The active project is the Karma Peer system (Hub + Vault on arknexus.net).
   (concurrency=3) + karma-server live queries (consciousness loop, chats) can exceed 25 queued
   queries â†’ "Max pending queries exceeded" errors. Use `MAX_QUEUED_QUERIES 100`. Verified batch4
   (2026-02-23) with 40% error rate before fix, clean after recreating with 100.
-- **batch_ingest: always use `--skip-dedup` for bulk backfill**: Graphiti dedup mode times out at
-  scale (~0.01 eps/s, 85% error rate past ~250 episodes). `--skip-dedup` writes Episodic nodes
-  directly via Cypher: 899 eps/s, 0 errors. Cron already uses `--skip-dedup` by default.
+- **batch_ingest cron MUST always use `--skip-dedup`** (not just bulk backfill): Graphiti dedup mode
+  silently fails at scale (3200+ Episodic nodes). Watermark advances, 0 FalkorDB nodes created, no
+  error logged — "All caught up" does NOT mean nodes were created. `--skip-dedup` writes via direct
+  Cypher: 899 eps/s, 0 errors. Verify cron: `crontab -l | grep batch` must show `--skip-dedup`.
+  Watermark is root-owned — reset via: `docker exec karma-server sh -c 'echo N > /ledger/.batch_watermark'`
 - **FalkorDB has no `datetime()` Cypher function**: Use plain ISO string properties instead.
   `datetime('2026-03-04T...')` throws "Unknown function 'datetime'". Store as `created_at: '2026-03-04T...'`.
 - **Graphiti embedder reads `OPENAI_API_KEY` from env directly**: Removing env var from compose

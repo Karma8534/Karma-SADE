@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-05T21:30:00Z
-**Session:** 69 (fetch_url tool live, stale tools removed, Phase 5 verified, skill paths fixed)
+**Last updated:** 2026-03-09T23:00:00Z
+**Session:** 70 (system prompt trim, cron --skip-dedup fix, FalkorDB catchup, resurrection spine ban)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -28,7 +28,7 @@
 | **Config Validation Gate** | ✅ LIVE | MODEL_DEFAULT + MODEL_DEEP allow-lists. [CONFIG ERROR] + exit(1) on bad config. 27/27 tests. |
 | **OpenAI API key** | ✅ SECURED | File-based read (mounted volume), not env var (docker inspect clean). |
 | **PDF Watcher** | ✅ WORKING | Rate-limit backoff + jam notification + time-window scheduling. |
-| **System Prompt Accuracy** | ✅ CORRECT | Memory/00-karma-system-prompt-live.md wired via KARMA_IDENTITY_PROMPT. Session-62. Session-66: honesty fixes. Session-67: v9 Phase 3 behavioral coaching added (Entity Relationships, Recurring Topics, deep-mode graph_query proactivity). |
+| **System Prompt Accuracy** | ✅ CORRECT | Session-70: trimmed 16,519→11,674 chars (-29%); "resurrection spine" banned; context lag explained; cron --skip-dedup note added. input_chars per request: 67K→57K. |
 | **Deep-Mode Tool Gate** | ✅ SECURED | Session-67: standard GLM requests no longer get tool execution. deep_mode flag gates callLLMWithTools vs callLLM at line 1271. Security fix commit 41b2c06. |
 | **v9 Phase 3 Persona Coaching** | ✅ DEPLOYED | Session-67: "How to Use Your Context Data" section in system prompt. KARMA_IDENTITY_PROMPT: 10,415 → 11,850 chars. docker restart only. |
 | **FAISS Semantic Retrieval** | ✅ LIVE | fetchSemanticContext() in hub-bridge. karmaCtx + semanticCtx via Promise.all. 4073 entries indexed. Session-62. |
@@ -38,7 +38,7 @@
 | **Entity Relationships** | ✅ LIVE | RELATES_TO edges surfaced in karmaCtx. query_relevant_relationships() per-message. Session-64. |
 | **Recurring Topics** | ✅ LIVE | Top-10 entities by episode count. _pattern_cache refreshed every 30min at startup. Session-64. |
 | **Graphiti Watermark** | ✅ LIVE | batch_ingest watermark mode (Session 63). New episodes get entity extraction. :MENTIONS edges grow. |
-| **batch_ingest cron** | ✅ Graphiti mode | WATERMARK_PATH set. No --skip-dedup. Entity extraction enabled for incremental. |
+| **batch_ingest cron** | ✅ --skip-dedup FIXED | Session-70: cron now uses --skip-dedup permanently. Graphiti mode silently fails at scale. |
 | **GLM Tool-Calling** | ✅ LIVE | callGPTWithTools() now handles all non-Anthropic models (line 868 fix). Session-66. |
 | **graph_query tool** | ✅ LIVE | Karma can run Cypher against FalkorDB neo_workspace in standard GLM mode. End-to-end verified. Session-66. |
 | **get_vault_file tool** | ✅ LIVE | Karma can read canonical files by alias (MEMORY.md, system-prompt, etc.). Handled in hub-bridge. Session-66. |
@@ -305,5 +305,18 @@ Vault-api schema only allows types: ["fact","preference","project","artifact","l
 
 ### Decision #21: hub-bridge lib/ files belong in build context parent, not app/ (2026-03-05, LOCKED)
 Build context is `/opt/seed-vault/memory_v1/hub_bridge/` (the parent). Dockerfile COPY commands are relative to this parent. `COPY lib/ ./lib/` requires `lib/feedback.js` at `/opt/seed-vault/memory_v1/hub_bridge/lib/` — NOT under `app/`. Must `mkdir -p` this directory first, then `cp`. Easy to get wrong because server.js lives under `app/`.
+
+**Last updated:** 2026-03-09T23:00:00Z (Session 70 — system prompt trim + cron fix + FalkorDB catchup)
+
+### Session 70 Accomplishments (2026-03-09)
+- System prompt trimmed: 16,519 → 11,674 chars (-29%) — reduces per-request input from 67K → 57K chars, fixes recurring 429s
+- "Resurrection spine" language banned in system prompt — old design doc artifact, not live behavior
+- Context lag explained: "0-6h FalkorDB lag is normal and expected"
+- **CRON BUG FIXED**: vault-neo crontab was using Graphiti mode (no --skip-dedup). Graphiti silently fails at scale: watermark advances, 0 FalkorDB nodes created, no error in logs. Fixed: `--skip-dedup` added permanently to cron.
+- Manual FalkorDB catchup: reset watermark to 4100, ran --skip-dedup: 118 entries, 0 errors, 879 eps/s. March 5+9 entries now in FalkorDB.
+- **Thumbs up/down UI feature**: brainstorming started (not complete) — DRL article connection noted, session ended before code exploration.
+
+### Next Session Agenda (Session 71)
+1. **Thumbs up/down UI feature**: Resume brainstorming — explore hub-bridge/app/server.js for existing /v1/feedback + unified.html for current UI state. Then writing-plans → implement.
 
 **Last updated:** 2026-03-05T21:30:00Z (Session 68 — v9 Phase 4 complete)
