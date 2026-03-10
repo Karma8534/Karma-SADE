@@ -485,10 +485,11 @@
   }
 
   // ── Add message ──────────────────────────────────────────────────────────
-  function addMessage(role, content, writeId) {
+  function addMessage(role, content, writeId, turnId = null) {
     const wrap    = document.createElement('div');
     wrap.className = 'msg ' + role;
     if (writeId) wrap.dataset.writeId = writeId;
+    if (turnId) wrap.dataset.turnId = turnId;
     const bubble  = document.createElement('div');
     bubble.className = 'msg-bubble';
     bubble.textContent = content;
@@ -497,13 +498,13 @@
     const label = (role === 'user' ? 'You' : role === 'karma' ? 'Karma' : '');
     const timeStr = new Date().toLocaleTimeString();
     meta.innerHTML = '<span>' + label + ' &middot; ' + timeStr + '</span>';
-    // Add feedback buttons for Karma messages (only when writeId is available)
-    if (role === 'karma' && writeId) {
+    // Add feedback buttons for all Karma messages (write_id takes priority; falls back to turn_id)
+    if (role === 'karma' && (writeId || turnId)) {
       const btns = document.createElement('span');
       btns.className = 'feedback-btns';
       btns.innerHTML = '<button class="up" title="Good response">&#x1F44D;</button><button class="down" title="Bad response">&#x1F44E;</button>';
-      btns.querySelector('.up').onclick = function() { sendFeedback(writeId, 'up', this); };
-      btns.querySelector('.down').onclick = function() { sendFeedback(writeId, 'down', this, wrap); };
+      btns.querySelector('.up').onclick = function() { sendFeedback(writeId, turnId, 'up', this); };
+      btns.querySelector('.down').onclick = function() { sendFeedback(writeId, turnId, 'down', this, wrap); };
       meta.appendChild(btns);
     }
     wrap.appendChild(bubble);
@@ -513,7 +514,7 @@
   }
 
   // ── Send feedback ─────────────────────────────────────────────────────────
-  async function sendFeedback(writeId, signal, btnEl, msgWrap) {
+  async function sendFeedback(writeId, turnId, signal, btnEl, msgWrap) {
     const token = getToken();
     if (!token) return;
     // Visual: highlight clicked, dim sibling
@@ -521,13 +522,22 @@
     btns.querySelectorAll('button').forEach(b => b.classList.remove('active'));
     btnEl.classList.add('active');
 
+    // Build payload: write_id takes priority; falls back to turn_id for general feedback
+    function buildFeedbackPayload(sig, note) {
+      const p = { signal: sig };
+      if (writeId) p.write_id = writeId;
+      else if (turnId) p.turn_id = turnId;
+      if (note) p.note = note;
+      return p;
+    }
+
     if (signal === 'down' && msgWrap) {
       // Remove any existing feedback-note first (re-click)
       const existingNote = msgWrap.querySelector('.feedback-note');
       if (existingNote) existingNote.remove();
 
       // Inject inline correction textarea below the message
-      const noteId = 'fn-' + (writeId || 'unknown');
+      const noteId = 'fn-' + (writeId || turnId || 'unknown');
       const noteDiv = document.createElement('div');
       noteDiv.className = 'feedback-note';
       noteDiv.id = noteId;
@@ -541,13 +551,11 @@
         this.disabled = true;
         const token = getToken();
         const note = noteDiv.querySelector('textarea').value.trim() || undefined;
-        const payload = { write_id: writeId, signal: 'down' };
-        if (note) payload.note = note;
         try {
           await fetch('/v1/feedback', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(buildFeedbackPayload('down', note))
           });
         } catch (err) {
           console.warn('[UI] Feedback note send failed:', err.message);
@@ -562,7 +570,7 @@
       await fetch('/v1/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({ write_id: writeId, signal: signal })
+        body: JSON.stringify(buildFeedbackPayload(signal))
       });
     } catch (err) {
       console.warn('[UI] Feedback send failed:', err.message);
@@ -576,7 +584,8 @@
     if (data.assistant_text || data.response || data.content) {
       const text = data.assistant_text || data.response || data.content;
       const writeId = data.write_id ?? null;
-      addMessage('karma', text, writeId);
+      const turnId = data.canonical?.turn_id ?? null;
+      addMessage('karma', text, writeId, turnId);
       updateSidebar(data);
       setConnStatus('Connected', true);
     } else if (data.error) {

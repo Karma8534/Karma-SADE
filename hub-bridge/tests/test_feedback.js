@@ -71,3 +71,35 @@ test("unknown write_id: no write_content, DPO pair has null proposed", () => {
   assert.equal(result.dpo_pair.proposed, null);
   assert.equal(result.delete_key, null);
 });
+
+// ── processFeedback: general feedback (turn_id path, no pending write) ────────
+
+test("general up: write_content null, dpo_pair has turn_id", () => {
+  const r = processFeedback(new Map(), null, "up", undefined, "turn_abc");
+  assert.equal(r.write_content, null);
+  assert.equal(r.dpo_pair.turn_id, "turn_abc");
+  assert.equal(r.dpo_pair.write_id, null);
+  assert.equal(r.delete_key, null);
+});
+
+test("general down with note: dpo_pair captures correction", () => {
+  const r = processFeedback(new Map(), null, "down", "Better answer", "turn_abc");
+  assert.equal(r.write_content, null);
+  assert.equal(r.dpo_pair.preferred, "Better answer");
+  assert.equal(r.dpo_pair.signal, "down");
+  assert.equal(r.dpo_pair.turn_id, "turn_abc");
+});
+
+test("general up with note: write_content still null (no pending write)", () => {
+  const r = processFeedback(new Map(), null, "up", "My note", "turn_abc");
+  assert.equal(r.write_content, null);
+  assert.equal(r.dpo_pair.preferred, "My note");
+  assert.equal(r.dpo_pair.turn_id, "turn_abc");
+});
+
+test("both null: dpo_pair has null write_id and null turn_id", () => {
+  const r = processFeedback(new Map(), null, "up", undefined, null);
+  assert.equal(r.dpo_pair.write_id, null);
+  assert.equal(r.dpo_pair.turn_id, null);
+  assert.equal(r.write_content, null);
+});

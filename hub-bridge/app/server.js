@@ -1443,16 +1443,16 @@ const server = http.createServer(async (req, res) => {
       let body;
       try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
 
-      const { write_id, signal, note } = body;
-      if (!write_id || !["up", "down"].includes(signal)) {
-        return json(res, 400, { ok: false, error: "missing_fields", hint: "write_id and signal ('up'|'down') required" });
+      const { write_id, signal, note, turn_id } = body;
+      if ((!write_id && !turn_id) || !["up", "down"].includes(signal)) {
+        return json(res, 400, { ok: false, error: "missing_fields", hint: "write_id or turn_id required, plus signal ('up'|'down')" });
       }
 
       // Lazy prune: remove writes older than 30 minutes
       prunePendingWrites(pending_writes, 30 * 60 * 1000);
 
       // Process feedback -- pure logic, no I/O
-      const { write_content, dpo_pair, delete_key } = processFeedback(pending_writes, write_id, signal, note);
+      const { write_content, dpo_pair, delete_key } = processFeedback(pending_writes, write_id, signal, note, turn_id);
 
       // Execute write if approved
       if (write_content) {
@@ -1466,7 +1466,7 @@ const server = http.createServer(async (req, res) => {
           // Don't surface filesystem error to UI -- still store DPO pair
         }
       } else {
-        console.log(`[FEEDBACK] 👎 write discarded for write_id=${write_id}`);
+        console.log(`[FEEDBACK] 👎 write suppressed: write_id=${write_id ?? 'none'}, turn_id=${turn_id ?? 'none'}`);
       }
 
       // Store DPO pair in vault ledger
