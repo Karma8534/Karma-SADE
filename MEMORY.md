@@ -643,3 +643,13 @@ n## Session 72 (2026-03-10) — Watcher Fix + v10 Startn### karma-inbox-watcher 
 - Updated CLAUDE.md: 4 new pitfall entries
 - Regenerated cc-session-brief.md: current as of Session 72
 - STATUS: All documentation synchronized. v10 complete. No blockers.
+
+## Session 73 — Watcher Fix (2026-03-10)
+
+**PITFALL/FIX: KarmaInboxWatcher was dying silently**
+- Root cause: `StopIfGoingOnBatteries=true` — Task Scheduler killed it when machine went on battery
+- Secondary: wrong paths (OneDrive default vs Karma_PDFs/), restarts exhausted after 3 attempts
+- Fix: admin script rewrote task — battery flags false, 9999 restarts/2min, AtLogon+AtStartup triggers, correct Karma_PDFs/ paths
+- Emergency restart: `Scripts/start-watcher-now.ps1` (no admin)
+- Permanent fix script: `Scripts/fix-watcher-task-ADMIN.ps1` (requires admin, already applied)
+- PROOF: Done=206 (+2 during fix), Inbox=3 (was 10), queue moving post-fix
