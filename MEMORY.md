@@ -1,3 +1,19 @@
+## Session 75 — Switch Karma primary model to Claude Haiku 3.5 (2026-03-10)
+
+**Status:** IN PROGRESS — deploying
+
+### What changed
+- `hub-bridge/lib/routing.js`: added `claude-3-5-haiku-20241022` to ALLOWED_DEFAULT_MODELS + ALLOWED_DEEP_MODELS, updated defaults
+- `hub.env` on vault-neo: MODEL_DEFAULT + MODEL_DEEP = claude-3-5-haiku-20241022, pricing updated ($0.80/$4.00 per 1M)
+- lib files (feedback.js, pricing.js, library_docs.js) committed to git — were only in build context before
+
+### DPO diagnosis
+- DPO pairs ARE being written (logs confirm). Previous "0 pairs" count was outdated.
+- Thumbs render correctly when turn_id is present. Feedback flow functional.
+
+### Active task
+- Rebuilding hub-bridge with Haiku 3.5 as primary model
+
 ## Session 74 — v11 Karma Full Read Access COMPLETE (2026-03-10)
 
 **Status:** ✅ ALL 8 TASKS DONE — 7/7 end-to-end tests passed

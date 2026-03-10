@@ -1,20 +1,14 @@
 /**
  * Routing authority — single source of truth for model selection.
  *
- * Decision #2: GLM-4.7-Flash primary (~80%), gpt-4o-mini fallback (~20%).
+ * Decision #3 (2026-03-10): Claude Haiku 3.5 primary for both standard and deep mode.
+ * (Replaced Decision #2: GLM-4.7-Flash / gpt-4o-mini)
  *
  * Rules:
- *   - deep_mode=false (no x-karma-deep header): MODEL_DEFAULT (glm-4.7-flash)
- *   - deep_mode=true  (x-karma-deep: true):     MODEL_DEEP   (gpt-4o-mini)
- *   - Tool-use requests: same routing — no silent OpenAI override
- *   - GLM-4.7-Flash tool-calling is SUPPORTED (proven: A3 probe 2026-03-04)
- *
- * Also exports GlmRateLimiter — sliding-window RPM guard for Z.ai free tier.
- *   - Global across /v1/chat and /v1/ingest (Z.ai measures per API key, not per route)
- *   - /v1/chat: checkAndConsume() → immediate 429 on deny
- *   - /v1/ingest chunks: waitForSlot(ms) → block up to ceiling, then 503
- *   - Brief generation: checkAndConsume() → skip gracefully on deny
- *   - NEVER silently failover to gpt-4o-mini when GLM limit hit
+ *   - deep_mode=false (no x-karma-deep header): MODEL_DEFAULT (claude-3-5-haiku-20241022)
+ *   - deep_mode=true  (x-karma-deep: true):     MODEL_DEEP   (claude-3-5-haiku-20241022)
+ *   - Tool-use requests: same routing — routes through Anthropic SDK
+ *   - GlmRateLimiter kept for compatibility but not invoked for claude- models
  */
 
 // ── GLM Rate Limiter ─────────────────────────────────────────────────────────
@@ -96,14 +90,14 @@ export const glmLimiter = new GlmRateLimiter({
 
 // ── Model routing ────────────────────────────────────────────────────────────
 
-/** Allowed values for MODEL_DEFAULT (free tier). Fail-fast if configured otherwise. */
-export const ALLOWED_DEFAULT_MODELS = ["glm-4.7-flash"];
+/** Allowed values for MODEL_DEFAULT. */
+export const ALLOWED_DEFAULT_MODELS = ["claude-3-5-haiku-20241022", "glm-4.7-flash"];
 
-/** Allowed values for MODEL_DEEP (paid tier). Fail-fast if configured otherwise. */
-export const ALLOWED_DEEP_MODELS = ["gpt-4o-mini"];
+/** Allowed values for MODEL_DEEP. */
+export const ALLOWED_DEEP_MODELS = ["claude-3-5-haiku-20241022", "gpt-4o-mini"];
 
-const DEFAULT_MODEL_DEFAULT = "glm-4.7-flash";
-const DEFAULT_MODEL_DEEP    = "gpt-4o-mini";
+const DEFAULT_MODEL_DEFAULT = "claude-3-5-haiku-20241022";
+const DEFAULT_MODEL_DEEP    = "claude-3-5-haiku-20241022";
 
 /**
  * Validate model env vars at startup. Throws if either model is not in its allowed set.

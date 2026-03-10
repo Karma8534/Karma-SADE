@@ -1,13 +1,13 @@
-/**
- * Pricing authority — single source of truth for LLM cost estimation.
+﻿/**
+ * Pricing authority ΓÇö single source of truth for LLM cost estimation.
  *
  * Decision #2: GLM-4.7-Flash primary (free via Z.ai), gpt-4o-mini paid fallback.
  *
  * Rules:
- *   - GLM models: always $0 (Z.ai free tier, hardcoded — no env var needed)
+ *   - GLM models: always $0 (Z.ai free tier, hardcoded ΓÇö no env var needed)
  *   - gpt-4o-mini: reads PRICE_GPT_4O_MINI_INPUT/OUTPUT_PER_1M from env
  *   - Anthropic: reads PRICE_CLAUDE_INPUT/OUTPUT_PER_1M from env
- *   - Unknown model: returns 1e9 (sentinel — triggers cap enforcement defensively)
+ *   - Unknown model: returns 1e9 (sentinel ΓÇö triggers cap enforcement defensively)
  */
 
 function isGlmModel(model) {
@@ -47,7 +47,7 @@ export function validatePricingEnv(env) {
  * @returns {number}
  */
 export function pricePer1M(model, dir, env) {
-  // GLM models: Z.ai free tier — always $0
+  // GLM models: Z.ai free tier ΓÇö always $0
   if (isGlmModel(model)) return 0;
 
   // Anthropic models
@@ -64,7 +64,7 @@ export function pricePer1M(model, dir, env) {
       : Number(env.PRICE_GPT_4O_MINI_OUTPUT_PER_1M);
   }
 
-  // Unknown model — sentinel value triggers cap enforcement defensively
+  // Unknown model ΓÇö sentinel value triggers cap enforcement defensively
   return 1e9;
 }
 
