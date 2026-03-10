@@ -93,6 +93,9 @@ function loadMemoryMd() {
 const LOCAL_FILE_SERVER_URL = process.env.LOCAL_FILE_SERVER_URL || "";
 const LOCAL_FILE_TOKEN = process.env.LOCAL_FILE_TOKEN || "";
 
+const ARIA_URL = process.env.ARIA_URL || "http://100.75.109.92:7890";
+const ARIA_SERVICE_KEY = process.env.ARIA_SERVICE_KEY || "";
+
 // Auto-handoff config
 const HUB_AUTO_HANDOFF           = (process.env.HUB_AUTO_HANDOFF           || "1") === "1";
 const HUB_AUTO_HANDOFF_PRINCIPAL = process.env.HUB_AUTO_HANDOFF_PRINCIPAL  || "colby";
@@ -516,7 +519,7 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
   // Active Intents — behavioral rules matched to this request. Injected before karmaCtx.
   const intentBlock = activeIntentsText ? activeIntentsText + "\n\n" : "";
 
-  let text = identityBlock + selfKnowledge + intentBlock + base + "\n\nTools available in deep mode (x-karma-deep: true) only: graph_query(cypher), get_vault_file(alias or repo/<path> or vault/<path>), get_local_file(path), write_memory(content), fetch_url(url), get_library_docs(library). In standard GLM mode: NO tools — do not promise to run queries or fetch files.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
+  let text = identityBlock + selfKnowledge + intentBlock + base + "\n\nTools available in deep mode (x-karma-deep: true) only: graph_query(cypher), get_vault_file(alias or repo/<path> or vault/<path>), get_local_file(path), write_memory(content), fetch_url(url), get_library_docs(library), defer_intent(intent,trigger,fire_mode), get_active_intents(), aria_local_call(mode,message). In standard GLM mode: NO tools — do not promise to run queries or fetch files.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
 
   // Semantic memory — top-K ledger entries most relevant to the current question.
   // Retrieved from FAISS search service (anr-vault-search:8081).
@@ -876,7 +879,7 @@ else console.warn("[INIT] ZAI_API_KEY not set — GLM models will fall back to O
 // Karma's autonomous access to her own graph/memory requires tools.
 // GPT-4o has proven tool support. Using it for /v1/chat with tool definitions.
 // ── Phase 3: 4-Tool Surface (P2) ─────────────────────────────────────────
-// Active tools: graph_query, get_vault_file, get_local_file, write_memory, fetch_url, get_library_docs
+// Active tools: graph_query, get_vault_file, get_local_file, write_memory, fetch_url, get_library_docs, defer_intent, get_active_intents, aria_local_call
 const TOOL_DEFINITIONS = [
   {
     name: "graph_query",
@@ -977,6 +980,19 @@ const TOOL_DEFINITIONS = [
       },
     },
   },
+  {
+    name: "aria_local_call",
+    description: "Call Aria (the local K2 AI peer) directly. Use for delegation: complex reasoning tasks, memory graph queries, or peer consultation. Aria runs on the local network at K2. Only available in deep mode.",
+    input_schema: {
+      type: "object",
+      properties: {
+        mode:    { type: "string", enum: ["chat", "health", "memory_graph"], description: "chat=send a message; health=check Aria status; memory_graph=query Aria's memory graph" },
+        message: { type: "string", description: "Message to send to Aria (required for chat and memory_graph modes)" },
+        payload: { type: "object", description: "Optional extra payload fields passed through to Aria's API" },
+      },
+      required: ["mode"],
+    },
+  },
 ];
 
 // Map of whitelisted file aliases to actual paths
@@ -1042,6 +1058,43 @@ async function executeToolCall(toolName, toolInput, writeId = null) {
       const pending = [...pending_intents.values()].map(i => ({ ...i, _pending: true }));
       console.log(`[TOOL-API] get_active_intents: ${intents.length} active, ${pending.length} pending`);
       return { active: intents, pending, total_active: intents.length, total_pending: pending.length };
+    }
+
+    // aria_local_call -- call Aria (K2 AI peer) on local network
+    if (toolName === "aria_local_call") {
+      if (!ARIA_SERVICE_KEY) return { error: "not_configured", message: "ARIA_SERVICE_KEY not set in hub.env" };
+      const mode = (toolInput.mode || "chat").trim();
+      const message = (toolInput.message || "").trim();
+      const payload = toolInput.payload || {};
+
+      let endpoint;
+      if (mode === "health")        endpoint = `${ARIA_URL}/api/health`;
+      else if (mode === "memory_graph") endpoint = `${ARIA_URL}/api/memory_graph`;
+      else                           endpoint = `${ARIA_URL}/api/chat`;
+
+      const body = { message, ...payload };
+      try {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Aria-Service-Key": ARIA_SERVICE_KEY,
+            "X-Aria-Delegated": "karma",
+          },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(30000),
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok) {
+          console.warn(`[TOOL-API] aria_local_call mode=${mode} → ${res.status}`);
+          return { error: "aria_error", status: res.status, response: data };
+        }
+        console.log(`[TOOL-API] aria_local_call mode=${mode} → ok`);
+        return { ok: true, mode, response: data };
+      } catch (e) {
+        console.warn(`[TOOL-API] aria_local_call failed: ${e.message}`);
+        return { error: "network_error", message: e.message, endpoint };
+      }
     }
 
     // write_memory -- propose a MEMORY.md append, gated by /v1/feedback
