@@ -1721,9 +1721,9 @@ const server = http.createServer(async (req, res) => {
       let body;
       try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
 
-      const { write_id, signal, note, turn_id } = body;
-      if ((!write_id && !turn_id) || !["up", "down"].includes(signal)) {
-        return json(res, 400, { ok: false, error: "missing_fields", hint: "write_id or turn_id required, plus signal ('up'|'down')" });
+      const { write_id, intent_id, signal, note, turn_id } = body;
+      if ((!write_id && !turn_id && !intent_id) || !["up", "down"].includes(signal)) {
+        return json(res, 400, { ok: false, error: "missing_fields", hint: "write_id, intent_id, or turn_id required, plus signal ('up'|'down')" });
       }
 
       // Lazy prune: remove writes older than 30 minutes
@@ -1766,6 +1766,41 @@ const server = http.createServer(async (req, res) => {
 
       // Cleanup
       if (delete_key) pending_writes.delete(delete_key);
+
+      // Intent approval/rejection -- independent of write_memory flow
+      if (intent_id) {
+        const intentEntry = pending_intents.get(intent_id);
+        if (!intentEntry) {
+          return json(res, 404, { ok: false, error: "intent_not_found", hint: `No pending intent with intent_id=${intent_id}` });
+        }
+
+        if (signal === "up") {
+          const approvedIntent = { ...intentEntry, status: "active", approved: true, approved_at: new Date().toISOString() };
+          delete approvedIntent.ts;
+          try {
+            const record = buildVaultRecord({
+              type: "log",
+              content: approvedIntent,
+              tags: ["deferred-intent"],
+              source: "intent-approval",
+              confidence: 1.0,
+            });
+            const vResult = await vaultPost("/v1/memory", VAULT_BEARER, record);
+            if (vResult.status >= 300) throw new Error(`vault ${vResult.status}: ${vResult.text.slice(0, 120)}`);
+            _activeIntentsMap.set(intent_id, approvedIntent);
+            _activeIntentsCacheTs = Date.now();
+            console.log(`[FEEDBACK] 👍 intent approved: intent_id=${intent_id}, intent="${intentEntry.intent.slice(0, 60)}"`);
+          } catch (e) {
+            console.error(`[FEEDBACK] Intent vault write failed: ${e.message}`);
+            return json(res, 500, { ok: false, error: "vault_write_failed", message: e.message });
+          }
+        } else {
+          console.log(`[FEEDBACK] 👎 intent rejected: intent_id=${intent_id}`);
+        }
+
+        pending_intents.delete(intent_id);
+        return json(res, 200, { ok: true, signal, intent_id, approved: signal === "up" });
+      }
 
       return json(res, 200, { ok: true, signal, wrote: !!write_content });
     }
