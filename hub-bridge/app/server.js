@@ -156,6 +156,16 @@ const rlBuckets = new Map();
 // Pending memory writes -- keyed by write_id, awaiting /v1/feedback approval
 const pending_writes = new Map();
 
+// Pending intent proposals -- keyed by intent_id, awaiting /v1/feedback approval
+const pending_intents = new Map();
+
+// Approved active intents -- loaded from vault ledger at startup, updated on approval
+// intent_id → intent object (status:"active")
+const _activeIntentsMap = new Map();
+
+// Tracks once_per_conversation intents that have already fired this server session
+const _firedThisSession = new Set();
+
 setInterval(() => {
   const now = Date.now();
   for (const [k, v] of rlBuckets) {
@@ -164,6 +174,10 @@ setInterval(() => {
   // Expire pending writes older than 30 minutes
   for (const [k, v] of pending_writes) {
     if (now - v.ts > 30 * 60 * 1000) pending_writes.delete(k);
+  }
+  // Expire pending intent proposals older than 30 minutes
+  for (const [k, v] of pending_intents) {
+    if (now - v.ts > 30 * 60 * 1000) pending_intents.delete(k);
   }
 }, 5 * 60 * 1000).unref();
 
@@ -382,6 +396,63 @@ async function fetchKarmaContext(userMessage) {
     clearTimeout(timer);
     return null;
   }
+}
+
+/**
+ * Load active intents from vault ledger JSONL file.
+ * Scans for deferred-intent tagged entries; uses latest status per intent_id (last wins).
+ * Returns Map: intent_id → intent object.
+ */
+function loadActiveIntentsFromLedger() {
+  const LEDGER_PATH = "/karma/ledger/memory.jsonl";
+  const latestByIntentId = new Map();
+
+  let lines;
+  try {
+    lines = fs.readFileSync(LEDGER_PATH, "utf8").split("\n").filter(Boolean);
+  } catch (e) {
+    console.warn("[INTENT] Cannot read ledger for intent load:", e.message);
+    return new Map();
+  }
+
+  for (const line of lines) {
+    try {
+      const entry = JSON.parse(line);
+      if (!Array.isArray(entry.tags) || !entry.tags.includes("deferred-intent")) continue;
+      const intent = entry.content;
+      if (!intent || !intent.intent_id) continue;
+      latestByIntentId.set(intent.intent_id, intent);
+    } catch { /* skip malformed */ }
+  }
+
+  const active = new Map();
+  for (const [id, intent] of latestByIntentId) {
+    if (intent.status === "active") active.set(id, intent);
+  }
+  console.log(`[INTENT] Loaded ${active.size} active intents from ledger`);
+  return active;
+}
+
+let _activeIntentsCacheTs = 0;
+const ACTIVE_INTENTS_CACHE_MS = 5 * 60 * 1000; // 5 minutes
+
+function refreshActiveIntentsCache() {
+  const now = Date.now();
+  if (now - _activeIntentsCacheTs < ACTIVE_INTENTS_CACHE_MS) return; // not stale
+  const loaded = loadActiveIntentsFromLedger();
+  for (const [id, intent] of loaded) {
+    _activeIntentsMap.set(id, intent);
+  }
+  _activeIntentsCacheTs = now;
+}
+
+// Populate on startup
+try {
+  const initial = loadActiveIntentsFromLedger();
+  for (const [id, intent] of initial) _activeIntentsMap.set(id, intent);
+  _activeIntentsCacheTs = Date.now();
+} catch (e) {
+  console.warn("[INTENT] Startup intent load failed:", e.message);
 }
 
 /**
