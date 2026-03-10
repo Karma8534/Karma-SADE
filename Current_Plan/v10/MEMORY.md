@@ -1,3 +1,7 @@
+## Session 71 continued (2026-03-10) — v10 snapshot created
+
+**v10 snapshot (COMPLETE + cross-validated):** Created `Current_Plan/v10/` with 10 files. Cross-validated against Karma's own PDF analysis — added 6 missed primitives: Path-Based Rules, Multi-Agent Brainstorm, Hooks>LLMs for deterministic tasks (CCintoanOS); Plans as Files, YOLO Mode security honesty, MCP CLI-progressive (PiMonoCoder). direction.md now has 16 total primitives. v10 priority order: universal thumbs → Entity Relationships fix → confidence levels + anti-hallucination → Context7 MCP → hooks>LLMs for correction capture.
+
 ## Session 71 (2026-03-10) — Universal thumbs + Recurring Topics coaching fix
 
 **Thumbs (COMPLETE):** Extended `/v1/feedback` + `processFeedback()` + `unified.html` to show thumbs on ALL Karma messages via `turn_id` fallback. 11/11 tests pass. Deployed.
@@ -590,3 +594,53 @@ Task 8 complete: write_memory coaching paragraph appended to "## How to Use Your
 Completed: batch_ingest --skip-dedup PITFALL added to CLAUDE.md + architecture.md. STATE.md, problems-log.md, session-handoff (Session 71), session-summary updated. cc-session-brief.md regenerated. Secret scan clean.
 
 Next: Session 71 — thumbs up/down general feedback UI for Karma chat.
+n## Session 72 (2026-03-10) — Watcher Fix + v10 Startn### karma-inbox-watcher persistent startup fixn- Fix: added Step 4 to karma_startup.ps1 — watcher now launches via existing logon orchestratorn- Watcher runs at every logon; running now (PID 235260)
+
+### Session 72 fix: MEMORY.md spine injection (2026-03-10)
+- BUG: MEMORY.md never appeared in Karma's standard context -- she was blind to her own memory spine
+- ROOT CAUSE: buildSystemText had no memoryMd param; MEMORY.md only accessible via get_vault_file in deep mode
+- FIX: _memoryMdCache (tail 3000 chars), loadMemoryMd() on startup + 5min refresh, injected as KARMA MEMORY SPINE section
+- PROOF: 17/17 tests GREEN (11 feedback + 6 system_text); deployed to vault-neo
+- STATUS: Karma now has v10 context on every request without needing deep mode
+\
+
+### Session 72: Entity Relationships data quality fix (2026-03-10)
+- BUG: query_relevant_relationships() used RELATES_TO â€” 1,423 edges permanently frozen at 2026-03-04 (Chrome ext era)
+- ROOT CAUSE: --skip-dedup mode never creates RELATES_TO edges; Graphiti dedup (disabled Session 59) was the only creator
+- FIX: MENTIONS co-occurrence query â€” Episodic->Entity cross-join, cocount >= 2, ORDER BY cocount DESC LIMIT 20
+- LIVE: Karma/Colby=123, Karma/User=100, User/Universal AI Memory=44 â€” current, growing data
+- PROOF: 11/11 tests GREEN (2 new TDD); RestartCount=0; live query confirmed in deployed container
+- STATUS: v10 blocker #2 COMPLETE
+
+### Session 72: Confidence levels + anti-hallucination gate (2026-03-10)
+- FEATURE: [HIGH]/[MEDIUM]/[LOW] tags mandatory on technical claims in system prompt
+- FEATURE: Anti-hallucination hard stop â€” before asserting unverified API/function behavior, Karma must stop and offer to verify first
+- Covers v10 priority #3 (confidence levels) AND #4 (anti-hallucination pre-check) in one section
+- PROOF: [LOW] on unverified redis-py signature + verification suggestion; [HIGH] on known system facts
+- KARMA_IDENTITY_PROMPT: 12524 â†’ 14601 chars; docker restart only (no rebuild needed)
+- STATUS: v10 priorities #3 + #4 COMPLETE
+
+### Session 72: get_library_docs tool (v10 priority #5) (2026-03-10)
+- FEATURE: get_library_docs(library) deep-mode tool — URL map lookup + fetch_url reuse pattern
+- Libraries: redis-py, falkordb, falkordb-py, fastapi (covers Karma's actual [LOW] claim libraries)
+- DECISION: Context7 rejected (external dependency not needed); DIY with existing fetch_url logic
+- Files: hub-bridge/lib/library_docs.js (new), hub-bridge/app/server.js (import + TOOL_DEFINITIONS + handler)
+- TDD: 7/7 tests GREEN (test_library_docs.js); 24/24 full suite GREEN
+- STATUS: v10 priority #5 COMPLETE
+
+### Session 72: System prompt updated for get_library_docs (2026-03-10)
+- Added get_library_docs to tool list (line 26), CANNOT Do exception, deep-mode coaching, anti-hallucination gate
+- Karma now knows when/how to call get_library_docs before [LOW] library API claims
+
+### Session 72: Wrap-up documentation (2026-03-10)
+- Updated direction.md: v10 COMPLETE (was v9 IN PROGRESS)
+- Updated Memory/08-session-handoff.md: Session 72 system state + new pitfalls
+- Updated Memory/11-session-summary-latest.md: full Session 72 summary
+- Updated Memory/02-stable-decisions.md: Decisions #22–#27 promoted
+- Updated Memory/04-session-learnings.md: 5 patterns captured
+- Updated Memory/corrections-log.md: 2 corrections documented
+- Updated Memory/problems-log.md: 3 problems logged
+- Updated .claude/rules/architecture.md: v10 features documented
+- Updated CLAUDE.md: 4 new pitfall entries
+- Regenerated cc-session-brief.md: current as of Session 72
+- STATUS: All documentation synchronized. v10 complete. No blockers.
