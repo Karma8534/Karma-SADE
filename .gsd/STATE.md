@@ -50,6 +50,7 @@
 | **TOOL_NAME_MAP** | ✅ FIXED | Pre-existing bug: was mapping read_file→file_read (wrong names). Now empty dict = identity passthrough. Session-66. |
 | **K2_PASSWORD secret** | ✅ SECURED | Removed plaintext from docker-compose.karma.yml → ${K2_PASSWORD} env var. Value in hub.env. Session-66. |
 | **Main branch protection** | ✅ ENABLED | allow_force_pushes=false, allow_deletions=false. Session-66. |
+| **Deferred Intent Engine (Phase 4)** | ✅ LIVE | defer_intent tool, get_active_intents tool, /v1/feedback intent approval, active intent injection in buildSystemText |
 
 ---
 

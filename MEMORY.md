@@ -1,3 +1,17 @@
+## Phase 4 Task 9 — Deferred Intent Engine deployed to vault-neo (2026-03-10)
+
+**Status:** ✅ LIVE — Full acceptance test passed. hub-bridge v2.11.0.
+
+### Deployment result
+- `deferred_intent.js` + `server.js` synced to build context, `--no-cache` rebuild succeeded
+- Startup: `[INTENT] Loaded 0 active intents from ledger` (correct — fresh deploy)
+- Acceptance test 1 (propose): `intent_id: int_1773184629042_2hjg5g`, `ok: true`
+- Acceptance test 2 (approve): `{"ok":true,"signal":"up","intent_id":"...","approved":true}`
+- Acceptance test 3 (trigger): redis-py question surfaced intent; Karma showed verification behavior with [LOW] confidence signal
+- STATE.md updated: Deferred Intent Engine row added
+
+---
+
 ## Phase 4 Task 5 — defer_intent tool added (2026-03-10)
 
 **Status:** ✅ COMPLETE — `defer_intent` tool added to TOOL_DEFINITIONS and executeToolCall handler in hub-bridge/app/server.js. Syntax clean (node --check). Pending commit.
