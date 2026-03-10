@@ -1,3 +1,12 @@
+## Session 73 — v11 Task 6: system prompt tool docs completed (2026-03-10)
+
+**What changed:** Memory/00-karma-system-prompt-live.md — complete tool documentation for v11 access patterns
+- get_vault_file: added repo/<path> and vault/<path> prefix documentation + path traversal blocked note + cc-brief alias
+- get_local_file: added concrete path examples + promoted out of trailing exception clause
+- Deep mode tool list (line 26): added get_local_file to the tool list (was missing)
+- Blocking instruction rewritten: "use get_local_file" is now the primary instruction for Karma_SADE reads; "I can't do that" only for shell/browser/arbitrary paths
+- No code changes, no rebuild needed — docker restart anr-hub-bridge sufficient
+
 ## Session 73 — v11 Task 5: get_local_file tool added (2026-03-10)
 
 **What changed:** hub-bridge/app/server.js — added `get_local_file` tool
