@@ -603,3 +603,11 @@ n## Session 72 (2026-03-10) — Watcher Fix + v10 Startn### karma-inbox-watcher 
 - PROOF: 17/17 tests GREEN (11 feedback + 6 system_text); deployed to vault-neo
 - STATUS: Karma now has v10 context on every request without needing deep mode
 \
+
+### Session 72: Entity Relationships data quality fix (2026-03-10)
+- BUG: query_relevant_relationships() used RELATES_TO â€” 1,423 edges permanently frozen at 2026-03-04 (Chrome ext era)
+- ROOT CAUSE: --skip-dedup mode never creates RELATES_TO edges; Graphiti dedup (disabled Session 59) was the only creator
+- FIX: MENTIONS co-occurrence query â€” Episodic->Entity cross-join, cocount >= 2, ORDER BY cocount DESC LIMIT 20
+- LIVE: Karma/Colby=123, Karma/User=100, User/Universal AI Memory=44 â€” current, growing data
+- PROOF: 11/11 tests GREEN (2 new TDD); RestartCount=0; live query confirmed in deployed container
+- STATUS: v10 blocker #2 COMPLETE
