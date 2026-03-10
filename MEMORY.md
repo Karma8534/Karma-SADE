@@ -1,3 +1,10 @@
+## Session 73 (2026-03-10) — v11 Task 1: vault volume mount
+
+**Active task:** v11 Full Read Access — Task 1 COMPLETE
+- Added `/opt/seed-vault:/karma/vault:ro` volume mount to `hub-bridge/compose.hub.yml`
+- Positioned between `/karma/repo:ro` and `/karma/ledger:rw` as required
+- Committed to main, syncing to vault-neo build context
+
 ## Session 71 continued (2026-03-10) — v10 snapshot created
 
 **v10 snapshot (COMPLETE + cross-validated):** Created `Current_Plan/v10/` with 10 files. Cross-validated against Karma's own PDF analysis — added 6 missed primitives: Path-Based Rules, Multi-Agent Brainstorm, Hooks>LLMs for deterministic tasks (CCintoanOS); Plans as Files, YOLO Mode security honesty, MCP CLI-progressive (PiMonoCoder). direction.md now has 16 total primitives. v10 priority order: universal thumbs → Entity Relationships fix → confidence levels + anti-hallucination → Context7 MCP → hooks>LLMs for correction capture.
