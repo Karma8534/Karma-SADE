@@ -1,11 +1,12 @@
-## Session 71 (2026-03-10) — Universal thumbs up/down on all Karma messages
+## Session 71 (2026-03-10) — Universal thumbs + Recurring Topics coaching fix
 
-**Active task:** COMPLETE
-1. Extended `processFeedback()` in `hub-bridge/lib/feedback.js`: added `turn_id` param (5th) + `turn_id` field in dpo_pair. `write_content` now gated on `entry !== null` (no write for general feedback even with note).
-2. Extended `/v1/feedback` in `server.js`: accepts `turn_id` as alternative to `write_id`; validation now `(!write_id && !turn_id)`.
-3. `unified.html`: thumbs shown on ALL Karma messages (gate: `writeId || turnId`); `buildFeedbackPayload()` routes to write_id (priority) or turn_id; both POST paths updated.
-4. 11/11 tests pass (4 new TDD tests for general feedback path, red-first verified).
-5. **NEXT**: deploy to vault-neo + smoke test.
+**Thumbs (COMPLETE):** Extended `/v1/feedback` + `processFeedback()` + `unified.html` to show thumbs on ALL Karma messages via `turn_id` fallback. 11/11 tests pass. Deployed.
+
+**Persona coaching (IN PROGRESS):**
+- Diagnosed: Recurring Topics coaching was abstract ("invisibly raise your floor") — no trigger, no behavior
+- Fixed: Rewrote `Memory/00-karma-system-prompt-live.md` Recurring Topics section with concrete trigger→action pattern (matches Recently Learned style)
+- Entity Relationships: data is stale (all Chrome extension edges) — separate investigation needed
+- **NEXT**: verify Karma behavior change on recurring topic test
 
 ## Session 70 (2026-03-09) — FalkorDB catchup + cron fix + resurrection spine ban
 
