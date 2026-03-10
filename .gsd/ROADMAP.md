@@ -1,7 +1,7 @@
 # ROADMAP: Karma Peer — Phases & Milestones
 
 **Last updated:** 2026-03-10
-**Current phase:** v10 IN PROGRESS — Priorities #1–#4 COMPLETE; #5 (get_library_docs) next
+**Current phase:** v10 COMPLETE — All 5 priorities shipped (Session 72)
 **Previous phase:** v9 COMPLETE — all phases done Sessions 64–70
 
 ---
@@ -147,7 +147,7 @@
 - [x] New section "How to Use Your Context Data": Entity Relationships, Recurring Topics, deep-mode proactivity
 - [x] KARMA_IDENTITY_PROMPT: 10,415 → 11,850 chars
 - [x] Deployed: git pull + docker restart anr-hub-bridge (no rebuild needed)
-- [ ] Acceptance test PENDING: Ask Karma about a Recurring Topic; verify she references relationship data unprompted
+- [x] Acceptance test PASSED (Session 68): Karma referenced entity relationship data unprompted — "That's what I see in my graph"
 
 ### Phase 3b: Deep-Mode Security Gate ✅ (Session 67)
 - [x] Bug: callLLMWithTools called unconditionally for all GLM requests — standard chat got tools
@@ -182,10 +182,9 @@
 
 ## Milestone 6: Self-Improvement Loop (FUTURE)
 
-### Phase 1: DPO Data Collection ⏳
-- [ ] 0/20 preference pairs collected
-- [ ] Mechanism not yet in place
-- [ ] Needs explicit Colby approval on pair collection approach
+### Phase 1: DPO Data Collection ⏳ UNBLOCKED (mechanism live Session 68)
+- [x] Mechanism live: /v1/feedback + processFeedback + DPO vault write (type:"log", tags:["dpo-pair"])
+- [ ] ~0/20 preference pairs collected — accumulation time-gated (requires regular deep-mode Karma usage)
 
 ### Phase 2: Fine-Tuning ⏳ BLOCKED
 - [ ] Blocked on Phase 1 (data first)
@@ -218,8 +217,9 @@
 | v9 | Promise Loop Fix + GLM Tool-Calling | ✅ DONE (Session 66) |
 | v9 | Deep-Mode Security Gate | ✅ DONE (Session 67) |
 | v9 | Full Persona Iteration (behavioral coaching on graph data) | ✅ DONE (Session 67) |
-| v9 | Write Agency + Feedback Mechanism | ⏳ NEXT (design approved) |
-| v9 | MENTIONS verification | ⏳ PENDING |
+| v9 | Write Agency + Feedback Mechanism | ✅ DONE (Session 68) |
+| v9 | MENTIONS verification | ✅ DONE (Session 69) |
+| v10 | Universal Thumbs + MENTIONS fix + Confidence + Anti-hallucination + get_library_docs | ✅ DONE (Session 72) |
 | GSD Workflow | Manual | ✅ ADOPTED |
 | Self-Improvement | DPO collection (mechanism live) | ⏳ ACCUMULATING (0/20 pairs) |
 | Self-Improvement | Fine-tuning | ⏳ BLOCKED on 20+ DPO pairs |
@@ -251,12 +251,11 @@ K2 (192.168.0.226) not intended as active worker. Consciousness loop runs on dro
 - **graph_query 100-row cap**: Returns max 100 rows. Dense graphs may miss edges. Acceptable for now.
 - **get_vault_file 20KB cap**: Large files truncated at 20,000 chars. Acceptable for current vault files.
 - **hooks.py legacy aliases**: file_read, shell_exec remain in ALLOWED_TOOLS (pre-existing, unused, harmless). Could be cleaned up in future.
-- **Persona coaching acceptance test pending**: v9 Phase 3 deployed (Session 67). Acceptance test not yet run: ask Karma about Recurring Topic, verify relationship data referenced unprompted.
-- **karma-verify smoke test wrong key**: Skill checks for "reply" but hub-bridge returns "assistant_text". False "FAILED" on healthy service. Needs skill update.
+- **Persona coaching acceptance test**: PASSED Session 68 — Karma referenced entity relationship data unprompted.
 
 ---
 
-**Last updated:** 2026-03-05 (Session 69 — Phase 5 verified, fetch_url live, stale tools removed)
+**Last updated:** 2026-03-10 (Session 73 — v10 complete, all stale items resolved)
 **Next review:** Session 68 (Phase 4 implementation kickoff)
 **Owner:** Claude Code (updates on Colby approval)
 
@@ -288,11 +287,12 @@ K2 (192.168.0.226) not intended as active worker. Consciousness loop runs on dro
 - [x] Deep mode phrasing: "[LOW] I haven't verified this. Should I fetch_url or graph_query to confirm first?"
 - [x] Combined with Priority #3 in single system prompt section (12,524→14,601 chars)
 
-### Priority #5: get_library_docs (DIY — no Context7) ⏳ NEXT
-- [ ] Decision #25: Context7 rejected — external dependency, not needed when fetch_url + URL map suffices
-- [ ] Implement get_library_docs(library) as hub-bridge deep-mode tool
-- [ ] URL map: redis-py, falkordb, falkordb-py, fastapi (target Karma's actual [LOW] hit libraries)
-- [ ] Estimated: ~30min (reuse existing fetch_url handler logic)
+### Priority #5: get_library_docs (DIY — no Context7) ✅ COMPLETE (Session 72)
+- [x] Decision #25: Context7 rejected — DIY with existing fetch_url logic (no external dependency)
+- [x] hub-bridge/lib/library_docs.js — LIBRARY_URLS map + resolveLibraryUrl()
+- [x] Libraries: redis-py, falkordb, falkordb-py, fastapi
+- [x] 7/7 TDD tests GREEN; system prompt coaching added (commits cbe7c0f, 16cb19d)
+- [x] Deployed to vault-neo; 5 references confirmed in server.js
 
 ### v10 Context Blindness Fix (Root Bug) ✅ COMPLETE (Session 72)
 - [x] ROOT CAUSE: buildSystemText() had no MEMORY.md parameter — Karma never saw MEMORY.md

@@ -168,17 +168,16 @@ Three bugs fixed in unified.html (feedback buttons, stale token, double-submit g
 
 ---
 
-## Next Session Starts Here
+## Session 73 Start
 
-1. **Run `/resurrect`** — standard session start
-2. **Fix karma-verify skill** — update `C:\Users\raest\.claude\skills\karma-verify\SKILL.md` to check `assistant_text` instead of `reply` in smoke test (OPEN from Session 66/68)
-3. **Verify DPO accumulation** — after a few days of Karma conversations in deep mode, run: `ssh vault-neo "grep 'dpo-pair' /opt/seed-vault/memory_v1/ledger/memory.jsonl | wc -l"` — should be growing
-4. **v9 Phase 5** — MENTIONS edge growth verification: `ssh vault-neo "docker exec anr-karma-server curl -s localhost:8000/v1/cypher -d '{\"query\":\"MATCH (e:Episode)-[:MENTIONS]->(n) RETURN count(*) as edge_count\"}'"` — if growing, healthy
+**State:** v10 COMPLETE. No active task. No blockers.
 
-**Blocker if any:** None. All systems green. karma-verify skill fix is cosmetic (OPEN, not blocking).
+**FalkorDB (verified 2026-03-10):** 3305 Episodic + 571 Entity + 1 Decision = 3877 nodes. Batch cron healthy (305 eps/s, 0 errors). MENTIONS co-occurrence live.
+
+**DPO accumulation:** Mechanism live (Session 68). ~0/20 pairs. Grows with regular deep-mode Karma usage.
 
 # currentDate
-Today's date is 2026-03-05.
+Today's date is 2026-03-10.
 
 ---
 
@@ -559,7 +558,7 @@ Karma can recall (FAISS) but cannot reason across sessions (no Entity/relationsh
 - **hub-bridge build context ≠ git repo**: build uses `/opt/seed-vault/memory_v1/hub_bridge/app/`, NOT `/home/neo/karma-sade/hub-bridge/app/`. After any git pull, sync first: `cp /home/neo/karma-sade/hub-bridge/app/server.js /opt/seed-vault/memory_v1/hub_bridge/app/server.js`
 
 # currentDate
-Today's date is 2026-03-05.
+Today's date is 2026-03-10.
 
 ## Session 62 Task 2 — Graphiti Watermark Wired into run() (2026-03-04T22:23:29Z)
 

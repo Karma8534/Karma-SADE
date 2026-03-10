@@ -13,7 +13,7 @@
 | **Consciousness Loop** | ✅ WORKING | 60s OBSERVE-only cycles. Zero LLM calls confirmed in source. RestartCount=0. |
 | **Hub Bridge API** | ✅ WORKING | /v1/chat, /v1/ambient, /v1/context, /v1/cypher, /v1/ingest operational. |
 | **Voice & Persona** | ✅ DEPLOYED | Peer-level voice verified. gpt-4o-mini confirmed (MODEL_DEEP verified 2026-03-04). |
-| **FalkorDB Graph** | ✅ FULLY CAUGHT UP | 3621 nodes (3049 Episodic + 571 Entity + 1 Decision). batch_ingest cron every 6h. |
+| **FalkorDB Graph** | ✅ FULLY CAUGHT UP | 3877 nodes (3305 Episodic + 571 Entity + 1 Decision). batch_ingest cron every 6h. Last run: 305 eps/s, 0 errors. |
 | **Ledger** | ✅ GROWING | 4000+ entries. Git commits + session-end hooks capturing actively. |
 | **Work-Loss Prevention** | ✅ GATES LIVE | Pre-commit hook + session-end hook both active and verified. |
 | **Ambient Tier 1 Hooks** | ✅ WORKING | Git + session-end captures verified in ledger. |

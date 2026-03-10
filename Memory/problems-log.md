@@ -176,7 +176,7 @@ Also removed stale DIAGNOSTIC log that was left in from Session 66 debugging.
 
 **Residual risk:** karma-verify skill will continue to false-alarm on every smoke test until the skill is updated. Action: update `C:\Users\raest\.claude\skills\karma-verify\SKILL.md` to check `assistant_text` instead of `reply`.
 
-**Status:** OPEN — skill not yet updated
+**Status:** RESOLVED — skill was updated (uses `assistant_text` check confirmed 2026-03-10)
 
 ---
 
