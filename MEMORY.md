@@ -595,3 +595,10 @@ Completed: batch_ingest --skip-dedup PITFALL added to CLAUDE.md + architecture.m
 
 Next: Session 71 — thumbs up/down general feedback UI for Karma chat.
 n## Session 72 (2026-03-10) — Watcher Fix + v10 Startn### karma-inbox-watcher persistent startup fixn- Fix: added Step 4 to karma_startup.ps1 — watcher now launches via existing logon orchestratorn- Watcher runs at every logon; running now (PID 235260)
+
+### Session 72 fix: MEMORY.md spine injection (2026-03-10)
+- BUG: MEMORY.md never appeared in Karma's standard context -- she was blind to her own memory spine
+- ROOT CAUSE: buildSystemText had no memoryMd param; MEMORY.md only accessible via get_vault_file in deep mode
+- FIX: _memoryMdCache (tail 3000 chars), loadMemoryMd() on startup + 5min refresh, injected as KARMA MEMORY SPINE section
+- PROOF: 17/17 tests GREEN (11 feedback + 6 system_text); deployed to vault-neo
+- STATUS: Karma now has v10 context on every request without needing deep mode

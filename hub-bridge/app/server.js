@@ -73,6 +73,20 @@ function loadSessionBrief() {
   } catch (_) {}
 }
 
+// MEMORY.md cache — tail of Karma's memory spine, injected into every request.
+// Tail (most recent) = most relevant. Refreshed every 5min same as session brief.
+const MEMORY_MD_PATH = "/karma/MEMORY.md";
+const MEMORY_MD_TAIL_CHARS = 3000;
+let _memoryMdCache = "";
+function loadMemoryMd() {
+  try {
+    const t = fs.readFileSync(MEMORY_MD_PATH, "utf8");
+    if (t && t.length > 50) {
+      _memoryMdCache = t.length > MEMORY_MD_TAIL_CHARS ? t.slice(-MEMORY_MD_TAIL_CHARS) : t.trim();
+    }
+  } catch (_) {}
+}
+
 // Auto-handoff config
 const HUB_AUTO_HANDOFF           = (process.env.HUB_AUTO_HANDOFF           || "1") === "1";
 const HUB_AUTO_HANDOFF_PRINCIPAL = process.env.HUB_AUTO_HANDOFF_PRINCIPAL  || "colby";
@@ -402,7 +416,7 @@ async function fetchSemanticContext(userMessage, topK = FAISS_SEARCH_K) {
  * Build Karma's system prompt from FalkorDB context.
  * Extracted so both /v1/chat and /v1/ingest can reuse it.
  */
-function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticCtx = null) {
+function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticCtx = null, memoryMd = null) {
   // Identity block — loaded from file at startup. Describes Karma's actual architecture,
   // capability boundaries, data model corrections, and API surface.
   // File is volume-mounted; future updates: git pull + container restart (no rebuild needed).
@@ -454,6 +468,12 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
 --- CURRENT SESSION CONTEXT ---
 ` + _sessionBriefCache + `
 ---`;
+  }
+
+  // Memory spine — tail of MEMORY.md (most recent session summaries + decisions).
+  // Always injected so Karma has her memory in standard mode without needing deep-mode tools.
+  if (memoryMd) {
+    text += `\n\n--- KARMA MEMORY SPINE (recent) ---\n${memoryMd}\n---`;
   }
 
   return text;
@@ -1248,7 +1268,7 @@ const server = http.createServer(async (req, res) => {
         debug_search = webSearchResults ? "hit" : "miss";
       }
 
-      const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults, semanticCtx);
+      const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults, semanticCtx, _memoryMdCache || null);
 
       const extractedFacts = extractExplicitFacts(userMessage);
       let factWriteResults = [];
@@ -2073,6 +2093,8 @@ console.log(`[INIT] GLM rate limiter: ${glmLimiter._rpm} RPM, ingest slot timeou
 
 loadSessionBrief();
 setInterval(loadSessionBrief, 5 * 60 * 1000);
+loadMemoryMd();
+setInterval(loadMemoryMd, 5 * 60 * 1000);
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`hub-bridge v2.11.0 listening on :${PORT}`);
 });
