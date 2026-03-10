@@ -1,3 +1,15 @@
+## Session 73 — v11 Task 5: get_local_file tool added (2026-03-10)
+
+**What changed:** hub-bridge/app/server.js — added `get_local_file` tool
+- New env vars: `LOCAL_FILE_SERVER_URL`, `LOCAL_FILE_TOKEN` read at startup
+- New TOOL_DEFINITION for `get_local_file` (after get_vault_file in array)
+- New handler in executeToolCall: calls Payback file server at LOCAL_FILE_SERVER_URL via Bearer auth
+- Handler guards: empty path, missing config, HTTP errors, fetch errors, 10s timeout
+- buildSystemText tool list updated to include get_local_file(path)
+- Active tools comment updated (line ~796)
+- File server URL: http://100.124.194.102:7771 (Tailscale IP for Payback)
+- hub.env on vault-neo: LOCAL_FILE_SERVER_URL + LOCAL_FILE_TOKEN appended
+
 ## Session 73 — Code quality fix: get_vault_file handler (2026-03-10)
 
 **What changed:** hub-bridge/app/server.js — get_vault_file import cleanup

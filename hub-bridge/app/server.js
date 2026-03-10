@@ -88,6 +88,10 @@ function loadMemoryMd() {
   } catch (_) {}
 }
 
+// Local file server — Payback (Colby's machine) via Tailscale
+const LOCAL_FILE_SERVER_URL = process.env.LOCAL_FILE_SERVER_URL || "";
+const LOCAL_FILE_TOKEN = process.env.LOCAL_FILE_TOKEN || "";
+
 // Auto-handoff config
 const HUB_AUTO_HANDOFF           = (process.env.HUB_AUTO_HANDOFF           || "1") === "1";
 const HUB_AUTO_HANDOFF_PRINCIPAL = process.env.HUB_AUTO_HANDOFF_PRINCIPAL  || "colby";
@@ -433,7 +437,7 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
   const selfModel = process.env.MODEL_DEFAULT || "claude-sonnet-4-6";
   const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/30min, web_search=auto_on_intent]\n\n`;
 
-  let text = identityBlock + selfKnowledge + base + "\n\nTools available in deep mode (x-karma-deep: true) only: graph_query(cypher), get_vault_file(alias or repo/<path> or vault/<path>), write_memory(content), fetch_url(url), get_library_docs(library). In standard GLM mode: NO tools — do not promise to run queries or fetch files.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
+  let text = identityBlock + selfKnowledge + base + "\n\nTools available in deep mode (x-karma-deep: true) only: graph_query(cypher), get_vault_file(alias or repo/<path> or vault/<path>), get_local_file(path), write_memory(content), fetch_url(url), get_library_docs(library). In standard GLM mode: NO tools — do not promise to run queries or fetch files.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
 
   // Semantic memory — top-K ledger entries most relevant to the current question.
   // Retrieved from FAISS search service (anr-vault-search:8081).
@@ -793,7 +797,7 @@ else console.warn("[INIT] ZAI_API_KEY not set — GLM models will fall back to O
 // Karma's autonomous access to her own graph/memory requires tools.
 // GPT-4o has proven tool support. Using it for /v1/chat with tool definitions.
 // ── Phase 3: 4-Tool Surface (P2) ─────────────────────────────────────────
-// Active tools: graph_query, get_vault_file, write_memory (3 tools — no unhandled stubs)
+// Active tools: graph_query, get_vault_file, get_local_file, write_memory, fetch_url, get_library_docs
 const TOOL_DEFINITIONS = [
   {
     name: "graph_query",
@@ -815,6 +819,17 @@ const TOOL_DEFINITIONS = [
         alias: { type: "string", description: "File alias, repo path (e.g. 'repo/.gsd/STATE.md'), or vault path (e.g. 'vault/memory_v1/ledger/memory.jsonl')" },
       },
       required: ["alias"],
+    },
+  },
+  {
+    name: "get_local_file",
+    description: "Read any file from Colby's Karma_SADE folder on Payback (local machine). Path is relative to Karma_SADE root. Examples: '.gsd/STATE.md', 'CLAUDE.md', 'Scripts/karma-inbox-watcher.ps1', 'hub-bridge/app/server.js'. Use when you need to read local files that aren't on the vault-neo droplet. Returns up to 40KB.",
+    input_schema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Relative path within Karma_SADE folder (e.g., '.gsd/STATE.md', 'MEMORY.md', 'Scripts/karma-inbox-watcher.ps1')" },
+      },
+      required: ["path"],
     },
   },
   {
@@ -918,6 +933,31 @@ async function executeToolCall(toolName, toolInput, writeId = null) {
         return { ok: true, alias, path: filePath, content: trimmed };
       } catch (e) {
         return { error: "file_read_error", message: e.message };
+      }
+    }
+
+    // get_local_file — reads files from Payback (Colby's machine) via Tailscale file server
+    if (toolName === "get_local_file") {
+      const filePath = (toolInput.path || "").trim();
+      if (!filePath) return { error: "missing_path", message: "path is required" };
+      if (!LOCAL_FILE_SERVER_URL || !LOCAL_FILE_TOKEN) {
+        return { error: "not_configured", message: "LOCAL_FILE_SERVER_URL and LOCAL_FILE_TOKEN must be set in hub.env" };
+      }
+      try {
+        const url = `${LOCAL_FILE_SERVER_URL}/v1/local-file?path=${encodeURIComponent(filePath)}`;
+        const resp = await fetch(url, {
+          headers: { Authorization: `Bearer ${LOCAL_FILE_TOKEN}` },
+          signal: AbortSignal.timeout(10_000),
+        });
+        if (!resp.ok) {
+          const body = await resp.text();
+          return { error: "file_server_error", status: resp.status, message: body.slice(0, 500) };
+        }
+        const data = await resp.json();
+        console.log(`[TOOL-API] get_local_file '${filePath}' (${(data.content || "").length} chars)`);
+        return data;
+      } catch (e) {
+        return { error: "fetch_error", message: e.message };
       }
     }
 
