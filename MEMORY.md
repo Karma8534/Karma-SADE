@@ -2,11 +2,13 @@
 
 **Thumbs (COMPLETE):** Extended `/v1/feedback` + `processFeedback()` + `unified.html` to show thumbs on ALL Karma messages via `turn_id` fallback. 11/11 tests pass. Deployed.
 
-**Persona coaching (IN PROGRESS):**
+**Deep mode toggle (COMPLETE):** Added DEEP button to unified.html input bar — toggles purple when active, sends `x-karma-deep: true` header. Static file, no rebuild needed.
+
+**Persona coaching (COMPLETE):**
 - Diagnosed: Recurring Topics coaching was abstract ("invisibly raise your floor") — no trigger, no behavior
 - Fixed: Rewrote `Memory/00-karma-system-prompt-live.md` Recurring Topics section with concrete trigger→action pattern (matches Recently Learned style)
+- Verified: behavior change confirmed — Karma now acknowledges recurring topics explicitly
 - Entity Relationships: data is stale (all Chrome extension edges) — separate investigation needed
-- **NEXT**: verify Karma behavior change on recurring topic test
 
 ## Session 70 (2026-03-09) — FalkorDB catchup + cron fix + resurrection spine ban
 

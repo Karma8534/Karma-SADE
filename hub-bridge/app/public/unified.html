@@ -233,6 +233,22 @@
     font-weight: 500;
   }
   .btn-send:hover:not(:disabled) { opacity: 0.85; }
+  .btn-deep {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .btn-deep.active {
+    background: rgba(139, 92, 246, 0.18);
+    border-color: var(--accent-purple);
+    color: var(--accent-purple);
+  }
+  .btn-deep:hover:not(.active) { border-color: var(--accent-purple); }
 
   input[type="file"] { display: none; }
 
@@ -347,6 +363,7 @@
         </div>
         <div class="input-actions">
           <button class="btn-icon" id="file-btn" title="Attach files (Ctrl+Shift+U)">📎</button>
+          <button class="btn-deep" id="deep-btn" title="Enable deep mode (tool use + graph queries)">DEEP</button>
           <button class="btn-send" id="send-btn">Send</button>
         </div>
       </div>
@@ -420,7 +437,13 @@
   const $messages  = document.getElementById('chat-messages');
   const $input     = document.getElementById('chat-input');
   const $sendBtn   = document.getElementById('send-btn');
+  const $deepBtn   = document.getElementById('deep-btn');
   const $fileBtn   = document.getElementById('file-btn');
+  let deepMode = false;
+  $deepBtn.addEventListener('click', () => {
+    deepMode = !deepMode;
+    $deepBtn.classList.toggle('active', deepMode);
+  });
   const $fileInput = document.getElementById('file-input');
   const $fileList  = document.getElementById('file-list');
   const $connDot   = document.getElementById('conn-dot');
@@ -644,7 +667,7 @@
     try {
       let fetchOpts = {
         method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token }
+        headers: { 'Authorization': 'Bearer ' + token, ...(deepMode ? { 'x-karma-deep': 'true' } : {}) }
       };
       let body;
 
