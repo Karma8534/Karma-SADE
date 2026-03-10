@@ -1,11 +1,17 @@
 ## Session 76 — Emergency: migrate to claude-haiku-4-5-20251001 (2026-03-10)
 
-**Status:** IN PROGRESS
+**Status:** ✅ COMPLETE
 
 ### What changed
 - `claude-3-5-haiku-20241022` was RETIRED 2026-02-19 — was causing `Error: internal_error` in Karma UI
-- `routing.js`: `ALLOWED_DEFAULT_MODELS` + `ALLOWED_DEEP_MODELS` updated to include `claude-haiku-4-5-20251001`; defaults updated (Decision #29)
-- hub.env to be updated: MODEL_DEFAULT + MODEL_DEEP → `claude-haiku-4-5-20251001`, pricing $1.00/$5.00
+- `routing.js`: `ALLOWED_DEFAULT_MODELS` + `ALLOWED_DEEP_MODELS` updated; defaults → `claude-haiku-4-5-20251001` (Decision #29)
+- `hub.env` on vault-neo: MODEL_DEFAULT + MODEL_DEEP → `claude-haiku-4-5-20251001`, pricing $1.00/$5.00
+- Container rebuilt `--no-cache`, deployed. Verified: `model: claude-haiku-4-5-20251001, debug_provider: anthropic`
+- **Revelation (Decision #30)**: Karma was always supposed to have a Cognitive Architecture Layer — never built. Self-Model Kernel + Metacognitive Trace + Deferred Intent Engine. Documented in STATE.md + ROADMAP.md Milestone 8. This is the next major milestone.
+
+### System state
+- Hub Bridge: ✅ claude-haiku-4-5-20251001 live, RestartCount=0
+- All other containers: ✅ unchanged
 
 ---
 

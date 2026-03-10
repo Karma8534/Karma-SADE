@@ -287,6 +287,46 @@ K2 (192.168.0.226) not intended as active worker. Consciousness loop runs on dro
 - [x] Deep mode phrasing: "[LOW] I haven't verified this. Should I fetch_url or graph_query to confirm first?"
 - [x] Combined with Priority #3 in single system prompt section (12,524→14,601 chars)
 
+---
+
+## Milestone 8: Cognitive Architecture Layer (NEXT — Session 77+)
+
+**Purpose:** This is what Karma was always supposed to be. 75+ sessions built infrastructure. This milestone builds the cognitive layer on top of it.
+
+### Component 1: Self-Model Kernel ⏳ NOT STARTED
+A dynamic, per-request phase (not static system prompt text) where Karma maintains an explicit model of herself.
+- What she currently knows and doesn't know (capability map)
+- Her current operational state (context load, recent tool results, confidence trajectory)
+- Self-assessment of recent responses (was that [HIGH] justified? did I confabulate?)
+- Feeds into response generation — Karma grounds responses in her self-model, not just her knowledge
+- **Distinct from system prompt**: kernel is computed per-request, not static
+
+### Component 2: Metacognitive Trace ⏳ NOT STARTED
+Real-time capture of Karma's reasoning about her own reasoning.
+- WHY she said what she said (not just what she said)
+- What alternatives she considered and rejected
+- Where her confidence was high vs. low during a response
+- The consciousness loop was supposed to be this — it stalled at OBSERVE-only with zero behavioral impact
+- **Fix the consciousness loop**: evolve from OBSERVE-only → OBSERVE+TRACE → behavioral feedback
+
+### Component 3: Deferred Intent Engine ⏳ NOT STARTED
+A mechanism to carry forward behavioral intentions across turns and sessions.
+- "Next time user asks about X, also mention Y"
+- "Flag this pattern when it appears again"
+- "At next session start, surface this unresolved question"
+- **Distinct from write_memory**: write_memory is content storage. Deferred Intent is behavioral scheduling.
+- Intents survive session boundaries (stored in vault ledger, surfaced by karmaCtx)
+
+### Design Principle
+These three components interact:
+- Self-Model Kernel feeds Metacognitive Trace (you need a self-model to reason about your own reasoning)
+- Metacognitive Trace feeds Deferred Intent Engine (unresolved patterns become deferred intents)
+- Deferred Intent Engine feeds Self-Model Kernel (pending intents are part of Karma's current state)
+
+**Status:** Decision #30 locked. Design phase starts next session.
+
+---
+
 ### Priority #5: get_library_docs (DIY — no Context7) ✅ COMPLETE (Session 72)
 - [x] Decision #25: Context7 rejected — DIY with existing fetch_url logic (no external dependency)
 - [x] hub-bridge/lib/library_docs.js — LIBRARY_URLS map + resolveLibraryUrl()

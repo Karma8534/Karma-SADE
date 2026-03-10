@@ -12,7 +12,7 @@
 |-----------|--------|-------|
 | **Consciousness Loop** | ✅ WORKING | 60s OBSERVE-only cycles. Zero LLM calls confirmed in source. RestartCount=0. |
 | **Hub Bridge API** | ✅ WORKING | /v1/chat, /v1/ambient, /v1/context, /v1/cypher, /v1/ingest operational. |
-| **Voice & Persona** | ✅ DEPLOYED | Peer-level voice via claude-3-5-haiku-20241022 (switched Session 75). Both standard + deep mode now Haiku. |
+| **Voice & Persona** | ✅ DEPLOYED | Peer-level voice via claude-haiku-4-5-20251001 (Session 76: haiku-20241022 was RETIRED, migrated). Both modes. |
 | **FalkorDB Graph** | ✅ FULLY CAUGHT UP | 3877 nodes (3305 Episodic + 571 Entity + 1 Decision). batch_ingest cron every 6h. Last run: 305 eps/s, 0 errors. |
 | **Ledger** | ✅ GROWING | 4000+ entries. Git commits + session-end hooks capturing actively. |
 | **Work-Loss Prevention** | ✅ GATES LIVE | Pre-commit hook + session-end hook both active and verified. |
@@ -23,8 +23,8 @@
 | **Conversation Capture** | ✅ WORKING | All 3049 hub/chat episodes ingested via --skip-dedup. |
 | **batch_ingest Schedule** | ✅ CONFIGURED | Cron every 6h on vault-neo. --skip-dedup mode. |
 | **karma-server image** | ✅ REBUILT | Session-66: graph_query handler + hooks.py whitelist fix. |
-| **Primary Model (Decision #28)** | ✅ LIVE — Haiku 3.5 | claude-3-5-haiku-20241022 for both MODEL_DEFAULT + MODEL_DEEP. hub.env updated. Container redeployed Session 75. |
-| **Routing/Pricing (Decision #28)** | ✅ UPDATED | Haiku 3.5 pricing: $0.80/$4.00 per 1M. routing.js allow-list updated. lib/*.js now in git. |
+| **Primary Model (Decision #29)** | ✅ LIVE — Haiku 4.5 | claude-haiku-4-5-20251001 for both MODEL_DEFAULT + MODEL_DEEP. Session 76 emergency migration. |
+| **Routing/Pricing (Decision #29)** | ✅ UPDATED | Haiku 4.5 pricing: $1.00/$5.00 per 1M. routing.js allow-list updated. |
 | **GLM Rate Limiter** | ✅ KEPT (compat) | 40 RPM class kept in routing.js for compat; not invoked for claude- models. |
 | **Config Validation Gate** | ✅ LIVE | MODEL_DEFAULT + MODEL_DEEP allow-lists. [CONFIG ERROR] + exit(1) on bad config. 27/27 tests. |
 | **OpenAI API key** | ✅ SECURED | File-based read (mounted volume), not env var (docker inspect clean). |
@@ -386,11 +386,22 @@ Thumbs-down + note feeds correction pipeline. Backward compatible — existing w
 - hub-bridge now auto-injects last 3000 chars of MEMORY.md into every /v1/chat request
 - 6/6 TDD tests (test_system_text.js) GREEN; deployed + verified Karma can see v10 plan details
 
-### Decision #28: claude-3-5-haiku-20241022 replaces GLM-4.7-Flash as primary model (2026-03-10, LOCKED)
-Previous routing: GLM-4.7-Flash (standard) + gpt-4o-mini (deep). Both were Claude's recommendations across multiple sessions. GLM performance was poor. Colby directed switch to Claude Haiku 3.5.
-MODEL_DEFAULT=claude-3-5-haiku-20241022, MODEL_DEEP=claude-3-5-haiku-20241022. Pricing: $0.80/$4.00 per 1M.
-routing.js ALLOWED_DEFAULT_MODELS + ALLOWED_DEEP_MODELS updated. GLM still in allow-list as fallback option.
-hub.env updated on vault-neo. Container rebuilt --no-cache. Verified: `docker exec anr-hub-bridge env | grep MODEL` → both show claude-3-5-haiku-20241022.
+### Decision #28: claude-3-5-haiku-20241022 as primary model (2026-03-10, SUPERSEDED by #29)
+Previously set as primary in Session 75. Model was already RETIRED as of 2026-02-19 — this was an error.
+
+### Decision #29: claude-haiku-4-5-20251001 as primary model (2026-03-10, LOCKED)
+haiku-20241022 RETIRED 2026-02-19 — was producing `Error: internal_error` in Karma UI.
+Official Anthropic replacement: claude-haiku-4-5-20251001 (Active, retirement not before Oct 2026).
+MODEL_DEFAULT=claude-haiku-4-5-20251001, MODEL_DEEP=claude-haiku-4-5-20251001. Pricing: $1.00/$5.00 per 1M.
+routing.js ALLOWED_DEFAULT_MODELS + ALLOWED_DEEP_MODELS updated. hub.env on vault-neo updated. Container rebuilt --no-cache.
+Verified: `model: claude-haiku-4-5-20251001, debug_provider: anthropic` in live API response.
+
+### Decision #30: Cognitive Architecture Layer is the next major milestone (2026-03-10, LOCKED)
+Colby identified that Karma's original purpose was cognitive architecture — never built. 75+ sessions of plumbing without the core layer. Three missing components:
+- **Self-Model Kernel**: A dynamic, per-request phase where Karma maintains an explicit model of herself (capabilities, current state, recent patterns) — NOT the static system prompt.
+- **Metacognitive Trace**: Real-time capture of Karma's reasoning about her own reasoning — WHY she said what she said, what alternatives she considered, confidence trajectory. The consciousness loop was supposed to be this. It stalled at OBSERVE-only.
+- **Deferred Intent Engine**: A mechanism to carry forward behavioral intentions across turns and sessions. "When X comes up, also do Y." "Next session: remember to mention Z." Not approval-gating (that's write_memory) — intent scheduling.
+These three together form the Cognitive Architecture Layer — what makes Karma cognizant rather than merely contextually rich. This is Milestone 8.
 
 ### Session 74 Accomplishments (2026-03-10) — v11 Karma Full Read Access
 - get_vault_file extended: repo/<path> + vault/<path> prefixes + traversal protection (path.resolve + startsWith)
@@ -412,6 +423,8 @@ hub.env updated on vault-neo. Container rebuilt --no-cache. Verified: `docker ex
 
 ## Next Session Starts Here
 
-1. **Verify Karma quality with Haiku 3.5**: Chat with Karma at hub.arknexus.net — confirm sidebar shows claude-3-5-haiku-20241022, response quality improved over GLM
-2. **Check thumbs and DPO accumulation**: Click 👍 on a response, confirm DPO pair lands in ledger (search tags:["dpo-pair"])
-3. **Sync lib/*.js to build context**: Before next rebuild, sync hub-bridge/lib/*.js to /opt/seed-vault/memory_v1/hub_bridge/lib/
+**Active model:** claude-haiku-4-5-20251001 (live, verified Session 76)
+
+1. **Cognitive Architecture Layer — Design Phase**: Invoke brainstorming skill. Design Self-Model Kernel, Metacognitive Trace, and Deferred Intent Engine as a cohesive system. Write `.gsd/phase-cognitive-arch-CONTEXT.md` before any code.
+2. **Verify Karma quality with Haiku 4.5**: Open hub.arknexus.net — sidebar should show claude-haiku-4-5-20251001. Test a real conversation.
+3. **Update system prompt**: `Memory/00-karma-system-prompt-live.md` still references claude-3-5-haiku-20241022 in model routing section — update to haiku-4-5-20251001, then `git pull + docker restart anr-hub-bridge`.
