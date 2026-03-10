@@ -962,6 +962,17 @@ const TOOL_DEFINITIONS = [
       required: ["intent", "trigger", "fire_mode"],
     },
   },
+  {
+    name: "get_active_intents",
+    description: "Query active intents. Use in deep mode before responding on topics where you have recurring behavioral rules, to verify which intents are active. Optionally filter by topic keyword or fire_mode.",
+    input_schema: {
+      type: "object",
+      properties: {
+        topic:     { type: "string", description: "Optional keyword filter — returns intents whose trigger value or description contains this string" },
+        fire_mode: { type: "string", description: "Optional filter by fire_mode: once | once_per_conversation | recurring" },
+      },
+    },
+  },
 ];
 
 // Map of whitelisted file aliases to actual paths
@@ -1008,6 +1019,25 @@ async function executeToolCall(toolName, toolInput, writeId = null) {
       });
       console.log("[TOOL-API] defer_intent proposed: intent_id=" + id + ", intent=" + intent.slice(0, 60));
       return { proposed: true, intent_id: id, message: "Intent proposed. Awaiting Colby approval via thumbs-up (intent_id: " + id + ") — or thumbs-down to discard." };
+    }
+
+    // get_active_intents -- live query of active approved intents
+    if (toolName === "get_active_intents") {
+      const { topic, fire_mode: filterMode } = toolInput || {};
+      refreshActiveIntentsCache();
+      let intents = [..._activeIntentsMap.values()].filter(i => i.status === "active");
+      if (filterMode) intents = intents.filter(i => i.fire_mode === filterMode);
+      if (topic) {
+        const needle = topic.toLowerCase();
+        intents = intents.filter(i => {
+          const v = (i.trigger?.value || "").toLowerCase();
+          const desc = (i.intent || "").toLowerCase();
+          return v.includes(needle) || desc.includes(needle);
+        });
+      }
+      const pending = [...pending_intents.values()].map(i => ({ ...i, _pending: true }));
+      console.log(`[TOOL-API] get_active_intents: ${intents.length} active, ${pending.length} pending`);
+      return { active: intents, pending, total_active: intents.length, total_pending: pending.length };
     }
 
     // write_memory -- propose a MEMORY.md append, gated by /v1/feedback
