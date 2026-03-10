@@ -627,3 +627,7 @@ n## Session 72 (2026-03-10) — Watcher Fix + v10 Startn### karma-inbox-watcher 
 - Files: hub-bridge/lib/library_docs.js (new), hub-bridge/app/server.js (import + TOOL_DEFINITIONS + handler)
 - TDD: 7/7 tests GREEN (test_library_docs.js); 24/24 full suite GREEN
 - STATUS: v10 priority #5 COMPLETE
+
+### Session 72: System prompt updated for get_library_docs (2026-03-10)
+- Added get_library_docs to tool list (line 26), CANNOT Do exception, deep-mode coaching, anti-hallucination gate
+- Karma now knows when/how to call get_library_docs before [LOW] library API claims
