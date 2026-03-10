@@ -602,3 +602,4 @@ n## Session 72 (2026-03-10) — Watcher Fix + v10 Startn### karma-inbox-watcher 
 - FIX: _memoryMdCache (tail 3000 chars), loadMemoryMd() on startup + 5min refresh, injected as KARMA MEMORY SPINE section
 - PROOF: 17/17 tests GREEN (11 feedback + 6 system_text); deployed to vault-neo
 - STATUS: Karma now has v10 context on every request without needing deep mode
+\
