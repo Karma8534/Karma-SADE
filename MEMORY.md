@@ -789,3 +789,11 @@ n## Session 72 (2026-03-10) — Watcher Fix + v10 Startn### karma-inbox-watcher 
 - Emergency restart: `Scripts/start-watcher-now.ps1` (no admin)
 - Permanent fix script: `Scripts/fix-watcher-task-ADMIN.ps1` (requires admin, already applied)
 - PROOF: Done=206 (+2 during fix), Inbox=3 (was 10), queue moving post-fix
+
+## Phase 4 Task 1 — Deferred Intent Engine (2026-03-10)
+
+**Created: hub-bridge/lib/deferred_intent.js**
+- Pure logic module, no I/O, no external dependencies
+- Exports: `generateIntentId()`, `triggerMatches()`, `buildActiveIntentsText()`, `getSurfaceIntents()`
+- Syntax verified: `node --check` passed
+- STATUS: Task 1 complete. Next: tests + integration into server.js context assembly.
