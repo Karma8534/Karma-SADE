@@ -8,6 +8,7 @@ import { pricePer1M, estimateUsd, validatePricingEnv } from "./lib/pricing.js";
 import { chooseModel, validateModelEnv, GlmRateLimiter, GLM_INGEST_SLOT_TIMEOUT_MS } from "./lib/routing.js";
 import { processFeedback, prunePendingWrites } from "./lib/feedback.js";
 import { resolveLibraryUrl } from "./lib/library_docs.js";
+import { getSurfaceIntents, buildActiveIntentsText } from "./lib/deferred_intent.js";
 
 // CJS interop for pdf-parse (CommonJS module in ESM context)
 import { createRequire } from 'module';
@@ -492,7 +493,7 @@ async function fetchSemanticContext(userMessage, topK = FAISS_SEARCH_K) {
  * Build Karma's system prompt from FalkorDB context.
  * Extracted so both /v1/chat and /v1/ingest can reuse it.
  */
-function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticCtx = null, memoryMd = null) {
+function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticCtx = null, memoryMd = null, activeIntentsText = null) {
   // Identity block — loaded from file at startup. Describes Karma's actual architecture,
   // capability boundaries, data model corrections, and API surface.
   // File is volume-mounted; future updates: git pull + container restart (no rebuild needed).
@@ -508,7 +509,10 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
   const selfModel = process.env.MODEL_DEFAULT || "claude-sonnet-4-6";
   const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/30min, web_search=auto_on_intent]\n\n`;
 
-  let text = identityBlock + selfKnowledge + base + "\n\nTools available in deep mode (x-karma-deep: true) only: graph_query(cypher), get_vault_file(alias or repo/<path> or vault/<path>), get_local_file(path), write_memory(content), fetch_url(url), get_library_docs(library). In standard GLM mode: NO tools — do not promise to run queries or fetch files.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
+  // Active Intents — behavioral rules matched to this request. Injected before karmaCtx.
+  const intentBlock = activeIntentsText ? activeIntentsText + "\n\n" : "";
+
+  let text = identityBlock + selfKnowledge + intentBlock + base + "\n\nTools available in deep mode (x-karma-deep: true) only: graph_query(cypher), get_vault_file(alias or repo/<path> or vault/<path>), get_local_file(path), write_memory(content), fetch_url(url), get_library_docs(library). In standard GLM mode: NO tools — do not promise to run queries or fetch files.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
 
   // Semantic memory — top-K ledger entries most relevant to the current question.
   // Retrieved from FAISS search service (anr-vault-search:8081).
@@ -1438,7 +1442,13 @@ const server = http.createServer(async (req, res) => {
         debug_search = webSearchResults ? "hit" : "miss";
       }
 
-      const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults, semanticCtx, _memoryMdCache || null);
+      refreshActiveIntentsCache();
+      const surfacedIntents = getSurfaceIntents(_activeIntentsMap, _firedThisSession, userMessage, "active");
+      for (const intent of surfacedIntents) {
+        if (intent.fire_mode === "once_per_conversation") _firedThisSession.add(intent.intent_id);
+      }
+      const activeIntentsText = buildActiveIntentsText(surfacedIntents);
+      const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults, semanticCtx, _memoryMdCache || null, activeIntentsText || null);
 
       const extractedFacts = extractExplicitFacts(userMessage);
       let factWriteResults = [];
