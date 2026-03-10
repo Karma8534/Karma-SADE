@@ -1,12 +1,12 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-09T23:00:00Z
-**Session:** 70 (system prompt trim, cron --skip-dedup fix, FalkorDB catchup, resurrection spine ban)
+**Last updated:** 2026-03-10T13:30:00Z
+**Session:** 72 (universal thumbs via turn_id, MEMORY.md spine injection, MENTIONS co-occurrence, confidence levels + anti-hallucination gate)
 **Canonical source:** This file. Read at session start.
 
 ---
 
-## Current Status (Verified 2026-03-05)
+## Current Status (Verified 2026-03-10)
 
 | Component | Status | Notes |
 |-----------|--------|-------|
@@ -35,7 +35,10 @@
 | **Correction Capture Protocol** | ✅ LIVE | Memory/corrections-log.md + CC Session End step 2. Session-62. |
 | **FalkorDB lane backfill** | ✅ DONE | 3040 Episodic nodes with lane=NULL → lane="episodic". 0 remaining. Session-62. |
 | **anr-vault-search** | ✅ FAISS | Custom search_service.py (NOT ChromaDB). FAISS + text-embedding-3-small. Auto-reindex on ledger change. |
-| **Entity Relationships** | ✅ LIVE | RELATES_TO edges surfaced in karmaCtx. query_relevant_relationships() per-message. Session-64. |
+| **MEMORY.md Spine Injection** | ✅ LIVE | `_memoryMdCache` (tail 3000 chars, 5min refresh) injected as "KARMA MEMORY SPINE (recent)" in buildSystemText(). Session-72. |
+| **Universal Thumbs (turn_id)** | ✅ LIVE | All Karma messages show 👍/👎 via turn_id fallback. /v1/feedback accepts turn_id OR write_id. 11/11 tests. Session-72. |
+| **Confidence Levels** | ✅ LIVE | [HIGH]/[MEDIUM]/[LOW] mandatory on technical claims. Anti-hallucination hard stop before [LOW] assertions. System prompt 12,524→14,601 chars. Session-72. |
+| **Entity Relationships** | ✅ FIXED | MENTIONS co-occurrence replaces stale RELATES_TO (frozen at 2026-03-04). 11/11 tests. Session-72. |
 | **Recurring Topics** | ✅ LIVE | Top-10 entities by episode count. _pattern_cache refreshed every 30min at startup. Session-64. |
 | **Graphiti Watermark** | ✅ LIVE | batch_ingest watermark mode (Session 63). New episodes get entity extraction. :MENTIONS edges grow. |
 | **batch_ingest cron** | ✅ --skip-dedup FIXED | Session-70: cron now uses --skip-dedup permanently. Graphiti mode silently fails at scale. |
@@ -320,3 +323,64 @@ Build context is `/opt/seed-vault/memory_v1/hub_bridge/` (the parent). Dockerfil
 1. **Thumbs up/down UI feature**: Resume brainstorming — explore hub-bridge/app/server.js for existing /v1/feedback + unified.html for current UI state. Then writing-plans → implement.
 
 **Last updated:** 2026-03-05T21:30:00Z (Session 68 — v9 Phase 4 complete)
+
+### Decision #22: MENTIONS co-occurrence replaces stale RELATES_TO (2026-03-10, LOCKED)
+RELATES_TO edges (1,423) are permanently frozen at 2026-03-04 — all from Chrome extension + Graphiti dedup era.
+--skip-dedup mode (active since Session 59) never creates RELATES_TO; only creates MENTIONS.
+query_relevant_relationships() now uses Episodic→Entity MENTIONS co-occurrence cross-join, cocount >= 2.
+Live data: Karma/Colby=123, Karma/User=100, User/Universal AI Memory=44. 11/11 TDD tests GREEN.
+
+### Decision #23: Confidence level tags mandatory in system prompt (2026-03-10, LOCKED)
+[HIGH]/[MEDIUM]/[LOW] tags on all technical claims. [HIGH] = verified in current context this session.
+[MEDIUM] = reasonable inference from pattern/adjacent evidence. [LOW] = unverified.
+Placement: on specific claims only, not every sentence. Reserve [HIGH] strictly — value comes from rarity.
+
+### Decision #24: Anti-hallucination hard stop before [LOW] claims (2026-03-10, LOCKED)
+Before asserting unverified API behavior, function signatures, or endpoint paths: Karma must STOP and write:
+"[LOW] I haven't verified this. Should I fetch_url or graph_query to confirm first?"
+Do not proceed with the unverified claim. Propose verification instead.
+In standard mode: "[LOW] This isn't in my current context — you'd need to check docs or run a query via CC."
+
+### Decision #25: Context7 rejected — DIY get_library_docs with URL map (2026-03-10, LOCKED)
+Context7 free tier (1,000 calls/month) covers estimated usage (60-750/month) but adds external dependency.
+Decision: build get_library_docs(library) as hub-bridge deep-mode tool using hardcoded URL map + existing fetch_url logic.
+Target libraries: redis-py, falkordb, falkordb-py, fastapi. ~30min implementation. No external account required.
+Status: DECIDED, not yet implemented (v10 priority #5).
+
+### Decision #26: Universal thumbs via turn_id (2026-03-10, LOCKED)
+Every Karma response now carries 👍/👎 UI regardless of write_memory presence.
+/v1/feedback accepts turn_id as alternative to write_id. write_id takes priority when both present.
+General quality signal + DPO pair accumulation even in standard mode.
+Thumbs-down + note feeds correction pipeline. Backward compatible — existing write_memory gate unchanged.
+
+### Session 72 Accomplishments (2026-03-10)
+
+**v10 Priority #1: Universal Thumbs via turn_id — COMPLETE**
+- hub-bridge/lib/feedback.js: processFeedback() extended with turn_id 5th param; stored in dpo_pair
+- hub-bridge/app/server.js: /v1/feedback validation updated — turn_id OR write_id required; turn_id passed through
+- hub-bridge/app/public/unified.html: gate changed from writeId-only to (writeId || turnId); buildFeedbackPayload sends write_id first, falls back to turn_id; all 3 signal paths send correct payload
+- 4 new TDD tests (11/11 GREEN); deployed + smoke test verified {wrote:false} on turn_id-only POST
+- PITFALL: All changed hub-bridge files (server.js, lib/feedback.js, app/public/unified.html) must be synced to build context — not just server.js. Session-72 caught: unified.html + feedback.js were not synced on prior deploy.
+
+**v10 Blocker #2: Entity Relationships data quality — COMPLETE**
+- ROOT CAUSE: query_relevant_relationships() queried RELATES_TO — 1,423 edges frozen at 2026-03-04 (Chrome ext era). --skip-dedup mode never creates RELATES_TO; Graphiti dedup (disabled Session 59) was sole creator.
+- FIX: MENTIONS co-occurrence query — Episodic→Entity cross-join, cocount >= 2, ORDER BY cocount DESC LIMIT 20
+- Relationship label format: "co-occurs in N episodes" (human-readable, not raw edge fact)
+- LIVE data confirmed: Karma/Colby=123, Karma/User=100, User/Universal AI Memory=44
+- TDD: 2 new tests (test_query_relevant_relationships_uses_mentions_not_relates_to, test_query_relevant_relationships_formats_cooccurrence_label); 11/11 GREEN
+- Deployed: git pull → cp server.py to build context → --no-cache rebuild → docker compose up -d → RestartCount=0
+
+**v10 Priority #3+#4: Confidence Levels + Anti-Hallucination Gate — COMPLETE**
+- Added "Confidence Levels — Mandatory for Technical Claims" section to Memory/00-karma-system-prompt-live.md
+- [HIGH]/[MEDIUM]/[LOW] tag definitions + placement rule + calibration rules
+- Anti-hallucination gate: hard stop + propose verification before proceeding with [LOW] claims
+- KARMA_IDENTITY_PROMPT: 12,524 → 14,601 chars
+- Deployed via docker restart anr-hub-bridge (no rebuild needed); acceptance tests: [LOW] on unverified redis-py signature; [HIGH] on known system facts — both passed
+- Covers v10 priority #3 (confidence levels) AND #4 (anti-hallucination pre-check) in single section
+
+**v10 Context Blindness Fix (Session 72 Root Bug)**
+- ROOT CAUSE: buildSystemText() had no path for MEMORY.md injection — Karma never saw MEMORY.md content
+- FIX: _memoryMdCache module-level cache (tail 3000 chars), loaded at startup + refreshed every 5min
+- Injected as "--- KARMA MEMORY SPINE (recent) ---" section in buildSystemText()
+- hub-bridge now auto-injects last 3000 chars of MEMORY.md into every /v1/chat request
+- 6/6 TDD tests (test_system_text.js) GREEN; deployed + verified Karma can see v10 plan details

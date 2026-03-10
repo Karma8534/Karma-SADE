@@ -1,8 +1,8 @@
 # ROADMAP: Karma Peer — Phases & Milestones
 
-**Last updated:** 2026-03-05
-**Current phase:** v9 IN PROGRESS — Phase 4 (write agency) next
-**Previous phase:** v9 Phase 3 (persona coaching) COMPLETE — Session 67
+**Last updated:** 2026-03-10
+**Current phase:** v10 IN PROGRESS — Priorities #1–#4 COMPLETE; #5 (get_library_docs) next
+**Previous phase:** v9 COMPLETE — all phases done Sessions 64–70
 
 ---
 
@@ -259,3 +259,42 @@ K2 (192.168.0.226) not intended as active worker. Consciousness loop runs on dro
 **Last updated:** 2026-03-05 (Session 69 — Phase 5 verified, fetch_url live, stale tools removed)
 **Next review:** Session 68 (Phase 4 implementation kickoff)
 **Owner:** Claude Code (updates on Colby approval)
+
+---
+
+## Milestone 7: v10 — Context Quality, Quality Signals, Anti-Hallucination (IN PROGRESS)
+
+### Priority #1: Universal Thumbs via turn_id ✅ COMPLETE (Session 72)
+- [x] hub-bridge/lib/feedback.js: processFeedback() 5th param turn_id, stored in dpo_pair
+- [x] hub-bridge/app/server.js: /v1/feedback accepts turn_id OR write_id (validation updated)
+- [x] hub-bridge/app/public/unified.html: gate (writeId || turnId); buildFeedbackPayload write_id-first, turn_id fallback
+- [x] 4 new TDD tests; 11/11 GREEN; deployed + smoke test {wrote:false} on turn_id-only POST
+- [x] PITFALL documented: ALL hub-bridge changed files must be synced to build context (not just server.js)
+
+### Priority #2 / Blocker #2: Entity Relationships data quality ✅ COMPLETE (Session 72)
+- [x] ROOT CAUSE: RELATES_TO edges (1,423) frozen at 2026-03-04 — Chrome ext era, never updated by --skip-dedup
+- [x] FIX: MENTIONS co-occurrence query in query_relevant_relationships()
+- [x] Live data: Karma/Colby=123, Karma/User=100, growing with every batch_ingest run
+- [x] 2 new TDD tests (MENTIONS-asserts, format-asserts); 11/11 GREEN; karma-server rebuilt + deployed
+
+### Priority #3: Confidence Levels in Karma Responses ✅ COMPLETE (Session 72)
+- [x] [HIGH]/[MEDIUM]/[LOW] mandatory tags on all technical claims
+- [x] Calibration rules: [HIGH] = verified in context this session only; [LOW] = genuinely uncertain
+- [x] Deployed to system prompt (docker restart); acceptance tests passed
+
+### Priority #4: Anti-Hallucination Gate ✅ COMPLETE (Session 72)
+- [x] Hard stop rule: before asserting unverified API/function behavior, Karma must stop + propose verification
+- [x] Standard mode phrasing: "[LOW] This isn't in my current context — check docs or run a query via CC"
+- [x] Deep mode phrasing: "[LOW] I haven't verified this. Should I fetch_url or graph_query to confirm first?"
+- [x] Combined with Priority #3 in single system prompt section (12,524→14,601 chars)
+
+### Priority #5: get_library_docs (DIY — no Context7) ⏳ NEXT
+- [ ] Decision #25: Context7 rejected — external dependency, not needed when fetch_url + URL map suffices
+- [ ] Implement get_library_docs(library) as hub-bridge deep-mode tool
+- [ ] URL map: redis-py, falkordb, falkordb-py, fastapi (target Karma's actual [LOW] hit libraries)
+- [ ] Estimated: ~30min (reuse existing fetch_url handler logic)
+
+### v10 Context Blindness Fix (Root Bug) ✅ COMPLETE (Session 72)
+- [x] ROOT CAUSE: buildSystemText() had no MEMORY.md parameter — Karma never saw MEMORY.md
+- [x] FIX: _memoryMdCache (tail 3000 chars, 5min refresh) injected as "KARMA MEMORY SPINE (recent)"
+- [x] 6/6 TDD tests (test_system_text.js) GREEN; deployed + verified
