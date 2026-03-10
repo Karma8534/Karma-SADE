@@ -1,3 +1,12 @@
+## Session 73 — Code quality fix: get_vault_file handler (2026-03-10)
+
+**What changed:** hub-bridge/app/server.js — get_vault_file import cleanup
+- Removed redundant `await import("fs")` and `await import("path")` (both top-level at lines 2-3)
+- Replaced `nodePath.default.resolve()` with top-level `path.resolve()`
+- Replaced `readFileSync()` with `fs.readFileSync()` using top-level import
+- Added empty alias guard: `if (!alias) return { error: "missing_alias", ... }`
+- Added comment above traversal check re: normalize behavior of resolve()
+
 ## Session 73 (2026-03-10) — v11 Task 1: vault volume mount
 
 **Active task:** v11 Full Read Access — Task 1 COMPLETE

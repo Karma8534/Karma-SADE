@@ -885,8 +885,7 @@ async function executeToolCall(toolName, toolInput, writeId = null) {
     // get_vault_file is handled directly — hub-bridge has volume access to /karma/
     if (toolName === "get_vault_file") {
       const alias = (toolInput.alias || "").trim();
-      const { readFileSync } = await import("fs");
-      const nodePath = await import("path");
+      if (!alias) return { error: "missing_alias", message: "alias is required" };
 
       let filePath;
 
@@ -896,7 +895,8 @@ async function executeToolCall(toolName, toolInput, writeId = null) {
         const prefix = alias.slice(0, slashIdx);
         const relativePath = alias.slice(slashIdx + 1);
         const baseDir = prefix === "repo" ? "/karma/repo" : "/karma/vault";
-        const resolved = nodePath.default.resolve(baseDir, relativePath);
+        // resolve() normalizes .., //, and redundant slashes before the startsWith check
+        const resolved = path.resolve(baseDir, relativePath);
 
         // Traversal protection: resolved path must stay within base dir
         if (!resolved.startsWith(baseDir + "/") && resolved !== baseDir) {
@@ -912,7 +912,7 @@ async function executeToolCall(toolName, toolInput, writeId = null) {
       }
 
       try {
-        const content = readFileSync(filePath, "utf8");
+        const content = fs.readFileSync(filePath, "utf8");
         const trimmed = content.slice(0, 20_000); // 20KB cap
         console.log(`[TOOL-API] get_vault_file '${alias}' → ${filePath} (${trimmed.length} chars)`);
         return { ok: true, alias, path: filePath, content: trimmed };
