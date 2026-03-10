@@ -1,3 +1,14 @@
+## Session 76 — Emergency: migrate to claude-haiku-4-5-20251001 (2026-03-10)
+
+**Status:** IN PROGRESS
+
+### What changed
+- `claude-3-5-haiku-20241022` was RETIRED 2026-02-19 — was causing `Error: internal_error` in Karma UI
+- `routing.js`: `ALLOWED_DEFAULT_MODELS` + `ALLOWED_DEEP_MODELS` updated to include `claude-haiku-4-5-20251001`; defaults updated (Decision #29)
+- hub.env to be updated: MODEL_DEFAULT + MODEL_DEEP → `claude-haiku-4-5-20251001`, pricing $1.00/$5.00
+
+---
+
 ## Session 75 — Switch Karma primary model to Claude Haiku 3.5 (2026-03-10)
 
 **Status:** ✅ COMPLETE — Haiku 3.5 live, container healthy

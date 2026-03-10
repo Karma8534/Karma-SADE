@@ -2,11 +2,12 @@
  * Routing authority — single source of truth for model selection.
  *
  * Decision #3 (2026-03-10): Claude Haiku 3.5 primary for both standard and deep mode.
+ * Decision #29 (2026-03-10): Migrated to claude-haiku-4-5-20251001 — haiku-20241022 RETIRED 2026-02-19.
  * (Replaced Decision #2: GLM-4.7-Flash / gpt-4o-mini)
  *
  * Rules:
- *   - deep_mode=false (no x-karma-deep header): MODEL_DEFAULT (claude-3-5-haiku-20241022)
- *   - deep_mode=true  (x-karma-deep: true):     MODEL_DEEP   (claude-3-5-haiku-20241022)
+ *   - deep_mode=false (no x-karma-deep header): MODEL_DEFAULT (claude-haiku-4-5-20251001)
+ *   - deep_mode=true  (x-karma-deep: true):     MODEL_DEEP   (claude-haiku-4-5-20251001)
  *   - Tool-use requests: same routing — routes through Anthropic SDK
  *   - GlmRateLimiter kept for compatibility but not invoked for claude- models
  */
@@ -91,13 +92,13 @@ export const glmLimiter = new GlmRateLimiter({
 // ── Model routing ────────────────────────────────────────────────────────────
 
 /** Allowed values for MODEL_DEFAULT. */
-export const ALLOWED_DEFAULT_MODELS = ["claude-3-5-haiku-20241022", "glm-4.7-flash"];
+export const ALLOWED_DEFAULT_MODELS = ["claude-haiku-4-5-20251001", "claude-3-5-haiku-20241022", "glm-4.7-flash"];
 
 /** Allowed values for MODEL_DEEP. */
-export const ALLOWED_DEEP_MODELS = ["claude-3-5-haiku-20241022", "gpt-4o-mini"];
+export const ALLOWED_DEEP_MODELS = ["claude-haiku-4-5-20251001", "claude-3-5-haiku-20241022", "gpt-4o-mini"];
 
-const DEFAULT_MODEL_DEFAULT = "claude-3-5-haiku-20241022";
-const DEFAULT_MODEL_DEEP    = "claude-3-5-haiku-20241022";
+const DEFAULT_MODEL_DEFAULT = "claude-haiku-4-5-20251001";
+const DEFAULT_MODEL_DEEP    = "claude-haiku-4-5-20251001";
 
 /**
  * Validate model env vars at startup. Throws if either model is not in its allowed set.
