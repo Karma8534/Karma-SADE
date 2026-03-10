@@ -574,10 +574,17 @@ def query_entity_relationships(entity_name: str, limit: int = 10) -> list[dict]:
 
 
 def query_relevant_relationships(entity_names: list[str]) -> list[dict]:
-    """Query RELATES_TO edges for a list of entity names in one FalkorDB call.
-    Uses r.fact (the meaningful relationship description from Graphiti).
+    """Query entity co-occurrence via MENTIONS edges (live, growing data).
+
+    RELATES_TO edges are permanently frozen at 2026-03-04 (pre-skip-dedup era,
+    all from Chrome extension captures). MENTIONS co-occurrence reflects actual
+    conversation history and grows with every batch_ingest run (every 6h).
+
+    Returns entities that co-appear in >= 2 episodes with any of the given entities,
+    sorted by co-occurrence count descending.
     Returns [{"from": str, "relationship": str, "to": str}].
-    Returns [] on empty input or FalkorDB failure (non-fatal)."""
+    Returns [] on empty input or FalkorDB failure (non-fatal).
+    """
     if not entity_names:
         return []
     try:
@@ -585,17 +592,24 @@ def query_relevant_relationships(entity_names: list[str]) -> list[dict]:
         safe_names = [n.replace("'", "") for n in entity_names]
         names_str = ", ".join(f"'{n}'" for n in safe_names)
         cypher = (
-            f"MATCH (e1:Entity)-[r:RELATES_TO]->(e2:Entity) "
-            f"WHERE e1.name IN [{names_str}] "
-            "RETURN e1.name AS from, r.fact AS relationship, e2.name AS to "
-            "LIMIT 20"
+            f"MATCH (ep:Episodic)-[:MENTIONS]->(e1:Entity), "
+            f"(ep)-[:MENTIONS]->(e2:Entity) "
+            f"WHERE e1.name IN [{names_str}] AND e1.name <> e2.name "
+            f"WITH e1.name AS from_entity, e2.name AS to_entity, count(ep) AS cocount "
+            f"WHERE cocount >= 2 "
+            f"RETURN from_entity, to_entity, cocount "
+            f"ORDER BY cocount DESC LIMIT 20"
         )
         result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
         if len(result) >= 2 and result[1]:
             return [
-                {"from": row[0], "relationship": row[1], "to": row[2]}
+                {
+                    "from": row[0],
+                    "relationship": f"co-occurs in {row[2]} episodes",
+                    "to": row[1],
+                }
                 for row in result[1]
-                if row[0] and row[1] and row[2]  # skip rows with None fact
+                if row[0] and row[1] and row[2]
             ]
         return []
     except Exception as e:

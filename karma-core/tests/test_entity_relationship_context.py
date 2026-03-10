@@ -57,14 +57,15 @@ def test_query_relevant_relationships_empty_list():
     assert result == []
 
 
-def test_query_relevant_relationships_returns_facts():
-    """query_relevant_relationships returns from/relationship/to dicts using r.fact."""
+def test_query_relevant_relationships_returns_cooccurrence_dicts():
+    """query_relevant_relationships returns from/relationship/to dicts using MENTIONS co-occurrence count."""
     import server
 
+    # New row format: [from_entity, to_entity, cocount(int)]
     mock_result = [
         ["header"],
-        [["Karma", "uses for memory storage", "FalkorDB"],
-         ["Colby", "is building", "Karma"]]
+        [["Karma", "FalkorDB", 21],
+         ["Colby", "Karma", 123]]
     ]
 
     with patch.object(server, "get_falkor") as mock_get_falkor:
@@ -75,8 +76,13 @@ def test_query_relevant_relationships_returns_facts():
         result = server.query_relevant_relationships(["Karma", "Colby"])
 
     assert len(result) == 2
-    assert result[0] == {"from": "Karma", "relationship": "uses for memory storage", "to": "FalkorDB"}
-    assert result[1] == {"from": "Colby", "relationship": "is building", "to": "Karma"}
+    assert result[0]["from"] == "Karma"
+    assert result[0]["to"] == "FalkorDB"
+    assert "21" in result[0]["relationship"]
+    assert "episode" in result[0]["relationship"]
+    assert result[1]["from"] == "Colby"
+    assert result[1]["to"] == "Karma"
+    assert "123" in result[1]["relationship"]
 
 
 def test_query_relevant_relationships_graceful_on_error():
@@ -86,6 +92,63 @@ def test_query_relevant_relationships_graceful_on_error():
         mock_get_falkor.side_effect = Exception("timeout")
         result = server.query_relevant_relationships(["Karma"])
     assert result == []
+
+
+def test_query_relevant_relationships_uses_mentions_not_relates_to():
+    """query_relevant_relationships queries MENTIONS co-occurrence, not frozen RELATES_TO edges.
+
+    RELATES_TO edges are permanently frozen at 2026-03-04 (pre-skip-dedup era).
+    MENTIONS co-occurrence is live and grows with every batch_ingest run.
+    Row format from new Cypher: [from_entity, to_entity, cocount(int)]
+    """
+    import server
+
+    mock_result = [
+        ["header"],
+        [["Karma", "FalkorDB", 21],
+         ["Karma", "Colby", 123]],
+    ]
+
+    with patch.object(server, "get_falkor") as mock_get_falkor:
+        mock_r = MagicMock()
+        mock_r.execute_command.return_value = mock_result
+        mock_get_falkor.return_value = mock_r
+
+        result = server.query_relevant_relationships(["Karma"])
+
+        # The Cypher issued must use MENTIONS, not RELATES_TO
+        call_args = mock_r.execute_command.call_args[0]
+        cypher_issued = call_args[2]
+        assert "MENTIONS" in cypher_issued, "Cypher must use MENTIONS edges"
+        assert "RELATES_TO" not in cypher_issued, "Cypher must NOT use stale RELATES_TO edges"
+
+    assert len(result) == 2
+    assert result[0]["from"] == "Karma"
+    assert result[0]["to"] == "FalkorDB"
+    assert "21" in result[0]["relationship"]
+
+
+def test_query_relevant_relationships_formats_cooccurrence_label():
+    """relationship label is human-readable co-occurrence string, not a raw edge fact."""
+    import server
+
+    mock_result = [
+        ["header"],
+        [["User", "Karma", 100]],
+    ]
+
+    with patch.object(server, "get_falkor") as mock_get_falkor:
+        mock_r = MagicMock()
+        mock_r.execute_command.return_value = mock_result
+        mock_get_falkor.return_value = mock_r
+
+        result = server.query_relevant_relationships(["User"])
+
+    assert len(result) == 1
+    assert result[0]["from"] == "User"
+    assert result[0]["to"] == "Karma"
+    assert "100" in result[0]["relationship"]
+    assert "episode" in result[0]["relationship"]
 
 
 def test_build_karma_context_includes_relationship_section():
