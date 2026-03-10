@@ -1,3 +1,34 @@
+## Session 74 — v11 Karma Full Read Access COMPLETE (2026-03-10)
+
+**Status:** ✅ ALL 8 TASKS DONE — 7/7 end-to-end tests passed
+
+### What was built
+- `get_vault_file` extended: `repo/<path>` (→/karma/repo) + `vault/<path>` (→/karma/vault) prefixes, traversal protection, backward compat with 9 existing aliases
+- `/opt/seed-vault:/karma/vault:ro` volume mount added to compose.hub.yml
+- `get_local_file(path)` tool added: hub-bridge calls Payback file server via Tailscale 100.124.194.102:7771
+- `Scripts/karma-file-server.ps1`: PowerShell HTTP server on port 7771, bearer token auth, 40KB cap, traversal protection
+- `Scripts/generate-file-token.ps1`: one-time token generator
+- `KarmaFileServer` Windows Task Scheduler task: always-on, StopIfGoingOnBatteries=false, 9999 restart attempts
+- URL ACL registered: `http://+:7771/`
+- System prompt updated: complete tool docs for all three access patterns
+
+### Commits (in order)
+- `245b3e5` — compose vault mount
+- `d28684b` — get_vault_file extension
+- `a9eae3c` — import style fixes
+- `7bb0e9b` — file server scripts
+- `1656d86` — task registration scripts
+- `5ec17a3` — get_local_file tool
+- `40316e5` — system prompt unblock
+- `88a6eba` — system prompt complete
+
+### Key pitfalls discovered
+1. System prompt blocking instruction silently defeats new tools — positive action must be PRIMARY, not an exception clause
+2. `nodePath.default.resolve` is ESM fragile — both fs and path were already top-level imports
+3. `docker compose up -d` required (not restart) to pick up new hub.env vars and volume mounts
+
+### claude-mem observations saved: #4648, #4649, #4650, #4651
+
 ## Session 73 — v11 Task 6: system prompt tool docs completed (2026-03-10)
 
 **What changed:** Memory/00-karma-system-prompt-live.md — complete tool documentation for v11 access patterns
