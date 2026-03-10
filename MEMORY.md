@@ -619,3 +619,11 @@ n## Session 72 (2026-03-10) — Watcher Fix + v10 Startn### karma-inbox-watcher 
 - PROOF: [LOW] on unverified redis-py signature + verification suggestion; [HIGH] on known system facts
 - KARMA_IDENTITY_PROMPT: 12524 â†’ 14601 chars; docker restart only (no rebuild needed)
 - STATUS: v10 priorities #3 + #4 COMPLETE
+
+### Session 72: get_library_docs tool (v10 priority #5) (2026-03-10)
+- FEATURE: get_library_docs(library) deep-mode tool — URL map lookup + fetch_url reuse pattern
+- Libraries: redis-py, falkordb, falkordb-py, fastapi (covers Karma's actual [LOW] claim libraries)
+- DECISION: Context7 rejected (external dependency not needed); DIY with existing fetch_url logic
+- Files: hub-bridge/lib/library_docs.js (new), hub-bridge/app/server.js (import + TOOL_DEFINITIONS + handler)
+- TDD: 7/7 tests GREEN (test_library_docs.js); 24/24 full suite GREEN
+- STATUS: v10 priority #5 COMPLETE

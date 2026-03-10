@@ -7,6 +7,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { pricePer1M, estimateUsd, validatePricingEnv } from "./lib/pricing.js";
 import { chooseModel, validateModelEnv, GlmRateLimiter, GLM_INGEST_SLOT_TIMEOUT_MS } from "./lib/routing.js";
 import { processFeedback, prunePendingWrites } from "./lib/feedback.js";
+import { resolveLibraryUrl } from "./lib/library_docs.js";
 
 // CJS interop for pdf-parse (CommonJS module in ESM context)
 import { createRequire } from 'module';
@@ -432,7 +433,7 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
   const selfModel = process.env.MODEL_DEFAULT || "claude-sonnet-4-6";
   const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/30min, web_search=auto_on_intent]\n\n`;
 
-  let text = identityBlock + selfKnowledge + base + "\n\nTools available in deep mode (x-karma-deep: true) only: graph_query(cypher), get_vault_file(alias), write_memory(content), fetch_url(url). In standard GLM mode: NO tools — do not promise to run queries or fetch files.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
+  let text = identityBlock + selfKnowledge + base + "\n\nTools available in deep mode (x-karma-deep: true) only: graph_query(cypher), get_vault_file(alias), write_memory(content), fetch_url(url), get_library_docs(library). In standard GLM mode: NO tools — do not promise to run queries or fetch files.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
 
   // Semantic memory — top-K ledger entries most relevant to the current question.
   // Retrieved from FAISS search service (anr-vault-search:8081).
@@ -838,6 +839,17 @@ const TOOL_DEFINITIONS = [
       required: ["url"],
     },
   },
+  {
+    name: "get_library_docs",
+    description: "Fetch documentation for a known library. Use before making [LOW] claims about API behavior — check docs first. Known libraries: redis-py, falkordb, falkordb-py, fastapi. Returns up to 8KB of plain text from the official docs page.",
+    input_schema: {
+      type: "object",
+      properties: {
+        library: { type: "string", description: "Library name (e.g. 'redis-py', 'falkordb', 'falkordb-py', 'fastapi')" },
+      },
+      required: ["library"],
+    },
+  },
 ];
 
 // Map of whitelisted file aliases to actual paths
@@ -905,6 +917,32 @@ async function executeToolCall(toolName, toolInput, writeId = null) {
           .slice(0, 8192);
         console.log(`[TOOL-API] fetch_url '${url}' → ${text.length} chars`);
         return { ok: true, url, content: text, chars: text.length };
+      } catch (e) {
+        return { error: "fetch_error", message: e.message, url };
+      }
+    }
+
+    // get_library_docs — fetch official docs for a known library
+    if (toolName === "get_library_docs") {
+      const library = (toolInput.library || "").trim();
+      const url = resolveLibraryUrl(library);
+      if (!url) {
+        const known = ["redis-py", "falkordb", "falkordb-py", "fastapi"];
+        return { error: "unknown_library", message: `Unknown library '${library}'. Known libraries: ${known.join(", ")}` };
+      }
+      try {
+        const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+        if (!res.ok) return { error: "http_error", message: `${res.status} ${res.statusText}`, url };
+        const html = await res.text();
+        const text = html
+          .replace(/<script[\s\S]*?<\/script>/gi, "")
+          .replace(/<style[\s\S]*?<\/style>/gi, "")
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 8192);
+        console.log(`[TOOL-API] get_library_docs '${library}' → ${url} (${text.length} chars)`);
+        return { ok: true, library, url, content: text, chars: text.length };
       } catch (e) {
         return { error: "fetch_error", message: e.message, url };
       }
