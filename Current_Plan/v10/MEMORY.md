@@ -1,7 +1,3 @@
-## Session 71 continued (2026-03-10) — v10 snapshot created
-
-**v10 snapshot (COMPLETE):** Created `Current_Plan/v10/` with 10 files — exact copies of canonical files + updated direction.md/PROJECT.md incorporating PDF primitives. PDFs analyzed: CCintoanOS (confidence levels, anti-hallucination pre-check, Context7 MCP, PostToolUseFailure), PiMonoCoder (pi-mono 4-tool philosophy, self-as-subagent), LocalAIFortress (local routing patterns). v10 priority order: universal thumbs (turn_id plan ready) → Entity Relationships data quality fix → confidence levels + anti-hallucination coaching → Context7 MCP.
-
 ## Session 71 (2026-03-10) — Universal thumbs + Recurring Topics coaching fix
 
 **Thumbs (COMPLETE):** Extended `/v1/feedback` + `processFeedback()` + `unified.html` to show thumbs on ALL Karma messages via `turn_id` fallback. 11/11 tests pass. Deployed.
