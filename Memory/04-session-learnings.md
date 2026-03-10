@@ -99,3 +99,20 @@ Quality review after spec review caught 3 bugs in unified.html (null write_id gu
 
 **Pattern: in-process Map is sufficient for single-node write gating**
 `pending_writes` Map in server.js (module-level) is stateless-across-restarts but correct for the use case: write_id expires with TTL or on feedback. No Redis/external state needed. If hub-bridge is ever scaled horizontally (multiple instances), this breaks — but single-node is the current deployment.
+
+## Session 72 Learnings (2026-03-10)
+
+**Pattern: architectural gaps can be invisible for many sessions**
+MEMORY.md was never injected into buildSystemText() — Karma was context-blind to her own session history for the entire system's lifetime. No error, no warning, just silent absence. Lesson: audit every context source at session start to verify it's actually flowing into /v1/chat. Don't assume injection is happening.
+
+**Pattern: RELATES_TO vs MENTIONS — wrong edge type = permanently stale data**
+Disabling Graphiti dedup (Session 59) stopped creating RELATES_TO edges. All 1,423 remain frozen at 2026-03-04. --skip-dedup creates only MENTIONS. Any code that queries RELATES_TO for "current" relationships is querying a snapshot from Chrome-extension era. Rule: after changing batch_ingest mode, audit all code that depends on edge types created by that mode.
+
+**Pattern: hub-bridge multi-file sync is a recurring silent failure mode**
+Two sessions now (68, 72) have had stale-code deploys because only server.js was synced to build context. The pattern: developer sees server.js in the diff, syncs it, misses lib/ or app/public/ files. Fix rule: always grep full diff before every deploy. Decision #27.
+
+**Pattern: DIY beats external dependency when existing infrastructure covers the use case**
+Context7 (external SaaS, 1,000 free calls/month) vs DIY get_library_docs (30min, reuses fetch_url, zero dependency). fetch_url already does HTML strip + 8KB cap. LIBRARY_URLS map covers Karma's actual [LOW] claim libraries. External service adds operational risk, account dependency, and call limit anxiety. When existing fetch infrastructure is adequate, use it.
+
+**Pattern: combining related priorities into one system prompt section saves chars and improves coherence**
+Confidence levels (#3) + anti-hallucination gate (#4) were two separate priorities but clearly belong in the same behavioral section. Combining them meant less back-and-forth between related rules and saved system prompt chars. Look for priority clusters that share behavioral context before adding separate sections.

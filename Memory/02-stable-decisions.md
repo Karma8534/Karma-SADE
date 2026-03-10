@@ -63,3 +63,25 @@ After a squash merge to main, vault-neo local branch diverges (non-linear histor
 
 ### Decision #18: compose up -d required to re-read hub.env
 `docker restart anr-hub-bridge` reuses existing container environment and does NOT re-read env_file entries from compose. Any hub.env change requires `docker compose -f compose.hub.yml up -d` (recreates container). This is a Docker behavior, not a bug.
+
+---
+
+## Session 72 Decisions (2026-03-10) — Locked
+
+### Decision #22: MENTIONS co-occurrence replaces stale RELATES_TO in query_relevant_relationships()
+RELATES_TO edges (1,423) are permanently frozen at 2026-03-04 — created only by Graphiti dedup mode which was disabled Session 59. --skip-dedup (permanent mode) creates only MENTIONS edges. Correct Cypher: Episodic→Entity cross-join via MENTIONS edges, cocount >= 2, ORDER BY cocount DESC LIMIT 20. Relationship label: "co-occurs in N episodes". Never use RELATES_TO for live relationship data again.
+
+### Decision #23: Confidence level tags [HIGH]/[MEDIUM]/[LOW] mandatory on technical claims in Karma system prompt
+[HIGH] = verified in current context this session. [MEDIUM] = reasonable inference from adjacent evidence. [LOW] = unverified. Tag goes on specific claim, not every sentence. [HIGH] must be rare — value comes from rarity. Applied in system prompt section "Confidence Levels — Mandatory for Technical Claims".
+
+### Decision #24: Anti-hallucination hard stop before [LOW] claims
+Before asserting unverified API behavior, function signatures, or endpoint paths: Karma must STOP and write "[LOW] I haven't verified this. Should I fetch_url, get_library_docs, or graph_query to confirm first?" Do not proceed with the unverified claim. In standard mode: "[LOW] This isn't in my current context — check docs or run a query via CC."
+
+### Decision #25: Context7 rejected — DIY get_library_docs with URL map using existing fetch_url logic
+Context7 free tier (1,000/month) covers estimated usage (60-750/month) but adds external dependency + account. DIY: lib/library_docs.js with LIBRARY_URLS map (redis-py, falkordb, falkordb-py, fastapi) + resolveLibraryUrl() pure function. handler reuses existing fetch_url HTML strip + 8KB cap pattern. No new dependencies.
+
+### Decision #26: Universal thumbs on all Karma messages via turn_id fallback
+Every Karma response shows 👍/👎 regardless of write_memory presence. /v1/feedback accepts turn_id OR write_id — write_id takes priority. General quality signal + DPO pair accumulation in standard mode. Thumbs-down + note feeds correction pipeline. Backward compatible — existing write_memory gate unchanged.
+
+### Decision #27: hub-bridge file sync must cover ALL changed files, not just server.js
+Build context is /opt/seed-vault/memory_v1/hub_bridge/ (parent). lib/ files sync to parent/lib/, app/public/ files sync to parent/app/public/, server.js syncs to parent/app/server.js. Before any --no-cache rebuild, grep changed files: `git diff --name-only HEAD~1 | grep hub-bridge` and sync every one to build context. Syncing only server.js is the #1 cause of stale hub-bridge deploys.

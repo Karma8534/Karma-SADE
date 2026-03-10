@@ -631,3 +631,16 @@ n## Session 72 (2026-03-10) — Watcher Fix + v10 Startn### karma-inbox-watcher 
 ### Session 72: System prompt updated for get_library_docs (2026-03-10)
 - Added get_library_docs to tool list (line 26), CANNOT Do exception, deep-mode coaching, anti-hallucination gate
 - Karma now knows when/how to call get_library_docs before [LOW] library API claims
+
+### Session 72: Wrap-up documentation (2026-03-10)
+- Updated direction.md: v10 COMPLETE (was v9 IN PROGRESS)
+- Updated Memory/08-session-handoff.md: Session 72 system state + new pitfalls
+- Updated Memory/11-session-summary-latest.md: full Session 72 summary
+- Updated Memory/02-stable-decisions.md: Decisions #22–#27 promoted
+- Updated Memory/04-session-learnings.md: 5 patterns captured
+- Updated Memory/corrections-log.md: 2 corrections documented
+- Updated Memory/problems-log.md: 3 problems logged
+- Updated .claude/rules/architecture.md: v10 features documented
+- Updated CLAUDE.md: 4 new pitfall entries
+- Regenerated cc-session-brief.md: current as of Session 72
+- STATUS: All documentation synchronized. v10 complete. No blockers.

@@ -137,3 +137,17 @@ At session end (CC protocol — Task 3.3):
 2. For each: append a correction entry above using the format template
 3. If 3+ corrections exist that aren't yet in the system prompt: flag to Colby for system prompt update
 4. System prompt update cycle: CC drafts → Colby approves → CC deploys (commit → push → pull → restart hub-bridge)
+
+## Correction 2026-03-10
+**Was wrong:** Karma described herself as having no access to MEMORY.md content, and responded without awareness of recent session decisions (v10 plan, prior session work).
+**Actually:** MEMORY.md was never injected into buildSystemText() — architectural gap, not a Karma error. Fixed Session 72: _memoryMdCache now injected as "KARMA MEMORY SPINE (recent)" in every /v1/chat.
+**Source:** Root cause verified in server.js buildSystemText() — no memoryMd parameter existed.
+**Applies to:** System prompt section "How Session Continuity Actually Works" — already accurate; the code fix resolved it.
+**Status:** INCORPORATED
+
+## Correction 2026-03-10
+**Was wrong:** Entity Relationships section showed "related to chrome extension" and other 2026-03-04-era data. Karma would reference these stale relationships as if current.
+**Actually:** query_relevant_relationships() was querying RELATES_TO edges — all 1,423 frozen at 2026-03-04 from Graphiti dedup era. MENTIONS co-occurrence is the live, growing data source.
+**Source:** FalkorDB edge count query confirming RELATES_TO dates; verified Karma/Colby=123 in MENTIONS co-occurrence.
+**Applies to:** karma-core/server.py query_relevant_relationships() — fixed. System prompt unchanged.
+**Status:** INCORPORATED

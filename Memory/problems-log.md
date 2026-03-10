@@ -243,3 +243,80 @@ Also removed stale DIAGNOSTIC log that was left in from Session 66 debugging.
 **Residual risk:** Any time a subagent generates JS file content via SSH heredoc, escape sequences may become literal bytes. Always verify after subagent edits to JS files with `grep -P '\x0a' targetString` or `wc -l` cross-check.
 
 **Status:** RESOLVED
+
+---
+
+## 2026-03-10 Hub-bridge deploy missing non-server.js file sync
+
+**Symptom:** After deploying v10 priority #1 (universal thumbs), smoke test passed for /v1/feedback but browser UI did not show thumbs on standard-mode messages. unified.html still had old writeId-only gate.
+
+**Root cause(s):**
+- RC1: Prior deploy only synced `server.js` to build context (`/opt/seed-vault/memory_v1/hub_bridge/app/server.js`)
+- RC2: `unified.html` and `lib/feedback.js` were modified in the same commit but NOT synced to their respective build context paths before `docker compose build`
+- RC3: Docker image COPY layer cached the old `unified.html` from the previous build context state
+
+**Fix:** Synced all three changed files before rebuild:
+```
+cp hub-bridge/app/server.js /opt/seed-vault/memory_v1/hub_bridge/app/server.js
+cp hub-bridge/app/public/unified.html /opt/seed-vault/memory_v1/hub_bridge/app/public/unified.html
+cp hub-bridge/lib/feedback.js /opt/seed-vault/memory_v1/hub_bridge/lib/feedback.js
+```
+Then `--no-cache` rebuild and redeploy.
+
+**Verified by:** Smoke test `curl /v1/feedback` with turn_id returned `{wrote:false}`. PITFALL documented in CLAUDE.md and STATE.md.
+
+**Residual risk:** Any session that modifies hub-bridge files outside `app/server.js` (e.g., `lib/`, `app/public/`) will silently deploy stale code if sync step only covers server.js. Rule: always grep `git diff --name-only HEAD~1` for the full list of changed hub-bridge files and sync ALL of them.
+
+**Status:** RESOLVED
+
+---
+
+## 2026-03-10 RELATES_TO edges frozen — Entity Relationships returning stale Chrome-era data
+
+**Symptom:** Karma's "Entity Relationships" context section showed edges like "related to chrome extension" and other 2026-03-04-era data. No recent relationships visible.
+
+**Root cause(s):**
+- RC1: `query_relevant_relationships()` in karma-core/server.py queried `RELATES_TO` edges
+- RC2: All 1,423 RELATES_TO edges were created by Graphiti dedup mode — permanently frozen at 2026-03-04 (last time Graphiti ran before it was disabled in Session 59)
+- RC3: `--skip-dedup` mode (active since Session 59) only creates `MENTIONS` edges, never RELATES_TO
+
+**Fix:** Replaced `query_relevant_relationships()` Cypher query from RELATES_TO to MENTIONS co-occurrence:
+```cypher
+MATCH (ep:Episodic)-[:MENTIONS]->(e1:Entity), (ep)-[:MENTIONS]->(e2:Entity)
+WHERE e1.name IN [...] AND e1.name <> e2.name
+WITH e1.name AS from_entity, e2.name AS to_entity, count(ep) AS cocount
+WHERE cocount >= 2
+RETURN from_entity, to_entity, cocount ORDER BY cocount DESC LIMIT 20
+```
+Relationship label changed from raw edge `r.fact` string to `"co-occurs in N episodes"`.
+
+**Verified by:** Live data confirmed: Karma/Colby=123, Karma/User=100, User/Universal AI Memory=44. 11/11 TDD tests GREEN. RestartCount=0. Decision #22 locked.
+
+**Residual risk:** RELATES_TO edges will never grow again (Graphiti dedup disabled permanently). If someone re-enables Graphiti mode, it creates RELATES_TO again — but that would break batch_ingest at scale (known pitfall). The MENTIONS approach is the correct permanent solution.
+
+**Status:** RESOLVED
+
+---
+
+## 2026-03-10 Karma context-blind to MEMORY.md — never saw her own session history
+
+**Symptom:** At session start, Karma had no awareness of v10 plan, recent sessions, or any content from MEMORY.md. Every session Karma responded as if no previous architectural decisions had been made.
+
+**Root cause(s):**
+- RC1: `buildSystemText()` in hub-bridge/app/server.js had no parameter for MEMORY.md content
+- RC2: MEMORY.md was never loaded, cached, or injected anywhere in the request pipeline
+- RC3: The system prompt, karmaCtx (FalkorDB), and semanticCtx (FAISS) were all injected — but MEMORY.md was the only canonical state file with no injection path
+
+**Fix:** Added to server.js:
+1. `const MEMORY_MD_PATH = "/karma/MEMORY.md"` and `const MEMORY_MD_TAIL_CHARS = 3000`
+2. `let _memoryMdCache = ""` module-level cache
+3. `loadMemoryMd()` function: reads MEMORY.md, takes last 3000 chars, stores in cache
+4. `buildSystemText()` extended with `memoryMd` 5th param — injects as `"--- KARMA MEMORY SPINE (recent) ---\n{memoryMd}\n---"`
+5. `/v1/chat` handler passes `_memoryMdCache || null`
+6. Startup: `loadMemoryMd(); setInterval(loadMemoryMd, 5 * 60 * 1000)`
+
+**Verified by:** 6/6 TDD tests in test_system_text.js GREEN. Deployed. Karma correctly referenced v10 plan details in next message. KARMA_IDENTITY_PROMPT length increased as expected.
+
+**Residual risk:** 3000 chars = roughly last 2-4 session entries in MEMORY.md. If MEMORY.md grows very long, oldest entries invisible. Acceptable — recent entries are what matter for continuity.
+
+**Status:** RESOLVED

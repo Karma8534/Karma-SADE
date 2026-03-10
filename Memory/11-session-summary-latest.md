@@ -1,63 +1,84 @@
 # Karma SADE Session Summary (Latest)
 
-**Date**: 2026-03-09
-**Session**: 70
-**Focus**: System prompt trim (fix 429 rate limits) + FalkorDB cron bug fix + context catchup + "resurrection spine" ban
+**Date**: 2026-03-10
+**Session**: 72
+**Focus**: v10 — All 5 priorities complete (universal thumbs, MEMORY.md spine, MENTIONS fix, confidence levels, get_library_docs)
 
 ---
 
 ## What Was Done
 
-### 1. System Prompt Trimmed (16,519 → 11,674 chars)
-- Root cause: System prompt had grown to 16,519 chars across multiple fix sessions → 67K+ input chars per request → recurring 429 rate limits from Z.ai
-- Removed: API Surface table, 3 low-value corrections (#1 verdict.txt, #2 batch_ingest direction, #5 consciousness loop), infrastructure container list, machine specs
-- All critical coaching preserved: session continuity, Recently Learned priority, tool routing, K2 deprecated, FalkorDB fields, ASSIMILATE/DEFER/DISCARD, Behavioral Contract
-- Result: 56,843 input chars per request (was 67,388), 429 pressure significantly reduced
+### 1. Universal Thumbs on All Karma Messages (v10 Priority #1)
+- Problem: 👍/👎 only showed on `write_memory` proposals (write_id present). Standard chat had no feedback signal.
+- Fix: `/v1/feedback` extended to accept `turn_id` (already in every response at `data.canonical.turn_id`).
+- `processFeedback()` 5th param `turn_id`; `dpo_pair` records which ID was used.
+- `unified.html`: `addMessage()` gate changed from `if (writeId)` to `if (writeId || turnId)`. `sendFeedback()` builds payload with write_id if present, else turn_id.
+- TDD: 4 new tests → RED → GREEN → 11/11 pass.
+- Decision #26.
 
-### 2. batch_ingest Cron Bug Fixed
-- Root cause: crontab was using Graphiti mode (no --skip-dedup). At 3200+ Episodic nodes, Graphiti dedup queries exceed 10s timeout → silent failure → watermark advances → 0 FalkorDB nodes created
-- Symptom: Karma reporting "my latest context is Session 66" despite cron running every 6h and reporting "all caught up"
-- Fix: `--skip-dedup` added permanently to vault-neo crontab
-- Manual catchup: reset watermark to 4100, 118 entries ingested, 0 errors, 879 eps/s
+### 2. MEMORY.md Spine Injection into /v1/chat (v10 Priority #2)
+- Problem: Karma was context-blind to her own MEMORY.md — the file existed but was never injected into context.
+- Fix: `_memoryMdCache` = tail 3000 chars, refreshed every 5min; injected as "KARMA MEMORY SPINE (recent)" section as 5th param to `buildSystemText()`.
+- TDD: 6 tests for inject/guard logic → all pass.
+- Decision #21 (architectural gap closed).
 
-### 3. FalkorDB Context Verified
-- March 5 entries: 76 nodes now in FalkorDB
-- March 9 entries: present (ep_hub-chat_108 through ep_hub-chat_117)
-- Karma's context now includes recent conversations
+### 3. Entity Relationships Fix — MENTIONS Co-occurrence (v10 Priority #3)
+- Problem: `query_relevant_relationships()` used RELATES_TO edges — frozen at 2026-03-04, Chrome extension era, never updated. Karma was seeing stale relationships.
+- Fix: Rewrote to use MENTIONS cross-join (Episodic→Entity co-occurrence, cocount >= 2).
+- Decision #22 — RELATES_TO edges (1,423) permanently frozen, must never be used for live data.
 
-### 4. "Resurrection Spine" Language Banned
-- Karma was using "resurrection spine", "checkpoint loading", "session ID mismatch" — fiction from old architecture docs in her graph
-- Fixed: explicit ban added to system prompt with correct explanation (FalkorDB 0-6h lag is normal)
+### 4. Confidence Levels + Anti-Hallucination Gate (v10 Priority #4)
+- System prompt updated: mandatory [HIGH]/[MEDIUM]/[LOW] labels on all claims.
+- [LOW] = hard stop — must run `get_library_docs` or `graph_query` before answering.
+- Also updated anti-hallucination gate protocol to reference the new verification tools.
+- Decisions #23, #24.
 
-### 5. DRL/RL Article Noted for Future
-- Article: https://kuriko-iwai.com/deep-reinforcement-learning
-- Connection to Karma: DPO pairs = reward signal infrastructure; corrections pipeline = manual policy iteration; write_memory gate = RL loop
-- Saved to claude-mem #4248 — revisit when DPO pair count is meaningful
-
----
-
-## What's Live (Verified)
-
-| Component | Status |
-|-----------|--------|
-| Hub Bridge | ✅ RestartCount=0, listening |
-| /v1/chat | ✅ ok, 56,843 input chars |
-| System prompt | ✅ 11,674 chars, deployed |
-| FalkorDB | ✅ 76+ March-5 nodes, caught up |
-| batch_ingest cron | ✅ --skip-dedup permanent |
+### 5. get_library_docs Tool (v10 Priority #5)
+- New hub-bridge-native deep-mode tool: `get_library_docs(library)`.
+- `hub-bridge/lib/library_docs.js`: LIBRARY_URLS map (redis-py, falkordb, falkordb-py, fastapi) + `resolveLibraryUrl()`.
+- Handler in `executeToolCall()` reuses fetch_url HTML strip + 8KB cap.
+- Context7 API evaluated and rejected: free tier too limited, per-call latency overhead, DIY is sufficient (Decision #25).
+- TDD: 7 tests → all pass.
 
 ---
 
-## What's NOT Done (Next Session)
+## Key Decisions Made
 
-1. **Thumbs up/down general feedback UI** — brainstorming started but NOT complete. Need to:
-   - Explore hub-bridge/app/ for unified.html and existing /v1/feedback endpoint
-   - Complete brainstorming → writing-plans → implement
-   - The write_memory thumbs (Session 68) is different from general per-message feedback
+| # | Decision |
+|---|----------|
+| #21 | MEMORY.md architectural gap: spine must be injected into every /v1/chat |
+| #22 | RELATES_TO edges permanently frozen; MENTIONS co-occurrence is live relationship source |
+| #23 | Confidence levels [HIGH]/[MEDIUM]/[LOW] mandatory in Karma responses |
+| #24 | [LOW] confidence = hard stop before answering; run verification tools first |
+| #25 | Context7 API rejected; DIY get_library_docs (LIBRARY_URLS map) is sufficient |
+| #26 | Universal thumbs via turn_id — all Karma messages get 👍/👎 signal |
+| #27 | Hub-bridge deploy must sync ALL changed file categories (lib/, public/, app/) |
 
 ---
 
-## Commits This Session
+## System State After Session 72
 
-- `8b989dc` — session-70: trim system prompt 16519→11674 chars to fix 429 rate limits
-- `59408af` — fix(karma-prompt): ban 'resurrection spine' + fix cron --skip-dedup + FalkorDB catchup
+- **System prompt**: 15,192 chars (11,674 after Session 70 trim → grew with v10 features)
+- **FalkorDB nodes**: 3200+ Episodic, 570+ Entity (stable, batch_ingest running every 6h)
+- **Ledger entries**: 4000+ (growing)
+- **DPO pairs**: Mechanism live (Session 68 + universal thumbs Session 72); 0/20 goal — use Karma daily
+- **All v10 priorities**: COMPLETE ✅
+
+---
+
+## TDD Results
+
+| Test file | Tests | Result |
+|-----------|-------|--------|
+| test_feedback.js | 11 | ✅ pass |
+| test_system_text.js | 6 | ✅ pass |
+| test_library_docs.js | 7 | ✅ pass |
+| Full suite | 24 | ✅ pass |
+
+---
+
+## Open Items / Next Session
+
+- **DPO accumulation**: Use Karma in deep mode with regular 👍/👎 feedback. Goal: 20 pairs.
+- **v10 complete**: Check `.gsd/ROADMAP.md` for next phase direction.
+- No blockers. All systems green.
