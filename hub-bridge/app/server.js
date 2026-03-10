@@ -8,7 +8,7 @@ import { pricePer1M, estimateUsd, validatePricingEnv } from "./lib/pricing.js";
 import { chooseModel, validateModelEnv, GlmRateLimiter, GLM_INGEST_SLOT_TIMEOUT_MS } from "./lib/routing.js";
 import { processFeedback, prunePendingWrites } from "./lib/feedback.js";
 import { resolveLibraryUrl } from "./lib/library_docs.js";
-import { getSurfaceIntents, buildActiveIntentsText } from "./lib/deferred_intent.js";
+import { generateIntentId, getSurfaceIntents, buildActiveIntentsText } from "./lib/deferred_intent.js";
 
 // CJS interop for pdf-parse (CommonJS module in ESM context)
 import { createRequire } from 'module';
@@ -441,6 +441,10 @@ function refreshActiveIntentsCache() {
   const now = Date.now();
   if (now - _activeIntentsCacheTs < ACTIVE_INTENTS_CACHE_MS) return; // not stale
   const loaded = loadActiveIntentsFromLedger();
+  // Clear and repopulate so completed/rejected intents are evicted.
+  // In-session approvals are immediately set in _activeIntentsMap at approval time
+  // and will be in the ledger by next refresh (vault write is synchronous before map.set).
+  _activeIntentsMap.clear();
   for (const [id, intent] of loaded) {
     _activeIntentsMap.set(id, intent);
   }
@@ -1005,7 +1009,7 @@ async function executeToolCall(toolName, toolInput, writeId = null) {
       if (!["topic", "phase", "always"].includes(trigger.type)) {
         return { error: "invalid_trigger_type", message: "trigger.type must be topic, phase, or always" };
       }
-      const id = "int_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+      const id = generateIntentId();
       pending_intents.set(id, {
         intent_id: id,
         intent,
@@ -1523,7 +1527,9 @@ const server = http.createServer(async (req, res) => {
       refreshActiveIntentsCache();
       const surfacedIntents = getSurfaceIntents(_activeIntentsMap, _firedThisSession, userMessage, "active");
       for (const intent of surfacedIntents) {
-        if (intent.fire_mode === "once_per_conversation") _firedThisSession.add(intent.intent_id);
+        if (intent.fire_mode === "once_per_conversation" || intent.fire_mode === "once") {
+          _firedThisSession.add(intent.intent_id);
+        }
       }
       const activeIntentsText = buildActiveIntentsText(surfacedIntents);
       const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults, semanticCtx, _memoryMdCache || null, activeIntentsText || null);
@@ -1747,21 +1753,23 @@ const server = http.createServer(async (req, res) => {
         console.log(`[FEEDBACK] 👎 write suppressed: write_id=${write_id ?? 'none'}, turn_id=${turn_id ?? 'none'}`);
       }
 
-      // Store DPO pair in vault ledger
-      try {
-        const dpoRecord = buildVaultRecord({
-          type: "log",
-          content: dpo_pair,
-          tags: ["dpo-pair"],
-          source: "feedback",
-          confidence: 0.9,
-        });
-        const dpResult = await vaultPost("/v1/memory", VAULT_BEARER, dpoRecord);
-        if (dpResult.status >= 300) throw new Error(`vault ${dpResult.status}: ${dpResult.text.slice(0, 120)}`);
-        console.log(`[FEEDBACK] DPO pair stored: signal=${signal}, has_note=${!!note}`);
-      } catch (e) {
-        console.error(`[FEEDBACK] DPO vault write failed: ${e.message}`);
-        // Non-critical -- don't fail the request
+      // Store DPO pair in vault ledger (only for write_memory feedback, not intent-only feedback)
+      if (write_id || turn_id) {
+        try {
+          const dpoRecord = buildVaultRecord({
+            type: "log",
+            content: dpo_pair,
+            tags: ["dpo-pair"],
+            source: "feedback",
+            confidence: 0.9,
+          });
+          const dpResult = await vaultPost("/v1/memory", VAULT_BEARER, dpoRecord);
+          if (dpResult.status >= 300) throw new Error(`vault ${dpResult.status}: ${dpResult.text.slice(0, 120)}`);
+          console.log(`[FEEDBACK] DPO pair stored: signal=${signal}, has_note=${!!note}`);
+        } catch (e) {
+          console.error(`[FEEDBACK] DPO vault write failed: ${e.message}`);
+          // Non-critical -- don't fail the request
+        }
       }
 
       // Cleanup
@@ -1788,7 +1796,6 @@ const server = http.createServer(async (req, res) => {
             const vResult = await vaultPost("/v1/memory", VAULT_BEARER, record);
             if (vResult.status >= 300) throw new Error(`vault ${vResult.status}: ${vResult.text.slice(0, 120)}`);
             _activeIntentsMap.set(intent_id, approvedIntent);
-            _activeIntentsCacheTs = Date.now();
             console.log(`[FEEDBACK] 👍 intent approved: intent_id=${intent_id}, intent="${intentEntry.intent.slice(0, 60)}"`);
           } catch (e) {
             console.error(`[FEEDBACK] Intent vault write failed: ${e.message}`);

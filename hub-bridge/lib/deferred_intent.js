@@ -26,7 +26,7 @@ export function triggerMatches(trigger, userMessage, sessionPhase = "active") {
       return true;
     case "topic":
       return typeof trigger.value === "string" &&
-        userMessage.toLowerCase().includes(trigger.value.toLowerCase());
+        (userMessage || "").toLowerCase().includes(trigger.value.toLowerCase());
     case "phase":
       return trigger.value === sessionPhase;
     default:
@@ -43,7 +43,7 @@ export function buildActiveIntentsText(matchedIntents) {
   if (!matchedIntents || matchedIntents.length === 0) return "";
 
   const lines = matchedIntents.map(intent =>
-    `- [${intent.action}] ${intent.intent} (fire_mode: ${intent.fire_mode}, id: ${intent.intent_id || "?"})`
+    `- [${intent.action || "surface_before_responding"}] ${intent.intent} (fire_mode: ${intent.fire_mode}, id: ${intent.intent_id || "?"})`
   );
 
   return [
