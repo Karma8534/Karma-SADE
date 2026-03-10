@@ -611,3 +611,11 @@ n## Session 72 (2026-03-10) — Watcher Fix + v10 Startn### karma-inbox-watcher 
 - LIVE: Karma/Colby=123, Karma/User=100, User/Universal AI Memory=44 â€” current, growing data
 - PROOF: 11/11 tests GREEN (2 new TDD); RestartCount=0; live query confirmed in deployed container
 - STATUS: v10 blocker #2 COMPLETE
+
+### Session 72: Confidence levels + anti-hallucination gate (2026-03-10)
+- FEATURE: [HIGH]/[MEDIUM]/[LOW] tags mandatory on technical claims in system prompt
+- FEATURE: Anti-hallucination hard stop â€” before asserting unverified API/function behavior, Karma must stop and offer to verify first
+- Covers v10 priority #3 (confidence levels) AND #4 (anti-hallucination pre-check) in one section
+- PROOF: [LOW] on unverified redis-py signature + verification suggestion; [HIGH] on known system facts
+- KARMA_IDENTITY_PROMPT: 12524 â†’ 14601 chars; docker restart only (no rebuild needed)
+- STATUS: v10 priorities #3 + #4 COMPLETE
