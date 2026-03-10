@@ -1,3 +1,24 @@
+## Session 77 — Cognitive Architecture Layer design (2026-03-10)
+
+**Status:** ✅ DESIGN COMPLETE — `docs/plans/2026-03-10-cognitive-architecture-design.md` committed
+
+### What was designed
+Three-component Cognitive Architecture Layer (Milestone 8, Decision #30):
+- **Self-Model Kernel**: `buildSelfModelSnapshot()` in hub-bridge, injected in `buildSystemText()`. Pure observational data: tools available, claim calibration, RPM state, unapproved writes, active/pending intents, detected patterns. Coaching in system prompt (threshold rules). `get_self_model()` deep-mode tool for live verification.
+- **Metacognitive Trace**: `capture_trace()` outbound tool, async write to consciousness.jsonl, observability logging. Trace schema: turn_id, topic, confidence_used, alternatives_considered (0-5 cap), tool_called, tool_changed_answer, pre/post tool confidence, write_memory_proposed. Phase 2b: consciousness loop rule-based pattern detection (confidence drift, tool effectiveness, memory cluster).
+- **Deferred Intent Engine**: `defer_intent()` + `get_active_intents()` tools. Storage: vault ledger type:"log" tags:["deferred-intent"]. Fire modes: once, once_per_conversation, recurring. Karma-created: approval gate (same as write_memory). Colby-created: direct. Tag-based trigger matching in karmaCtx. Phase 2b: trace-to-intent loop (consciousness-proposed intents).
+
+### Implementation order (Approach B: Kernel-first)
+Phase 1 → Phase 2 → Phase 2b → Phase 3 → Phase 4 → Future (trace-to-intent)
+
+### Session-end protocol addition needed
+CLAUDE.md: add "review pending intent proposals" alongside "review pending writes" in checklist.
+
+### Next step
+Invoke `superpowers:writing-plans` to create implementation plan for Phase 1.
+
+---
+
 ## Session 76 — Emergency: migrate to claude-haiku-4-5-20251001 (2026-03-10)
 
 **Status:** ✅ COMPLETE
