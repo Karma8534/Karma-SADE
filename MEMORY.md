@@ -821,3 +821,18 @@ n## Session 72 (2026-03-10) — Watcher Fix + v10 Startn### karma-inbox-watcher 
 - Exports: `generateIntentId()`, `triggerMatches()`, `buildActiveIntentsText()`, `getSurfaceIntents()`
 - Syntax verified: `node --check` passed
 - STATUS: Task 1 complete. Next: tests + integration into server.js context assembly.
+
+## Session 78 Final (2026-03-10) — All tasks complete, code review applied
+
+All 9 implementation tasks complete. Post-review commit 7a96fda pushed and redeployed.
+
+6 code review fixes:
+1. DPO guard: if (write_id || turn_id) — intent-only feedback no longer pollutes DPO dataset
+2. Cache eviction: _activeIntentsMap.clear() before repopulate — completed intents evicted
+3. triggerMatches null guard: (userMessage || "").toLowerCase()
+4. generateIntentId: imported from module, inline duplicate removed
+5. once fire_mode: added to _firedThisSession (was only once_per_conversation)
+6. Removed misleading _activeIntentsCacheTs on approval
+
+Final state: v2.11.0 live, RestartCount=0, loads active intents from ledger at startup.
+Next: Phase 1 Self-Model Kernel — buildSelfModelSnapshot(), Haiku 4.5 RPM tracking, injection.
