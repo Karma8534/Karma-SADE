@@ -121,6 +121,14 @@ v9 completed the reasoning/context layer. v10 focuses on signal quality, coding 
 9. **Local model routing**: Architecture patterns for routing between local and remote models based on task type
 10. **Security boundary enforcement**: Local-first for sensitive data; remote only for compute-heavy tasks
 
+### Additional Primitives (Karma's analysis, cross-validated)
+11. **Path-Based Rules** (CCintoanOS): Rules loaded per file path, not universal — project-level rules override global. Directly relevant to CLAUDE.md architecture (global `~/.claude/CLAUDE.md` + project-level CLAUDE.md).
+12. **Multi-Agent Brainstorm** (CCintoanOS): Orchestrate specialist agents to synthesize recommendations rather than single LLM response. Applicable to Karma's complex architectural questions.
+13. **Hooks > LLMs for Deterministic Tasks** (CCintoanOS): Use hooks for code formatting, linting, validation — reserve LLM for reasoning. Directly applicable to consciousness loop + correction capture pipeline.
+14. **Plans as Files** (PiMonoCoder): Plan = file operation, not embedded mode. Supports GSD workflow discipline — plans are `.md` files, not conversational context.
+15. **YOLO Mode / Security Honesty** (PiMonoCoder): Honest representation of security model. Manage real threats rather than artificially limiting capabilities. Relevant to deep-mode tool gate philosophy.
+16. **MCP Cost Efficiency — CLI-Progressive** (PiMonoCoder): Start with CLI tools; add MCP only when proven necessary. MCP servers have startup overhead; CLI tools are cheaper for one-off operations.
+
 ### Session 71 Completed Primitives
 - ✅ **Recurring Topics coaching**: Concrete trigger→action pattern deployed — "You've been asking this repeatedly" behavior
 - ✅ **Deep mode toggle UI**: DEEP button in unified.html with visual state
@@ -132,6 +140,9 @@ v9 completed the reasoning/context layer. v10 focuses on signal quality, coding 
 4. **Anti-hallucination pre-check coaching** — system prompt: when uncertain, use fetch_url or graph_query before asserting
 5. **Context7 MCP for Karma's coding use** — add Context7 as deep-mode tool for live library docs (Pi Coder use case)
 6. **DPO pairs accumulation** — usage habit; no code needed; target 20+ before fine-tuning consideration
+7. **Hooks > LLMs for deterministic tasks** — replace consciousness loop LLM calls with hooks where deterministic; extend correction-capture to event-driven (hooks at commit/review time, not session-end)
+8. **Path-based rules** — evaluate splitting CLAUDE.md into global (~/.claude/) + project-level for cleaner separation
+9. **Multi-agent brainstorm** — design mechanism for Karma to orchestrate specialist sub-queries on complex architectural questions
 
 ---
 

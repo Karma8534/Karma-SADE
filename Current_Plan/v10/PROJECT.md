@@ -38,6 +38,10 @@ Solution: Persistent droplet identity + GSD workflow + human-gated memory writes
 | Context7 MCP for live docs | CCintoanOS.PDF + PiMonoCoder.PDF | MEDIUM |
 | PostToolUseFailure logging | CCintoanOS.PDF | LOW |
 | Pi-mono 4-tool coding philosophy | PiMonoCoder.PDF | LOW |
+| Hooks > LLMs for deterministic tasks | CCintoanOS.PDF | LOW |
+| Path-based rules (global vs project CLAUDE.md) | CCintoanOS.PDF | LOW |
+| Plans as Files discipline | PiMonoCoder.PDF | LOW |
+| Multi-agent brainstorm for complex questions | CCintoanOS.PDF | FUTURE |
 
 ## Key Invariants
 

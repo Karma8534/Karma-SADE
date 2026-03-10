@@ -1,6 +1,6 @@
 ## Session 71 continued (2026-03-10) — v10 snapshot created
 
-**v10 snapshot (COMPLETE):** Created `Current_Plan/v10/` with 10 files — exact copies of canonical files + updated direction.md/PROJECT.md incorporating PDF primitives. PDFs analyzed: CCintoanOS (confidence levels, anti-hallucination pre-check, Context7 MCP, PostToolUseFailure), PiMonoCoder (pi-mono 4-tool philosophy, self-as-subagent), LocalAIFortress (local routing patterns). v10 priority order: universal thumbs (turn_id plan ready) → Entity Relationships data quality fix → confidence levels + anti-hallucination coaching → Context7 MCP.
+**v10 snapshot (COMPLETE + cross-validated):** Created `Current_Plan/v10/` with 10 files. Cross-validated against Karma's own PDF analysis — added 6 missed primitives: Path-Based Rules, Multi-Agent Brainstorm, Hooks>LLMs for deterministic tasks (CCintoanOS); Plans as Files, YOLO Mode security honesty, MCP CLI-progressive (PiMonoCoder). direction.md now has 16 total primitives. v10 priority order: universal thumbs → Entity Relationships fix → confidence levels + anti-hallucination → Context7 MCP → hooks>LLMs for correction capture.
 
 ## Session 71 (2026-03-10) — Universal thumbs + Recurring Topics coaching fix
 
