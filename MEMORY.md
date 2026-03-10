@@ -1,3 +1,13 @@
+## Phase 4 Task 5 — defer_intent tool added (2026-03-10)
+
+**Status:** ✅ COMPLETE — `defer_intent` tool added to TOOL_DEFINITIONS and executeToolCall handler in hub-bridge/app/server.js. Syntax clean (node --check). Pending commit.
+
+- TOOL_DEFINITIONS entry added after get_library_docs
+- Handler added before write_memory in executeToolCall — validates fields, creates int_ prefixed ID, stores in pending_intents Map
+- Approval gated via /v1/feedback with intent_id (same pattern as write_memory/write_id)
+
+---
+
 ## Session 77 — Cognitive Architecture Layer design (2026-03-10)
 
 **Status:** ✅ DESIGN COMPLETE — `docs/plans/2026-03-10-cognitive-architecture-design.md` committed

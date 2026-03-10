@@ -940,6 +940,28 @@ const TOOL_DEFINITIONS = [
       required: ["library"],
     },
   },
+  {
+    name: "defer_intent",
+    description: "Propose a behavioral intent to be remembered across requests. Karma-created intents require Colby approval (👍 at /v1/feedback with intent_id). Use when you notice a recurring gap or behavioral need that a specific trigger should address. Returns intent_id in response.",
+    input_schema: {
+      type: "object",
+      properties: {
+        intent:     { type: "string", description: "What should happen — e.g. 'verify redis-py function signatures before asserting'" },
+        trigger:    {
+          type: "object",
+          description: "When to surface — e.g. {type:'topic',value:'redis-py'} or {type:'always'} or {type:'phase',value:'start'}",
+          properties: {
+            type:  { type: "string", enum: ["topic", "phase", "always"] },
+            value: { type: "string" },
+          },
+          required: ["type"],
+        },
+        action:    { type: "string", description: "What Karma does when triggered — use 'surface_before_responding'", default: "surface_before_responding" },
+        fire_mode: { type: "string", enum: ["once", "once_per_conversation", "recurring"], description: "once=fires once then completes; once_per_conversation=fires once per session; recurring=stays active until Colby closes" },
+      },
+      required: ["intent", "trigger", "fire_mode"],
+    },
+  },
 ];
 
 // Map of whitelisted file aliases to actual paths
@@ -962,6 +984,32 @@ const TOOL_NAME_MAP = {}; // identity passthrough — tool names match karma-ser
 
 async function executeToolCall(toolName, toolInput, writeId = null) {
   try {
+    // defer_intent -- propose a behavioral intent, gated by /v1/feedback
+    if (toolName === "defer_intent") {
+      const { intent, trigger, action = "surface_before_responding", fire_mode } = toolInput;
+      if (!intent || !trigger || !fire_mode) return { error: "missing_fields", message: "intent, trigger, and fire_mode are required" };
+      if (!["once", "once_per_conversation", "recurring"].includes(fire_mode)) {
+        return { error: "invalid_fire_mode", message: "fire_mode must be once, once_per_conversation, or recurring" };
+      }
+      if (!["topic", "phase", "always"].includes(trigger.type)) {
+        return { error: "invalid_trigger_type", message: "trigger.type must be topic, phase, or always" };
+      }
+      const id = "int_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+      pending_intents.set(id, {
+        intent_id: id,
+        intent,
+        trigger,
+        action,
+        fire_mode,
+        created_by: "karma",
+        created_at: new Date().toISOString(),
+        status: "pending",
+        ts: Date.now(),
+      });
+      console.log("[TOOL-API] defer_intent proposed: intent_id=" + id + ", intent=" + intent.slice(0, 60));
+      return { proposed: true, intent_id: id, message: "Intent proposed. Awaiting Colby approval via thumbs-up (intent_id: " + id + ") — or thumbs-down to discard." };
+    }
+
     // write_memory -- propose a MEMORY.md append, gated by /v1/feedback
     if (toolName === "write_memory") {
       const content = (toolInput.content || "").trim();
