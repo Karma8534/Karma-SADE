@@ -1,18 +1,32 @@
 ## Session 75 — Switch Karma primary model to Claude Haiku 3.5 (2026-03-10)
 
-**Status:** IN PROGRESS — deploying
+**Status:** ✅ COMPLETE — Haiku 3.5 live, container healthy
 
 ### What changed
-- `hub-bridge/lib/routing.js`: added `claude-3-5-haiku-20241022` to ALLOWED_DEFAULT_MODELS + ALLOWED_DEEP_MODELS, updated defaults
-- `hub.env` on vault-neo: MODEL_DEFAULT + MODEL_DEEP = claude-3-5-haiku-20241022, pricing updated ($0.80/$4.00 per 1M)
-- lib files (feedback.js, pricing.js, library_docs.js) committed to git — were only in build context before
+- `MODEL_DEFAULT` + `MODEL_DEEP`: `glm-4.7-flash`/`gpt-4o-mini` → `claude-3-5-haiku-20241022` (both)
+- `hub-bridge/lib/routing.js`: updated `ALLOWED_DEFAULT_MODELS`, `ALLOWED_DEEP_MODELS`, default constants (Decision #28)
+- `hub.env` on vault-neo: MODEL_DEFAULT + MODEL_DEEP updated; `PRICE_CLAUDE_INPUT_PER_1M=0.80`, `OUTPUT=4.00`
+- `hub-bridge/lib/*.js` (all 4 files) committed to git — were missing from repo, only in build context
+- Container rebuilt `--no-cache` and deployed; `RestartCount=0`; verified via `docker exec env | grep MODEL`
 
-### DPO diagnosis
-- DPO pairs ARE being written (logs confirm). Previous "0 pairs" count was outdated.
-- Thumbs render correctly when turn_id is present. Feedback flow functional.
+### DPO diagnosis (resolved)
+- DPO pairs ARE being written — logs confirmed: `[FEEDBACK] DPO pair stored: signal=up`
+- Previous "0 pairs" claim was outdated/unverified. Feedback pipeline is functional.
 
-### Active task
-- Rebuilding hub-bridge with Haiku 3.5 as primary model
+### Verified system state (2026-03-10)
+
+| Component | Status |
+|-----------|--------|
+| Hub Bridge | ✅ Running — claude-3-5-haiku-20241022 for both standard + deep mode |
+| DPO feedback | ✅ Working — pairs confirmed in logs |
+| lib/*.js in git | ✅ Fixed — all 4 files committed (34b7326) |
+| v11 read access | ✅ Live from Session 74 |
+| FalkorDB | ✅ 3877+ nodes, cron every 6h |
+
+### Next session
+1. Chat with Karma at hub.arknexus.net — confirm sidebar shows claude-3-5-haiku-20241022
+2. Click 👍 on a response — confirm DPO pair in ledger (search tags:["dpo-pair"])
+3. Before any hub-bridge rebuild: sync `hub-bridge/lib/*.js` to `/opt/seed-vault/memory_v1/hub_bridge/lib/`
 
 ## Session 74 — v11 Karma Full Read Access COMPLETE (2026-03-10)
 

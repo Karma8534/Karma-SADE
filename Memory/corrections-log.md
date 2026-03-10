@@ -126,6 +126,20 @@ Append-only log of facts Karma got wrong in conversation. Used to update the sys
 **Actually:** The "Recently Learned (Approved)" karmaCtx block IS the primitive list. 44 canonical karma-ingest nodes exist in FalkorDB; 5 are surfaced per request.
 **Source:** Live karmaCtx inspection + FalkorDB query (44 canonical karma-ingest nodes confirmed).
 **Applies to:** How You Improve Over Time / primitives self-knowledge
+
+## Correction 2026-03-10 [Session 75] — Claude stated GLM was "smart enough" and Haiku "sub-optimal"
+**Was wrong:** Claude (CC sessions) told Colby that GLM-4.7-Flash was "smart enough" for Karma, and that Claude Haiku 3.5 was "sub-optimal" compared to GLM. These statements were made across multiple sessions and used to justify the GLM-primary architecture.
+**Actually:** GLM-4.7-Flash produces consistently lower-quality responses than Claude Haiku 3.5 for Karma's use case. Colby experienced this degradation daily for weeks. The "sub-optimal" label applied to Haiku was factually wrong. Claude Haiku 3.5 is now the primary model (Decision #28).
+**Source:** Colby's direct feedback after daily use. Claude acknowledged the error.
+**Applies to:** Model routing section of system prompt — update next cycle to reflect Haiku 3.5 as primary.
+**Status:** PARTIALLY INCORPORATED — model switched (Session 75). System prompt model references not yet updated.
+
+## Correction 2026-03-10 [Session 75] — "0 DPO pairs" was wrong
+**Was wrong:** Claude and previous sessions stated Karma had accumulated "0 DPO pairs" despite daily use — implying the feedback pipeline was broken.
+**Actually:** DPO pairs ARE being written to the vault ledger. Container logs confirmed: `[FEEDBACK] DPO pair stored: signal=up, has_note=false`. The "0 pairs" count was never verified against actual logs — it was an assumption.
+**Source:** `docker logs anr-hub-bridge` during Session 75 — confirmed successful DPO writes.
+**Applies to:** No system prompt change needed — was a Claude CC session-level misstatement.
+**Status:** RESOLVED — correct state documented in MEMORY.md and problems-log.md.
 **Status:** INCORPORATED — primitives coaching added to "How You Improve Over Time" section 2026-03-05
 
 ---

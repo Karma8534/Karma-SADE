@@ -200,7 +200,9 @@
       "Bash(powershell -Command \"git worktree list\")",
       "Bash(powershell -Command \"git add hub-bridge/app/server.js && git commit -m ''fix: gate tool-calling to deep-mode only — standard GLM requests no longer get tool execution''\")",
       "Bash(powershell -Command \"git add hub-bridge/app/server.js; git commit -m ''fix: gate tool-calling to deep-mode only — standard GLM requests no longer get tool execution''\")",
-      "Bash(powershell -Command \"git add hub-bridge/app/server.js MEMORY.md; git commit -m ''fix: gate tool-calling to deep-mode only — standard GLM requests no longer get tool execution''\")"
+      "Bash(powershell -Command \"git add hub-bridge/app/server.js MEMORY.md; git commit -m ''fix: gate tool-calling to deep-mode only — standard GLM requests no longer get tool execution''\")",
+      "mcp__plugin_claude-mem_mcp-search__get_observations",
+      "Bash(node --test hub-bridge/tests/test_feedback.js)"
     ]
   }
 }

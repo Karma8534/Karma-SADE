@@ -31,7 +31,7 @@ Ledger → anr-vault-search (auto-reindex on change + every 5min) → FAISS vect
 
 /v1/chat request → [karmaCtx via karma-server, semanticCtx via anr-vault-search] in parallel
                  → buildSystemText(karmaCtx, ckLatest, webResults, semanticCtx)
-                 → GLM-4.7-Flash (primary) or gpt-4o-mini (deep mode)
+                 → claude-3-5-haiku-20241022 (primary and deep mode, Decision #28 Session 75)
 ```
 
 ## Layer Details
@@ -53,18 +53,20 @@ Ledger → anr-vault-search (auto-reindex on change + every 5min) → FAISS vect
 - URL: https://hub.arknexus.net
 - Endpoints in use: `/v1/ambient` (hook capture), `/v1/chat` (Karma chat), `/v1/context` (context query), `/v1/cypher` (graph query), `/v1/self-model`, `/v1/ingest` (PDF pipeline), `/v1/feedback` (write_memory approval gate — Session 68)
 - Auth: Bearer token (hub.chat.token.txt for chat; hub.capture.token.txt for ambient hooks)
-- Model routing: GLM-4.7-Flash primary (~80%), gpt-4o-mini fallback (~20%) — Decision #7
+- Model routing: `claude-3-5-haiku-20241022` for both standard + deep mode — Decision #28 (Session 75). GLM-4.7-Flash retired from primary use.
 - **System prompt**: Loaded from `Memory/00-karma-system-prompt-live.md` at startup via `KARMA_IDENTITY_PROMPT`. Injected as `identityBlock` at top of `buildSystemText()`. 15,192 chars as of Session 72. Future updates: git pull + `docker restart anr-hub-bridge` only (no rebuild needed).
 - **Context assembly**: Each `/v1/chat` fetches `karmaCtx` (FalkorDB recency via karma-server) + `semanticCtx` (FAISS top-5 via anr-vault-search) in parallel via `Promise.all`. Additionally: `_memoryMdCache` (tail 3000 chars of MEMORY.md, refreshed every 5min) injected as "KARMA MEMORY SPINE (recent)" section (Session 72).
 - **karmaCtx sections** (as of Session 72): User Identity, Relevant Knowledge, Entity Relationships (MENTIONS co-occurrence — NOT stale RELATES_TO), Recurring Topics (top-10 by episode count, 30min cache), Recent Memories, Recently Learned, What I Know About The User.
 - **Entity Relationships** (FIXED Session 72): `query_relevant_relationships()` now uses MENTIONS co-occurrence cross-join (Episodic→Entity, cocount >= 2). RELATES_TO edges (1,423) are permanently frozen at 2026-03-04 and must never be used for live relationship data. Decision #22.
 - **Brave Search**: Auto-triggered by `SEARCH_INTENT_REGEX` on user message. Top-3 results injected into context. API key at `/opt/seed-vault/memory_v1/session/brave.api_key.txt`.
-- **Tool-calling** (Session 66+): GLM-4.7-Flash gets tool-calling via `callGPTWithTools()`. Active tools (deep mode only, hub-bridge-native): `get_vault_file(alias)`, `write_memory(content)`, `fetch_url(url)`, `get_library_docs(library)`. Proxied to karma-server: `graph_query(cypher)`. Hub-bridge-native tools do NOT require hooks.py ALLOWED_TOOLS update. Karma-server-proxied tools DO require ALLOWED_TOOLS update + karma-server rebuild.
+- **Tool-calling** (Session 66+, updated Session 75): Haiku 3.5 uses `callLLMWithTools()` → Anthropic SDK path (isAnthropicModel=true). Active tools (deep mode only, hub-bridge-native): `get_vault_file(alias)`, `write_memory(content)`, `fetch_url(url)`, `get_library_docs(library)`, `get_local_file(path)`. Proxied to karma-server: `graph_query(cypher)`. Hub-bridge-native tools do NOT require hooks.py ALLOWED_TOOLS update. Karma-server-proxied tools DO require ALLOWED_TOOLS update + karma-server rebuild.
 - **get_library_docs tool** (Session 72): hub-bridge-native, deep-mode only. `lib/library_docs.js` — LIBRARY_URLS map + `resolveLibraryUrl()`. Known libraries: redis-py, falkordb, falkordb-py, fastapi. Reuses fetch_url HTML strip + 8KB cap. Decision #25.
 - **Universal thumbs** (Session 72): `/v1/feedback` accepts `turn_id` OR `write_id`. Every Karma message has 👍/👎 via turn_id. write_id takes priority when both present. DPO pairs accumulate from standard-mode messages. Decision #26.
 - **Deep-mode tool gate** (Session 67): Tool-calling ONLY for `x-karma-deep: true` requests. Standard chat (deep_mode=false) routes to `callLLM()` — no tools. Line 1269-1272 in server.js: `deep_mode ? callLLMWithTools() : callLLM()`.
 - **write_memory gate** (Session 68): Karma calls `write_memory(content)` in deep mode → hub-bridge stores in `pending_writes` Map with TTL → returns `write_id` in response → user 👍/👎 at `/v1/feedback` → if approved: MEMORY.md appended + DPO pair written to vault ledger (`type:"log"`, `tags:["dpo-pair"]`).
-- **GLM_RPM_LIMIT**: 40 RPM (raised from 20 in Session 66). Set in hub.env.
+- **GLM_RPM_LIMIT**: 40 RPM kept in hub.env for compat — not invoked when MODEL_DEFAULT is claude-. GLM rate-limit code paths skip for claude- models (startsWith check).
+- **lib/*.js location** (Session 75): `hub-bridge/lib/` in git repo. Build context: `/opt/seed-vault/memory_v1/hub_bridge/lib/`. After git pull on vault-neo, must `cp hub-bridge/lib/*.js /opt/seed-vault/memory_v1/hub_bridge/lib/` before `--no-cache` rebuild.
+- **Haiku 3.5 pricing**: `PRICE_CLAUDE_INPUT_PER_1M=0.80`, `PRICE_CLAUDE_OUTPUT_PER_1M=4.00` in hub.env.
 
 ### Vault API
 - FastAPI application running in Docker (anr-vault-api container)

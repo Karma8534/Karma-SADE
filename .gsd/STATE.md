@@ -12,7 +12,7 @@
 |-----------|--------|-------|
 | **Consciousness Loop** | ✅ WORKING | 60s OBSERVE-only cycles. Zero LLM calls confirmed in source. RestartCount=0. |
 | **Hub Bridge API** | ✅ WORKING | /v1/chat, /v1/ambient, /v1/context, /v1/cypher, /v1/ingest operational. |
-| **Voice & Persona** | ✅ DEPLOYED | Peer-level voice verified. gpt-4o-mini confirmed (MODEL_DEEP verified 2026-03-04). |
+| **Voice & Persona** | ✅ DEPLOYED | Peer-level voice via claude-3-5-haiku-20241022 (switched Session 75). Both standard + deep mode now Haiku. |
 | **FalkorDB Graph** | ✅ FULLY CAUGHT UP | 3877 nodes (3305 Episodic + 571 Entity + 1 Decision). batch_ingest cron every 6h. Last run: 305 eps/s, 0 errors. |
 | **Ledger** | ✅ GROWING | 4000+ entries. Git commits + session-end hooks capturing actively. |
 | **Work-Loss Prevention** | ✅ GATES LIVE | Pre-commit hook + session-end hook both active and verified. |
@@ -23,8 +23,9 @@
 | **Conversation Capture** | ✅ WORKING | All 3049 hub/chat episodes ingested via --skip-dedup. |
 | **batch_ingest Schedule** | ✅ CONFIGURED | Cron every 6h on vault-neo. --skip-dedup mode. |
 | **karma-server image** | ✅ REBUILT | Session-66: graph_query handler + hooks.py whitelist fix. |
-| **Routing/Pricing (Decision #2)** | ✅ CORRECTED | GLM=$0, tool-use respects deep_mode, MODEL_DEEP default fixed. Session-60. |
-| **GLM Rate Limiter** | ✅ LIVE | 40 RPM (raised from 20 in Session 66). /v1/chat=429, /v1/ingest=waitForSlot. V1-V5 verified. |
+| **Primary Model (Decision #28)** | ✅ LIVE — Haiku 3.5 | claude-3-5-haiku-20241022 for both MODEL_DEFAULT + MODEL_DEEP. hub.env updated. Container redeployed Session 75. |
+| **Routing/Pricing (Decision #28)** | ✅ UPDATED | Haiku 3.5 pricing: $0.80/$4.00 per 1M. routing.js allow-list updated. lib/*.js now in git. |
+| **GLM Rate Limiter** | ✅ KEPT (compat) | 40 RPM class kept in routing.js for compat; not invoked for claude- models. |
 | **Config Validation Gate** | ✅ LIVE | MODEL_DEFAULT + MODEL_DEEP allow-lists. [CONFIG ERROR] + exit(1) on bad config. 27/27 tests. |
 | **OpenAI API key** | ✅ SECURED | File-based read (mounted volume), not env var (docker inspect clean). |
 | **PDF Watcher** | ✅ WORKING | Rate-limit backoff + jam notification + time-window scheduling. |
@@ -272,7 +273,7 @@ karmaCtx (FalkorDB recency) + semanticCtx (FAISS top-5) fetched via Promise.all 
 
 ---
 
-**Last updated:** 2026-03-05T20:00:00Z (Session 67 — Security fix + v9 Phase 3 persona coaching + Phase 4 design)
+**Last updated:** 2026-03-10T22:30:00Z (Session 75 — Model switch to Haiku 3.5 + lib/*.js into git)
 **Owner:** Claude Code (writes on Colby approval)
 **Canonical location:** C:\Users\raest\Documents\Karma_SADE\.gsd\STATE.md
 
@@ -384,3 +385,33 @@ Thumbs-down + note feeds correction pipeline. Backward compatible — existing w
 - Injected as "--- KARMA MEMORY SPINE (recent) ---" section in buildSystemText()
 - hub-bridge now auto-injects last 3000 chars of MEMORY.md into every /v1/chat request
 - 6/6 TDD tests (test_system_text.js) GREEN; deployed + verified Karma can see v10 plan details
+
+### Decision #28: claude-3-5-haiku-20241022 replaces GLM-4.7-Flash as primary model (2026-03-10, LOCKED)
+Previous routing: GLM-4.7-Flash (standard) + gpt-4o-mini (deep). Both were Claude's recommendations across multiple sessions. GLM performance was poor. Colby directed switch to Claude Haiku 3.5.
+MODEL_DEFAULT=claude-3-5-haiku-20241022, MODEL_DEEP=claude-3-5-haiku-20241022. Pricing: $0.80/$4.00 per 1M.
+routing.js ALLOWED_DEFAULT_MODELS + ALLOWED_DEEP_MODELS updated. GLM still in allow-list as fallback option.
+hub.env updated on vault-neo. Container rebuilt --no-cache. Verified: `docker exec anr-hub-bridge env | grep MODEL` → both show claude-3-5-haiku-20241022.
+
+### Session 74 Accomplishments (2026-03-10) — v11 Karma Full Read Access
+- get_vault_file extended: repo/<path> + vault/<path> prefixes + traversal protection (path.resolve + startsWith)
+- /opt/seed-vault:/karma/vault:ro volume mount added to compose.hub.yml
+- get_local_file(path) tool: hub-bridge calls PowerShell HTTP server on Payback (Tailscale 100.124.194.102:7771)
+- karma-file-server.ps1: PowerShell HttpListener, bearer token auth, 40KB cap, traversal protection
+- KarmaFileServer Windows Task Scheduler task registered (always-on, AtBoot+AtLogon)
+- System prompt updated: repo/<path> + vault/<path> + get_local_file concrete examples (16,511 chars)
+- 7/7 end-to-end tests passed; all 8 plan tasks complete
+
+### Session 75 Accomplishments (2026-03-10) — Model Switch to Haiku 3.5
+- Diagnosed: DPO pairs ARE working (log evidence); prior "0 pairs" was outdated
+- MODEL_DEFAULT + MODEL_DEEP switched from GLM/gpt-4o-mini → claude-3-5-haiku-20241022
+- routing.js: updated ALLOWED_DEFAULT_MODELS + ALLOWED_DEEP_MODELS + default constants (Decision #28)
+- hub.env on vault-neo: MODEL_DEFAULT + MODEL_DEEP updated; PRICE_CLAUDE updated to Haiku rates
+- lib/*.js (feedback.js, routing.js, pricing.js, library_docs.js) committed to git — were missing from repo
+- Container rebuilt --no-cache and deployed; RestartCount=0; env verified inside container
+- Acknowledged root failure: backend-only verification declared as "green" without UX testing
+
+## Next Session Starts Here
+
+1. **Verify Karma quality with Haiku 3.5**: Chat with Karma at hub.arknexus.net — confirm sidebar shows claude-3-5-haiku-20241022, response quality improved over GLM
+2. **Check thumbs and DPO accumulation**: Click 👍 on a response, confirm DPO pair lands in ledger (search tags:["dpo-pair"])
+3. **Sync lib/*.js to build context**: Before next rebuild, sync hub-bridge/lib/*.js to /opt/seed-vault/memory_v1/hub_bridge/lib/

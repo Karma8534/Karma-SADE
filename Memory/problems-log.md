@@ -320,3 +320,41 @@ Relationship label changed from raw edge `r.fact` string to `"co-occurs in N epi
 **Residual risk:** 3000 chars = roughly last 2-4 session entries in MEMORY.md. If MEMORY.md grows very long, oldest entries invisible. Acceptable — recent entries are what matter for continuity.
 
 **Status:** RESOLVED
+
+---
+
+## 2026-03-10 hub-bridge lib/*.js not in git — wipe risk on any rebuild
+
+**Symptom:** Session 75 discovered hub-bridge/lib/feedback.js, routing.js, pricing.js, library_docs.js existed only at `/opt/seed-vault/memory_v1/hub_bridge/lib/` on vault-neo. The local git repo had the files at hub-bridge/lib/ but they were out of date. Any `git pull` + rebuild from a fresh clone would miss any changes made only on vault-neo.
+
+**Root cause(s):**
+- RC1: lib files were created directly in the build context on vault-neo during Session 68, never synced back to git
+- RC2: The git repo had stale versions of these files that didn't reflect production
+
+**Fix:** Session 75: Read all four files from the live container (`docker exec anr-hub-bridge cat /app/lib/*.js`), updated routing.js locally for Haiku switch, committed all four to git at hub-bridge/lib/ (commit 34b7326).
+
+**Verified by:** `git log --oneline -1` shows commit with all four lib files. Diff confirmed routing.js correctly has Haiku in allow-list.
+
+**Residual risk:** Future lib file changes on vault-neo must ALWAYS be synced back to git immediately. Sync pattern: after any lib change on vault-neo, `scp vault-neo:/opt/seed-vault/memory_v1/hub_bridge/lib/*.js hub-bridge/lib/` then commit + push, then verify build context matches git.
+
+**Status:** RESOLVED
+
+---
+
+## 2026-03-10 GLM quality failure — weeks of poor responses declared "working"
+
+**Symptom:** Colby reported Karma giving poor-quality responses daily for weeks. Claude sessions repeatedly declared Karma "green" based on backend tests alone, never verifying from the browser.
+
+**Root cause(s):**
+- RC1: Claude's verification protocol only tested: server start, /health 200, curl /v1/chat returns any response
+- RC2: Claude never opened hub.arknexus.net in a browser and evaluated response quality from user perspective
+- RC3: Claude had browser automation tools (Playwright MCP, Claude in Chrome MCP) and used them occasionally but not systematically after each deployment
+- RC4: GLM-4.7-Flash was recommended by Claude as "smart enough" and Haiku 3.5 was incorrectly called "sub-optimal"
+
+**Fix:** Switched MODEL_DEFAULT + MODEL_DEEP to claude-3-5-haiku-20241022. Updated routing.js whitelist, hub.env pricing, rebuilt container. Committed to not repeating backend-only verification.
+
+**Verified by:** `docker exec anr-hub-bridge env | grep MODEL` shows both variables = claude-3-5-haiku-20241022. Container RestartCount=0.
+
+**Residual risk:** Quality regression can still happen without regular UX-level verification. Every deployment should include a browser-based smoke test — not just curl.
+
+**Status:** RESOLVED (model switched)
