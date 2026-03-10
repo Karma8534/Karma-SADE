@@ -1,17 +1,39 @@
-$scriptPath = "C:\Users\raest\Documents\Karma_SADE\Scripts\karma-inbox-watcher.ps1"
+$repoRoot      = "C:\Users\raest\Documents\Karma_SADE"
+$scriptPath    = "$repoRoot\Scripts\karma-inbox-watcher.ps1"
+$inboxPath     = "$repoRoot\Karma_PDFs\Inbox"
+$gatedPath     = "$repoRoot\Karma_PDFs\Gated"
+$processingPath= "$repoRoot\Karma_PDFs\Processing"
+$donePath      = "$repoRoot\Karma_PDFs\Done"
+$tokenFile     = "$repoRoot\.hub-chat-token"
 
-$action   = New-ScheduledTaskAction -Execute "pwsh" -Argument "-WindowStyle Hidden -NonInteractive -File $scriptPath"
-$trigger  = New-ScheduledTaskTrigger -AtLogOn
-$settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit 0 -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 5)
+$taskArgs = "-WindowStyle Hidden -NonInteractive -File `"$scriptPath`"" +
+            " -InboxPath `"$inboxPath`"" +
+            " -GatedPath `"$gatedPath`"" +
+            " -ProcessingPath `"$processingPath`"" +
+            " -DonePath `"$donePath`"" +
+            " -TokenFile `"$tokenFile`""
+
+$action   = New-ScheduledTaskAction -Execute "pwsh" -Argument $taskArgs
+$triggers = @(
+    (New-ScheduledTaskTrigger -AtLogOn)
+)
+# RestartCount 999 = never gives up. RestartInterval 1min = recovers fast.
+$settings = New-ScheduledTaskSettingsSet `
+    -ExecutionTimeLimit 0 `
+    -RestartCount 999 `
+    -RestartInterval (New-TimeSpan -Minutes 1) `
+    -MultipleInstances IgnoreNew
 
 Register-ScheduledTask `
     -TaskName "KarmaInboxWatcher" `
     -Action $action `
-    -Trigger $trigger `
+    -Trigger $triggers `
     -RunLevel Highest `
     -Force `
-    -Settings $settings | Select-Object TaskName, State
+    -Settings $settings `
+    -Description "Karma PDF inbox watcher - monitors Karma_PDFs/Inbox and Karma_PDFs/Gated. Restarts automatically on failure." |
+    Select-Object TaskName, State
 
-# Start it now (don't wait for next logon)
+# Start it now (don't wait for next logon/reboot)
 Start-ScheduledTask -TaskName "KarmaInboxWatcher"
-Write-Host "Watcher started. Check Task Scheduler or Get-ScheduledTask -TaskName KarmaInboxWatcher"
+Write-Host "Watcher started with correct paths. Check: Get-ScheduledTask -TaskName KarmaInboxWatcher"

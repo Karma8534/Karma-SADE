@@ -142,7 +142,7 @@ function Start-KarmaServices {
     $allHealthy = $true
 
     # ── Step 0: Load Secrets ──
-    Write-Log "── Step 0/3: Secrets Management ──"
+    Write-Log "── Step 0/4: Secrets Management ──"
 
     if (Test-Path $Config.SecretsScript) {
         try {
@@ -159,7 +159,7 @@ function Start-KarmaServices {
     }
 
     # ── Step 1: Ollama ──
-    Write-Log "── Step 1/3: Ollama ──"
+    Write-Log "── Step 1/4: Ollama ──"
 
     # Ollama is typically started by its own service/autostart, but verify
     $ollamaHealthy = $false
@@ -186,7 +186,7 @@ function Start-KarmaServices {
     }
 
     # ── Step 2: Open WebUI ──
-    Write-Log "── Step 2/3: Open WebUI ──"
+    Write-Log "── Step 2/4: Open WebUI ──"
 
     # Check if already healthy
     $webuiAlreadyUp = $false
@@ -228,7 +228,7 @@ function Start-KarmaServices {
     }
 
     # ── Step 3: Cockpit ──
-    Write-Log "── Step 3/3: Cockpit ──"
+    Write-Log "── Step 3/4: Cockpit ──"
 
     # Check if already healthy
     $cockpitAlreadyUp = $false
@@ -289,6 +289,26 @@ function Start-KarmaServices {
                 $allHealthy = $false
             }
         }
+    }
+
+    # ── Step 4: Karma Inbox Watcher ──
+    Write-Log "── Step 4/4: Karma Inbox Watcher ──"
+
+    $watcherScript = "C:\Users\raest\Documents\Karma_SADE\Scripts\start-karma-watcher.ps1"
+    $alreadyRunning = Get-Process pwsh -ErrorAction SilentlyContinue | Where-Object {
+        try {
+            (Get-CimInstance Win32_Process -Filter "ProcessId=$($_.Id)" -ErrorAction SilentlyContinue).CommandLine -match 'karma-inbox-watcher'
+        } catch { $false }
+    }
+
+    if ($alreadyRunning) {
+        Write-Log "Inbox watcher already running (PID $($alreadyRunning[0].Id))" "OK"
+    } elseif (-not (Test-Path $watcherScript)) {
+        Write-Log "Inbox watcher script not found: $watcherScript" "ERROR"
+        $allHealthy = $false
+    } else {
+        Start-Process pwsh -ArgumentList "-WindowStyle Hidden -NonInteractive -File `"$watcherScript`"" -WindowStyle Hidden
+        Write-Log "Inbox watcher launched (watching Karma_PDFs/Inbox + Gated)" "OK"
     }
 
     # ── Summary ──

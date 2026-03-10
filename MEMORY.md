@@ -594,3 +594,4 @@ Task 8 complete: write_memory coaching paragraph appended to "## How to Use Your
 Completed: batch_ingest --skip-dedup PITFALL added to CLAUDE.md + architecture.md. STATE.md, problems-log.md, session-handoff (Session 71), session-summary updated. cc-session-brief.md regenerated. Secret scan clean.
 
 Next: Session 71 — thumbs up/down general feedback UI for Karma chat.
+n## Session 72 (2026-03-10) — Watcher Fix + v10 Startn### karma-inbox-watcher persistent startup fixn- Fix: added Step 4 to karma_startup.ps1 — watcher now launches via existing logon orchestratorn- Watcher runs at every logon; running now (PID 235260)
