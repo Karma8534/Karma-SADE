@@ -1068,22 +1068,29 @@ async function executeToolCall(toolName, toolInput, writeId = null) {
       const payload = toolInput.payload || {};
 
       let endpoint;
-      if (mode === "health")        endpoint = `${ARIA_URL}/api/health`;
-      else if (mode === "memory_graph") endpoint = `${ARIA_URL}/api/memory_graph`;
-      else                           endpoint = `${ARIA_URL}/api/chat`;
+      let method = "POST";
+      if (mode === "health") {
+        endpoint = `${ARIA_URL}/`;
+        method = "GET";
+      } else if (mode === "memory_graph") {
+        endpoint = `${ARIA_URL}/api/memory_graph`;
+      } else {
+        endpoint = `${ARIA_URL}/api/chat`;
+      }
 
       const body = { message, ...payload };
       try {
-        const res = await fetch(endpoint, {
-          method: "POST",
+        const fetchOpts = {
+          method,
           headers: {
             "Content-Type": "application/json",
             "X-Aria-Service-Key": ARIA_SERVICE_KEY,
             "X-Aria-Delegated": "karma",
           },
-          body: JSON.stringify(body),
           signal: AbortSignal.timeout(30000),
-        });
+        };
+        if (method === "POST") fetchOpts.body = JSON.stringify(body);
+        const res = await fetch(endpoint, fetchOpts);
         const data = await res.json().catch(() => null);
         if (!res.ok) {
           console.warn(`[TOOL-API] aria_local_call mode=${mode} → ${res.status}`);

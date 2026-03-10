@@ -836,3 +836,14 @@ All 9 implementation tasks complete. Post-review commit 7a96fda pushed and redep
 
 Final state: v2.11.0 live, RestartCount=0, loads active intents from ledger at startup.
 Next: Phase 1 Self-Model Kernel — buildSelfModelSnapshot(), Haiku 4.5 RPM tracking, injection.
+
+## Session 79 (2026-03-10) — aria_local_call tool
+
+Added aria_local_call hub-bridge tool for Karma-to-Aria delegation:
+- ARIA_URL + ARIA_SERVICE_KEY in hub.env (vault-neo, not in git)
+- Tool: mode (chat|health|memory_graph), message, payload
+- Headers: X-Aria-Service-Key, X-Aria-Delegated: karma
+- Health mode: GET / (Aria has no /api/health)
+- Aria endpoint: 100.75.109.92:7890/api/chat
+- Key: Bt1MU_H7mRnEyTPE0nQtUyymOR3qvQaVxJifUdixm00 (set in hub.env; Aria runtime needs same value)
+- Status: hub-bridge wired; awaiting Aria-side key configuration for end-to-end test
