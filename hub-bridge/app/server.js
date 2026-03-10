@@ -433,7 +433,7 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
   const selfModel = process.env.MODEL_DEFAULT || "claude-sonnet-4-6";
   const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/30min, web_search=auto_on_intent]\n\n`;
 
-  let text = identityBlock + selfKnowledge + base + "\n\nTools available in deep mode (x-karma-deep: true) only: graph_query(cypher), get_vault_file(alias), write_memory(content), fetch_url(url), get_library_docs(library). In standard GLM mode: NO tools — do not promise to run queries or fetch files.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
+  let text = identityBlock + selfKnowledge + base + "\n\nTools available in deep mode (x-karma-deep: true) only: graph_query(cypher), get_vault_file(alias or repo/<path> or vault/<path>), write_memory(content), fetch_url(url), get_library_docs(library). In standard GLM mode: NO tools — do not promise to run queries or fetch files.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
 
   // Semantic memory — top-K ledger entries most relevant to the current question.
   // Retrieved from FAISS search service (anr-vault-search:8081).
@@ -808,11 +808,11 @@ const TOOL_DEFINITIONS = [
   },
   {
     name: "get_vault_file",
-    description: "Read a canonical Karma file by alias. Available aliases: MEMORY.md, consciousness, collab, candidates, system-prompt, session-handoff, session-summary, core-architecture, cc-brief.",
+    description: "Read any file on the vault-neo droplet. Three usage patterns: (1) Named aliases: MEMORY.md, consciousness, collab, candidates, system-prompt, session-handoff, session-summary, core-architecture, cc-brief. (2) Repo path: 'repo/.gsd/STATE.md', 'repo/CLAUDE.md', 'repo/.gsd/ROADMAP.md', 'repo/Memory/00-karma-system-prompt-live.md', etc. (3) Vault path: 'vault/memory_v1/ledger/memory.jsonl', 'vault/memory_v1/hub_bridge/config/hub.env', etc. Path traversal is blocked.",
     input_schema: {
       type: "object",
       properties: {
-        alias: { type: "string", description: "File alias (e.g. 'MEMORY.md', 'system-prompt', 'session-handoff')" },
+        alias: { type: "string", description: "File alias, repo path (e.g. 'repo/.gsd/STATE.md'), or vault path (e.g. 'vault/memory_v1/ledger/memory.jsonl')" },
       },
       required: ["alias"],
     },
@@ -885,11 +885,32 @@ async function executeToolCall(toolName, toolInput, writeId = null) {
     // get_vault_file is handled directly — hub-bridge has volume access to /karma/
     if (toolName === "get_vault_file") {
       const alias = (toolInput.alias || "").trim();
-      const filePath = VAULT_FILE_ALIASES[alias];
-      if (!filePath) {
-        return { error: "unknown_alias", message: `Alias '${alias}' not found. Available: ${Object.keys(VAULT_FILE_ALIASES).join(", ")}` };
-      }
       const { readFileSync } = await import("fs");
+      const nodePath = await import("path");
+
+      let filePath;
+
+      // Path-based access: repo/<path> or vault/<path>
+      if (alias.startsWith("repo/") || alias.startsWith("vault/")) {
+        const slashIdx = alias.indexOf("/");
+        const prefix = alias.slice(0, slashIdx);
+        const relativePath = alias.slice(slashIdx + 1);
+        const baseDir = prefix === "repo" ? "/karma/repo" : "/karma/vault";
+        const resolved = nodePath.default.resolve(baseDir, relativePath);
+
+        // Traversal protection: resolved path must stay within base dir
+        if (!resolved.startsWith(baseDir + "/") && resolved !== baseDir) {
+          return { error: "invalid_path", message: `Path traversal denied. Path must be under ${baseDir}/` };
+        }
+        filePath = resolved;
+      } else {
+        // Backward compat: alias lookup
+        filePath = VAULT_FILE_ALIASES[alias];
+        if (!filePath) {
+          return { error: "unknown_alias", message: `Alias '${alias}' not found. Use 'repo/<path>' for repo files, 'vault/<path>' for vault files, or one of: ${Object.keys(VAULT_FILE_ALIASES).join(", ")}` };
+        }
+      }
+
       try {
         const content = readFileSync(filePath, "utf8");
         const trimmed = content.slice(0, 20_000); // 20KB cap
