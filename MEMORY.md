@@ -1,3 +1,8 @@
+## Session 81b — Thumbs-up confirmation UI (2026-03-11)
+- unified.html: 👍 with write_id shows `✓ saved` green fade-out (2s). Plain turn_id 👍 unchanged.
+
+---
+
 ## Session 81 — Architecture clarity + MODEL_DEEP → Sonnet + K2 confirmed (2026-03-11)
 
 **Status:** ✅ COMPLETE — hub-bridge v2.11.0, MODEL_DEEP=claude-sonnet-4-6

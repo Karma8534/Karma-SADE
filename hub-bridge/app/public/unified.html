@@ -134,6 +134,9 @@
   .feedback-btns button.active { opacity: 1; }
   .feedback-btns button.active.up { color: var(--accent-green); }
   .feedback-btns button.active.down { color: var(--status-err); }
+  .write-confirmed { font-size: 0.75em; color: var(--accent-green); margin-left: 4px;
+    animation: fadeConfirm 2s ease forwards; pointer-events: none; }
+  @keyframes fadeConfirm { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
 
   /* ── Feedback note (inline correction after thumbs-down) ── */
   .feedback-note { margin-top: 4px; }
@@ -595,6 +598,15 @@
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify(buildFeedbackPayload(signal))
       });
+      // Show confirmation if this was a memory write (write_id present)
+      if (signal === 'up' && writeId) {
+        const btns = btnEl.parentElement;
+        const conf = document.createElement('span');
+        conf.className = 'write-confirmed';
+        conf.textContent = '✓ saved';
+        btns.appendChild(conf);
+        setTimeout(() => conf.remove(), 2100);
+      }
     } catch (err) {
       console.warn('[UI] Feedback send failed:', err.message);
     }
