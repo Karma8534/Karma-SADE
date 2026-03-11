@@ -919,6 +919,15 @@ const zai = ZAI_API_KEY
 if (zai) console.log("[INIT] Z.ai client ready — GLM models available");
 else console.warn("[INIT] ZAI_API_KEY not set — GLM models will fall back to OpenAI (will 404)");
 
+// ── K2 Ollama client (local Qwen — primary inference, Anthropic is fallback) ──
+const K2_OLLAMA_URL   = process.env.K2_OLLAMA_URL   || null;
+const K2_OLLAMA_MODEL = process.env.K2_OLLAMA_MODEL  || "qwen3-coder:30b";
+const k2Client = K2_OLLAMA_URL
+  ? new OpenAI({ baseURL: K2_OLLAMA_URL, apiKey: "ollama" })
+  : null;
+if (k2Client) console.log(`[INIT] K2 Ollama client ready — ${K2_OLLAMA_MODEL} @ ${K2_OLLAMA_URL}`);
+else console.warn("[INIT] K2_OLLAMA_URL not set — K2 routing disabled, Anthropic is primary");
+
 // ── Tool-use via GPT-4o (Anthropic Claude doesn't reliably trigger tool_use) ─────
 // Karma's autonomous access to her own graph/memory requires tools.
 // GPT-4o has proven tool support. Using it for /v1/chat with tool definitions.
@@ -1465,6 +1474,75 @@ async function callGPTWithTools(messages, maxTokens, model, writeId = null, aria
   }
 }
 
+// ── K2 Ollama tool-calling (primary inference — qwen3-coder:30b via Ollama) ───────
+// Throws on failure so callWithK2Fallback can catch and route to Anthropic.
+async function callK2WithTools(messages, maxTokens, writeId = null, ariaSessionId = null) {
+  if (!k2Client) throw new Error("K2 client not initialised");
+  const gptTools = TOOL_DEFINITIONS.map(t => ({
+    type: "function",
+    function: {
+      name: t.name,
+      description: t.description,
+      parameters: t.input_schema,
+    }
+  }));
+  let allMessages = [...messages];
+  let iterations = 0;
+  const MAX_ITERATIONS = 5;
+
+  while (iterations < MAX_ITERATIONS) {
+    iterations++;
+    const resp = await k2Client.chat.completions.create({
+      model: K2_OLLAMA_MODEL,
+      messages: allMessages,
+      max_tokens: maxTokens,
+      tools: gptTools,
+      tool_choice: "auto",
+    });
+
+    const toolCalls = resp.choices[0]?.message?.tool_calls || [];
+    const finishReason = resp.choices[0].finish_reason;
+    console.log(`[K2] Iteration ${iterations}: finish_reason="${finishReason}", tool_calls=${toolCalls.length}`);
+
+    if (!toolCalls.length || finishReason !== "tool_calls") {
+      return {
+        text: resp.choices[0]?.message?.content || "",
+        usage: resp.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+        finish_reason: finishReason,
+        provider: "k2-ollama",
+      };
+    }
+
+    allMessages.push({ role: "assistant", content: resp.choices[0].message.content, tool_calls: toolCalls });
+    const toolResults = [];
+    for (const call of toolCalls) {
+      const parsedArgs = call.function.arguments ? JSON.parse(call.function.arguments) : {};
+      console.log(`[K2] Executing tool: ${call.function.name}`, JSON.stringify(parsedArgs));
+      const result = await executeToolCall(call.function.name, parsedArgs, writeId, ariaSessionId);
+      toolResults.push({ tool_call_id: call.id, role: "tool", content: JSON.stringify(result) });
+    }
+    allMessages.push(...toolResults);
+  }
+
+  return { text: "(tool_loop_exceeded)", usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, finish_reason: "max_tokens", provider: "k2-ollama" };
+}
+
+// ── K2-first routing with Anthropic fallback ─────────────────────────────────────
+async function callWithK2Fallback(model, messages, maxTokens, deep_mode, writeId = null, ariaSessionId = null) {
+  if (k2Client) {
+    try {
+      const result = await callK2WithTools(messages, maxTokens, writeId, ariaSessionId);
+      return result;
+    } catch (e) {
+      console.warn(`[K2] Fallback to Anthropic — K2 error: ${e.message}`);
+    }
+  }
+  // Anthropic fallback (existing logic unchanged)
+  return deep_mode
+    ? callLLMWithTools(model, messages, maxTokens, writeId, ariaSessionId)
+    : callLLM(model, messages, maxTokens);
+}
+
 async function callLLM(model, messages, maxTokens) {
   if (isAnthropicModel(model)) {
     if (!anthropic) throw new Error("Anthropic client unavailable — ANTHROPIC_API_KEY not loaded");
@@ -1771,13 +1849,10 @@ const server = http.createServer(async (req, res) => {
         { role: "user", content: userContent },
       ];
 
-      // Tool-calling is deep-mode only. Standard requests go through callLLM (no tools).
-      const req_write_id = deep_mode
-        ? "wr_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8)
-        : null;
-      const llmResult = deep_mode
-        ? await callLLMWithTools(model, messages, max_output_tokens, req_write_id, ariaSessionId)
-        : await callLLM(model, messages, max_output_tokens);
+      // K2-primary routing: tools available in all modes when K2 is online.
+      // Anthropic fallback: tools only in deep_mode (existing behaviour preserved).
+      const req_write_id = "wr_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+      const llmResult = await callWithK2Fallback(model, messages, max_output_tokens, deep_mode, req_write_id, ariaSessionId);
       const assistantText = llmResult.text || "(empty_assistant_text)";
       const usage         = llmResult.usage;
       const debug_provider   = llmResult.provider;

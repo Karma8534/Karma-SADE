@@ -1,3 +1,14 @@
+## Session 83 (2026-03-11) — K2 as Primary Compute Substrate
+- ARCHITECTURE: K2/Ollama (qwen3-coder:30b) is now PRIMARY inference; Anthropic is silent fallback
+- ADDED: k2Client — OpenAI-compat client pointed at http://100.75.109.92:11434/v1
+- ADDED: callK2WithTools() — K2 inference with full tool-calling support (throws on failure for fallback)
+- ADDED: callWithK2Fallback() — tries K2 first, falls back to Anthropic (deep_mode gate preserved for fallback path only)
+- FIXED: Tool deep-mode gate removed — tools available in standard mode when K2 is online
+- ADDED: K2_OLLAMA_URL + K2_OLLAMA_MODEL to hub.env on vault-neo
+- Benchmark: qwen3-coder:30b warm ~0.26s TTFT, ~3.5-6s for 80-word response (MoE 30.5B, 66% CPU / 34% GPU)
+- IN PROGRESS: FAISS content_preview fix (search_service.py not yet in git — must copy before fixing)
+- Next: copy anr-vault-search/search_service.py into git, fix assistant content preference, rebuild
+
 ## Session 82b (2026-03-11) — list_local_dir + full Karma_SADE session access
 - ADDED: list_local_dir tool in server.js + /v1/local-dir endpoint in karma-file-server.ps1
 - Karma can now browse Memory/, Memory/ChatHistory/, .gsd/ to discover session files
