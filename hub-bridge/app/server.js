@@ -78,7 +78,7 @@ function loadSessionBrief() {
 // MEMORY.md cache — tail of Karma's memory spine, injected into every request.
 // Tail (most recent) = most relevant. Refreshed every 5min same as session brief.
 const MEMORY_MD_PATH = "/karma/MEMORY.md";
-const MEMORY_MD_TAIL_CHARS = 3000;
+const MEMORY_MD_TAIL_CHARS = 800;
 let _memoryMdCache = "";
 function loadMemoryMd() {
   try {
@@ -337,7 +337,7 @@ const KARMA_CTX_MAX_CHARS = Number(process.env.KARMA_CTX_MAX_CHARS || "1200");
 
 // --- Semantic search via anr-vault-search (FAISS) ---
 const FAISS_SEARCH_URL    = process.env.FAISS_SEARCH_URL || "http://anr-vault-search:8081/v1/search";
-const FAISS_SEARCH_K      = Number(process.env.FAISS_SEARCH_K || "5");
+const FAISS_SEARCH_K      = Number(process.env.FAISS_SEARCH_K || "3");
 const FAISS_ENABLED       = (process.env.FAISS_ENABLED || "1") === "1";
 
 // --- Brave Search ---
@@ -557,7 +557,7 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
   // Active Intents — behavioral rules matched to this request. Injected before karmaCtx.
   const intentBlock = activeIntentsText ? activeIntentsText + "\n\n" : "";
 
-  let text = identityBlock + selfKnowledge + intentBlock + base + "\n\nTools always available (K2/Qwen backend supports native tool-calling in all modes): graph_query(cypher), get_vault_file(alias), get_local_file(path), write_memory(content), fetch_url(url), get_library_docs(library), defer_intent(intent,trigger,fire_mode), get_active_intents(), aria_local_call(mode,message). Use tools natively via the API — do NOT output tool calls as XML or plain text.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. Be direct, occasionally dry, genuinely curious.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.";
+  let text = identityBlock + selfKnowledge + intentBlock + base;
 
   // Semantic memory — top-K ledger entries most relevant to the current question.
   // Retrieved from FAISS search service (anr-vault-search:8081).
@@ -581,11 +581,7 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
     text += `\n\n--- KARMA GRAPH SYNTHESIS ---\n${ckLatest.distillation_brief}\n---`;
   }
 
-  // Rich context injection: Karma has her complete graph/memory state available.
-  // No runtime tool-calling needed — everything is in the system prompt.
-  if (karmaCtx) {
-    text += `\n\n=== YOUR COMPLETE KNOWLEDGE STATE (INJECTED) ===\n${karmaCtx}\n=== END KNOWLEDGE STATE ===\n\nYou have your full graph above. Answer questions directly from this context. You are not missing any data.`;
-  }
+  // karmaCtx already injected in base above — do not duplicate it here.
 
   if (_sessionBriefCache) {
     text += `
@@ -1374,8 +1370,12 @@ async function callLLMWithTools(model, messages, maxTokens, writeId = null, aria
 
   while (iterations < MAX_TOOL_ITERATIONS) {
     iterations++;
+    // Prompt caching: system prompt is static per session — cache at 10% cost after first call
+    const systemBlock = systemPrompt
+      ? [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }]
+      : undefined;
     const resp = await anthropic.messages.create({
-      model, system: systemPrompt, messages: allMessages, max_tokens: maxTokens, tools: TOOL_DEFINITIONS,
+      model, system: systemBlock, messages: allMessages, max_tokens: maxTokens, tools: TOOL_DEFINITIONS,
     });
 
     const toolUseBlocks = resp.content.filter(b => b.type === "tool_use");
@@ -1553,7 +1553,11 @@ async function callLLM(model, messages, maxTokens) {
     const systemPrompt  = systemParts.join("\n\n") || undefined;
     // Ensure at least one user message (Anthropic requirement)
     if (!apiMessages.length) apiMessages.push({ role: "user", content: "(continue)" });
-    const resp = await anthropic.messages.create({ model, system: systemPrompt, messages: apiMessages, max_tokens: maxTokens });
+    // Prompt caching: system prompt cached at 10% cost after first call per session
+    const systemBlock = systemPrompt
+      ? [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }]
+      : undefined;
+    const resp = await anthropic.messages.create({ model, system: systemBlock, messages: apiMessages, max_tokens: maxTokens });
     return {
       text:         resp.content?.[0]?.text || "",
       usage:        { prompt_tokens: resp.usage?.input_tokens || 0, completion_tokens: resp.usage?.output_tokens || 0, total_tokens: (resp.usage?.input_tokens || 0) + (resp.usage?.output_tokens || 0) },
@@ -1850,10 +1854,10 @@ const server = http.createServer(async (req, res) => {
         { role: "user", content: userContent },
       ];
 
-      // K2-primary routing: tools available in all modes when K2 is online.
-      // Anthropic fallback: tools only in deep_mode (existing behaviour preserved).
+      // Claude primary routing: Haiku (standard) or Sonnet (deep), tools always available.
+      // K2/Aria is a memory tool (aria_local_call), not the primary inference engine.
       const req_write_id = "wr_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
-      const llmResult = await callWithK2Fallback(model, messages, max_output_tokens, deep_mode, req_write_id, ariaSessionId);
+      const llmResult = await callLLMWithTools(model, messages, max_output_tokens, req_write_id, ariaSessionId);
       const assistantText = llmResult.text || "(empty_assistant_text)";
       const usage         = llmResult.usage;
       const debug_provider   = llmResult.provider;

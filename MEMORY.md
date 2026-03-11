@@ -1,3 +1,13 @@
+## Session 84 (2026-03-11) — Claude Primary + K2 Memory + Prompt Caching
+- ARCHITECTURE CORRECTED: Claude Haiku (standard) / Sonnet (deep) restored as primary mouth; K2/Aria = memory tool only
+- ROUTING: callWithK2Fallback removed as primary path → callLLMWithTools handles all modes (tools always available)
+- PROMPT CACHING: cache_control ephemeral added to system prompt in both callLLMWithTools + callLLM → ~80% cost reduction on system prompt tokens after first call
+- CONTEXT PRUNING: MEMORY_MD_TAIL_CHARS 3000→800, FAISS_SEARCH_K 5→3, removed duplicate governance block from buildSystemText
+- BUG FIX: karmaCtx was injected TWICE (in base AND "COMPLETE KNOWLEDGE STATE" block) — duplicate removed
+- SYSTEM PROMPT: K2 awareness added (aria_local_call guidance), deep mode redefined as model swap only, tool gate text removed, architecture updated to reflect Claude primary
+- DESIGN DOC: docs/plans/2026-03-11-karma-claude-primary-k2-memory.md
+- STATUS: deploying
+
 ## Session 83d (2026-03-11) — Fix qwen3 thinking mode causing empty responses
 - ROOT CAUSE: qwen3-coder:30b default think=true consumed entire 16000-token budget with reasoning, leaving empty content
 - FIXED: added think:false to callK2WithTools API call
