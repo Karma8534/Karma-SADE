@@ -743,6 +743,22 @@
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
       if (e.ctrlKey && e.shiftKey && e.key === 'U') { e.preventDefault(); $fileInput.click(); }
     });
+
+    // Image paste: Ctrl+V with an image in clipboard adds it to selectedFiles
+    $input.addEventListener('paste', (e) => {
+      const items = Array.from(e.clipboardData?.items || []);
+      const imageItems = items.filter(item => item.type.startsWith('image/'));
+      if (!imageItems.length) return; // no images — let normal text paste proceed
+      e.preventDefault();
+      const incoming = imageItems.map(item => {
+        const blob = item.getAsFile();
+        const ext = (blob.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
+        return new File([blob], `pasted-image-${Date.now()}.${ext}`, { type: blob.type });
+      });
+      selectedFiles = [...selectedFiles, ...incoming].slice(0, 50);
+      if (selectedFiles.length === 50) addMessage('system', '⚠ Maximum 50 files');
+      renderFileList();
+    });
   }
 
   init();

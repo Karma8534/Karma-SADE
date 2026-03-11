@@ -1,3 +1,10 @@
+## Session 81d — Clipboard image paste support (2026-03-11)
+- unified.html: paste event listener on chat textarea detects image/* clipboard items
+- Ctrl+V screenshot or copied image → File object → selectedFiles → sent with vision pipeline
+- Text paste unaffected (early return if no image items)
+
+---
+
 ## Session 81c — Anthropic vision support for image uploads (2026-03-11)
 - server.js: image files (jpg/jpeg/png/gif/webp) now routed to Anthropic vision instead of pdf-parse
 - Deep mode: content array built with {type:"image", source:{type:"base64",...}} blocks → Sonnet can see images
