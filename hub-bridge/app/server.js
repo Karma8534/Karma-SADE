@@ -949,13 +949,23 @@ const TOOL_DEFINITIONS = [
   },
   {
     name: "get_local_file",
-    description: "Read any file from Colby's Karma_SADE folder on Payback (local machine). Path is relative to Karma_SADE root. Examples: '.gsd/STATE.md', 'CLAUDE.md', 'Scripts/karma-inbox-watcher.ps1', 'hub-bridge/app/server.js'. Use when you need to read local files that aren't on the vault-neo droplet. Returns up to 40KB.",
+    description: "Read any file from Colby's Karma_SADE folder on Payback (local machine). Path is relative to Karma_SADE root. Key session files: 'Memory/11-session-summary-latest.md', 'Memory/08-session-handoff.md', 'Memory/ChatHistory/<filename>'. Other examples: '.gsd/STATE.md', 'CLAUDE.md', 'hub-bridge/app/server.js'. Returns up to 40KB. Use list_local_dir first if you don't know the exact filename.",
     input_schema: {
       type: "object",
       properties: {
-        path: { type: "string", description: "Relative path within Karma_SADE folder (e.g., '.gsd/STATE.md', 'MEMORY.md', 'Scripts/karma-inbox-watcher.ps1')" },
+        path: { type: "string", description: "Relative path within Karma_SADE folder (e.g., 'Memory/11-session-summary-latest.md', 'Memory/ChatHistory/2026-03-10_...md', '.gsd/STATE.md')" },
       },
       required: ["path"],
+    },
+  },
+  {
+    name: "list_local_dir",
+    description: "List files and subdirectories in a directory within Colby's Karma_SADE folder. Use before get_local_file when you don't know the exact filename. Key directories: 'Memory' (session summaries, handoffs), 'Memory/ChatHistory' (archived sessions Colby saved for you), '.gsd' (project state), 'Scripts'. Empty path lists the root.",
+    input_schema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Relative directory path within Karma_SADE (e.g., 'Memory', 'Memory/ChatHistory', '.gsd'). Omit or empty string for root." },
+      },
     },
   },
   {
@@ -1239,6 +1249,30 @@ async function executeToolCall(toolName, toolInput, writeId = null, ariaSessionI
         }
         const data = await resp.json();
         console.log(`[TOOL-API] get_local_file '${filePath}' (${(data.content || "").length} chars)`);
+        return data;
+      } catch (e) {
+        return { error: "fetch_error", message: e.message };
+      }
+    }
+
+    // list_local_dir — list files in a directory on Payback via file server
+    if (toolName === "list_local_dir") {
+      if (!LOCAL_FILE_SERVER_URL || !LOCAL_FILE_TOKEN) {
+        return { error: "not_configured", message: "LOCAL_FILE_SERVER_URL and LOCAL_FILE_TOKEN must be set in hub.env" };
+      }
+      const dirPath = (toolInput.path || "").trim();
+      try {
+        const url = `${LOCAL_FILE_SERVER_URL}/v1/local-dir?path=${encodeURIComponent(dirPath)}`;
+        const resp = await fetch(url, {
+          headers: { Authorization: `Bearer ${LOCAL_FILE_TOKEN}` },
+          signal: AbortSignal.timeout(10_000),
+        });
+        if (!resp.ok) {
+          const body = await resp.text();
+          return { error: "file_server_error", status: resp.status, message: body.slice(0, 500) };
+        }
+        const data = await resp.json();
+        console.log(`[TOOL-API] list_local_dir '${dirPath || "."}' (${(data.entries || []).length} entries)`);
         return data;
       } catch (e) {
         return { error: "fetch_error", message: e.message };

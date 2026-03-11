@@ -1,3 +1,9 @@
+## Session 82b (2026-03-11) — list_local_dir + full Karma_SADE session access
+- ADDED: list_local_dir tool in server.js + /v1/local-dir endpoint in karma-file-server.ps1
+- Karma can now browse Memory/, Memory/ChatHistory/, .gsd/ to discover session files
+- Updated get_local_file + system prompt to explicitly reference session file locations
+- karma-file-server.ps1 updated — Colby must restart the scheduled task on Payback
+
 ## Session 82 (2026-03-11) — K2 Memory Graph Fix + Context Injection
 - FIXED: aria_local_call memory_graph — wrong path (/api/memory_graph → /api/memory/graph) + wrong method (POST → GET with ?query= param)
 - ADDED: fetchK2MemoryGraph() — GET /api/memory/graph?query=Colby, 5min cache, non-blocking

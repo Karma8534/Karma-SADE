@@ -50,6 +50,29 @@ while ($listener.IsListening) {
             continue
         }
 
+        # Route: GET /v1/local-dir — list files in a directory
+        if ($req.HttpMethod -eq 'GET' -and $req.Url.AbsolutePath -eq '/v1/local-dir') {
+            $dirPath = [System.Web.HttpUtility]::ParseQueryString($req.Url.Query)['path']
+            if (-not $dirPath) { $dirPath = '' }  # empty = root of Karma_SADE
+            $fullDir = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($BaseDir, $dirPath))
+            if (-not $fullDir.StartsWith($BaseDir + '\') -and $fullDir -ne $BaseDir) {
+                Send-Json 403 '{"error":"traversal_denied"}'
+                continue
+            }
+            if (-not (Test-Path $fullDir -PathType Container)) {
+                Send-Json 404 '{"error":"dir_not_found"}'
+                continue
+            }
+            $items = Get-ChildItem $fullDir | ForEach-Object {
+                $rel = $_.FullName.Substring($BaseDir.Length + 1).Replace('\','/')
+                [PSCustomObject]@{ name = $_.Name; path = $rel; type = $(if ($_.PSIsContainer) { 'dir' } else { 'file' }); bytes = $(if ($_.PSIsContainer) { 0 } else { $_.Length }) }
+            }
+            $payload = [PSCustomObject]@{ ok = $true; dir = $(if ($dirPath) { $dirPath } else { '.' }); entries = @($items) } | ConvertTo-Json -Compress -Depth 4
+            Send-Json 200 $payload
+            Write-Output "[karma-file-server] $(Get-Date -Format 'HH:mm:ss') DIR $fullDir ($($items.Count) entries)"
+            continue
+        }
+
         # Only GET /v1/local-file
         if ($req.HttpMethod -ne 'GET' -or $req.Url.AbsolutePath -ne '/v1/local-file') {
             Send-Json 404 '{"error":"not_found"}'
