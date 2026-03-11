@@ -235,7 +235,9 @@
       "Bash(powershell -Command \"git commit -m ''fix\\(chat\\): session turns 8->20, fix file upload \\(base64 JSON\\):*)",
       "Bash(powershell -Command \"git push origin main\")",
       "Bash(python3 -c \"import json,sys; models=json.load\\(sys.stdin\\)[''''models'''']; [print\\(m[''''name''''], f\"\"{m[''''size'''']//1024//1024//1024}GB\"\"\\) for m in models]\")",
-      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(''''response:'''', d.get\\(''''response'''',''''''''\\)[:300]\\); print\\(''''model:'''', d.get\\(''''model_used'''',''''unknown''''\\)\\); print\\(''''adapter:'''', d.get\\(''''adapter_in_use'''',''''none''''\\)\\)\")"
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(''''response:'''', d.get\\(''''response'''',''''''''\\)[:300]\\); print\\(''''model:'''', d.get\\(''''model_used'''',''''unknown''''\\)\\); print\\(''''adapter:'''', d.get\\(''''adapter_in_use'''',''''none''''\\)\\)\")",
+      "Bash(git config:*)",
+      "Bash(ssh neo@100.75.109.92 \"systemctl cat aria.service 2>/dev/null || systemctl cat aria 2>/dev/null || echo ''service not found as aria, listing services:'' && systemctl list-units --type=service | grep -i aria\")"
     ]
   }
 }
