@@ -1,3 +1,10 @@
+## Session 81e — Fix aria_local_call delegated write block (2026-03-11)
+- server.js: removed X-Aria-Delegated header from aria_local_call tool handler
+- Root cause: X-Aria-Delegated triggers Aria's delegated_read_only policy → 0 observations written
+- Fix: service key only → Aria writes observations from Karma's calls (Codex-verified: 0→1)
+
+---
+
 ## Session 81d — Clipboard image paste support (2026-03-11)
 - unified.html: paste event listener on chat textarea detects image/* clipboard items
 - Ctrl+V screenshot or copied image → File object → selectedFiles → sent with vision pipeline

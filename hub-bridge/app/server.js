@@ -1085,7 +1085,6 @@ async function executeToolCall(toolName, toolInput, writeId = null) {
           headers: {
             "Content-Type": "application/json",
             "X-Aria-Service-Key": ARIA_SERVICE_KEY,
-            "X-Aria-Delegated": "karma",
           },
           signal: AbortSignal.timeout(30000),
         };
