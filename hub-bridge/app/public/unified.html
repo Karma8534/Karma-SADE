@@ -671,14 +671,16 @@
       };
       let body;
 
+      fetchOpts.headers['Content-Type'] = 'application/json';
       if (selectedFiles.length > 0) {
-        const fd = new FormData();
-        fd.append('message', text);
-        fd.append('conversation_id', conversationId);
-        selectedFiles.forEach((f, i) => fd.append('file_' + i, f));
-        body = fd;
+        const files = await Promise.all(selectedFiles.map(f => new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve({ name: f.name, data_b64: reader.result.split(',')[1] });
+          reader.onerror = reject;
+          reader.readAsDataURL(f);
+        })));
+        body = JSON.stringify({ message: text, conversation_id: conversationId, stream: false, files });
       } else {
-        fetchOpts.headers['Content-Type'] = 'application/json';
         body = JSON.stringify({ message: text, conversation_id: conversationId, stream: false });
       }
       fetchOpts.body = body;

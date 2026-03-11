@@ -1,3 +1,18 @@
+## Session 80 — Context amnesia fix + upload button fix (2026-03-11)
+
+**Status:** ✅ DEPLOYED — hub-bridge v2.12.0
+
+### Root causes diagnosed from KarmaSession031026a.md
+1. **Context amnesia** (7:20 PM drift): `MAX_SESSION_TURNS=8` — only 16 messages of history in a 1.5hr session. Aria/K2 discussion from 40+ mins prior was gone.
+2. **Upload button broken**: `/v1/chat` only handled `application/json`. Files sent as `multipart/form-data` → `JSON.parse()` fails → 400 `invalid_json` every time.
+
+### Fixes
+- `MAX_SESSION_TURNS`: 8 → 20 (env-configurable), TTL 30m → 60m
+- `/v1/chat`: accepts `files: [{name, data_b64}]` array, extracts text (PDF/txt/md), prepends as `[Attached file: name]` context
+- `unified.html`: reads files via `FileReader`, encodes base64, sends as JSON (no more FormData)
+
+---
+
 ## Phase 4 Task 9 — Deferred Intent Engine deployed to vault-neo (2026-03-10)
 
 **Status:** ✅ LIVE — Full acceptance test passed. hub-bridge v2.11.0.

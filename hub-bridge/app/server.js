@@ -33,8 +33,8 @@ const KARMA_CONTEXT_URL = process.env.KARMA_CONTEXT_URL || "http://karma-server:
 // ── Within-session conversation history ──────────────────────────────────────
 // Keeps the last N exchange pairs in memory, keyed by a hash of the bearer token.
 // Sessions expire after SESSION_TTL_MS of inactivity → next message starts fresh.
-const SESSION_TTL_MS    = 30 * 60 * 1000;  // 30 minutes
-const MAX_SESSION_TURNS = 8;               // exchange pairs (16 messages total)
+const SESSION_TTL_MS    = 60 * 60 * 1000;  // 60 minutes
+const MAX_SESSION_TURNS = Number(process.env.MAX_SESSION_TURNS || "20"); // exchange pairs (40 messages total)
 const _sessionStore     = new Map();       // hash → { turns:[{role,content}], lastActive }
 
 function _tokenHash(token) {
@@ -514,7 +514,7 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
 
   // Self-knowledge prefix — Karma can accurately self-report her own infrastructure.
   const selfModel = process.env.MODEL_DEFAULT || "claude-sonnet-4-6";
-  const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/30min, web_search=auto_on_intent]\n\n`;
+  const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/60min, web_search=auto_on_intent]\n\n`;
 
   // Active Intents — behavioral rules matched to this request. Injected before karmaCtx.
   const intentBlock = activeIntentsText ? activeIntentsText + "\n\n" : "";
@@ -1514,10 +1514,28 @@ const server = http.createServer(async (req, res) => {
       if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
         return json(res, 401, { ok: false, error: "unauthorized" });
       }
-      const raw = await parseBody(req);
+      const raw = await parseBody(req, 30000000);
       let body; try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
 
-      const userMessage = (body?.message || "").toString().trim();
+      // If files were attached (base64 array from browser), extract their text and prepend to message
+      let fileContext = "";
+      if (Array.isArray(body?.files) && body.files.length > 0) {
+        for (const f of body.files) {
+          if (!f?.data_b64 || !f?.name) continue;
+          try {
+            const buf = Buffer.from(f.data_b64, "base64");
+            const ext = (f.name.split(".").pop() || "").toLowerCase();
+            const text = (ext === "txt" || ext === "md")
+              ? buf.toString("utf8").trim()
+              : await extractPdfText(buf);
+            if (text) fileContext += `\n\n[Attached file: ${f.name}]\n${text.slice(0, 12000)}`;
+          } catch (e) {
+            fileContext += `\n\n[Attached file: ${f.name} — could not extract text: ${e.message}]`;
+          }
+        }
+      }
+
+      const userMessage = ((body?.message || "").toString().trim() + fileContext).trim();
       if (!userMessage) return json(res, 400, { ok: false, error: "missing_message" });
 
       const topic = (body?.topic || "").toString().trim();
