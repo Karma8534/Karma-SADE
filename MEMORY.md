@@ -1,3 +1,9 @@
+## Session 84b (2026-03-11) — MANDATORY K2 state-write protocol
+- ADDED: Prominent MANDATORY section to system prompt — Karma must call aria_local_call after any DECISION/PROOF/PITFALL/DIRECTION/INSIGHT
+- Format: aria_local_call(mode="chat", message="STATE UPDATE — [TYPE]: [title]\n[1-3 sentences]")
+- K2=staging, vault=canonical — explicit in prompt
+- Deploy: system prompt only, git pull + docker restart
+
 ## Session 84 (2026-03-11) — Claude Primary + K2 Memory + Prompt Caching
 - ARCHITECTURE CORRECTED: Claude Haiku (standard) / Sonnet (deep) restored as primary mouth; K2/Aria = memory tool only
 - ROUTING: callWithK2Fallback removed as primary path → callLLMWithTools handles all modes (tools always available)
