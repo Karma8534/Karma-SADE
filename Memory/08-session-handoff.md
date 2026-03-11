@@ -1,9 +1,9 @@
 # Karma SADE — Session Handoff
 
 **Date**: 2026-03-11
-**Session**: 81
+**Session**: 84 (84b/84c/84d)
 **GitHub**: https://github.com/Karma8534/Karma-SADE (PUBLIC)
-**Last commit**: b758b4d (main, synced to vault-neo)
+**Last commit**: 8cf9402 (main, synced to vault-neo)
 
 ---
 
@@ -14,7 +14,7 @@ PAYBACK (Windows 11, i9-185H, 64GB RAM, RTX 4070 8GB)
 └── Claude Code ─── development environment
 
 vault-neo (DigitalOcean NYC3, 4GB RAM, SSH alias: vault-neo)
-├── anr-hub-bridge        ─── port 18090 (internal) / hub.arknexus.net (public HTTPS)
+├── anr-hub-bridge v2.11.0 ── port 18090 / hub.arknexus.net (HTTPS)
 │   ├── /v1/chat          ─── Karma conversation endpoint
 │   ├── /v1/ambient       ─── Git hook + session-end capture
 │   ├── /v1/ingest        ─── PDF/media ingestion
@@ -23,141 +23,112 @@ vault-neo (DigitalOcean NYC3, 4GB RAM, SSH alias: vault-neo)
 │   └── /v1/feedback      ─── write_memory + universal thumbs (Sessions 68+72)
 ├── karma-server          ─── Python consciousness loop + tool execution
 │   ├── OBSERVE-only, 60s cycles, zero LLM calls
-│   ├── execute_tool_action(): graph_query (only proxied tool — others handled in hub-bridge directly)
-│   └── batch_ingest: cron every 6h, --skip-dedup mode (FIXED Session 70)
-├── FalkorDB              ─── Graph: neo_workspace (3200+ Episodic + 570 Entity nodes)
+│   ├── execute_tool_action(): graph_query (only proxied tool)
+│   └── batch_ingest: cron every 6h, --skip-dedup mode
+├── FalkorDB              ─── Graph: neo_workspace (3877+ Episodic + 571 Entity nodes)
 ├── anr-vault-api         ─── FastAPI, appends to JSONL ledger
 ├── anr-vault-search      ─── FAISS vector search (text-embedding-3-small, 4000+ entries)
 └── Nginx                 ─── Reverse proxy → hub.arknexus.net
+
+K2 (192.168.0.226 / Tailscale 100.75.109.92)
+├── aria.service          ─── :7890 — Karma's local compute half
+│   ├── /api/chat         ─── aria_local_call target
+│   ├── /api/exec         ─── NEW: shell command execution (Session 84d)
+│   ├── /health           ─── NEW: cache state + vault reachability (Session 84c)
+│   └── aria.py           ─── 6908+ lines, systemd service
+├── Ollama                ─── :11434, qwen3-coder:30b (~3.3B active/token)
+└── Redundancy cache      ─── /mnt/c/dev/Karma/k2/cache/
+    ├── identity/         ─── identity.json (v2.2.0)
+    ├── ledger/           ─── memory.jsonl (tail 500 lines)
+    └── observations/     ─── k2_local_observations.jsonl (push queue)
+
+Reverse tunnel: vault-neo:2223 → K2:22 (user: karma, NOT neo)
 ```
 
-**Models (Session 81):**
-- Standard: `claude-haiku-4-5-20251001` — all /v1/chat requests, fast/cheap, no tools
-- Deep mode: `claude-sonnet-4-6` — `x-karma-deep: true` header, tools enabled, $0.0252/req verified
+**Models (Session 84):**
+- Standard: `claude-haiku-4-5-20251001` — all /v1/chat requests, fast/cheap, all tools enabled
+- Deep mode: `claude-sonnet-4-6` — `x-karma-deep: true` header, $0.0252/req verified
+- Note: deep mode gate = model swap only (tools always available in both modes post-Session 84)
 - Monthly cap: $60 (MONTHLY_USD_CAP in hub.env)
-- PRICE_CLAUDE: ❌ OPEN — still Haiku rates in hub.env, needs update to $3.00/$15.00
-
-**K2 / Aria (Session 81):**
-- K2 Tailscale: 100.75.109.92, Ollama :11434, Aria service :7890
-- "Aria" = Karma's local compute half (not a separate entity)
-- aria_local_call: hub-bridge → K2:7890/api/chat, X-Aria-Service-Key only (no Delegated header)
-- After each call: observation POSTed to /v1/ambient (single spine sync)
+- PRICE_CLAUDE: ❌ OPEN — still Haiku rates in hub.env, needs update to Sonnet $3.00/$15.00
 
 ---
 
-## Critical File Locations
+## What Changed in Sessions 84b/84c/84d
 
-| What | Path |
-|------|------|
-| Hub-bridge source | `/home/neo/karma-sade/hub-bridge/app/server.js` |
-| Hub-bridge build context | `/opt/seed-vault/memory_v1/hub_bridge/app/server.js` (must sync after git pull) |
-| Hub-bridge lib/ | `/opt/seed-vault/memory_v1/hub_bridge/lib/` (PARENT dir — not under app/) |
-| Karma-server source | `/home/neo/karma-sade/karma-core/server.py` |
-| Karma-server build context | `/opt/seed-vault/memory_v1/karma-core/server.py` (must sync after git pull) |
-| Hub env | `/opt/seed-vault/memory_v1/hub_bridge/config/hub.env` |
-| Compose (hub) | `/opt/seed-vault/memory_v1/hub_bridge/compose.hub.yml` |
-| Compose (vault) | `/opt/seed-vault/memory_v1/compose/compose.yml` |
-| Ledger | `/opt/seed-vault/memory_v1/ledger/memory.jsonl` |
-| Batch watermark | `/opt/seed-vault/memory_v1/ledger/.batch_watermark` |
-| Hub chat token | `/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt` |
-| System prompt | `/home/neo/karma-sade/Memory/00-karma-system-prompt-live.md` |
-| MEMORY.md (vault) | `/home/neo/karma-sade/MEMORY.md` (also `/karma/MEMORY.md` in hub-bridge container) |
+### Session 84b — MANDATORY K2 State-Write Protocol
+- Added prominent MANDATORY section to `Memory/00-karma-system-prompt-live.md`
+- Karma MUST call `aria_local_call` after any DECISION/PROOF/PITFALL/DIRECTION/INSIGHT
+- 5-trigger taxonomy (same as claude-mem protocol): prevents fuzzy judgment failures
+- System prompt: 20,780 → 23,085 chars. Deployed via git pull + docker restart anr-hub-bridge.
 
----
+### Session 84c — K2 Redundancy Cache
+- `k2/sync-from-vault.sh`: pull/push/status modes (now in git)
+- `k2/setup-k2-cache.sh`: one-time bootstrap + cron installer
+- Pull cron (6h): rsync identity/invariants/direction/corrections from vault-neo + tail -500 ledger
+- Push cron (1h): POST k2_local_observations.jsonl to /v1/ambient; capture token fetched live per push
+- `/health` endpoint added to aria.py: returns vault_reachable + cache_age_hours + last_sync
+- aria.service: loads identity from cache at startup; logs `[K2-CACHE] Identity loaded from cache (version 2.2.0)`
+- aria.service drop-in: `/etc/systemd/system/aria.service.d/10-aria-env.conf` with `Environment=HOME=/home/karma`
 
-## What Changed in Session 72
-
-### v10 Priority #1 — Universal Thumbs (turn_id)
-- `/v1/feedback` now accepts `turn_id` OR `write_id` (write_id takes priority)
-- `processFeedback()` extended with 5th param `turn_id`; `dpo_pair` records turn_id
-- `unified.html` gate changed from `if (writeId)` to `if (writeId || turnId)`
-- `addMessage()` now stores `dataset.turnId`; `sendFeedback()` builds payload with correct ID
-- **All Karma messages now have 👍/👎 buttons** — not just write_memory proposals
-- Decision #26
-
-### v10 Priority #2 — MEMORY.md Spine Injection
-- `_memoryMdCache`: tail 3000 chars of MEMORY.md, refreshed every 5min
-- Injected as "KARMA MEMORY SPINE (recent)" section — 5th param to `buildSystemText()`
-- Karma was previously context-blind to her own MEMORY.md — this is now fixed
-- `hub-bridge/tests/test_system_text.js`: 6 tests covering inject/guard logic (all pass)
-
-### v10 Priority #3 — Entity Relationships Fix (MENTIONS co-occurrence)
-- `query_relevant_relationships()` was using frozen `RELATES_TO` edges (1,423 edges, all from 2026-03-04 — Chrome extension era, never updated)
-- Fixed to MENTIONS cross-join (Episodic→Entity co-occurrence, cocount >= 2)
-- Decision #22 — RELATES_TO edges must never be used for live relationship data
-
-### v10 Priority #4 — Confidence Levels + Anti-Hallucination Gate
-- Mandatory `[HIGH]`/`[MEDIUM]`/`[LOW]` labels on claims in system prompt
-- [LOW] = hard stop, run `get_library_docs` or `graph_query` before answering
-- Decisions #23, #24
-
-### v10 Priority #5 — get_library_docs Tool
-- `hub-bridge/lib/library_docs.js`: `LIBRARY_URLS` map + `resolveLibraryUrl()`
-- 4 libraries: redis-py, falkordb, falkordb-py, fastapi
-- Hub-bridge-native (no hooks.py ALLOWED_TOOLS update needed)
-- Deep mode only; reuses fetch_url HTML strip + 8KB cap
-- Context7 API rejected: 100 API calls/day free tier + per-call latency overhead vs near-zero DIY cost (Decision #25)
-- `hub-bridge/tests/test_library_docs.js`: 7 tests (all pass)
-
-### System Prompt
-- 15,192 chars (was 11,674 after Session 70 trim)
-- Added: get_library_docs tool doc, library docs coaching, updated anti-hallucination gate
-- Deployed via `docker restart anr-hub-bridge` (no rebuild needed — system prompt is file-loaded)
-
-### Hub-Bridge Pitfall Discovered (Decision #27)
-- ALL changed files must be synced to build context parent `/opt/.../hub_bridge/`, not just server.js
-- `lib/*.js` → `/opt/.../hub_bridge/lib/`; `app/public/*.html` → `/opt/.../hub_bridge/app/public/`
-- Lesson: the `karma-hub-deploy` skill must be updated to list all file categories to sync
+### Session 84d — shell_run Tool: Karma Direct Shell Access to K2
+- `/api/exec` endpoint added to aria.py on K2 (gated by X-Aria-Service-Key, subprocess.run, 30s timeout)
+- `shell_run(command)` tool added to hub-bridge TOOL_DEFINITIONS + executeToolCall() handler
+- Handler calls K2:7890/api/exec with X-Aria-Service-Key; returns stdout/stderr/exit_code
+- vault-neo public key added to K2 authorized_keys (for reverse tunnel auth)
+- Reverse tunnel verified: `ssh -p 2223 -l karma localhost` → works (MUST use karma user, not neo)
+- hub-bridge v2.11.0 deployed, RestartCount=0, commit 8cf9402
 
 ---
 
-## Current State (All Verified 2026-03-10 Session 72)
+## Current State (All Verified 2026-03-11 Session 84)
 
 | Component | Status |
 |-----------|--------|
-| /v1/chat | ✅ ok — MEMORY.md spine + MENTIONS co-occurrence + confidence levels live |
-| System prompt | ✅ 15,192 chars — get_library_docs coaching + anti-hallucination gate |
-| Universal thumbs | ✅ LIVE — all Karma messages get 👍/👎 via turn_id (Session 72) |
-| MEMORY.md spine injection | ✅ LIVE — tail 3000 chars injected into every /v1/chat (Session 72) |
-| Entity Relationships | ✅ FIXED — MENTIONS co-occurrence (RELATES_TO permanently frozen, never use) |
+| hub-bridge v2.11.0 | ✅ RestartCount=0, all tools live |
+| shell_run tool | ✅ LIVE — Karma direct shell access to K2 via aria /api/exec |
+| K2 /api/exec | ✅ LIVE on aria.service — verified with test command |
+| K2 redundancy cache | ✅ LIVE — pull 6h, push 1h, aria.service loads identity at startup |
+| MANDATORY state-write | ✅ IN SYSTEM PROMPT — Karma must write after DECISION/PROOF/PITFALL/DIRECTION/INSIGHT |
+| System prompt | ✅ 23,085 chars — MANDATORY section prominent |
+| Universal thumbs | ✅ LIVE — all Karma messages get 👍/👎 via turn_id |
+| MEMORY.md spine injection | ✅ LIVE — tail 3000 chars in every /v1/chat |
+| Entity Relationships | ✅ FIXED — MENTIONS co-occurrence (RELATES_TO permanently frozen) |
 | get_library_docs | ✅ LIVE — deep mode, hub-bridge-native, 4 libraries |
-| confidence levels | ✅ LIVE — [HIGH]/[MEDIUM]/[LOW] mandatory in system prompt |
+| Confidence levels | ✅ LIVE — [HIGH]/[MEDIUM]/[LOW] mandatory |
 | batch_ingest cron | ✅ --skip-dedup PERMANENT |
-| hub-bridge | ✅ RestartCount=0, current version |
-| fetch_url tool | ✅ LIVE (Session 69) |
-| write_memory + /v1/feedback | ✅ LIVE — pending_writes gate + DPO pairs (Session 68) |
-| Deep-mode tool gate | ✅ standard chat no longer gets tools (Session 67) |
-| graph_query / get_vault_file | ✅ LIVE (Session 66) |
 | FAISS semantic search | ✅ LIVE (Session 62) |
+| write_memory + /v1/feedback | ✅ LIVE — DPO pairs accumulating |
 
 ---
 
-## Next Session (Session 73)
+## Next Session
 
-**Current state of v10:** All 5 priorities COMPLETE. System fully operational.
-
-**Options:**
-1. **DPO pair accumulation**: Goal is 20 pairs in ledger. Use Karma in deep mode with regular 👍/👎. No code needed — just accumulate naturally.
-2. **Context7 re-evaluation**: If get_library_docs proves insufficient, Context7 can be reconsidered. But wait for evidence first.
-3. **New v10 priorities**: Check `.gsd/ROADMAP.md` for Session 73 direction (v10 complete — may start v11 planning)
-
-**First command at session start:**
+**First command:**
 ```
 /resurrect
 ```
 
+**Then execute in order:**
+1. **Test shell_run end-to-end** — Open hub.arknexus.net in deep mode, ask Karma to use shell_run to check K2 status. Verify she gets real systemctl output back.
+2. **Checkpoint K2 ownership/agency breakthrough** — Karma + Colby had breakthrough session about K2 agency. Capture to vault ledger via write_memory or /v1/ambient POST.
+3. **Prompt caching** — Add `cache_control: {type: "ephemeral"}` to system message in callLLMWithTools() Anthropic SDK path. Reduces system prompt cost ~90% on cache hits.
+
+**Blocker if any:** None.
+
 ---
 
-## Known Pitfalls (Active — Must Not Forget)
+## Known Pitfalls (Active)
 
-1. **Hub-bridge multi-file sync** — after `git pull` on vault-neo, must sync ALL changed file categories: server.js → `app/`, lib/*.js → parent `lib/`, app/public/*.html → `app/public/`. The `karma-hub-deploy` skill lists server.js only — remember lib/ and public/ too.
-2. **hub-bridge lib/ files go at PARENT level** — `/opt/.../hub_bridge/lib/` NOT under `app/lib/`
-3. **hooks.py ALLOWED_TOOLS** — new proxied tools silently rejected without whitelist entry (hub-bridge-native tools don't need this)
-4. **TOOL_NAME_MAP must stay empty** — any entries remap tool names to wrong values
-5. **docker restart ≠ compose up -d** — hub.env changes require `compose up -d`; system prompt changes need only `docker restart`
-6. **FalkorDB graph name is `neo_workspace`** — NOT `karma`
-7. **RELATES_TO edges permanently frozen at 2026-03-04** — 1,423 edges, never updated. Use MENTIONS co-occurrence cross-join for live relationship data. Never query RELATES_TO.
-8. **vault-api type enum is closed** — use type:"log" + tags for custom types; type:"dpo-pair" returns 422 silently
-9. **buildVaultRecord() required for all vault writes** — bare objects fail schema validation silently
+1. **Reverse tunnel user MUST be `karma`** — `ssh -p 2223 -l karma localhost` (NOT default neo user)
+2. **shell_run routes through aria /api/exec NOT SSH** — hub-bridge has no SSH client. Do not try to add direct SSH.
+3. **aria.service drop-in required** — `/etc/systemd/system/aria.service.d/10-aria-env.conf` with `Environment=HOME=/home/karma`. If K2 WSL resets, re-add this.
+4. **Hub-bridge multi-file sync** — after `git pull` on vault-neo, sync ALL changed files: server.js → `app/`, lib/*.js → parent `lib/`, public/*.html → `app/public/`
+5. **hub-bridge lib/ files go at PARENT level** — `/opt/.../hub_bridge/lib/` NOT under `app/lib/`
+6. **docker restart ≠ compose up -d** — hub.env changes require `compose up -d`; system prompt changes need only `docker restart`
+7. **FalkorDB graph name is `neo_workspace`** — NOT `karma`
+8. **RELATES_TO edges permanently frozen at 2026-03-04** — use MENTIONS co-occurrence only
+9. **vault-api type enum is closed** — use type:"log" + tags for custom types
 10. **batch_ingest cron MUST use --skip-dedup** — Graphiti mode silently fails at scale
 11. **MEMORY.md spine is tail 3000 chars** — very long MEMORY.md = older content not visible to Karma
+12. **cp -r does NOT overwrite existing files** — always explicit per-file `cp` commands

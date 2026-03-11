@@ -1029,5 +1029,3 @@ Added aria_local_call hub-bridge tool for Karma-to-Aria delegation:
 - Aria endpoint: 100.75.109.92:7890/api/chat
 - Key: Bt1MU_H7mRnEyTPE0nQtUyymOR3qvQaVxJifUdixm00 (set in hub.env; Aria runtime needs same value)
 - Status: hub-bridge wired; awaiting Aria-side key configuration for end-to-end test
-
-<!-- session-84 wrap-up: all docs updated 2026-03-11T23:11Z -->

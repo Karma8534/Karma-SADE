@@ -4,6 +4,35 @@ Append-only. Every problem debugged in any session gets an entry here. If we deb
 
 ---
 
+## 2026-03-11 [Session 84d] Reverse tunnel SSH fails — wrong user
+
+**Symptom:** `ssh vault-neo "ssh -p 2223 localhost 'whoami'"` → `neo@localhost: Permission denied`
+**Root cause:** The reverse tunnel forwards to K2:22, but the SSH attempt used the default user (`neo`, vault-neo's user) which has no account on K2. K2's SSH user is `karma`.
+**Fix:** Use `ssh -p 2223 -l karma localhost` or `karma@localhost` explicitly in all tunnel commands.
+**Verified by:** `ssh vault-neo "ssh -p 2223 -l karma localhost 'echo K2-tunnel-OK && whoami'"` → `K2-tunnel-OK\nkarma`
+**Residual risk:** Any new code that SSHes to K2 via the tunnel must explicitly specify `-l karma`. Default user inference will fail.
+**Status:** RESOLVED
+
+## 2026-03-11 [Session 84d] shell_run can't SSH directly from hub-bridge Docker container
+
+**Symptom:** Wanted to SSH K2 directly from hub-bridge for shell_run tool, but hub-bridge Docker container has no SSH client, no private key mounted.
+**Root cause:** Hub-bridge Docker container is minimal Node.js — no openssh-client installed, no key mount in compose.hub.yml. Adding these would require compose changes, key provisioning, and a rebuild.
+**Fix:** Route shell_run through aria's /api/exec endpoint instead. hub-bridge already has authenticated connection to K2:7890 via ARIA_SERVICE_KEY. Added new /api/exec POST endpoint to aria.py; shell_run tool in server.js calls it.
+**Verified by:** `curl -X POST http://K2:7890/api/exec -H "X-Aria-Service-Key: ..." -d '{"command":"echo test"}'` → `{"ok":true,"stdout":"test\n","exit_code":0}`
+**Residual risk:** If aria.service is down, shell_run fails silently (network_error). aria.service has systemd restart policy so should self-heal. Check with aria_local_call health mode first.
+**Status:** RESOLVED
+
+## 2026-03-11 [Session 84c] aria.service startup fails — HOME env missing
+
+**Symptom:** `systemctl status aria` → `ModuleNotFoundError: No module named 'flask'` despite flask installed.
+**Root cause:** systemd runs aria.service without `HOME` env set. Python user site-packages are at `/home/karma/.local/lib/python3.12/site-packages/` — but without `HOME=/home/karma`, Python doesn't know where to look.
+**Fix:** Added `Environment=HOME=/home/karma` to `/etc/systemd/system/aria.service.d/10-aria-env.conf`. Also added `EnvironmentFile=/etc/aria.env` to pick up ARIA_SERVICE_KEY from there.
+**Verified by:** `systemctl restart aria && systemctl is-active aria` → `active`; `curl :7890/health` → `{"vault_reachable":true,...}`
+**Residual risk:** If the drop-in file is lost (e.g., K2 WSL reset), aria.service will fail at startup with the same error. Document drop-in path in session handoff.
+**Status:** RESOLVED
+
+---
+
 ## 2026-03-09 [Session 70] batch_ingest cron silently failing — FalkorDB months behind
 
 **Symptom:** Karma reported "my latest context is Session 66" despite batch cron reporting "all caught up" at watermark 4155.
@@ -364,7 +393,7 @@ Relationship label changed from raw edge `r.fact` string to `"co-occurs in N epi
 ## 2026-03-11 [Session 81] Upload button not working after Session 80 commit
 
 **Symptom:** File upload appeared to work (button present in unified.html) but Karma received nothing. Session 80 fix was committed but not deployed.
-**Root cause(s):** RC1: cp -r source/ dest/ silently skips files already present in dest/. unified.html in build context was never overwritten � old FormData code remained.
+**Root cause(s):** RC1: cp -r source/ dest/ silently skips files already present in dest/. unified.html in build context was never overwritten � old FormData code remained.
 **Fix:** Explicit file copy: cp /home/neo/karma-sade/hub-bridge/app/public/unified.html /opt/seed-vault/memory_v1/hub_bridge/app/public/unified.html, then --no-cache rebuild.
 **Verified by:** Uploaded KarmaSession031026a.md via Karma UI. Karma analyzed contents successfully.
 **Residual risk:** Any future cp -r in build context sync workflow will silently skip existing files. Decision #29 locked: always use explicit per-file copies.
@@ -375,7 +404,7 @@ Relationship label changed from raw edge `r.fact` string to `"co-occurs in N epi
 ## 2026-03-11 [Session 81] X-Aria-Delegated header blocked all Aria memory writes
 
 **Symptom:** aria_local_call returned 200 OK but Aria session_messages stayed at 0. Observations never accumulated. Memory holding not working.
-**Root cause(s):** RC1: hub-bridge aria_local_call handler sent both X-Aria-Service-Key AND X-Aria-Delegated:karma. Delegated flag triggers Aria delegated_read_only policy � all memory writes blocked regardless of service key validity.
+**Root cause(s):** RC1: hub-bridge aria_local_call handler sent both X-Aria-Service-Key AND X-Aria-Delegated:karma. Delegated flag triggers Aria delegated_read_only policy � all memory writes blocked regardless of service key validity.
 **Fix:** Removed X-Aria-Delegated header from aria_local_call fetch options. server.js ~line 1088. Service key auth alone is correct.
 **Verified by:** Codex live test: non-delegated service-key call = observations 0->1. Delegated call = 0.
 **Residual risk:** If delegated header is re-added thinking it provides isolation, writes will silently stop again with no error.

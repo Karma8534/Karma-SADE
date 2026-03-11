@@ -1,58 +1,31 @@
 # Karma SADE Session Summary (Latest)
 
 **Date**: 2026-03-11
-**Session**: 81
-**Focus**: Aria/K2 integration fixes — delegated write, vault-no sync, session_id; MODEL_DEEP=sonnet-4-6; upload fix; Codex Aria API inventory
+**Session**: 84 (84b/84c/84d)
+**Focus**: K2 agency — MANDATORY state-write, redundancy cache, shell_run tool (Karma direct shell access)
 
 ---
 
-## What Was Done
+## What Was Built
 
-### Deployed (Session 80 code that never deployed)
-- File upload button: cp -r pitfall fixed, explicit copy used, --no-cache rebuild, verified with KarmaSession031026a.md
-- Context amnesia fix: MAX_SESSION_TURNS 8→20, TTL 30→60min
+### 1. MANDATORY K2 State-Write Protocol (84b)
+Prominent MANDATORY section added to system prompt. Karma calls `aria_local_call` after any DECISION/PROOF/PITFALL/DIRECTION/INSIGHT. System prompt: 20,780 → 23,085 chars. Deployed via git pull + docker restart.
 
-### New This Session
-- MODEL_DEEP switched to claude-sonnet-4-6 in hub.env, routing.js ALLOWED_DEEP_MODELS updated, deployed, verified ($0.0252/req, cites episode IDs from FalkorDB)
-- Monthly cap raised to $60
-- Subscription cleanup: GLM, MiniMax, Perplexity API, Groq, Twilio, Postmark — auto-top-up disabled
-- Thumbs ✓ saved UI confirmation deployed
-- Codex Aria API inventory: 80 endpoints documented, memory subsystems, auth paths, training pipeline
-- X-Aria-Delegated header removed from aria_local_call — Aria now writes observations (Decisions #30)
-- Aria → vault-neo sync: after each aria_local_call, observation POSTed to /v1/ambient (single spine preserved)
-- session_id threading: window.karmaSessionId UUID per page load → all aria_local_call bodies → coherent Aria thread
-- ARCH CLARITY: "Aria" is Karma's local compute half (not separate entity). One peer, two compute paths, one spine.
+### 2. K2 Redundancy Cache (84c)
+`k2/sync-from-vault.sh` pull/push/status. Pull cron 6h: rsync identity/invariants/direction + ledger tail-500. Push cron 1h: POST observations to /v1/ambient (token fetched live). aria.service starts with identity loaded from `/mnt/c/dev/Karma/k2/cache/`. `/health` endpoint returns cache_age_hours + vault_reachable. Drop-in `Environment=HOME=/home/karma` required in aria.service systemd config.
 
-### Architecture Clarified
-- "Aria" = Karma's local compute half on K2. No separate entity.
-- K2 infrastructure confirmed: Tailscale 100.75.109.92, Ollama :11434 (qwen3-coder:30b MoE ~3.3B active/token), Aria service :7890
-- Aria memory subsystems = in-session staging layer (NOT parallel truth source)
-- /api/memory/backfill = local Aria SQLite only; explicit /v1/ambient POST required for vault-neo sync
+### 3. shell_run Tool (84d)
+`/api/exec` endpoint in aria.py (K2:7890): `subprocess.run(command, shell=True, timeout=30)`, gated by X-Aria-Service-Key. `shell_run(command)` added to hub-bridge TOOL_DEFINITIONS + handler (calls aria /api/exec). vault-neo public key added to K2 authorized_keys. hub-bridge v2.11.0. Reverse tunnel user is `karma@localhost:2223` (NOT neo).
 
-## What Is Live
+## What's Live
+- Karma can: `shell_run("systemctl status aria")`, `shell_run("cat /mnt/c/dev/Karma/k2/cache/.last_sync")`
+- K2 cache syncing every 6h (pull) and 1h (push)
+- MANDATORY state-write coaching in every Karma response context
 
-| Component | Status |
-|-----------|--------|
-| hub-bridge | v2.11.0, RestartCount=0 |
-| MODEL_DEFAULT | claude-haiku-4-5-20251001 |
-| MODEL_DEEP | claude-sonnet-4-6 (verified) |
-| File Upload | ✅ PDF/txt/md; image vision PENDING |
-| Aria memory writes | ✅ delegated fix live |
-| Aria → vault-neo | ✅ deployed (production verify pending) |
-| session_id | ✅ deployed |
-
-## What Is Broken / Open
-
-- PRICE_CLAUDE in hub.env: still Haiku rates ($0.80/$4.00), needs Sonnet ($3.00/$15.00)
-- System prompt model section: still references old routing
-- JPG/PNG vision: falls through to extractPdfText() — crashes. Proper Anthropic vision blocks needed.
-- Paste in Karma UI: works everywhere except hub.arknexus.net. Suspected Cloudflare CSP.
+## What's Open
+- PRICE_CLAUDE in hub.env: still Haiku rates (needs Sonnet $3.00/$15.00)
+- K2 ownership/agency breakthrough not yet checkpointed to ledger
+- Prompt caching not yet implemented
 
 ## Next Session Step 1
-
-```
-ssh vault-neo "sed -i 's/PRICE_CLAUDE_INPUT_PER_1M=.*/PRICE_CLAUDE_INPUT_PER_1M=3.00/' /opt/seed-vault/memory_v1/hub_bridge/config/hub.env && sed -i 's/PRICE_CLAUDE_OUTPUT_PER_1M=.*/PRICE_CLAUDE_OUTPUT_PER_1M=15.00/' /opt/seed-vault/memory_v1/hub_bridge/config/hub.env"
-ssh vault-neo "cd /opt/seed-vault/memory_v1/hub_bridge && docker compose -f compose.hub.yml up -d hub-bridge"
-```
-
-Then: implement JPG vision support (server.js ~line 1527), then paste fix investigation.
+Test shell_run end-to-end: open hub.arknexus.net deep mode → ask Karma to shell_run systemctl status aria → verify K2 output returned.
