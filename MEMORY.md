@@ -1,3 +1,11 @@
+## Session 81g — Wire session_id into aria_local_call (2026-03-11)
+- unified.html: sends session_id = conversationId (existing page-load UUID) with every /v1/chat POST
+- server.js: extracts body.session_id → threads through callLLMWithTools(ariaSessionId) → executeToolCall → Aria POST body
+- TDD: hub-bridge/test/aria-session-id.test.mjs — RED/GREEN verified with node:test
+- Effect: Aria accumulates conversation as a coherent thread, not disconnected entries
+
+---
+
 ## Session 81f — Aria → vault-neo sync (2026-03-11)
 - aria_local_call (chat mode): fire-and-forget vaultPost after successful Aria response
 - Record: type="log", tags=["aria","k2","sync","capture"], content={user_message, assistant_response, session_id}

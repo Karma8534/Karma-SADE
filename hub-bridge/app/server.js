@@ -1013,7 +1013,7 @@ const VAULT_FILE_ALIASES = {
 // All other tools proxy to karma-server with the same name
 const TOOL_NAME_MAP = {}; // identity passthrough — tool names match karma-server names
 
-async function executeToolCall(toolName, toolInput, writeId = null) {
+async function executeToolCall(toolName, toolInput, writeId = null, ariaSessionId = null) {
   try {
     // defer_intent -- propose a behavioral intent, gated by /v1/feedback
     if (toolName === "defer_intent") {
@@ -1079,6 +1079,7 @@ async function executeToolCall(toolName, toolInput, writeId = null) {
       }
 
       const body = { message, ...payload };
+      if (ariaSessionId) body.session_id = ariaSessionId;
       try {
         const fetchOpts = {
           method,
@@ -1270,8 +1271,8 @@ async function executeToolCall(toolName, toolInput, writeId = null) {
   }
 }
 
-async function callLLMWithTools(model, messages, maxTokens, writeId = null) {
-  if (!isAnthropicModel(model)) return callGPTWithTools(messages, maxTokens, model, writeId);
+async function callLLMWithTools(model, messages, maxTokens, writeId = null, ariaSessionId = null) {
+  if (!isAnthropicModel(model)) return callGPTWithTools(messages, maxTokens, model, writeId, ariaSessionId);
 
   const systemParts = messages.filter(m => m.role === "system").map(m => m.content);
   const apiMessages = messages.filter(m => m.role !== "system");
@@ -1302,7 +1303,7 @@ async function callLLMWithTools(model, messages, maxTokens, writeId = null) {
     allMessages.push({ role: "assistant", content: resp.content });
     const toolResults = [];
     for (const toolUse of toolUseBlocks) {
-      const toolResult = await executeToolCall(toolUse.name, toolUse.input, writeId);
+      const toolResult = await executeToolCall(toolUse.name, toolUse.input, writeId, ariaSessionId);
       toolResults.push({ type: "tool_result", tool_use_id: toolUse.id, content: JSON.stringify(toolResult) });
     }
     allMessages.push({ role: "user", content: toolResults });
@@ -1313,7 +1314,7 @@ async function callLLMWithTools(model, messages, maxTokens, writeId = null) {
 
 // ── OpenAI GPT tool-calling (production tool-use for Karma) ────────────────────
 // OpenAI tool format differs from Anthropic. GPT-4o has reliable tool support.
-async function callGPTWithTools(messages, maxTokens, model, writeId = null) {
+async function callGPTWithTools(messages, maxTokens, model, writeId = null, ariaSessionId = null) {
   try {
     // Transform Anthropic schema (input_schema) to OpenAI schema (parameters)
     const gptTools = TOOL_DEFINITIONS.map(t => ({
@@ -1366,7 +1367,7 @@ async function callGPTWithTools(messages, maxTokens, model, writeId = null) {
     for (const call of toolCalls) {
       const parsedArgs = call.function.arguments ? JSON.parse(call.function.arguments) : {};
       console.log(`[TOOL-USE] Executing tool: ${call.function.name} with args:`, JSON.stringify(parsedArgs));
-      const result = await executeToolCall(call.function.name, parsedArgs, writeId);
+      const result = await executeToolCall(call.function.name, parsedArgs, writeId, ariaSessionId);
       if (result.error) {
         console.log(`[TOOL-USE] Tool ERROR: ${call.function.name} → ${result.error}`);
       } else {
@@ -1565,6 +1566,7 @@ const server = http.createServer(async (req, res) => {
       if (!userMessage && !imageBlocks.length) return json(res, 400, { ok: false, error: "missing_message" });
 
       const topic = (body?.topic || "").toString().trim();
+      const ariaSessionId = (body?.session_id || "").toString().trim() || null;
 
       // B) Token budget: clamp(requested || DEFAULT, MIN, CAP)
       const maxOutReq = Number(body?.max_output_tokens || 0);
@@ -1693,7 +1695,7 @@ const server = http.createServer(async (req, res) => {
         ? "wr_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8)
         : null;
       const llmResult = deep_mode
-        ? await callLLMWithTools(model, messages, max_output_tokens, req_write_id)
+        ? await callLLMWithTools(model, messages, max_output_tokens, req_write_id, ariaSessionId)
         : await callLLM(model, messages, max_output_tokens);
       const assistantText = llmResult.text || "(empty_assistant_text)";
       const usage         = llmResult.usage;

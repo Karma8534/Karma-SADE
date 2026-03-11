@@ -691,9 +691,9 @@
           reader.onerror = reject;
           reader.readAsDataURL(f);
         })));
-        body = JSON.stringify({ message: text, conversation_id: conversationId, stream: false, files });
+        body = JSON.stringify({ message: text, conversation_id: conversationId, session_id: conversationId, stream: false, files });
       } else {
-        body = JSON.stringify({ message: text, conversation_id: conversationId, stream: false });
+        body = JSON.stringify({ message: text, conversation_id: conversationId, session_id: conversationId, stream: false });
       }
       fetchOpts.body = body;
 
