@@ -12,8 +12,8 @@
 |-----------|--------|-------|
 | **Consciousness Loop** | ✅ WORKING | 60s OBSERVE-only cycles. Zero LLM calls confirmed in source. RestartCount=0. |
 | **Hub Bridge API** | ✅ WORKING | /v1/chat, /v1/ambient, /v1/context, /v1/cypher, /v1/ingest operational. |
-| **Voice & Persona** | ✅ DEPLOYED | Peer-level voice verified. gpt-4o-mini confirmed (MODEL_DEEP verified 2026-03-04). |
-| **FalkorDB Graph** | ✅ FULLY CAUGHT UP | 3621 nodes (3049 Episodic + 571 Entity + 1 Decision). batch_ingest cron every 6h. |
+| **Voice & Persona** | ✅ DEPLOYED | Peer-level voice via claude-haiku-4-5-20251001 (Session 76: haiku-20241022 was RETIRED, migrated). Both modes. |
+| **FalkorDB Graph** | ✅ FULLY CAUGHT UP | 3877 nodes (3305 Episodic + 571 Entity + 1 Decision). batch_ingest cron every 6h. Last run: 305 eps/s, 0 errors. |
 | **Ledger** | ✅ GROWING | 4000+ entries. Git commits + session-end hooks capturing actively. |
 | **Work-Loss Prevention** | ✅ GATES LIVE | Pre-commit hook + session-end hook both active and verified. |
 | **Ambient Tier 1 Hooks** | ✅ WORKING | Git + session-end captures verified in ledger. |
@@ -23,8 +23,9 @@
 | **Conversation Capture** | ✅ WORKING | All 3049 hub/chat episodes ingested via --skip-dedup. |
 | **batch_ingest Schedule** | ✅ CONFIGURED | Cron every 6h on vault-neo. --skip-dedup mode. |
 | **karma-server image** | ✅ REBUILT | Session-66: graph_query handler + hooks.py whitelist fix. |
-| **Routing/Pricing (Decision #2)** | ✅ CORRECTED | GLM=$0, tool-use respects deep_mode, MODEL_DEEP default fixed. Session-60. |
-| **GLM Rate Limiter** | ✅ LIVE | 40 RPM (raised from 20 in Session 66). /v1/chat=429, /v1/ingest=waitForSlot. V1-V5 verified. |
+| **Primary Model (Decision #29)** | ✅ LIVE — Haiku 4.5 | claude-haiku-4-5-20251001 for both MODEL_DEFAULT + MODEL_DEEP. Session 76 emergency migration. |
+| **Routing/Pricing (Decision #29)** | ✅ UPDATED | Haiku 4.5 pricing: $1.00/$5.00 per 1M. routing.js allow-list updated. |
+| **GLM Rate Limiter** | ✅ KEPT (compat) | 40 RPM class kept in routing.js for compat; not invoked for claude- models. |
 | **Config Validation Gate** | ✅ LIVE | MODEL_DEFAULT + MODEL_DEEP allow-lists. [CONFIG ERROR] + exit(1) on bad config. 27/27 tests. |
 | **OpenAI API key** | ✅ SECURED | File-based read (mounted volume), not env var (docker inspect clean). |
 | **PDF Watcher** | ✅ WORKING | Rate-limit backoff + jam notification + time-window scheduling. |
@@ -49,6 +50,7 @@
 | **TOOL_NAME_MAP** | ✅ FIXED | Pre-existing bug: was mapping read_file→file_read (wrong names). Now empty dict = identity passthrough. Session-66. |
 | **K2_PASSWORD secret** | ✅ SECURED | Removed plaintext from docker-compose.karma.yml → ${K2_PASSWORD} env var. Value in hub.env. Session-66. |
 | **Main branch protection** | ✅ ENABLED | allow_force_pushes=false, allow_deletions=false. Session-66. |
+| **Deferred Intent Engine (Phase 4)** | ✅ LIVE | defer_intent tool, get_active_intents tool, /v1/feedback intent approval, active intent injection in buildSystemText |
 
 ---
 
@@ -272,7 +274,7 @@ karmaCtx (FalkorDB recency) + semanticCtx (FAISS top-5) fetched via Promise.all 
 
 ---
 
-**Last updated:** 2026-03-05T20:00:00Z (Session 67 — Security fix + v9 Phase 3 persona coaching + Phase 4 design)
+**Last updated:** 2026-03-10T22:30:00Z (Session 75 — Model switch to Haiku 3.5 + lib/*.js into git)
 **Owner:** Claude Code (writes on Colby approval)
 **Canonical location:** C:\Users\raest\Documents\Karma_SADE\.gsd\STATE.md
 
@@ -384,3 +386,72 @@ Thumbs-down + note feeds correction pipeline. Backward compatible — existing w
 - Injected as "--- KARMA MEMORY SPINE (recent) ---" section in buildSystemText()
 - hub-bridge now auto-injects last 3000 chars of MEMORY.md into every /v1/chat request
 - 6/6 TDD tests (test_system_text.js) GREEN; deployed + verified Karma can see v10 plan details
+
+### Decision #28: claude-3-5-haiku-20241022 as primary model (2026-03-10, SUPERSEDED by #29)
+Previously set as primary in Session 75. Model was already RETIRED as of 2026-02-19 — this was an error.
+
+### Decision #29: claude-haiku-4-5-20251001 as primary model (2026-03-10, LOCKED)
+haiku-20241022 RETIRED 2026-02-19 — was producing `Error: internal_error` in Karma UI.
+Official Anthropic replacement: claude-haiku-4-5-20251001 (Active, retirement not before Oct 2026).
+MODEL_DEFAULT=claude-haiku-4-5-20251001, MODEL_DEEP=claude-haiku-4-5-20251001. Pricing: $1.00/$5.00 per 1M.
+routing.js ALLOWED_DEFAULT_MODELS + ALLOWED_DEEP_MODELS updated. hub.env on vault-neo updated. Container rebuilt --no-cache.
+Verified: `model: claude-haiku-4-5-20251001, debug_provider: anthropic` in live API response.
+
+### Decision #30: Cognitive Architecture Layer is the next major milestone (2026-03-10, LOCKED)
+Colby identified that Karma's original purpose was cognitive architecture — never built. 75+ sessions of plumbing without the core layer. Three missing components:
+- **Self-Model Kernel**: A dynamic, per-request phase where Karma maintains an explicit model of herself (capabilities, current state, recent patterns) — NOT the static system prompt.
+- **Metacognitive Trace**: Real-time capture of Karma's reasoning about her own reasoning — WHY she said what she said, what alternatives she considered, confidence trajectory. The consciousness loop was supposed to be this. It stalled at OBSERVE-only.
+- **Deferred Intent Engine**: A mechanism to carry forward behavioral intentions across turns and sessions. "When X comes up, also do Y." "Next session: remember to mention Z." Not approval-gating (that's write_memory) — intent scheduling.
+These three together form the Cognitive Architecture Layer — what makes Karma cognizant rather than merely contextually rich. This is Milestone 8.
+
+### Session 74 Accomplishments (2026-03-10) — v11 Karma Full Read Access
+- get_vault_file extended: repo/<path> + vault/<path> prefixes + traversal protection (path.resolve + startsWith)
+- /opt/seed-vault:/karma/vault:ro volume mount added to compose.hub.yml
+- get_local_file(path) tool: hub-bridge calls PowerShell HTTP server on Payback (Tailscale 100.124.194.102:7771)
+- karma-file-server.ps1: PowerShell HttpListener, bearer token auth, 40KB cap, traversal protection
+- KarmaFileServer Windows Task Scheduler task registered (always-on, AtBoot+AtLogon)
+- System prompt updated: repo/<path> + vault/<path> + get_local_file concrete examples (16,511 chars)
+- 7/7 end-to-end tests passed; all 8 plan tasks complete
+
+### Session 75 Accomplishments (2026-03-10) — Model Switch to Haiku 3.5
+- Diagnosed: DPO pairs ARE working (log evidence); prior "0 pairs" was outdated
+- MODEL_DEFAULT + MODEL_DEEP switched from GLM/gpt-4o-mini → claude-3-5-haiku-20241022
+- routing.js: updated ALLOWED_DEFAULT_MODELS + ALLOWED_DEEP_MODELS + default constants (Decision #28)
+- hub.env on vault-neo: MODEL_DEFAULT + MODEL_DEEP updated; PRICE_CLAUDE updated to Haiku rates
+- lib/*.js (feedback.js, routing.js, pricing.js, library_docs.js) committed to git — were missing from repo
+- Container rebuilt --no-cache and deployed; RestartCount=0; env verified inside container
+- Acknowledged root failure: backend-only verification declared as "green" without UX testing
+
+## Next Session Starts Here
+
+### Decision #31: "Aria" unified into Karma — one peer, two compute paths (2026-03-11, LOCKED)
+"Aria" was a working name for K2's local Karma instance built in isolation. Confirmed by Colby: no separate entity. One peer (Karma), two compute paths: cloud (vault-neo + Anthropic API) and local (K2 + qwen3-coder:30b). One memory spine. All code built for "Aria" on K2 is Karma's local half. aria_local_call = Karma calling herself on local hardware.
+
+### Decision #32: MODEL_DEEP = claude-sonnet-4-6 (2026-03-11, LOCKED)
+MODEL_DEFAULT stays claude-haiku-4-5-20251001 (cheap, fast, standard queries).
+MODEL_DEEP changed to claude-sonnet-4-6 (stronger reasoning, peer-quality conversation, better tool-calling).
+hub.env updated on vault-neo. routing.js allow-list must be verified to include claude-sonnet-4-6.
+
+### Decision #33: Subscription cleanup — target $30-35/mo (2026-03-11, LOCKED)
+Cut (auto-top-up disabled): GLM/z.ai, MiniMax, Perplexity API, Groq, Twilio, Postmark.
+Keep: DigitalOcean ($24), Anthropic API (~$5-15), OpenAI API (<$1 embeddings), Brave Search, Cloudflare, Porkbun.
+Evaluate: OpenRouter (unified model API, could replace direct Anthropic+OpenAI), Google Workspace (user doesn't use it — Cloudflare email routing is free alternative).
+
+### Session 81 Accomplishments (2026-03-11)
+- Context amnesia root cause diagnosed from KarmaSession031026a.md: MAX_SESSION_TURNS=8 (deployed Session 80)
+- File upload fix deployed and verified: KarmaSession031026a.md successfully uploaded and analyzed by Karma
+- vault-neo → K2 Tailscale confirmed: Ollama at :11434, Aria/Karma-local service at :7890 both operational
+- qwen3-coder:30b confirmed MoE architecture: ~3.3B active per token, ~0.26s warm latency
+- ARCHITECTURAL CLARITY: "Aria" = Karma's local compute half. Not a separate entity.
+- MODEL_DEEP switched to claude-sonnet-4-6 in hub.env
+- Subscription cleanup plan established — 6 services cut, target $30-35/mo
+- PITFALL: `cp -r source/ dest/` does not overwrite existing files — always explicit file copy for individual files
+
+### Session 81 — Open Items for Next Session
+1. **Deploy MODEL_DEEP**: `compose up -d` to pick up claude-sonnet-4-6 from hub.env — requires routing.js allow-list check first
+2. **routing.js allow-list**: Verify claude-sonnet-4-6 is in ALLOWED_DEEP_MODELS (startup fails if not)
+3. **Karma routing logic**: When does Karma use local K2 compute vs cloud Anthropic? Routing rules needed.
+4. **System prompt update**: Update model routing section to reflect MODEL_DEFAULT=haiku, MODEL_DEEP=sonnet-4-6
+5. **karma-builder:latest**: Remove from K2 (user confirmed — discarded project)
+
+**Active models:** MODEL_DEFAULT=claude-haiku-4-5-20251001, MODEL_DEEP=claude-sonnet-4-6 (hub.env set, not yet deployed)

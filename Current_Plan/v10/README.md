@@ -1,3 +1,26 @@
+# Current_Plan/v10 — Snapshot (updated 2026-03-11)
+
+## Session 81 Progress (2026-03-11)
+
+| Commit | Change |
+|--------|--------|
+| session-81a | Upload button fix — cp -r pitfall resolved |
+| session-81b | Thumbs-up ✓ saved confirmation UI |
+| session-81c | Anthropic vision support for image files in deep mode |
+| session-81d | Clipboard image paste support in Karma UI |
+| session-81e | aria_local_call — remove X-Aria-Delegated header (Aria now writes observations) |
+
+**Deployed & verified:** MODEL_DEEP=claude-sonnet-4-6, MONTHLY_USD_CAP=60, upload working, vision working.
+
+**Pending (next session):**
+- Deploy session-81e (git push + hub-bridge rebuild)
+- Aria → vault-neo sync: POST Aria observations to /v1/ambient (closes memory loop)
+- Single model collapse: MODEL_DEFAULT=claude-sonnet-4-6, tools always on
+- Update system prompt model references
+- Remove karma-builder:latest from K2
+
+---
+
 # Current_Plan/v10 — Snapshot (2026-03-10)
 
 Captured at: Session 71 end. v9 complete. v10 starting.

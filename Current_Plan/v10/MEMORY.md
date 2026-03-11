@@ -1,3 +1,236 @@
+## Session 81f — Aria → vault-neo sync (2026-03-11)
+- aria_local_call (chat mode): fire-and-forget vaultPost after successful Aria response
+- Record: type="log", tags=["aria","k2","sync","capture"], content={user_message, assistant_response, session_id}
+- Closes the loop: Aria memory → ledger → batch_ingest → FalkorDB → Karma context
+- Non-blocking: sync errors logged but never fail the tool call
+
+---
+
+## Session 81e — Fix aria_local_call delegated write block (2026-03-11)
+- server.js: removed X-Aria-Delegated header from aria_local_call tool handler
+- Root cause: X-Aria-Delegated triggers Aria's delegated_read_only policy → 0 observations written
+- Fix: service key only → Aria writes observations from Karma's calls (Codex-verified: 0→1)
+
+---
+
+## Session 81d — Clipboard image paste support (2026-03-11)
+- unified.html: paste event listener on chat textarea detects image/* clipboard items
+- Ctrl+V screenshot or copied image → File object → selectedFiles → sent with vision pipeline
+- Text paste unaffected (early return if no image items)
+
+---
+
+## Session 81c — Anthropic vision support for image uploads (2026-03-11)
+- server.js: image files (jpg/jpeg/png/gif/webp) now routed to Anthropic vision instead of pdf-parse
+- Deep mode: content array built with {type:"image", source:{type:"base64",...}} blocks → Sonnet can see images
+- Standard mode: returns helpful message directing user to enable Deep Mode
+- Session history: stores plain text userMessage only (no base64 bloat in history)
+- Missing_message error now allows through if imageBlocks present (image-only upload works)
+
+---
+
+## Session 81b — Thumbs-up confirmation UI (2026-03-11)
+- unified.html: 👍 with write_id shows `✓ saved` green fade-out (2s). Plain turn_id 👍 unchanged.
+
+---
+
+## Session 81 — Architecture clarity + MODEL_DEEP → Sonnet + K2 confirmed (2026-03-11)
+
+**Status:** ✅ COMPLETE — hub-bridge v2.11.0, MODEL_DEEP=claude-sonnet-4-6
+
+### Key Decisions This Session
+1. **"Aria" is Karma's local compute half** — not a separate entity. One peer (Karma), two compute paths (vault-neo/Anthropic + K2/qwen3-coder:30b), one memory spine. Everything built for "Aria" on K2 is already Karma's local half.
+2. **MODEL_DEEP = claude-sonnet-4-6** — MODEL_DEFAULT stays Haiku (cheap/fast). Deep mode is now peer-quality conversation. hub.env updated, requires compose up -d to take effect.
+3. **Subscription cleanup** — auto-top-up disabled on: GLM/z.ai, MiniMax, Perplexity API, Groq, Twilio, Postmark. Google Workspace to evaluate. OpenRouter worth exploring. Target monthly: ~$30-35.
+
+### Infrastructure Confirmed
+- vault-neo → K2 Tailscale (100.75.109.92): ✅ operational
+- Ollama on K2: ✅ accessible at :11434 (qwen3-coder:30b 17GB, qwen3.5:9b 6.6GB installed)
+- Aria/Karma-local service at K2:7890: ✅ live, responding with memory context, model_in_use=qwen3-coder:30b
+- qwen3-coder:30b architecture: MoE (qwen3moe), ~3.3B active per token, warm latency ~0.26s
+- aria_local_call tool in hub-bridge: ✅ functional
+
+### Fixes Deployed (Session 80 code, Session 81 deployment)
+- File upload: base64 JSON approach verified — KarmaSession031026a.md analyzed successfully
+- PITFALL: `cp -r source/ dest/` does NOT overwrite existing files in dest/ — always use explicit file copy for individual files
+
+---
+
+## Session 80 — Context amnesia fix + upload button fix (2026-03-11)
+
+**Status:** ✅ DEPLOYED — hub-bridge v2.12.0
+
+### Root causes diagnosed from KarmaSession031026a.md
+1. **Context amnesia** (7:20 PM drift): `MAX_SESSION_TURNS=8` — only 16 messages of history in a 1.5hr session. Aria/K2 discussion from 40+ mins prior was gone.
+2. **Upload button broken**: `/v1/chat` only handled `application/json`. Files sent as `multipart/form-data` → `JSON.parse()` fails → 400 `invalid_json` every time.
+
+### Fixes
+- `MAX_SESSION_TURNS`: 8 → 20 (env-configurable), TTL 30m → 60m
+- `/v1/chat`: accepts `files: [{name, data_b64}]` array, extracts text (PDF/txt/md), prepends as `[Attached file: name]` context
+- `unified.html`: reads files via `FileReader`, encodes base64, sends as JSON (no more FormData)
+
+---
+
+## Phase 4 Task 9 — Deferred Intent Engine deployed to vault-neo (2026-03-10)
+
+**Status:** ✅ LIVE — Full acceptance test passed. hub-bridge v2.11.0.
+
+### Deployment result
+- `deferred_intent.js` + `server.js` synced to build context, `--no-cache` rebuild succeeded
+- Startup: `[INTENT] Loaded 0 active intents from ledger` (correct — fresh deploy)
+- Acceptance test 1 (propose): `intent_id: int_1773184629042_2hjg5g`, `ok: true`
+- Acceptance test 2 (approve): `{"ok":true,"signal":"up","intent_id":"...","approved":true}`
+- Acceptance test 3 (trigger): redis-py question surfaced intent; Karma showed verification behavior with [LOW] confidence signal
+- STATE.md updated: Deferred Intent Engine row added
+
+---
+
+## Phase 4 Task 5 — defer_intent tool added (2026-03-10)
+
+**Status:** ✅ COMPLETE — `defer_intent` tool added to TOOL_DEFINITIONS and executeToolCall handler in hub-bridge/app/server.js. Syntax clean (node --check). Pending commit.
+
+- TOOL_DEFINITIONS entry added after get_library_docs
+- Handler added before write_memory in executeToolCall — validates fields, creates int_ prefixed ID, stores in pending_intents Map
+- Approval gated via /v1/feedback with intent_id (same pattern as write_memory/write_id)
+
+---
+
+## Session 77 — Cognitive Architecture Layer design (2026-03-10)
+
+**Status:** ✅ DESIGN COMPLETE — `docs/plans/2026-03-10-cognitive-architecture-design.md` committed
+
+### What was designed
+Three-component Cognitive Architecture Layer (Milestone 8, Decision #30):
+- **Self-Model Kernel**: `buildSelfModelSnapshot()` in hub-bridge, injected in `buildSystemText()`. Pure observational data: tools available, claim calibration, RPM state, unapproved writes, active/pending intents, detected patterns. Coaching in system prompt (threshold rules). `get_self_model()` deep-mode tool for live verification.
+- **Metacognitive Trace**: `capture_trace()` outbound tool, async write to consciousness.jsonl, observability logging. Trace schema: turn_id, topic, confidence_used, alternatives_considered (0-5 cap), tool_called, tool_changed_answer, pre/post tool confidence, write_memory_proposed. Phase 2b: consciousness loop rule-based pattern detection (confidence drift, tool effectiveness, memory cluster).
+- **Deferred Intent Engine**: `defer_intent()` + `get_active_intents()` tools. Storage: vault ledger type:"log" tags:["deferred-intent"]. Fire modes: once, once_per_conversation, recurring. Karma-created: approval gate (same as write_memory). Colby-created: direct. Tag-based trigger matching in karmaCtx. Phase 2b: trace-to-intent loop (consciousness-proposed intents).
+
+### Implementation order (Approach B: Kernel-first)
+Phase 1 → Phase 2 → Phase 2b → Phase 3 → Phase 4 → Future (trace-to-intent)
+
+### Session-end protocol addition needed
+CLAUDE.md: add "review pending intent proposals" alongside "review pending writes" in checklist.
+
+### Next step
+Invoke `superpowers:writing-plans` to create implementation plan for Phase 1.
+
+---
+
+## Session 76 — Emergency: migrate to claude-haiku-4-5-20251001 (2026-03-10)
+
+**Status:** ✅ COMPLETE
+
+### What changed
+- `claude-3-5-haiku-20241022` was RETIRED 2026-02-19 — was causing `Error: internal_error` in Karma UI
+- `routing.js`: `ALLOWED_DEFAULT_MODELS` + `ALLOWED_DEEP_MODELS` updated; defaults → `claude-haiku-4-5-20251001` (Decision #29)
+- `hub.env` on vault-neo: MODEL_DEFAULT + MODEL_DEEP → `claude-haiku-4-5-20251001`, pricing $1.00/$5.00
+- Container rebuilt `--no-cache`, deployed. Verified: `model: claude-haiku-4-5-20251001, debug_provider: anthropic`
+- **Revelation (Decision #30)**: Karma was always supposed to have a Cognitive Architecture Layer — never built. Self-Model Kernel + Metacognitive Trace + Deferred Intent Engine. Documented in STATE.md + ROADMAP.md Milestone 8. This is the next major milestone.
+
+### System state
+- Hub Bridge: ✅ claude-haiku-4-5-20251001 live, RestartCount=0
+- All other containers: ✅ unchanged
+
+---
+
+## Session 75 — Switch Karma primary model to Claude Haiku 3.5 (2026-03-10)
+
+**Status:** ✅ COMPLETE — Haiku 3.5 live, container healthy
+
+### What changed
+- `MODEL_DEFAULT` + `MODEL_DEEP`: `glm-4.7-flash`/`gpt-4o-mini` → `claude-3-5-haiku-20241022` (both)
+- `hub-bridge/lib/routing.js`: updated `ALLOWED_DEFAULT_MODELS`, `ALLOWED_DEEP_MODELS`, default constants (Decision #28)
+- `hub.env` on vault-neo: MODEL_DEFAULT + MODEL_DEEP updated; `PRICE_CLAUDE_INPUT_PER_1M=0.80`, `OUTPUT=4.00`
+- `hub-bridge/lib/*.js` (all 4 files) committed to git — were missing from repo, only in build context
+- Container rebuilt `--no-cache` and deployed; `RestartCount=0`; verified via `docker exec env | grep MODEL`
+
+### DPO diagnosis (resolved)
+- DPO pairs ARE being written — logs confirmed: `[FEEDBACK] DPO pair stored: signal=up`
+- Previous "0 pairs" claim was outdated/unverified. Feedback pipeline is functional.
+
+### Verified system state (2026-03-10)
+
+| Component | Status |
+|-----------|--------|
+| Hub Bridge | ✅ Running — claude-3-5-haiku-20241022 for both standard + deep mode |
+| DPO feedback | ✅ Working — pairs confirmed in logs |
+| lib/*.js in git | ✅ Fixed — all 4 files committed (34b7326) |
+| v11 read access | ✅ Live from Session 74 |
+| FalkorDB | ✅ 3877+ nodes, cron every 6h |
+
+### Next session
+1. Chat with Karma at hub.arknexus.net — confirm sidebar shows claude-3-5-haiku-20241022
+2. Click 👍 on a response — confirm DPO pair in ledger (search tags:["dpo-pair"])
+3. Before any hub-bridge rebuild: sync `hub-bridge/lib/*.js` to `/opt/seed-vault/memory_v1/hub_bridge/lib/`
+
+## Session 74 — v11 Karma Full Read Access COMPLETE (2026-03-10)
+
+**Status:** ✅ ALL 8 TASKS DONE — 7/7 end-to-end tests passed
+
+### What was built
+- `get_vault_file` extended: `repo/<path>` (→/karma/repo) + `vault/<path>` (→/karma/vault) prefixes, traversal protection, backward compat with 9 existing aliases
+- `/opt/seed-vault:/karma/vault:ro` volume mount added to compose.hub.yml
+- `get_local_file(path)` tool added: hub-bridge calls Payback file server via Tailscale 100.124.194.102:7771
+- `Scripts/karma-file-server.ps1`: PowerShell HTTP server on port 7771, bearer token auth, 40KB cap, traversal protection
+- `Scripts/generate-file-token.ps1`: one-time token generator
+- `KarmaFileServer` Windows Task Scheduler task: always-on, StopIfGoingOnBatteries=false, 9999 restart attempts
+- URL ACL registered: `http://+:7771/`
+- System prompt updated: complete tool docs for all three access patterns
+
+### Commits (in order)
+- `245b3e5` — compose vault mount
+- `d28684b` — get_vault_file extension
+- `a9eae3c` — import style fixes
+- `7bb0e9b` — file server scripts
+- `1656d86` — task registration scripts
+- `5ec17a3` — get_local_file tool
+- `40316e5` — system prompt unblock
+- `88a6eba` — system prompt complete
+
+### Key pitfalls discovered
+1. System prompt blocking instruction silently defeats new tools — positive action must be PRIMARY, not an exception clause
+2. `nodePath.default.resolve` is ESM fragile — both fs and path were already top-level imports
+3. `docker compose up -d` required (not restart) to pick up new hub.env vars and volume mounts
+
+### claude-mem observations saved: #4648, #4649, #4650, #4651
+
+## Session 73 — v11 Task 6: system prompt tool docs completed (2026-03-10)
+
+**What changed:** Memory/00-karma-system-prompt-live.md — complete tool documentation for v11 access patterns
+- get_vault_file: added repo/<path> and vault/<path> prefix documentation + path traversal blocked note + cc-brief alias
+- get_local_file: added concrete path examples + promoted out of trailing exception clause
+- Deep mode tool list (line 26): added get_local_file to the tool list (was missing)
+- Blocking instruction rewritten: "use get_local_file" is now the primary instruction for Karma_SADE reads; "I can't do that" only for shell/browser/arbitrary paths
+- No code changes, no rebuild needed — docker restart anr-hub-bridge sufficient
+
+## Session 73 — v11 Task 5: get_local_file tool added (2026-03-10)
+
+**What changed:** hub-bridge/app/server.js — added `get_local_file` tool
+- New env vars: `LOCAL_FILE_SERVER_URL`, `LOCAL_FILE_TOKEN` read at startup
+- New TOOL_DEFINITION for `get_local_file` (after get_vault_file in array)
+- New handler in executeToolCall: calls Payback file server at LOCAL_FILE_SERVER_URL via Bearer auth
+- Handler guards: empty path, missing config, HTTP errors, fetch errors, 10s timeout
+- buildSystemText tool list updated to include get_local_file(path)
+- Active tools comment updated (line ~796)
+- File server URL: http://100.124.194.102:7771 (Tailscale IP for Payback)
+- hub.env on vault-neo: LOCAL_FILE_SERVER_URL + LOCAL_FILE_TOKEN appended
+
+## Session 73 — Code quality fix: get_vault_file handler (2026-03-10)
+
+**What changed:** hub-bridge/app/server.js — get_vault_file import cleanup
+- Removed redundant `await import("fs")` and `await import("path")` (both top-level at lines 2-3)
+- Replaced `nodePath.default.resolve()` with top-level `path.resolve()`
+- Replaced `readFileSync()` with `fs.readFileSync()` using top-level import
+- Added empty alias guard: `if (!alias) return { error: "missing_alias", ... }`
+- Added comment above traversal check re: normalize behavior of resolve()
+
+## Session 73 (2026-03-10) — v11 Task 1: vault volume mount
+
+**Active task:** v11 Full Read Access — Task 1 COMPLETE
+- Added `/opt/seed-vault:/karma/vault:ro` volume mount to `hub-bridge/compose.hub.yml`
+- Positioned between `/karma/repo:ro` and `/karma/ledger:rw` as required
+- Committed to main, syncing to vault-neo build context
+
 ## Session 71 continued (2026-03-10) — v10 snapshot created
 
 **v10 snapshot (COMPLETE + cross-validated):** Created `Current_Plan/v10/` with 10 files. Cross-validated against Karma's own PDF analysis — added 6 missed primitives: Path-Based Rules, Multi-Agent Brainstorm, Hooks>LLMs for deterministic tasks (CCintoanOS); Plans as Files, YOLO Mode security honesty, MCP CLI-progressive (PiMonoCoder). direction.md now has 16 total primitives. v10 priority order: universal thumbs → Entity Relationships fix → confidence levels + anti-hallucination → Context7 MCP → hooks>LLMs for correction capture.
@@ -168,17 +401,16 @@ Three bugs fixed in unified.html (feedback buttons, stale token, double-submit g
 
 ---
 
-## Next Session Starts Here
+## Session 73 Start
 
-1. **Run `/resurrect`** — standard session start
-2. **Fix karma-verify skill** — update `C:\Users\raest\.claude\skills\karma-verify\SKILL.md` to check `assistant_text` instead of `reply` in smoke test (OPEN from Session 66/68)
-3. **Verify DPO accumulation** — after a few days of Karma conversations in deep mode, run: `ssh vault-neo "grep 'dpo-pair' /opt/seed-vault/memory_v1/ledger/memory.jsonl | wc -l"` — should be growing
-4. **v9 Phase 5** — MENTIONS edge growth verification: `ssh vault-neo "docker exec anr-karma-server curl -s localhost:8000/v1/cypher -d '{\"query\":\"MATCH (e:Episode)-[:MENTIONS]->(n) RETURN count(*) as edge_count\"}'"` — if growing, healthy
+**State:** v10 COMPLETE. No active task. No blockers.
 
-**Blocker if any:** None. All systems green. karma-verify skill fix is cosmetic (OPEN, not blocking).
+**FalkorDB (verified 2026-03-10):** 3305 Episodic + 571 Entity + 1 Decision = 3877 nodes. Batch cron healthy (305 eps/s, 0 errors). MENTIONS co-occurrence live.
+
+**DPO accumulation:** Mechanism live (Session 68). ~0/20 pairs. Grows with regular deep-mode Karma usage.
 
 # currentDate
-Today's date is 2026-03-05.
+Today's date is 2026-03-10.
 
 ---
 
@@ -559,7 +791,7 @@ Karma can recall (FAISS) but cannot reason across sessions (no Entity/relationsh
 - **hub-bridge build context ≠ git repo**: build uses `/opt/seed-vault/memory_v1/hub_bridge/app/`, NOT `/home/neo/karma-sade/hub-bridge/app/`. After any git pull, sync first: `cp /home/neo/karma-sade/hub-bridge/app/server.js /opt/seed-vault/memory_v1/hub_bridge/app/server.js`
 
 # currentDate
-Today's date is 2026-03-05.
+Today's date is 2026-03-10.
 
 ## Session 62 Task 2 — Graphiti Watermark Wired into run() (2026-03-04T22:23:29Z)
 
@@ -644,3 +876,47 @@ n## Session 72 (2026-03-10) — Watcher Fix + v10 Startn### karma-inbox-watcher 
 - Updated CLAUDE.md: 4 new pitfall entries
 - Regenerated cc-session-brief.md: current as of Session 72
 - STATUS: All documentation synchronized. v10 complete. No blockers.
+
+## Session 73 — Watcher Fix (2026-03-10)
+
+**PITFALL/FIX: KarmaInboxWatcher was dying silently**
+- Root cause: `StopIfGoingOnBatteries=true` — Task Scheduler killed it when machine went on battery
+- Secondary: wrong paths (OneDrive default vs Karma_PDFs/), restarts exhausted after 3 attempts
+- Fix: admin script rewrote task — battery flags false, 9999 restarts/2min, AtLogon+AtStartup triggers, correct Karma_PDFs/ paths
+- Emergency restart: `Scripts/start-watcher-now.ps1` (no admin)
+- Permanent fix script: `Scripts/fix-watcher-task-ADMIN.ps1` (requires admin, already applied)
+- PROOF: Done=206 (+2 during fix), Inbox=3 (was 10), queue moving post-fix
+
+## Phase 4 Task 1 — Deferred Intent Engine (2026-03-10)
+
+**Created: hub-bridge/lib/deferred_intent.js**
+- Pure logic module, no I/O, no external dependencies
+- Exports: `generateIntentId()`, `triggerMatches()`, `buildActiveIntentsText()`, `getSurfaceIntents()`
+- Syntax verified: `node --check` passed
+- STATUS: Task 1 complete. Next: tests + integration into server.js context assembly.
+
+## Session 78 Final (2026-03-10) — All tasks complete, code review applied
+
+All 9 implementation tasks complete. Post-review commit 7a96fda pushed and redeployed.
+
+6 code review fixes:
+1. DPO guard: if (write_id || turn_id) — intent-only feedback no longer pollutes DPO dataset
+2. Cache eviction: _activeIntentsMap.clear() before repopulate — completed intents evicted
+3. triggerMatches null guard: (userMessage || "").toLowerCase()
+4. generateIntentId: imported from module, inline duplicate removed
+5. once fire_mode: added to _firedThisSession (was only once_per_conversation)
+6. Removed misleading _activeIntentsCacheTs on approval
+
+Final state: v2.11.0 live, RestartCount=0, loads active intents from ledger at startup.
+Next: Phase 1 Self-Model Kernel — buildSelfModelSnapshot(), Haiku 4.5 RPM tracking, injection.
+
+## Session 79 (2026-03-10) — aria_local_call tool
+
+Added aria_local_call hub-bridge tool for Karma-to-Aria delegation:
+- ARIA_URL + ARIA_SERVICE_KEY in hub.env (vault-neo, not in git)
+- Tool: mode (chat|health|memory_graph), message, payload
+- Headers: X-Aria-Service-Key, X-Aria-Delegated: karma
+- Health mode: GET / (Aria has no /api/health)
+- Aria endpoint: 100.75.109.92:7890/api/chat
+- Key: Bt1MU_H7mRnEyTPE0nQtUyymOR3qvQaVxJifUdixm00 (set in hub.env; Aria runtime needs same value)
+- Status: hub-bridge wired; awaiting Aria-side key configuration for end-to-end test
