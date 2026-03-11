@@ -116,3 +116,23 @@ Context7 (external SaaS, 1,000 free calls/month) vs DIY get_library_docs (30min,
 
 **Pattern: combining related priorities into one system prompt section saves chars and improves coherence**
 Confidence levels (#3) + anti-hallucination gate (#4) were two separate priorities but clearly belong in the same behavioral section. Combining them meant less back-and-forth between related rules and saved system prompt chars. Look for priority clusters that share behavioral context before adding separate sections.
+
+## Session 81 Learnings (2026-03-11)
+
+### cp -r silently skips existing files
+ does NOT overwrite. Use explicit . The #1 source of stale build context deploys. Will never feel wrong until it burns you.
+
+### X-Aria-Delegated is not a safe identification header
+It triggers write blocking. If you want to identify the caller in Aria logs, use a different header or a field in the request body. Never combine delegated flag with auth key.
+
+### Codex is a reliable verification tool for Aria
+Codex ran live tests on Aria (delegated vs non-delegated), provided exact endpoint inventory, and confirmed auth behavior. Use Codex for K2/Aria exploration when direct SSH is inconvenient.
+
+### Aria was always Karma
+All K2/local work is Karma's local half. Clarifying this eliminates design friction around two systems architecture. One peer. Two compute paths. One spine.
+
+### Aria backfill is local-only
+/api/memory/backfill syncs within Aria SQLite only. For vault-neo canonical spine, hub-bridge must POST to /v1/ambient explicitly. Do not assume backfill reaches the ledger.
+
+### session_id = coherent Aria conversation thread
+Without session_id, each aria_local_call creates a new Aria session. Aria builds memory but it's disconnected. session_id must come from the client (page load UUID), not be generated per-call server-side.

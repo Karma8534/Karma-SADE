@@ -165,3 +165,17 @@ At session end (CC protocol — Task 3.3):
 **Source:** FalkorDB edge count query confirming RELATES_TO dates; verified Karma/Colby=123 in MENTIONS co-occurrence.
 **Applies to:** karma-core/server.py query_relevant_relationships() — fixed. System prompt unchanged.
 **Status:** INCORPORATED
+
+## Correction 2026-03-11
+**Was wrong:** System prompt still described MODEL_DEEP as haiku-based routing after Session 81 switch
+**Actually:** MODEL_DEFAULT=claude-haiku-4-5-20251001, MODEL_DEEP=claude-sonnet-4-6 as of Session 81
+**Source:** hub.env verified on vault-neo; routing.js ALLOWED_DEEP_MODELS updated; container rebuilt
+**Applies to:** system prompt section: model routing / tool-calling description
+**Status:** PENDING (system prompt update queued as OPEN problem)
+
+## Correction 2026-03-11
+**Was wrong:** aria_local_call sends X-Aria-Delegated header (assumed safe / needed for identification)
+**Actually:** X-Aria-Delegated blocks all Aria memory writes via delegated_read_only policy. Service key alone is correct.
+**Source:** Codex live test: delegated call = 0 obs, non-delegated service-key call = 1 obs
+**Applies to:** hub-bridge aria_local_call handler (server.js); any future Aria integration guidance
+**Status:** INCORPORATED (header removed in commit session-81e)

@@ -1,8 +1,8 @@
 # ROADMAP: Karma Peer — Phases & Milestones
 
-**Last updated:** 2026-03-10
-**Current phase:** v10 COMPLETE — All 5 priorities shipped (Session 72)
-**Previous phase:** v9 COMPLETE — all phases done Sessions 64–70
+**Last updated:** 2026-03-11
+**Current phase:** v11 — Aria Integration + Model Upgrade (Session 81 COMPLETE)
+**Previous phase:** v10 COMPLETE — All 5 priorities shipped (Session 72)
 
 ---
 
@@ -192,15 +192,19 @@
 
 ---
 
-## Milestone 7: K2 Worker Integration (FUTURE)
+## Milestone 7: K2 Worker Integration (IN PROGRESS — Session 81)
 
-### Phase 1: K2 Sync Protocol ⏳
-- [ ] K2 (192.168.0.226) not currently used as active worker
-- [ ] Consciousness loop runs on droplet only (OBSERVE-only, 60s)
-- [ ] Blocker: K2 not configured with sync protocol
+### Phase 1: K2 Sync Protocol ✅ PARTIAL (Session 81)
+- [x] K2 (192.168.0.226/100.75.109.92) confirmed operational: Ollama :11434, Aria :7890
+- [x] aria_local_call tool wired: hub-bridge → K2:7890/api/chat
+- [x] Aria delegated write fix: observations now accumulate (service key auth, no delegated flag)
+- [x] Aria → vault-neo sync: observations POST to /v1/ambient after each chat call
+- [x] session_id threading: coherent Aria conversation thread per page load
+- [ ] Karma routing logic: automatic K2 vs cloud decision rules (not yet built)
+- [ ] Single-model collapse: MODEL_DEFAULT=sonnet, tools always on, aria_local_call as infrastructure (not explicit tool)
 
 ### Phase 2: Multi-Agent Consciousness ⏳
-- [ ] Requires Phase 1 complete
+- [ ] Requires Phase 1 complete (sync protocol done; routing logic pending)
 
 ---
 
@@ -223,7 +227,9 @@
 | GSD Workflow | Manual | ✅ ADOPTED |
 | Self-Improvement | DPO collection (mechanism live) | ⏳ ACCUMULATING (0/20 pairs) |
 | Self-Improvement | Fine-tuning | ⏳ BLOCKED on 20+ DPO pairs |
-| K2 Worker | Sync protocol | ⏳ K2 not configured |
+| v11 | MODEL_DEEP=sonnet-4-6, cap $60, Aria delegated fix, vault sync, session_id | ✅ DONE (Session 81) |
+| K2 Worker | Sync protocol (aria_local_call + observations + vault sync) | ✅ PARTIAL (Session 81) |
+| K2 Worker | Karma routing logic + single-model collapse | ⏳ NEXT |
 | K2 Worker | Multi-agent | ⏳ FUTURE |
 
 ---
@@ -255,8 +261,7 @@ K2 (192.168.0.226) not intended as active worker. Consciousness loop runs on dro
 
 ---
 
-**Last updated:** 2026-03-10 (Session 73 — v10 complete, all stale items resolved)
-**Next review:** Session 68 (Phase 4 implementation kickoff)
+**Last updated:** 2026-03-11 (Session 81 — v11 Aria integration, model upgrade, cap increase)
 **Owner:** Claude Code (updates on Colby approval)
 
 ---

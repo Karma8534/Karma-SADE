@@ -1,9 +1,9 @@
 # Karma SADE — Session Handoff
 
-**Date**: 2026-03-10
-**Session**: 72
+**Date**: 2026-03-11
+**Session**: 81
 **GitHub**: https://github.com/Karma8534/Karma-SADE (PUBLIC)
-**Last commit**: 0c15d35 (main, synced to vault-neo)
+**Last commit**: b758b4d (main, synced to vault-neo)
 
 ---
 
@@ -31,9 +31,17 @@ vault-neo (DigitalOcean NYC3, 4GB RAM, SSH alias: vault-neo)
 └── Nginx                 ─── Reverse proxy → hub.arknexus.net
 ```
 
-**Models:**
-- Primary: GLM-4.7-Flash (Z.ai) — ~80% requests, free, 40 RPM self-imposed
-- Deep mode: gpt-4o-mini (OpenAI) — `x-karma-deep: true` header only, paid
+**Models (Session 81):**
+- Standard: `claude-haiku-4-5-20251001` — all /v1/chat requests, fast/cheap, no tools
+- Deep mode: `claude-sonnet-4-6` — `x-karma-deep: true` header, tools enabled, $0.0252/req verified
+- Monthly cap: $60 (MONTHLY_USD_CAP in hub.env)
+- PRICE_CLAUDE: ❌ OPEN — still Haiku rates in hub.env, needs update to $3.00/$15.00
+
+**K2 / Aria (Session 81):**
+- K2 Tailscale: 100.75.109.92, Ollama :11434, Aria service :7890
+- "Aria" = Karma's local compute half (not a separate entity)
+- aria_local_call: hub-bridge → K2:7890/api/chat, X-Aria-Service-Key only (no Delegated header)
+- After each call: observation POSTed to /v1/ambient (single spine sync)
 
 ---
 

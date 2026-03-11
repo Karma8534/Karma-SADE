@@ -7,13 +7,14 @@ in an append-only ledger. FalkorDB graph is populated by batch_ingest running on
 
 **Chrome extension: SHELVED.** Never reliably captured conversations. Not in active use.
 
-## Active Capture Sources (as of 2026-03-05)
+## Active Capture Sources (as of 2026-03-11)
 
 | Source | Mechanism | Last seen in ledger |
 |--------|-----------|---------------------|
-| Git commits | post-commit hook → /v1/ambient | 2026-03-03 (current) |
-| Claude Code sessions | session-end hook → /v1/ambient | 2026-03-03 (current) |
-| Direct chat (/v1/chat) | hub-bridge stores to ledger | 2026-03-03 (current) |
+| Git commits | post-commit hook → /v1/ambient | 2026-03-11 (current) |
+| Claude Code sessions | session-end hook → /v1/ambient | 2026-03-11 (current) |
+| Direct chat (/v1/chat) | hub-bridge stores to ledger | 2026-03-11 (current) |
+| Aria/K2 local chat | aria_local_call → /v1/ambient post-call | 2026-03-11 (new) |
 | PDF/image ingestion | karma-inbox-watcher.ps1 → /v1/ingest | 2026-03-03 (active) |
 | Karma terminal | karma-terminal client | 2026-02-27 (stale) |
 | Chrome extension | **SHELVED** | 2026-02-26 (legacy data only) |
@@ -25,13 +26,14 @@ Git commit          → post-commit hook  ↘
 Claude Code session → session-end hook  → /v1/ambient → vault-api → ledger
 Direct chat         → /v1/chat          ↗
 PDF/images          → /v1/ingest        ↗
+Aria/K2 local chat  → aria_local_call → Aria K2:7890/api/chat → hub-bridge posts /v1/ambient ↗
 
 Ledger → batch_ingest (cron every 6h on vault-neo) → FalkorDB neo_workspace graph
 Ledger → anr-vault-search (auto-reindex on change + every 5min) → FAISS vector index
 
 /v1/chat request → [karmaCtx via karma-server, semanticCtx via anr-vault-search] in parallel
                  → buildSystemText(karmaCtx, ckLatest, webResults, semanticCtx)
-                 → claude-3-5-haiku-20241022 (primary and deep mode, Decision #28 Session 75)
+                 → claude-haiku-4-5-20251001 (standard) + claude-sonnet-4-6 (deep), Decision #32 Session 81
 ```
 
 ## Layer Details
@@ -53,7 +55,7 @@ Ledger → anr-vault-search (auto-reindex on change + every 5min) → FAISS vect
 - URL: https://hub.arknexus.net
 - Endpoints in use: `/v1/ambient` (hook capture), `/v1/chat` (Karma chat), `/v1/context` (context query), `/v1/cypher` (graph query), `/v1/self-model`, `/v1/ingest` (PDF pipeline), `/v1/feedback` (write_memory approval gate — Session 68)
 - Auth: Bearer token (hub.chat.token.txt for chat; hub.capture.token.txt for ambient hooks)
-- Model routing: `claude-3-5-haiku-20241022` for both standard + deep mode — Decision #28 (Session 75). GLM-4.7-Flash retired from primary use.
+- Model routing: `MODEL_DEFAULT=claude-haiku-4-5-20251001` (standard, fast/cheap), `MODEL_DEEP=claude-sonnet-4-6` (deep, peer-quality). Decision #32 (Session 81). GLM-4.7-Flash retired. Monthly cap: $60.
 - **System prompt**: Loaded from `Memory/00-karma-system-prompt-live.md` at startup via `KARMA_IDENTITY_PROMPT`. Injected as `identityBlock` at top of `buildSystemText()`. 15,192 chars as of Session 72. Future updates: git pull + `docker restart anr-hub-bridge` only (no rebuild needed).
 - **Context assembly**: Each `/v1/chat` fetches `karmaCtx` (FalkorDB recency via karma-server) + `semanticCtx` (FAISS top-5 via anr-vault-search) in parallel via `Promise.all`. Additionally: `_memoryMdCache` (tail 3000 chars of MEMORY.md, refreshed every 5min) injected as "KARMA MEMORY SPINE (recent)" section (Session 72).
 - **karmaCtx sections** (as of Session 72): User Identity, Relevant Knowledge, Entity Relationships (MENTIONS co-occurrence — NOT stale RELATES_TO), Recurring Topics (top-10 by episode count, 30min cache), Recent Memories, Recently Learned, What I Know About The User.
@@ -66,7 +68,8 @@ Ledger → anr-vault-search (auto-reindex on change + every 5min) → FAISS vect
 - **write_memory gate** (Session 68): Karma calls `write_memory(content)` in deep mode → hub-bridge stores in `pending_writes` Map with TTL → returns `write_id` in response → user 👍/👎 at `/v1/feedback` → if approved: MEMORY.md appended + DPO pair written to vault ledger (`type:"log"`, `tags:["dpo-pair"]`).
 - **GLM_RPM_LIMIT**: 40 RPM kept in hub.env for compat — not invoked when MODEL_DEFAULT is claude-. GLM rate-limit code paths skip for claude- models (startsWith check).
 - **lib/*.js location** (Session 75): `hub-bridge/lib/` in git repo. Build context: `/opt/seed-vault/memory_v1/hub_bridge/lib/`. After git pull on vault-neo, must `cp hub-bridge/lib/*.js /opt/seed-vault/memory_v1/hub_bridge/lib/` before `--no-cache` rebuild.
-- **Haiku 3.5 pricing**: `PRICE_CLAUDE_INPUT_PER_1M=0.80`, `PRICE_CLAUDE_OUTPUT_PER_1M=4.00` in hub.env.
+- **Pricing (hub.env)**: `PRICE_CLAUDE_INPUT_PER_1M=0.80`, `PRICE_CLAUDE_OUTPUT_PER_1M=4.00` — **OPEN: needs update to Sonnet rates ($3.00/$15.00) for MODEL_DEEP accuracy** (problems-log 2026-03-11).
+- **Aria/K2 integration** (Session 81): `aria_local_call` tool calls K2:7890/api/chat (Aria service). Auth: `X-Aria-Service-Key` only — do NOT send `X-Aria-Delegated` (blocks memory writes). After each chat call, hub-bridge posts observation to `/v1/ambient` (tags: aria, k2-local). `session_id` = `body.session_id` (UUID from unified.html per page load) — threaded through to Aria for coherent conversation accumulation.
 
 ### Vault API
 - FastAPI application running in Docker (anr-vault-api container)

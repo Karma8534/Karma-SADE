@@ -85,3 +85,22 @@ Every Karma response shows 👍/👎 regardless of write_memory presence. /v1/fe
 
 ### Decision #27: hub-bridge file sync must cover ALL changed files, not just server.js
 Build context is /opt/seed-vault/memory_v1/hub_bridge/ (parent). lib/ files sync to parent/lib/, app/public/ files sync to parent/app/public/, server.js syncs to parent/app/server.js. Before any --no-cache rebuild, grep changed files: `git diff --name-only HEAD~1 | grep hub-bridge` and sync every one to build context. Syncing only server.js is the #1 cause of stale hub-bridge deploys.
+
+---
+
+## Session 81 Decisions (2026-03-11) — Locked
+
+### Decision #29: cp -r does NOT overwrite existing files — never use for build context sync
+`cp -r source/ dest/` silently skips files already present in dest/. Session 80's upload button fix was not deployed for this reason — build context had stale unified.html. Always use explicit per-file copies: `cp /path/to/file /build-context/path/to/file`. This is the canonical sync pattern for ALL hub-bridge file deploys.
+
+### Decision #30: X-Aria-Delegated header must be removed from aria_local_call
+Sending `X-Aria-Delegated: karma` alongside `X-Aria-Service-Key` triggers Aria's delegated_read_only policy, silently blocking all memory writes (observations stay at 0). Service key alone is the correct auth for Karma's calls to Aria. Verified live: delegated = 0 obs, non-delegated service-key = 1 obs. File: hub-bridge/app/server.js aria_local_call handler.
+
+### Decision #31: Aria = Karma's local compute half — single peer, single spine
+"Aria" is not a separate entity. It is Karma's K2/local inference half. One coherent peer, two compute paths: vault-neo/Anthropic (cloud primary) + K2/qwen3-coder (local secondary). Aria's memory subsystems are in-session staging layer (working memory). For single canonical spine: Aria observations must POST to /v1/ambient after each chat call. /api/memory/backfill only syncs within Aria's local SQLite — does NOT reach vault-neo.
+
+### Decision #32: MODEL_DEEP = claude-sonnet-4-6
+Switched from claude-haiku-4-5-20251001. ALLOWED_DEEP_MODELS in routing.js must include the model string or container refuses to start. Monthly cap $60 (was $35). Haiku 3.5 remains MODEL_DEFAULT.
+
+### Decision #33: session_id required for coherent Aria memory accumulation
+aria_local_call must pass a consistent session_id (UUID generated per page load in unified.html, stored as window.karmaSessionId) with every /api/chat call to Aria. Without it, each call creates a new Aria session — observations accumulate but cannot be retrieved as a coherent thread. session_id wired in unified.html JS + server.js aria_local_call handler (passes toolInput.session_id from client).

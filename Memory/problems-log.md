@@ -358,3 +358,58 @@ Relationship label changed from raw edge `r.fact` string to `"co-occurs in N epi
 **Residual risk:** Quality regression can still happen without regular UX-level verification. Every deployment should include a browser-based smoke test â€” not just curl.
 
 **Status:** RESOLVED (model switched)
+
+---
+
+## 2026-03-11 [Session 81] Upload button not working after Session 80 commit
+
+**Symptom:** File upload appeared to work (button present in unified.html) but Karma received nothing. Session 80 fix was committed but not deployed.
+**Root cause(s):** RC1: cp -r source/ dest/ silently skips files already present in dest/. unified.html in build context was never overwritten — old FormData code remained.
+**Fix:** Explicit file copy: cp /home/neo/karma-sade/hub-bridge/app/public/unified.html /opt/seed-vault/memory_v1/hub_bridge/app/public/unified.html, then --no-cache rebuild.
+**Verified by:** Uploaded KarmaSession031026a.md via Karma UI. Karma analyzed contents successfully.
+**Residual risk:** Any future cp -r in build context sync workflow will silently skip existing files. Decision #29 locked: always use explicit per-file copies.
+**Status:** RESOLVED
+
+---
+
+## 2026-03-11 [Session 81] X-Aria-Delegated header blocked all Aria memory writes
+
+**Symptom:** aria_local_call returned 200 OK but Aria session_messages stayed at 0. Observations never accumulated. Memory holding not working.
+**Root cause(s):** RC1: hub-bridge aria_local_call handler sent both X-Aria-Service-Key AND X-Aria-Delegated:karma. Delegated flag triggers Aria delegated_read_only policy — all memory writes blocked regardless of service key validity.
+**Fix:** Removed X-Aria-Delegated header from aria_local_call fetch options. server.js ~line 1088. Service key auth alone is correct.
+**Verified by:** Codex live test: non-delegated service-key call = observations 0->1. Delegated call = 0.
+**Residual risk:** If delegated header is re-added thinking it provides isolation, writes will silently stop again with no error.
+**Status:** RESOLVED
+
+---
+
+## 2026-03-11 [Session 81] Aria backfill does not reach vault-neo canonical spine
+
+**Symptom:** Aria observations accumulate in local SQLite but never reach vault-neo ledger. Single memory spine violated.
+**Root cause(s):** RC1: /api/memory/backfill syncs session_messages to observations within Aria SQLite only. No connection to vault-neo /v1/ambient.
+**Fix:** After each aria_local_call, hub-bridge now POSTs Aria response as observation to /v1/ambient (vault-neo). Tags: aria, k2-local, observation.
+**Verified by:** Deploy confirmed RestartCount=0. Production verification pending first aria_local_call.
+**Residual risk:** If Aria response is empty or errors, ambient POST skipped (not blocking). Aria entries in ledger not yet reflected in architecture.md ledger entry distribution table.
+**Status:** RESOLVED (code live, full production verification pending)
+
+---
+
+## 2026-03-11 [Session 81] PRICE_CLAUDE in hub.env not updated for Sonnet MODEL_DEEP
+
+**Symptom:** hub.env has PRICE_CLAUDE_INPUT_PER_1M=0.80, PRICE_CLAUDE_OUTPUT_PER_1M=4.00 (Haiku rates). MODEL_DEEP is now claude-sonnet-4-6.
+**Root cause(s):** RC1: Sonnet pricing was not updated when MODEL_DEEP was switched. Sonnet rates are .00/5.00 per 1M (input/output).
+**Fix needed:** Update hub.env on vault-neo: PRICE_CLAUDE_INPUT_PER_1M=3.00, PRICE_CLAUDE_OUTPUT_PER_1M=15.00. Then docker compose -f compose.hub.yml up -d to pick up env changes.
+**Verified by:** Not yet fixed.
+**Residual risk:** Cost tracking underestimates deep-mode cost by ~3-4x. Monthly cap enforcement uses these values.
+**Status:** OPEN
+
+---
+
+## 2026-03-11 [Session 81] System prompt still references old model routing (GLM/haiku)
+
+**Symptom:** Memory/00-karma-system-prompt-live.md model routing section references GLM-4.7-Flash and haiku routing, not claude-sonnet-4-6 for deep mode.
+**Root cause(s):** RC1: System prompt not updated when MODEL_DEEP switched to claude-sonnet-4-6.
+**Fix needed:** Update model routing section in 00-karma-system-prompt-live.md. Then git pull on vault-neo + docker restart anr-hub-bridge (no rebuild needed).
+**Verified by:** Not yet fixed.
+**Residual risk:** Karma may describe her own model capabilities incorrectly to users.
+**Status:** OPEN
