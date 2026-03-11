@@ -1,3 +1,10 @@
+## Session 82 (2026-03-11) — K2 Memory Graph Fix + Context Injection
+- FIXED: aria_local_call memory_graph — wrong path (/api/memory_graph → /api/memory/graph) + wrong method (POST → GET with ?query= param)
+- ADDED: fetchK2MemoryGraph() — GET /api/memory/graph?query=Colby, 5min cache, non-blocking
+- WIRED: Promise.all fetches karmaCtx + semanticCtx + k2MemCtx in parallel; injected as 7th param to buildSystemText()
+- Karma now wakes with K2 memory graph in context automatically
+- Next: verify deployment + end-to-end confirmation
+
 ## Session 81g — Wire session_id into aria_local_call (2026-03-11)
 - unified.html: sends session_id = conversationId (existing page-load UUID) with every /v1/chat POST
 - server.js: extracts body.session_id → threads through callLLMWithTools(ariaSessionId) → executeToolCall → Aria POST body

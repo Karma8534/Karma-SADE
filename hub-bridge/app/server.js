@@ -89,6 +89,44 @@ function loadMemoryMd() {
   } catch (_) {}
 }
 
+// K2 memory graph cache — fetched once per request cycle, cached 5 min.
+// Aria on K2 exposes GET /api/memory/graph?query=... — returns seed_facts, related_facts, entities.
+let _k2MemGraphCache = null;
+let _k2MemGraphCacheAt = 0;
+const K2_MEM_CACHE_TTL_MS = 5 * 60 * 1000;
+
+async function fetchK2MemoryGraph(query = "Colby") {
+  if (!ARIA_SERVICE_KEY || !ARIA_URL) return null;
+  const now = Date.now();
+  if (_k2MemGraphCache && (now - _k2MemGraphCacheAt) < K2_MEM_CACHE_TTL_MS) {
+    return _k2MemGraphCache;
+  }
+  try {
+    const url = `${ARIA_URL}/api/memory/graph?query=${encodeURIComponent(query)}&limit=10`;
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { "X-Aria-Service-Key": ARIA_SERVICE_KEY },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) { console.warn(`[K2-MEM] /api/memory/graph → ${res.status}`); return null; }
+    const data = await res.json();
+    if (!data.success || !data.graph_context) return null;
+    const ctx = data.graph_context;
+    const lines = [];
+    if (ctx.seed_facts?.length)    lines.push("Key facts: "  + ctx.seed_facts.map(f => `${f.content} (${f.fact_type})`).join("; "));
+    if (ctx.related_facts?.length) lines.push("Related: "    + ctx.related_facts.map(f => f.content).join("; "));
+    if (ctx.entities?.length)      lines.push("Entities: "   + ctx.entities.map(e => e.name).join(", "));
+    const text = lines.join("\n");
+    _k2MemGraphCache = text;
+    _k2MemGraphCacheAt = now;
+    console.log(`[K2-MEM] graph loaded (${text.length} chars, ${ctx.graph_hits} hits)`);
+    return text;
+  } catch (e) {
+    console.warn(`[K2-MEM] fetch failed: ${e.message}`);
+    return null;
+  }
+}
+
 // Local file server — Payback (Colby's machine) via Tailscale
 const LOCAL_FILE_SERVER_URL = process.env.LOCAL_FILE_SERVER_URL || "";
 const LOCAL_FILE_TOKEN = process.env.LOCAL_FILE_TOKEN || "";
@@ -500,7 +538,7 @@ async function fetchSemanticContext(userMessage, topK = FAISS_SEARCH_K) {
  * Build Karma's system prompt from FalkorDB context.
  * Extracted so both /v1/chat and /v1/ingest can reuse it.
  */
-function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticCtx = null, memoryMd = null, activeIntentsText = null) {
+function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticCtx = null, memoryMd = null, activeIntentsText = null, k2MemCtx = null) {
   // Identity block — loaded from file at startup. Describes Karma's actual architecture,
   // capability boundaries, data model corrections, and API surface.
   // File is volume-mounted; future updates: git pull + container restart (no rebuild needed).
@@ -561,6 +599,12 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
   // Always injected so Karma has her memory in standard mode without needing deep-mode tools.
   if (memoryMd) {
     text += `\n\n--- KARMA MEMORY SPINE (recent) ---\n${memoryMd}\n---`;
+  }
+
+  // K2 memory graph — Aria's local peer memory (seed facts, related facts, entities).
+  // Fetched from K2:7890 /api/memory/graph at request time. Non-blocking; omitted if K2 unreachable.
+  if (k2MemCtx) {
+    text += `\n\n--- ARIA K2 MEMORY GRAPH ---\n${k2MemCtx}\n---`;
   }
 
   return text;
@@ -1073,7 +1117,9 @@ async function executeToolCall(toolName, toolInput, writeId = null, ariaSessionI
         endpoint = `${ARIA_URL}/`;
         method = "GET";
       } else if (mode === "memory_graph") {
-        endpoint = `${ARIA_URL}/api/memory_graph`;
+        const q = encodeURIComponent(message || "Colby");
+        endpoint = `${ARIA_URL}/api/memory/graph?query=${q}&limit=10`;
+        method = "GET";
       } else {
         endpoint = `${ARIA_URL}/api/chat`;
       }
@@ -1616,10 +1662,11 @@ const server = http.createServer(async (req, res) => {
         ckLatestData = await fetchCheckpointLatestFromVault();
       } catch (e) { /* non-fatal — Karma runs without checkpoint if vault is down */ }
 
-      // Pull live FalkorDB context + semantic search in parallel (non-blocking)
-      const [karmaCtx, semanticCtx] = await Promise.all([
+      // Pull live FalkorDB context + semantic search + K2 memory graph in parallel (non-blocking)
+      const [karmaCtx, semanticCtx, k2MemCtx] = await Promise.all([
         fetchKarmaContext(userMessage),
         fetchSemanticContext(userMessage),
+        fetchK2MemoryGraph("Colby"),
       ]);
 
       // Web search — fires when message contains clear search-intent keywords
@@ -1638,7 +1685,7 @@ const server = http.createServer(async (req, res) => {
         }
       }
       const activeIntentsText = buildActiveIntentsText(surfacedIntents);
-      const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults, semanticCtx, _memoryMdCache || null, activeIntentsText || null);
+      const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults, semanticCtx, _memoryMdCache || null, activeIntentsText || null, k2MemCtx || null);
 
       const extractedFacts = extractExplicitFacts(userMessage);
       let factWriteResults = [];
