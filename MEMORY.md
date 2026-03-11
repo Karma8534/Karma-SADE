@@ -1,3 +1,12 @@
+## Session 81c — Anthropic vision support for image uploads (2026-03-11)
+- server.js: image files (jpg/jpeg/png/gif/webp) now routed to Anthropic vision instead of pdf-parse
+- Deep mode: content array built with {type:"image", source:{type:"base64",...}} blocks → Sonnet can see images
+- Standard mode: returns helpful message directing user to enable Deep Mode
+- Session history: stores plain text userMessage only (no base64 bloat in history)
+- Missing_message error now allows through if imageBlocks present (image-only upload works)
+
+---
+
 ## Session 81b — Thumbs-up confirmation UI (2026-03-11)
 - unified.html: 👍 with write_id shows `✓ saved` green fade-out (2s). Plain turn_id 👍 unchanged.
 

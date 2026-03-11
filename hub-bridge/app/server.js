@@ -1517,26 +1517,32 @@ const server = http.createServer(async (req, res) => {
       const raw = await parseBody(req, 30000000);
       let body; try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
 
-      // If files were attached (base64 array from browser), extract their text and prepend to message
+      // If files were attached (base64 array from browser), extract text or collect images
       let fileContext = "";
+      const imageBlocks = []; // vision blocks for Anthropic multimodal (deep mode only)
       if (Array.isArray(body?.files) && body.files.length > 0) {
         for (const f of body.files) {
           if (!f?.data_b64 || !f?.name) continue;
           try {
-            const buf = Buffer.from(f.data_b64, "base64");
             const ext = (f.name.split(".").pop() || "").toLowerCase();
-            const text = (ext === "txt" || ext === "md")
-              ? buf.toString("utf8").trim()
-              : await extractPdfText(buf);
-            if (text) fileContext += `\n\n[Attached file: ${f.name}]\n${text.slice(0, 12000)}`;
+            if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
+              const mediaType = ext === "png" ? "image/png" : ext === "gif" ? "image/gif" : ext === "webp" ? "image/webp" : "image/jpeg";
+              imageBlocks.push({ fileName: f.name, mediaType, data: f.data_b64 });
+            } else {
+              const buf = Buffer.from(f.data_b64, "base64");
+              const text = (ext === "txt" || ext === "md")
+                ? buf.toString("utf8").trim()
+                : await extractPdfText(buf);
+              if (text) fileContext += `\n\n[Attached file: ${f.name}]\n${text.slice(0, 12000)}`;
+            }
           } catch (e) {
-            fileContext += `\n\n[Attached file: ${f.name} — could not extract text: ${e.message}]`;
+            fileContext += `\n\n[Attached file: ${f.name} — could not extract: ${e.message}]`;
           }
         }
       }
 
       const userMessage = ((body?.message || "").toString().trim() + fileContext).trim();
-      if (!userMessage) return json(res, 400, { ok: false, error: "missing_message" });
+      if (!userMessage && !imageBlocks.length) return json(res, 400, { ok: false, error: "missing_message" });
 
       const topic = (body?.topic || "").toString().trim();
 
@@ -1635,11 +1641,31 @@ const server = http.createServer(async (req, res) => {
       const debug_input_chars = statePrelude.length + systemText.length + historyChars + userMessage.length;
       const debug_max_output_tokens_used = max_output_tokens;
 
+      // Build user content: multimodal array if images present + deep mode, else plain string
+      let userContent;
+      if (imageBlocks.length > 0 && deep_mode) {
+        // Anthropic vision: content array with text block + image blocks
+        const contentArr = [];
+        if (userMessage) contentArr.push({ type: "text", text: userMessage });
+        for (const img of imageBlocks) {
+          contentArr.push({ type: "image", source: { type: "base64", media_type: img.mediaType, data: img.data } });
+        }
+        userContent = contentArr;
+      } else if (imageBlocks.length > 0 && !deep_mode) {
+        // Standard mode has no vision — tell user to use Deep Mode
+        const names = imageBlocks.map(i => i.fileName).join(", ");
+        userContent = userMessage
+          ? `${userMessage}\n\n[Attached image(s): ${names} — vision requires Deep Mode. Enable Deep Mode to analyze images.]`
+          : `[Attached image(s): ${names} — vision requires Deep Mode. Enable Deep Mode to analyze images.]`;
+      } else {
+        userContent = userMessage;
+      }
+
       const messages = [
         { role: "system", content: statePrelude },
         { role: "system", content: systemText },
         ...sessionHistory,
-        { role: "user", content: userMessage },
+        { role: "user", content: userContent },
       ];
 
       // Tool-calling is deep-mode only. Standard requests go through callLLM (no tools).
