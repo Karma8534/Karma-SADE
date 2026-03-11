@@ -1,3 +1,25 @@
+## Session 81 — Architecture clarity + MODEL_DEEP → Sonnet + K2 confirmed (2026-03-11)
+
+**Status:** ✅ COMPLETE — hub-bridge v2.11.0, MODEL_DEEP=claude-sonnet-4-6
+
+### Key Decisions This Session
+1. **"Aria" is Karma's local compute half** — not a separate entity. One peer (Karma), two compute paths (vault-neo/Anthropic + K2/qwen3-coder:30b), one memory spine. Everything built for "Aria" on K2 is already Karma's local half.
+2. **MODEL_DEEP = claude-sonnet-4-6** — MODEL_DEFAULT stays Haiku (cheap/fast). Deep mode is now peer-quality conversation. hub.env updated, requires compose up -d to take effect.
+3. **Subscription cleanup** — auto-top-up disabled on: GLM/z.ai, MiniMax, Perplexity API, Groq, Twilio, Postmark. Google Workspace to evaluate. OpenRouter worth exploring. Target monthly: ~$30-35.
+
+### Infrastructure Confirmed
+- vault-neo → K2 Tailscale (100.75.109.92): ✅ operational
+- Ollama on K2: ✅ accessible at :11434 (qwen3-coder:30b 17GB, qwen3.5:9b 6.6GB installed)
+- Aria/Karma-local service at K2:7890: ✅ live, responding with memory context, model_in_use=qwen3-coder:30b
+- qwen3-coder:30b architecture: MoE (qwen3moe), ~3.3B active per token, warm latency ~0.26s
+- aria_local_call tool in hub-bridge: ✅ functional
+
+### Fixes Deployed (Session 80 code, Session 81 deployment)
+- File upload: base64 JSON approach verified — KarmaSession031026a.md analyzed successfully
+- PITFALL: `cp -r source/ dest/` does NOT overwrite existing files in dest/ — always use explicit file copy for individual files
+
+---
+
 ## Session 80 — Context amnesia fix + upload button fix (2026-03-11)
 
 **Status:** ✅ DEPLOYED — hub-bridge v2.12.0

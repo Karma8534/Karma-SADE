@@ -424,8 +424,34 @@ These three together form the Cognitive Architecture Layer — what makes Karma 
 
 ## Next Session Starts Here
 
-**Active model:** claude-haiku-4-5-20251001 (live, verified Session 76)
+### Decision #31: "Aria" unified into Karma — one peer, two compute paths (2026-03-11, LOCKED)
+"Aria" was a working name for K2's local Karma instance built in isolation. Confirmed by Colby: no separate entity. One peer (Karma), two compute paths: cloud (vault-neo + Anthropic API) and local (K2 + qwen3-coder:30b). One memory spine. All code built for "Aria" on K2 is Karma's local half. aria_local_call = Karma calling herself on local hardware.
 
-1. **Cognitive Architecture Layer — Design Phase**: Invoke brainstorming skill. Design Self-Model Kernel, Metacognitive Trace, and Deferred Intent Engine as a cohesive system. Write `.gsd/phase-cognitive-arch-CONTEXT.md` before any code.
-2. **Verify Karma quality with Haiku 4.5**: Open hub.arknexus.net — sidebar should show claude-haiku-4-5-20251001. Test a real conversation.
-3. **Update system prompt**: `Memory/00-karma-system-prompt-live.md` still references claude-3-5-haiku-20241022 in model routing section — update to haiku-4-5-20251001, then `git pull + docker restart anr-hub-bridge`.
+### Decision #32: MODEL_DEEP = claude-sonnet-4-6 (2026-03-11, LOCKED)
+MODEL_DEFAULT stays claude-haiku-4-5-20251001 (cheap, fast, standard queries).
+MODEL_DEEP changed to claude-sonnet-4-6 (stronger reasoning, peer-quality conversation, better tool-calling).
+hub.env updated on vault-neo. routing.js allow-list must be verified to include claude-sonnet-4-6.
+
+### Decision #33: Subscription cleanup — target $30-35/mo (2026-03-11, LOCKED)
+Cut (auto-top-up disabled): GLM/z.ai, MiniMax, Perplexity API, Groq, Twilio, Postmark.
+Keep: DigitalOcean ($24), Anthropic API (~$5-15), OpenAI API (<$1 embeddings), Brave Search, Cloudflare, Porkbun.
+Evaluate: OpenRouter (unified model API, could replace direct Anthropic+OpenAI), Google Workspace (user doesn't use it — Cloudflare email routing is free alternative).
+
+### Session 81 Accomplishments (2026-03-11)
+- Context amnesia root cause diagnosed from KarmaSession031026a.md: MAX_SESSION_TURNS=8 (deployed Session 80)
+- File upload fix deployed and verified: KarmaSession031026a.md successfully uploaded and analyzed by Karma
+- vault-neo → K2 Tailscale confirmed: Ollama at :11434, Aria/Karma-local service at :7890 both operational
+- qwen3-coder:30b confirmed MoE architecture: ~3.3B active per token, ~0.26s warm latency
+- ARCHITECTURAL CLARITY: "Aria" = Karma's local compute half. Not a separate entity.
+- MODEL_DEEP switched to claude-sonnet-4-6 in hub.env
+- Subscription cleanup plan established — 6 services cut, target $30-35/mo
+- PITFALL: `cp -r source/ dest/` does not overwrite existing files — always explicit file copy for individual files
+
+### Session 81 — Open Items for Next Session
+1. **Deploy MODEL_DEEP**: `compose up -d` to pick up claude-sonnet-4-6 from hub.env — requires routing.js allow-list check first
+2. **routing.js allow-list**: Verify claude-sonnet-4-6 is in ALLOWED_DEEP_MODELS (startup fails if not)
+3. **Karma routing logic**: When does Karma use local K2 compute vs cloud Anthropic? Routing rules needed.
+4. **System prompt update**: Update model routing section to reflect MODEL_DEFAULT=haiku, MODEL_DEEP=sonnet-4-6
+5. **karma-builder:latest**: Remove from K2 (user confirmed — discarded project)
+
+**Active models:** MODEL_DEFAULT=claude-haiku-4-5-20251001, MODEL_DEEP=claude-sonnet-4-6 (hub.env set, not yet deployed)

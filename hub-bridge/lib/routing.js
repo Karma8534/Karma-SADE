@@ -95,7 +95,7 @@ export const glmLimiter = new GlmRateLimiter({
 export const ALLOWED_DEFAULT_MODELS = ["claude-haiku-4-5-20251001", "claude-3-5-haiku-20241022", "glm-4.7-flash"];
 
 /** Allowed values for MODEL_DEEP. */
-export const ALLOWED_DEEP_MODELS = ["claude-haiku-4-5-20251001", "claude-3-5-haiku-20241022", "gpt-4o-mini"];
+export const ALLOWED_DEEP_MODELS = ["claude-haiku-4-5-20251001", "claude-3-5-haiku-20241022", "gpt-4o-mini", "claude-sonnet-4-6"];
 
 const DEFAULT_MODEL_DEFAULT = "claude-haiku-4-5-20251001";
 const DEFAULT_MODEL_DEEP    = "claude-haiku-4-5-20251001";
