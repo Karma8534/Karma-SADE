@@ -1,7 +1,7 @@
 # Direction — What We're Building
 
-**Last updated:** 2026-03-10
-**Status:** v10 COMPLETE — All 5 priorities shipped (Session 72). System fully operational.
+**Last updated:** 2026-03-11
+**Status:** v11 — Aria/K2 integration complete (Session 81). MODEL_DEEP=claude-sonnet-4-6. System fully operational.
 
 ---
 
@@ -24,7 +24,8 @@ Karma is a single coherent peer whose long-term identity lives in a verified mem
 | **batch_ingest** | Cron every 6h, --skip-dedup mode (FIXED Session 70) | ✅ Scheduled |
 | **PDF watcher** | `karma-inbox-watcher.ps1` → /v1/ingest (rate-limit aware, jam detection) | ✅ Active |
 | **Brave Search** | Auto-triggered on search intent, top-3 results injected into context | ✅ Enabled |
-| **K2 local worker** | DEPRECATED 2026-03-03 — not operational, not needed | ❌ Shelved |
+| **K2 / Aria** | Karma's local compute half (100.75.109.92). Ollama :11434 (qwen3-coder:30b MoE), Aria service :7890 | ✅ Operational |
+| **aria_local_call** | hub-bridge tool → K2:7890/api/chat. Service key auth. Observations sync to /v1/ambient. session_id threaded. | ✅ Live (Session 81) |
 | **Chrome extension** | SHELVED permanently — DOM scraping unreliable | ❌ Shelved |
 
 ---
@@ -53,17 +54,15 @@ All 5 priorities shipped in Session 72:
 
 ---
 
-## What Changed: Sessions 66–72
+## What Changed: Sessions 73–81
 
 | Session | Key Change |
 |---------|-----------|
-| 66 | GLM tool-calling live; graph_query + get_vault_file; TOOL_NAME_MAP bug fixed |
-| 67 | Deep-mode tool gate; standard chat no longer gets tools |
-| 68 | write_memory gate; /v1/feedback; 👍/👎 on memory writes; DPO pairs |
-| 69 | fetch_url tool; stale tools removed (read_file, write_file, edit_file, bash) |
-| 70 | System prompt trim (16K→11K chars); batch_ingest --skip-dedup permanent; context lag note |
-| 71 | (Not recorded — likely minor fixes) |
-| 72 | v10 all 5 priorities complete (see above) |
+| 74 | get_vault_file extended (repo/+vault/ prefixes); get_local_file tool; karma-file-server.ps1 |
+| 75 | Model switch to Haiku 3.5; lib/*.js committed to git; backend-only verification ≠ green |
+| 77 | Cognitive architecture layer design (Self-Model Kernel, Metacognitive Trace, Deferred Intent Engine) |
+| 78-80 | Deferred Intent Engine live; session amnesia fix (MAX_SESSION_TURNS 8→20); file upload |
+| 81 | MODEL_DEEP=claude-sonnet-4-6; K2/Aria integration (delegated fix, vault sync, session_id); $60 cap; subscription cleanup |
 
 ---
 
@@ -71,9 +70,12 @@ All 5 priorities shipped in Session 72:
 
 - FalkorDB: 10s timeout, vault-neo:6379
 - Ledger: 4000+ episodes
-- System prompt: 15,192 chars — monitor for token pressure (429s above ~13K chars were the signal)
-- GLM_RPM_LIMIT: 40 RPM (Z.ai free tier)
-- DPO pairs: 0/20 goal — needs regular use with 👍/👎 feedback
+- System prompt: ~18,200 chars (Session 81 load confirmed) — monitor for token pressure
+- MODEL_DEFAULT: claude-haiku-4-5-20251001 (standard, fast/cheap, no tools)
+- MODEL_DEEP: claude-sonnet-4-6 (deep, tools, peer-quality — $0.0252/req)
+- Monthly cap: $60 (MONTHLY_USD_CAP in hub.env)
+- PRICE_CLAUDE: ❌ needs update to Sonnet rates ($3/$15 per 1M)
+- DPO pairs: accumulation in progress — needs regular Karma usage with 👍/👎
 
 ---
 
@@ -82,4 +84,5 @@ All 5 priorities shipped in Session 72:
 - Chrome extension (shelved — DOM scraping unreliable)
 - Karma terminal (last capture 2026-02-27, stale)
 - Ambient Tier 3 (screen capture daemon — not yet built)
-- DPO pair accumulation: mechanism LIVE but 0 pairs collected — needs actual Karma usage
+- JPG/PNG vision: code deployed but falls through to extractPdfText() — needs Anthropic multimodal fix
+- Paste in Karma UI: works everywhere except hub.arknexus.net — suspected Cloudflare CSP

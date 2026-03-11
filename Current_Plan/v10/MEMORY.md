@@ -1,3 +1,11 @@
+## Session 81g — Wire session_id into aria_local_call (2026-03-11)
+- unified.html: sends session_id = conversationId (existing page-load UUID) with every /v1/chat POST
+- server.js: extracts body.session_id → threads through callLLMWithTools(ariaSessionId) → executeToolCall → Aria POST body
+- TDD: hub-bridge/test/aria-session-id.test.mjs — RED/GREEN verified with node:test
+- Effect: Aria accumulates conversation as a coherent thread, not disconnected entries
+
+---
+
 ## Session 81f — Aria → vault-neo sync (2026-03-11)
 - aria_local_call (chat mode): fire-and-forget vaultPost after successful Aria response
 - Record: type="log", tags=["aria","k2","sync","capture"], content={user_message, assistant_response, session_id}
@@ -791,7 +799,41 @@ Karma can recall (FAISS) but cannot reason across sessions (no Entity/relationsh
 - **hub-bridge build context ≠ git repo**: build uses `/opt/seed-vault/memory_v1/hub_bridge/app/`, NOT `/home/neo/karma-sade/hub-bridge/app/`. After any git pull, sync first: `cp /home/neo/karma-sade/hub-bridge/app/server.js /opt/seed-vault/memory_v1/hub_bridge/app/server.js`
 
 # currentDate
-Today's date is 2026-03-10.
+Today's date is 2026-03-11.
+
+## Next Session Starts Here (Session 82)
+
+### Step 1 — Fix PRICE_CLAUDE in hub.env
+```
+ssh vault-neo "sed -i 's/PRICE_CLAUDE_INPUT_PER_1M=.*/PRICE_CLAUDE_INPUT_PER_1M=3.00/' /opt/seed-vault/memory_v1/hub_bridge/config/hub.env"
+ssh vault-neo "sed -i 's/PRICE_CLAUDE_OUTPUT_PER_1M=.*/PRICE_CLAUDE_OUTPUT_PER_1M=15.00/' /opt/seed-vault/memory_v1/hub_bridge/config/hub.env"
+ssh vault-neo "cd /opt/seed-vault/memory_v1/hub_bridge && docker compose -f compose.hub.yml up -d hub-bridge"
+```
+
+### Step 2 — Implement JPG/PNG vision support properly
+- server.js ~line 1527: detect image extensions (jpg,jpeg,png,gif,webp)
+- Deep mode: build `[{type:"text",...},{type:"image",source:{type:"base64",media_type:"image/jpeg",data:...}}]`
+- Standard mode: return `[Attached image: name.jpg — vision requires deep mode]`
+- CURRENT BUG: image files fall through to `extractPdfText()` — crashes or returns nothing
+
+### Step 3 — Investigate paste in Karma UI
+- Paste works everywhere (Aria local, RDP) except hub.arknexus.net
+- Check: `curl -I https://hub.arknexus.net` for Permissions-Policy headers
+- Likely fix: add paste event listener for image paste OR Cloudflare header tweak
+
+### Verified System State (2026-03-11)
+| Component | Status |
+|-----------|--------|
+| Hub Bridge | ✅ v2.11.0, RestartCount=0 |
+| MODEL_DEFAULT | ✅ claude-haiku-4-5-20251001 |
+| MODEL_DEEP | ✅ claude-sonnet-4-6 ($0.0252/req verified) |
+| Monthly Cap | ✅ $60 |
+| File Upload | ✅ PDF/txt/md working; JPG vision PENDING |
+| Aria Memory Writes | ✅ delegated fix deployed |
+| Aria → vault-neo sync | ✅ deployed (production verification pending first call) |
+| session_id threading | ✅ deployed |
+| PRICE_CLAUDE in hub.env | ❌ OPEN — still Haiku rates ($0.80/$4.00), needs update to Sonnet ($3.00/$15.00) |
+| System prompt model section | ❌ OPEN — still references old routing, needs update |
 
 ## Session 62 Task 2 — Graphiti Watermark Wired into run() (2026-03-04T22:23:29Z)
 
