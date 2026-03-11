@@ -1,3 +1,9 @@
+## Session 83b (2026-03-11) — Fix system prompt tool-gate causing text-format tool calls
+- ROOT CAUSE: system prompt "In standard mode NO tool-calling" → K2/qwen3 generated <function=...> XML text instead of native tool_calls
+- FIXED: system prompt tools always available, removed deep-mode-only restrictions
+- Added: "do NOT output tool calls as text or XML" instruction
+- Deploy: git pull + docker restart (no rebuild needed)
+
 ## Session 83 (2026-03-11) — K2 as Primary Compute Substrate
 - ARCHITECTURE: K2/Ollama (qwen3-coder:30b) is now PRIMARY inference; Anthropic is silent fallback
 - ADDED: k2Client — OpenAI-compat client pointed at http://100.75.109.92:11434/v1
