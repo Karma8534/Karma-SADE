@@ -1,3 +1,11 @@
+## Session 84d (2026-03-11) — shell_run tool: Karma direct shell access to K2
+- ADDED: shell_run tool in TOOL_DEFINITIONS (hub-bridge/app/server.js)
+- ADDED: /api/exec endpoint in aria.py on K2 (gated by X-Aria-Service-Key)
+- vault-neo public key added to K2 authorized_keys (vault-neo → K2 tunnel auth)
+- Reverse tunnel vault-neo:2223 → K2:22 verified working (ssh -p 2223 -l karma localhost)
+- K2 checkpoint written to vault-neo ledger: mem_EJg8ZcKqaFjnHfVt (K2 ownership/agency decision)
+- Karma can now: shell_run(command="systemctl status aria"), read cache files, query observations directly
+
 ## Session 84c (2026-03-11) — K2 redundancy cache + sync scripts
 - ADDED: k2/sync-from-vault.sh (pull/push/status modes, bash, runs on K2 WSL)
 - ADDED: k2/setup-k2-cache.sh (one-time bootstrap, cron install)

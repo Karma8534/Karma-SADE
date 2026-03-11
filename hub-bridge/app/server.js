@@ -928,7 +928,7 @@ else console.warn("[INIT] K2_OLLAMA_URL not set — K2 routing disabled, Anthrop
 // Karma's autonomous access to her own graph/memory requires tools.
 // GPT-4o has proven tool support. Using it for /v1/chat with tool definitions.
 // ── Phase 3: 4-Tool Surface (P2) ─────────────────────────────────────────
-// Active tools: graph_query, get_vault_file, get_local_file, write_memory, fetch_url, get_library_docs, defer_intent, get_active_intents, aria_local_call
+// Active tools: graph_query, get_vault_file, get_local_file, write_memory, fetch_url, get_library_docs, defer_intent, get_active_intents, aria_local_call, shell_run
 const TOOL_DEFINITIONS = [
   {
     name: "graph_query",
@@ -1050,6 +1050,17 @@ const TOOL_DEFINITIONS = [
         payload: { type: "object", description: "Optional extra payload fields passed through to Aria's API" },
       },
       required: ["mode"],
+    },
+  },
+  {
+    name: "shell_run",
+    description: "Execute a shell command on K2 (your hardware twin). Use to check system state, read cache files, inspect aria service, query observations. Runs as the karma user on K2. Deep mode only.",
+    input_schema: {
+      type: "object",
+      properties: {
+        command: { type: "string", description: "Shell command to execute on K2 (e.g. 'systemctl status aria', 'cat /mnt/c/dev/Karma/k2/cache/.last_sync', 'wc -l /mnt/c/dev/Karma/k2/cache/observations/k2_local_observations.jsonl')" },
+      },
+      required: ["command"],
     },
   },
 ];
@@ -1183,6 +1194,29 @@ async function executeToolCall(toolName, toolInput, writeId = null, ariaSessionI
       } catch (e) {
         console.warn(`[TOOL-API] aria_local_call failed: ${e.message}`);
         return { error: "network_error", message: e.message, endpoint };
+      }
+    }
+
+    // shell_run -- execute shell command on K2 via Aria /api/exec
+    if (toolName === "shell_run") {
+      const { command } = toolInput;
+      if (!command) return { error: "command_required", message: "command is required" };
+      const ARIA_KEY = process.env.ARIA_SERVICE_KEY || "";
+      const execUrl = `${ARIA_URL}/api/exec`;
+      try {
+        console.log(`[TOOL-API] shell_run: ${command}`);
+        const r = await fetch(execUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Aria-Service-Key": ARIA_KEY },
+          body: JSON.stringify({ command }),
+          signal: AbortSignal.timeout(35000),
+        });
+        const result = await r.json();
+        if (!result.ok) return { error: result.error || "exec_failed", exit_code: result.exit_code };
+        return { ok: true, stdout: result.stdout || "", stderr: result.stderr || "", exit_code: result.exit_code };
+      } catch (e) {
+        console.warn(`[TOOL-API] shell_run failed: ${e.message}`);
+        return { error: "network_error", message: e.message };
       }
     }
 
