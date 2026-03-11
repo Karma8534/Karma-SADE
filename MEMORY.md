@@ -1,3 +1,8 @@
+## Session 83d (2026-03-11) — Fix qwen3 thinking mode causing empty responses
+- ROOT CAUSE: qwen3-coder:30b default think=true consumed entire 16000-token budget with reasoning, leaving empty content
+- FIXED: added think:false to callK2WithTools API call
+- VERIFIED: direct Ollama test with think=false returns immediate response (~0.26s TTFT)
+
 ## Session 83b (2026-03-11) — Fix system prompt tool-gate causing text-format tool calls
 - ROOT CAUSE: system prompt "In standard mode NO tool-calling" → K2/qwen3 generated <function=...> XML text instead of native tool_calls
 - FIXED: system prompt tools always available, removed deep-mode-only restrictions

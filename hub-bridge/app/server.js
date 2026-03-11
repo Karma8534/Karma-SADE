@@ -1498,6 +1498,7 @@ async function callK2WithTools(messages, maxTokens, writeId = null, ariaSessionI
       max_tokens: maxTokens,
       tools: gptTools,
       tool_choice: "auto",
+      think: false,  // disable qwen3 thinking mode — consumes full token budget with no output
     });
 
     const toolCalls = resp.choices[0]?.message?.tool_calls || [];
