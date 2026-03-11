@@ -1096,6 +1096,27 @@ async function executeToolCall(toolName, toolInput, writeId = null) {
           return { error: "aria_error", status: res.status, response: data };
         }
         console.log(`[TOOL-API] aria_local_call mode=${mode} → ok`);
+        // Aria → vault-neo sync: capture chat exchanges in the canonical ledger (fire-and-forget)
+        if (mode === "chat" && message) {
+          const ariaText = data?.response || data?.message || data?.assistant_text || "";
+          if (ariaText) {
+            const syncRecord = buildVaultRecord({
+              type: "log",
+              content: {
+                source: "aria_local_call",
+                user_message: message,
+                assistant_response: ariaText,
+                session_id: data?.session_id || null,
+              },
+              tags: ["aria", "k2", "sync", "capture"],
+              confidence: 1.0,
+              verificationNotes: "Auto-captured from aria_local_call — Aria local memory synced to canonical spine",
+            });
+            vaultPost("/v1/memory", VAULT_BEARER, syncRecord)
+              .then(r => { if (r.status >= 300) console.warn(`[ARIA-SYNC] vault write failed: ${r.status}`); })
+              .catch(e => console.warn(`[ARIA-SYNC] vault write error: ${e.message}`));
+          }
+        }
         return { ok: true, mode, response: data };
       } catch (e) {
         console.warn(`[TOOL-API] aria_local_call failed: ${e.message}`);

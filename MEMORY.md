@@ -1,3 +1,11 @@
+## Session 81f — Aria → vault-neo sync (2026-03-11)
+- aria_local_call (chat mode): fire-and-forget vaultPost after successful Aria response
+- Record: type="log", tags=["aria","k2","sync","capture"], content={user_message, assistant_response, session_id}
+- Closes the loop: Aria memory → ledger → batch_ingest → FalkorDB → Karma context
+- Non-blocking: sync errors logged but never fail the tool call
+
+---
+
 ## Session 81e — Fix aria_local_call delegated write block (2026-03-11)
 - server.js: removed X-Aria-Delegated header from aria_local_call tool handler
 - Root cause: X-Aria-Delegated triggers Aria's delegated_read_only policy → 0 observations written
