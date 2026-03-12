@@ -1110,7 +1110,7 @@ const TOOL_DEFINITIONS = [
   },
   // ── K2 Structured Tools (Phase 2 — MCP surface on K2) ──
   {
-    name: "k2.file_read",
+    name: "k2_file_read",
     description: "Read a file on K2 with metadata (size, modified, exists). Use for inspecting K2 code, configs, logs.",
     input_schema: {
       type: "object",
@@ -1121,7 +1121,7 @@ const TOOL_DEFINITIONS = [
     },
   },
   {
-    name: "k2.file_write",
+    name: "k2_file_write",
     description: "Write content to a file on K2. Creates parent directories if needed. Use for creating/updating code on K2.",
     input_schema: {
       type: "object",
@@ -1133,7 +1133,7 @@ const TOOL_DEFINITIONS = [
     },
   },
   {
-    name: "k2.file_list",
+    name: "k2_file_list",
     description: "List directory contents on K2 with optional glob filter. Use to explore K2 filesystem.",
     input_schema: {
       type: "object",
@@ -1145,7 +1145,7 @@ const TOOL_DEFINITIONS = [
     },
   },
   {
-    name: "k2.file_search",
+    name: "k2_file_search",
     description: "Search for a regex pattern in files under a K2 directory (recursive grep).",
     input_schema: {
       type: "object",
@@ -1157,7 +1157,7 @@ const TOOL_DEFINITIONS = [
     },
   },
   {
-    name: "k2.python_exec",
+    name: "k2_python_exec",
     description: "Execute Python code on K2 and return stdout/stderr/exit_code. Use for testing, data processing, or running scripts.",
     input_schema: {
       type: "object",
@@ -1168,7 +1168,7 @@ const TOOL_DEFINITIONS = [
     },
   },
   {
-    name: "k2.service_status",
+    name: "k2_service_status",
     description: "Check systemd service status on K2 (e.g. aria, ollama).",
     input_schema: {
       type: "object",
@@ -1179,7 +1179,7 @@ const TOOL_DEFINITIONS = [
     },
   },
   {
-    name: "k2.service_restart",
+    name: "k2_service_restart",
     description: "Restart a systemd service on K2 (requires sudo, which karma user has).",
     input_schema: {
       type: "object",
@@ -1190,7 +1190,7 @@ const TOOL_DEFINITIONS = [
     },
   },
   {
-    name: "k2.scratchpad_read",
+    name: "k2_scratchpad_read",
     description: "Read Karma's K2 scratchpad (working memory between sessions). Contains beads framework, session notes, active candidates.",
     input_schema: {
       type: "object",
@@ -1198,7 +1198,7 @@ const TOOL_DEFINITIONS = [
     },
   },
   {
-    name: "k2.scratchpad_write",
+    name: "k2_scratchpad_write",
     description: "Write to Karma's K2 scratchpad. Mode: 'append' (default) or 'replace'.",
     input_schema: {
       type: "object",
@@ -1512,9 +1512,9 @@ async function executeToolCall(toolName, toolInput, writeId = null, ariaSessionI
       }
     }
 
-    // k2.* tools -- route to K2's structured MCP surface via /api/tools/execute
-    if (toolName.startsWith("k2.")) {
-      const k2ToolName = toolName.slice(3); // strip "k2." prefix
+    // k2_* tools -- route to K2's structured MCP surface via /api/tools/execute
+    if (toolName.startsWith("k2_")) {
+      const k2ToolName = toolName.slice(3); // strip "k2_" prefix
       const ARIA_KEY = process.env.ARIA_SERVICE_KEY || "";
       const k2ToolUrl = `${ARIA_URL}/api/tools/execute`;
       try {
