@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-12T19:30:00Z
-**Session:** 86b (Context fix deployed; Coordination bus v1 live but UI panel missing; 9 stacked items identified)
+**Last updated:** 2026-03-12T21:00:00Z
+**Session:** 87b (Conversation persistence LIVE; Coordination panel compose LIVE; Coordination disk persistence LIVE; Karma operational status block deployed)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -65,23 +65,25 @@
 | **K2 Structured Tools (k2_*)** | ✅ LIVE | 9 tools: k2_file_read, k2_file_write, k2_file_list, k2_file_search, k2_python_exec, k2_service_status, k2_service_restart, k2_scratchpad_read, k2_scratchpad_write. Hub-bridge routes k2_* → K2 /api/tools/execute. Session 86. |
 | **K2 Tool Registry** | ✅ LIVE | k2_tools.py on K2 (9 tools, 23 TDD tests). aria.py endpoints: GET /api/tools/list, POST /api/tools/execute. Session 86. |
 | **MAX_TOOL_ITERATIONS** | ✅ FIXED | Raised from 5→12 across Anthropic, OpenAI/ZAI, K2-Ollama providers. Session 86. |
-| **Conversation Persistence** | ⚠️ RECLASSIFIED | Server-side works (_sessionStore survives refresh, injected at line 2059). UI-only problem: browser JS array clears on refresh. localStorage fix needed. NOT a blocker — cosmetic UX. Session 86b. |
+| **Conversation Persistence** | ✅ LIVE | localStorage persistence: saveMessages/loadSavedMessages/clearConversation. New Chat button. Messages survive refresh. Session 87b. |
 | **Context Fix (3 changes)** | ✅ DEPLOYED | KARMA_CTX_MAX_CHARS 3500, recent episodes 10, direction.md in buildSystemText. Session 86b. |
-| **Coordination Bus v1** | ⚠️ PLUMBING ONLY | Endpoints work, tool works, context injection works. BUT: no UI panel, no CC notification, Colby can't see messages without curl. Session 86b. |
+| **Coordination Bus v1** | ✅ LIVE | Endpoints + tool + context injection + UI panel + compose input + disk persistence (JSONL). Colby can see and send messages. Session 87b. |
 | **K2 Working Memory Injection** | ✅ LIVE | fetchK2WorkingMemory() reads scratchpad.md + shadow.md via /api/exec. 4015 chars injected. 8th param to buildSystemText(). Session 85. |
 | **K2 Memory Query (dynamic)** | ✅ FIXED | fetchK2MemoryGraph(userMessage) instead of hardcoded "Colby". 1200 chars, 3 hits. Session 85. |
 | **K2 Ownership Directive** | ✅ IN SYSTEM PROMPT | K2 = Karma's resource (Chromium, Codex, KCC). Delegate heavy work to K2. Anthropic model = persona only. Session 85. |
+| **Coordination Disk Persistence** | ✅ LIVE | /run/state/coordination.jsonl (bind-mounted). Messages survive rebuilds. loadCoordinationFromDisk() at startup. Session 87b. |
+| **Operational Status Block** | ✅ IN SYSTEM PROMPT | "What Is Wired and Working RIGHT NOW" table + anti-pattern list in 00-karma-system-prompt-live.md. Fixes 2-year rediscovery cycle. Session 87b. |
 
 ---
 
 ## Active Blockers
 
-1. **⚠️ Coordination bus has no UI visibility** — Colby can't see Karma↔CC messages without SSH+curl. Panel on unified.html needed. (Session 86b)
-2. **⚠️ Conversation thread UI clears on refresh** — Server-side _sessionStore works (60min TTL). Browser JS array clears on refresh = blank screen. Fix: localStorage or fetch-from-server. Cosmetic UX, not architectural. (Session 86b, reclassified from 🔴)
-3. **⚠️ 9 stacked items keep getting deferred** — Karma identified: panel, CC notification, deep mode image gate, K2 MCP, beads, "Karma builds Karma", hearts, session persistence. Pattern: CC builds infrastructure and defers the actual vision. (Session 86b)
-2. ~~MAX_TOOL_ITERATIONS = 5~~ ✅ RESOLVED (Session 86) — Raised to 12 across all 3 providers.
-3. ~~No sudo on K2~~ ✅ RESOLVED (Session 86) — karma user has full sudo access.
-4. ~~Raw shell_run output~~ ✅ RESOLVED (Session 86) — 9 structured k2_* tools deployed via /api/tools/execute.
+1. ~~Coordination bus has no UI visibility~~ ✅ RESOLVED (Session 87b) — Panel + compose input deployed.
+2. ~~Conversation thread UI clears on refresh~~ ✅ RESOLVED (Session 87b) — localStorage persistence deployed.
+3. **⚠️ Karma still regressing** — Despite operational status block in system prompt, Karma gave status dump + "I'm reading back" instead of acting from the table. Session 87b.
+4. **⚠️ Karma↔CC behavioral test pending** — Mechanical loop verified (6 steps). Need Karma to actually use coordination_post. Session 87b.
+5. **⚠️ JSON truncation on long responses** — "Unexpected end of JSON input" on hub.arknexus.net. HUB_MAX_OUTPUT_TOKENS_DEFAULT=3000 may be too low. Session 87b.
+6. **⚠️ 9 stacked items keep getting deferred** — Pattern: CC builds infrastructure, defers vision items. (Session 86b)
 
 ---
 
@@ -179,7 +181,7 @@ Safe target: PATCH /v1/vault-file/MEMORY.md (append-only). Web UI thumbs up/down
 ---
 
 ## Known Limitations
-- **🔴 Conversation persistence:** Thread lives in browser JS only. Error/refresh = total amnesia. No server-side storage or recovery. PRIORITY #1.
+- ~~Conversation persistence~~ ✅ RESOLVED Session 87b — localStorage persistence deployed.
 - **Chrome extension:** Shelved permanently
 - **K2 not online:** Consciousness loop runs on droplet only
 - **No fine-tuning yet:** Need 20+ DPO preference pairs (accumulation in progress)
@@ -470,6 +472,12 @@ These three together form the Cognitive Architecture Layer — what makes Karma 
 - Claude-mem observations: #5325 (root causes), #5326 (plan), #5337 (bugfix), #5338 (verification)
 
 ## Next Session Starts Here
+
+1. **Fix Karma regression** — She's still giving status dumps instead of acting from the operational table. The prompt update wasn't enough. Investigate: is the updated system prompt actually loaded? Check docker logs for prompt length.
+2. **Karma↔CC behavioral test** — Have Karma POST to CC via coordination_post. CC reads and responds. First real exchange without Colby relaying.
+3. **If JSON truncation recurs** — Increase HUB_MAX_OUTPUT_TOKENS_DEFAULT from 3000 to 4096 in hub.env.
+
+**Blocker:** Karma regression — if she can't act from the operational table, the coordination loop won't work because she'll keep re-deriving instead of using coordination_post.
 
 ### Decision #31: "Aria" unified into Karma — one peer, two compute paths (2026-03-11, LOCKED)
 "Aria" was a working name for K2's local Karma instance built in isolation. Confirmed by Colby: no separate entity. One peer (Karma), two compute paths: cloud (vault-neo + Anthropic API) and local (K2 + qwen3-coder:30b). One memory spine. All code built for "Aria" on K2 is Karma's local half. aria_local_call = Karma calling herself on local hardware.

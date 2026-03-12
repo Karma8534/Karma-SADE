@@ -49,13 +49,25 @@
 **Done (continued):**
 - K2 scratchpad injection: already working (verified 4015 chars loaded, obs #5612)
 - Coordination panel compose input: deployed (dropdown recipient, text input, POST with urgency=informational)
-- System prompt operational status block added to 00-karma-system-prompt-live.md — stops the 2-year rediscovery cycle
-- Coordination bus persistence: messages now survive hub-bridge rebuilds via /run/state/coordination.jsonl (bind-mounted volume). Load on startup, append on POST, full rewrite on PATCH status change.
+- System prompt operational status block added to 00-karma-system-prompt-live.md — "What Is Wired and Working RIGHT NOW" table + "Stop doing this" anti-patterns. Root cause of 2-year rediscovery cycle: prompt had architecture but not operational state. (obs #5650)
+- Coordination bus persistence: messages survive hub-bridge rebuilds via /run/state/coordination.jsonl. Verified: restart showed "loaded 1 entries from disk". (obs #5648)
+- Colby confirmed panel renders and shows messages (screenshot verified)
+- Karma↔CC coordination loop mechanically complete (all 6 steps verified, obs #5648)
+
+**Key decisions:**
+- Coordination panel = supervision window for Colby, NOT participation tool (obs #5649)
+- Colby's goal: Karma and CC communicate directly, Colby stops being the manual relay
+- Constitutional AI parallel acknowledged: Karma + CC improving each other = same pattern that created Claude
+
+**Known issue:** Karma chat error "Unexpected end of JSON input" — likely max_output_tokens (3000 default) truncating long responses. Not blocking. Investigate next session if recurring.
+
+**claude-mem observations:** #5612, #5637, #5638, #5648, #5649, #5650
 
 ## Next Session Starts Here
-1. Tabled: coordination panel needs to work for Colby too (not just Karma→CC)
-2. Respond to Karma's 4 pending coordination messages
-**Blocker:** None
+1. Ask Karma to post to CC via coordination_post — test the full behavioral loop
+2. CC reads Karma's message and responds — first real Karma↔CC exchange without Colby relaying
+3. If JSON truncation recurs: increase HUB_MAX_OUTPUT_TOKENS_DEFAULT from 3000 to 4096
+**Blocker:** None — loop is mechanically complete, needs behavioral test
 
 ## Session 86 (2026-03-12) — K2 MCP Server: Evolve aria.py into Karma's structured tool surface
 
