@@ -26,7 +26,14 @@
 **Key discovery:** `_sessionStore` already injects conversation turns into LLM messages (line 2059). Session history wasn't missing — graph context was stale and tiny.
 **Identity files:** identity.json (Feb 28), invariants.json (Feb 26), direction.md (Mar 11) exist on vault-neo but only direction.md is now loaded. Others too stale/large for token budget.
 **Skills created:** wrap-session (lean 5+3 steps), resurrect updated (health check step 3d). CLAUDE.md Session End Protocol now invokes wrap-session skill (mirrors Session Start → resurrect pattern).
-**Next:** Step 2 = Coordination bus on Aria UI (next session). Redesign resurrect + wrap-session prompts.
+
+### Coordination Bus v1 Design — APPROVED
+**Design doc:** `docs/plans/2026-03-12-coordination-bus-design.md`
+**Architecture:** Hub-bridge cache (`_coordinationCache`, 100 entries, 24h TTL) + vault ledger (`lane: "coordination"`). No K2 dependency.
+**Endpoints:** POST /v1/coordination/post, GET /v1/coordination/recent, PATCH /v1/coordination/:id
+**Karma tool:** `coordination_post` (hub-bridge-native, all modes). Passive context injection via `getRecentCoordination()` into buildSystemText().
+**Key decision:** Colby = queue monitor, not translator. CC checks for pending requests on resurrect.
+**Next:** Implementation.
 
 ## Session 85 (2026-03-12) — EMERGENCY: Fix Karma's broken memory + system prompt
 
