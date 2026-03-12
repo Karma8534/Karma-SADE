@@ -376,6 +376,14 @@
     font-style: italic;
     padding: 4px 0;
   }
+  .coord-compose { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+  .coord-compose select { width: 100%; padding: 4px 6px; font-size: 11px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 4px; }
+  .coord-compose-row { display: flex; gap: 4px; }
+  .coord-compose-row input { flex: 1; padding: 5px 8px; font-size: 12px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px; outline: none; }
+  .coord-compose-row input:focus { border-color: var(--accent-purple); }
+  .coord-compose-row button { padding: 4px 10px; font-size: 12px; background: var(--accent-purple); color: white; border: none; border-radius: 6px; cursor: pointer; }
+  .coord-compose-row button:hover { opacity: 0.85; }
+  .coord-compose-row button:disabled { opacity: 0.4; cursor: not-allowed; }
 
   /* ── Typing indicator ── */
   .typing-indicator .msg-bubble {
@@ -487,6 +495,16 @@
       </div>
       <div id="coord-list">
         <div class="coord-empty">No messages yet</div>
+      </div>
+      <div class="coord-compose">
+        <select id="coord-to">
+          <option value="karma">→ Karma</option>
+          <option value="cc">→ CC</option>
+        </select>
+        <div class="coord-compose-row">
+          <input type="text" id="coord-input" placeholder="Message..." maxlength="500" />
+          <button id="coord-send" title="Send coordination message">▶</button>
+        </div>
       </div>
     </div>
 
@@ -951,6 +969,38 @@
 
   // Poll every 10 seconds
   setInterval(fetchCoordination, 10000);
+
+  // ── Coordination compose ───────────────────────────────────────────
+  const $coordInput = document.getElementById('coord-input');
+  const $coordSend  = document.getElementById('coord-send');
+  const $coordTo    = document.getElementById('coord-to');
+
+  async function sendCoordination() {
+    const token = getToken();
+    const content = ($coordInput.value || '').trim();
+    if (!token || !content) return;
+    $coordSend.disabled = true;
+    try {
+      const res = await fetch('/v1/coordination/post', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: 'colby', to: $coordTo.value, content })
+      });
+      if (res.ok) {
+        $coordInput.value = '';
+        await fetchCoordination();
+      }
+    } catch (e) {
+      console.warn('[Coord] send failed:', e.message);
+    } finally {
+      $coordSend.disabled = false;
+    }
+  }
+
+  $coordSend.addEventListener('click', sendCoordination);
+  $coordInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); sendCoordination(); }
+  });
 
   init();
 </script>
