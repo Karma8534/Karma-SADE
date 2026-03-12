@@ -46,12 +46,13 @@
 - New Chat button (🔄) wired to clearConversation()
 - conversationId persists across page refreshes
 
-**In progress:**
-- K2 scratchpad injection into buildSystemText (server.js)
-- Coordination panel compose input (text box + POST from unified.html)
+**Done (continued):**
+- K2 scratchpad injection: already working (verified 4015 chars loaded, obs #5612)
+- Coordination panel compose input: deployed (dropdown recipient, text input, POST with urgency=informational)
+- System prompt operational status block added to 00-karma-system-prompt-live.md — tells Karma what's wired and working RIGHT NOW, stops the 2-year rediscovery cycle
 
 ## Next Session Starts Here
-1. Complete K2 scratchpad injection + coordination compose input
+1. Tabled: coordination panel needs to work for Colby too (not just Karma→CC)
 2. Respond to Karma's 4 pending coordination messages
 **Blocker:** None
 
