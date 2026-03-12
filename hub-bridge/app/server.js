@@ -2296,6 +2296,22 @@ const server = http.createServer(async (req, res) => {
       // Persist this exchange to session history (skip empty responses)
       if (assistantText !== "(empty_assistant_text)") {
         addToSession(token, userMessage, assistantText);
+
+        // Auto-write session state to K2 scratchpad (fire-and-forget)
+        // Karma requested this: #4 in coord_1773350033529_7xhb
+        const ARIA_KEY = process.env.ARIA_SERVICE_KEY || "";
+        if (ARIA_URL && ARIA_KEY) {
+          const ts = new Date().toISOString().slice(0, 19).replace("T", " ");
+          const userSnip = userMessage.length > 120 ? userMessage.slice(0, 120) + "..." : userMessage;
+          const assistSnip = assistantText.length > 200 ? assistantText.slice(0, 200) + "..." : assistantText;
+          const scratchLine = `\n[${ts}] User: ${userSnip}\nKarma: ${assistSnip}\n`;
+          fetch(`${ARIA_URL}/api/tools/execute`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Aria-Service-Key": ARIA_KEY },
+            body: JSON.stringify({ tool: "scratchpad_write", input: { content: scratchLine, mode: "append" } }),
+            signal: AbortSignal.timeout(5000),
+          }).catch(() => {}); // fire-and-forget, never block chat response
+        }
       }
 
       // Detect ASSIMILATE/DEFER/DISCARD signals from Karma and write to FalkorDB
