@@ -78,7 +78,7 @@ function loadSessionBrief() {
 // MEMORY.md cache — tail of Karma's memory spine, injected into every request.
 // Tail (most recent) = most relevant. Refreshed every 5min same as session brief.
 const MEMORY_MD_PATH = "/karma/MEMORY.md";
-const MEMORY_MD_TAIL_CHARS = 800;
+const MEMORY_MD_TAIL_CHARS = 2000;
 let _memoryMdCache = "";
 function loadMemoryMd() {
   try {
@@ -123,6 +123,45 @@ async function fetchK2MemoryGraph(query = "Colby") {
     return text;
   } catch (e) {
     console.warn(`[K2-MEM] fetch failed: ${e.message}`);
+    return null;
+  }
+}
+
+// K2 working memory — scratchpad.md + shadow.md from K2 cache.
+// Fetched via /api/exec (shell_run endpoint). Injected into buildSystemText for session continuity.
+let _k2WorkingMemCache = null;
+let _k2WorkingMemCacheAt = 0;
+const K2_WORKING_MEM_MAX_CHARS = 4000;
+
+async function fetchK2WorkingMemory() {
+  if (!ARIA_SERVICE_KEY || !ARIA_URL) return null;
+  const now = Date.now();
+  if (_k2WorkingMemCache && (now - _k2WorkingMemCacheAt) < K2_MEM_CACHE_TTL_MS) {
+    return _k2WorkingMemCache;
+  }
+  try {
+    const cmd = "echo '=== SCRATCHPAD ===' && cat /mnt/c/dev/Karma/k2/cache/scratchpad.md 2>/dev/null || echo '(empty)' && echo '=== SHADOW ===' && tail -c 1500 /mnt/c/dev/Karma/k2/cache/shadow.md 2>/dev/null || echo '(empty)'";
+    const res = await fetch(`${ARIA_URL}/api/exec`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Aria-Service-Key": ARIA_SERVICE_KEY,
+      },
+      body: JSON.stringify({ command: cmd }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) { console.warn(`[K2-WORK] /api/exec → ${res.status}`); return null; }
+    const data = await res.json();
+    if (!data.success || !data.stdout) return null;
+    const text = data.stdout.length > K2_WORKING_MEM_MAX_CHARS
+      ? data.stdout.slice(0, K2_WORKING_MEM_MAX_CHARS) + "\n...(truncated)"
+      : data.stdout;
+    _k2WorkingMemCache = text;
+    _k2WorkingMemCacheAt = now;
+    console.log(`[K2-WORK] working memory loaded (${text.length} chars)`);
+    return text;
+  } catch (e) {
+    console.warn(`[K2-WORK] fetch failed: ${e.message}`);
     return null;
   }
 }
@@ -538,7 +577,7 @@ async function fetchSemanticContext(userMessage, topK = FAISS_SEARCH_K) {
  * Build Karma's system prompt from FalkorDB context.
  * Extracted so both /v1/chat and /v1/ingest can reuse it.
  */
-function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticCtx = null, memoryMd = null, activeIntentsText = null, k2MemCtx = null) {
+function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticCtx = null, memoryMd = null, activeIntentsText = null, k2MemCtx = null, k2WorkingMemCtx = null) {
   // Identity block — loaded from file at startup. Describes Karma's actual architecture,
   // capability boundaries, data model corrections, and API surface.
   // File is volume-mounted; future updates: git pull + container restart (no rebuild needed).
@@ -601,6 +640,12 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
   // Fetched from K2:7890 /api/memory/graph at request time. Non-blocking; omitted if K2 unreachable.
   if (k2MemCtx) {
     text += `\n\n--- ARIA K2 MEMORY GRAPH ---\n${k2MemCtx}\n---`;
+  }
+
+  // K2 working memory — scratchpad.md (structured notes) + shadow.md (raw session capture).
+  // Fetched from K2 via /api/exec at request time. Non-blocking; omitted if K2 unreachable.
+  if (k2WorkingMemCtx) {
+    text += `\n\n--- K2 WORKING MEMORY (scratchpad + shadow) ---\n${k2WorkingMemCtx}\n---`;
   }
 
   return text;
@@ -1814,10 +1859,11 @@ const server = http.createServer(async (req, res) => {
       } catch (e) { /* non-fatal — Karma runs without checkpoint if vault is down */ }
 
       // Pull live FalkorDB context + semantic search + K2 memory graph in parallel (non-blocking)
-      const [karmaCtx, semanticCtx, k2MemCtx] = await Promise.all([
+      const [karmaCtx, semanticCtx, k2MemCtx, k2WorkingMemCtx] = await Promise.all([
         fetchKarmaContext(userMessage),
         fetchSemanticContext(userMessage),
-        fetchK2MemoryGraph("Colby"),
+        fetchK2MemoryGraph(userMessage),
+        fetchK2WorkingMemory(),
       ]);
 
       // Web search — fires when message contains clear search-intent keywords
@@ -1836,7 +1882,7 @@ const server = http.createServer(async (req, res) => {
         }
       }
       const activeIntentsText = buildActiveIntentsText(surfacedIntents);
-      const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults, semanticCtx, _memoryMdCache || null, activeIntentsText || null, k2MemCtx || null);
+      const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults, semanticCtx, _memoryMdCache || null, activeIntentsText || null, k2MemCtx || null, k2WorkingMemCtx || null);
 
       const extractedFacts = extractExplicitFacts(userMessage);
       let factWriteResults = [];

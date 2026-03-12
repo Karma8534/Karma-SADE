@@ -1,3 +1,19 @@
+## Session 85 (2026-03-12) — EMERGENCY: Fix Karma's broken memory + system prompt
+
+**Root causes:** 5 confirmed — (1) tools contradiction in system prompt (line 254 "no tools in standard" vs line 69 "tools always available"), (2) MEMORY_MD_TAIL slashed 3000→800 chars, (3) K2 memory query hardcoded to "Colby", (4) K2 scratchpad/shadow.md not wired into context, (5) accumulated drift from previous CC sessions.
+
+**Fixes applied:**
+- SYSTEM PROMPT: Removed tools contradiction. Added K2 ownership directive (K2 = Karma's resource, delegate heavy work there). Updated tool list to include shell_run/defer_intent/get_active_intents. Fixed "deep-mode only" confusion — tools available in ALL modes.
+- SERVER.JS: MEMORY_MD_TAIL_CHARS 800→2000. fetchK2MemoryGraph("Colby")→fetchK2MemoryGraph(userMessage). NEW: fetchK2WorkingMemory() reads scratchpad.md + shadow.md via /api/exec, injected as 8th param to buildSystemText.
+- GSD DOCS: phase-karma-emergency-CONTEXT.md + PLAN.md written.
+- CLAUDE-MEM: Observations #5325 (root causes), #5326 (plan decision) saved.
+
+**Key insight from Colby:** K2 is Karma's compute substrate, not a service. Chromium/Codex/KCC available 24/7. Anything that CAN be done on K2 SHOULD be done on K2. Anthropic model = persona only.
+
+**K2 continuity mechanism:** Files (scratchpad, shadow, Aria SQLite) persist IMMEDIATELY on disk. Hub-bridge reads them live at request time. Crons (hourly/6h) are for long-term promotion, not session continuity.
+
+**Status:** Code committed locally. Deploying to vault-neo.
+
 ## Session 84d (2026-03-11) — shell_run tool: Karma direct shell access to K2
 - ADDED: shell_run tool in TOOL_DEFINITIONS (hub-bridge/app/server.js)
 - ADDED: /api/exec endpoint in aria.py on K2 (gated by X-Aria-Service-Key)
