@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-11T23:30:00Z
-**Session:** 84 (K2 redundancy cache + MANDATORY state-write protocol + shell_run tool — Karma direct shell access to K2)
+**Last updated:** 2026-03-12T10:30:00Z
+**Session:** 85 (Emergency fix — system prompt contradictions, K2 ownership, memory context, working memory wiring)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -29,14 +29,14 @@
 | **Config Validation Gate** | ✅ LIVE | MODEL_DEFAULT + MODEL_DEEP allow-lists. [CONFIG ERROR] + exit(1) on bad config. 27/27 tests. |
 | **OpenAI API key** | ✅ SECURED | File-based read (mounted volume), not env var (docker inspect clean). |
 | **PDF Watcher** | ✅ WORKING | Rate-limit backoff + jam notification + time-window scheduling. |
-| **System Prompt Accuracy** | ✅ CORRECT | Session-70: trimmed 16,519→11,674 chars (-29%); "resurrection spine" banned; context lag explained; cron --skip-dedup note added. input_chars per request: 67K→57K. |
-| **Deep-Mode Tool Gate** | ✅ SECURED | Session-67: standard GLM requests no longer get tool execution. deep_mode flag gates callLLMWithTools vs callLLM at line 1271. Security fix commit 41b2c06. |
+| **System Prompt Accuracy** | ✅ FIXED Session 85 | Tools contradiction removed (line 254). K2 ownership directive added. Tool list updated (shell_run, defer_intent, get_active_intents). "deep-mode only" confusion eliminated. 24,594 chars. |
+| **Deep-Mode Tool Gate** | ⚠️ CLARIFIED | Session-85: deep_mode only switches Haiku↔Sonnet model. Tools available in ALL modes (line 1894: all routes through callLLMWithTools). "deep-mode only" labels removed from system prompt. |
 | **v9 Phase 3 Persona Coaching** | ✅ DEPLOYED | Session-67: "How to Use Your Context Data" section in system prompt. KARMA_IDENTITY_PROMPT: 10,415 → 11,850 chars. docker restart only. |
 | **FAISS Semantic Retrieval** | ✅ LIVE | fetchSemanticContext() in hub-bridge. karmaCtx + semanticCtx via Promise.all. 4073 entries indexed. Session-62. |
 | **Correction Capture Protocol** | ✅ LIVE | Memory/corrections-log.md + CC Session End step 2. Session-62. |
 | **FalkorDB lane backfill** | ✅ DONE | 3040 Episodic nodes with lane=NULL → lane="episodic". 0 remaining. Session-62. |
 | **anr-vault-search** | ✅ FAISS | Custom search_service.py (NOT ChromaDB). FAISS + text-embedding-3-small. Auto-reindex on ledger change. |
-| **MEMORY.md Spine Injection** | ✅ LIVE | `_memoryMdCache` (tail 3000 chars, 5min refresh) injected as "KARMA MEMORY SPINE (recent)" in buildSystemText(). Session-72. |
+| **MEMORY.md Spine Injection** | ✅ LIVE | `_memoryMdCache` (tail 2000 chars, 5min refresh) injected as "KARMA MEMORY SPINE (recent)" in buildSystemText(). Session-85: fixed from 800→2000. |
 | **Universal Thumbs (turn_id)** | ✅ LIVE | All Karma messages show 👍/👎 via turn_id fallback. /v1/feedback accepts turn_id OR write_id. 11/11 tests. Session-72. |
 | **Confidence Levels** | ✅ LIVE | [HIGH]/[MEDIUM]/[LOW] mandatory on technical claims. Anti-hallucination hard stop before [LOW] assertions. System prompt 12,524→14,601 chars. Session-72. |
 | **Entity Relationships** | ✅ FIXED | MENTIONS co-occurrence replaces stale RELATES_TO (frozen at 2026-03-04). 11/11 tests. Session-72. |
@@ -62,6 +62,9 @@
 | **shell_run tool** | ✅ LIVE | Karma can execute shell commands on K2 via aria /api/exec. Gated by X-Aria-Service-Key. hub-bridge v2.11.0. Session 84d. |
 | **K2 /api/exec endpoint** | ✅ LIVE | Added to aria.py on K2. POST :7890/api/exec with command + service key. Returns stdout/stderr/exit_code. Session 84d. |
 | **vault-neo → K2 SSH auth** | ✅ LIVE | vault-neo public key in K2 authorized_keys. Reverse tunnel works as karma@localhost:2223. Session 84d. |
+| **K2 Working Memory Injection** | ✅ LIVE | fetchK2WorkingMemory() reads scratchpad.md + shadow.md via /api/exec. 4015 chars injected. 8th param to buildSystemText(). Session 85. |
+| **K2 Memory Query (dynamic)** | ✅ FIXED | fetchK2MemoryGraph(userMessage) instead of hardcoded "Colby". 1200 chars, 3 hits. Session 85. |
+| **K2 Ownership Directive** | ✅ IN SYSTEM PROMPT | K2 = Karma's resource (Chromium, Codex, KCC). Delegate heavy work to K2. Anthropic model = persona only. Session 85. |
 
 ---
 
@@ -442,6 +445,17 @@ These three together form the Cognitive Architecture Layer — what makes Karma 
 - /api/exec endpoint added to aria.py: subprocess.run gated by X-Aria-Service-Key, 30s timeout (Session 84d)
 - hub-bridge v2.11.0 deployed, RestartCount=0 (Session 84d)
 - Decision #34: shell_run routes through aria /api/exec, not direct SSH (locked Session 84d)
+
+### Session 85 (2026-03-12) — Emergency Fix: Karma Broken Memory + System Prompt
+- EMERGENCY: Karma forgot most of week, couldn't use tools (fetch_url), contradictory system prompt
+- ROOT CAUSES (5): tools contradiction line 254, MEMORY_MD_TAIL slashed to 800, K2 query hardcoded "Colby", scratchpad/shadow not wired, accumulated drift
+- System prompt: removed tools contradiction, added K2 ownership directive, updated tool list, eliminated "deep-mode only" confusion
+- server.js: MEMORY_MD_TAIL_CHARS 800→2000, fetchK2MemoryGraph("Colby")→fetchK2MemoryGraph(userMessage)
+- NEW: fetchK2WorkingMemory() — reads scratchpad.md + shadow.md via /api/exec, injected as 8th param to buildSystemText
+- BUGFIX: /api/exec returns {ok:true} not {success:true} — fetchK2WorkingMemory initially checked wrong field
+- VERIFIED: K2 working memory 4015 chars loaded, K2 memory graph 1200 chars/3 hits, fetch_url working, shell_run working
+- Decision #35: K2 is Karma's resource — delegate heavy work (browse/code/compute) to K2, Anthropic model = persona only
+- Claude-mem observations: #5325 (root causes), #5326 (plan), #5337 (bugfix), #5338 (verification)
 
 ## Next Session Starts Here
 

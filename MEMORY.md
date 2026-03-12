@@ -12,7 +12,7 @@
 
 **K2 continuity mechanism:** Files (scratchpad, shadow, Aria SQLite) persist IMMEDIATELY on disk. Hub-bridge reads them live at request time. Crons (hourly/6h) are for long-term promotion, not session continuity.
 
-**Status:** Code committed locally. Deploying to vault-neo.
+**Status:** DEPLOYED + VERIFIED. All 3 context sources working. Hub-bridge v2.11.0 running clean.
 
 ## Session 84d (2026-03-11) — shell_run tool: Karma direct shell access to K2
 - ADDED: shell_run tool in TOOL_DEFINITIONS (hub-bridge/app/server.js)
