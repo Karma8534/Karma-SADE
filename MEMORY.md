@@ -83,7 +83,10 @@ Haiku 4.5 ($1/$5 per 1M) too weak for peer behavior — ignores 28K system promp
 - Stale "deep mode" references removed from system prompt (6 occurrences)
 - Session history empty message filter added (Anthropic rejects empty content)
 
-**claude-mem observations:** #5728 (coord panel fix), #5734 (audit verification)
+- Cache telemetry: [CACHE] log line on every Anthropic call shows input/cache_create/cache_read/hit_rate%
+- Self-audit protocol added to Karma system prompt — 5-step checklist triggered by "run a self-audit"
+
+**claude-mem observations:** #5728 (coord panel fix), #5734 (audit verification), #5768 (caching pitfall), #5772 (support ticket)
 
 ## Next Session Starts Here
 1. VERIFY: Anthropic cache rate recovering on dashboard (should be 90%+ within a few requests)

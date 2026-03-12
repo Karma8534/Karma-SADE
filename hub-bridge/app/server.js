@@ -1886,13 +1886,18 @@ async function callLLMWithTools(model, messages, maxTokens, writeId = null, aria
     const resp = await anthropic.messages.create({
       model, system: systemBlock.length ? systemBlock : undefined, messages: allMessages, max_tokens: maxTokens, tools: TOOL_DEFINITIONS,
     });
+    // Cache telemetry — log every call so we can verify caching is working
+    const cacheCreate = resp.usage?.cache_creation_input_tokens || 0;
+    const cacheRead = resp.usage?.cache_read_input_tokens || 0;
+    const inputTokens = resp.usage?.input_tokens || 0;
+    console.log(`[CACHE] input=${inputTokens} cache_create=${cacheCreate} cache_read=${cacheRead} hit_rate=${inputTokens > 0 ? Math.round(cacheRead / (inputTokens + cacheCreate) * 100) : 0}%`);
 
     const toolUseBlocks = resp.content.filter(b => b.type === "tool_use");
     if (!toolUseBlocks.length || resp.stop_reason !== "tool_use") {
       const finalText = resp.content.filter(b => b.type === "text").map(b => b.text).join("\n");
       return {
         text: finalText || "(empty_assistant_text)",
-        usage: { prompt_tokens: resp.usage?.input_tokens || 0, completion_tokens: resp.usage?.output_tokens || 0, total_tokens: (resp.usage?.input_tokens || 0) + (resp.usage?.output_tokens || 0) },
+        usage: { prompt_tokens: inputTokens, completion_tokens: resp.usage?.output_tokens || 0, total_tokens: inputTokens + (resp.usage?.output_tokens || 0), cache_read: cacheRead, cache_create: cacheCreate },
         finish_reason: resp.stop_reason || null,
         provider: "anthropic",
       };
@@ -2070,9 +2075,13 @@ async function callLLM(model, messages, maxTokens) {
     if (volatileSystem) systemBlock.push({ type: "text", text: volatileSystem.content });
     if (!systemBlock.length && systemPrompt) systemBlock.push({ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } });
     const resp = await anthropic.messages.create({ model, system: systemBlock.length ? systemBlock : undefined, messages: apiMessages, max_tokens: maxTokens });
+    const cacheCreate = resp.usage?.cache_creation_input_tokens || 0;
+    const cacheRead = resp.usage?.cache_read_input_tokens || 0;
+    const inputTokens = resp.usage?.input_tokens || 0;
+    console.log(`[CACHE] input=${inputTokens} cache_create=${cacheCreate} cache_read=${cacheRead} hit_rate=${inputTokens > 0 ? Math.round(cacheRead / (inputTokens + cacheCreate) * 100) : 0}%`);
     return {
       text:         resp.content?.[0]?.text || "",
-      usage:        { prompt_tokens: resp.usage?.input_tokens || 0, completion_tokens: resp.usage?.output_tokens || 0, total_tokens: (resp.usage?.input_tokens || 0) + (resp.usage?.output_tokens || 0) },
+      usage:        { prompt_tokens: inputTokens, completion_tokens: resp.usage?.output_tokens || 0, total_tokens: inputTokens + (resp.usage?.output_tokens || 0), cache_read: cacheRead, cache_create: cacheCreate },
       finish_reason: resp.stop_reason || null,
       provider:     "anthropic",
     };
