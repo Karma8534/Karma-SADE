@@ -48,7 +48,8 @@ function getSessionHistory(token) {
   const key = _tokenHash(token);
   const sess = _sessionStore.get(key);
   if (!sess || Date.now() - sess.lastActive > SESSION_TTL_MS) return [];
-  return sess.turns;
+  // Filter out empty content — Anthropic rejects empty user/assistant messages
+  return sess.turns.filter(t => t.content && (typeof t.content === "string" ? t.content.trim() : true));
 }
 
 function addToSession(token, userMsg, assistantText) {

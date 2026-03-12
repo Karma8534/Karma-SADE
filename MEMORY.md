@@ -79,13 +79,17 @@ Haiku 4.5 ($1/$5 per 1M) too weak for peer behavior — ignores 28K system promp
 - Vision in standard mode: removed "requires Deep Mode" gate. Sonnet 4-6 supports multimodal natively — both standard and deep now build image content arrays.
 - Karma self-audit verified: P4 (session hydration) WORKING despite Karma claiming "unproven". P5 (DPO pairs) has 112 entries but proposed/preferred fields are None — hollow pairs.
 
+- CRITICAL FIX: Anthropic prompt caching was broken — all volatile context (karmaCtx, search, FAISS, coordination) in same system block as identity prompt, invalidating cache every request (~$46 wasted today). Split buildSystemText into { static, volatile } — static block (identity+direction, ~28K) gets cache_control ephemeral, volatile block has no cache marker. Should restore to 90%+ from 8.9%.
+- Stale "deep mode" references removed from system prompt (6 occurrences)
+- Session history empty message filter added (Anthropic rejects empty content)
+
 **claude-mem observations:** #5728 (coord panel fix), #5734 (audit verification)
 
 ## Next Session Starts Here
-1. Fix DPO pair content — proposed/preferred fields writing as None instead of actual response text
-2. If JSON truncation recurs: increase HUB_MAX_OUTPUT_TOKENS_DEFAULT from 3000 to 4096
+1. VERIFY: Anthropic cache rate recovering on dashboard (should be 90%+ within a few requests)
+2. Fix DPO pair content — proposed/preferred fields writing as None instead of actual response text
 3. Karma's P3: seed Aria memory graph with lived knowledge (decisions, architecture facts, Colby prefs)
-**Blocker:** None immediate. Sonnet model live, vision enabled, panel clearing.
+**Blocker:** None immediate. Monitor cache rate.
 
 ## Session 86 (2026-03-12) — K2 MCP Server: Evolve aria.py into Karma's structured tool surface
 
