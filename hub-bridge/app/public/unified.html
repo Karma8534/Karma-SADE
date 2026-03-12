@@ -370,6 +370,12 @@
     overflow: visible;
     text-overflow: unset;
   }
+  #coord-list {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  #coord-list::-webkit-scrollbar { width: 3px; }
+  #coord-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
   .coord-empty {
     color: var(--text-secondary);
     font-size: 12px;
