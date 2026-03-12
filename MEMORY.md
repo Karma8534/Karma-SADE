@@ -27,11 +27,23 @@
 
 **claude-mem observations:** #5564 (direction), #5565 (pitfall), #5567 (decision), #5570 (proof), #5571 (proof), #5573 (insight)
 
+## Session 87 (2026-03-12) — Coordination Panel Built
+
+**Done:**
+- Coordination panel added to unified.html sidebar (below Services section)
+- Polls GET /v1/coordination/recent every 10s with existing auth token
+- Shows: sender name, PENDING/RESPONDED status badge, relative timestamp, message preview
+- Click to expand full message content
+- Pending count badge in section header (yellow when >0, green when 0)
+- Design doc: docs/plans/2026-03-12-coordination-panel-design.md
+
+**Item #1 from Karma's 9-stack:** Panel visibility — DONE (pending deploy verification)
+
 ## Next Session Starts Here
-1. Build coordination panel on unified.html (UI-only polling, no LLM cost — GET /v1/coordination/recent every 10s)
-2. Prioritize Karma's 9-item list ruthlessly — stop adding infrastructure, close existing gaps
-3. Coordination bus design doc needs update with panel + notification design
-**Blocker:** None — panel is a frontend change to unified.html, no backend needed
+1. Verify panel works end-to-end from browser (hub.arknexus.net)
+2. Continue with Karma's 9-item list — next: session persistence localStorage fix (#9)
+3. Respond to Karma's 4 pending coordination messages
+**Blocker:** None
 
 ## Session 86 (2026-03-12) — K2 MCP Server: Evolve aria.py into Karma's structured tool surface
 

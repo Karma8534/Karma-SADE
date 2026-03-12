@@ -314,6 +314,69 @@
   .service-status.ok { background: rgba(52,211,153,0.15); color: var(--status-ok); }
   .service-status.warn { background: rgba(245,158,11,0.15); color: var(--status-warn); }
 
+  /* ── Coordination panel ── */
+  .coord-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .coord-count {
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(245,158,11,0.2);
+    color: var(--status-warn);
+    padding: 1px 6px;
+    border-radius: 8px;
+    min-width: 18px;
+    text-align: center;
+  }
+  .coord-count.zero { background: rgba(52,211,153,0.15); color: var(--status-ok); }
+  .coord-entry {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .coord-entry:last-child { border-bottom: none; }
+  .coord-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px;
+  }
+  .coord-from { color: var(--accent-purple); font-weight: 600; }
+  .coord-time { color: var(--text-secondary); font-size: 11px; }
+  .coord-status {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 1px 5px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .coord-status.pending { background: rgba(245,158,11,0.15); color: var(--status-warn); }
+  .coord-status.responded { background: rgba(52,211,153,0.15); color: var(--status-ok); }
+  .coord-preview {
+    color: var(--text-secondary);
+    margin-top: 3px;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .coord-entry.expanded .coord-preview {
+    white-space: pre-wrap;
+    overflow: visible;
+    text-overflow: unset;
+  }
+  .coord-empty {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-style: italic;
+    padding: 4px 0;
+  }
+
   /* ── Typing indicator ── */
   .typing-indicator .msg-bubble {
     display: flex;
@@ -413,6 +476,16 @@
       <div class="service-row">
         <span class="service-name">vault-api</span>
         <span class="service-status ok">Running</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section" id="coord-section">
+      <div class="coord-header">
+        <span class="sidebar-section-title" style="margin-bottom:0">Coordination</span>
+        <span class="coord-count zero" id="coord-count">0</span>
+      </div>
+      <div id="coord-list">
+        <div class="coord-empty">No messages yet</div>
       </div>
     </div>
 
@@ -744,6 +817,9 @@
       if (e.ctrlKey && e.shiftKey && e.key === 'U') { e.preventDefault(); $fileInput.click(); }
     });
 
+    // Initial coordination fetch
+    fetchCoordination();
+
     // Image paste: Ctrl+V with an image in clipboard adds it to selectedFiles
     $input.addEventListener('paste', (e) => {
       const items = Array.from(e.clipboardData?.items || []);
@@ -760,6 +836,80 @@
       renderFileList();
     });
   }
+
+  // ── Coordination panel ───────────────────────────────────────────────
+  const $coordList  = document.getElementById('coord-list');
+  const $coordCount = document.getElementById('coord-count');
+  let coordEntries  = [];
+
+  function relativeTime(iso) {
+    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    return Math.floor(diff / 86400) + 'd ago';
+  }
+
+  function renderCoordination() {
+    if (!coordEntries.length) {
+      $coordList.innerHTML = '<div class="coord-empty">No messages yet</div>';
+      $coordCount.textContent = '0';
+      $coordCount.className = 'coord-count zero';
+      return;
+    }
+    const pending = coordEntries.filter(e => e.status === 'pending').length;
+    $coordCount.textContent = pending;
+    $coordCount.className = 'coord-count' + (pending === 0 ? ' zero' : '');
+
+    $coordList.innerHTML = '';
+    coordEntries.forEach(entry => {
+      const div = document.createElement('div');
+      div.className = 'coord-entry';
+      div.dataset.id = entry.id;
+      const from = (entry.from || 'unknown').charAt(0).toUpperCase() + (entry.from || 'unknown').slice(1);
+      const statusClass = entry.status === 'responded' ? 'responded' : 'pending';
+      const statusLabel = entry.status === 'responded' ? 'Responded' : 'Pending';
+      const preview = (entry.content || '').replace(/\n/g, ' ').slice(0, 100);
+      div.innerHTML =
+        '<div class="coord-entry-header">' +
+          '<span class="coord-from">' + from + '</span>' +
+          '<span class="coord-status ' + statusClass + '">' + statusLabel + '</span>' +
+        '</div>' +
+        '<div class="coord-entry-header" style="margin-top:2px">' +
+          '<span class="coord-time">' + relativeTime(entry.created_at) + '</span>' +
+        '</div>' +
+        '<div class="coord-preview">' + escapeHtml(preview) + '</div>';
+      div.addEventListener('click', () => div.classList.toggle('expanded'));
+      $coordList.appendChild(div);
+    });
+  }
+
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  async function fetchCoordination() {
+    const token = getToken();
+    if (!token) return;
+    try {
+      const res = await fetch('/v1/coordination/recent?limit=20', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.ok && Array.isArray(data.entries)) {
+        coordEntries = data.entries;
+        renderCoordination();
+      }
+    } catch (e) {
+      console.warn('[Coord] fetch failed:', e.message);
+    }
+  }
+
+  // Poll every 10 seconds
+  setInterval(fetchCoordination, 10000);
 
   init();
 </script>
