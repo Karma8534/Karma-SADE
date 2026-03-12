@@ -89,6 +89,17 @@ function loadMemoryMd() {
   } catch (_) {}
 }
 
+// direction.md cache — Karma's current architectural direction, constraints, stage.
+// Loaded at startup, refreshed every 5min. Injected into buildSystemText.
+const DIRECTION_MD_PATH = "/karma/repo/direction.md";
+let _directionMdCache = "";
+function loadDirectionMd() {
+  try {
+    const t = fs.readFileSync(DIRECTION_MD_PATH, "utf8");
+    if (t && t.length > 50) _directionMdCache = t.trim();
+  } catch (_) {}
+}
+
 // K2 memory graph cache — fetched once per request cycle, cached 5 min.
 // Aria on K2 exposes GET /api/memory/graph?query=... — returns seed_facts, related_facts, entities.
 let _k2MemGraphCache = null;
@@ -596,7 +607,13 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
   // Active Intents — behavioral rules matched to this request. Injected before karmaCtx.
   const intentBlock = activeIntentsText ? activeIntentsText + "\n\n" : "";
 
-  let text = identityBlock + selfKnowledge + intentBlock + base;
+  // Direction — Karma's current architectural direction, constraints, and stage.
+  // Loaded from direction.md at startup, refreshed every 5min.
+  const directionBlock = _directionMdCache
+    ? `\n--- KARMA DIRECTION (current architecture & stage) ---\n${_directionMdCache}\n---\n\n`
+    : "";
+
+  let text = identityBlock + directionBlock + selfKnowledge + intentBlock + base;
 
   // Semantic memory — top-K ledger entries most relevant to the current question.
   // Retrieved from FAISS search service (anr-vault-search:8081).
@@ -2888,6 +2905,8 @@ loadSessionBrief();
 setInterval(loadSessionBrief, 5 * 60 * 1000);
 loadMemoryMd();
 setInterval(loadMemoryMd, 5 * 60 * 1000);
+loadDirectionMd();
+setInterval(loadDirectionMd, 5 * 60 * 1000);
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`hub-bridge v2.11.0 listening on :${PORT}`);
 });

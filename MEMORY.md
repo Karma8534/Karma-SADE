@@ -20,10 +20,12 @@
 **Phase 2 deploy:** ✅ DEPLOYED — hub-bridge v2.11.0, end-to-end verified (k2_scratchpad_read through /v1/chat).
 **PITFALL:** Anthropic API rejects dots in tool names (pattern `^[a-zA-Z0-9_-]{1,128}$`). Changed k2.* → k2_* prefix. Required second deploy cycle. (obs #5427)
 
-### 🔴 CRITICAL: Conversation Thread Persistence BROKEN (Session 86 EMERGENCY)
-Karma lost entire conversation mid-session after `internal_error`. Thread lives ONLY in browser JS — no server-side storage. K2 shadow.md was 20h stale. Vault ledger has all turns but no reload mechanism.
-**This is PRIORITY #1 — supersedes K2 MCP Phase 3 and all other work.**
-**Fix needed:** Server-side conversation storage keyed by session_id + client recovery on error.
+### 🔴 Session 86 EMERGENCY: Context Regression Diagnosed + Fixed
+**Root cause (verified):** Two compounding failures — (1) hub-bridge restarted at 11:58 AM (K2 tool routing deploy), wiping volatile `_sessionStore` (in-memory only), (2) FalkorDB context capped at 1200 chars / 3 recent episodes — stale due to 6h batch delay.
+**Fix deployed:** (1) KARMA_CTX_MAX_CHARS 1200→3500 (hub.env), (2) query_recent_episodes 3→10 (server.py), (3) direction.md loaded into buildSystemText (server.js).
+**Key discovery:** `_sessionStore` already injects conversation turns into LLM messages (line 2059). Session history wasn't missing — graph context was stale and tiny.
+**Identity files:** identity.json (Feb 28), invariants.json (Feb 26), direction.md (Mar 11) exist on vault-neo but only direction.md is now loaded. Others too stale/large for token budget.
+**Next:** Step 2 = Coordination bus on Aria UI (next session). Redesign resurrect + wrap-session prompts.
 
 ## Session 85 (2026-03-12) — EMERGENCY: Fix Karma's broken memory + system prompt
 

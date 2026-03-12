@@ -927,7 +927,7 @@ def build_karma_context(user_message: str, episode_lane: str = "canonical") -> s
             parts.append(f"{i}. {entry['entity']} ({entry['mentions']} episodes)")
 
     # Get recent conversation memories for continuity
-    recent = query_recent_episodes(limit=3, lane=episode_lane)
+    recent = query_recent_episodes(limit=10, lane=episode_lane)
     recent_names = {ep["name"] for ep in recent}
     if recent:
         parts.append("\n## Recent Memories")
