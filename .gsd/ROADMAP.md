@@ -1,8 +1,8 @@
 # ROADMAP: Karma Peer — Phases & Milestones
 
-**Last updated:** 2026-03-11 (Session 84)
-**Current phase:** v12 — K2 Agency: shell_run, state-write protocol, redundancy cache (Session 84 COMPLETE)
-**Previous phase:** v10 COMPLETE — All 5 priorities shipped (Session 72)
+**Last updated:** 2026-03-12 (Session 86)
+**Current phase:** v14 — Conversation Thread Persistence (PRIORITY #1, Session 86 EMERGENCY)
+**Previous phase:** v13 K2 MCP Phase 1+2 COMPLETE (Session 86); Phase 3 PAUSED
 
 ---
 
@@ -236,8 +236,9 @@
 | K2 Worker | K2 ownership/agency breakthrough checkpoint to ledger | ✅ DONE (Session 85) |
 | v13 | K2 MCP Phase 1: Fix 3 blockers (MAX_TOOL_ITERATIONS, sudo, batch guidance) | ✅ DONE (Session 86) |
 | v13 | K2 MCP Phase 2: Structured tool registry + hub-bridge routing | ✅ DONE (Session 86) |
-| v13 | K2 MCP Phase 3: Hub-bridge dynamic tool discovery | ⏳ NEXT |
+| v13 | K2 MCP Phase 3: Hub-bridge dynamic tool discovery | ⏸️ PAUSED (conversation persistence is P1) |
 | v13 | K2 MCP Phase 4: Karma self-modification loop | ⏳ FUTURE |
+| **v14** | **🔴 Conversation Thread Persistence (server-side storage + error recovery)** | **⏳ NEXT — PRIORITY #1** |
 | K2 Worker | Karma routing logic + single-model collapse | ⏳ FUTURE |
 | K2 Worker | Multi-agent | ⏳ FUTURE |
 
@@ -257,6 +258,7 @@ K2 (192.168.0.226) not intended as active worker. Consciousness loop runs on dro
 
 ## Known Quality Gaps (Active)
 
+- **🔴 Conversation thread persistence**: Thread lives in browser JS only. One `internal_error` or refresh = Karma forgets entire conversation. Vault ledger has all turns but no reload mechanism. K2 shadow.md is stale (20+ hours). PRIORITY #1 — everything else is useless without this. (Session 86, 2026-03-12)
 - **3049 bulk episodes lack MENTIONS edges**: bulk-ingested episodes (Sessions 57–59 --skip-dedup) have no entity extraction. Graphiti watermark (Session 63) fixes this for NEW episodes only. Historical gap remains. Acceptable.
 - **karma-terminal capture stale**: last capture 2026-02-27. Not a blocker.
 - **DPO pairs**: 0/20 collected. Fine-tuning loop not started.
@@ -270,7 +272,7 @@ K2 (192.168.0.226) not intended as active worker. Consciousness loop runs on dro
 
 ---
 
-**Last updated:** 2026-03-12 (Session 86 — v13 K2 MCP Phase 1+2 complete)
+**Last updated:** 2026-03-12 (Session 86 — v13 Phase 1+2 complete; conversation persistence = PRIORITY #1)
 **Owner:** Claude Code (updates on Colby approval)
 
 ---

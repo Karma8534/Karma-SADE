@@ -17,7 +17,13 @@
 
 **Phase 1 status:** ✅ COMPLETE — MAX_TOOL_ITERATIONS 12, sudo verified, batch guidance in system prompt. Deployed + verified.
 **Phase 2 status:** ✅ COMPLETE — k2_tools.py (9 tools, 23 TDD tests), aria.py patched with /api/tools/list + /api/tools/execute, hub-bridge server.js has k2.* TOOL_DEFINITIONS + executeToolCall routing (9 TDD tests). Integration tested from vault-neo — all tools pass.
-**Phase 2 deploy:** PENDING — need hub-bridge rebuild on vault-neo.
+**Phase 2 deploy:** ✅ DEPLOYED — hub-bridge v2.11.0, end-to-end verified (k2_scratchpad_read through /v1/chat).
+**PITFALL:** Anthropic API rejects dots in tool names (pattern `^[a-zA-Z0-9_-]{1,128}$`). Changed k2.* → k2_* prefix. Required second deploy cycle. (obs #5427)
+
+### 🔴 CRITICAL: Conversation Thread Persistence BROKEN (Session 86 EMERGENCY)
+Karma lost entire conversation mid-session after `internal_error`. Thread lives ONLY in browser JS — no server-side storage. K2 shadow.md was 20h stale. Vault ledger has all turns but no reload mechanism.
+**This is PRIORITY #1 — supersedes K2 MCP Phase 3 and all other work.**
+**Fix needed:** Server-side conversation storage keyed by session_id + client recovery on error.
 
 ## Session 85 (2026-03-12) — EMERGENCY: Fix Karma's broken memory + system prompt
 

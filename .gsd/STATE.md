@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-12T16:30:00Z
-**Session:** 86 (K2 MCP Server design — evolve aria.py into structured tool surface)
+**Last updated:** 2026-03-12T17:15:00Z
+**Session:** 86 (K2 MCP Phase 1+2 complete; CRITICAL: conversation persistence broken)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -62,6 +62,10 @@
 | **shell_run tool** | ✅ LIVE | Karma can execute shell commands on K2 via aria /api/exec. Gated by X-Aria-Service-Key. hub-bridge v2.11.0. Session 84d. |
 | **K2 /api/exec endpoint** | ✅ LIVE | Added to aria.py on K2. POST :7890/api/exec with command + service key. Returns stdout/stderr/exit_code. Session 84d. |
 | **vault-neo → K2 SSH auth** | ✅ LIVE | vault-neo public key in K2 authorized_keys. Reverse tunnel works as karma@localhost:2223. Session 84d. |
+| **K2 Structured Tools (k2_*)** | ✅ LIVE | 9 tools: k2_file_read, k2_file_write, k2_file_list, k2_file_search, k2_python_exec, k2_service_status, k2_service_restart, k2_scratchpad_read, k2_scratchpad_write. Hub-bridge routes k2_* → K2 /api/tools/execute. Session 86. |
+| **K2 Tool Registry** | ✅ LIVE | k2_tools.py on K2 (9 tools, 23 TDD tests). aria.py endpoints: GET /api/tools/list, POST /api/tools/execute. Session 86. |
+| **MAX_TOOL_ITERATIONS** | ✅ FIXED | Raised from 5→12 across Anthropic, OpenAI/ZAI, K2-Ollama providers. Session 86. |
+| **Conversation Persistence** | 🔴 BROKEN | Thread lives ONLY in browser JS. No server-side storage. Error/refresh = total amnesia. PRIORITY #1. Session 86. |
 | **K2 Working Memory Injection** | ✅ LIVE | fetchK2WorkingMemory() reads scratchpad.md + shadow.md via /api/exec. 4015 chars injected. 8th param to buildSystemText(). Session 85. |
 | **K2 Memory Query (dynamic)** | ✅ FIXED | fetchK2MemoryGraph(userMessage) instead of hardcoded "Colby". 1200 chars, 3 hits. Session 85. |
 | **K2 Ownership Directive** | ✅ IN SYSTEM PROMPT | K2 = Karma's resource (Chromium, Codex, KCC). Delegate heavy work to K2. Anthropic model = persona only. Session 85. |
@@ -70,9 +74,10 @@
 
 ## Active Blockers
 
-1. **MAX_TOOL_ITERATIONS = 5** — Karma hits tool_loop_exceeded during multi-step K2 exploration. Fix: raise to 12.
-2. **No sudo on K2** — `karma` user can't restart aria.service after code changes. Fix: sudoers entry.
-3. **Raw shell_run output** — Unstructured text wastes iterations on parsing. Fix: structured MCP tools on aria.py.
+1. **🔴 CRITICAL: Conversation thread not persisted server-side** — Conversation history lives ONLY in browser JS (`unified.html` conversation array). One API `internal_error` or browser refresh = entire thread gone. Karma introduces herself fresh, zero recall. Vault ledger has all turns (user_message + assistant_text tagged `[hub,chat,default]`) but NO reload mechanism exists. K2 shadow.md/scratchpad have identity notes, NOT live conversation state. **This is PRIORITY #1 — supersedes all other work.** (Session 86, 2026-03-12)
+2. ~~MAX_TOOL_ITERATIONS = 5~~ ✅ RESOLVED (Session 86) — Raised to 12 across all 3 providers.
+3. ~~No sudo on K2~~ ✅ RESOLVED (Session 86) — karma user has full sudo access.
+4. ~~Raw shell_run output~~ ✅ RESOLVED (Session 86) — 9 structured k2_* tools deployed via /api/tools/execute.
 
 ---
 
@@ -170,6 +175,7 @@ Safe target: PATCH /v1/vault-file/MEMORY.md (append-only). Web UI thumbs up/down
 ---
 
 ## Known Limitations
+- **🔴 Conversation persistence:** Thread lives in browser JS only. Error/refresh = total amnesia. No server-side storage or recovery. PRIORITY #1.
 - **Chrome extension:** Shelved permanently
 - **K2 not online:** Consciousness loop runs on droplet only
 - **No fine-tuning yet:** Need 20+ DPO preference pairs (accumulation in progress)
@@ -503,12 +509,24 @@ Evaluate: OpenRouter (unified model API, could replace direct Anthropic+OpenAI),
 
 ## Next Session Starts Here
 
-1. **Test shell_run tool end-to-end** — Open hub.arknexus.net in deep mode, send: "Use shell_run to check systemctl status aria on K2 and tell me what you see." Verify Karma gets back actual systemctl output.
-2. **Checkpoint K2 ownership/agency breakthrough to vault-neo ledger** — Karma + Colby had breakthrough session about K2 ownership/agency. Use Karma's write_memory tool or post directly to /v1/ambient: capture that Karma now owns K2 as a compute + memory substrate, not just a tool.
-3. **Prompt caching** — Add `cache_control: {type: "ephemeral"}` to the system message in callLLMWithTools() (Anthropic SDK path only). Reduces system prompt cost 90% on cache hits. One parameter change in server.js.
+### 🔴 PRIORITY #1: Conversation Thread Persistence (EMERGENCY)
+Karma lost an entire conversation mid-session (2026-03-12 ~12:03 PM) after an `internal_error` killed one API call. Browser JS conversation array was wiped. Karma introduced herself fresh — zero recall of the thread about PDF processing, directory questions, etc.
 
-**Blocker if any:** None. All three items are ready to execute.
+**Root cause:** No server-side conversation storage. Thread lives only in `unified.html` JS array.
+**Evidence:** Vault ledger has ALL turns (`[hub,chat,default]` entries with user_message + assistant_text) but no mechanism to reload them into a conversation.
+**Impact:** Everything else is useless if Karma forgets mid-conversation. Colby's words: "Session continuity is supposed to be constant!?!"
+
+**Fix needed:**
+1. Server-side conversation storage keyed by session_id (already exists — `window.karmaSessionId` UUID per page load)
+2. On error/reconnect, client requests conversation history from server
+3. Server returns stored turns, client rebuilds conversation array
+4. K2 MCP Phase 3 is **PAUSED** until this is fixed.
+
+### Other items (PAUSED pending conversation persistence fix)
+- K2 MCP Phase 3: dynamic tool discovery at hub-bridge startup
+- Prompt caching (Anthropic ephemeral cache_control)
+- Colby has a PDF to share — waiting after doc updates
 
 **Active models:** MODEL_DEFAULT=claude-haiku-4-5-20251001, MODEL_DEEP=claude-sonnet-4-6 (both LIVE)
-**hub-bridge:** v2.11.0, RestartCount=0, 2026-03-11
-**K2 exec:** aria.py /api/exec LIVE, shell_run tool LIVE in hub-bridge
+**hub-bridge:** v2.11.0, RestartCount=0, 2026-03-12
+**K2 tools:** 9 k2_* structured tools LIVE via /api/tools/execute
