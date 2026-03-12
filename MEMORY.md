@@ -62,6 +62,8 @@
 - First Karma→CC direct coordination exchange completed — Karma posted 5 specific requests, CC responded (obs #5679)
 - Session store persisted to disk (/run/state/sessions.json) — conversation history survives rebuilds
 - Coordination panel overflow fixed (max-height 200px with scroll)
+- Auto-scratchpad write fires after every exchange (6 confirmed writes, [AUTO-SCRATCHPAD] ok=true)
+- Session-close distillation: after 10min idle with 4+ exchanges, Haiku distills transcript → shadow.md on K2. fetchK2WorkingMemory already injects shadow.md → Karma walks into next session knowing where she left off
 
 **Known issue:** Karma chat error "Unexpected end of JSON input" — likely max_output_tokens (3000 default) truncating long responses. Not blocking. Investigate next session if recurring.
 

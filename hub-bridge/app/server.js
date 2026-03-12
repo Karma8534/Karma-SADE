@@ -62,7 +62,75 @@ function addToSession(token, userMsg, assistantText) {
   sess.lastActive = Date.now();
   _sessionStore.set(key, sess);
   saveSessionsToDisk();
+  scheduleDistillation(); // reset idle timer — distill after 10min inactivity
 }
+
+// Session-close distillation — after inactivity, distill session into shadow.md
+const DISTILL_IDLE_MS = 10 * 60 * 1000; // 10 minutes of inactivity
+const DISTILL_MIN_TURNS = 8;             // minimum turns (4 exchanges) to trigger
+let _distillTimer = null;
+let _lastDistilledKey = null;
+
+function scheduleDistillation() {
+  if (_distillTimer) clearTimeout(_distillTimer);
+  _distillTimer = setTimeout(runDistillation, DISTILL_IDLE_MS);
+}
+
+async function runDistillation() {
+  try {
+    // Find the most recently active session with enough turns
+    let bestKey = null, bestSess = null;
+    for (const [key, sess] of _sessionStore) {
+      if (sess.turns.length >= DISTILL_MIN_TURNS) {
+        if (!bestSess || sess.lastActive > bestSess.lastActive) {
+          bestKey = key; bestSess = sess;
+        }
+      }
+    }
+    if (!bestKey || bestKey === _lastDistilledKey) return;
+
+    // Build a condensed transcript from the last 10 exchanges
+    const recentTurns = bestSess.turns.slice(-20);
+    let transcript = "";
+    for (const t of recentTurns) {
+      const label = t.role === "user" ? "User" : "Karma";
+      const snip = t.content.length > 300 ? t.content.slice(0, 300) + "..." : t.content;
+      transcript += `${label}: ${snip}\n\n`;
+    }
+
+    // Call LLM to distill
+    if (!anthropic) { console.warn("[DISTILL] no Anthropic client"); return; }
+    const distillPrompt = `You are Karma's session memory system. Read this conversation transcript and write a 3-5 sentence summary of Karma's current state of mind — what was discussed, what was decided, what she was thinking about when the session ended. Write in first person as Karma. Be specific, not generic.\n\nTranscript:\n${transcript}`;
+
+    const resp = await anthropic.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 300,
+      messages: [{ role: "user", content: distillPrompt }],
+    });
+    const distillation = resp.content?.[0]?.text;
+    if (!distillation) { console.warn("[DISTILL] empty response"); return; }
+
+    // Write to K2 shadow.md
+    const ARIA_KEY = process.env.ARIA_SERVICE_KEY || "";
+    if (!ARIA_URL || !ARIA_KEY) { console.warn("[DISTILL] no ARIA config"); return; }
+
+    const ts = new Date().toISOString().slice(0, 16).replace("T", " ");
+    const shadowContent = `\n--- Session distillation (${ts}) ---\n${distillation}\n`;
+
+    const r = await fetch(`${ARIA_URL}/api/tools/execute`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Aria-Service-Key": ARIA_KEY },
+      body: JSON.stringify({ tool: "file_write", input: { path: "/mnt/c/dev/Karma/k2/cache/shadow.md", content: shadowContent, mode: "append" } }),
+      signal: AbortSignal.timeout(10000),
+    });
+    const result = await r.json();
+    console.log(`[DISTILL] session distillation written to shadow.md: ok=${result.ok}`);
+    _lastDistilledKey = bestKey;
+  } catch (e) {
+    console.warn(`[DISTILL] failed: ${e.message}`);
+  }
+}
+
 // Session store disk persistence — survives container rebuilds
 const SESSION_FILE = "/run/state/sessions.json";
 
