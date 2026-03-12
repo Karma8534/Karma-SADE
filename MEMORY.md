@@ -63,11 +63,14 @@
 
 **claude-mem observations:** #5612, #5637, #5638, #5648, #5649, #5650
 
+### Decision #36: MODEL_DEFAULT switched to claude-sonnet-4-6 (2026-03-12, LOCKED)
+Haiku 4.5 ($1/$5 per 1M) too weak for peer behavior — ignores 28K system prompt behavioral directives, defaults to chatbot status dumps despite operational status table and coordination messages being correctly injected. Sonnet 4-6 ($3/$15 per 1M) for both MODEL_DEFAULT and MODEL_DEEP. routing.js ALLOWED_DEFAULT_MODELS updated. hub.env pricing updated to $3/$15. Monthly cost increase ~3x per request but Karma can actually follow instructions.
+
 ## Next Session Starts Here
-1. Ask Karma to post to CC via coordination_post — test the full behavioral loop
-2. CC reads Karma's message and responds — first real Karma↔CC exchange without Colby relaying
+1. Verify Karma behaves differently on Sonnet — acts from operational table, addresses coordination messages
+2. Karma↔CC behavioral test — have Karma post to CC via coordination_post
 3. If JSON truncation recurs: increase HUB_MAX_OUTPUT_TOKENS_DEFAULT from 3000 to 4096
-**Blocker:** None — loop is mechanically complete, needs behavioral test
+**Blocker:** If Sonnet still regresses, the system prompt itself needs radical simplification (28K → ~8K)
 
 ## Session 86 (2026-03-12) — K2 MCP Server: Evolve aria.py into Karma's structured tool surface
 
