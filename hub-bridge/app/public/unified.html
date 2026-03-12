@@ -916,24 +916,27 @@
   }
 
   function renderCoordination() {
-    if (!coordEntries.length) {
+    // Filter out resolved/timeout — only show active messages
+    const active = coordEntries.filter(e => e.status !== 'resolved' && e.status !== 'timeout');
+    if (!active.length) {
       $coordList.innerHTML = '<div class="coord-empty">No messages yet</div>';
       $coordCount.textContent = '0';
       $coordCount.className = 'coord-count zero';
       return;
     }
-    const pending = coordEntries.filter(e => e.status === 'pending').length;
+    const pending = active.filter(e => e.status === 'pending').length;
     $coordCount.textContent = pending;
     $coordCount.className = 'coord-count' + (pending === 0 ? ' zero' : '');
 
     $coordList.innerHTML = '';
-    coordEntries.forEach(entry => {
+    active.forEach(entry => {
       const div = document.createElement('div');
       div.className = 'coord-entry';
       div.dataset.id = entry.id;
       const from = (entry.from || 'unknown').charAt(0).toUpperCase() + (entry.from || 'unknown').slice(1);
-      const statusClass = entry.status === 'responded' ? 'responded' : 'pending';
-      const statusLabel = entry.status === 'responded' ? 'Responded' : 'Pending';
+      const st = entry.status || 'pending';
+      const statusClass = st === 'pending' ? 'pending' : 'responded';
+      const statusLabel = st.charAt(0).toUpperCase() + st.slice(1);
       const preview = (entry.content || '').replace(/\n/g, ' ').slice(0, 100);
       div.innerHTML =
         '<div class="coord-entry-header">' +
