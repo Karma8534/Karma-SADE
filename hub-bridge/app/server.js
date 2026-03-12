@@ -2310,7 +2310,11 @@ const server = http.createServer(async (req, res) => {
             headers: { "Content-Type": "application/json", "X-Aria-Service-Key": ARIA_KEY },
             body: JSON.stringify({ tool: "scratchpad_write", input: { content: scratchLine, mode: "append" } }),
             signal: AbortSignal.timeout(5000),
-          }).catch(() => {}); // fire-and-forget, never block chat response
+          }).then(r => r.json()).then(j => {
+            console.log(`[AUTO-SCRATCHPAD] write ok=${j.ok}`);
+          }).catch(e => {
+            console.warn(`[AUTO-SCRATCHPAD] write failed: ${e.message}`);
+          });
         }
       }
 
