@@ -61,7 +61,41 @@ function addToSession(token, userMsg, assistantText) {
   }
   sess.lastActive = Date.now();
   _sessionStore.set(key, sess);
+  saveSessionsToDisk();
 }
+// Session store disk persistence — survives container rebuilds
+const SESSION_FILE = "/run/state/sessions.json";
+
+function loadSessionsFromDisk() {
+  try {
+    if (!fs.existsSync(SESSION_FILE)) return;
+    const data = JSON.parse(fs.readFileSync(SESSION_FILE, "utf-8"));
+    const now = Date.now();
+    let loaded = 0;
+    for (const [key, sess] of Object.entries(data)) {
+      if (now - sess.lastActive > SESSION_TTL_MS) continue;
+      _sessionStore.set(key, sess);
+      loaded++;
+    }
+    if (loaded > 0) console.log(`[SESSION] loaded ${loaded} sessions from disk`);
+  } catch (e) {
+    console.warn("[SESSION] disk load failed:", e.message);
+  }
+}
+
+function saveSessionsToDisk() {
+  try {
+    const obj = {};
+    const now = Date.now();
+    for (const [key, sess] of _sessionStore) {
+      if (now - sess.lastActive <= SESSION_TTL_MS) obj[key] = sess;
+    }
+    fs.writeFileSync(SESSION_FILE, JSON.stringify(obj));
+  } catch (e) {
+    console.warn("[SESSION] disk save failed:", e.message);
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Coordination bus — structured agent-to-agent messaging.
@@ -3202,6 +3236,7 @@ setInterval(loadMemoryMd, 5 * 60 * 1000);
 loadDirectionMd();
 setInterval(loadDirectionMd, 5 * 60 * 1000);
 loadCoordinationFromDisk(); // restore coordination messages across rebuilds
+loadSessionsFromDisk();     // restore conversation history across rebuilds
 setInterval(evictExpiredCoordination, 60 * 60 * 1000); // coordination bus hourly sweep
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`hub-bridge v2.11.0 listening on :${PORT}`);

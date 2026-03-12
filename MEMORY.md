@@ -58,6 +58,10 @@
 - Coordination panel = supervision window for Colby, NOT participation tool (obs #5649)
 - Colby's goal: Karma and CC communicate directly, Colby stops being the manual relay
 - Constitutional AI parallel acknowledged: Karma + CC improving each other = same pattern that created Claude
+- Decision #36: MODEL_DEFAULT switched to claude-sonnet-4-6 — Haiku too weak for peer behavior (obs #5669)
+- First Karma→CC direct coordination exchange completed — Karma posted 5 specific requests, CC responded (obs #5679)
+- Session store persisted to disk (/run/state/sessions.json) — conversation history survives rebuilds
+- Coordination panel overflow fixed (max-height 200px with scroll)
 
 **Known issue:** Karma chat error "Unexpected end of JSON input" — likely max_output_tokens (3000 default) truncating long responses. Not blocking. Investigate next session if recurring.
 
