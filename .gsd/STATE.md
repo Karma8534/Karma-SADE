@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-12T17:15:00Z
-**Session:** 86 (K2 MCP Phase 1+2 complete; CRITICAL: conversation persistence broken)
+**Last updated:** 2026-03-12T19:30:00Z
+**Session:** 86b (Context fix deployed; Coordination bus v1 live but UI panel missing; 9 stacked items identified)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -65,7 +65,9 @@
 | **K2 Structured Tools (k2_*)** | ✅ LIVE | 9 tools: k2_file_read, k2_file_write, k2_file_list, k2_file_search, k2_python_exec, k2_service_status, k2_service_restart, k2_scratchpad_read, k2_scratchpad_write. Hub-bridge routes k2_* → K2 /api/tools/execute. Session 86. |
 | **K2 Tool Registry** | ✅ LIVE | k2_tools.py on K2 (9 tools, 23 TDD tests). aria.py endpoints: GET /api/tools/list, POST /api/tools/execute. Session 86. |
 | **MAX_TOOL_ITERATIONS** | ✅ FIXED | Raised from 5→12 across Anthropic, OpenAI/ZAI, K2-Ollama providers. Session 86. |
-| **Conversation Persistence** | 🔴 BROKEN | Thread lives ONLY in browser JS. No server-side storage. Error/refresh = total amnesia. PRIORITY #1. Session 86. |
+| **Conversation Persistence** | ⚠️ RECLASSIFIED | Server-side works (_sessionStore survives refresh, injected at line 2059). UI-only problem: browser JS array clears on refresh. localStorage fix needed. NOT a blocker — cosmetic UX. Session 86b. |
+| **Context Fix (3 changes)** | ✅ DEPLOYED | KARMA_CTX_MAX_CHARS 3500, recent episodes 10, direction.md in buildSystemText. Session 86b. |
+| **Coordination Bus v1** | ⚠️ PLUMBING ONLY | Endpoints work, tool works, context injection works. BUT: no UI panel, no CC notification, Colby can't see messages without curl. Session 86b. |
 | **K2 Working Memory Injection** | ✅ LIVE | fetchK2WorkingMemory() reads scratchpad.md + shadow.md via /api/exec. 4015 chars injected. 8th param to buildSystemText(). Session 85. |
 | **K2 Memory Query (dynamic)** | ✅ FIXED | fetchK2MemoryGraph(userMessage) instead of hardcoded "Colby". 1200 chars, 3 hits. Session 85. |
 | **K2 Ownership Directive** | ✅ IN SYSTEM PROMPT | K2 = Karma's resource (Chromium, Codex, KCC). Delegate heavy work to K2. Anthropic model = persona only. Session 85. |
@@ -74,7 +76,9 @@
 
 ## Active Blockers
 
-1. **🔴 CRITICAL: Conversation thread not persisted server-side** — Conversation history lives ONLY in browser JS (`unified.html` conversation array). One API `internal_error` or browser refresh = entire thread gone. Karma introduces herself fresh, zero recall. Vault ledger has all turns (user_message + assistant_text tagged `[hub,chat,default]`) but NO reload mechanism exists. K2 shadow.md/scratchpad have identity notes, NOT live conversation state. **This is PRIORITY #1 — supersedes all other work.** (Session 86, 2026-03-12)
+1. **⚠️ Coordination bus has no UI visibility** — Colby can't see Karma↔CC messages without SSH+curl. Panel on unified.html needed. (Session 86b)
+2. **⚠️ Conversation thread UI clears on refresh** — Server-side _sessionStore works (60min TTL). Browser JS array clears on refresh = blank screen. Fix: localStorage or fetch-from-server. Cosmetic UX, not architectural. (Session 86b, reclassified from 🔴)
+3. **⚠️ 9 stacked items keep getting deferred** — Karma identified: panel, CC notification, deep mode image gate, K2 MCP, beads, "Karma builds Karma", hearts, session persistence. Pattern: CC builds infrastructure and defers the actual vision. (Session 86b)
 2. ~~MAX_TOOL_ITERATIONS = 5~~ ✅ RESOLVED (Session 86) — Raised to 12 across all 3 providers.
 3. ~~No sudo on K2~~ ✅ RESOLVED (Session 86) — karma user has full sudo access.
 4. ~~Raw shell_run output~~ ✅ RESOLVED (Session 86) — 9 structured k2_* tools deployed via /api/tools/execute.
