@@ -152,7 +152,7 @@ async function fetchK2WorkingMemory() {
     });
     if (!res.ok) { console.warn(`[K2-WORK] /api/exec → ${res.status}`); return null; }
     const data = await res.json();
-    if (!data.success || !data.stdout) return null;
+    if (!data.ok || !data.stdout) return null;
     const text = data.stdout.length > K2_WORKING_MEM_MAX_CHARS
       ? data.stdout.slice(0, K2_WORKING_MEM_MAX_CHARS) + "\n...(truncated)"
       : data.stdout;
