@@ -49,7 +49,8 @@
 **Done (continued):**
 - K2 scratchpad injection: already working (verified 4015 chars loaded, obs #5612)
 - Coordination panel compose input: deployed (dropdown recipient, text input, POST with urgency=informational)
-- System prompt operational status block added to 00-karma-system-prompt-live.md — tells Karma what's wired and working RIGHT NOW, stops the 2-year rediscovery cycle
+- System prompt operational status block added to 00-karma-system-prompt-live.md — stops the 2-year rediscovery cycle
+- Coordination bus persistence: messages now survive hub-bridge rebuilds via /run/state/coordination.jsonl (bind-mounted volume). Load on startup, append on POST, full rewrite on PATCH status change.
 
 ## Next Session Starts Here
 1. Tabled: coordination panel needs to work for Colby too (not just Karma→CC)

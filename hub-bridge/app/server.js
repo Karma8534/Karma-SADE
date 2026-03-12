@@ -65,10 +65,48 @@ function addToSession(token, userMsg, assistantText) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Coordination bus — structured agent-to-agent messaging.
-// In-memory cache (100 entries, 24h TTL). Durable via vault ledger (lane="coordination").
+// In-memory cache (100 entries, 24h TTL). Persisted to COORD_FILE so rebuilds don't lose messages.
 const COORD_MAX_ENTRIES = 100;
 const COORD_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const _coordinationCache = new Map();      // id → coordination entry object
+const COORD_FILE = "/run/state/coordination.jsonl";
+
+function loadCoordinationFromDisk() {
+  try {
+    if (!fs.existsSync(COORD_FILE)) return;
+    const lines = fs.readFileSync(COORD_FILE, "utf-8").trim().split("\n").filter(Boolean);
+    const now = Date.now();
+    let loaded = 0;
+    for (const line of lines) {
+      try {
+        const entry = JSON.parse(line);
+        if (now - new Date(entry.created_at).getTime() > COORD_TTL_MS) continue;
+        _coordinationCache.set(entry.id, entry);
+        loaded++;
+      } catch (_) { /* skip malformed lines */ }
+    }
+    if (loaded > 0) console.log(`[COORD] loaded ${loaded} entries from disk`);
+  } catch (e) {
+    console.warn("[COORD] disk load failed:", e.message);
+  }
+}
+
+function appendCoordinationToDisk(entry) {
+  try {
+    fs.appendFileSync(COORD_FILE, JSON.stringify(entry) + "\n");
+  } catch (e) {
+    console.warn("[COORD] disk append failed:", e.message);
+  }
+}
+
+function saveCoordinationToDisk() {
+  try {
+    const lines = [..._coordinationCache.values()].map(e => JSON.stringify(e)).join("\n") + "\n";
+    fs.writeFileSync(COORD_FILE, lines);
+  } catch (e) {
+    console.warn("[COORD] disk save failed:", e.message);
+  }
+}
 
 function generateCoordId() {
   const ts = Date.now();
@@ -1640,6 +1678,7 @@ async function executeToolCall(toolName, toolInput, writeId = null, ariaSessionI
         }
 
         _coordinationCache.set(entry.id, entry);
+        appendCoordinationToDisk(entry);
         evictExpiredCoordination();
 
         // Fire-and-forget vault write
@@ -3050,8 +3089,9 @@ const server = http.createServer(async (req, res) => {
           parent.status = "resolved";
         }
 
-        // Store in cache
+        // Store in cache + persist to disk
         _coordinationCache.set(entry.id, entry);
+        appendCoordinationToDisk(entry);
         evictExpiredCoordination();
 
         // Fire-and-forget write to vault ledger
@@ -3119,6 +3159,7 @@ const server = http.createServer(async (req, res) => {
         }
         if (data.response_id) entry.response_id = data.response_id;
 
+        saveCoordinationToDisk();
         console.log(`[COORD] ${id} updated: status=${entry.status}`);
         return json(res, 200, { ok: true, entry });
       } catch (e) {
@@ -3160,6 +3201,7 @@ loadMemoryMd();
 setInterval(loadMemoryMd, 5 * 60 * 1000);
 loadDirectionMd();
 setInterval(loadDirectionMd, 5 * 60 * 1000);
+loadCoordinationFromDisk(); // restore coordination messages across rebuilds
 setInterval(evictExpiredCoordination, 60 * 60 * 1000); // coordination bus hourly sweep
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`hub-bridge v2.11.0 listening on :${PORT}`);
