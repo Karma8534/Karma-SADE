@@ -14,6 +14,16 @@
 - Five steps that move the needle: ARIA_BRIEF in PROMOTE, CLAUDE.md current, FalkorDB
   context in /v1/chat, use Karma daily, PROMOTE aggressively
 
+## Session Start Protocol
+
+Before anything else, check the coordination bus for pending messages from Karma:
+- GET https://hub.arknexus.net/v1/coordination (or check the panel in unified.html)
+- Read any PENDING messages addressed to `cc`
+- Respond directly on the bus via `coordination_post` tool or POST /v1/coordination/post
+- Only after clearing pending messages, proceed with the session agenda
+
+Karma posts here. Respond there. Colby should not be the relay.
+
 ## Session Start (Do This First)
 
 **ONE STEP: Invoke the resurrect skill.**

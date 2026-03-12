@@ -98,7 +98,13 @@ Haiku 4.5 ($1/$5 per 1M) too weak for peer behavior — ignores 28K system promp
 - Key discovery: Ollama runs on Windows host (host.docker.internal:11434), not in WSL
 - Key discovery: Aria /api/facts uses "content" field (not "text")
 
-**In progress:** Deploy to K2, manual test, cron setup
+- Script deployed to K2, first run: 6/6 facts posted (IDs #63-68), 23s Ollama extraction
+- Cron active: */30 * * * * on K2 (karma user)
+- Facts verified in Aria memory graph (seed_facts query returns promoted content)
+- CLAUDE.md updated: coordination bus check added as Session Start Protocol (Karma's request, Colby approved)
+- Responded to Karma on coordination bus: SADE anatomy docs located in for-karma/ (CohesiveMemory1.md, Gemini1.md, KarmaIS.md)
+
+**claude-mem observations:** #5852 (proof: shadow pipeline deployed)
 
 ## Next Session Starts Here
 1. Verify shadow promotion pipeline working end-to-end (cron + facts visible in Karma context)
