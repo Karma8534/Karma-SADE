@@ -429,6 +429,7 @@
         </div>
         <div class="input-actions">
           <button class="btn-icon" id="file-btn" title="Attach files (Ctrl+Shift+U)">📎</button>
+          <button class="btn-icon" id="new-chat-btn" title="New conversation">🔄</button>
           <button class="btn-deep" id="deep-btn" title="Enable deep mode (tool use + graph queries)">DEEP</button>
           <button class="btn-send" id="send-btn">Send</button>
         </div>
@@ -506,8 +507,41 @@
   }
 
   // ── State ────────────────────────────────────────────────────────────────
-  let conversationId = crypto.randomUUID();
+  let conversationId = localStorage.getItem('karma_conversation_id');
+  if (!conversationId) {
+    conversationId = crypto.randomUUID();
+    localStorage.setItem('karma_conversation_id', conversationId);
+  }
   let selectedFiles  = [];
+
+  // ── Conversation persistence ──────────────────────────────────────────
+  function saveMessages() {
+    const msgs = [];
+    $messages.querySelectorAll('.msg').forEach(el => {
+      const role = el.classList.contains('user') ? 'user' : el.classList.contains('karma') ? 'karma' : 'system';
+      const bubble = el.querySelector('.msg-bubble');
+      if (!bubble) return;
+      msgs.push({ role, text: bubble.textContent, writeId: el.dataset.writeId || null, turnId: el.dataset.turnId || null });
+    });
+    localStorage.setItem('karma_messages', JSON.stringify(msgs));
+  }
+
+  function loadSavedMessages() {
+    const raw = localStorage.getItem('karma_messages');
+    if (!raw) return;
+    try {
+      const msgs = JSON.parse(raw);
+      msgs.forEach(m => addMessage(m.role, m.text, m.writeId, m.turnId));
+    } catch (e) { /* corrupt data, ignore */ }
+  }
+
+  function clearConversation() {
+    localStorage.removeItem('karma_messages');
+    localStorage.removeItem('karma_conversation_id');
+    conversationId = crypto.randomUUID();
+    localStorage.setItem('karma_conversation_id', conversationId);
+    $messages.innerHTML = '';
+  }
 
   // ── DOM refs ─────────────────────────────────────────────────────────────
   const $messages  = document.getElementById('chat-messages');
@@ -610,6 +644,7 @@
     if (role !== 'system') wrap.appendChild(meta);
     $messages.appendChild(wrap);
     setTimeout(() => { $messages.scrollTop = $messages.scrollHeight; }, 10);
+    saveMessages();
   }
 
   // ── Send feedback ─────────────────────────────────────────────────────────
@@ -816,6 +851,12 @@
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
       if (e.ctrlKey && e.shiftKey && e.key === 'U') { e.preventDefault(); $fileInput.click(); }
     });
+
+    // Load saved conversation from localStorage
+    loadSavedMessages();
+
+    // New chat button
+    document.getElementById('new-chat-btn').addEventListener('click', clearConversation);
 
     // Initial coordination fetch
     fetchCoordination();

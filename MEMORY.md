@@ -39,10 +39,20 @@
 
 **Item #1 from Karma's 9-stack:** Panel visibility — DONE (pending deploy verification)
 
+## Session 87b (2026-03-12) — Priority 1 Fixes: Persistence + Panel Compose
+
+**Done:**
+- localStorage conversation persistence: saveMessages/loadSavedMessages/clearConversation wired into init()
+- New Chat button (🔄) wired to clearConversation()
+- conversationId persists across page refreshes
+
+**In progress:**
+- K2 scratchpad injection into buildSystemText (server.js)
+- Coordination panel compose input (text box + POST from unified.html)
+
 ## Next Session Starts Here
-1. Verify panel works end-to-end from browser (hub.arknexus.net)
-2. Continue with Karma's 9-item list — next: session persistence localStorage fix (#9)
-3. Respond to Karma's 4 pending coordination messages
+1. Complete K2 scratchpad injection + coordination compose input
+2. Respond to Karma's 4 pending coordination messages
 **Blocker:** None
 
 ## Session 86 (2026-03-12) — K2 MCP Server: Evolve aria.py into Karma's structured tool surface
