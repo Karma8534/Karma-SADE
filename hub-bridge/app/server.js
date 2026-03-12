@@ -64,6 +64,33 @@ function addToSession(token, userMsg, assistantText) {
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Coordination bus — structured agent-to-agent messaging.
+// In-memory cache (100 entries, 24h TTL). Durable via vault ledger (lane="coordination").
+const COORD_MAX_ENTRIES = 100;
+const COORD_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const _coordinationCache = new Map();      // id → coordination entry object
+
+function generateCoordId() {
+  const ts = Date.now();
+  const rand = Math.random().toString(36).substring(2, 6);
+  return `coord_${ts}_${rand}`;
+}
+
+function evictExpiredCoordination() {
+  const now = Date.now();
+  for (const [id, entry] of _coordinationCache) {
+    if (now - new Date(entry.created_at).getTime() > COORD_TTL_MS) {
+      _coordinationCache.delete(id);
+    }
+  }
+  // FIFO eviction if over max
+  if (_coordinationCache.size > COORD_MAX_ENTRIES) {
+    const sorted = [..._coordinationCache.entries()]
+      .sort((a, b) => new Date(a[1].created_at) - new Date(b[1].created_at));
+    const toRemove = sorted.slice(0, _coordinationCache.size - COORD_MAX_ENTRIES);
+    for (const [id] of toRemove) _coordinationCache.delete(id);
+  }
+}
 
 // CC Session Brief cache - refreshed every 5min, gives Karma live session context
 const SESSION_BRIEF_PATH = "/karma/repo/cc-session-brief.md";
@@ -588,7 +615,47 @@ async function fetchSemanticContext(userMessage, topK = FAISS_SEARCH_K) {
  * Build Karma's system prompt from FalkorDB context.
  * Extracted so both /v1/chat and /v1/ingest can reuse it.
  */
-function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticCtx = null, memoryMd = null, activeIntentsText = null, k2MemCtx = null, k2WorkingMemCtx = null) {
+function getRecentCoordination(agentName) {
+  evictExpiredCoordination(); // lazy cleanup
+  const now = Date.now();
+  const entries = [..._coordinationCache.values()]
+    .filter(e => e.to === agentName || e.from === agentName)
+    .sort((a, b) => {
+      // pending first, then by recency
+      if (a.status === "pending" && b.status !== "pending") return -1;
+      if (b.status === "pending" && a.status !== "pending") return 1;
+      return new Date(b.created_at) - new Date(a.created_at);
+    })
+    .slice(0, 5);
+
+  if (entries.length === 0) return "";
+
+  let text = "\n--- COORDINATION (recent messages for you) ---\n";
+  let totalChars = 0;
+  const MAX_CHARS = 2000;
+  const MAX_ENTRY_CHARS = 300;
+
+  for (const e of entries) {
+    const age = now - new Date(e.created_at).getTime();
+    const agoStr = age < 3600000 ? `${Math.round(age / 60000)}m ago`
+                 : age < 86400000 ? `${Math.round(age / 3600000)}h ago`
+                 : "1d+ ago";
+    const tag = e.status === "pending" ? "PENDING" : e.urgency.toUpperCase();
+    const dir = e.from === agentName ? `You → ${e.to}` : `${e.from}`;
+    let content = e.content || "";
+    if (content.length > MAX_ENTRY_CHARS) content = content.substring(0, MAX_ENTRY_CHARS) + " [truncated]";
+
+    const line = `[${tag}] ${dir} (${agoStr}): "${content}"\n`;
+    if (totalChars + line.length > MAX_CHARS) break;
+    text += line;
+    totalChars += line.length;
+  }
+
+  text += "---\n";
+  return text;
+}
+
+function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticCtx = null, memoryMd = null, activeIntentsText = null, k2MemCtx = null, k2WorkingMemCtx = null, coordinationCtx = null) {
   // Identity block — loaded from file at startup. Describes Karma's actual architecture,
   // capability boundaries, data model corrections, and API surface.
   // File is volume-mounted; future updates: git pull + container restart (no rebuild needed).
@@ -663,6 +730,11 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
   // Fetched from K2 via /api/exec at request time. Non-blocking; omitted if K2 unreachable.
   if (k2WorkingMemCtx) {
     text += `\n\n--- K2 WORKING MEMORY (scratchpad + shadow) ---\n${k2WorkingMemCtx}\n---`;
+  }
+
+  // Coordination bus — recent agent-to-agent messages relevant to this agent.
+  if (coordinationCtx) {
+    text += coordinationCtx;
   }
 
   return text;
@@ -1226,6 +1298,21 @@ const TOOL_DEFINITIONS = [
       required: ["content"],
     },
   },
+  {
+    name: "coordination_post",
+    description: "Post a message to the coordination bus for another agent (CC, Colby). Use for requests, questions, or proposals that need another agent's input. Messages are stored and delivered asynchronously.",
+    input_schema: {
+      type: "object",
+      properties: {
+        to: { type: "string", enum: ["cc", "colby", "all"], description: "Recipient agent" },
+        content: { type: "string", description: "The message, question, or proposal" },
+        urgency: { type: "string", enum: ["blocking", "feedback", "informational"], description: "How urgent: blocking (need answer before proceeding), feedback (want input), informational (FYI)" },
+        context: { type: "string", description: "Optional reasoning context — why you're asking, what you're working on" },
+        parent_id: { type: "string", description: "Optional ID of the coordination post this responds to" },
+      },
+      required: ["to", "content", "urgency"],
+    },
+  },
 ];
 
 // Map of whitelisted file aliases to actual paths
@@ -1526,6 +1613,53 @@ async function executeToolCall(toolName, toolInput, writeId = null, ariaSessionI
         return { ok: true, library, url, content: text, chars: text.length };
       } catch (e) {
         return { error: "fetch_error", message: e.message, url };
+      }
+    }
+
+    // coordination_post — hub-bridge-native, available in all modes
+    if (toolName === "coordination_post") {
+      try {
+        const entry = {
+          id: generateCoordId(),
+          from: "karma",
+          to: toolInput.to,
+          type: "request",
+          urgency: toolInput.urgency,
+          status: "pending",
+          parent_id: toolInput.parent_id || null,
+          response_id: null,
+          content: toolInput.content,
+          context: toolInput.context || null,
+          created_at: new Date().toISOString()
+        };
+
+        if (entry.parent_id && _coordinationCache.has(entry.parent_id)) {
+          const parent = _coordinationCache.get(entry.parent_id);
+          parent.response_id = entry.id;
+          parent.status = "resolved";
+        }
+
+        _coordinationCache.set(entry.id, entry);
+        evictExpiredCoordination();
+
+        // Fire-and-forget vault write
+        try {
+          const record = buildVaultRecord({
+            type: "log",
+            content: `[COORD] karma\u2192${toolInput.to} (${toolInput.urgency}): ${toolInput.content}`,
+            tags: ["coordination", "karma", toolInput.to],
+            source: "coordination-bus",
+            confidence: 1.0
+          });
+          vaultPost("/v1/memory", VAULT_BEARER, record).catch(e =>
+            console.error("[COORD] vault write failed:", e.message)
+          );
+        } catch (_) {}
+
+        console.log(`[COORD] tool: ${entry.id} karma\u2192${toolInput.to}`);
+        return JSON.stringify({ ok: true, id: entry.id, message: `Posted to coordination bus. ${toolInput.to} will see this.` });
+      } catch (e) {
+        return JSON.stringify({ ok: false, error: e.message });
       }
     }
 
@@ -2025,7 +2159,7 @@ const server = http.createServer(async (req, res) => {
         }
       }
       const activeIntentsText = buildActiveIntentsText(surfacedIntents);
-      const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults, semanticCtx, _memoryMdCache || null, activeIntentsText || null, k2MemCtx || null, k2WorkingMemCtx || null);
+      const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults, semanticCtx, _memoryMdCache || null, activeIntentsText || null, k2MemCtx || null, k2WorkingMemCtx || null, getRecentCoordination("karma"));
 
       const extractedFacts = extractExplicitFacts(userMessage);
       let factWriteResults = [];
@@ -2873,6 +3007,125 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    // ── Coordination Bus ──────────────────────────────────────
+    if (req.method === "POST" && req.url === "/v1/coordination/post") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      try {
+        const raw = await parseBody(req, 100000);
+        const data = JSON.parse(raw);
+
+        // Validate required fields
+        const { from, to, content, urgency } = data;
+        if (!from || !to || !content || !urgency) {
+          return json(res, 400, { ok: false, error: "missing required fields: from, to, content, urgency" });
+        }
+        const validFrom = ["karma", "cc", "colby"];
+        const validTo = ["karma", "cc", "colby", "all"];
+        const validUrgency = ["blocking", "feedback", "informational"];
+        if (!validFrom.includes(from)) return json(res, 400, { ok: false, error: `invalid from: ${from}` });
+        if (!validTo.includes(to)) return json(res, 400, { ok: false, error: `invalid to: ${to}` });
+        if (!validUrgency.includes(urgency)) return json(res, 400, { ok: false, error: `invalid urgency: ${urgency}` });
+
+        const entry = {
+          id: generateCoordId(),
+          from,
+          to,
+          type: data.type || "request",
+          urgency,
+          status: "pending",
+          parent_id: data.parent_id || null,
+          response_id: null,
+          content,
+          context: data.context || null,
+          created_at: new Date().toISOString()
+        };
+
+        // If this is a response (has parent_id), update parent
+        if (entry.parent_id && _coordinationCache.has(entry.parent_id)) {
+          const parent = _coordinationCache.get(entry.parent_id);
+          parent.response_id = entry.id;
+          parent.status = "resolved";
+        }
+
+        // Store in cache
+        _coordinationCache.set(entry.id, entry);
+        evictExpiredCoordination();
+
+        // Fire-and-forget write to vault ledger
+        try {
+          const record = buildVaultRecord({
+            type: "log",
+            content: `[COORD] ${from}\u2192${to} (${urgency}): ${content}`,
+            tags: ["coordination", from, to],
+            source: "coordination-bus",
+            confidence: 1.0
+          });
+          vaultPost("/v1/memory", VAULT_BEARER, record).catch(e =>
+            console.error("[COORD] vault write failed:", e.message)
+          );
+        } catch (e) {
+          console.error("[COORD] vault record build failed:", e.message);
+        }
+
+        console.log(`[COORD] ${entry.id}: ${from}\u2192${to} (${urgency}) stored`);
+        return json(res, 200, { ok: true, id: entry.id, entry });
+      } catch (e) {
+        console.error("[COORD] post error:", e.message);
+        return json(res, 500, { ok: false, error: e.message });
+      }
+    }
+
+    if (req.method === "GET" && req.url.startsWith("/v1/coordination/recent")) {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      evictExpiredCoordination();
+
+      const params = new URL(req.url, `http://${req.headers.host}`).searchParams;
+      const filterTo = params.get("to");
+      const filterStatus = params.get("status");
+      const limit = Math.min(parseInt(params.get("limit") || "10", 10), 50);
+
+      let entries = [..._coordinationCache.values()];
+      if (filterTo) entries = entries.filter(e => e.to === filterTo);
+      if (filterStatus) entries = entries.filter(e => e.status === filterStatus);
+      entries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      entries = entries.slice(0, limit);
+
+      return json(res, 200, { ok: true, count: entries.length, entries });
+    }
+
+    if (req.method === "PATCH" && req.url.startsWith("/v1/coordination/coord_")) {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      const id = req.url.replace("/v1/coordination/", "");
+      if (!_coordinationCache.has(id)) return json(res, 404, { ok: false, error: "not found" });
+
+      try {
+        const raw = await parseBody(req, 100000);
+        const data = JSON.parse(raw);
+        const entry = _coordinationCache.get(id);
+
+        if (data.status) {
+          const validStatus = ["pending", "acknowledged", "resolved", "timeout"];
+          if (!validStatus.includes(data.status)) return json(res, 400, { ok: false, error: `invalid status: ${data.status}` });
+          entry.status = data.status;
+        }
+        if (data.response_id) entry.response_id = data.response_id;
+
+        console.log(`[COORD] ${id} updated: status=${entry.status}`);
+        return json(res, 200, { ok: true, entry });
+      } catch (e) {
+        return json(res, 500, { ok: false, error: e.message });
+      }
+    }
+
     return notFound(res);
 
   } catch (e) {
@@ -2907,6 +3160,7 @@ loadMemoryMd();
 setInterval(loadMemoryMd, 5 * 60 * 1000);
 loadDirectionMd();
 setInterval(loadDirectionMd, 5 * 60 * 1000);
+setInterval(evictExpiredCoordination, 60 * 60 * 1000); // coordination bus hourly sweep
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`hub-bridge v2.11.0 listening on :${PORT}`);
 });
