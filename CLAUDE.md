@@ -78,7 +78,7 @@ Every session follows this exact frame. No deviations, no "good enough":
 |-------|-------------|----------------|
 | **Start** | `/resurrect` | Run script â†’ read brief â†’ invoke `using-superpowers` â†’ resume active task |
 | **After resurrect** | `"check what was saved last session"` | Search claude-mem for prior session's observations; surface gaps |
-| **End** | `"wrap up â€” save any uncaptured observations and commit"` | Scan session for DECISION/PROOF/PITFALL/DIRECTION â†’ call `save_observation` for each â†’ commit + push |
+| **End** | `”wrap up”` / `”end session”` / `”save and close”` | Invoke `wrap-session` skill â†’ follows 5 essential + 3 optional steps |
 
 ## claude-mem â€” Always Available, Always Use
 
@@ -371,13 +371,17 @@ If pack and MEMORY.md conflict on the same fact, surface it explicitly:
 `DRIFT DETECTED: Pack says X. MEMORY.md says Y (written [timestamp]). Confirm canonical before proceeding.`
 
 ## Session End Protocol
-1. **save_observation for any uncaptured events** â€” scan the session for DECISION/PROOF/PITFALL/DIRECTION moments not yet saved. Call `mcp__plugin_claude-mem_mcp-search__save_observation` for each. This is step 1 because it must happen before context is lost.
-2. **Correction capture (v8 Phase 3 discipline)** â€” scan the session for moments Karma stated something wrong and was corrected. For each correction: append to `Memory/corrections-log.md` using the format in that file. If 3+ corrections exist that aren't yet in the system prompt: flag to Colby for system prompt update cycle (CC drafts addition â†’ Colby approves â†’ CC commits + deploys + restarts hub-bridge).
-3. Run secret scan: `grep -rn "Bearer\|token\|secret\|password\|api_key" --include="*.js" --include="*.py" --include="*.json" --include="*.md" . | grep -v node_modules | grep -v .git`
-4. If clean: git add, commit with descriptive message, push
-5. Update MEMORY.md with: what was done, current blockers, next task
-6. Format commit: `phase-N: brief description of what changed`
-7. Cherry-pick updated MEMORY.md to main and push: git checkout main -- MEMORY.md from current worktree, commit, push.
+
+**ONE STEP: Invoke the `wrap-session` skill.**
+
+The wrap-session skill IS the session end protocol. It handles observations, MEMORY.md, STATE.md, secret scan, commit, push, and vault-neo sync. Do NOT manually replicate its steps.
+
+**Fallback (only if wrap-session skill unavailable):**
+1. `save_observation` for any uncaptured DECISION/PROOF/PITFALL/DIRECTION events
+2. Update MEMORY.md with: what was done, current blockers, next task
+3. Update `.gsd/STATE.md` with progress
+4. Secret scan â†’ git add â†’ commit â†’ push
+5. `ssh vault-neo “cd /home/neo/karma-sade && git pull”` â†’ verify containers healthy
 
 ## File Layout
 ```

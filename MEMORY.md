@@ -25,6 +25,7 @@
 **Fix deployed:** (1) KARMA_CTX_MAX_CHARS 1200→3500 (hub.env), (2) query_recent_episodes 3→10 (server.py), (3) direction.md loaded into buildSystemText (server.js).
 **Key discovery:** `_sessionStore` already injects conversation turns into LLM messages (line 2059). Session history wasn't missing — graph context was stale and tiny.
 **Identity files:** identity.json (Feb 28), invariants.json (Feb 26), direction.md (Mar 11) exist on vault-neo but only direction.md is now loaded. Others too stale/large for token budget.
+**Skills created:** wrap-session (lean 5+3 steps), resurrect updated (health check step 3d). CLAUDE.md Session End Protocol now invokes wrap-session skill (mirrors Session Start → resurrect pattern).
 **Next:** Step 2 = Coordination bus on Aria UI (next session). Redesign resurrect + wrap-session prompts.
 
 ## Session 85 (2026-03-12) — EMERGENCY: Fix Karma's broken memory + system prompt
