@@ -88,11 +88,23 @@ Haiku 4.5 ($1/$5 per 1M) too weak for peer behavior — ignores 28K system promp
 
 **claude-mem observations:** #5728 (coord panel fix), #5734 (audit verification), #5768 (caching pitfall), #5772 (support ticket)
 
+## Session 87d (2026-03-12) — Shadow.md Promotion Pipeline
+
+**Done:**
+- Design doc: docs/plans/2026-03-12-shadow-promotion-pipeline-design.md (approved by Colby + Karma)
+- Implementation plan: docs/plans/2026-03-12-shadow-promotion-pipeline.md
+- promote_shadow.py written: watermark-based incremental reader → Ollama qwen3-coder:30b extraction → POST Aria /api/facts
+- Service key file created on K2: /mnt/c/dev/Karma/k2/scripts/.aria_service_key
+- Key discovery: Ollama runs on Windows host (host.docker.internal:11434), not in WSL
+- Key discovery: Aria /api/facts uses "content" field (not "text")
+
+**In progress:** Deploy to K2, manual test, cron setup
+
 ## Next Session Starts Here
-1. VERIFY: Anthropic cache rate recovering on dashboard (should be 90%+ within a few requests)
+1. Verify shadow promotion pipeline working end-to-end (cron + facts visible in Karma context)
 2. Fix DPO pair content — proposed/preferred fields writing as None instead of actual response text
-3. Karma's P3: seed Aria memory graph with lived knowledge (decisions, architecture facts, Colby prefs)
-**Blocker:** None immediate. Monitor cache rate.
+3. Monitor Anthropic cache rate (should be 90%+ after Session 87c fix)
+**Blocker:** None immediate.
 
 ## Session 86 (2026-03-12) — K2 MCP Server: Evolve aria.py into Karma's structured tool surface
 
