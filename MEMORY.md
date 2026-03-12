@@ -15,7 +15,9 @@
 
 **Reminder:** Reevaluate session-end and resurrect session-start prompts after this work.
 
-**Status:** Design doc + GSD files written. Phase 1 implementation NEXT.
+**Phase 1 status:** ✅ COMPLETE — MAX_TOOL_ITERATIONS 12, sudo verified, batch guidance in system prompt. Deployed + verified.
+**Phase 2 status:** ✅ COMPLETE — k2_tools.py (9 tools, 23 TDD tests), aria.py patched with /api/tools/list + /api/tools/execute, hub-bridge server.js has k2.* TOOL_DEFINITIONS + executeToolCall routing (9 TDD tests). Integration tested from vault-neo — all tools pass.
+**Phase 2 deploy:** PENDING — need hub-bridge rebuild on vault-neo.
 
 ## Session 85 (2026-03-12) — EMERGENCY: Fix Karma's broken memory + system prompt
 

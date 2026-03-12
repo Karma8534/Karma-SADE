@@ -1108,6 +1108,107 @@ const TOOL_DEFINITIONS = [
       required: ["command"],
     },
   },
+  // ── K2 Structured Tools (Phase 2 — MCP surface on K2) ──
+  {
+    name: "k2.file_read",
+    description: "Read a file on K2 with metadata (size, modified, exists). Use for inspecting K2 code, configs, logs.",
+    input_schema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Absolute path on K2 filesystem (e.g. '/mnt/c/dev/Karma/k2/aria/aria.py')" },
+      },
+      required: ["path"],
+    },
+  },
+  {
+    name: "k2.file_write",
+    description: "Write content to a file on K2. Creates parent directories if needed. Use for creating/updating code on K2.",
+    input_schema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Absolute path on K2 to write" },
+        content: { type: "string", description: "File content to write" },
+      },
+      required: ["path", "content"],
+    },
+  },
+  {
+    name: "k2.file_list",
+    description: "List directory contents on K2 with optional glob filter. Use to explore K2 filesystem.",
+    input_schema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Directory path on K2 to list" },
+        pattern: { type: "string", description: "Optional glob pattern (e.g. '*.py')" },
+      },
+      required: ["path"],
+    },
+  },
+  {
+    name: "k2.file_search",
+    description: "Search for a regex pattern in files under a K2 directory (recursive grep).",
+    input_schema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Directory on K2 to search in" },
+        pattern: { type: "string", description: "Regex pattern to match" },
+      },
+      required: ["path", "pattern"],
+    },
+  },
+  {
+    name: "k2.python_exec",
+    description: "Execute Python code on K2 and return stdout/stderr/exit_code. Use for testing, data processing, or running scripts.",
+    input_schema: {
+      type: "object",
+      properties: {
+        code: { type: "string", description: "Python code to execute on K2" },
+      },
+      required: ["code"],
+    },
+  },
+  {
+    name: "k2.service_status",
+    description: "Check systemd service status on K2 (e.g. aria, ollama).",
+    input_schema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Service name (e.g. 'aria', 'ollama')" },
+      },
+      required: ["name"],
+    },
+  },
+  {
+    name: "k2.service_restart",
+    description: "Restart a systemd service on K2 (requires sudo, which karma user has).",
+    input_schema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Service name to restart" },
+      },
+      required: ["name"],
+    },
+  },
+  {
+    name: "k2.scratchpad_read",
+    description: "Read Karma's K2 scratchpad (working memory between sessions). Contains beads framework, session notes, active candidates.",
+    input_schema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "k2.scratchpad_write",
+    description: "Write to Karma's K2 scratchpad. Mode: 'append' (default) or 'replace'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        content: { type: "string", description: "Content to write" },
+        mode: { type: "string", enum: ["append", "replace"], description: "Write mode (default: append)" },
+      },
+      required: ["content"],
+    },
+  },
 ];
 
 // Map of whitelisted file aliases to actual paths
@@ -1408,6 +1509,31 @@ async function executeToolCall(toolName, toolInput, writeId = null, ariaSessionI
         return { ok: true, library, url, content: text, chars: text.length };
       } catch (e) {
         return { error: "fetch_error", message: e.message, url };
+      }
+    }
+
+    // k2.* tools -- route to K2's structured MCP surface via /api/tools/execute
+    if (toolName.startsWith("k2.")) {
+      const k2ToolName = toolName.slice(3); // strip "k2." prefix
+      const ARIA_KEY = process.env.ARIA_SERVICE_KEY || "";
+      const k2ToolUrl = `${ARIA_URL}/api/tools/execute`;
+      try {
+        console.log(`[TOOL-API] k2.* routing: ${toolName} → ${k2ToolName}`);
+        const r = await fetch(k2ToolUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Aria-Service-Key": ARIA_KEY,
+          },
+          body: JSON.stringify({ tool: k2ToolName, input: toolInput }),
+          signal: AbortSignal.timeout(35000),
+        });
+        const result = await r.json();
+        console.log(`[TOOL-API] k2.* result: ok=${result.ok}, tool=${k2ToolName}`);
+        return result;
+      } catch (e) {
+        console.warn(`[TOOL-API] k2.* routing failed: ${e.message}`);
+        return { error: "k2_network_error", message: e.message, tool: toolName };
       }
     }
 
