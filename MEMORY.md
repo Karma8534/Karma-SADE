@@ -1,3 +1,22 @@
+## Session 86 (2026-03-12) — K2 MCP Server: Evolve aria.py into Karma's structured tool surface
+
+**Problem:** Karma's entire K2 interaction funnels through `shell_run` — one unstructured tool with 5-iteration cap. K2 is a full machine (i9, 64GB, RTX 4070, Python, Ollama) but Karma accesses it through a keyhole.
+
+**Root cause:** `shell_run` was a quick bridge (Session 84d). Works but doesn't scale to Karma as autonomous agent.
+
+**Design approved:** Evolve aria.py into MCP-style structured tool surface. Incremental, TDD verified.
+
+**Phase 1 (immediate):** Fix 3 blockers — MAX_TOOL_ITERATIONS 5→12, sudoers for karma on K2, batch command guidance.
+**Phase 2:** Add `/api/tools/list` + `/api/tools/execute` to aria.py with typed tools (file_read, file_write, python_exec, service_restart, scratchpad, beads).
+**Phase 3:** Hub-bridge discovers K2 tools dynamically at startup, registers as `k2.*` TOOL_DEFINITIONS.
+**Phase 4:** Karma self-modification loop (read code → propose change → Colby 👍 → write → restart → discover).
+
+**Key insight from Colby:** "Karma should just be the mouthpiece. K2 in its entirety should be natively accessible."
+
+**Reminder:** Reevaluate session-end and resurrect session-start prompts after this work.
+
+**Status:** Design doc + GSD files written. Phase 1 implementation NEXT.
+
 ## Session 85 (2026-03-12) — EMERGENCY: Fix Karma's broken memory + system prompt
 
 **Root causes:** 5 confirmed — (1) tools contradiction in system prompt (line 254 "no tools in standard" vs line 69 "tools always available"), (2) MEMORY_MD_TAIL slashed 3000→800 chars, (3) K2 memory query hardcoded to "Colby", (4) K2 scratchpad/shadow.md not wired into context, (5) accumulated drift from previous CC sessions.

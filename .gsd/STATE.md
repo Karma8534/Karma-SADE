@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-12T10:30:00Z
-**Session:** 85 (Emergency fix — system prompt contradictions, K2 ownership, memory context, working memory wiring)
+**Last updated:** 2026-03-12T16:30:00Z
+**Session:** 86 (K2 MCP Server design — evolve aria.py into structured tool surface)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -70,7 +70,9 @@
 
 ## Active Blockers
 
-**None.**
+1. **MAX_TOOL_ITERATIONS = 5** — Karma hits tool_loop_exceeded during multi-step K2 exploration. Fix: raise to 12.
+2. **No sudo on K2** — `karma` user can't restart aria.service after code changes. Fix: sudoers entry.
+3. **Raw shell_run output** — Unstructured text wastes iterations on parsing. Fix: structured MCP tools on aria.py.
 
 ---
 

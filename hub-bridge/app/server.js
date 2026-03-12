@@ -1445,7 +1445,7 @@ async function callLLMWithTools(model, messages, maxTokens, writeId = null, aria
 
   let allMessages = [...apiMessages];
   let iterations = 0;
-  const MAX_TOOL_ITERATIONS = 5;
+  const MAX_TOOL_ITERATIONS = 12;
 
   while (iterations < MAX_TOOL_ITERATIONS) {
     iterations++;
@@ -1495,7 +1495,7 @@ async function callGPTWithTools(messages, maxTokens, model, writeId = null, aria
     }));
     let allMessages = [...messages];
     let iterations = 0;
-    const MAX_ITERATIONS = 5;
+    const MAX_ITERATIONS = 12;
 
     // Use passed-in model; fall back to MODEL_DEFAULT via chooseModel (Decision #2 — GLM primary)
     const actualModel = model || chooseModel(false, env);
@@ -1567,7 +1567,7 @@ async function callK2WithTools(messages, maxTokens, writeId = null, ariaSessionI
   }));
   let allMessages = [...messages];
   let iterations = 0;
-  const MAX_ITERATIONS = 5;
+  const MAX_ITERATIONS = 12;
 
   while (iterations < MAX_ITERATIONS) {
     iterations++;

@@ -233,7 +233,11 @@
 | K2 Worker | MANDATORY state-write protocol in system prompt | ✅ DONE (Session 84b) |
 | K2 Worker | shell_run tool — Karma direct K2 shell access | ✅ DONE (Session 84d) |
 | K2 Worker | Prompt caching (Anthropic ephemeral cache_control) | ⏳ NEXT |
-| K2 Worker | K2 ownership/agency breakthrough checkpoint to ledger | ⏳ NEXT |
+| K2 Worker | K2 ownership/agency breakthrough checkpoint to ledger | ✅ DONE (Session 85) |
+| v13 | K2 MCP Phase 1: Fix 3 blockers (MAX_TOOL_ITERATIONS, sudo, batch guidance) | ⏳ NEXT |
+| v13 | K2 MCP Phase 2: Structured tool registry on aria.py | ⏳ NEXT |
+| v13 | K2 MCP Phase 3: Hub-bridge dynamic tool discovery | ⏳ FUTURE |
+| v13 | K2 MCP Phase 4: Karma self-modification loop | ⏳ FUTURE |
 | K2 Worker | Karma routing logic + single-model collapse | ⏳ FUTURE |
 | K2 Worker | Multi-agent | ⏳ FUTURE |
 
