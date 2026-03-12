@@ -234,9 +234,9 @@
 | K2 Worker | shell_run tool — Karma direct K2 shell access | ✅ DONE (Session 84d) |
 | K2 Worker | Prompt caching (Anthropic ephemeral cache_control) | ⏳ NEXT |
 | K2 Worker | K2 ownership/agency breakthrough checkpoint to ledger | ✅ DONE (Session 85) |
-| v13 | K2 MCP Phase 1: Fix 3 blockers (MAX_TOOL_ITERATIONS, sudo, batch guidance) | ⏳ NEXT |
-| v13 | K2 MCP Phase 2: Structured tool registry on aria.py | ⏳ NEXT |
-| v13 | K2 MCP Phase 3: Hub-bridge dynamic tool discovery | ⏳ FUTURE |
+| v13 | K2 MCP Phase 1: Fix 3 blockers (MAX_TOOL_ITERATIONS, sudo, batch guidance) | ✅ DONE (Session 86) |
+| v13 | K2 MCP Phase 2: Structured tool registry + hub-bridge routing | ✅ DONE (Session 86) |
+| v13 | K2 MCP Phase 3: Hub-bridge dynamic tool discovery | ⏳ NEXT |
 | v13 | K2 MCP Phase 4: Karma self-modification loop | ⏳ FUTURE |
 | K2 Worker | Karma routing logic + single-model collapse | ⏳ FUTURE |
 | K2 Worker | Multi-agent | ⏳ FUTURE |
@@ -270,7 +270,7 @@ K2 (192.168.0.226) not intended as active worker. Consciousness loop runs on dro
 
 ---
 
-**Last updated:** 2026-03-11 (Session 81 — v11 Aria integration, model upgrade, cap increase)
+**Last updated:** 2026-03-12 (Session 86 — v13 K2 MCP Phase 1+2 complete)
 **Owner:** Claude Code (updates on Colby approval)
 
 ---
