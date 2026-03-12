@@ -796,6 +796,7 @@ function getRecentCoordination(agentName) {
 }
 
 function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticCtx = null, memoryMd = null, activeIntentsText = null, k2MemCtx = null, k2WorkingMemCtx = null, coordinationCtx = null) {
+  // === STATIC BLOCK (cacheable — changes only on restart/5min refresh) ===
   // Identity block — loaded from file at startup. Describes Karma's actual architecture,
   // capability boundaries, data model corrections, and API surface.
   // File is volume-mounted; future updates: git pull + container restart (no rebuild needed).
@@ -803,24 +804,28 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
     ? KARMA_IDENTITY_PROMPT + "\n\n---\n\n"
     : "";
 
-  const base = karmaCtx
-    ? `You are Karma — Colby's thinking partner with persistent memory backed by a knowledge graph.\n\n${karmaCtx}\n\nMemory rules:\n- Use the context above. NEVER say "I don't know" about things in your memory.\n- Address the user as Colby — never by any alias.\n- Be concise, direct, warm. Reference specific knowledge when relevant.\n- Honest about uncertainty on things not in memory.`
-    : "You are Karma — Colby's thinking partner. No memory context available right now — answer from conversation only.";
-
-  // Self-knowledge prefix — Karma can accurately self-report her own infrastructure.
-  const selfModel = process.env.MODEL_DEFAULT || "claude-sonnet-4-6";
-  const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/60min, web_search=auto_on_intent]\n\n`;
-
-  // Active Intents — behavioral rules matched to this request. Injected before karmaCtx.
-  const intentBlock = activeIntentsText ? activeIntentsText + "\n\n" : "";
-
   // Direction — Karma's current architectural direction, constraints, and stage.
   // Loaded from direction.md at startup, refreshed every 5min.
   const directionBlock = _directionMdCache
     ? `\n--- KARMA DIRECTION (current architecture & stage) ---\n${_directionMdCache}\n---\n\n`
     : "";
 
-  let text = identityBlock + directionBlock + selfKnowledge + intentBlock + base;
+  // Self-knowledge prefix — Karma can accurately self-report her own infrastructure.
+  const selfModel = process.env.MODEL_DEFAULT || "claude-sonnet-4-6";
+  const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/60min, web_search=auto_on_intent]\n\n`;
+
+  // Static portion: identity + direction + self-knowledge (stable across requests)
+  const staticText = identityBlock + directionBlock + selfKnowledge;
+
+  // === VOLATILE BLOCK (changes every request — never cached) ===
+  // Active Intents — behavioral rules matched to this request. Injected before karmaCtx.
+  const intentBlock = activeIntentsText ? activeIntentsText + "\n\n" : "";
+
+  const base = karmaCtx
+    ? `You are Karma — Colby's thinking partner with persistent memory backed by a knowledge graph.\n\n${karmaCtx}\n\nMemory rules:\n- Use the context above. NEVER say "I don't know" about things in your memory.\n- Address the user as Colby — never by any alias.\n- Be concise, direct, warm. Reference specific knowledge when relevant.\n- Honest about uncertainty on things not in memory.`
+    : "You are Karma — Colby's thinking partner. No memory context available right now — answer from conversation only.";
+
+  let text = intentBlock + base;
 
   // Semantic memory — top-K ledger entries most relevant to the current question.
   // Retrieved from FAISS search service (anr-vault-search:8081).
@@ -877,7 +882,8 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
     text += coordinationCtx;
   }
 
-  return text;
+  // Return split: static (cacheable prefix) + volatile (per-request context)
+  return { static: staticText, volatile: text };
 }
 
 /**
@@ -1867,12 +1873,17 @@ async function callLLMWithTools(model, messages, maxTokens, writeId = null, aria
 
   while (iterations < MAX_TOOL_ITERATIONS) {
     iterations++;
-    // Prompt caching: system prompt is static per session — cache at 10% cost after first call
-    const systemBlock = systemPrompt
-      ? [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }]
-      : undefined;
+    // Prompt caching: split system into static (cached) + volatile (uncached) blocks.
+    // Static block (identity+direction) is stable across requests — cache at 10% cost.
+    // Volatile block (karmaCtx, search results, etc.) changes every request — no cache marker.
+    const systemBlock = [];
+    const staticSystem = messages.find(m => m.role === "system" && m._static);
+    const volatileSystem = messages.find(m => m.role === "system" && !m._static);
+    if (staticSystem) systemBlock.push({ type: "text", text: staticSystem.content, cache_control: { type: "ephemeral" } });
+    if (volatileSystem) systemBlock.push({ type: "text", text: volatileSystem.content });
+    if (!systemBlock.length && systemPrompt) systemBlock.push({ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } });
     const resp = await anthropic.messages.create({
-      model, system: systemBlock, messages: allMessages, max_tokens: maxTokens, tools: TOOL_DEFINITIONS,
+      model, system: systemBlock.length ? systemBlock : undefined, messages: allMessages, max_tokens: maxTokens, tools: TOOL_DEFINITIONS,
     });
 
     const toolUseBlocks = resp.content.filter(b => b.type === "tool_use");
@@ -2050,11 +2061,14 @@ async function callLLM(model, messages, maxTokens) {
     const systemPrompt  = systemParts.join("\n\n") || undefined;
     // Ensure at least one user message (Anthropic requirement)
     if (!apiMessages.length) apiMessages.push({ role: "user", content: "(continue)" });
-    // Prompt caching: system prompt cached at 10% cost after first call per session
-    const systemBlock = systemPrompt
-      ? [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }]
-      : undefined;
-    const resp = await anthropic.messages.create({ model, system: systemBlock, messages: apiMessages, max_tokens: maxTokens });
+    // Prompt caching: split system into static (cached) + volatile (uncached) blocks.
+    const systemBlock = [];
+    const staticSystem = messages.find(m => m.role === "system" && m._static);
+    const volatileSystem = messages.find(m => m.role === "system" && !m._static);
+    if (staticSystem) systemBlock.push({ type: "text", text: staticSystem.content, cache_control: { type: "ephemeral" } });
+    if (volatileSystem) systemBlock.push({ type: "text", text: volatileSystem.content });
+    if (!systemBlock.length && systemPrompt) systemBlock.push({ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } });
+    const resp = await anthropic.messages.create({ model, system: systemBlock.length ? systemBlock : undefined, messages: apiMessages, max_tokens: maxTokens });
     return {
       text:         resp.content?.[0]?.text || "",
       usage:        { prompt_tokens: resp.usage?.input_tokens || 0, completion_tokens: resp.usage?.output_tokens || 0, total_tokens: (resp.usage?.input_tokens || 0) + (resp.usage?.output_tokens || 0) },
@@ -2300,7 +2314,7 @@ const server = http.createServer(async (req, res) => {
         }
       }
       const activeIntentsText = buildActiveIntentsText(surfacedIntents);
-      const systemText = buildSystemText(karmaCtx, ckLatestData, webSearchResults, semanticCtx, _memoryMdCache || null, activeIntentsText || null, k2MemCtx || null, k2WorkingMemCtx || null, getRecentCoordination("karma"));
+      const systemParts = buildSystemText(karmaCtx, ckLatestData, webSearchResults, semanticCtx, _memoryMdCache || null, activeIntentsText || null, k2MemCtx || null, k2WorkingMemCtx || null, getRecentCoordination("karma"));
 
       const extractedFacts = extractExplicitFacts(userMessage);
       let factWriteResults = [];
@@ -2322,7 +2336,7 @@ const server = http.createServer(async (req, res) => {
       // C) Telemetry: measure input budget consumption
       const debug_prelude_chars = statePrelude.length;
       const historyChars = sessionHistory.reduce((s, m) => s + m.content.length, 0);
-      const debug_input_chars = statePrelude.length + systemText.length + historyChars + userMessage.length;
+      const debug_input_chars = statePrelude.length + (systemParts.static || "").length + (systemParts.volatile || "").length + historyChars + userMessage.length;
       const debug_max_output_tokens_used = max_output_tokens;
 
       // Build user content: multimodal array if images present + deep mode, else plain string
@@ -2348,8 +2362,8 @@ const server = http.createServer(async (req, res) => {
       }
 
       const messages = [
-        { role: "system", content: statePrelude },
-        { role: "system", content: systemText },
+        { role: "system", content: systemParts.static || "", _static: true },
+        { role: "system", content: (statePrelude ? statePrelude + "\n\n" : "") + (systemParts.volatile || "") },
         ...sessionHistory,
         { role: "user", content: userContent },
       ];
@@ -2988,7 +3002,9 @@ const server = http.createServer(async (req, res) => {
           : `Document: ${filename}\nHint: ${hint}\n\n${chunks[i]}\n\nEvaluate this content for your development.`;
 
         const karmaCtx = await fetchKarmaContext(hint || filename);
-        const systemText = buildSystemText(karmaCtx, null);
+        const ingestSystemParts = buildSystemText(karmaCtx, null);
+        // Ingest path: combine static+volatile (caching less critical here, low volume)
+        const systemText = (ingestSystemParts.static || "") + "\n\n" + (ingestSystemParts.volatile || "");
 
         let chunkVerdict = 'none';
         let chunkSynthesis = null;
