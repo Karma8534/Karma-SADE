@@ -2336,11 +2336,13 @@ const server = http.createServer(async (req, res) => {
         }
         userContent = contentArr;
       } else if (imageBlocks.length > 0 && !deep_mode) {
-        // Standard mode has no vision — tell user to use Deep Mode
-        const names = imageBlocks.map(i => i.fileName).join(", ");
-        userContent = userMessage
-          ? `${userMessage}\n\n[Attached image(s): ${names} — vision requires Deep Mode. Enable Deep Mode to analyze images.]`
-          : `[Attached image(s): ${names} — vision requires Deep Mode. Enable Deep Mode to analyze images.]`;
+        // Standard mode (Sonnet 4-6) supports vision — build multimodal array
+        const contentArr = [];
+        if (userMessage) contentArr.push({ type: "text", text: userMessage });
+        for (const img of imageBlocks) {
+          contentArr.push({ type: "image", source: { type: "base64", media_type: img.mediaType, data: img.data } });
+        }
+        userContent = contentArr;
       } else {
         userContent = userMessage;
       }

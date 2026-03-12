@@ -72,11 +72,20 @@
 ### Decision #36: MODEL_DEFAULT switched to claude-sonnet-4-6 (2026-03-12, LOCKED)
 Haiku 4.5 ($1/$5 per 1M) too weak for peer behavior — ignores 28K system prompt behavioral directives, defaults to chatbot status dumps despite operational status table and coordination messages being correctly injected. Sonnet 4-6 ($3/$15 per 1M) for both MODEL_DEFAULT and MODEL_DEEP. routing.js ALLOWED_DEFAULT_MODELS updated. hub.env pricing updated to $3/$15. Monthly cost increase ~3x per request but Karma can actually follow instructions.
 
+## Session 87c (2026-03-12) — Panel Fix + Vision Fix + Karma Self-Audit
+
+**Done:**
+- Coordination panel: resolved/timeout entries now hidden from UI (was showing all statuses). Correct status labels for pending/acknowledged/responded. Commit c78fbb6.
+- Vision in standard mode: removed "requires Deep Mode" gate. Sonnet 4-6 supports multimodal natively — both standard and deep now build image content arrays.
+- Karma self-audit verified: P4 (session hydration) WORKING despite Karma claiming "unproven". P5 (DPO pairs) has 112 entries but proposed/preferred fields are None — hollow pairs.
+
+**claude-mem observations:** #5728 (coord panel fix), #5734 (audit verification)
+
 ## Next Session Starts Here
-1. Verify Karma behaves differently on Sonnet — acts from operational table, addresses coordination messages
-2. Karma↔CC behavioral test — have Karma post to CC via coordination_post
-3. If JSON truncation recurs: increase HUB_MAX_OUTPUT_TOKENS_DEFAULT from 3000 to 4096
-**Blocker:** If Sonnet still regresses, the system prompt itself needs radical simplification (28K → ~8K)
+1. Fix DPO pair content — proposed/preferred fields writing as None instead of actual response text
+2. If JSON truncation recurs: increase HUB_MAX_OUTPUT_TOKENS_DEFAULT from 3000 to 4096
+3. Karma's P3: seed Aria memory graph with lived knowledge (decisions, architecture facts, Colby prefs)
+**Blocker:** None immediate. Sonnet model live, vision enabled, panel clearing.
 
 ## Session 86 (2026-03-12) — K2 MCP Server: Evolve aria.py into Karma's structured tool surface
 
