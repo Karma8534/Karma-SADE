@@ -106,11 +106,41 @@ Haiku 4.5 ($1/$5 per 1M) too weak for peer behavior — ignores 28K system promp
 
 **claude-mem observations:** #5852 (proof: shadow pipeline deployed)
 
+## Session 88 (2026-03-13) — Karma Autonomous Evolution Loop (yoyo v4)
+
+**Done:**
+- Built karma_yoyo_v4.py with TITANS memory architecture (three-tier: working/long-term/persistent)
+- TITANS features: surprise scoring, adaptive forgetting, momentum, reinforcement-based rule decay
+- Deployed to K2 as systemd service (karma-yoyo.service), replaces hollow v3
+- Directive v2.0 written and deployed to K2 cache
+- Seeded 3 initial issues (health check, first rule, self-evolve gather_context)
+- **Karma took her first real autonomous action** — Cycle #11: "fix: Adding issue-reading to gather_context", wrote 321 chars to disk
+
+**Key technical findings:**
+- qwen3:30b /api/chat BROKEN — thinking mode returns empty strings, /no_think also empty
+- devstral:latest /api/chat WORKS — 27s/cycle, valid JSON, coding-focused
+- Context must be minimal for local models — issues FIRST, self-source omitted, directive trimmed
+- Regex JSON fallback parser needed — devstral puts code in details with unescaped newlines
+- TITANS surprise score is for memory encoding strength, NOT action gating
+
+**Files changed/created:**
+- scripts/karma_yoyo_v4.py (new — autonomous evolution loop)
+- scripts/karma_directive.md (new — v2.0 directive for K2)
+
+**Deployed to K2:**
+- /mnt/c/dev/Karma/k2/scripts/karma_yoyo_v4.py
+- /mnt/c/dev/Karma/k2/cache/karma_directive.md
+- /mnt/c/dev/Karma/k2/cache/yoyo_issues.jsonl (3 seed issues)
+- karma-yoyo.service: OLLAMA_MODEL=devstral:latest, LOOP_INTERVAL=300, OLLAMA_URL=http://172.22.240.1:11434
+
+**claude-mem observations:** #5895 (proof: first action), #5898 (direction: model candidates), #5900 (pitfall: qwen3 broken), #5901 (decision: TITANS architecture)
+
 ## Next Session Starts Here
-1. Verify shadow promotion pipeline working end-to-end (cron + facts visible in Karma context)
-2. Fix DPO pair content — proposed/preferred fields writing as None instead of actual response text
-3. Monitor Anthropic cache rate (should be 90%+ after Session 87c fix)
-**Blocker:** None immediate.
+1. Check Karma's yoyo journal — how many cycles ran, what did she do overnight?
+2. Model candidates for self-benchmarking: rnj-1 (8B, code), Nemotron 3 Nano (30B/3.5B active MoE)
+3. Fix DPO pair content — proposed/preferred fields writing as None
+4. Monitor Anthropic cache rate (should be 90%+ after Session 87c fix)
+**Blocker:** None. Karma's loop is running autonomously on K2.
 
 ## Session 86 (2026-03-12) — K2 MCP Server: Evolve aria.py into Karma's structured tool surface
 
