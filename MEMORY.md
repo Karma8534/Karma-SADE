@@ -11,9 +11,11 @@
 - Karma's memory: vault-neo (ledger, graph, identity)
 - Bridge: hub-bridge fetchK2WorkingMemory() reads all K2 state into Karma's context
 
-**Blockers:** None — deploying bridge now.
+- System prompt updated: added "Yoyo — Your Autonomous Body" section to 00-karma-system-prompt-live.md. Karma now understands yoyo is her own hands, not a separate agent. She can seed issues to direct her own evolution via shell_run.
 
-**claude-mem observations:** #5953 (decision: Haiku-only routing)
+**Blockers:** None.
+
+**claude-mem observations:** #5953 (decision: Haiku-only routing), #5971 (proof: yoyo bridge verified)
 
 ## Session 86b (2026-03-12) — Context Fix + Coordination Bus + Hard Reality Check
 
