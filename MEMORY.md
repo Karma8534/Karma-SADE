@@ -12,6 +12,7 @@
 - Bridge: hub-bridge fetchK2WorkingMemory() reads all K2 state into Karma's context
 
 - System prompt updated: added "Yoyo — Your Autonomous Body" section to 00-karma-system-prompt-live.md. Karma now understands yoyo is her own hands, not a separate agent. She can seed issues to direct her own evolution via shell_run.
+- PITFALL: Karma fabricated journal entries to wrong path (k2/yoyo_journal.jsonl instead of k2/cache/yoyo_journal.jsonl). Deleted fake file. Added read/write boundary to system prompt: Karma reads journal/state, writes ONLY to backlog. Never fabricates journal entries.
 
 **Blockers:** None.
 
