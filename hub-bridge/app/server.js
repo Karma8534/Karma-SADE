@@ -306,11 +306,11 @@ async function fetchK2MemoryGraph(query = "Colby") {
   }
 }
 
-// K2 working memory — scratchpad.md + shadow.md from K2 cache.
+// K2 working memory — scratchpad, shadow, yoyo state/journal/backlog from K2 cache.
 // Fetched via /api/exec (shell_run endpoint). Injected into buildSystemText for session continuity.
 let _k2WorkingMemCache = null;
 let _k2WorkingMemCacheAt = 0;
-const K2_WORKING_MEM_MAX_CHARS = 4000;
+const K2_WORKING_MEM_MAX_CHARS = 6000;
 
 async function fetchK2WorkingMemory() {
   if (!ARIA_SERVICE_KEY || !ARIA_URL) return null;
@@ -319,7 +319,7 @@ async function fetchK2WorkingMemory() {
     return _k2WorkingMemCache;
   }
   try {
-    const cmd = "echo '=== SCRATCHPAD ===' && cat /mnt/c/dev/Karma/k2/cache/scratchpad.md 2>/dev/null || echo '(empty)' && echo '=== SHADOW ===' && tail -c 1500 /mnt/c/dev/Karma/k2/cache/shadow.md 2>/dev/null || echo '(empty)'";
+    const cmd = "echo '=== SCRATCHPAD ===' && cat /mnt/c/dev/Karma/k2/cache/scratchpad.md 2>/dev/null || echo '(empty)' && echo '=== SHADOW ===' && tail -c 1500 /mnt/c/dev/Karma/k2/cache/shadow.md 2>/dev/null || echo '(empty)' && echo '=== YOYO STATE ===' && cat /mnt/c/dev/Karma/k2/cache/yoyo_state.json 2>/dev/null || echo '(empty)' && echo '=== YOYO JOURNAL (last 20) ===' && tail -20 /mnt/c/dev/Karma/k2/cache/yoyo_journal.jsonl 2>/dev/null || echo '(empty)' && echo '=== YOYO BACKLOG ===' && cat /mnt/c/dev/Karma/k2/cache/yoyo_issues.jsonl 2>/dev/null || echo '(empty)'";
     const res = await fetch(`${ARIA_URL}/api/exec`, {
       method: "POST",
       headers: {
@@ -872,10 +872,10 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
     text += `\n\n--- ARIA K2 MEMORY GRAPH ---\n${k2MemCtx}\n---`;
   }
 
-  // K2 working memory — scratchpad.md (structured notes) + shadow.md (raw session capture).
+  // K2 working memory — scratchpad, shadow, yoyo state/journal/backlog.
   // Fetched from K2 via /api/exec at request time. Non-blocking; omitted if K2 unreachable.
   if (k2WorkingMemCtx) {
-    text += `\n\n--- K2 WORKING MEMORY (scratchpad + shadow) ---\n${k2WorkingMemCtx}\n---`;
+    text += `\n\n--- K2 WORKING MEMORY + YOYO STATE ---\n${k2WorkingMemCtx}\n---`;
   }
 
   // Coordination bus — recent agent-to-agent messages relevant to this agent.

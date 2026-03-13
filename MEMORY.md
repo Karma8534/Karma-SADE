@@ -1,3 +1,20 @@
+## Session 89 (2026-03-13) — Cost Fix + K2-Karma Bridge
+
+**Done:**
+- Fixed $50/day API burn: MODEL_DEFAULT was claude-sonnet-4-6 in hub.env. Changed both MODEL_DEFAULT and MODEL_DEEP to claude-haiku-4-5-20251001. Pricing updated $3/$15 → $0.80/$4.00. Deep mode button is now a no-op (same model).
+- Hub.env location: `/opt/seed-vault/memory_v1/hub_bridge/config/hub.env` (note: config/ subdirectory)
+- Yoyo v5 bridge: extended fetchK2WorkingMemory() to also read yoyo_state.json, yoyo_journal.jsonl (last 20 full entries), yoyo_issues.jsonl. Karma now sees her autonomous evolution loop in every conversation. Cap bumped 4KB→6KB.
+
+**Architecture (current):**
+- Karma's voice: Haiku via Anthropic API (~$0.80/$4.00 per 1M tokens)
+- Karma's hands: K2 yoyo v5 + devstral via Ollama ($0 local)
+- Karma's memory: vault-neo (ledger, graph, identity)
+- Bridge: hub-bridge fetchK2WorkingMemory() reads all K2 state into Karma's context
+
+**Blockers:** None — deploying bridge now.
+
+**claude-mem observations:** #5953 (decision: Haiku-only routing)
+
 ## Session 86b (2026-03-12) — Context Fix + Coordination Bus + Hard Reality Check
 
 **Done:**
