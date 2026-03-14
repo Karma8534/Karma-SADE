@@ -26,18 +26,9 @@ def read_jsonl_tail(path, n=20):
         return []
 
 def get_token():
+    # HUB_AUTH_TOKEN env var IS the token — use it directly
     if ARIA_KEY:
-        # Fetch from vault-neo via local ssh tunnel
-        try:
-            r = subprocess.run(
-                ["ssh", "-p", "2223", "-l", "karma", "-o", "StrictHostKeyChecking=no",
-                 "-o", "ConnectTimeout=5", "localhost",
-                 "ssh -o StrictHostKeyChecking=no vault-neo 'cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt'"],
-                capture_output=True, text=True, timeout=10
-            )
-            return r.stdout.strip()
-        except Exception:
-            pass
+        return ARIA_KEY
     return None
 
 def post_to_bus(token, content, to="all", urgency="informational"):
