@@ -67,6 +67,33 @@
   #header .status { color: #6b7280; font-size: 11px; margin-left: auto; }
   #header .dot { width: 6px; height: 6px; border-radius: 50%; background: #34d399; display: inline-block; }
 
+  /* Persona status bar */
+  #persona-bar {
+    display: flex;
+    gap: 14px;
+    padding: 5px 16px;
+    background: #0a0a0f;
+    border-bottom: 1px solid #1f2937;
+    flex-shrink: 0;
+    align-items: center;
+  }
+  .persona {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    opacity: 0.85;
+  }
+  .persona-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .p-green  { background: #34d399; }
+  .p-amber  { background: #fbbf24; }
+  .p-grey   { background: #374151; }
+
   /* Feed */
   #feed {
     flex: 1;
@@ -185,6 +212,7 @@
     <span class="dot" id="status-dot"></span>
     <span class="status" id="status-text">connecting...</span>
   </div>
+  <div id="persona-bar"></div>
   <div id="feed"></div>
   <div id="input-bar">
     <select id="to-select">
@@ -254,6 +282,29 @@ function launch() {
   });
 }
 
+const PERSONAS = [
+  { name: 'karma', color: '#a78bfa' },
+  { name: 'cc',    color: '#34d399' },
+  { name: 'kcc',   color: '#67e8f9' },
+  { name: 'codex', color: '#fb923c' },
+  { name: 'kiki',  color: '#f472b6' },
+  { name: 'asher', color: '#a3e635' },
+  { name: 'colby', color: '#f9fafb' },
+];
+const lastSeen = {}; // agent -> ms timestamp
+
+function updatePersonaBar() {
+  const bar = document.getElementById('persona-bar');
+  const now = Date.now();
+  bar.innerHTML = PERSONAS.map(p => {
+    const ms = lastSeen[p.name];
+    const ago = ms ? (now - ms) : Infinity;
+    const dotClass = ago < 5 * 60000 ? 'p-green' : ago < 15 * 60000 ? 'p-amber' : 'p-grey';
+    const label = ms ? (ago < 60000 ? 'now' : `${Math.floor(ago/60000)}m`) : '—';
+    return `<span class="persona"><span class="persona-dot ${dotClass}"></span><span style="color:${p.color}">${p.name}</span><span style="color:#4b5563">${label}</span></span>`;
+  }).join('');
+}
+
 async function poll() {
   try {
     const r = await fetch(`${BASE}/v1/coordination/recent?limit=50`, {
@@ -265,10 +316,13 @@ async function poll() {
       (a, b) => new Date(a.created_at) - new Date(b.created_at)
     );
     for (const e of entries) {
+      const t = new Date(e.created_at).getTime();
+      if (e.from && t > (lastSeen[e.from] || 0)) lastSeen[e.from] = t;
       if (seenIds.has(e.id)) continue;
       seenIds.add(e.id);
       renderEntry(e, true);
     }
+    updatePersonaBar();
     setStatus('live', `${seenIds.size} messages`);
   } catch (err) {
     setStatus('error', `error: ${err.message}`);
