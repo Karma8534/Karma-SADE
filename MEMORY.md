@@ -1,3 +1,5 @@
+## Task 4-5 Complete (2026-03-13) — Promotion Contract: kiki/evolution->main gate with rollback audit, 7 TDD tests passing
+
 ## Task 2-3 Complete (2026-03-13) — Policy Arbiter: deterministic ALLOW/DENY/REQUIRE_APPROVAL, 10 TDD tests passing
 
 ## Session 91 (2026-03-13) — Anti-Pattern-Matching Gate
