@@ -85,3 +85,17 @@ def test_provenance_written_on_promote(contract, tmp_path):
     prov = json.loads(prov_files[0].read_text())
     assert prov["cycle"] == 5
     assert prov["eligible"] is True
+
+
+def test_rollback_rejects_unapproved_actor(contract):
+    result = contract.rollback("rando", "testing")
+    assert result["rolled_back"] is False
+    assert "not approved" in result["reason"]
+
+
+def test_rollback_dry_run_returns_sha(contract, tmp_path):
+    (tmp_path / ".karma_last_good").write_text("deadbeef")
+    result = contract.rollback("colby", "testing rollback")
+    assert result["rolled_back"] is True
+    assert result["sha"] == "deadbeef"
+    assert result["dry_run"] is True
