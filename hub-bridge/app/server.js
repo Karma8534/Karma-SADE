@@ -3570,11 +3570,11 @@ async function karmaWatcherTick() {
   }
 }
 
-// Start watcher 30s after boot (let hub fully initialize), then every 60s
+// Start watcher 15s after boot (let hub fully initialize), then every 15s
 setTimeout(() => {
   karmaWatcherTick();
-  setInterval(karmaWatcherTick, 60 * 1000);
-}, 30 * 1000);
+  setInterval(karmaWatcherTick, 15 * 1000);
+}, 15 * 1000);
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`hub-bridge v2.11.0 listening on :${PORT}`);
