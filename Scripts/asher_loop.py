@@ -16,7 +16,8 @@ SCRATCHPAD = BASE / "cc_scratchpad.md"
 HUB_TOKEN = os.environ.get("HUB_AUTH_TOKEN", "").strip()
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://172.22.240.1:11434")
 MODEL = os.environ.get("ASHER_MODEL", "devstral:latest")
-INTERVAL = int(os.environ.get("ASHER_INTERVAL", "60"))
+POLL_INTERVAL = int(os.environ.get("ASHER_POLL", "10"))   # bus check every 10s
+THINK_INTERVAL = int(os.environ.get("ASHER_THINK", "300")) # max devstral gap: 5min
 LOG = BASE / "asher_loop.log"
 
 
@@ -154,15 +155,42 @@ Output 3 bullets only."""
 
 
 def main():
-    log("Asher loop starting")
+    import hashlib
+    log("Asher loop starting — event-driven mode (poll 10s, think on delta)")
     if not HUB_TOKEN:
         log("WARNING: HUB_AUTH_TOKEN not set — bus reads will fail")
+
+    last_hash = ""
+    last_think = 0.0
+
     while True:
         try:
-            run_cycle()
+            # Fast poll — check if anything changed
+            bus = read_bus_recent()
+            journal = read_kiki_journal_tail(3)
+            state = read_kiki_state()
+
+            fingerprint = hashlib.md5(
+                json.dumps([
+                    [e["id"] for e in bus],
+                    state.get("cycles", 0),
+                    [e.get("ts", "") for e in journal]
+                ]).encode()
+            ).hexdigest()
+
+            now = time.time()
+            delta = fingerprint != last_hash
+            overdue = (now - last_think) > THINK_INTERVAL
+
+            if delta or overdue:
+                log(f"delta={delta} overdue={overdue} — running cycle")
+                run_cycle()
+                last_hash = fingerprint
+                last_think = now
+            # else silent — nothing changed
         except Exception as e:
-            log(f"cycle error: {e}")
-        time.sleep(INTERVAL)
+            log(f"loop error: {e}")
+        time.sleep(POLL_INTERVAL)
 
 
 if __name__ == "__main__":

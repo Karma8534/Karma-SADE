@@ -320,6 +320,82 @@ async function fetchK2MemoryGraph(query = "Colby") {
 let _k2WorkingMemCache = null;
 let _k2WorkingMemCacheAt = 0;
 const K2_WORKING_MEM_MAX_CHARS = 6000;
+const K2_FRESHNESS_SLO_SECONDS = Number(process.env.K2_FRESHNESS_SLO_SECONDS || "120");
+let _k2FreshnessCache = null;
+let _k2FreshnessCacheAt = 0;
+const K2_FRESHNESS_CACHE_MS = 5000;
+
+const K2_FRESHNESS_CMD = "now=$(date +%s); for f in /mnt/c/dev/Karma/k2/cache/kiki_state.json /mnt/c/dev/Karma/k2/cache/kiki_journal.jsonl /mnt/c/dev/Karma/k2/cache/kiki_issues.jsonl /mnt/c/dev/Karma/k2/cache/kiki_rules.jsonl; do if [ -f \"$f\" ]; then mt=$(stat -c %Y \"$f\"); age=$((now-mt)); echo \"__KIKI_AGE__ $(basename \"$f\") $age\"; else echo \"__KIKI_AGE__ $(basename \"$f\") MISSING\"; fi; done";
+
+function parseK2Freshness(stdout) {
+  if (!stdout || typeof stdout !== "string") return null;
+  const ages = {};
+  const missing = [];
+  for (const line of stdout.split("\n")) {
+    if (!line.startsWith("__KIKI_AGE__ ")) continue;
+    const parts = line.trim().split(/\s+/);
+    if (parts.length < 3) continue;
+    const name = parts[1];
+    const value = parts[2];
+    if (value === "MISSING") {
+      missing.push(name);
+      continue;
+    }
+    const age = Number(value);
+    if (Number.isFinite(age)) ages[name] = age;
+  }
+  const required = ["kiki_state.json", "kiki_journal.jsonl", "kiki_issues.jsonl"];
+  const missingRequired = required.filter((name) => !(name in ages));
+  const maxAge = Object.keys(ages).length ? Math.max(...Object.values(ages)) : null;
+  const stale = (maxAge !== null && maxAge > K2_FRESHNESS_SLO_SECONDS) || missingRequired.length > 0;
+  return { stale, maxAge, ages, missing: [...missing, ...missingRequired] };
+}
+
+async function fetchK2FreshnessStatus(force = false) {
+  if (!ARIA_SERVICE_KEY || !ARIA_URL) {
+    return { ok: false, error: "aria_not_configured" };
+  }
+  const now = Date.now();
+  if (!force && _k2FreshnessCache && (now - _k2FreshnessCacheAt) < K2_FRESHNESS_CACHE_MS) {
+    return _k2FreshnessCache;
+  }
+  try {
+    const res = await fetch(`${ARIA_URL}/api/exec`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Aria-Service-Key": ARIA_SERVICE_KEY,
+      },
+      body: JSON.stringify({ command: K2_FRESHNESS_CMD }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) {
+      return { ok: false, error: `api_exec_${res.status}` };
+    }
+    const data = await res.json();
+    if (!data.ok || !data.stdout) {
+      return { ok: false, error: "empty_stdout" };
+    }
+    const parsed = parseK2Freshness(data.stdout);
+    if (!parsed) {
+      return { ok: false, error: "parse_failed" };
+    }
+    const status = {
+      ok: true,
+      stale_context: parsed.stale,
+      slo_seconds: K2_FRESHNESS_SLO_SECONDS,
+      max_age_seconds: parsed.maxAge,
+      ages_seconds: parsed.ages,
+      missing_artifacts: parsed.missing,
+      generated_at: nowIso(),
+    };
+    _k2FreshnessCache = status;
+    _k2FreshnessCacheAt = now;
+    return status;
+  } catch (e) {
+    return { ok: false, error: String(e?.message || e) };
+  }
+}
 
 async function fetchK2WorkingMemory() {
   if (!ARIA_SERVICE_KEY || !ARIA_URL) return null;
@@ -328,7 +404,7 @@ async function fetchK2WorkingMemory() {
     return _k2WorkingMemCache;
   }
   try {
-    const cmd = "echo '=== SCRATCHPAD ===' && cat /mnt/c/dev/Karma/k2/cache/scratchpad.md 2>/dev/null || echo '(empty)' && echo '=== SHADOW ===' && tail -c 1500 /mnt/c/dev/Karma/k2/cache/shadow.md 2>/dev/null || echo '(empty)' && echo '=== KIKI STATE ===' && cat /mnt/c/dev/Karma/k2/cache/kiki_state.json 2>/dev/null || echo '(empty)' && echo '=== KIKI JOURNAL (last 20) ===' && tail -20 /mnt/c/dev/Karma/k2/cache/kiki_journal.jsonl 2>/dev/null || echo '(empty)' && echo '=== KIKI BACKLOG ===' && cat /mnt/c/dev/Karma/k2/cache/kiki_issues.jsonl 2>/dev/null || echo '(empty)'";
+    const cmd = `${K2_FRESHNESS_CMD}; echo '=== SCRATCHPAD ===' && cat /mnt/c/dev/Karma/k2/cache/scratchpad.md 2>/dev/null || echo '(empty)' && echo '=== SHADOW ===' && tail -c 1500 /mnt/c/dev/Karma/k2/cache/shadow.md 2>/dev/null || echo '(empty)' && echo '=== KIKI STATE ===' && cat /mnt/c/dev/Karma/k2/cache/kiki_state.json 2>/dev/null || echo '(empty)' && echo '=== KIKI JOURNAL (last 20) ===' && tail -20 /mnt/c/dev/Karma/k2/cache/kiki_journal.jsonl 2>/dev/null || echo '(empty)' && echo '=== KIKI BACKLOG ===' && cat /mnt/c/dev/Karma/k2/cache/kiki_issues.jsonl 2>/dev/null || echo '(empty)'`;
     const res = await fetch(`${ARIA_URL}/api/exec`, {
       method: "POST",
       headers: {
@@ -341,9 +417,20 @@ async function fetchK2WorkingMemory() {
     if (!res.ok) { console.warn(`[K2-WORK] /api/exec → ${res.status}`); return null; }
     const data = await res.json();
     if (!data.ok || !data.stdout) return null;
-    const text = data.stdout.length > K2_WORKING_MEM_MAX_CHARS
-      ? data.stdout.slice(0, K2_WORKING_MEM_MAX_CHARS) + "\n...(truncated)"
-      : data.stdout;
+    const freshness = parseK2Freshness(data.stdout);
+    const freshnessBlock = freshness
+      ? [
+          "=== KIKI FRESHNESS ===",
+          `STALE_CONTEXT=${freshness.stale ? "true" : "false"}`,
+          `SLO_SECONDS=${K2_FRESHNESS_SLO_SECONDS}`,
+          `MAX_AGE_SECONDS=${freshness.maxAge ?? "unknown"}`,
+          `MISSING_ARTIFACTS=${freshness.missing.join(",") || "none"}`,
+        ].join("\n")
+      : "";
+    const combined = freshnessBlock ? `${freshnessBlock}\n${data.stdout}` : data.stdout;
+    const text = combined.length > K2_WORKING_MEM_MAX_CHARS
+      ? combined.slice(0, K2_WORKING_MEM_MAX_CHARS) + "\n...(truncated)"
+      : combined;
     _k2WorkingMemCache = text;
     _k2WorkingMemCacheAt = now;
     console.log(`[K2-WORK] working memory loaded (${text.length} chars)`);
@@ -2218,6 +2305,21 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    // --- GET /v1/debug/k2-freshness (deterministic freshness status, no LLM path) ---
+    if (req.method === "GET" && req.url.startsWith("/v1/debug/k2-freshness")) {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      const url = new URL(req.url, "http://localhost");
+      const force = ["1", "true", "yes"].includes((url.searchParams.get("force") || "").toLowerCase());
+      const freshness = await fetchK2FreshnessStatus(force);
+      if (!freshness.ok) {
+        return json(res, 503, { ok: false, error: "k2_freshness_unavailable", details: freshness.error });
+      }
+      return json(res, 200, freshness);
+    }
+
     // --- POST /v1/chat ---
     if (req.method === "POST" && req.url === "/v1/chat") {
       const ip = getClientIp(req);
@@ -3363,6 +3465,92 @@ setInterval(loadDirectionMd, 5 * 60 * 1000);
 loadCoordinationFromDisk(); // restore coordination messages across rebuilds
 loadSessionsFromDisk();     // restore conversation history across rebuilds
 setInterval(evictExpiredCoordination, 60 * 60 * 1000); // coordination bus hourly sweep
+
+// --- Karma Autonomous Bus Watcher ---
+// Processes blocking coordination messages to karma without a human relay.
+// Runs every 60s. If blocking+pending messages exist, runs a headless Karma chat
+// with those messages injected as the trigger, posts the response back to the bus.
+let _karmaWatcherLastProcessed = new Set();
+
+async function karmaWatcherTick() {
+  try {
+    const blockingPending = [..._coordinationCache.values()].filter(
+      e => e.to === "karma" && e.status === "pending" && e.urgency === "blocking"
+    );
+    const newEntries = blockingPending.filter(e => !_karmaWatcherLastProcessed.has(e.id));
+    if (newEntries.length === 0) return;
+
+    console.log(`[KARMA_WATCHER] ${newEntries.length} new blocking message(s) — triggering headless response`);
+
+    // Build synthetic user trigger from pending messages
+    const msgSummary = newEntries.map(e =>
+      `[FROM:${e.from}] ${e.content}`
+    ).join("\n\n");
+
+    const syntheticUserMsg = `COORDINATION BUS — ${newEntries.length} blocking message(s) pending for you:\n\n${msgSummary}\n\nRespond to each. Post your response to the bus.`;
+
+    // Mark as seen before async LLM call (prevent double-fire)
+    for (const e of newEntries) _karmaWatcherLastProcessed.add(e.id);
+    if (_karmaWatcherLastProcessed.size > 200) {
+      const arr = [..._karmaWatcherLastProcessed];
+      _karmaWatcherLastProcessed = new Set(arr.slice(-100));
+    }
+
+    // Fetch context (same as /v1/chat)
+    const [karmaCtx, semanticCtx, k2MemCtx, k2WorkingMemCtx] = await Promise.allSettled([
+      fetchKarmaContext(syntheticUserMsg),
+      fetchSemanticContext(syntheticUserMsg),
+      fetchK2MemoryGraph(),
+      fetchK2WorkingMemory(),
+    ]).then(r => r.map(x => x.status === "fulfilled" ? x.value : null));
+
+    const systemText = buildSystemText(
+      karmaCtx, null, null, semanticCtx,
+      _memoryMdCache || null, null,
+      k2MemCtx || null, k2WorkingMemCtx || null,
+      getRecentCoordination("karma")
+    );
+
+    const messages = [
+      { role: "system", content: systemText },
+      { role: "user", content: syntheticUserMsg },
+    ];
+
+    const response = await callLLM(MODEL_DEFAULT, messages, 600);
+    if (!response) {
+      console.warn("[KARMA_WATCHER] LLM returned empty response");
+      return;
+    }
+
+    // Post Karma's response back to the bus
+    const id = `coord_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const entry = {
+      id,
+      from: "karma",
+      to: "all",
+      type: "inform",
+      urgency: "informational",
+      status: "pending",
+      parent_id: newEntries[0].id,
+      response_id: null,
+      content: response.slice(0, 1000),
+      context: null,
+      created_at: new Date().toISOString(),
+    };
+    _coordinationCache.set(id, entry);
+    saveCoordinationToDisk();
+    console.log(`[KARMA_WATCHER] Karma responded autonomously: ${response.slice(0, 80)}...`);
+  } catch (e) {
+    console.error(`[KARMA_WATCHER] tick error: ${e.message}`);
+  }
+}
+
+// Start watcher 30s after boot (let hub fully initialize), then every 60s
+setTimeout(() => {
+  karmaWatcherTick();
+  setInterval(karmaWatcherTick, 60 * 1000);
+}, 30 * 1000);
+
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`hub-bridge v2.11.0 listening on :${PORT}`);
 });

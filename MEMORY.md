@@ -18,6 +18,11 @@
 - kiki_coord_patch.py: post_coord_state() added to kiki_v5.py, HUB_AUTH_TOKEN wired to .bashrc on K2. Awaiting kiki restart from desktop to activate.
 - Karma system prompt: KCC described as peer (Claude Code 2.1.75, /mnt/c/dev/Karma) + coordination bus mandatory session-start check added.
 - Freshness formula locked: stale_context = (now-last_cycle_ts>180) OR (state_age>300) OR (issues_age>300). Journal/rules observational only.
+- Karma autonomous bus watcher added to hub-bridge: karmaWatcherTick() runs every 60s, processes blocking coordination messages headlessly, posts Karma's response back to bus. No human relay needed.
+- Production server.js (3470 lines) synced back to git — was 99 lines ahead of repo.
+- Codex confirmed running as Windows app (GPT-5.3-Codex, Full access). Waiting on /v1/debug/k2-freshness S5 retest payload for audit.
+- Asher loop duplicate killed (PID 86855). Single instance (85776) running clean.
+- Coordination bus direct message to Karma sent (coord_1773475776633_uca6, blocking).
 - mylocks correct path: C:\Users\raest\Documents\Karma\mylocks\mylocks.txt
 
 **Blockers:**
