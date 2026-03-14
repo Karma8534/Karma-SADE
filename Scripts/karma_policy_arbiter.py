@@ -48,7 +48,8 @@ class PolicyArbiter:
 
         # 2. Financial boundary — named control files
         financial = self.boundary.get("financial_files", [])
-        if any(target_path.endswith(f) for f in financial):
+        target_name = Path(target_path).name
+        if target_name in financial:
             return ArbitratorResult(
                 "DENY", "FINANCIAL_BOUNDARY",
                 f"{target_path} is a financial boundary file"
@@ -85,4 +86,18 @@ class PolicyArbiter:
 
     @staticmethod
     def _matches_any(path: str, patterns: list[str]) -> bool:
-        return any(fnmatch.fnmatch(path, p) for p in patterns)
+        # Normalize separators for cross-platform consistency
+        norm_path = path.replace("\\", "/")
+        for p in patterns:
+            norm_p = p.replace("\\", "/")
+            if fnmatch.fnmatch(norm_path, norm_p):
+                return True
+            # If pattern uses **, also match its trailing filename glob against the
+            # basename so "**/*token*" matches "/some/deep/path/my_token.txt" on Linux.
+            # Only do this when the trailing segment is a meaningful filename glob
+            # (not a bare "**" which would match everything).
+            if "**" in norm_p:
+                basename_pattern = norm_p.split("/")[-1]
+                if basename_pattern and basename_pattern != "**" and fnmatch.fnmatch(Path(path).name, basename_pattern):
+                    return True
+        return False

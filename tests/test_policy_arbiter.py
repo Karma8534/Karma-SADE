@@ -90,3 +90,10 @@ def test_arbiter_result_has_reason_code(arbiter):
     assert r.reason_code
     assert r.reason
     assert r.verdict in ("ALLOW", "DENY", "REQUIRE_APPROVAL")
+
+
+def test_financial_boundary_no_false_suffix_match(arbiter):
+    # "fakehub.env" should NOT match financial_files ["hub.env"]
+    r = arbiter.evaluate("/some/path/fakehub.env", "write", {})
+    # Should NOT be FINANCIAL_BOUNDARY
+    assert r.reason_code != "FINANCIAL_BOUNDARY"
