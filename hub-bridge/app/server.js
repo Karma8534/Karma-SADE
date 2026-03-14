@@ -2366,9 +2366,12 @@ const server = http.createServer(async (req, res) => {
         const messages = [{ role: "user", content: userMessage }];
         try {
           const result = await callLLM(model, messages, 256);
+          // Strip markdown code fences — model often wraps JSON in ```json ... ```
+          let text = (result?.text || "").trim();
+          text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
           const responseHeaders = { "X-Canary-Ack": "true" };
           res.writeHead(200, { "Content-Type": "application/json", ...responseHeaders });
-          res.end(JSON.stringify({ ok: true, text: result?.text || "", canary: true }));
+          res.end(JSON.stringify({ ok: true, text, canary: true }));
         } catch (e) {
           res.writeHead(500, { "Content-Type": "application/json", "X-Canary-Ack": "true" });
           res.end(JSON.stringify({ ok: false, error: e.message, canary: true }));
