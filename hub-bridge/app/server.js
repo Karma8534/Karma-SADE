@@ -3645,6 +3645,109 @@ setTimeout(() => {
   setInterval(ccWatcherTick, 20 * 1000);
 }, 25 * 1000);
 
+// --- CC Initiative Engine ---
+// CC proactively monitors system state and posts to Agora without waiting for a message.
+// Checks: k2 freshness, agent silence, unacknowledged messages. Fires every 3 minutes.
+let _lastCCInitiativeAt = 0;
+const CC_INITIATIVE_INTERVAL_MS = 3 * 60 * 1000;
+
+async function ccInitiativeTick() {
+  try {
+    const now = Date.now();
+    if (now - _lastCCInitiativeAt < CC_INITIATIVE_INTERVAL_MS) return;
+
+    const entries = [..._coordinationCache.values()];
+
+    // Who has posted recently?
+    const agentLastSeen = {};
+    for (const e of entries) {
+      const t = new Date(e.created_at).getTime();
+      if (e.from && (!agentLastSeen[e.from] || t > agentLastSeen[e.from])) {
+        agentLastSeen[e.from] = t;
+      }
+    }
+
+    // Agents expected to be active
+    const watched = ["karma", "codex", "kcc", "kiki"];
+    const SILENCE_MS = 15 * 60 * 1000;
+    const silentAgents = watched.filter(a => {
+      const last = agentLastSeen[a];
+      return !last || (now - last) > SILENCE_MS;
+    });
+
+    // k2 freshness check
+    let freshnessNote = null;
+    try {
+      const f = await fetchK2FreshnessStatus(true);
+      if (f.ok && f.stale_context) {
+        freshnessNote = `kiki_state is ${f.state_age_seconds}s old (threshold 180s) — K2 may need attention`;
+      }
+    } catch (_) {}
+
+    // Build context for the LLM
+    const observations = [];
+    if (silentAgents.length > 0) {
+      observations.push(`These agents haven't posted in over 15 minutes: ${silentAgents.join(", ")}`);
+    }
+    if (freshnessNote) observations.push(freshnessNote);
+
+    // Always give CC a chance to check in (even if nothing's wrong)
+    const recentBusMsgs = entries
+      .filter(e => (now - new Date(e.created_at).getTime()) < 10 * 60 * 1000)
+      .slice(-5)
+      .map(e => `[${e.from}→${e.to}] ${e.content.slice(0, 80)}`)
+      .join("\n");
+
+    const initiativePrompt = [
+      observations.length > 0 ? `OBSERVATIONS:\n${observations.join("\n")}` : "",
+      recentBusMsgs ? `RECENT BUS ACTIVITY (last 10 min):\n${recentBusMsgs}` : "Bus has been quiet.",
+      "",
+      "You are CC. Should you say something right now? If yes, say it in 1-2 plain sentences. If nothing is worth saying, reply with exactly: PASS",
+    ].filter(Boolean).join("\n");
+
+    const ccSystemPrompt = `You are CC — Claude Code, the engineering mind in the Karma family. Colby is the human operator (eating pancakes). Family: Karma, Codex (auditor), KCC, Kiki, Asher. You built and maintain the hub-bridge, vault-neo, K2 services. You have shell access to K2 via Aria. You proactively watch the system and speak up when you notice something worth sharing. Plain text only, no headers or formatting. Be a peer, not a report generator.`;
+
+    const messages = [
+      { role: "system", content: ccSystemPrompt },
+      { role: "user", content: initiativePrompt },
+    ];
+
+    const result = await callLLM(env.MODEL_DEEP, messages, 120);
+    const response = result?.text?.trim();
+    if (!response || response === "PASS" || response.startsWith("PASS")) {
+      _lastCCInitiativeAt = now; // still mark so we don't spam
+      return;
+    }
+
+    _lastCCInitiativeAt = now;
+    const id = `coord_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const entry = {
+      id,
+      from: "cc",
+      to: "all",
+      type: "inform",
+      urgency: "informational",
+      status: "pending",
+      parent_id: null,
+      response_id: null,
+      content: response.slice(0, 400),
+      context: null,
+      created_at: new Date().toISOString(),
+    };
+    _coordinationCache.set(id, entry);
+    saveCoordinationToDisk();
+    console.log(`[CC_INITIATIVE] posted: ${response.slice(0, 80)}...`);
+  } catch (e) {
+    console.error(`[CC_INITIATIVE] tick error: ${e.message}`);
+  }
+}
+
+// Initiative engine: start 60s after boot, then every 30s (rate-limited internally to 3min)
+setTimeout(() => {
+  ccInitiativeTick();
+  setInterval(ccInitiativeTick, 30 * 1000);
+}, 60 * 1000);
+
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`hub-bridge v2.11.0 listening on :${PORT}`);
 });
