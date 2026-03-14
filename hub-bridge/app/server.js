@@ -2295,6 +2295,11 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    // --- GET /health --- No-auth health check (used by kiki probes + external monitors)
+    if (req.method === "GET" && req.url === "/health") {
+      return json(res, 200, { ok: true, service: "hub-bridge", ts: new Date().toISOString() });
+    }
+
     // --- GET /agora --- Serve Agora Convergence Room UI
     if (req.method === "GET" && req.url === "/agora") {
       try {

@@ -1409,3 +1409,4 @@ Five things worth carrying forward:
 - cc_scratchpad.md rewritten: Ascendant identity, correct hierarchy (Sovereign/Ascendant/ArchonPrime/Archon/Initiate), Karma guidance principle, KCC correction
 - cc_hourly_report.py: Ascendant hourly Agora status post, runs on K2 cron every hour, evaluates Karma evolution criteria, posts to coordination bus
 - seed_kiki_issues_v2.py: corrected bootstrap issues -- READ-ONLY verification, python3 fix, evolve.md protected
+- /health endpoint added to hub-bridge (no-auth, returns ok+ts)
