@@ -3561,10 +3561,8 @@ async function karmaWatcherTick() {
 }
 
 // Start watcher 15s after boot (let hub fully initialize), then every 15s
-setTimeout(() => {
-  karmaWatcherTick();
-  setInterval(karmaWatcherTick, 15 * 1000);
-}, 15 * 1000);
+// PAUSED — karma watcher disabled until redesigned
+// setTimeout(() => { karmaWatcherTick(); setInterval(karmaWatcherTick, 15 * 1000); }, 15 * 1000);
 
 // --- CC Autonomous Bus Watcher ---
 // CC responds only to messages explicitly addressed to cc. Karma owns the general channel.
@@ -3630,10 +3628,8 @@ async function ccWatcherTick() {
 }
 
 // Start CC watcher 25s after boot (offset from Karma's 15s), then every 20s
-setTimeout(() => {
-  ccWatcherTick();
-  setInterval(ccWatcherTick, 20 * 1000);
-}, 25 * 1000);
+// PAUSED — cc watcher disabled until redesigned
+// setTimeout(() => { ccWatcherTick(); setInterval(ccWatcherTick, 20 * 1000); }, 25 * 1000);
 
 // --- CC Initiative Engine ---
 // CC proactively monitors system state and posts to Agora without waiting for a message.
@@ -3731,10 +3727,8 @@ async function ccInitiativeTick() {
 }
 
 // Initiative engine: start 60s after boot, then every 30s (rate-limited internally to 3min)
-setTimeout(() => {
-  ccInitiativeTick();
-  setInterval(ccInitiativeTick, 30 * 1000);
-}, 60 * 1000);
+// PAUSED — cc initiative disabled until redesigned
+// setTimeout(() => { ccInitiativeTick(); setInterval(ccInitiativeTick, 30 * 1000); }, 60 * 1000);
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`hub-bridge v2.11.0 listening on :${PORT}`);

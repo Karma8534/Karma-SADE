@@ -1400,3 +1400,4 @@ Five things worth carrying forward:
 - CC initiative interval bumped to 10 min
 - Karma/CC watcher prompts now include hard CRITICAL constraint: headless mode, no tool access, cannot claim to check live state
 - Karma watcher now uses simple honest system prompt instead of full buildSystemText() -- eliminates tool-capability hallucination
+- All autonomous watchers PAUSED (karma watcher, cc watcher, cc initiative) -- redesign needed before re-enabling
