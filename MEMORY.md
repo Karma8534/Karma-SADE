@@ -1,3 +1,5 @@
+## Task 9 Complete (2026-03-13) — Kiki v6: Bus Ingester + Critic + Policy Arbiter + Promotion Contract all wired into autonomous loop
+
 ## Tasks 6-8 Complete (2026-03-13) — Bus Ingester (4 tests), Critic Agent (3 tests), Coordinator Bus schema extension
 
 ## Task 4-5 Complete (2026-03-13) — Promotion Contract: kiki/evolution->main gate with rollback audit, 7 TDD tests passing
