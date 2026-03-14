@@ -84,7 +84,7 @@
 4. ~~**P0: vault-neo cannot run tests**~~ ✅ RESOLVED (Session 92) — pytest installed, 27/27 pass. Artifact at docs/supervisor/artifacts/P0-vault-neo-pytest-evidence.txt. Commit 792ef95.
 5. ~~**Kiki feedback loop missing**~~ ✅ RESOLVED (Session 93) — last_cycle_ts added to kiki state on every cycle. fetchK2WorkingMemory() path verified functional via Aria exec. Cycle count drift was cache lag (5min TTL), not a real gap.
 6. ~~**Coordination bus REST API returns 404**~~ ✅ RESOLVED (Session 93) — /v1/coordination aliased to /v1/coordination/recent in hub-bridge. Returns 200.
-7. **⚠️ Arbiter config path gap** — governance_boundary_v1.json at ~/Config/ not found from kiki working dir. Lazy init handles gracefully (returns None). Fix: absolute path or cwd-relative Config/ resolution.
+7. ~~**Arbiter config path gap**~~ ✅ RESOLVED (Session 93) — Config/ dir created at /mnt/c/dev/Karma/k2/Config/, governance_boundary_v1.json + critical_paths.json copied from tmp/p0-proof/Config/. PolicyArbiter loads correctly.
 8. ~~**4 pending bus messages from Karma**~~ ✅ BUS FIXED — watcher chaos cleared. Bus quiet, no auto-responders running.
 
 ---

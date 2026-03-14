@@ -1404,3 +1404,4 @@ Five things worth carrying forward:
 - Fixed /v1/coordination 404 -- alias to /v1/coordination/recent added (CLAUDE.md session start fix)
 - Added last_cycle_ts to kiki state on every cycle (was missing from save_state -- kiki couldn't self-patch)
 - STATE.md updated: blockers 5, 6, 8 resolved; blocker 7 (arbiter path) remains
+- Arbiter config path resolved: Config/ dir created on K2 at /mnt/c/dev/Karma/k2/Config/ with governance_boundary + critical_paths
