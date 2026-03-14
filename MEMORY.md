@@ -1,3 +1,5 @@
+## Task 2-3 Complete (2026-03-13) — Policy Arbiter: deterministic ALLOW/DENY/REQUIRE_APPROVAL, 10 TDD tests passing
+
 ## Session 91 (2026-03-13) — Anti-Pattern-Matching Gate
 
 **Done:**
