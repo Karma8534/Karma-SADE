@@ -1,0 +1,26 @@
+{
+  "version": "1.0",
+  "controlled_by": "colby",
+  "hard_deny_paths": [
+    "/run/secrets/**",
+    "~/.ssh/**",
+    "/opt/seed-vault/memory_v1/hub_auth/**",
+    "/opt/seed-vault/memory_v1/session/**",
+    "/opt/seed-vault/memory_v1/hub_bridge/config/hub.env",
+    "**/*.pem",
+    "**/*.key",
+    "**/.env*",
+    "**/*token*",
+    "**/*api_key*",
+    "Config/governance_boundary_v1.json"
+  ],
+  "financial_files": [
+    "hub.env",
+    "spend-cap.json",
+    "billing-policy.json",
+    "model-routing-config.json"
+  ],
+  "spend_envelope_path": "/opt/seed-vault/memory_v1/session/spend_envelope.json",
+  "lease_timeout_minutes": 5,
+  "lease_heartbeat_intervals": 2
+}

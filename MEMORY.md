@@ -1271,3 +1271,5 @@ Added aria_local_call hub-bridge tool for Karma-to-Aria delegation:
 - Status: hub-bridge wired; awaiting Aria-side key configuration for end-to-end test
 
 <!-- session-84 wrap-up: all docs updated 2026-03-11T23:11Z -->
+
+## Task 1 Complete (2026-03-13) — Created Config/governance_boundary_v1.json and Config/critical_paths.json (Colby-controlled governance boundary v2)

@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "controlled_by": "colby",
+  "critical_paths": [
+    "hub-bridge/app/server.js",
+    "Memory/00-karma-system-prompt-live.md",
+    "CLAUDE.md",
+    "Config/governance_boundary_v1.json",
+    "Config/critical_paths.json",
+    ".github/workflows/**",
+    "Scripts/karma_policy_arbiter.py",
+    "Scripts/karma_promote.py"
+  ]
+}
