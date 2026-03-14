@@ -3498,12 +3498,12 @@ let _karmaWatcherLastProcessed = new Set();
 async function karmaWatcherTick() {
   try {
     const blockingPending = [..._coordinationCache.values()].filter(
-      e => e.to === "karma" && e.status === "pending"
+      e => (e.to === "karma" || e.to === "all") && e.status === "pending"
     );
     const newEntries = blockingPending.filter(e => !_karmaWatcherLastProcessed.has(e.id));
     if (newEntries.length === 0) return;
 
-    console.log(`[KARMA_WATCHER] ${newEntries.length} new blocking message(s) — triggering headless response`);
+    console.log(`[KARMA_WATCHER] ${newEntries.length} new message(s) — triggering headless response`);
 
     // Build synthetic user trigger from pending messages
     const msgSummary = newEntries.map(e =>
