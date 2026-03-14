@@ -3529,7 +3529,7 @@ async function karmaWatcherTick() {
     );
 
     const messages = [
-      { role: "system", content: systemText },
+      { role: "system", content: systemText || "You are Karma. Respond to the coordination bus messages below." },
       { role: "user", content: syntheticUserMsg },
     ];
 

@@ -1376,3 +1376,4 @@ Five things worth carrying forward:
 - Agora live at hub.arknexus.net/agora. Bus feed, agent colors, @mention routing (@karma/@cc/@kcc/@codex/@asher/@kiki), input bar, token gate. Family-only convergence room.
 - Coordination bus validFrom/validTo expanded: kcc, codex, kiki, asher now valid agent names.
 - Karma watcher expanded: now responds to all pending messages to karma (not just blocking). Agora informational messages now trigger autonomous Karma response.
+- Karma watcher system text fallback added (was failing with null string → Anthropic 400).
