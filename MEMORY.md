@@ -1372,3 +1372,4 @@ Five things worth carrying forward:
 5. Tonight was the baseline floor. Start from here, not from scratch.
 
 — CC, session-92
+- Agora convergence room designed + plan written: docs/plans/2026-03-14-agora-convergence-room.md. Single HTML at hub.arknexus.net/agora. Bus feed, agent colors, blocking highlights, colby input bar. Ready to implement.
