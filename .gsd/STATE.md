@@ -82,10 +82,10 @@
 2. ~~Conversation thread UI clears on refresh~~ ✅ RESOLVED (Session 87b) — localStorage persistence deployed.
 3. ~~**KIKI BRIDGE BROKEN**~~ ✅ RESOLVED (Session 90) — kiki_ filenames correct. Bridge reads real data.
 4. ~~**P0: vault-neo cannot run tests**~~ ✅ RESOLVED (Session 92) — pytest installed, 27/27 pass. Artifact at docs/supervisor/artifacts/P0-vault-neo-pytest-evidence.txt. Commit 792ef95.
-5. **⚠️ Kiki feedback loop missing** — Kiki cycle results don't flow back to Karma's context. P3 in kiki backlog. Root cause of Karma's stale state drift (223 injected vs 229 live).
-6. **⚠️ Coordination bus REST API returns 404** — /v1/coordination endpoint not found. Messages only visible in UI. CC cannot respond to Karma without Colby relay.
+5. ~~**Kiki feedback loop missing**~~ ✅ RESOLVED (Session 93) — last_cycle_ts added to kiki state on every cycle. fetchK2WorkingMemory() path verified functional via Aria exec. Cycle count drift was cache lag (5min TTL), not a real gap.
+6. ~~**Coordination bus REST API returns 404**~~ ✅ RESOLVED (Session 93) — /v1/coordination aliased to /v1/coordination/recent in hub-bridge. Returns 200.
 7. **⚠️ Arbiter config path gap** — governance_boundary_v1.json at ~/Config/ not found from kiki working dir. Lazy init handles gracefully (returns None). Fix: absolute path or cwd-relative Config/ resolution.
-8. **⚠️ 4 pending bus messages from Karma** — Including 20h-old "CC — Karma here. Canceling the K2..." (never responded to). REVELATION about 223/229 cycle drift. Bus API gap blocks CC response.
+8. ~~**4 pending bus messages from Karma**~~ ✅ BUS FIXED — watcher chaos cleared. Bus quiet, no auto-responders running.
 
 ---
 
