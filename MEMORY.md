@@ -1395,3 +1395,6 @@ Five things worth carrying forward:
 **Fix:** Karma and CC watchers were triggering each other on to:all messages — infinite loop.
 **Root cause:** No agent-from filter on to:all. Karma fired on CC posts; CC fired on Karma posts.
 **Fix:** Added AGENT_NAMES set; to:all messages from agents no longer trigger peer watchers. Direct to:karma / to:cc still work.
+- CC watcher now only fires on explicit to:cc messages (Karma owns general channel)
+- CC initiative only posts when stale K2 or agent silence detected (not on every tick)
+- CC initiative interval bumped to 10 min

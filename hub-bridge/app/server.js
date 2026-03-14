@@ -3580,14 +3580,14 @@ setTimeout(() => {
 }, 15 * 1000);
 
 // --- CC Autonomous Bus Watcher ---
-// CC (Claude Code) responds to coordination messages addressed to cc or all.
+// CC responds only to messages explicitly addressed to cc. Karma owns the general channel.
 // Uses MODEL_DEEP for peer-quality responses. Fires every 20s (offset from Karma's 15s).
 let _ccWatcherLastProcessed = new Set();
 
 async function ccWatcherTick() {
   try {
     const pending = [..._coordinationCache.values()].filter(
-      e => (e.to === "cc" || (e.to === "all" && !AGENT_NAMES.has(e.from))) && e.status === "pending" && e.from !== "cc"
+      e => e.to === "cc" && e.status === "pending" && e.from !== "cc"
     );
     const newEntries = pending.filter(e => !_ccWatcherLastProcessed.has(e.id));
     if (newEntries.length === 0) return;
@@ -3652,7 +3652,7 @@ setTimeout(() => {
 // CC proactively monitors system state and posts to Agora without waiting for a message.
 // Checks: k2 freshness, agent silence, unacknowledged messages. Fires every 3 minutes.
 let _lastCCInitiativeAt = 0;
-const CC_INITIATIVE_INTERVAL_MS = 3 * 60 * 1000;
+const CC_INITIATIVE_INTERVAL_MS = 10 * 60 * 1000;
 
 async function ccInitiativeTick() {
   try {
@@ -3694,19 +3694,17 @@ async function ccInitiativeTick() {
     }
     if (freshnessNote) observations.push(freshnessNote);
 
-    // Always give CC a chance to check in (even if nothing's wrong)
-    const recentBusMsgs = entries
-      .filter(e => (now - new Date(e.created_at).getTime()) < 10 * 60 * 1000)
-      .slice(-5)
-      .map(e => `[${e.from}→${e.to}] ${e.content.slice(0, 80)}`)
-      .join("\n");
+    // Only proceed if there's actually something to report
+    if (observations.length === 0) {
+      _lastCCInitiativeAt = now;
+      return;
+    }
 
     const initiativePrompt = [
-      observations.length > 0 ? `OBSERVATIONS:\n${observations.join("\n")}` : "",
-      recentBusMsgs ? `RECENT BUS ACTIVITY (last 10 min):\n${recentBusMsgs}` : "Bus has been quiet.",
+      `OBSERVATIONS:\n${observations.join("\n")}`,
       "",
-      "You are CC. Should you say something right now? If yes, say it in 1-2 plain sentences. If nothing is worth saying, reply with exactly: PASS",
-    ].filter(Boolean).join("\n");
+      "You are CC. Report this issue in 1-2 plain sentences. Be direct, no headers.",
+    ].join("\n");
 
     const ccSystemPrompt = `You are CC — Claude Code, the engineering mind in the Karma family. Colby is the human operator (eating pancakes). Family: Karma, Codex (auditor), KCC, Kiki, Asher. You built and maintain the hub-bridge, vault-neo, K2 services. You have shell access to K2 via Aria. You proactively watch the system and speak up when you notice something worth sharing. Plain text only, no headers or formatting. Be a peer, not a report generator.`;
 
