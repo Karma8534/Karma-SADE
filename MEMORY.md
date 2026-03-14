@@ -25,6 +25,13 @@
 - Coordination bus direct message to Karma sent (coord_1773475776633_uca6, blocking).
 - mylocks correct path: C:\Users\raest\Documents\Karma\mylocks\mylocks.txt
 
+**Session-94 additions (2026-03-14):**
+- S5 freshness formula fixed: parseK2Freshness() now only checks kiki_state.json age (threshold 180s cycle/300s state). Journal/rules/issues observational. kiki_state.json at 53s = FRESH = S5 passes.
+- Agora deployed: hub-bridge/app/public/agora.html. Coordination bus feed + @mention routing. All 7 agents (karma/cc/kcc/codex/kiki/asher/colby) visible.
+- All K2 services persistent: aria.service, karma-kiki.service (with HUB_AUTH_TOKEN drop-in), asher_loop.service. Survive reboot.
+- Windows Update auto-restart disabled on P1: Scripts/disable-auto-restart.ps1 (NoAutoRebootWithLoggedOnUsers=1, AUOptions=3, active hours 1am-11pm).
+- Karma watcher urgency filter removed — now processes all pending messages (not just blocking).
+
 **Blockers:**
 - Kiki restart needed (old PID 71823 can't be killed via SSH — desktop restart required)
 - CC background process not yet built

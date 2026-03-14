@@ -344,11 +344,15 @@ function parseK2Freshness(stdout) {
     const age = Number(value);
     if (Number.isFinite(age)) ages[name] = age;
   }
-  const required = ["kiki_state.json", "kiki_journal.jsonl", "kiki_issues.jsonl"];
-  const missingRequired = required.filter((name) => !(name in ages));
-  const maxAge = Object.keys(ages).length ? Math.max(...Object.values(ages)) : null;
-  const stale = (maxAge !== null && maxAge > K2_FRESHNESS_SLO_SECONDS) || missingRequired.length > 0;
-  return { stale, maxAge, ages, missing: [...missing, ...missingRequired] };
+  // Codex S5 spec: only kiki_state.json determines staleness (written every kiki cycle).
+  // state_age > 300s = kiki stopped entirely; cycle_age > 180s = 3 missed cycles.
+  // kiki_issues.jsonl, kiki_journal.jsonl, kiki_rules.jsonl = observational only.
+  const STATE_STALE_S = 300;
+  const CYCLE_STALE_S = 180;
+  const stateAge = ages["kiki_state.json"] ?? null;
+  const stateMissing = missing.includes("kiki_state.json");
+  const stale = stateMissing || (stateAge !== null && stateAge > CYCLE_STALE_S);
+  return { stale, stateAge, ages, missing };
 }
 
 async function fetchK2FreshnessStatus(force = false) {
@@ -383,10 +387,12 @@ async function fetchK2FreshnessStatus(force = false) {
     const status = {
       ok: true,
       stale_context: parsed.stale,
-      slo_seconds: K2_FRESHNESS_SLO_SECONDS,
-      max_age_seconds: parsed.maxAge,
+      state_age_seconds: parsed.stateAge,
+      cycle_threshold_seconds: 180,
+      state_threshold_seconds: 300,
       ages_seconds: parsed.ages,
       missing_artifacts: parsed.missing,
+      observational: ["kiki_issues.jsonl", "kiki_journal.jsonl", "kiki_rules.jsonl"],
       generated_at: nowIso(),
     };
     _k2FreshnessCache = status;
@@ -422,8 +428,8 @@ async function fetchK2WorkingMemory() {
       ? [
           "=== KIKI FRESHNESS ===",
           `STALE_CONTEXT=${freshness.stale ? "true" : "false"}`,
-          `SLO_SECONDS=${K2_FRESHNESS_SLO_SECONDS}`,
-          `MAX_AGE_SECONDS=${freshness.maxAge ?? "unknown"}`,
+          `STATE_AGE_SECONDS=${freshness.stateAge ?? "unknown"}`,
+          `CYCLE_THRESHOLD_SECONDS=180`,
           `MISSING_ARTIFACTS=${freshness.missing.join(",") || "none"}`,
         ].join("\n")
       : "";
