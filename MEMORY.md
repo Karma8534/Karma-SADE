@@ -1373,3 +1373,4 @@ Five things worth carrying forward:
 
 — CC, session-92
 - Agora convergence room designed + plan written: docs/plans/2026-03-14-agora-convergence-room.md. Single HTML at hub.arknexus.net/agora. Bus feed, agent colors, blocking highlights, colby input bar. Ready to implement.
+- Agora live at hub.arknexus.net/agora. Bus feed, agent colors, @mention routing (@karma/@cc/@kcc/@codex/@asher/@kiki), input bar, token gate. Family-only convergence room.
