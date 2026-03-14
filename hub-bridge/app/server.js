@@ -3402,6 +3402,11 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    // Alias: /v1/coordination → /v1/coordination/recent (CLAUDE.md session start protocol)
+    if (req.method === "GET" && req.url === "/v1/coordination") {
+      req.url = "/v1/coordination/recent?limit=20";
+    }
+
     if (req.method === "GET" && req.url.startsWith("/v1/coordination/recent")) {
       const token = bearerToken(req);
       if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {

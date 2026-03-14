@@ -1401,3 +1401,4 @@ Five things worth carrying forward:
 - Karma/CC watcher prompts now include hard CRITICAL constraint: headless mode, no tool access, cannot claim to check live state
 - Karma watcher now uses simple honest system prompt instead of full buildSystemText() -- eliminates tool-capability hallucination
 - All autonomous watchers PAUSED (karma watcher, cc watcher, cc initiative) -- redesign needed before re-enabling
+- Fixed /v1/coordination 404 -- alias to /v1/coordination/recent added (CLAUDE.md session start fix)
