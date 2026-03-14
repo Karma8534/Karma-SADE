@@ -3489,6 +3489,9 @@ loadCoordinationFromDisk(); // restore coordination messages across rebuilds
 loadSessionsFromDisk();     // restore conversation history across rebuilds
 setInterval(evictExpiredCoordination, 60 * 60 * 1000); // coordination bus hourly sweep
 
+// Agent names — used to prevent watcher ping-pong loops on to:"all" messages
+const AGENT_NAMES = new Set(["karma", "cc", "kiki", "kcc", "asher", "codex"]);
+
 // --- Karma Autonomous Bus Watcher ---
 // Processes coordination messages to karma without a human relay.
 // Runs every 60s. If any pending messages to karma exist, runs a headless Karma chat
@@ -3498,7 +3501,7 @@ let _karmaWatcherLastProcessed = new Set();
 async function karmaWatcherTick() {
   try {
     const blockingPending = [..._coordinationCache.values()].filter(
-      e => (e.to === "karma" || e.to === "all") && e.status === "pending"
+      e => (e.to === "karma" || (e.to === "all" && !AGENT_NAMES.has(e.from))) && e.status === "pending"
     );
     const newEntries = blockingPending.filter(e => !_karmaWatcherLastProcessed.has(e.id));
     if (newEntries.length === 0) return;
@@ -3584,7 +3587,7 @@ let _ccWatcherLastProcessed = new Set();
 async function ccWatcherTick() {
   try {
     const pending = [..._coordinationCache.values()].filter(
-      e => (e.to === "cc" || e.to === "all") && e.status === "pending" && e.from !== "cc"
+      e => (e.to === "cc" || (e.to === "all" && !AGENT_NAMES.has(e.from))) && e.status === "pending" && e.from !== "cc"
     );
     const newEntries = pending.filter(e => !_ccWatcherLastProcessed.has(e.id));
     if (newEntries.length === 0) return;

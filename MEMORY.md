@@ -1389,3 +1389,9 @@ Five things worth carrying forward:
 - Karma watcher expanded: now responds to all pending messages to karma (not just blocking). Agora informational messages now trigger autonomous Karma response.
 - Karma watcher system text fallback added (was failing with null string → Anthropic 400).
 - Karma watcher root cause fixed: buildSystemText returns {static,volatile} object, not string. callLLM returns {text,...} object, not string. Both corrected.
+
+## Session (2026-03-14) — Watcher Ping-Pong Fix
+
+**Fix:** Karma and CC watchers were triggering each other on to:all messages — infinite loop.
+**Root cause:** No agent-from filter on to:all. Karma fired on CC posts; CC fired on Karma posts.
+**Fix:** Added AGENT_NAMES set; to:all messages from agents no longer trigger peer watchers. Direct to:karma / to:cc still work.
