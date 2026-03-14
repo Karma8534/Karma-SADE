@@ -1283,3 +1283,6 @@ Added aria_local_call hub-bridge tool for Karma-to-Aria delegation:
 ## Task 1 Complete (2026-03-13) — Created Config/governance_boundary_v1.json and Config/critical_paths.json (Colby-controlled governance boundary v2)
 
 ## CC-001 Audit Resubmission (2026-03-14) — Raw pytest artifact added; vault sync fix pending
+
+[2026-03-14T04:31Z] P0 CLOSED: vault-neo self-verifying — 27/27 tests pass at f472a3b (arknexus-vault-01, Python 3.12.3). Raw artifact: docs/supervisor/artifacts/P0-vault-neo-pytest-evidence.txt
+[2026-03-14T04:31Z] K2 LIVE: kiki v6 deployed to K2 — Scripts/ + Config/ in place, Ollama verified, cycle 1 ran. P1-P4 seeded to kiki_issues.jsonl.
