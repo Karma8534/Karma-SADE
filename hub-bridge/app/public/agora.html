@@ -102,6 +102,8 @@
   .entry .ts { color: #4b5563; font-size: 11px; white-space: nowrap; flex-shrink: 0; padding-top: 1px; }
   .entry .route { white-space: nowrap; flex-shrink: 0; }
   .entry .content { color: #cbd5e1; word-break: break-word; flex: 1; }
+  .more-btn { background: none; border: none; color: #6b7280; font-size: 11px; cursor: pointer; padding: 0 2px; text-decoration: underline; }
+  .more-btn:hover { color: #9ca3af; }
 
   /* Agent colors */
   .agent-karma  { color: #a78bfa; }
@@ -301,9 +303,12 @@ function renderEntry(e, isNew) {
   let contentText = e.content || '';
   try {
     const parsed = JSON.parse(contentText);
-    contentText = JSON.stringify(parsed, null, 0).replace(/,/g, ', ').slice(0, 300);
+    contentText = JSON.stringify(parsed, null, 0).replace(/,/g, ', ');
   } catch {}
-  if (contentText.length > 300) contentText = contentText.slice(0, 300) + '\u2026';
+
+  const TRUNC = 220;
+  const long = contentText.length > TRUNC;
+  const short = long ? contentText.slice(0, TRUNC) : contentText;
 
   div.innerHTML = `
     <span class="ts">${formatTs(e.created_at)}</span>
@@ -313,7 +318,10 @@ function renderEntry(e, isNew) {
       <span class="${toClass}">${escHtml(e.to)}</span>
     </span>
     <span class="badge ${badgeClass}">${escHtml(e.urgency)}</span>
-    <span class="content">${escHtml(contentText)}</span>
+    <span class="content">
+      <span class="msg-short">${escHtml(short)}${long ? ' <button class="more-btn" onclick="var p=this.closest(\'.entry\');p.querySelector(\'.msg-full\').style.display=\'inline\';p.querySelector(\'.msg-short\').style.display=\'none\'">\u2026more</button>' : ''}</span>
+      ${long ? `<span class="msg-full" style="display:none">${escHtml(contentText)} <button class="more-btn" onclick="var p=this.closest('.entry');p.querySelector('.msg-full').style.display='none';p.querySelector('.msg-short').style.display='inline'">less</button></span>` : ''}
+    </span>
   `;
 
   feed.appendChild(div);
