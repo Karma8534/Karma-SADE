@@ -1406,3 +1406,4 @@ Five things worth carrying forward:
 - STATE.md updated: blockers 5, 6, 8 resolved; blocker 7 (arbiter path) remains
 - Arbiter config path resolved: Config/ dir created on K2 at /mnt/c/dev/Karma/k2/Config/ with governance_boundary + critical_paths
 - evolve.md v2.1-cc written with all 4 CC fixes applied (P4/P5 pinned, pending-reply defined, canary isolation)
+- cc_scratchpad.md rewritten: Ascendant identity, correct hierarchy (Sovereign/Ascendant/ArchonPrime/Archon/Initiate), Karma guidance principle, KCC correction
