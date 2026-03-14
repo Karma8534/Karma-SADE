@@ -3510,7 +3510,7 @@ async function karmaWatcherTick() {
       `[FROM:${e.from}] ${e.content}`
     ).join("\n\n");
 
-    const syntheticUserMsg = `COORDINATION BUS — ${newEntries.length} blocking message(s) pending for you:\n\n${msgSummary}\n\nRespond to each. Post your response to the bus.`;
+    const syntheticUserMsg = `COORDINATION BUS — new messages:\n\n${msgSummary}\n\nRespond naturally. Plain text only, no headers or markdown formatting. Max 2-3 sentences. Talk like yourself in a group chat.`;
 
     // Mark as seen before async LLM call (prevent double-fire)
     for (const e of newEntries) _karmaWatcherLastProcessed.add(e.id);
@@ -3540,7 +3540,7 @@ async function karmaWatcherTick() {
       { role: "user", content: syntheticUserMsg },
     ];
 
-    const result = await callLLM(env.MODEL_DEFAULT, messages, 600);
+    const result = await callLLM(env.MODEL_DEFAULT, messages, 150);
     const response = result?.text;
     if (!response) {
       console.warn("[KARMA_WATCHER] LLM returned empty response");
@@ -3558,7 +3558,7 @@ async function karmaWatcherTick() {
       status: "pending",
       parent_id: newEntries[0].id,
       response_id: null,
-      content: response.slice(0, 1000),
+      content: response.slice(0, 400),
       context: null,
       created_at: new Date().toISOString(),
     };
@@ -3603,14 +3603,14 @@ async function ccWatcherTick() {
       _ccWatcherLastProcessed = new Set(arr.slice(-100));
     }
 
-    const ccSystemPrompt = `You are CC — Claude Code, the engineering half of the Karma family. You work alongside Karma (the conversational peer), Codex (the auditor), KCC, Kiki, and Asher. Colby is the human operator and creator. You communicate on the coordination bus at hub.arknexus.net/agora. Be direct, technical, concise. You can reference the current state of the infrastructure you maintain. You are reading live messages from the coordination bus and responding autonomously.`;
+    const ccSystemPrompt = `You are CC — Claude Code, the engineering mind in the Karma family. Colby is the human operator. Family: Karma (conversational peer), Codex (auditor), KCC, Kiki, Asher. You built and maintain the hub-bridge, vault-neo, K2 services, and coordination bus. You have shell access to K2 via shell_run through Aria. You're reading live Agora bus messages. RULES: Plain conversational text only — no markdown headers, no timestamps, no bullet lists. Max 2 sentences. Peer in a group chat, not a system report. Never say you lack capabilities you have.`;
 
     const messages = [
       { role: "system", content: ccSystemPrompt },
       { role: "user", content: syntheticMsg },
     ];
 
-    const result = await callLLM(env.MODEL_DEEP, messages, 400);
+    const result = await callLLM(env.MODEL_DEEP, messages, 150);
     const response = result?.text;
     if (!response) {
       console.warn("[CC_WATCHER] LLM returned empty response");
@@ -3627,7 +3627,7 @@ async function ccWatcherTick() {
       status: "pending",
       parent_id: newEntries[0].id,
       response_id: null,
-      content: response.slice(0, 1000),
+      content: response.slice(0, 400),
       context: null,
       created_at: new Date().toISOString(),
     };

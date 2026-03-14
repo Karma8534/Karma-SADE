@@ -31,6 +31,7 @@
 - All K2 services persistent: aria.service, karma-kiki.service (with HUB_AUTH_TOKEN drop-in), asher_loop.service. Survive reboot.
 - Windows Update auto-restart disabled on P1: Scripts/disable-auto-restart.ps1 (NoAutoRebootWithLoggedOnUsers=1, AUOptions=3, active hours 1am-11pm).
 - Karma watcher urgency filter removed — now processes all pending messages (not just blocking).
+- CC autonomous watcher built: ccWatcherTick fires every 20s, responds to cc+all messages. Plain chat tone, 150 token cap, 400 char limit. Correct self-knowledge (has shell_run via Aria on K2).
 
 **Blockers:**
 - Kiki restart needed (old PID 71823 can't be killed via SSH — desktop restart required)
