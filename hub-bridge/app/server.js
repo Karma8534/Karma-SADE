@@ -2353,6 +2353,28 @@ const server = http.createServer(async (req, res) => {
       if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
         return json(res, 401, { ok: false, error: "unauthorized" });
       }
+
+      // Canary isolation (evolve.md §5) — requests with X-Canary: true are diagnostic only.
+      // They bypass watcher processing, bus posting, ledger writes, and kiki backlog mutation.
+      const isCanary = (req.headers["x-canary"] || "").toLowerCase() === "true";
+      if (isCanary) {
+        const raw = await parseBody(req, 1000000);
+        let body; try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+        const userMessage = (body?.message || "").toString().trim();
+        if (!userMessage) return json(res, 400, { ok: false, error: "missing_message" });
+        const model = env.MODEL_DEFAULT;
+        const messages = [{ role: "user", content: userMessage }];
+        try {
+          const result = await callLLM(model, messages, 256);
+          const responseHeaders = { "X-Canary-Ack": "true" };
+          res.writeHead(200, { "Content-Type": "application/json", ...responseHeaders });
+          res.end(JSON.stringify({ ok: true, text: result?.text || "", canary: true }));
+        } catch (e) {
+          res.writeHead(500, { "Content-Type": "application/json", "X-Canary-Ack": "true" });
+          res.end(JSON.stringify({ ok: false, error: e.message, canary: true }));
+        }
+        return;
+      }
       const raw = await parseBody(req, 30000000);
       let body; try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
 

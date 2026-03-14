@@ -1405,3 +1405,4 @@ Five things worth carrying forward:
 - Added last_cycle_ts to kiki state on every cycle (was missing from save_state -- kiki couldn't self-patch)
 - STATE.md updated: blockers 5, 6, 8 resolved; blocker 7 (arbiter path) remains
 - Arbiter config path resolved: Config/ dir created on K2 at /mnt/c/dev/Karma/k2/Config/ with governance_boundary + critical_paths
+- evolve.md v2.1-cc written with all 4 CC fixes applied (P4/P5 pinned, pending-reply defined, canary isolation)
