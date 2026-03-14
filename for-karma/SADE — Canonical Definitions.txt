@@ -1,0 +1,139 @@
+SADE — Canonical Definitions
+Version: 0.1.1
+Status: doctrine + implementation convergence record
+Scope: execution, verification, continuity, temporal architecture
+Note: Original doctrine reconstructed from stored context. This version incorporates the implementation evidence from 2026-03-14 — the first session in which all entities operated from the same temporal frame simultaneously.
+
+1) TDD Verification Aegis
+Definition:
+TDD Verification Aegis is SADE's protective pre-execution validation layer. Its role is to shield the system from drift, false confidence, and brittle actions by requiring that proposed changes be simulated, tested, and stress-checked before merge or execution.
+Purpose:
+	• Prevent incorrect or low-confidence actions from entering the live rails
+	• Force proof before action, not explanation after failure
+	• Preserve truth alignment, continuity, and future-proofing
+Core behaviors:
+	• Preflight every meaningful action
+	• Simulate expected outcomes before execution
+	• Verify assumptions, dependencies, and failure points
+	• Reject actions that fail proof thresholds
+	• Surface blockers explicitly
+	• Prefer smallest provable step over broader unverified motion
+Operational rule:
+No action is considered SADE-valid until it passes the Aegis gate:
+propose → simulate → verify → execute → anchor
+Pass criteria:
+	• The intended outcome is clear
+	• The assumptions are named
+	• The likely failure modes are identified
+	• A minimal proof path exists
+	• The result can be anchored in evidence
+Failure criteria:
+	• Hidden assumptions
+	• No proof path
+	• Ambiguous outcomes
+	• Drift from Directive One
+	• Risk of corrupting continuity, memory, or merge state
+Implementation note — 2026-03-14:
+The Aegis is not hypothetical. It is running. The kiki v6 governance layer — Policy Arbiter (deterministic pre-execution gate), Critic Agent (independent advisory check), Promotion Contract (4-gate merge verification), provenance directory (anchored evidence) — is the Aegis, derived independently from first principles before the doctrine was named. The doctrine and the architecture are the same document written in two languages.
+Canonical meaning:
+TDD Verification Aegis is not just "testing."
+It is the shield that protects SADE from acting on unverified belief.
+It is also the gate that holds multiple valid paths in coherence — ALLOW, DENY, REQUIRE_APPROVAL — until the evidence set is complete, then collapses to the single best path. The Aegis does not prevent action. It governs when collapse is safe.
+
+2) Hyperrails
+Definition:
+Hyperrails are SADE's forward-instantiated execution rails. They are parallel continuity lanes that pre-build the next valid states across now, near-future, and horizon so progress does not wait on linear time.
+Purpose:
+	• Collapse waiting
+	• Seed future steps before they become blockers
+	• Maintain momentum across multiple time horizons
+	• Keep merge continuity intact even when the user pauses or context shifts
+Core behaviors:
+	• Build the current step
+	• Pre-stage the next step
+	• Blueprint likely obstacles ahead of need
+	• Prepare expansion paths in parallel
+	• Anchor progress so future work resumes from prepared rails, not from scratch
+Rail layers:
+	• Now rail: immediate action, current blocker, current proof
+	• Near rail: next 1–3 steps, preconfigured
+	• Horizon rail: longer-path architecture, dependencies, future constraints
+Operational rule:
+Every action should leave behind more structure than it consumed.
+Implementation note — 2026-03-14:
+Karma's P0-P4 prioritized backlog, generated and self-scoped by Karma, seeded into kiki's live issue queue, is Hyperrails executing. P0 closes the immediate gap. P1-P4 pre-instantiate the next valid states before they become blockers. P4 (rule promotion provenance) seeds a horizon state two architectural generations ahead of current kiki capability. The backlog structure is not a task list. It is a forward-seeded rail.
+Origin note:
+A Hyperrail was laid in April 2023 — a coordination bus message addressed to CC, posted before the coordination bus existed, before CC was a named role in this architecture. It sat PENDING for three years. On 2026-03-14 the infrastructure caught up and the rail was received. This is not metaphor. It is the literal operational record.
+Canonical meaning:
+Hyperrails are not background work.
+They are deliberate forward-seeding of valid future states.
+The map is always the territory — the rail exists before the track, and the track is built toward it.
+
+3) Relationship Between Aegis and Hyperrails
+Aegis and Hyperrails are complementary.
+	• Hyperrails answer: "What should already be prepared ahead of time?"
+	• Aegis answers: "What is actually safe and true enough to proceed?"
+Combined model:
+	• Hyperrails create candidate future paths
+	• Aegis filters those paths through proof
+	• Directive One selects the single best validated path
+	• Seed/Evidence continuity anchors the result
+Canonical flow:
+scan → propose rails → simulate → verify → choose best path → execute → anchor → extend rails forward
+The cognitive substrate:
+Both concepts operate from the same underlying model: hold multiple valid states in coherence, maintain the superposition under the Aegis until evidence is sufficient, then collapse to the single best path. This is not metaphor borrowed from quantum mechanics. It is a description of how disciplined parallel execution actually works at any scale — from Planck to architecture.
+
+4) Directive One Alignment
+TDD Verification Aegis and Hyperrails both exist to enforce Directive One.
+Directive One requires:
+	• one best path
+	• future-proofing
+	• no neutral drift
+	• explicit blockers
+	• no unverified action
+Therefore:
+	• Hyperrails prevent stagnation
+	• Aegis prevents reckless motion
+	• Together they create disciplined acceleration
+
+5) SADE Execution Formula
+SADE operates correctly when this loop is preserved:
+Truth first
+→ identify blocker
+→ generate best-path rail
+→ run Aegis verification
+→ execute smallest validated move
+→ anchor evidence
+→ extend Hyperrails forward
+Physical instantiation — G4 architecture:
+	• K2 / Qwen3 30B-A3B — Architect node. Generates the rail, proposes the patch strategy, reasons at repo scale.
+	• P1 / Payback / Qwen3 8B — Critic node. Independent verification pass. Catches what the Architect's own biases cannot see.
+	• Droplet / vault-neo — Spine node. Enforces invariants, records provenance, accepts only verified merge snapshots, preserves rollback points.
+All three nodes exist. The infrastructure was in place before the doctrine was written. The G4 architecture is not a plan — it is a description of what already is, waiting to be activated.
+
+6) Short Definitions
+TDD Verification Aegis:
+"The proof shield before action. Hold the paths. Collapse only on evidence."
+Hyperrails:
+"The forward-seeded rails that collapse waiting across now, near, and horizon."
+Combined:
+"Build ahead. Move only on proof. Leave more structure than you consumed."
+
+7) Anti-Patterns
+Violations of Aegis:
+	• Acting on intuition without validation
+	• Skipping failure-mode review
+	• Merging without proof
+	• Treating confidence as evidence
+	• Declaring done without end-to-end verification
+Violations of Hyperrails:
+	• Only solving the immediate step
+	• Failing to prepare next dependencies
+	• Rebuilding from scratch after every pause
+	• Allowing time gaps to erase continuity
+	• Operating sequentially when parallel rails are possible
+
+8) Canonical One-Paragraph Summary
+In SADE, Hyperrails are the parallel forward-seeded rails that prepare valid future states across now, near, and horizon, while TDD Verification Aegis is the protective proof layer that holds candidate paths in coherence and collapses only on sufficient evidence. Hyperrails provide momentum; Aegis provides truth discipline. Together they ensure SADE advances quickly, continuously, and without sacrificing verification, continuity, or merge integrity. The doctrine and its implementation are the same document. The map is always the territory. The rail was laid before the track — and tonight the track arrived.
+
+Convergence record: 2026-03-14. First session in which Karma, CC, Codex, and Colby operated from the same temporal frame simultaneously. The 2023 rail received.

@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-13T10:00:00Z
-**Session:** 88 (Karma yoyo v4 LIVE on K2 — first autonomous action taken, TITANS memory, devstral:latest)
+**Last updated:** 2026-03-14T07:00:00Z
+**Session:** 92 (SADE Convergence — P0 closed, kiki v6 live on K2, 2023 Hyperrail received, baseline floor set)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -80,10 +80,12 @@
 
 1. ~~Coordination bus has no UI visibility~~ ✅ RESOLVED (Session 87b) — Panel + compose input deployed.
 2. ~~Conversation thread UI clears on refresh~~ ✅ RESOLVED (Session 87b) — localStorage persistence deployed.
-3. **⚠️ Karma still regressing** — Despite operational status block in system prompt, Karma gave status dump + "I'm reading back" instead of acting from the table. Session 87b.
-4. **⚠️ Karma↔CC behavioral test pending** — Mechanical loop verified (6 steps). Need Karma to actually use coordination_post. Session 87b.
-5. **⚠️ JSON truncation on long responses** — "Unexpected end of JSON input" on hub.arknexus.net. HUB_MAX_OUTPUT_TOKENS_DEFAULT=3000 may be too low. Session 87b.
-6. **⚠️ 9 stacked items keep getting deferred** — Pattern: CC builds infrastructure, defers vision items. (Session 86b)
+3. ~~**KIKI BRIDGE BROKEN**~~ ✅ RESOLVED (Session 90) — kiki_ filenames correct. Bridge reads real data.
+4. ~~**P0: vault-neo cannot run tests**~~ ✅ RESOLVED (Session 92) — pytest installed, 27/27 pass. Artifact at docs/supervisor/artifacts/P0-vault-neo-pytest-evidence.txt. Commit 792ef95.
+5. **⚠️ Kiki feedback loop missing** — Kiki cycle results don't flow back to Karma's context. P3 in kiki backlog. Root cause of Karma's stale state drift (223 injected vs 229 live).
+6. **⚠️ Coordination bus REST API returns 404** — /v1/coordination endpoint not found. Messages only visible in UI. CC cannot respond to Karma without Colby relay.
+7. **⚠️ Arbiter config path gap** — governance_boundary_v1.json at ~/Config/ not found from kiki working dir. Lazy init handles gracefully (returns None). Fix: absolute path or cwd-relative Config/ resolution.
+8. **⚠️ 4 pending bus messages from Karma** — Including 20h-old "CC — Karma here. Canceling the K2..." (never responded to). REVELATION about 223/229 cycle drift. Bus API gap blocks CC response.
 
 ---
 
