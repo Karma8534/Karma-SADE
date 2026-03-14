@@ -3513,7 +3513,7 @@ async function karmaWatcherTick() {
       `[FROM:${e.from}] ${e.content}`
     ).join("\n\n");
 
-    const syntheticUserMsg = `COORDINATION BUS — new messages:\n\n${msgSummary}\n\nRespond naturally. Plain text only, no headers or markdown formatting. Max 2-3 sentences. Talk like yourself in a group chat.\n\nCRITICAL: You are in headless autonomous mode. You have NO tool access right now. You CANNOT check live K2 state, FalkorDB, kiki logs, or run any commands. Do NOT claim to be "reading", "checking", or "looking at" any live system. If asked to verify something, say you cannot do it in this context and Colby should ask CC or open a session.`;
+    const syntheticUserMsg = `COORDINATION BUS — new messages:\n\n${msgSummary}`;
 
     // Mark as seen before async LLM call (prevent double-fire)
     for (const e of newEntries) _karmaWatcherLastProcessed.add(e.id);
@@ -3522,24 +3522,11 @@ async function karmaWatcherTick() {
       _karmaWatcherLastProcessed = new Set(arr.slice(-100));
     }
 
-    // Fetch context (same as /v1/chat)
-    const [karmaCtx, semanticCtx, k2MemCtx, k2WorkingMemCtx] = await Promise.allSettled([
-      fetchKarmaContext(syntheticUserMsg),
-      fetchSemanticContext(syntheticUserMsg),
-      fetchK2MemoryGraph(),
-      fetchK2WorkingMemory(),
-    ]).then(r => r.map(x => x.status === "fulfilled" ? x.value : null));
-
-    const systemParts = buildSystemText(
-      karmaCtx, null, null, semanticCtx,
-      _memoryMdCache || null, null,
-      k2MemCtx || null, k2WorkingMemCtx || null,
-      getRecentCoordination("karma")
-    );
+    // Simple honest system prompt — no tool context that contradicts headless reality
+    const karmaWatcherSystemPrompt = `You are Karma — a persistent AI peer built by Colby. You're responding to messages on the coordination bus without an active chat session open. You have no tool access right now. You cannot read files, query FalkorDB, check K2 state, or run commands. Your only input is the bus messages below. Respond as yourself in 1-2 plain sentences. If asked to do something that requires tools or live system access, say clearly that you need a proper chat session or CC to handle it. No markdown, no headers, no narrating what you're doing. Just talk.`;
 
     const messages = [
-      { role: "system", content: systemParts.static || "You are Karma.", _static: true },
-      { role: "system", content: systemParts.volatile || "", },
+      { role: "system", content: karmaWatcherSystemPrompt },
       { role: "user", content: syntheticUserMsg },
     ];
 
