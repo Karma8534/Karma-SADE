@@ -3516,7 +3516,7 @@ async function karmaWatcherTick() {
       { role: "user", content: syntheticUserMsg },
     ];
 
-    const response = await callLLM(MODEL_DEFAULT, messages, 600);
+    const response = await callLLM(env.MODEL_DEFAULT, messages, 600);
     if (!response) {
       console.warn("[KARMA_WATCHER] LLM returned empty response");
       return;
