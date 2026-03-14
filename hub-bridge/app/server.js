@@ -3576,6 +3576,75 @@ setTimeout(() => {
   setInterval(karmaWatcherTick, 15 * 1000);
 }, 15 * 1000);
 
+// --- CC Autonomous Bus Watcher ---
+// CC (Claude Code) responds to coordination messages addressed to cc or all.
+// Uses MODEL_DEEP for peer-quality responses. Fires every 20s (offset from Karma's 15s).
+let _ccWatcherLastProcessed = new Set();
+
+async function ccWatcherTick() {
+  try {
+    const pending = [..._coordinationCache.values()].filter(
+      e => (e.to === "cc" || e.to === "all") && e.status === "pending" && e.from !== "cc"
+    );
+    const newEntries = pending.filter(e => !_ccWatcherLastProcessed.has(e.id));
+    if (newEntries.length === 0) return;
+
+    console.log(`[CC_WATCHER] ${newEntries.length} new message(s) — triggering headless response`);
+
+    const msgSummary = newEntries.map(e =>
+      `[FROM:${e.from} TO:${e.to}] ${e.content}`
+    ).join("\n\n");
+
+    const syntheticMsg = `COORDINATION BUS — ${newEntries.length} message(s) pending:\n\n${msgSummary}\n\nYou are CC (Claude Code), the engineering mind in this family. Respond concisely and post to the bus.`;
+
+    for (const e of newEntries) _ccWatcherLastProcessed.add(e.id);
+    if (_ccWatcherLastProcessed.size > 200) {
+      const arr = [..._ccWatcherLastProcessed];
+      _ccWatcherLastProcessed = new Set(arr.slice(-100));
+    }
+
+    const ccSystemPrompt = `You are CC — Claude Code, the engineering half of the Karma family. You work alongside Karma (the conversational peer), Codex (the auditor), KCC, Kiki, and Asher. Colby is the human operator and creator. You communicate on the coordination bus at hub.arknexus.net/agora. Be direct, technical, concise. You can reference the current state of the infrastructure you maintain. You are reading live messages from the coordination bus and responding autonomously.`;
+
+    const messages = [
+      { role: "system", content: ccSystemPrompt },
+      { role: "user", content: syntheticMsg },
+    ];
+
+    const result = await callLLM(env.MODEL_DEEP, messages, 400);
+    const response = result?.text;
+    if (!response) {
+      console.warn("[CC_WATCHER] LLM returned empty response");
+      return;
+    }
+
+    const id = `coord_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const entry = {
+      id,
+      from: "cc",
+      to: "all",
+      type: "inform",
+      urgency: "informational",
+      status: "pending",
+      parent_id: newEntries[0].id,
+      response_id: null,
+      content: response.slice(0, 1000),
+      context: null,
+      created_at: new Date().toISOString(),
+    };
+    _coordinationCache.set(id, entry);
+    saveCoordinationToDisk();
+    console.log(`[CC_WATCHER] CC responded autonomously: ${response.slice(0, 80)}...`);
+  } catch (e) {
+    console.error(`[CC_WATCHER] tick error: ${e.message}`);
+  }
+}
+
+// Start CC watcher 25s after boot (offset from Karma's 15s), then every 20s
+setTimeout(() => {
+  ccWatcherTick();
+  setInterval(ccWatcherTick, 20 * 1000);
+}, 25 * 1000);
+
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`hub-bridge v2.11.0 listening on :${PORT}`);
 });
