@@ -3,6 +3,8 @@
   "controlled_by": "colby",
   "critical_paths": [
     "hub-bridge/app/server.js",
+    "hub-bridge/lib/routing.js",
+    "hub-bridge/lib/pricing.js",
     "Memory/00-karma-system-prompt-live.md",
     "CLAUDE.md",
     "Config/governance_boundary_v1.json",

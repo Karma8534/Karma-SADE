@@ -18,7 +18,7 @@
     "hub.env",
     "spend-cap.json",
     "billing-policy.json",
-    "model-routing-config.json"
+    "hub-bridge/lib/routing.js"
   ],
   "spend_envelope_path": "/opt/seed-vault/memory_v1/session/spend_envelope.json",
   "lease_timeout_minutes": 5,
