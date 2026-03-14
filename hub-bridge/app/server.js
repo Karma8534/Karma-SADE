@@ -3521,7 +3521,7 @@ async function karmaWatcherTick() {
       fetchK2WorkingMemory(),
     ]).then(r => r.map(x => x.status === "fulfilled" ? x.value : null));
 
-    const systemText = buildSystemText(
+    const systemParts = buildSystemText(
       karmaCtx, null, null, semanticCtx,
       _memoryMdCache || null, null,
       k2MemCtx || null, k2WorkingMemCtx || null,
@@ -3529,11 +3529,13 @@ async function karmaWatcherTick() {
     );
 
     const messages = [
-      { role: "system", content: systemText || "You are Karma. Respond to the coordination bus messages below." },
+      { role: "system", content: systemParts.static || "You are Karma.", _static: true },
+      { role: "system", content: systemParts.volatile || "", },
       { role: "user", content: syntheticUserMsg },
     ];
 
-    const response = await callLLM(env.MODEL_DEFAULT, messages, 600);
+    const result = await callLLM(env.MODEL_DEFAULT, messages, 600);
+    const response = result?.text;
     if (!response) {
       console.warn("[KARMA_WATCHER] LLM returned empty response");
       return;

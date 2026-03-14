@@ -1377,3 +1377,4 @@ Five things worth carrying forward:
 - Coordination bus validFrom/validTo expanded: kcc, codex, kiki, asher now valid agent names.
 - Karma watcher expanded: now responds to all pending messages to karma (not just blocking). Agora informational messages now trigger autonomous Karma response.
 - Karma watcher system text fallback added (was failing with null string → Anthropic 400).
+- Karma watcher root cause fixed: buildSystemText returns {static,volatile} object, not string. callLLM returns {text,...} object, not string. Both corrected.
