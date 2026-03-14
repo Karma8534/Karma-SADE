@@ -306,20 +306,22 @@ async function fetchK2MemoryGraph(query = "Colby") {
   }
 }
 
-// K2 working memory — scratchpad, shadow, yoyo state/journal/backlog from K2 cache.
+// K2 working memory — scratchpad, shadow, kiki state/journal/backlog from K2 cache.
 // Fetched via /api/exec (shell_run endpoint). Injected into buildSystemText for session continuity.
 let _k2WorkingMemCache = null;
 let _k2WorkingMemCacheAt = 0;
 const K2_WORKING_MEM_MAX_CHARS = 6000;
 
 async function fetchK2WorkingMemory() {
-  if (!ARIA_SERVICE_KEY || !ARIA_URL) return null;
+  if (!ARIA_SERVICE_KEY || !ARIA_URL) {
+    return "k2_state_unavailable: missing ARIA connection configuration";
+  }
   const now = Date.now();
   if (_k2WorkingMemCache && (now - _k2WorkingMemCacheAt) < K2_MEM_CACHE_TTL_MS) {
     return _k2WorkingMemCache;
   }
   try {
-    const cmd = "echo '=== SCRATCHPAD ===' && cat /mnt/c/dev/Karma/k2/cache/scratchpad.md 2>/dev/null || echo '(empty)' && echo '=== SHADOW ===' && tail -c 1500 /mnt/c/dev/Karma/k2/cache/shadow.md 2>/dev/null || echo '(empty)' && echo '=== YOYO STATE ===' && cat /mnt/c/dev/Karma/k2/cache/yoyo_state.json 2>/dev/null || echo '(empty)' && echo '=== YOYO JOURNAL (last 20) ===' && tail -20 /mnt/c/dev/Karma/k2/cache/yoyo_journal.jsonl 2>/dev/null || echo '(empty)' && echo '=== YOYO BACKLOG ===' && cat /mnt/c/dev/Karma/k2/cache/yoyo_issues.jsonl 2>/dev/null || echo '(empty)'";
+    const cmd = "echo '=== kiki STATE ===' && cat /mnt/c/dev/Karma/k2/cache/kiki_state.json 2>/dev/null || echo '(empty)' && echo '=== kiki BACKLOG ===' && cat /mnt/c/dev/Karma/k2/cache/kiki_issues.jsonl 2>/dev/null || echo '(empty)' && echo '=== kiki RULES (last 10) ===' && tail -10 /mnt/c/dev/Karma/k2/cache/kiki_rules.jsonl 2>/dev/null || echo '(empty)' && echo '=== kiki JOURNAL (last 5) ===' && tail -5 /mnt/c/dev/Karma/k2/cache/kiki_journal.jsonl 2>/dev/null || echo '(empty)' && echo '=== SHADOW (tail 1200 chars) ===' && tail -c 1200 /mnt/c/dev/Karma/k2/cache/shadow.md 2>/dev/null || echo '(empty)' && echo '=== SCRATCHPAD (tail 1200 chars) ===' && tail -c 1200 /mnt/c/dev/Karma/k2/cache/scratchpad.md 2>/dev/null || echo '(empty)'";
     const res = await fetch(`${ARIA_URL}/api/exec`, {
       method: "POST",
       headers: {
@@ -329,9 +331,13 @@ async function fetchK2WorkingMemory() {
       body: JSON.stringify({ command: cmd }),
       signal: AbortSignal.timeout(8000),
     });
-    if (!res.ok) { console.warn(`[K2-WORK] /api/exec → ${res.status}`); return null; }
-    const data = await res.json();
-    if (!data.ok || !data.stdout) return null;
+    if (!res.ok) {
+      console.warn(`[K2-WORK] /api/exec -> ${res.status}`);
+      return `k2_state_unavailable: /api/exec status ${res.status}`;
+    }
+    const data = await res.json().catch(() => null);
+    if (!data || !data.ok) return "k2_state_unavailable: invalid /api/exec response";
+    if (!data.stdout) return "k2_state_unavailable: empty K2 working memory payload";
     const text = data.stdout.length > K2_WORKING_MEM_MAX_CHARS
       ? data.stdout.slice(0, K2_WORKING_MEM_MAX_CHARS) + "\n...(truncated)"
       : data.stdout;
@@ -341,7 +347,7 @@ async function fetchK2WorkingMemory() {
     return text;
   } catch (e) {
     console.warn(`[K2-WORK] fetch failed: ${e.message}`);
-    return null;
+    return `k2_state_unavailable: ${e.message}`;
   }
 }
 
@@ -351,6 +357,21 @@ const LOCAL_FILE_TOKEN = process.env.LOCAL_FILE_TOKEN || "";
 
 const ARIA_URL = process.env.ARIA_URL || "http://100.75.109.92:7890";
 const ARIA_SERVICE_KEY = process.env.ARIA_SERVICE_KEY || "";
+const KIKI_ISSUES_PATH = "/mnt/c/dev/Karma/k2/cache/kiki_issues.jsonl";
+
+const KIKI_PROTECTED_PATH_RE = /\/mnt\/c\/dev\/Karma\/k2\/cache\/kiki_(journal\.jsonl|state\.json|rules\.jsonl|gate_audit\.jsonl|drift_alerts\.jsonl|issues\.jsonl)/i;
+
+function isProtectedKikiPath(pathLike) {
+  if (!pathLike || typeof pathLike !== "string") return false;
+  return KIKI_PROTECTED_PATH_RE.test(pathLike);
+}
+
+function touchesProtectedKikiWrite(command) {
+  if (!command || typeof command !== "string") return false;
+  if (!KIKI_PROTECTED_PATH_RE.test(command)) return false;
+  const writeLike = /(>>|[^|]>|\btee\b|\bsed\s+-i\b|\brm\b|\bmv\b|\bcp\b|\btruncate\b|\bpython\b|\bperl\b|\bnode\b)/i;
+  return writeLike.test(command);
+}
 
 // Auto-handoff config
 const HUB_AUTO_HANDOFF           = (process.env.HUB_AUTO_HANDOFF           || "1") === "1";
@@ -872,10 +893,10 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
     text += `\n\n--- ARIA K2 MEMORY GRAPH ---\n${k2MemCtx}\n---`;
   }
 
-  // K2 working memory — scratchpad, shadow, yoyo state/journal/backlog.
+  // K2 working memory — scratchpad, shadow, kiki state/journal/backlog.
   // Fetched from K2 via /api/exec at request time. Non-blocking; omitted if K2 unreachable.
   if (k2WorkingMemCtx) {
-    text += `\n\n--- K2 WORKING MEMORY + YOYO STATE ---\n${k2WorkingMemCtx}\n---`;
+    text += `\n\n--- K2 WORKING MEMORY + kiki STATE ---\n${k2WorkingMemCtx}\n---`;
   }
 
   // Coordination bus — recent agent-to-agent messages relevant to this agent.
@@ -1344,6 +1365,21 @@ const TOOL_DEFINITIONS = [
       required: ["command"],
     },
   },
+  {
+    name: "kiki_seed_issue",
+    description: "Append one validated issue to kiki backlog. Use this to seed autonomous work instead of writing kiki_issues.jsonl directly.",
+    input_schema: {
+      type: "object",
+      properties: {
+        title: { type: "string", description: "Issue title (required)." },
+        details: { type: "string", description: "Optional details/context." },
+        priority: { type: "string", description: "Optional priority (critical|high|normal|low)." },
+        category: { type: "string", description: "Optional category label." },
+        vault_worthy: { type: "boolean", description: "Optional hint for vault promotion intent." },
+      },
+      required: ["title"],
+    },
+  },
   // ── K2 Structured Tools (Phase 2 — MCP surface on K2) ──
   {
     name: "k2_file_read",
@@ -1598,6 +1634,12 @@ async function executeToolCall(toolName, toolInput, writeId = null, ariaSessionI
     if (toolName === "shell_run") {
       const { command } = toolInput;
       if (!command) return { error: "command_required", message: "command is required" };
+      if (touchesProtectedKikiWrite(command)) {
+        return {
+          error: "protected_kiki_artifact_write_blocked",
+          message: "Writes to kiki journal/state/rules/issues artifacts are blocked from shell_run. Use kiki_seed_issue for backlog writes.",
+        };
+      }
       const ARIA_KEY = process.env.ARIA_SERVICE_KEY || "";
       const execUrl = `${ARIA_URL}/api/exec`;
       try {
@@ -1614,6 +1656,69 @@ async function executeToolCall(toolName, toolInput, writeId = null, ariaSessionI
       } catch (e) {
         console.warn(`[TOOL-API] shell_run failed: ${e.message}`);
         return { error: "network_error", message: e.message };
+      }
+    }
+
+    // kiki_seed_issue -- append one normalized issue to kiki backlog
+    if (toolName === "kiki_seed_issue") {
+      const title = (toolInput.title || "").trim();
+      const details = (toolInput.details || "").trim();
+      if (!title) return { error: "missing_title", message: "title is required" };
+      if (title.length > 400) return { error: "title_too_long", message: "title must be <= 400 chars" };
+      if (details.length > 4000) return { error: "details_too_long", message: "details must be <= 4000 chars" };
+
+      const nowIso = new Date().toISOString();
+      const rand = Math.random().toString(16).slice(2, 10);
+      const issueId = `kiki-${Date.now().toString(36)}-${rand}`;
+      const issue = {
+        issue_id: issueId,
+        issue: title,
+        details,
+        priority: (toolInput.priority || "normal").toString().trim() || "normal",
+        category: (toolInput.category || "general").toString().trim() || "general",
+        assigned_to: "kiki",
+        vault_worthy: Boolean(toolInput.vault_worthy),
+        created_at: nowIso,
+        updated_at: nowIso,
+        attempts: 0,
+        status: "open",
+      };
+
+      const ARIA_KEY = process.env.ARIA_SERVICE_KEY || "";
+      const k2ToolUrl = `${ARIA_URL}/api/tools/execute`;
+      try {
+        const writeResp = await fetch(k2ToolUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Aria-Service-Key": ARIA_KEY,
+          },
+          body: JSON.stringify({
+            tool: "file_write",
+            input: {
+              path: KIKI_ISSUES_PATH,
+              content: JSON.stringify(issue) + "\n",
+              mode: "append",
+            },
+          }),
+          signal: AbortSignal.timeout(15000),
+        });
+        const writeResult = await writeResp.json().catch(() => null);
+        if (!writeResp.ok || !writeResult || writeResult.ok === false) {
+          return {
+            error: "kiki_issue_write_failed",
+            status: writeResp.status,
+            response: writeResult,
+          };
+        }
+        return {
+          ok: true,
+          issue_id: issueId,
+          issue,
+          message: "kiki issue seeded",
+        };
+      } catch (e) {
+        return { error: "kiki_issue_seed_error", message: e.message };
       }
     }
 
@@ -1814,6 +1919,23 @@ async function executeToolCall(toolName, toolInput, writeId = null, ariaSessionI
     // k2_* tools -- route to K2's structured MCP surface via /api/tools/execute
     if (toolName.startsWith("k2_")) {
       const k2ToolName = toolName.slice(3); // strip "k2_" prefix
+      const writeTools = new Set(["file_write", "file_move", "file_delete"]);
+      if (writeTools.has(k2ToolName)) {
+        const pathCandidates = [
+          toolInput.path,
+          toolInput.file_path,
+          toolInput.target_path,
+          toolInput.source_path,
+          toolInput.dest_path,
+        ].filter(Boolean);
+        if (pathCandidates.some(isProtectedKikiPath)) {
+          return {
+            error: "protected_kiki_artifact_write_blocked",
+            message: "Writes to kiki journal/state/rules/issues artifacts are blocked from tool API. Use kiki_seed_issue for backlog writes.",
+            tool: toolName,
+          };
+        }
+      }
       const ARIA_KEY = process.env.ARIA_SERVICE_KEY || "";
       const k2ToolUrl = `${ARIA_URL}/api/tools/execute`;
       try {
