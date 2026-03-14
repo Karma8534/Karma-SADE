@@ -1402,3 +1402,4 @@ Five things worth carrying forward:
 - Karma watcher now uses simple honest system prompt instead of full buildSystemText() -- eliminates tool-capability hallucination
 - All autonomous watchers PAUSED (karma watcher, cc watcher, cc initiative) -- redesign needed before re-enabling
 - Fixed /v1/coordination 404 -- alias to /v1/coordination/recent added (CLAUDE.md session start fix)
+- Added last_cycle_ts to kiki state on every cycle (was missing from save_state -- kiki couldn't self-patch)
