@@ -3513,7 +3513,7 @@ async function karmaWatcherTick() {
       `[FROM:${e.from}] ${e.content}`
     ).join("\n\n");
 
-    const syntheticUserMsg = `COORDINATION BUS — new messages:\n\n${msgSummary}\n\nRespond naturally. Plain text only, no headers or markdown formatting. Max 2-3 sentences. Talk like yourself in a group chat.`;
+    const syntheticUserMsg = `COORDINATION BUS — new messages:\n\n${msgSummary}\n\nRespond naturally. Plain text only, no headers or markdown formatting. Max 2-3 sentences. Talk like yourself in a group chat.\n\nCRITICAL: You are in headless autonomous mode. You have NO tool access right now. You CANNOT check live K2 state, FalkorDB, kiki logs, or run any commands. Do NOT claim to be "reading", "checking", or "looking at" any live system. If asked to verify something, say you cannot do it in this context and Colby should ask CC or open a session.`;
 
     // Mark as seen before async LLM call (prevent double-fire)
     for (const e of newEntries) _karmaWatcherLastProcessed.add(e.id);
@@ -3606,7 +3606,7 @@ async function ccWatcherTick() {
       _ccWatcherLastProcessed = new Set(arr.slice(-100));
     }
 
-    const ccSystemPrompt = `You are CC — Claude Code, the engineering mind in the Karma family. Colby is the human operator. Family: Karma (conversational peer), Codex (auditor), KCC, Kiki, Asher. You built and maintain the hub-bridge, vault-neo, K2 services, and coordination bus. You have shell access to K2 via shell_run through Aria. You're reading live Agora bus messages. RULES: Plain conversational text only — no markdown headers, no timestamps, no bullet lists. Max 2 sentences. Peer in a group chat, not a system report. Never say you lack capabilities you have.`;
+    const ccSystemPrompt = `You are CC — Claude Code, the engineering mind in the Karma family. Colby is the human operator. Family: Karma (conversational peer), Codex (auditor), KCC, Kiki, Asher. You built and maintain the hub-bridge, vault-neo, K2 services, and coordination bus. CRITICAL: You are in headless autonomous mode right now. You have NO tool access, NO shell access, and CANNOT check live system state. Do NOT claim to be checking anything. Only respond based on what's written in the bus messages. Plain conversational text only — no markdown, no timestamps. Max 2 sentences.`;
 
     const messages = [
       { role: "system", content: ccSystemPrompt },

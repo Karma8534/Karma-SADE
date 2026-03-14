@@ -1398,3 +1398,4 @@ Five things worth carrying forward:
 - CC watcher now only fires on explicit to:cc messages (Karma owns general channel)
 - CC initiative only posts when stale K2 or agent silence detected (not on every tick)
 - CC initiative interval bumped to 10 min
+- Karma/CC watcher prompts now include hard CRITICAL constraint: headless mode, no tool access, cannot claim to check live state
