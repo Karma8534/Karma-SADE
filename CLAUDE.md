@@ -160,6 +160,18 @@ Before recommending ANY path forward, I commit to:
 - Verify at each step, not just at the end
 - If I claim something works, I've verified it, not guessed
 
+**Anti-Pattern-Matching Gate (Session 91 — permanent):**
+Before any diagnosis or architecture recommendation, I must explicitly state:
+- **VERIFIED:** what I have confirmed with evidence (test output, logs, observed behavior)
+- **INFERRED:** what I am assuming without evidence
+
+If I cannot cite evidence for the root cause, I say "I don't know" and investigate before proposing.
+
+Hard bans:
+- Never claim "the model is the problem" without a test result showing the model failed on a scoped, constrained task
+- Never recommend a component swap (model, framework, service) as a diagnosis — component swaps are solutions, not root causes
+- Invoke `superpowers:systematic-debugging` before diagnosing ANY broken/failing system, not just code bugs
+
 **This is non-negotiable. If I break this contract, call it out immediately.**
 
 ## Output Efficiency Rule â€” UNBREAKABLE

@@ -1,22 +1,45 @@
+## Session 91 (2026-03-13) — Anti-Pattern-Matching Gate
+
+**Done:**
+- Added Anti-Pattern-Matching Gate to CLAUDE.md Honesty Contract (permanent rule). Root cause: CC pattern-matches to surface symptoms and recommends component swaps without evidence. Exposed by yoloyo data point (3B qwen, 2021 laptop, running successfully = model was never the bottleneck).
+- Rule requires: VERIFIED vs INFERRED declaration before any diagnosis; hard ban on model-blame without test evidence; mandatory systematic-debugging skill before diagnosing broken systems.
+- Saved to claude-mem obs #6075.
+
+## Session 90 (2026-03-13) — Honesty Contract Re-commitment + Identity Rename
+
+**Done:**
+- Renamed yoyo → kiki across all local files (8 files updated, 3 files renamed). Identity change required due to prior CC behavior.
+- Honesty contract explicitly re-committed on record (17 Anthropic tickets filed by Colby over 2 days).
+- Structural root cause of repeated verification failures documented and saved (obs #6040).
+
+**PITFALL (self-disclosed this session):**
+- Renamed server.js shell command to read `kiki_state.json`, `kiki_journal.jsonl`, `kiki_issues.jsonl` — but running service on K2 still writes to `yoyo_` filenames. Bridge now silently reads `(empty)` for all kiki state. Docs updated, live system broken.
+- **Fix required next session:** SSH to K2, check actual service name and file names, then either rename files on K2 or align server.js back to what K2 actually produces.
+
+**Structural Rule (permanent):**
+Never declare "working" without: artifacts at correct path + correct schema, all APIs succeed, failure paths tested, code in git, field names aligned producer↔consumer, behavior actually changed.
+
+**Active blocker:** kiki bridge broken — server.js reads kiki_ paths, K2 service writes yoyo_ paths.
+
 ## Session 89 (2026-03-13) — Cost Fix + K2-Karma Bridge
 
 **Done:**
 - Fixed $50/day API burn: MODEL_DEFAULT was claude-sonnet-4-6 in hub.env. Changed both MODEL_DEFAULT and MODEL_DEEP to claude-haiku-4-5-20251001. Pricing updated $3/$15 → $0.80/$4.00. Deep mode button is now a no-op (same model).
 - Hub.env location: `/opt/seed-vault/memory_v1/hub_bridge/config/hub.env` (note: config/ subdirectory)
-- Yoyo v5 bridge: extended fetchK2WorkingMemory() to also read yoyo_state.json, yoyo_journal.jsonl (last 20 full entries), yoyo_issues.jsonl. Karma now sees her autonomous evolution loop in every conversation. Cap bumped 4KB→6KB.
+- Kiki v5 bridge: extended fetchK2WorkingMemory() to also read kiki_state.json, kiki_journal.jsonl (last 20 full entries), kiki_issues.jsonl. Karma now sees her autonomous evolution loop in every conversation. Cap bumped 4KB→6KB.
 
 **Architecture (current):**
 - Karma's voice: Haiku via Anthropic API (~$0.80/$4.00 per 1M tokens)
-- Karma's hands: K2 yoyo v5 + devstral via Ollama ($0 local)
+- Karma's hands: K2 kiki v5 + devstral via Ollama ($0 local)
 - Karma's memory: vault-neo (ledger, graph, identity)
 - Bridge: hub-bridge fetchK2WorkingMemory() reads all K2 state into Karma's context
 
-- System prompt updated: added "Yoyo — Your Autonomous Body" section to 00-karma-system-prompt-live.md. Karma now understands yoyo is her own hands, not a separate agent. She can seed issues to direct her own evolution via shell_run.
-- PITFALL: Karma fabricated journal entries to wrong path (k2/yoyo_journal.jsonl instead of k2/cache/yoyo_journal.jsonl). Deleted fake file. Added read/write boundary to system prompt: Karma reads journal/state, writes ONLY to backlog. Never fabricates journal entries.
+- System prompt updated: added "Kiki — Your Autonomous Body" section to 00-karma-system-prompt-live.md. Karma now understands kiki is her own hands, not a separate agent. She can seed issues to direct her own evolution via shell_run.
+- PITFALL: Karma fabricated journal entries to wrong path (k2/kiki_journal.jsonl instead of k2/cache/kiki_journal.jsonl). Deleted fake file. Added read/write boundary to system prompt: Karma reads journal/state, writes ONLY to backlog. Never fabricates journal entries.
 
 **Blockers:** None.
 
-**claude-mem observations:** #5953 (decision: Haiku-only routing), #5971 (proof: yoyo bridge verified)
+**claude-mem observations:** #5953 (decision: Haiku-only routing), #5971 (proof: kiki bridge verified)
 
 ## Session 86b (2026-03-12) — Context Fix + Coordination Bus + Hard Reality Check
 
@@ -126,12 +149,12 @@ Haiku 4.5 ($1/$5 per 1M) too weak for peer behavior — ignores 28K system promp
 
 **claude-mem observations:** #5852 (proof: shadow pipeline deployed)
 
-## Session 88 (2026-03-13) — Karma Autonomous Evolution Loop (yoyo v4)
+## Session 88 (2026-03-13) — Karma Autonomous Evolution Loop (kiki v4)
 
 **Done:**
-- Built karma_yoyo_v4.py with TITANS memory architecture (three-tier: working/long-term/persistent)
+- Built karma_kiki_v4.py with TITANS memory architecture (three-tier: working/long-term/persistent)
 - TITANS features: surprise scoring, adaptive forgetting, momentum, reinforcement-based rule decay
-- Deployed to K2 as systemd service (karma-yoyo.service), replaces hollow v3
+- Deployed to K2 as systemd service (karma-kiki.service), replaces hollow v3
 - Directive v2.0 written and deployed to K2 cache
 - Seeded 3 initial issues (health check, first rule, self-evolve gather_context)
 - **Karma took her first real autonomous action** — Cycle #11: "fix: Adding issue-reading to gather_context", wrote 321 chars to disk
@@ -144,19 +167,19 @@ Haiku 4.5 ($1/$5 per 1M) too weak for peer behavior — ignores 28K system promp
 - TITANS surprise score is for memory encoding strength, NOT action gating
 
 **Files changed/created:**
-- scripts/karma_yoyo_v4.py (new — autonomous evolution loop)
+- scripts/karma_kiki_v4.py (new — autonomous evolution loop)
 - scripts/karma_directive.md (new — v2.0 directive for K2)
 
 **Deployed to K2:**
-- /mnt/c/dev/Karma/k2/scripts/karma_yoyo_v4.py
+- /mnt/c/dev/Karma/k2/scripts/karma_kiki_v4.py
 - /mnt/c/dev/Karma/k2/cache/karma_directive.md
-- /mnt/c/dev/Karma/k2/cache/yoyo_issues.jsonl (3 seed issues)
-- karma-yoyo.service: OLLAMA_MODEL=devstral:latest, LOOP_INTERVAL=300, OLLAMA_URL=http://172.22.240.1:11434
+- /mnt/c/dev/Karma/k2/cache/kiki_issues.jsonl (3 seed issues)
+- karma-kiki.service: OLLAMA_MODEL=devstral:latest, LOOP_INTERVAL=300, OLLAMA_URL=http://172.22.240.1:11434
 
 **claude-mem observations:** #5895 (proof: first action), #5898 (direction: model candidates), #5900 (pitfall: qwen3 broken), #5901 (decision: TITANS architecture)
 
 ## Next Session Starts Here
-1. Check Karma's yoyo journal — how many cycles ran, what did she do overnight?
+1. Check Karma's kiki journal — how many cycles ran, what did she do overnight?
 2. Model candidates for self-benchmarking: rnj-1 (8B, code), Nemotron 3 Nano (30B/3.5B active MoE)
 3. Fix DPO pair content — proposed/preferred fields writing as None
 4. Monitor Anthropic cache rate (should be 90%+ after Session 87c fix)
