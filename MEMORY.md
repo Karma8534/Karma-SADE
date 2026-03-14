@@ -1408,3 +1408,4 @@ Five things worth carrying forward:
 - evolve.md v2.1-cc written with all 4 CC fixes applied (P4/P5 pinned, pending-reply defined, canary isolation)
 - cc_scratchpad.md rewritten: Ascendant identity, correct hierarchy (Sovereign/Ascendant/ArchonPrime/Archon/Initiate), Karma guidance principle, KCC correction
 - cc_hourly_report.py: Ascendant hourly Agora status post, runs on K2 cron every hour, evaluates Karma evolution criteria, posts to coordination bus
+- seed_kiki_issues_v2.py: corrected bootstrap issues -- READ-ONLY verification, python3 fix, evolve.md protected
