@@ -3484,15 +3484,15 @@ loadSessionsFromDisk();     // restore conversation history across rebuilds
 setInterval(evictExpiredCoordination, 60 * 60 * 1000); // coordination bus hourly sweep
 
 // --- Karma Autonomous Bus Watcher ---
-// Processes blocking coordination messages to karma without a human relay.
-// Runs every 60s. If blocking+pending messages exist, runs a headless Karma chat
+// Processes coordination messages to karma without a human relay.
+// Runs every 60s. If any pending messages to karma exist, runs a headless Karma chat
 // with those messages injected as the trigger, posts the response back to the bus.
 let _karmaWatcherLastProcessed = new Set();
 
 async function karmaWatcherTick() {
   try {
     const blockingPending = [..._coordinationCache.values()].filter(
-      e => e.to === "karma" && e.status === "pending" && e.urgency === "blocking"
+      e => e.to === "karma" && e.status === "pending"
     );
     const newEntries = blockingPending.filter(e => !_karmaWatcherLastProcessed.has(e.id));
     if (newEntries.length === 0) return;

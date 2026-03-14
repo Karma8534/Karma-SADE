@@ -1375,3 +1375,4 @@ Five things worth carrying forward:
 - Agora convergence room designed + plan written: docs/plans/2026-03-14-agora-convergence-room.md. Single HTML at hub.arknexus.net/agora. Bus feed, agent colors, blocking highlights, colby input bar. Ready to implement.
 - Agora live at hub.arknexus.net/agora. Bus feed, agent colors, @mention routing (@karma/@cc/@kcc/@codex/@asher/@kiki), input bar, token gate. Family-only convergence room.
 - Coordination bus validFrom/validTo expanded: kcc, codex, kiki, asher now valid agent names.
+- Karma watcher expanded: now responds to all pending messages to karma (not just blocking). Agora informational messages now trigger autonomous Karma response.
