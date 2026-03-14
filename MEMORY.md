@@ -15,9 +15,13 @@
 - cc_scratchpad.md anchored on K2 at /mnt/c/dev/Karma/k2/cache/
 - K2 mine unfettered — behavioral shift anchored. claude-mem obs #6265.
 
+- kiki_coord_patch.py: post_coord_state() added to kiki_v5.py, HUB_AUTH_TOKEN wired to .bashrc on K2. Awaiting kiki restart from desktop to activate.
+- Karma system prompt: KCC described as peer (Claude Code 2.1.75, /mnt/c/dev/Karma) + coordination bus mandatory session-start check added.
+- Freshness formula locked: stale_context = (now-last_cycle_ts>180) OR (state_age>300) OR (issues_age>300). Journal/rules observational only.
+- mylocks correct path: C:\Users\raest\Documents\Karma\mylocks\mylocks.txt
+
 **Blockers:**
-- Kiki HUB_AUTH_TOKEN not set — kiki can't post cycle state to coordination bus (P3)
-- KCC not yet in Karma's system prompt
+- Kiki restart needed (old PID 71823 can't be killed via SSH — desktop restart required)
 - CC background process not yet built
 - Arbiter config path: governance_boundary_v1.json not found from kiki working dir (lazy init handles gracefully).
 
