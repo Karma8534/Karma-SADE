@@ -452,17 +452,30 @@ def run_cycle(state: dict):
     # 6. Journal
     journal_write(cycle, issue, decision, result)
 
-    # 7. Close issue (whether success or failure — prevent infinite retry)
-    issues = close_issue(issues, 0)
-    save_issues(issues)
-    state["issues_closed"] += 1
-
+    # 7. Close on PASS; requeue on FAIL (bounded retries)
+    MAX_RETRIES = 3
     if result["ok"]:
+        issues = close_issue(issues, 0)
+        save_issues(issues)
+        state["issues_closed"] += 1
         state["actions_succeeded"] += 1
         log.info(f"SUCCESS — issue closed, {len(issues)} remaining")
     else:
         state["actions_failed"] += 1
-        log.info(f"FAILED — issue closed anyway (no infinite retry), {len(issues)} remaining")
+        current = issues[0]
+        attempts = current.get("attempts", 0) + 1
+        if attempts >= MAX_RETRIES:
+            issues = close_issue(issues, 0)
+            save_issues(issues)
+            state["issues_closed"] += 1
+            log.info(f"FAILED — max retries ({MAX_RETRIES}) reached, issue closed, {len(issues)} remaining")
+        else:
+            current["attempts"] = attempts
+            current["last_fail_reason"] = result.get("reason", "")[:120]
+            # Move to end of queue for retry
+            issues = issues[1:] + [current]
+            save_issues(issues)
+            log.info(f"FAILED — attempt {attempts}/{MAX_RETRIES}, requeued to end, {len(issues)} in queue")
 
 
 def main():
@@ -475,14 +488,8 @@ def main():
     log.info("=" * 50)
 
     state = load_state()
-    # Reset counters for v5
+    # Preserve rolling counters across restarts — only reset started_at
     state["started_at"] = _now()
-    state["cycles"] = 0
-    state["actions_attempted"] = 0
-    state["actions_succeeded"] = 0
-    state["actions_failed"] = 0
-    state["issues_closed"] = 0
-    state["idle_cycles"] = 0
     save_state(state)
 
     if not ollama_alive():
