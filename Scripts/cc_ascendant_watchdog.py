@@ -17,6 +17,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import subprocess
 import urllib.request
 import urllib.error
 from datetime import datetime, UTC, timedelta
@@ -64,6 +65,19 @@ def _save_json(path: Path, data: Any) -> None:
 
 
 def _get_token() -> str | None:
+    """Read hub auth token from karma-kiki systemd environment (same as archonprime_autopilot)."""
+    try:
+        proc = subprocess.run(
+            ["systemctl", "show", "karma-kiki", "--property=Environment", "--value"],
+            capture_output=True, text=True, timeout=10,
+        )
+        blob = proc.stdout if proc.returncode == 0 else ""
+        marker = "HUB_AUTH_TOKEN="
+        if marker in blob:
+            return blob.split(marker, 1)[1].split()[0].strip()
+    except Exception:
+        pass
+    # Fallback: try reading from vault-neo mount path
     try:
         return TOKEN_PATH.read_text(encoding="utf-8").strip()
     except Exception:
