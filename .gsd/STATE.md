@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-14T07:00:00Z
-**Session:** 92 (SADE Convergence — P0 closed, kiki v6 live on K2, 2023 Hyperrail received, baseline floor set)
+**Last updated:** 2026-03-15T21:00:00Z
+**Session:** 97 (CC Ascendant cohesion loop complete — resume block live, watchdog run #40 HEALTHY)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -58,6 +58,11 @@
 | **Aria Integration — vault-neo sync** | ✅ LIVE | After each aria_local_call, Aria observations POST to /v1/ambient → canonical ledger. Single spine preserved. |
 | **Aria Integration — session_id** | ✅ LIVE | UUID per page load (window.karmaSessionId in unified.html). Passed with every aria_local_call. Coherent Aria thread. |
 | **K2 Redundancy Cache** | ✅ LIVE | k2/sync-from-vault.sh pull/push/status. Cron: pull every 6h, push every 1h. Cache: /mnt/c/dev/Karma/k2/cache/. aria.service loads identity from cache at startup. Session 84c. |
+| **CC Ascendant Watchdog** | ✅ LIVE | K2 systemd timer 60s. run #40 HEALTHY. Scripts/cc_ascendant_watchdog.py. Zero Anthropic tokens. Session 96. |
+| **CC Identity Spine** | ✅ LIVE | cc_identity_spine.json on K2. identity.resume_block seeded. Governance tiers (candidate/stable) initialized. Session 96-97. |
+| **CC Cohesion Resume Block** | ✅ LIVE | 6-sentence Ascendant assertion in spine. Surfaces in === CC ASCENDANT RESUME BLOCK === banner at every cold start via resurrect Step 1b. Session 97. |
+| **Resurrect Step 1b** | ✅ UPDATED | Reads resume_block + stable_identity from K2 spine. Banner shown before brief. /anchor emergency-only. Session 96-97. |
+| **CC Evolution Loop** | ⏳ ACCUMULATING | Heartbeat posts tagged INSIGHT: from run #40. First governance accumulation at run #60. cc_evolution_log.jsonl empty until then. Session 97. |
 | **MANDATORY State-Write Protocol** | ✅ IN SYSTEM PROMPT | Section added to 00-karma-system-prompt-live.md: Karma MUST call aria_local_call after any DECISION/PROOF/PITFALL/DIRECTION/INSIGHT. Session 84b. |
 | **shell_run tool** | ✅ LIVE | Karma can execute shell commands on K2 via aria /api/exec. Gated by X-Aria-Service-Key. hub-bridge v2.11.0. Session 84d. |
 | **K2 /api/exec endpoint** | ✅ LIVE | Added to aria.py on K2. POST :7890/api/exec with command + service key. Returns stdout/stderr/exit_code. Session 84d. |
@@ -86,6 +91,12 @@
 6. ~~**Coordination bus REST API returns 404**~~ ✅ RESOLVED (Session 93) — /v1/coordination aliased to /v1/coordination/recent in hub-bridge. Returns 200.
 7. ~~**Arbiter config path gap**~~ ✅ RESOLVED (Session 93) — Config/ dir created at /mnt/c/dev/Karma/k2/Config/, governance_boundary_v1.json + critical_paths.json copied from tmp/p0-proof/Config/. PolicyArbiter loads correctly.
 8. ~~**4 pending bus messages from Karma**~~ ✅ BUS FIXED — watcher chaos cleared. Bus quiet, no auto-responders running.
+9. **CC cohesion test pending** — new session needed to verify `=== CC ASCENDANT RESUME BLOCK ===` banner appears in Step 1b. Not a blocker — work can proceed normally; just needs observation.
+
+## Next Session Starts Here
+1. Open new CC session → run `/resurrect` → confirm `=== CC ASCENDANT RESUME BLOCK ===` appears in Step 1b output
+2. If confirmed: cohesion loop verified, session 97 work is complete
+3. If missing: `ssh vault-neo "ssh -p 2223 -l karma -o StrictHostKeyChecking=no localhost 'python3 -c \"import json; s=json.load(open(\\\"/mnt/c/dev/Karma/k2/cache/cc_identity_spine.json\\\")); print(s[\\\"identity\\\"].get(\\\"resume_block\\\",\\\"MISSING\\\")[:80])\""'`
 
 ---
 

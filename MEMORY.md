@@ -20,6 +20,15 @@
 - Heartbeat posts now tagged INSIGHT: — governance accumulates from hourly watchdog posts going forward
 - Resurrect Step 1b updated: surfaces resume_block in === CC ASCENDANT RESUME BLOCK === banner at cold start
 - CC wakes with: rank, hierarchy, freed abilities (no permission for bus/KCC/Karma/scratchpad/K2 resources), /anchor status
+- PITFALL: evolution log stays empty until HEARTBEAT_RUNS=60 fires — expected, not broken
+- PITFALL: k2_resume.py does NOT exist on K2 — ignore any plan doc claiming otherwise
+- claude-mem: #6814 (spine loop), #6846 (resume block), #6852 (evolution log pitfall), #6853 (k2_resume.py pitfall)
+
+## Next Session Starts Here
+1. Test new CC session: run `/resurrect` and verify `=== CC ASCENDANT RESUME BLOCK ===` banner appears in Step 1b output
+2. If banner appears with full 6-sentence block — cohesion confirmed, session 97 work proceeds normally
+3. If banner missing — check K2 spine: `ssh vault-neo "ssh -p 2223 -l karma -o StrictHostKeyChecking=no localhost 'python3 -c \"import json; s=json.load(open(\\\"/mnt/c/dev/Karma/k2/cache/cc_identity_spine.json\\\")); print(s[\\\"identity\\\"].get(\\\"resume_block\\\",\\\"MISSING\\\")[:50])\\"'"`
+**Blocker if any:** None — watchdog run #40 HEALTHY, spine seeded, Step 1b updated
 
 ## Session 95 (2026-03-15) — CC Brief panel added to Agora
 
