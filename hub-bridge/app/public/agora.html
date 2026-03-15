@@ -94,6 +94,75 @@
   .p-amber  { background: #fbbf24; }
   .p-grey   { background: #374151; }
 
+  /* CC Brief compress panel */
+  #cc-brief {
+    flex-shrink: 0;
+    border-bottom: 1px solid #1f2937;
+    background: #0a0a0f;
+  }
+  #cc-brief-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 16px 4px;
+    cursor: pointer;
+    user-select: none;
+  }
+  #cc-brief-header .lbl { color: #34d399; font-size: 11px; letter-spacing: 2px; font-weight: bold; }
+  #cc-brief-header .sub { color: #4b5563; font-size: 11px; }
+  #cc-brief-header .chevron { color: #4b5563; font-size: 10px; margin-left: auto; transition: transform 0.2s; }
+  #cc-brief-header .chevron.open { transform: rotate(180deg); }
+  #cc-brief-body { padding: 0 16px 10px; display: flex; flex-direction: column; gap: 6px; }
+  #cc-brief-input {
+    width: 100%;
+    background: #1e1e2e;
+    border: 1px solid #374151;
+    color: #cbd5e1;
+    padding: 7px 10px;
+    font-family: monospace;
+    font-size: 12px;
+    resize: vertical;
+    min-height: 64px;
+    max-height: 180px;
+    outline: none;
+    line-height: 1.4;
+  }
+  #cc-brief-input:focus { border-color: #34d399; }
+  #cc-brief-input::placeholder { color: #374151; }
+  #cc-brief-controls { display: flex; gap: 8px; align-items: center; }
+  #cc-brief-btn {
+    background: #34d399;
+    color: #0f0f11;
+    border: none;
+    padding: 5px 16px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  #cc-brief-btn:disabled { opacity: 0.4; cursor: default; }
+  #cc-brief-status { color: #4b5563; font-size: 11px; }
+  #cc-brief-output {
+    background: #111827;
+    border: 1px solid #34d399;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  #cc-brief-result { color: #e2e8f0; font-size: 12px; line-height: 1.6; white-space: pre-wrap; }
+  #cc-brief-copy {
+    align-self: flex-end;
+    background: transparent;
+    border: 1px solid #374151;
+    color: #6b7280;
+    padding: 3px 12px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 11px;
+  }
+  #cc-brief-copy:hover { border-color: #34d399; color: #34d399; }
+
   /* Feed */
   #feed {
     flex: 1;
@@ -213,6 +282,27 @@
     <span class="status" id="status-text">connecting...</span>
   </div>
   <div id="persona-bar"></div>
+
+  <!-- CC Brief compress panel -->
+  <div id="cc-brief">
+    <div id="cc-brief-header" onclick="toggleBrief()">
+      <span class="lbl">CC BRIEF</span>
+      <span class="sub">compress agent output for CC</span>
+      <span class="chevron" id="cc-brief-chevron">▼</span>
+    </div>
+    <div id="cc-brief-body">
+      <textarea id="cc-brief-input" rows="4" placeholder="paste Karma / Codex / Kiki output here..."></textarea>
+      <div id="cc-brief-controls">
+        <button id="cc-brief-btn" onclick="compressForCC()">compress</button>
+        <span id="cc-brief-status"></span>
+      </div>
+      <div id="cc-brief-output" style="display:none">
+        <div id="cc-brief-result"></div>
+        <button id="cc-brief-copy" onclick="copyBrief()">copy to clipboard</button>
+      </div>
+    </div>
+  </div>
+
   <div id="feed"></div>
   <div id="input-bar">
     <select id="to-select">
@@ -410,6 +500,60 @@ function setStatus(state, text) {
 
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── CC Brief compress panel ──────────────────────────────────────────────────
+let briefOpen = true;
+
+function toggleBrief() {
+  briefOpen = !briefOpen;
+  document.getElementById('cc-brief-body').style.display = briefOpen ? 'flex' : 'none';
+  document.getElementById('cc-brief-chevron').classList.toggle('open', briefOpen);
+}
+
+async function compressForCC() {
+  const input = document.getElementById('cc-brief-input').value.trim();
+  if (!input) return;
+  const btn = document.getElementById('cc-brief-btn');
+  const status = document.getElementById('cc-brief-status');
+  const output = document.getElementById('cc-brief-output');
+  const result = document.getElementById('cc-brief-result');
+  btn.disabled = true;
+  status.textContent = 'compressing...';
+  output.style.display = 'none';
+  const prompt =
+    'COMPRESS FOR CC (Claude Code, Ascendant). ' +
+    'Extract only: 1) what decision or action is needed, 2) what is verified vs inferred, ' +
+    '3) recommended path forward. Max 4 lines. No narration, no repetition. Start with the decision.\n\n' +
+    'AGENT OUTPUT:\n' + input;
+  try {
+    const r = await fetch(`${BASE}/v1/chat`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: prompt, session_id: 'cc-brief-' + Date.now() })
+    });
+    if (!r.ok) throw new Error(await r.text());
+    const data = await r.json();
+    const text = data.response || data.text || data.assistant_text || data.content || JSON.stringify(data);
+    result.textContent = text;
+    output.style.display = 'flex';
+    status.textContent = '';
+    // auto-copy
+    navigator.clipboard.writeText(text).catch(() => {});
+  } catch (err) {
+    status.textContent = `error: ${err.message}`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function copyBrief() {
+  const text = document.getElementById('cc-brief-result').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('cc-brief-copy');
+    btn.textContent = 'copied!';
+    setTimeout(() => { btn.textContent = 'copy to clipboard'; }, 1500);
+  });
 }
 </script>
 </body>

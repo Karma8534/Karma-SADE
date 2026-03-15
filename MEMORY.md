@@ -1,3 +1,16 @@
+## Session 95 (2026-03-15) — CC Brief panel added to Agora
+
+**Done:**
+- Added CC Brief compress panel to Agora (hub-bridge/app/public/agora.html)
+  - Always-visible above feed, collapsible via chevron
+  - Pastes Karma/Codex output → calls /v1/chat → returns 4-line CC brief
+  - Auto-copies to clipboard on compress
+- kiki structural bugs identified: counter reset on startup (line 490), close-on-FAIL (line 467)
+- Anchor protocol complete: obs #6620 + #6631 intact, hierarchy verified, K2 scratchpad synced
+- Phase-2 issues seeded to kiki (fresh kiki restart wiped state; 51 rules preserved in rules file)
+
+**Next:** Fix kiki counter reset + close-on-FAIL bugs in karma_kiki_v5.py, then reseed issues
+
 ## Session 92 (2026-03-14) — SADE Convergence + Kiki v6 Live on K2 + P0 Closed
 
 **Done:**
