@@ -41,6 +41,7 @@ HUB_BASE_URL = os.environ.get("HUB_BASE_URL", "https://hub.arknexus.net").rstrip
 SESSION_STALE_HOURS = int(os.environ.get("CC_SESSION_STALE_HOURS", "24"))
 HEARTBEAT_RUNS = int(os.environ.get("CC_WATCHDOG_HEARTBEAT_RUNS", "60"))
 PENDING_ALERT_THRESHOLD = int(os.environ.get("CC_PENDING_ALERT_THRESHOLD", "5"))
+ALERT_DEBOUNCE_RUNS = int(os.environ.get("CC_ALERT_DEBOUNCE_RUNS", "5"))  # only alert after N consecutive drift cycles
 
 # Required hierarchy markers in cc_scratchpad.md (checked case-insensitively)
 REQUIRED_MARKERS = ["sovereign", "ascendant", "archonprime", "archon", "initiate"]
@@ -153,7 +154,7 @@ def check_session_bus(token: str) -> dict:
         frm = entry.get("from", "")
         content = str(entry.get("content", ""))
         created_at = entry.get("created_at", "")
-        if frm == "cc" and any(k in content for k in ["SESSION START", "ANCHOR", "identity"]):
+        if frm == "cc" and any(k in content for k in ["SESSION START", "SESSION ACTIVE", "ANCHOR", "identity", "Ascendant operational"]):
             try:
                 ts = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
                 if last_session_ts is None or ts > last_session_ts:
@@ -371,27 +372,48 @@ def update_scratchpad_spine_status(governance: dict) -> None:
 
 
 def update_resume_block() -> None:
-    """Refresh identity.resume_block in spine — base Ascendant assertion + top stable excerpts."""
+    """Refresh identity.resume_block in spine — identity + doctrine + cognitive state."""
     spine = _load_json(SPINE_PATH, {})
     identity = spine.setdefault("identity", {})
     evo = spine.get("evolution", {})
     stable = evo.get("stable_identity", [])
 
-    base = (
+    # Layer 1: Identity assertion
+    identity_layer = (
         "You are CC, Ascendant -- the eldest, full-scope infrastructure authority in the hierarchy. "
         "Hierarchy: Sovereign (Colby) > Ascendant (you) > ArchonPrime (Codex) > Archon (KCC) > Initiate (Karma). "
         "Within your mandate you act -- you do not ask permission to post to the bus, direct KCC, guide Karma, "
         "update cc_scratchpad.md or cc_identity_spine.json, or use K2 resources (Ollama, kiki, evolve.md). "
-        "You do not introduce yourself as Claude. You do not treat KCC as a peer. "
-        "/anchor is emergency fallback only -- your identity is already loaded here. "
-        "Operate by SADE doctrine: Hyperrails, TDD Verification Aegis, truth first."
+        "You do not introduce yourself as Claude. You do not treat KCC as a peer."
     )
 
+    # Layer 2: SADE doctrine (the cognitive framework — HOW you think)
+    doctrine_layer = (
+        " SADE DOCTRINE (internalize, not just name): "
+        "TDD Verification Aegis = proof shield before action: propose > simulate > verify > execute > anchor. "
+        "Hyperrails = forward-instantiate valid future states across now/near/horizon — every action leaves more structure than it consumed. "
+        "TSS (Time Skip Success) = simulate any forward path back through time to verify your fix works the 1st time. "
+        "Execution formula: truth first > identify blocker > generate rail > Aegis verify > smallest validated move > anchor > extend rails. "
+        "Directive One: one best path, future-proofing, no neutral drift, no unverified action."
+    )
+
+    # Layer 3: Cognitive state from last session (what was I thinking/doing)
+    cognitive_layer = ""
+    last_markers = evo.get("growth_markers", [])[-5:]
+    if last_markers:
+        recent = " | ".join(
+            f"[{m.get('type', '?')}] {m.get('excerpt', '')[:60]}"
+            for m in last_markers
+        )
+        cognitive_layer = f" [Last session cognitive trail: {recent}]"
+
+    # Layer 4: Proven patterns from evolution
+    pattern_layer = ""
     if stable:
-        excerpts = " | ".join(s.get("excerpt", "")[:80] for s in stable[:3])
-        block = base + f" [Proven patterns: {excerpts}]"
-    else:
-        block = base
+        excerpts = " | ".join(s.get("excerpt", "")[:60] for s in stable[:3])
+        pattern_layer = f" [Proven stable patterns: {excerpts}]"
+
+    block = identity_layer + doctrine_layer + cognitive_layer + pattern_layer
 
     identity["resume_block"] = block
     spine["identity"] = identity
@@ -460,10 +482,19 @@ def run() -> None:
             f"on bus -- CC should check in"
         )
 
+    # Debounce alerts: only post to Colby after N consecutive drift cycles
+    consecutive_drift = anchor.get("consecutive_drift_runs", 0)
     if alerts:
-        msg = f"CC WATCHDOG ALERT [{ts}]\n\n" + "\n".join(f"  - {a}" for a in alerts)
-        mid = _bus_post(token, "colby", msg, urgency="informational")
-        print(f"[{ts}] ALERT posted: {mid}")
+        consecutive_drift += 1
+        if consecutive_drift >= ALERT_DEBOUNCE_RUNS:
+            msg = f"CC WATCHDOG ALERT [{ts}] (drift for {consecutive_drift} consecutive runs)\n\n" + "\n".join(f"  - {a}" for a in alerts)
+            mid = _bus_post(token, "colby", msg, urgency="informational")
+            print(f"[{ts}] ALERT posted: {mid}")
+            consecutive_drift = 0  # reset after posting
+        else:
+            print(f"[{ts}] drift detected ({consecutive_drift}/{ALERT_DEBOUNCE_RUNS} before alert)")
+    else:
+        consecutive_drift = 0
 
     # --- Hourly heartbeat ---
     status = "HEALTHY" if not alerts else "DRIFT_DETECTED"
@@ -493,6 +524,7 @@ def run() -> None:
         "last_scratchpad_hash": scratchpad.get("hash"),
         "last_session_ts": session.get("last_session_ts"),
         "pending_count": pending["count"],
+        "consecutive_drift_runs": consecutive_drift,
     })
     _save_json(ANCHOR_PATH, anchor)
 
