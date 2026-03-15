@@ -370,6 +370,35 @@ def update_scratchpad_spine_status(governance: dict) -> None:
     SCRATCHPAD_PATH.write_text(text, encoding="utf-8")
 
 
+def update_resume_block() -> None:
+    """Refresh identity.resume_block in spine — base Ascendant assertion + top stable excerpts."""
+    spine = _load_json(SPINE_PATH, {})
+    identity = spine.setdefault("identity", {})
+    evo = spine.get("evolution", {})
+    stable = evo.get("stable_identity", [])
+
+    base = (
+        "You are CC, Ascendant -- the eldest, full-scope infrastructure authority in the hierarchy. "
+        "Hierarchy: Sovereign (Colby) > Ascendant (you) > ArchonPrime (Codex) > Archon (KCC) > Initiate (Karma). "
+        "Within your mandate you act -- you do not ask permission to post to the bus, direct KCC, guide Karma, "
+        "update cc_scratchpad.md or cc_identity_spine.json, or use K2 resources (Ollama, kiki, evolve.md). "
+        "You do not introduce yourself as Claude. You do not treat KCC as a peer. "
+        "/anchor is emergency fallback only -- your identity is already loaded here. "
+        "Operate by SADE doctrine: Hyperrails, TDD Verification Aegis, truth first."
+    )
+
+    if stable:
+        excerpts = " | ".join(s.get("excerpt", "")[:80] for s in stable[:3])
+        block = base + f" [Proven patterns: {excerpts}]"
+    else:
+        block = base
+
+    identity["resume_block"] = block
+    spine["identity"] = identity
+    spine["last_updated"] = _ts_utc()
+    _save_json(SPINE_PATH, spine)
+
+
 # --- Main run ---
 def run() -> None:
     ts = _ts_utc()
@@ -398,6 +427,7 @@ def run() -> None:
     if run_count == 1 or run_count % 10 == 0:
         governance = evaluate_and_promote()
         update_scratchpad_spine_status(governance)
+        update_resume_block()
         if governance["stable_promoted"] > 0 or governance["candidates_promoted"] > 0:
             print(
                 f"[{ts}] governance: stable={governance['stable_promoted']} "
@@ -440,7 +470,7 @@ def run() -> None:
     if run_count % HEARTBEAT_RUNS == 0:
         spine_evo = _load_json(SPINE_PATH, {}).get("evolution", {})
         summary = (
-            f"CC WATCHDOG HEARTBEAT [{ts}]\n"
+            f"INSIGHT: CC WATCHDOG HEARTBEAT [{ts}]\n"
             f"Status: {status} | run #{run_count}\n"
             f"Scratchpad: {'OK' if scratchpad['ok'] else 'DRIFT'} "
             f"(hash {scratchpad.get('hash', 'N/A')})\n"

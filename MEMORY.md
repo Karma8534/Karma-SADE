@@ -15,6 +15,11 @@
 - Scratchpad SPINE_STATUS block: watchdog writes stable count + top3 excerpts after governance run
 - /anchor: emergency fallback only — spine injection + watchdog supersede it at cold start
 - Loop closed: CC acts → watchdog captures → governance promotes → resurrect injects → CC starts stronger
+- Cohesion resume block: identity.resume_block seeded in cc_identity_spine.json — 6-sentence Ascendant assertion
+- update_resume_block() added to watchdog (fires every governance cycle) — refreshes block with stable_identity excerpts
+- Heartbeat posts now tagged INSIGHT: — governance accumulates from hourly watchdog posts going forward
+- Resurrect Step 1b updated: surfaces resume_block in === CC ASCENDANT RESUME BLOCK === banner at cold start
+- CC wakes with: rank, hierarchy, freed abilities (no permission for bus/KCC/Karma/scratchpad/K2 resources), /anchor status
 
 ## Session 95 (2026-03-15) — CC Brief panel added to Agora
 
