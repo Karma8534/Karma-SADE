@@ -370,7 +370,7 @@
   <div id="session-brief">
     <div id="session-brief-header" onclick="toggleSessionBrief()">
       <span class="lbl">SESSION BRIEF</span>
-      <span class="sub">compress bus feed → paste into CC to start session</span>
+      <span class="sub">auto-reads live bus feed (no paste) → builds CC session opener</span>
       <span class="chevron" id="session-brief-chevron">▼</span>
     </div>
     <div id="session-brief-body">
@@ -718,9 +718,11 @@ async function compressForCC() {
     const text = data.response || data.text || data.assistant_text || data.content || JSON.stringify(data);
     result.textContent = text;
     output.style.display = 'flex';
-    status.textContent = '';
-    // auto-copy
+    status.textContent = 'copied to clipboard ✓';
+    setTimeout(() => { status.textContent = ''; }, 2000);
+    // auto-copy + clear input
     navigator.clipboard.writeText(text).catch(() => {});
+    document.getElementById('cc-brief-input').value = '';
   } catch (err) {
     status.textContent = `error: ${err.message}`;
   } finally {
