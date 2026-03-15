@@ -163,6 +163,69 @@
   }
   #cc-brief-copy:hover { border-color: #34d399; color: #34d399; }
 
+  /* Session Brief panel */
+  #session-brief {
+    flex-shrink: 0;
+    border-bottom: 1px solid #1f2937;
+    background: #0a0a0f;
+  }
+  #session-brief-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 16px 4px;
+    cursor: pointer;
+    user-select: none;
+  }
+  #session-brief-header .lbl { color: #fbbf24; font-size: 11px; letter-spacing: 2px; font-weight: bold; }
+  #session-brief-header .sub { color: #4b5563; font-size: 11px; }
+  #session-brief-header .chevron { color: #4b5563; font-size: 10px; margin-left: auto; transition: transform 0.2s; }
+  #session-brief-header .chevron.open { transform: rotate(180deg); }
+  #session-brief-body { padding: 0 16px 10px; display: flex; flex-direction: column; gap: 6px; display: none; }
+  #session-brief-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  #session-brief-count { color: #4b5563; font-size: 11px; }
+  #session-brief-filter {
+    background: #1e1e2e;
+    border: 1px solid #374151;
+    color: #9ca3af;
+    padding: 4px 8px;
+    font-family: monospace;
+    font-size: 11px;
+    outline: none;
+  }
+  #session-brief-btn {
+    background: #fbbf24;
+    color: #0f0f11;
+    border: none;
+    padding: 5px 16px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  #session-brief-btn:disabled { opacity: 0.4; cursor: default; }
+  #session-brief-status { color: #4b5563; font-size: 11px; }
+  #session-brief-output {
+    background: #111827;
+    border: 1px solid #fbbf24;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  #session-brief-result { color: #e2e8f0; font-size: 12px; line-height: 1.6; white-space: pre-wrap; }
+  #session-brief-copy {
+    align-self: flex-end;
+    background: transparent;
+    border: 1px solid #374151;
+    color: #6b7280;
+    padding: 3px 12px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 11px;
+  }
+  #session-brief-copy:hover { border-color: #fbbf24; color: #fbbf24; }
+
   /* Feed */
   #feed {
     flex: 1;
@@ -303,6 +366,32 @@
     </div>
   </div>
 
+  <!-- Session Brief panel -->
+  <div id="session-brief">
+    <div id="session-brief-header" onclick="toggleSessionBrief()">
+      <span class="lbl">SESSION BRIEF</span>
+      <span class="sub">compress bus feed → paste into CC to start session</span>
+      <span class="chevron" id="session-brief-chevron">▼</span>
+    </div>
+    <div id="session-brief-body">
+      <div id="session-brief-controls">
+        <select id="session-brief-filter">
+          <option value="all">all agents</option>
+          <option value="karma">karma only</option>
+          <option value="codex">codex only</option>
+          <option value="kiki">kiki / cc</option>
+        </select>
+        <span id="session-brief-count">0 messages</span>
+        <button id="session-brief-btn" onclick="buildSessionBrief()">build for CC</button>
+        <span id="session-brief-status"></span>
+      </div>
+      <div id="session-brief-output" style="display:none">
+        <div id="session-brief-result"></div>
+        <button id="session-brief-copy" onclick="copySessionBrief()">copy to clipboard</button>
+      </div>
+    </div>
+  </div>
+
   <div id="feed"></div>
   <div id="input-bar">
     <select id="to-select">
@@ -410,6 +499,7 @@ async function poll() {
       if (e.from && t > (lastSeen[e.from] || 0)) lastSeen[e.from] = t;
       if (seenIds.has(e.id)) continue;
       seenIds.add(e.id);
+      busEntries.push(e);
       renderEntry(e, true);
     }
     updatePersonaBar();
@@ -501,6 +591,97 @@ function setStatus(state, text) {
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ── Session Brief panel ───────────────────────────────────────────────────────
+// Stores raw bus entries as they arrive for use in session brief
+const busEntries = [];
+let sessionBriefOpen = false;
+
+function toggleSessionBrief() {
+  sessionBriefOpen = !sessionBriefOpen;
+  const body = document.getElementById('session-brief-body');
+  body.style.display = sessionBriefOpen ? 'flex' : 'none';
+  document.getElementById('session-brief-chevron').classList.toggle('open', sessionBriefOpen);
+  if (sessionBriefOpen) updateSessionBriefCount();
+}
+
+function updateSessionBriefCount() {
+  const filter = document.getElementById('session-brief-filter').value;
+  const filtered = getFilteredEntries(filter);
+  document.getElementById('session-brief-count').textContent = `${filtered.length} messages`;
+}
+
+function getFilteredEntries(filter) {
+  const AGENT_GROUPS = {
+    'karma': ['karma'],
+    'codex': ['codex'],
+    'kiki': ['kiki', 'cc'],
+    'all': null
+  };
+  const allowed = AGENT_GROUPS[filter];
+  return busEntries.filter(e => {
+    if (e.urgency === 'informational' && e.from === 'cc' && filter !== 'kiki') return false;
+    if (allowed && !allowed.includes(e.from?.toLowerCase())) return false;
+    return true;
+  }).slice(-20); // last 20 relevant entries
+}
+
+async function buildSessionBrief() {
+  const filter = document.getElementById('session-brief-filter').value;
+  const entries = getFilteredEntries(filter);
+  if (!entries.length) {
+    document.getElementById('session-brief-status').textContent = 'no messages to compress';
+    return;
+  }
+  const btn = document.getElementById('session-brief-btn');
+  const status = document.getElementById('session-brief-status');
+  const output = document.getElementById('session-brief-output');
+  const result = document.getElementById('session-brief-result');
+  btn.disabled = true;
+  status.textContent = `compressing ${entries.length} messages...`;
+  output.style.display = 'none';
+
+  const raw = entries.map(e =>
+    `[${e.from}→${e.to} ${(e.created_at||'').slice(11,16)}] ${e.content||''}`
+  ).join('\n');
+
+  const prompt =
+    'BUILD CC SESSION BRIEF. You are compressing coordination bus messages for CC (Claude Code, Ascendant). ' +
+    'Extract: 1) current system state in one line, 2) what changed since last session, ' +
+    '3) one blocker or open question, 4) recommended first action. ' +
+    'Max 5 lines total. No narration. Facts only.\n\nBUS MESSAGES:\n' + raw;
+  try {
+    const r = await fetch(`${BASE}/v1/chat`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: prompt, session_id: 'session-brief-' + Date.now() })
+    });
+    if (!r.ok) throw new Error(await r.text());
+    const data = await r.json();
+    const text = data.response || data.text || data.assistant_text || data.content || JSON.stringify(data);
+    result.textContent = text;
+    output.style.display = 'flex';
+    status.textContent = '';
+    navigator.clipboard.writeText(text).catch(() => {});
+  } catch (err) {
+    status.textContent = `error: ${err.message}`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function copySessionBrief() {
+  const text = document.getElementById('session-brief-result').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('session-brief-copy');
+    btn.textContent = 'copied!';
+    setTimeout(() => { btn.textContent = 'copy to clipboard'; }, 1500);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('session-brief-filter').addEventListener('change', updateSessionBriefCount);
+});
 
 // ── CC Brief compress panel ──────────────────────────────────────────────────
 let briefOpen = true;
