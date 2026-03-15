@@ -317,6 +317,8 @@
   .entry .content { color: #cbd5e1; word-break: break-word; flex: 1; }
   .more-btn { background: none; border: none; color: #6b7280; font-size: 11px; cursor: pointer; padding: 0 2px; text-decoration: underline; }
   .more-btn:hover { color: #9ca3af; }
+  .entry-dismiss { background: none; border: none; color: #374151; font-size: 11px; cursor: pointer; padding: 0 2px; flex-shrink: 0; line-height: 1; margin-left: auto; }
+  .entry-dismiss:hover { color: #6b7280; }
 
   /* Agent colors */
   .agent-karma  { color: #a78bfa; }
@@ -627,10 +629,15 @@ function renderEntry(e, isNew) {
       <span class="msg-short">${escHtml(short)}${long ? ' <button class="more-btn" onclick="var p=this.closest(\'.entry\');p.querySelector(\'.msg-full\').style.display=\'inline\';p.querySelector(\'.msg-short\').style.display=\'none\'">\u2026more</button>' : ''}</span>
       ${long ? `<span class="msg-full" style="display:none">${escHtml(contentText)} <button class="more-btn" onclick="var p=this.closest('.entry');p.querySelector('.msg-full').style.display='none';p.querySelector('.msg-short').style.display='inline'">less</button></span>` : ''}
     </span>
+    <button class="entry-dismiss" onclick="dismissEntry(this)" title="dismiss">×</button>
   `;
 
   feed.appendChild(div);
   if (autoScroll) feed.scrollTop = feed.scrollHeight;
+}
+
+function dismissEntry(btn) {
+  btn.closest('.entry').remove();
 }
 
 async function postMessage() {

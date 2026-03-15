@@ -19,6 +19,7 @@
 - resurrect skill: Step 0 now verifies obs #6620/#6556 before anything else; bus confirmation at end
 - CLAUDE.md: /anchor = mid-session drift only; /resurrect handles cold-start identity check
 - ForColby panel added to Agora: auto-surfaces bus messages to:colby, badge count, auto-opens, per-item dismiss + clear all
+- Main feed dismiss (×) button added to every feed entry — removes from view locally, no auto-hide
 
 ## Session 92 (2026-03-14) — SADE Convergence + Kiki v6 Live on K2 + P0 Closed
 
