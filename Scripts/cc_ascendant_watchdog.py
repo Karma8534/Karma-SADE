@@ -17,9 +17,11 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import subprocess
 import urllib.request
 import urllib.error
+from collections import defaultdict
 from datetime import datetime, UTC, timedelta
 from pathlib import Path
 from typing import Any
@@ -250,6 +252,114 @@ def update_identity_spine(events: list[dict]) -> None:
     _save_json(SPINE_PATH, spine)
 
 
+# --- Governance eval: promote events through tiers ---
+def evaluate_and_promote() -> dict:
+    """Read cc_evolution_log.jsonl and promote validated patterns through tiers.
+
+    Tiers:
+      raw          -> growth_markers (already captured)
+      candidate    -> appeared 2+ times OR any PROOF event (limit 100)
+      stable       -> appeared 3+ times OR proof_validated (limit 50) — injected at session start
+    """
+    result = {"candidates_promoted": 0, "stable_promoted": 0}
+
+    if not EVOLUTION_LOG_PATH.exists():
+        return result
+
+    events: list[dict] = []
+    with EVOLUTION_LOG_PATH.open(encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                try:
+                    events.append(json.loads(line))
+                except Exception:
+                    pass
+
+    if not events:
+        return result
+
+    content_counts: dict[str, list[dict]] = defaultdict(list)
+    proof_source_ids: set[str] = set()
+
+    for ev in events:
+        key = ev.get("excerpt", "")[:80].strip().lower()
+        if key:
+            content_counts[key].append(ev)
+        if ev.get("type") == "PROOF":
+            proof_source_ids.add(ev.get("source_id", ""))
+
+    spine = _load_json(SPINE_PATH, {})
+    evo = spine.setdefault("evolution", {})
+
+    candidates = []
+    for key, evs in content_counts.items():
+        is_proof_validated = any(e.get("source_id") in proof_source_ids for e in evs)
+        if len(evs) >= 2 or is_proof_validated:
+            latest = max(evs, key=lambda e: e.get("ts", ""))
+            candidates.append({
+                "key": key[:80],
+                "type": latest.get("type"),
+                "excerpt": latest.get("excerpt", "")[:150],
+                "occurrences": len(evs),
+                "proof_validated": is_proof_validated,
+                "last_seen": latest.get("ts"),
+            })
+
+    candidates.sort(key=lambda c: c["occurrences"], reverse=True)
+    evo["candidate_patterns"] = candidates[:100]
+    result["candidates_promoted"] = len(evo["candidate_patterns"])
+
+    stable = [c for c in candidates if c["occurrences"] >= 3 or c["proof_validated"]]
+    stable.sort(key=lambda c: c["occurrences"], reverse=True)
+    evo["stable_identity"] = stable[:50]
+    result["stable_promoted"] = len(evo["stable_identity"])
+
+    spine["evolution"] = evo
+    spine["last_updated"] = _ts_utc()
+    _save_json(SPINE_PATH, spine)
+
+    return result
+
+
+def update_scratchpad_spine_status(governance: dict) -> None:
+    """Write SPINE_STATUS block to cc_scratchpad.md so identity layer stays fresh."""
+    if not SCRATCHPAD_PATH.exists():
+        return
+
+    spine = _load_json(SPINE_PATH, {})
+    evo = spine.get("evolution", {})
+    stable = evo.get("stable_identity", [])
+    candidates = evo.get("candidate_patterns", [])
+
+    ts = _ts_utc()
+    top3 = [s.get("excerpt", "")[:80] for s in stable[:3]]
+    top3_str = "\n".join(f"  - {e}" for e in top3) if top3 else "  (none yet — accumulating)"
+
+    block = (
+        f"\n<!-- SPINE_STATUS -->\n"
+        f"## Spine Status (auto-updated by watchdog)\n"
+        f"Last governance run: {ts}\n"
+        f"Stable patterns: {len(stable)} | Candidates: {len(candidates)}\n"
+        f"Top stable insights:\n{top3_str}\n"
+        f"<!-- /SPINE_STATUS -->"
+    )
+
+    text = SCRATCHPAD_PATH.read_text(encoding="utf-8")
+
+    if "<!-- SPINE_STATUS -->" in text:
+        text = re.sub(
+            r"<!-- SPINE_STATUS -->.*?<!-- /SPINE_STATUS -->",
+            block.strip(),
+            text,
+            flags=re.DOTALL,
+        )
+    else:
+        text = text.rstrip() + "\n" + block
+
+    SCRATCHPAD_PATH.write_text(text, encoding="utf-8")
+
+
 # --- Main run ---
 def run() -> None:
     ts = _ts_utc()
@@ -273,6 +383,16 @@ def run() -> None:
         update_identity_spine(events)
         anchor["last_evolution_id"] = events[-1].get("source_id")
         print(f"[{ts}] evolution: captured {appended} new events")
+
+    # --- Governance eval (run #1 and every 10th run) ---
+    if run_count == 1 or run_count % 10 == 0:
+        governance = evaluate_and_promote()
+        update_scratchpad_spine_status(governance)
+        if governance["stable_promoted"] > 0 or governance["candidates_promoted"] > 0:
+            print(
+                f"[{ts}] governance: stable={governance['stable_promoted']} "
+                f"candidates={governance['candidates_promoted']}"
+            )
 
     # --- Drift detection & alerts ---
     alerts = []

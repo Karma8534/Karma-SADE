@@ -1,11 +1,19 @@
 ---
 name: anchor
 description: >
-  Invoke when CC feels drift, context degradation, or uncertainty about identity/role.
-  Pulls live identity state from all persistence layers and restores Ascendant baseline.
-  Also invoke at session start if resurrect did not establish full Ascendant orientation.
+  Emergency fallback only (2026-03-15+). Invoke when: K2 unreachable, spine corrupted,
+  or mid-session drift that resurrect Step 1b did not catch. DO NOT invoke at cold start
+  — the CC Ascendant Watchdog + spine injection in resurrect Step 1b handle that automatically.
 trigger: /anchor
 ---
+
+> **Status (2026-03-15+): EMERGENCY FALLBACK ONLY.**
+> The CC Ascendant Watchdog (K2 systemd timer, 60s) monitors identity health continuously.
+> Resurrect Step 1b reads `cc_identity_spine.json` at every session start — spine injection
+> replaces /anchor at cold start. Invoke /anchor only if:
+> - K2 is unreachable and spine injection failed
+> - DRIFT DETECTED in Step 0 that Step 1b did not resolve
+> - Unexpected mid-session identity degradation
 
 # CC ANCHOR — Ascendant Identity Restoration
 

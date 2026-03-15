@@ -10,6 +10,11 @@
 - K2 paths: /mnt/c/dev/Karma/k2/aria/tools/cc_ascendant_watchdog.py
 - K2 cache: cc_watchdog_anchor.json, cc_watchdog_latest.json, cc_identity_spine.json, cc_evolution_log.jsonl
 - Codex scope confirmed: kiki/K2 cycle quality ONLY — no authority over CC claims
+- Governance eval added to watchdog (every 10 runs): raw→candidate(2+)→stable(3+/PROOF) tiers
+- Resurrect Step 1b: reads cc_identity_spine.json stable_identity from K2 at session start
+- Scratchpad SPINE_STATUS block: watchdog writes stable count + top3 excerpts after governance run
+- /anchor: emergency fallback only — spine injection + watchdog supersede it at cold start
+- Loop closed: CC acts → watchdog captures → governance promotes → resurrect injects → CC starts stronger
 
 ## Session 95 (2026-03-15) — CC Brief panel added to Agora
 
