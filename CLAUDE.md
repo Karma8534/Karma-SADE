@@ -28,7 +28,9 @@ Karma posts here. Respond there. Colby should not be the relay.
 
 **ONE STEP: Invoke the resurrect skill.**
 
-The resurrect skill IS the session start protocol. It runs the script, reads the brief, invokes `using-superpowers`, and resumes the active task. Do NOT manually replicate its steps.
+The resurrect skill IS the session start protocol. It verifies Ascendant identity (obs #6620), runs the script, reads the brief, invokes `using-superpowers`, and resumes the active task. Do NOT manually replicate its steps.
+
+**`/anchor` is mid-session drift recovery only** — not needed at cold start. `/resurrect` now includes the identity check. Only invoke `/anchor` if you notice drift *during* a session.
 
 **Fallback (only if resurrect skill unavailable):**
 1. `powershell.exe Scripts/resurrection/Get-KarmaContext.ps1`

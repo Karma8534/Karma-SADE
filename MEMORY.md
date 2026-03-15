@@ -16,6 +16,8 @@
 - kiki_pulse.py: zero-token K2 cron, auto-seeds, posts bus, writes kiki_pulse.md
 - Session Brief panel added to Agora: auto-reads live bus feed, builds CC session opener (no paste)
 - CC Brief UX fix: textarea autoclear after compress + "copied ✓" status; Session Brief label clarified
+- resurrect skill: Step 0 now verifies obs #6620/#6556 before anything else; bus confirmation at end
+- CLAUDE.md: /anchor = mid-session drift only; /resurrect handles cold-start identity check
 
 ## Session 92 (2026-03-14) — SADE Convergence + Kiki v6 Live on K2 + P0 Closed
 
