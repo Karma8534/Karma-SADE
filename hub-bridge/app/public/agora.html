@@ -163,6 +163,60 @@
   }
   #cc-brief-copy:hover { border-color: #34d399; color: #34d399; }
 
+  /* ForColby panel */
+  #for-colby {
+    flex-shrink: 0;
+    border-bottom: 1px solid #1f2937;
+    background: #0a0a0f;
+  }
+  #for-colby-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 16px 4px;
+    cursor: pointer;
+    user-select: none;
+  }
+  #for-colby-header .lbl { color: #f9fafb; font-size: 11px; letter-spacing: 2px; font-weight: bold; }
+  #for-colby-header .sub { color: #4b5563; font-size: 11px; }
+  #for-colby-badge {
+    background: #374151; color: #f9fafb;
+    font-size: 10px; padding: 1px 6px; border-radius: 8px;
+    display: none;
+  }
+  #for-colby-badge.has-items { background: #f9fafb; color: #0f0f11; display: inline-block; }
+  #for-colby-header .chevron { color: #4b5563; font-size: 10px; margin-left: auto; transition: transform 0.2s; }
+  #for-colby-header .chevron.open { transform: rotate(180deg); }
+  #for-colby-body { padding: 0 16px 10px; display: none; flex-direction: column; gap: 6px; }
+  #for-colby-actions { display: flex; justify-content: flex-end; margin-bottom: 2px; }
+  #for-colby-clear {
+    background: transparent; border: 1px solid #374151;
+    color: #6b7280; padding: 2px 10px; cursor: pointer;
+    font-family: monospace; font-size: 11px;
+  }
+  #for-colby-clear:hover { border-color: #6b7280; color: #e2e8f0; }
+  #for-colby-empty { color: #374151; font-size: 11px; font-style: italic; }
+  .fc-item {
+    background: #111827;
+    border-left: 2px solid #f9fafb;
+    padding: 6px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .fc-item-meta { display: flex; gap: 8px; align-items: center; }
+  .fc-item-from { font-size: 11px; font-weight: bold; }
+  .fc-item-ts { color: #4b5563; font-size: 10px; }
+  .fc-item-content { color: #e2e8f0; font-size: 12px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+  .fc-item-dismiss {
+    align-self: flex-end; background: transparent;
+    border: 1px solid #374151; color: #4b5563;
+    padding: 2px 8px; cursor: pointer;
+    font-family: monospace; font-size: 10px;
+    margin-top: 2px;
+  }
+  .fc-item-dismiss:hover { border-color: #6b7280; color: #9ca3af; }
+
   /* Session Brief panel */
   #session-brief {
     flex-shrink: 0;
@@ -366,6 +420,22 @@
     </div>
   </div>
 
+  <!-- ForColby panel — messages explicitly addressed to Colby -->
+  <div id="for-colby">
+    <div id="for-colby-header" onclick="toggleForColby()">
+      <span class="lbl">FOR COLBY</span>
+      <span id="for-colby-badge"></span>
+      <span class="sub" id="for-colby-sub">agents post here when action/review needed</span>
+      <span class="chevron" id="for-colby-chevron">▼</span>
+    </div>
+    <div id="for-colby-body">
+      <div id="for-colby-actions">
+        <button id="for-colby-clear" onclick="clearForColby()">clear all</button>
+      </div>
+      <div id="for-colby-list"></div>
+    </div>
+  </div>
+
   <!-- Session Brief panel -->
   <div id="session-brief">
     <div id="session-brief-header" onclick="toggleSessionBrief()">
@@ -503,6 +573,7 @@ async function poll() {
       renderEntry(e, true);
     }
     updatePersonaBar();
+    renderForColby();
     setStatus('live', `${seenIds.size} messages`);
   } catch (err) {
     setStatus('error', `error: ${err.message}`);
@@ -590,6 +661,68 @@ function setStatus(state, text) {
 
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── ForColby panel ───────────────────────────────────────────────────────────
+let forColbyOpen = false;
+const dismissedForColby = new Set();
+
+function toggleForColby() {
+  forColbyOpen = !forColbyOpen;
+  document.getElementById('for-colby-body').style.display = forColbyOpen ? 'flex' : 'none';
+  document.getElementById('for-colby-chevron').classList.toggle('open', forColbyOpen);
+}
+
+function renderForColby() {
+  const items = busEntries.filter(e =>
+    e.to === 'colby' && !dismissedForColby.has(e.id)
+  ).slice().reverse(); // most recent first
+
+  const badge = document.getElementById('for-colby-badge');
+  const sub = document.getElementById('for-colby-sub');
+  badge.textContent = items.length || '';
+  badge.classList.toggle('has-items', items.length > 0);
+  sub.textContent = items.length
+    ? `${items.length} item${items.length > 1 ? 's' : ''} need your attention`
+    : 'agents post here when action/review needed';
+
+  if (!forColbyOpen && items.length > 0) {
+    // Auto-open when new items arrive
+    forColbyOpen = true;
+    document.getElementById('for-colby-body').style.display = 'flex';
+    document.getElementById('for-colby-chevron').classList.add('open');
+  }
+
+  const list = document.getElementById('for-colby-list');
+  list.innerHTML = '';
+  if (!items.length) {
+    list.innerHTML = '<div class="fc-item-empty" style="color:#374151;font-size:11px;font-style:italic;">no items</div>';
+    return;
+  }
+  for (const e of items) {
+    const fromClass = agentClass(e.from);
+    const div = document.createElement('div');
+    div.className = 'fc-item';
+    div.innerHTML = `
+      <div class="fc-item-meta">
+        <span class="fc-item-from ${fromClass}">${escHtml(e.from)}</span>
+        <span class="fc-item-ts">${formatTs(e.created_at)}</span>
+      </div>
+      <div class="fc-item-content">${escHtml(e.content || '')}</div>
+      <button class="fc-item-dismiss" onclick="dismissForColby('${e.id}')">dismiss</button>
+    `;
+    list.appendChild(div);
+  }
+}
+
+function dismissForColby(id) {
+  dismissedForColby.add(id);
+  renderForColby();
+}
+
+function clearForColby() {
+  busEntries.filter(e => e.to === 'colby').forEach(e => dismissedForColby.add(e.id));
+  renderForColby();
 }
 
 // ── Session Brief panel ───────────────────────────────────────────────────────
