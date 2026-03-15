@@ -40,8 +40,8 @@ SESSION_STALE_HOURS = int(os.environ.get("CC_SESSION_STALE_HOURS", "24"))
 HEARTBEAT_RUNS = int(os.environ.get("CC_WATCHDOG_HEARTBEAT_RUNS", "60"))
 PENDING_ALERT_THRESHOLD = int(os.environ.get("CC_PENDING_ALERT_THRESHOLD", "5"))
 
-# Required hierarchy markers in cc_scratchpad.md
-REQUIRED_MARKERS = ["SOVEREIGN", "ASCENDANT", "ARCHONPRIME", "ARCHON", "INITIATE"]
+# Required hierarchy markers in cc_scratchpad.md (checked case-insensitively)
+REQUIRED_MARKERS = ["sovereign", "ascendant", "archonprime", "archon", "initiate"]
 
 # Evolution event types to capture from CC bus messages
 EVOLUTION_TAGS = ["DECISION", "PROOF", "PITFALL", "DIRECTION", "INSIGHT"]
@@ -96,7 +96,7 @@ def _bus_get(path: str, token: str) -> dict:
 
 def _bus_post(token: str, to: str, content: str, urgency: str = "informational") -> str | None:
     payload = json.dumps({
-        "from": "cc-watchdog",
+        "from": "cc",
         "to": to,
         "type": "inform",
         "urgency": urgency,
@@ -126,9 +126,10 @@ def check_scratchpad() -> dict:
 
     text = SCRATCHPAD_PATH.read_text(encoding="utf-8")
     result["hash"] = hashlib.sha256(text.encode()).hexdigest()[:16]
+    text_lower = text.lower()
 
     for marker in REQUIRED_MARKERS:
-        if marker in text:
+        if marker in text_lower:
             result["markers_found"].append(marker)
         else:
             result["missing"].append(marker)
