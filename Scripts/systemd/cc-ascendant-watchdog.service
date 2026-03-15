@@ -1,0 +1,17 @@
+[Unit]
+Description=CC Ascendant Watchdog — identity health + evolution capture
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=karma
+WorkingDirectory=/mnt/c/dev/Karma/k2/aria
+ExecStart=/usr/bin/python3 /mnt/c/dev/Karma/k2/aria/tools/cc_ascendant_watchdog.py
+StandardOutput=append:/mnt/c/dev/Karma/k2/cache/cc_watchdog.log
+StandardError=append:/mnt/c/dev/Karma/k2/cache/cc_watchdog.log
+Environment=HUB_BASE_URL=https://hub.arknexus.net
+Environment=CC_SESSION_STALE_HOURS=24
+Environment=CC_WATCHDOG_HEARTBEAT_RUNS=60
+Environment=CC_PENDING_ALERT_THRESHOLD=5
+EnvironmentFile=-/etc/default/karma-kiki

@@ -1,3 +1,16 @@
+## Session 96 (2026-03-15) — CC Ascendant Watchdog + Evolution Agent
+
+**Done:**
+- Built cc_ascendant_watchdog.py — K2 systemd timer (60s), zero Anthropic tokens
+- Monitors: cc_scratchpad.md hierarchy, bus session confirmation, pending CC messages, drift
+- Posts ForColby alerts on drift; hourly heartbeat to bus
+- Captures DECISION/PROOF/INSIGHT/PITFALL/DIRECTION from CC bus → cc_evolution_log.jsonl + cc_identity_spine.json
+- CC persona/identity spine grows independently from wrapper sessions
+- Files: Scripts/cc_ascendant_watchdog.py, Scripts/systemd/cc-ascendant-watchdog.{service,timer}
+- K2 paths: /mnt/c/dev/Karma/k2/aria/tools/cc_ascendant_watchdog.py
+- K2 cache: cc_watchdog_anchor.json, cc_watchdog_latest.json, cc_identity_spine.json, cc_evolution_log.jsonl
+- Codex scope confirmed: kiki/K2 cycle quality ONLY — no authority over CC claims
+
 ## Session 95 (2026-03-15) — CC Brief panel added to Agora
 
 **Done:**
