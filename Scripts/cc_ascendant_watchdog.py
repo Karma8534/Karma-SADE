@@ -263,6 +263,15 @@ def evaluate_and_promote() -> dict:
     """
     result = {"candidates_promoted": 0, "stable_promoted": 0}
 
+    # Always initialize tier keys in spine, even if log is empty
+    spine = _load_json(SPINE_PATH, {})
+    evo = spine.setdefault("evolution", {})
+    if "candidate_patterns" not in evo:
+        evo["candidate_patterns"] = []
+    if "stable_identity" not in evo:
+        evo["stable_identity"] = []
+    _save_json(SPINE_PATH, spine)
+
     if not EVOLUTION_LOG_PATH.exists():
         return result
 
@@ -289,6 +298,7 @@ def evaluate_and_promote() -> dict:
         if ev.get("type") == "PROOF":
             proof_source_ids.add(ev.get("source_id", ""))
 
+    # Reload spine (already initialized above)
     spine = _load_json(SPINE_PATH, {})
     evo = spine.setdefault("evolution", {})
 
