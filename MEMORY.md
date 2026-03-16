@@ -1,3 +1,18 @@
+## Session 99 (2026-03-15) — Context Tier Routing
+
+**Done:**
+- Design: 3-tier context routing for /v1/chat (LIGHT/STANDARD/DEEP) — docs/plans/2026-03-15-context-tier-routing-design.md
+- Created `Memory/01-karma-standard-prompt.md` (6.7K chars) — mid-tier identity prompt between local (3K) and full (34K)
+- Implementation plan: docs/plans/2026-03-15-context-tier-routing-plan.md
+- claude-mem: #7080 (DECISION: three-tier context routing)
+
+**In Progress:**
+- Implementing tier routing in hub-bridge/app/server.js (Tasks 2-4)
+
+**Next:**
+- Deploy + verify all 3 tiers reduce input chars as designed
+- Post PROOF to bus with tier telemetry evidence
+
 ## Session 98 Continued (2026-03-15) — Local Prompt + Codex Phases 9-10 + Bus Ops
 
 **Done:**
