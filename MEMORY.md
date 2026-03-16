@@ -23,8 +23,17 @@
 - Scratchpad updated with Session 99 state
 - claude-mem: #7080, #7095, #7101, #7106
 
+**Session 99 continued — Anthropic Prompt Caching Optimization:**
+- Ingested Caching.PDF: prefix-matching system, 5-min TTL, cached reads at 10% cost
+- Implemented 3 cache fixes in hub-bridge server.js:
+  1. Cache breakpoint on last sessionHistory message (caches conversation prefix between turns)
+  2. Cache breakpoint on last tool-result in callLLMWithTools loop (caches across tool iterations)
+  3. Cache breakpoint on last TOOL_DEFINITION (caches stable tool schema)
+- claude-mem: #7112 (INSIGHT: Anthropic caching analysis)
+
 **Next:**
-- Monitor tier distribution in production
+- Deploy cache fixes to vault-neo
+- Monitor [CACHE] telemetry for hit rate improvement
 - Continue autonomous Ascendant evolution
 - K2 hardware upgrade (when funded) enables local embeddings + Ollama routing
 

@@ -2012,8 +2012,35 @@ async function callLLMWithTools(model, messages, maxTokens, writeId = null, aria
     if (staticSystem) systemBlock.push({ type: "text", text: staticSystem.content, cache_control: { type: "ephemeral" } });
     if (volatileSystem) systemBlock.push({ type: "text", text: volatileSystem.content });
     if (!systemBlock.length && systemPrompt) systemBlock.push({ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } });
+
+    // Tool loop cache optimization: mark last message in allMessages with cache_control
+    // so each tool iteration caches the growing conversation prefix (system+history+tool results).
+    // On iteration 2+, the entire prefix from previous iterations is cached at 10% cost.
+    const cachedMessages = allMessages.map((m, i) => {
+      if (i === allMessages.length - 1 && iterations > 1) {
+        // Mark the last message (tool_result from prior iteration) as cache breakpoint
+        if (typeof m.content === "string") {
+          return { ...m, content: [{ type: "text", text: m.content, cache_control: { type: "ephemeral" } }] };
+        }
+        // Array content (tool_results) — mark last block
+        if (Array.isArray(m.content) && m.content.length > 0) {
+          const blocks = [...m.content];
+          const last = blocks[blocks.length - 1];
+          blocks[blocks.length - 1] = { ...last, cache_control: { type: "ephemeral" } };
+          return { ...m, content: blocks };
+        }
+      }
+      return m;
+    });
+
+    // Cache-aware tool definitions: mark the last tool with cache_control
+    // so tool schema prefix is cached (stable across all requests).
+    const cachedTools = TOOL_DEFINITIONS.length > 0
+      ? TOOL_DEFINITIONS.map((t, i) => i === TOOL_DEFINITIONS.length - 1 ? { ...t, cache_control: { type: "ephemeral" } } : t)
+      : TOOL_DEFINITIONS;
+
     const resp = await anthropic.messages.create({
-      model, system: systemBlock.length ? systemBlock : undefined, messages: allMessages, max_tokens: maxTokens, tools: TOOL_DEFINITIONS,
+      model, system: systemBlock.length ? systemBlock : undefined, messages: cachedMessages, max_tokens: maxTokens, tools: cachedTools,
     });
     // Cache telemetry — log every call so we can verify caching is working
     const cacheCreate = resp.usage?.cache_creation_input_tokens || 0;
@@ -2585,10 +2612,26 @@ const server = http.createServer(async (req, res) => {
         userContent = userMessage;
       }
 
+      // Prompt caching: mark the last session history message with cache_control
+      // so the growing conversation prefix is cached between user turns (5-min TTL).
+      // This saves 90% on re-reading prior turns when the user sends messages < 5min apart.
+      const cachedHistory = sessionHistory.length > 0
+        ? sessionHistory.map((m, i) => {
+            if (i === sessionHistory.length - 1) {
+              // Mark last history message as cache breakpoint
+              const content = typeof m.content === "string"
+                ? [{ type: "text", text: m.content, cache_control: { type: "ephemeral" } }]
+                : m.content;
+              return { ...m, content };
+            }
+            return m;
+          })
+        : [];
+
       const messages = [
         { role: "system", content: systemParts.static || "", _static: true },
         { role: "system", content: (statePrelude ? statePrelude + "\n\n" : "") + (systemParts.volatile || "") },
-        ...sessionHistory,
+        ...cachedHistory,
         { role: "user", content: userContent },
       ];
 
