@@ -75,10 +75,34 @@
 - Phase 11: K2 backup sync stale — identity/invariants/direction files absent from K2 (/mnt/c/dev/Karma/k2/cache/)
 - Phase 10: Kiki recent cycle degraded (success_rate=0) — may be probe calculation artifact
 
+## Session 100 (2026-03-16) — K2 as MCP Server Integration
+
+**Done:**
+- B1 fix: kiki JSON truncation repair (suffix-append `}`, `"}`, `"}}`, `"}}}` on truncated LLM responses)
+- B2 fix: vault sync auth header (`Authorization: Bearer HUB_AUTH_TOKEN` added to kiki_v5.py)
+- 5 new k2 tools deployed to k2_tools.py: kiki_inject, kiki_status, kiki_journal, bus_post, ollama_embed
+- Aria restarted — 14 tools now serving at /api/tools/list (verified)
+- `Scripts/k2_mcp_proxy.py`: MCP stdio proxy (JSON-RPC 2.0) — routes CC tool calls to K2 HTTP API
+- `Scripts/k2_mcp.key`: ARIA_SERVICE_KEY for proxy auth (gitignored)
+- `.mcp.json`: Claude Code MCP server registration (`k2` server → python Scripts/k2_mcp_proxy.py)
+- `hub-bridge/app/server.js`: +5 tool definitions (k2_kiki_inject/status/journal, k2_bus_post, k2_ollama_embed) + lazy k2_* routing handler
+- `docs/plans/2026-03-16-k2-mcp-server-design.md`: design doc committed
+
+**Architecture:**
+```
+CC (P1) ──MCP stdio──▶ k2_mcp_proxy.py ──HTTP──▶ K2:7890/api/tools/execute
+Karma ──hub-bridge k2_*──▶ server.js lazy handler ──────────────────────────▶ same
+```
+
+**Active blockers:**
+- hub-bridge not yet deployed (pending git commit + deploy)
+- TDD end-to-end verification pending (B1/B2, kiki_status, MCP proxy, CC native tools, hub-bridge Karma)
+
 ## Next Session Starts Here
-1. Fix Phase 11: copy identity/invariants/direction files from vault-neo to K2 cache — `ssh vault-neo "ssh -p 2223 -l karma localhost 'ls /mnt/c/dev/Karma/k2/cache/'"` then compare against needed files
-2. Benchmark qwen3.5:9b on P1 when pull completes (`ollama list` to check)
-**Blocker if any:** Phase 11 requires knowing which identity files exist on vault-neo vs K2
+1. TDD verify: `echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | python Scripts/k2_mcp_proxy.py` should return 14 tools
+2. Restart Claude Code to load k2 MCP server — verify k2_* tools visible natively
+3. Test Karma calling `k2_kiki_status` via hub-bridge
+**Blocker if any:** k2_mcp_proxy.py needs Python 3 on PATH (use `python` not `python3` on Windows)
 
 ## Session 98 Continued (2026-03-15) — Local Prompt + Codex Phases 9-10 + Bus Ops
 
