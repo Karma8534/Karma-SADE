@@ -898,18 +898,44 @@ function getRecentCoordination(agentName) {
   return text;
 }
 
-function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticCtx = null, memoryMd = null, activeIntentsText = null, k2MemCtx = null, k2WorkingMemCtx = null, coordinationCtx = null) {
+// ── Context Tier Routing ─────────────────────────────────────────────────────
+// Tier 1 (LIGHT):    short casual messages — minimal context, local identity prompt
+// Tier 2 (STANDARD): medium messages or keyword-triggered — standard identity, most context
+// Tier 3 (DEEP):     deep mode, long messages, or complex keywords — full context (current behavior)
+const TIER3_KEYWORDS = /\b(deep|analy[sz]e|architecture|design|explain\s+in\s+detail|diagnos[ei])\b/i;
+const TIER2_KEYWORDS = /\b(kiki|codex|k2|deploy|build|code|file|graph|debug|fix|bug|test|checkpoint|phase|plan|remember|memory|forget|tool|vault|ledger|falkor)\b/i;
+const TIER2_K2_KEYWORDS = /\b(kiki|k2|codex|aria)\b/i;
+
+function classifyMessageTier(userMessage, deepMode) {
+  if (deepMode) return 3;
+  const len = userMessage.length;
+  if (len > 500) return 3;
+  if (TIER3_KEYWORDS.test(userMessage)) return 3;
+  if (TIER2_KEYWORDS.test(userMessage)) return 2;
+  if (len >= 100) return 2;
+  return 1;
+}
+
+function getIdentityForTier(tier) {
+  if (tier === 1) return KARMA_LOCAL_PROMPT || KARMA_STANDARD_PROMPT || KARMA_IDENTITY_PROMPT;
+  if (tier === 2) return KARMA_STANDARD_PROMPT || KARMA_IDENTITY_PROMPT;
+  return KARMA_IDENTITY_PROMPT;
+}
+
+function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticCtx = null, memoryMd = null, activeIntentsText = null, k2MemCtx = null, k2WorkingMemCtx = null, coordinationCtx = null, tier = 3) {
   // === STATIC BLOCK (cacheable — changes only on restart/5min refresh) ===
   // Identity block — loaded from file at startup. Describes Karma's actual architecture,
   // capability boundaries, data model corrections, and API surface.
   // File is volume-mounted; future updates: git pull + container restart (no rebuild needed).
-  const identityBlock = KARMA_IDENTITY_PROMPT
-    ? KARMA_IDENTITY_PROMPT + "\n\n---\n\n"
+  const tierIdentity = getIdentityForTier(tier);
+  const identityBlock = tierIdentity
+    ? tierIdentity + "\n\n---\n\n"
     : "";
 
   // Direction — Karma's current architectural direction, constraints, and stage.
   // Loaded from direction.md at startup, refreshed every 5min.
-  const directionBlock = _directionMdCache
+  // Direction — Tier 3 only (large architectural context not needed for casual chat)
+  const directionBlock = (tier >= 3 && _directionMdCache)
     ? `\n--- KARMA DIRECTION (current architecture & stage) ---\n${_directionMdCache}\n---\n\n`
     : "";
 
@@ -930,58 +956,51 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
 
   let text = intentBlock + base;
 
-  // Semantic memory — top-K ledger entries most relevant to the current question.
-  // Retrieved from FAISS search service (anr-vault-search:8081).
-  if (semanticCtx) {
+  // Semantic memory — Tier 2+ (top-K ledger entries from FAISS)
+  if (tier >= 2 && semanticCtx) {
     text += `\n\n${semanticCtx}`;
   }
 
-  // Live web search results — injected when search intent detected in user message.
-  if (webResults) {
+  // Live web search results — Tier 2+ (only fires if search intent detected)
+  if (tier >= 2 && webResults) {
     text += `\n\n--- WEB SEARCH RESULTS ---\n${webResults}\n---\nUse these results to inform your response. Cite the source URL inline when drawing from a specific result.`;
   }
 
-  // Autonomous continuity: karma_brief from latest PROMOTE checkpoint.
-  if (ckLatest && ckLatest.karma_brief) {
+  // Autonomous continuity: karma_brief — Tier 3 only
+  if (tier >= 3 && ckLatest && ckLatest.karma_brief) {
     const ckId = ckLatest.checkpoint_id || ckLatest.latest_checkpoint_fact?.content?.value?.checkpoint_id || 'latest';
     text += `\n\n--- KARMA SELF-KNOWLEDGE (${ckId}) ---\n${ckLatest.karma_brief}\n---`;
   }
 
-  // Graph distillation: synthesized structural self-knowledge (24h cycle).
-  if (ckLatest && ckLatest.distillation_brief) {
+  // Graph distillation — Tier 3 only
+  if (tier >= 3 && ckLatest && ckLatest.distillation_brief) {
     text += `\n\n--- KARMA GRAPH SYNTHESIS ---\n${ckLatest.distillation_brief}\n---`;
   }
 
   // karmaCtx already injected in base above — do not duplicate it here.
 
-  if (_sessionBriefCache) {
-    text += `
-
---- CURRENT SESSION CONTEXT ---
-` + _sessionBriefCache + `
----`;
+  // Session brief — Tier 2+
+  if (tier >= 2 && _sessionBriefCache) {
+    text += `\n\n--- CURRENT SESSION CONTEXT ---\n${_sessionBriefCache}\n---`;
   }
 
-  // Memory spine — tail of MEMORY.md (most recent session summaries + decisions).
-  // Always injected so Karma has her memory in standard mode without needing deep-mode tools.
+  // Memory spine — always (all tiers) — critical for Karma's continuity
   if (memoryMd) {
     text += `\n\n--- KARMA MEMORY SPINE (recent) ---\n${memoryMd}\n---`;
   }
 
-  // K2 memory graph — Aria's local peer memory (seed facts, related facts, entities).
-  // Fetched from K2:7890 /api/memory/graph at request time. Non-blocking; omitted if K2 unreachable.
-  if (k2MemCtx) {
+  // K2 memory graph — Tier 3 only (Aria's local peer memory)
+  if (tier >= 3 && k2MemCtx) {
     text += `\n\n--- ARIA K2 MEMORY GRAPH ---\n${k2MemCtx}\n---`;
   }
 
-  // K2 working memory — scratchpad, shadow, kiki state/journal/backlog.
-  // Fetched from K2 via /api/exec at request time. Non-blocking; omitted if K2 unreachable.
-  if (k2WorkingMemCtx) {
+  // K2 working memory — Tier 2+ (conditionally fetched based on keywords)
+  if (tier >= 2 && k2WorkingMemCtx) {
     text += `\n\n--- K2 WORKING MEMORY + KIKI STATE ---\n${k2WorkingMemCtx}\n---`;
   }
 
-  // Coordination bus — recent agent-to-agent messages relevant to this agent.
-  if (coordinationCtx) {
+  // Coordination bus — Tier 2+ (recent agent-to-agent messages)
+  if (tier >= 2 && coordinationCtx) {
     text += coordinationCtx;
   }
 
@@ -1286,6 +1305,14 @@ try { HUB_CAPTURE_TOKEN = readFileTrim(HUB_CAPTURE_TOKEN_FILE); } catch (e) {
   HUB_CAPTURE_TOKEN = VAULT_BEARER;
 }
 try { HUB_HANDOFF_TOKEN = readFileTrim(HUB_HANDOFF_TOKEN_FILE); } catch (e) { console.error("WARN: cannot read HUB handoff token:", e.message); }
+
+// Tiered identity prompts — lighter prompts for simpler messages (context tier routing)
+let KARMA_STANDARD_PROMPT = "";
+let KARMA_LOCAL_PROMPT = "";
+const KARMA_STANDARD_PROMPT_PATH = "/karma/repo/Memory/01-karma-standard-prompt.md";
+const KARMA_LOCAL_PROMPT_PATH = "/karma/repo/Memory/00-karma-local-prompt.md";
+try { KARMA_STANDARD_PROMPT = readFileTrim(KARMA_STANDARD_PROMPT_PATH); console.log("[INIT] KARMA_STANDARD_PROMPT loaded, length:", KARMA_STANDARD_PROMPT.length); } catch (e) { console.warn("[INIT] KARMA_STANDARD_PROMPT not found — Tier 2 will use full identity"); }
+try { KARMA_LOCAL_PROMPT = readFileTrim(KARMA_LOCAL_PROMPT_PATH); console.log("[INIT] KARMA_LOCAL_PROMPT loaded, length:", KARMA_LOCAL_PROMPT.length); } catch (e) { console.warn("[INIT] KARMA_LOCAL_PROMPT not found — Tier 1 will use standard/full identity"); }
 
 const openai    = new OpenAI({ apiKey: OPENAI_KEY });
 const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : null;
@@ -2457,38 +2484,59 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
-      // Fetch checkpoint FIRST — reused for statePrelude AND karma_brief injection.
-      // Single vault call per turn (was already happening, just moved earlier).
+      // Context tier routing — classify message complexity
+      const tier = classifyMessageTier(userMessage, deep_mode);
+
+      // Fetch checkpoint — Tier 3 only (reused for statePrelude + karma_brief)
       let ckLatestData = null;
-      try {
-        ckLatestData = await fetchCheckpointLatestFromVault();
-      } catch (e) { /* non-fatal — Karma runs without checkpoint if vault is down */ }
+      if (tier >= 3) {
+        try {
+          ckLatestData = await fetchCheckpointLatestFromVault();
+        } catch (e) { /* non-fatal */ }
+      }
 
-      // Pull live FalkorDB context + semantic search + K2 memory graph in parallel (non-blocking)
-      const [karmaCtx, semanticCtx, k2MemCtx, k2WorkingMemCtx] = await Promise.all([
-        fetchKarmaContext(userMessage),
-        fetchSemanticContext(userMessage),
-        fetchK2MemoryGraph(userMessage),
-        fetchK2WorkingMemory(),
-      ]);
+      // Tier-aware context fetching — skip expensive calls for simple messages
+      let karmaCtx = null, semanticCtx = null, k2MemCtx = null, k2WorkingMemCtx = null;
+      if (tier === 1) {
+        // LIGHT — only karmaCtx (fast, often cached)
+        karmaCtx = await fetchKarmaContext(userMessage);
+      } else if (tier === 2) {
+        // STANDARD — skip k2MemCtx (Aria graph). Conditionally fetch k2WorkingMem.
+        const needsK2Working = TIER2_K2_KEYWORDS.test(userMessage);
+        const fetches = [
+          fetchKarmaContext(userMessage),
+          fetchSemanticContext(userMessage),
+          needsK2Working ? fetchK2WorkingMemory() : Promise.resolve(null),
+        ];
+        [karmaCtx, semanticCtx, k2WorkingMemCtx] = await Promise.all(fetches);
+      } else {
+        // DEEP — full fetch (unchanged from previous behavior)
+        [karmaCtx, semanticCtx, k2MemCtx, k2WorkingMemCtx] = await Promise.all([
+          fetchKarmaContext(userMessage),
+          fetchSemanticContext(userMessage),
+          fetchK2MemoryGraph(userMessage),
+          fetchK2WorkingMemory(),
+        ]);
+      }
 
-      // Web search — fires when message contains clear search-intent keywords
+      // Web search — Tier 2+ only, fires when message contains search-intent keywords
       let webSearchResults = null;
       let debug_search = "skip";
-      if (BRAVE_SEARCH_ENABLED && BRAVE_KEY && SEARCH_INTENT_REGEX.test(userMessage)) {
+      if (tier >= 2 && BRAVE_SEARCH_ENABLED && BRAVE_KEY && SEARCH_INTENT_REGEX.test(userMessage)) {
         webSearchResults = await fetchWebSearch(userMessage);
         debug_search = webSearchResults ? "hit" : "miss";
       }
 
       refreshActiveIntentsCache();
-      const surfacedIntents = getSurfaceIntents(_activeIntentsMap, _firedThisSession, userMessage, "active");
+      const surfacedIntents = tier >= 2 ? getSurfaceIntents(_activeIntentsMap, _firedThisSession, userMessage, "active") : [];
       for (const intent of surfacedIntents) {
         if (intent.fire_mode === "once_per_conversation" || intent.fire_mode === "once") {
           _firedThisSession.add(intent.intent_id);
         }
       }
       const activeIntentsText = buildActiveIntentsText(surfacedIntents);
-      const systemParts = buildSystemText(karmaCtx, ckLatestData, webSearchResults, semanticCtx, _memoryMdCache || null, activeIntentsText || null, k2MemCtx || null, k2WorkingMemCtx || null, getRecentCoordination("karma"));
+      const coordCtx = tier >= 2 ? getRecentCoordination("karma") : "";
+      const systemParts = buildSystemText(karmaCtx, ckLatestData, webSearchResults, semanticCtx, _memoryMdCache || null, activeIntentsText || null, k2MemCtx || null, k2WorkingMemCtx || null, coordCtx, tier);
 
       const extractedFacts = extractExplicitFacts(userMessage);
       let factWriteResults = [];
@@ -2496,12 +2544,14 @@ const server = http.createServer(async (req, res) => {
         factWriteResults = await writeFactsToVault(extractedFacts, VAULT_BEARER);
       }
 
-      // STATE_PRELUDE_V0_1: anchor turn to spine; A) pass length for compact mode
+      // STATE_PRELUDE — Tier 3 only (anchor turn to spine)
       let statePrelude = "";
-      try {
-        statePrelude = buildStatePrelude(ckLatestData, userMessage.length);
-      } catch (e) {
-        statePrelude = "=== STATE PRELUDE (vault unavailable) ===";
+      if (tier >= 3) {
+        try {
+          statePrelude = buildStatePrelude(ckLatestData, userMessage.length);
+        } catch (e) {
+          statePrelude = "=== STATE PRELUDE (vault unavailable) ===";
+        }
       }
 
       // Within-session history — last MAX_SESSION_TURNS exchange pairs
@@ -2543,7 +2593,7 @@ const server = http.createServer(async (req, res) => {
       ];
 
       // Claude primary routing: Haiku (standard) or Sonnet (deep), tools always available.
-      // K2/Aria is a memory tool (aria_local_call), not the primary inference engine.
+      // Haiku primary. K2 Ollama blocked by system prompt size (33K chars too large for 8B local). Session 98.
       const req_write_id = "wr_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
       const llmResult = await callLLMWithTools(model, messages, max_output_tokens, req_write_id, ariaSessionId);
       const assistantText = llmResult.text || "(empty_assistant_text)";
@@ -2626,6 +2676,7 @@ const server = http.createServer(async (req, res) => {
           debug_prelude_chars,
           debug_max_output_tokens_used,
           debug_provider,
+          debug_context_tier: tier,
           debug_karma_ctx: karmaCtx ? "ok" : "unavailable",
           debug_ingest: ingestVerdict,
         },
@@ -2704,6 +2755,7 @@ const server = http.createServer(async (req, res) => {
         debug_prelude_chars,
         debug_max_output_tokens_used,
         debug_provider,
+        debug_context_tier: tier,
         debug_karma_ctx: karmaCtx ? "ok" : "unavailable",
         debug_search,
         debug_ingest: ingestVerdict,
