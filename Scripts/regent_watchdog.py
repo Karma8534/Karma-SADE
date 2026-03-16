@@ -23,6 +23,8 @@ HUB_AUTH_TOKEN    = os.environ.get("HUB_AUTH_TOKEN", "") or (
 _last_heartbeat = time.time()
 _degraded_mode  = False
 _recovery_count = 0
+_startup_time   = time.time()
+STARTUP_GRACE   = 240  # seconds before watchdog declares Regent offline (allow for cold start)
 
 def log(msg):
     ts = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -145,7 +147,7 @@ def run():
                 _recovery_count = 0
                 bus_post("all", "REGENT_ONLINE: K2 Regent recovered. Full capability restored.")
 
-            elif not alive and not _degraded_mode:
+            elif not alive and not _degraded_mode and (time.time() - _startup_time > STARTUP_GRACE):
                 log("K2 Regent heartbeat LOST. Entering degraded mode.")
                 _degraded_mode = True
                 bus_post("all",

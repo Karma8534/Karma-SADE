@@ -221,6 +221,23 @@ def process_message(msg):
     with open(EVOLUTION_LOG, "a") as f:
         f.write(json.dumps(entry) + "\n")
 
+# ── Processed message dedup ────────────────────────────────────────────────────
+_processed_ids = set()
+MAX_PROCESSED_CACHE = 500
+
+def is_new_message(msg):
+    """Returns True if this message hasn't been processed yet."""
+    msg_id = msg.get("id", "")
+    if not msg_id or msg_id in _processed_ids:
+        return False
+    _processed_ids.add(msg_id)
+    if len(_processed_ids) > MAX_PROCESSED_CACHE:
+        # Trim oldest half when cache gets large
+        old = list(_processed_ids)[:MAX_PROCESSED_CACHE // 2]
+        for k in old:
+            _processed_ids.discard(k)
+    return True
+
 # ── Heartbeat + State ─────────────────────────────────────────────────────────
 _last_heartbeat   = 0.0
 _messages_processed = 0
@@ -257,6 +274,8 @@ def run():
             maybe_heartbeat()
             pending = bus_get_pending()
             for msg in pending:
+                if not is_new_message(msg):
+                    continue
                 process_message(msg)
                 _messages_processed += 1
             save_state()
