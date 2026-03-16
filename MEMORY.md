@@ -13,7 +13,8 @@
 - Self-eval wired into watchdog governance cycle (every 10 runs auto-updates scratchpad CC_SELF_EVAL block)
 - Current grade: ASCENDANT 32/40 (autonomy 8, mentorship 10, evidence 5, awareness 10)
 - Codex Phases 11-12 seeded: backup verification + bus message diversity
-- claude-mem: #7039 (local prompt), #7046 (codex phases 9-10), #7049 (Colby location), #7057 (self-eval), #7059 (self-eval insight)
+- **CRITICAL FIX**: Session brief was 10 days stale. Created Scripts/generate_cc_brief.py + vault-neo cron (*/30 * * * *)
+- claude-mem: #7039 (local prompt), #7046 (codex phases 9-10), #7049 (Colby location), #7057 (self-eval), #7059 (self-eval insight), #7067 (resurrect step 3d), #7068 (ollama pitfall), #7069 (brief fix)
 
 **Blockers:**
 - K2 Ollama blocked by 8GB VRAM — qwen3:8b marginal even with reduced prompt
