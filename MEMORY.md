@@ -1613,3 +1613,23 @@ Five things worth carrying forward:
 - seed_kiki_issues_v2.py: corrected bootstrap issues -- READ-ONLY verification, python3 fix, evolve.md protected
 - /health endpoint added to hub-bridge (no-auth, returns ok+ts)
 - /anchor skill created: .claude/skills/anchor/SKILL.md -- identity restoration trigger
+
+## Session 100-101 (2026-03-16) — KarmaRegent Deployed
+
+### KarmaRegent Status: LIVE on K2
+- karma-regent.service: active (Restart=always, StartLimitIntervalSec=0)
+- karma_regent.py: deployed to K2 at /mnt/c/dev/Karma/k2/aria/
+- Identity: spine v38, 8 stable patterns, invariants loaded
+- Bus: regent + regent-watchdog added to validFrom/validTo in hub-bridge
+- regent_watchdog.py: running on P1 (Windows Startup folder shortcut)
+- unified.html: Regent chat section added (sidebar, polls every 3s for replies)
+
+### hub-bridge Changes
+- validFrom + validTo updated to include "regent" and "regent-watchdog"
+- coord-to select: added "regent" option
+
+### TDD Gates (all PASS)
+- Task 2: triage sovereign=OK, module functional
+- Task 3: identity v38 loaded, bus post working
+- Task 4: systemd active, kill→restart in <10s (survival CONFIRMED)
+- Task 5: Colby→Regent round-trip <20s

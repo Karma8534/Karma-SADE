@@ -506,10 +506,26 @@
         <select id="coord-to">
           <option value="karma">→ Karma</option>
           <option value="cc">→ CC</option>
+          <option value="regent">→ Regent</option>
         </select>
         <div class="coord-compose-row">
           <input type="text" id="coord-input" placeholder="Message..." maxlength="500" />
           <button id="coord-send" title="Send coordination message">▶</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Regent chat section -->
+    <div class="sidebar-section" id="regent-section" style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px">
+      <div class="coord-header">
+        <span class="sidebar-section-title" style="margin-bottom:0;color:#9b8fff">&#9889; Regent</span>
+        <span id="regent-status-dot" style="font-size:10px;color:#34d399">&#9679;</span>
+      </div>
+      <div id="regent-chat-log" style="max-height:220px;overflow-y:auto;font-size:12px;margin-bottom:6px"></div>
+      <div class="coord-compose">
+        <div class="coord-compose-row">
+          <input type="text" id="regent-chat-input" placeholder="Message Regent..." maxlength="500" />
+          <button id="regent-chat-send" title="Send to Regent" style="background:#4a3a8a">&#9654;</button>
         </div>
       </div>
     </div>
@@ -1012,6 +1028,107 @@
   });
 
   init();
+
+  // ── Regent chat ───────────────────────────────────────────────────────────
+  const $regentLog   = document.getElementById('regent-chat-log');
+  const $regentInput = document.getElementById('regent-chat-input');
+  const $regentSend  = document.getElementById('regent-chat-send');
+  const $regentDot   = document.getElementById('regent-status-dot');
+  let regentLastPoll = null;
+  let regentPollTimer = null;
+
+  function appendRegentMsg(sender, text, isRegent) {
+    const div = document.createElement('div');
+    div.style.cssText = 'margin:4px 0;padding:6px 8px;border-radius:4px;'
+      + (isRegent ? 'background:#1a1430;border-left:2px solid #9b8fff' : 'background:#1a2a1a;border-left:2px solid #34d399');
+    const label = document.createElement('span');
+    label.style.cssText = 'font-size:10px;font-weight:600;color:' + (isRegent ? '#9b8fff' : '#34d399');
+    label.textContent = sender;
+    const body = document.createElement('div');
+    body.style.cssText = 'color:#d0d0d0;margin-top:2px;white-space:pre-wrap;word-break:break-word';
+    body.textContent = text;
+    div.appendChild(label);
+    div.appendChild(body);
+    $regentLog.appendChild(div);
+    $regentLog.scrollTop = $regentLog.scrollHeight;
+  }
+
+  async function sendToRegent() {
+    const token = getToken();
+    const content = ($regentInput.value || '').trim();
+    if (!token || !content) return;
+    $regentSend.disabled = true;
+    appendRegentMsg('Sovereign', content, false);
+    $regentInput.value = '';
+    const sent_at = new Date().toISOString();
+    try {
+      await fetch('/v1/coordination/post', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: 'colby', to: 'regent', content, urgency: 'blocking' })
+      });
+      // Poll for response
+      regentLastPoll = sent_at;
+      if (!regentPollTimer) {
+        regentPollTimer = setInterval(pollRegentReply, 3000);
+      }
+    } catch (e) {
+      appendRegentMsg('Error', e.message, true);
+    } finally {
+      $regentSend.disabled = false;
+    }
+  }
+
+  async function pollRegentReply() {
+    const token = getToken();
+    if (!token || !regentLastPoll) return;
+    try {
+      const res = await fetch('/v1/coordination/recent?from=regent&limit=10',
+        { headers: { 'Authorization': 'Bearer ' + token } });
+      const data = await res.json();
+      const replies = (data.entries || []).filter(e =>
+        (e.to === 'colby' || e.to === 'all') &&
+        new Date(e.created_at) > new Date(regentLastPoll)
+      );
+      if (replies.length > 0) {
+        clearInterval(regentPollTimer);
+        regentPollTimer = null;
+        replies.forEach(r => appendRegentMsg('Regent', r.content, true));
+        regentLastPoll = null;
+      }
+    } catch (e) { /* poll silently */ }
+  }
+
+  async function loadRegentHistory() {
+    const token = getToken();
+    if (!token) return;
+    try {
+      const res = await fetch('/v1/coordination/recent?from=regent&limit=10',
+        { headers: { 'Authorization': 'Bearer ' + token } });
+      const data = await res.json();
+      $regentLog.innerHTML = '';
+      (data.entries || []).slice(0, 5).reverse().forEach(e => {
+        appendRegentMsg('Regent', (e.content || '').slice(0, 200), true);
+      });
+      // Check regent heartbeat for status dot
+      const hasRecent = (data.entries || []).some(e => {
+        const age = (Date.now() - new Date(e.created_at).getTime()) / 1000;
+        return age < 180 && (e.content.includes('HEARTBEAT') || e.content.includes('REGENT_ONLINE'));
+      });
+      $regentDot.style.color = hasRecent ? '#34d399' : '#f59e0b';
+      $regentDot.title = hasRecent ? 'Regent online' : 'Heartbeat stale';
+    } catch(e) {}
+  }
+
+  $regentSend.addEventListener('click', sendToRegent);
+  $regentInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); sendToRegent(); }
+  });
+
+  // Load on init and refresh every 30s
+  loadRegentHistory();
+  setInterval(loadRegentHistory, 30000);
+
 </script>
 </body>
 </html>
