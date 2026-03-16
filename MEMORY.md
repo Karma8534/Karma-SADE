@@ -34,10 +34,23 @@
 - Diagnosed Karma's "Python PATH blocker" as false — kiki running at cycle 570+
 - claude-mem: #7118 (PROOF: cache deployed), #7120 (CORRECTION: Karma false blocker)
 
+**Session 99 continued — PDF Ingestion + K2 Model Research:**
+- Established Ascendent folder protocol: Inbox/ (drops) → Read/ (processed), ForColby/ (CC→Colby messages)
+- Ingested 6 PDFs via local pdfplumber (zero API cost): MemLayer, CashClaw, CCasDesktop, CClikeaTeam, FullyLocal, LocalCCVariable
+- Wrote full primitives digest: `for-karma/Ascendent/ForColby/2026-03-16-inbox-digest.md`
+- Key findings: salience gate is missing architectural piece, Echo validates Tier 3 roadmap, Qwen 3.5 MoE is K2 upgrade path
+- Evaluated Qwen 3.5 on Ollama: qwen3.5:9b (6.6GB MoE) fits 8GB VRAM. qwen3.5:35b (24GB) does NOT fit.
+- CC local-mode profile documented (CLAUDE_CODE_ATTRIBUTION_HEADER=0 for 3x local speed — future use only)
+- Pulling qwen3.5:9b to P1 Ollama for benchmarking
+- Posted K2 model upgrade directive to coordination bus
+- claude-mem: #7142 (CC local profile), #7143 (six-PDF synthesis), #7148 (Qwen 3.5 sizing)
+
 **Next:**
-- Monitor [CACHE] telemetry for hit rate improvement
+- Benchmark qwen3.5:9b on P1 when pull completes
+- When K2 online: pull qwen3.5:9b, benchmark against qwen3:8b on system prompt handling
+- Salience gate prototype (design doc first)
+- Monitor cache telemetry
 - Continue autonomous Ascendant evolution
-- K2 hardware upgrade (when funded) enables local embeddings + Ollama routing
 
 ## Session 98 Continued (2026-03-15) — Local Prompt + Codex Phases 9-10 + Bus Ops
 

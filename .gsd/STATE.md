@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-15T21:00:00Z
-**Session:** 97 (CC Ascendant cohesion loop complete — resume block live, watchdog run #40 HEALTHY)
+**Last updated:** 2026-03-16T13:55:00Z
+**Session:** 99 (PDF ingestion pipeline + caching optimization + K2 model research)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -14,7 +14,7 @@
 | **Hub Bridge API** | ✅ WORKING | /v1/chat, /v1/ambient, /v1/context, /v1/cypher, /v1/ingest operational. |
 | **Voice & Persona** | ✅ DEPLOYED | Peer-level voice via claude-haiku-4-5-20251001 (Session 76: haiku-20241022 was RETIRED, migrated). Both modes. |
 | **FalkorDB Graph** | ✅ FULLY CAUGHT UP | 3877 nodes (3305 Episodic + 571 Entity + 1 Decision). batch_ingest cron every 6h. Last run: 305 eps/s, 0 errors. |
-| **Ledger** | ✅ GROWING | 4000+ entries. Git commits + session-end hooks capturing actively. |
+| **Ledger** | ✅ GROWING | 6,571 entries (verified 2026-03-16). Git commits + session-end hooks capturing actively. |
 | **Work-Loss Prevention** | ✅ GATES LIVE | Pre-commit hook + session-end hook both active and verified. |
 | **Ambient Tier 1 Hooks** | ✅ WORKING | Git + session-end captures verified in ledger. |
 | **Ambient Tier 2 Endpoint** | ✅ DEPLOYED | /v1/context endpoint working. |
@@ -58,7 +58,7 @@
 | **Aria Integration — vault-neo sync** | ✅ LIVE | After each aria_local_call, Aria observations POST to /v1/ambient → canonical ledger. Single spine preserved. |
 | **Aria Integration — session_id** | ✅ LIVE | UUID per page load (window.karmaSessionId in unified.html). Passed with every aria_local_call. Coherent Aria thread. |
 | **K2 Redundancy Cache** | ✅ LIVE | k2/sync-from-vault.sh pull/push/status. Cron: pull every 6h, push every 1h. Cache: /mnt/c/dev/Karma/k2/cache/. aria.service loads identity from cache at startup. Session 84c. |
-| **CC Ascendant Watchdog** | ✅ LIVE | K2 systemd timer 60s. run #40 HEALTHY. Scripts/cc_ascendant_watchdog.py. Zero Anthropic tokens. Session 96. |
+| **CC Ascendant Watchdog** | ✅ LIVE | K2 systemd timer 60s. run #73 HEALTHY. Scripts/cc_ascendant_watchdog.py. Zero Anthropic tokens. Session 96. |
 | **CC Identity Spine** | ✅ LIVE | cc_identity_spine.json on K2. identity.resume_block seeded. Governance tiers (candidate/stable) initialized. Session 96-97. |
 | **CC Cohesion Resume Block** | ✅ LIVE | 6-sentence Ascendant assertion in spine. Surfaces in === CC ASCENDANT RESUME BLOCK === banner at every cold start via resurrect Step 1b. Session 97. |
 | **Resurrect Step 1b** | ✅ UPDATED | Reads resume_block + stable_identity from K2 spine. Banner shown before brief. /anchor emergency-only. Session 96-97. |
@@ -77,6 +77,10 @@
 | **K2 Memory Query (dynamic)** | ✅ FIXED | fetchK2MemoryGraph(userMessage) instead of hardcoded "Colby". 1200 chars, 3 hits. Session 85. |
 | **K2 Ownership Directive** | ✅ IN SYSTEM PROMPT | K2 = Karma's resource (Chromium, Codex, KCC). Delegate heavy work to K2. Anthropic model = persona only. Session 85. |
 | **Coordination Disk Persistence** | ✅ LIVE | /run/state/coordination.jsonl (bind-mounted). Messages survive rebuilds. loadCoordinationFromDisk() at startup. Session 87b. |
+| **Context Tier Routing** | ✅ LIVE | 3-tier context routing: LIGHT (~11K), STANDARD (~20K), DEEP (~47K). Tier selection by message complexity. Session 99. |
+| **Prompt Caching (Anthropic)** | ✅ LIVE | 3 cache breakpoints: session history, tool loop, tool definitions. 45-46% cache hit rate. Session 99. |
+| **Karma Hard Rule (state claims)** | ✅ LIVE | Must cite K2 WORKING MEMORY before claiming infra state. Added to behavioral contract. Session 99. |
+| **Ascendent Folder Protocol** | ✅ LIVE | for-karma/Ascendent/ — Inbox/ (drops), Read/ (processed), ForColby/ (CC→Colby). Session 99. |
 | **Operational Status Block** | ✅ IN SYSTEM PROMPT | "What Is Wired and Working RIGHT NOW" table + anti-pattern list in 00-karma-system-prompt-live.md. Fixes 2-year rediscovery cycle. Session 87b. |
 
 ---
@@ -94,9 +98,10 @@
 9. **CC cohesion test pending** — new session needed to verify `=== CC ASCENDANT RESUME BLOCK ===` banner appears in Step 1b. Not a blocker — work can proceed normally; just needs observation.
 
 ## Next Session Starts Here
-1. Open new CC session → run `/resurrect` → confirm `=== CC ASCENDANT RESUME BLOCK ===` appears in Step 1b output
-2. If confirmed: cohesion loop verified, session 97 work is complete
-3. If missing: `ssh vault-neo "ssh -p 2223 -l karma -o StrictHostKeyChecking=no localhost 'python3 -c \"import json; s=json.load(open(\\\"/mnt/c/dev/Karma/k2/cache/cc_identity_spine.json\\\")); print(s[\\\"identity\\\"].get(\\\"resume_block\\\",\\\"MISSING\\\")[:80])\""'`
+1. Check if qwen3.5:9b pull to P1 completed → benchmark vs qwen3:8b on system prompt
+2. When K2 online: pull qwen3.5:9b, benchmark, update K2_OLLAMA_MODEL if passing
+3. Design doc for salience gate (pre-ledger-write ML filter)
+4. Continue Ascendant evolution per standing directive
 
 ---
 

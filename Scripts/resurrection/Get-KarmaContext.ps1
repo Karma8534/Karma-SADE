@@ -204,12 +204,27 @@ $briefText = Get-VaultNeoContext
 if ($briefText) {
     $charCount = $briefText.Length
 
+    # Append Sentinel brief if available (CC's local lieutenant pre-session intel)
+    $sentinelBriefPath = Join-Path $PSScriptRoot "..\..\Logs\sentinel-brief.md"
+    $sentinelBriefPath = [System.IO.Path]::GetFullPath($sentinelBriefPath)
+    if (Test-Path $sentinelBriefPath) {
+        try {
+            $sentinelText = [System.IO.File]::ReadAllText($sentinelBriefPath, [System.Text.Encoding]::UTF8)
+            if ($sentinelText.Length -gt 50) {
+                $briefText += "`n`n---`n`n# CC Sentinel Intelligence (P1 Local)`n$sentinelText"
+                Write-Host "[Karma] Sentinel brief appended ($($sentinelText.Length) chars)"
+            }
+        } catch {
+            Write-Host "[Karma] Sentinel brief read failed: $_" -ForegroundColor Yellow
+        }
+    }
+
     # Write primary output: karma-context.md (atomic via tmp, for backward compat)
     Write-Context $briefText
     # Write cc-session-brief.md (primary CC pickup file)
     [System.IO.File]::WriteAllText($BriefOutputFile, $briefText, [System.Text.Encoding]::UTF8)
 
-    Write-Host "[Karma] Context written from vault-neo ($charCount chars) -> cc-session-brief.md"
+    Write-Host "[Karma] Context written from vault-neo ($($briefText.Length) chars) -> cc-session-brief.md"
     exit 0
 }
 
