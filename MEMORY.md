@@ -30,9 +30,11 @@
   2. Cache breakpoint on last tool-result in callLLMWithTools loop (caches across tool iterations)
   3. Cache breakpoint on last TOOL_DEFINITION (caches stable tool schema)
 - claude-mem: #7112 (INSIGHT: Anthropic caching analysis)
+- Added HARD RULE to Karma system prompt: must cite K2 WORKING MEMORY before claiming infra state
+- Diagnosed Karma's "Python PATH blocker" as false — kiki running at cycle 570+
+- claude-mem: #7118 (PROOF: cache deployed), #7120 (CORRECTION: Karma false blocker)
 
 **Next:**
-- Deploy cache fixes to vault-neo
 - Monitor [CACHE] telemetry for hit rate improvement
 - Continue autonomous Ascendant evolution
 - K2 hardware upgrade (when funded) enables local embeddings + Ollama routing
