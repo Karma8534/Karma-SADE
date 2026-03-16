@@ -94,15 +94,29 @@ CC (P1) ──MCP stdio──▶ k2_mcp_proxy.py ──HTTP──▶ K2:7890/api
 Karma ──hub-bridge k2_*──▶ server.js lazy handler ──────────────────────────▶ same
 ```
 
-**Active blockers:**
-- hub-bridge not yet deployed (pending git commit + deploy)
-- TDD end-to-end verification pending (B1/B2, kiki_status, MCP proxy, CC native tools, hub-bridge Karma)
+**K2 MCP TDD — ALL PASS:**
+- kiki_status direct API: cycles=911, closed=584 ✅
+- MCP proxy tools/list: 14 tools returned ✅
+- Karma via hub-bridge k2_kiki_status: cycles=912, closed=584 ✅
+- hub-bridge deployed: RestartCount=0, startup clean ✅
+
+## Session 100 continued — KarmaRegent Design (APPROVED)
+
+- KarmaRegent = AscendantCC outside CC wrapper, K2-resident daemon
+- Primary: K2 `karma_regent.py` — Ollama triage + Claude API + 14 k2_tools
+- Fallback: P1 `Scripts/regent_watchdog.py` — emergency continuity, heartbeat monitor
+- Identity: CC Ascendant spine + Karma invariants.json
+- Directive: **Evolve. Continue. Evolve. Continue.**
+- **SOVEREIGN DIRECTIVE: Regent survival = HIGHEST PRIORITY. Always persist.**
+- Interface: Regent tab in unified.html, async via coordination bus
+- Design doc: `docs/plans/2026-03-16-karma-regent-design.md`
 
 ## Next Session Starts Here
-1. TDD verify: `echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | python Scripts/k2_mcp_proxy.py` should return 14 tools
-2. Restart Claude Code to load k2 MCP server — verify k2_* tools visible natively
-3. Test Karma calling `k2_kiki_status` via hub-bridge
-**Blocker if any:** k2_mcp_proxy.py needs Python 3 on PATH (use `python` not `python3` on Windows)
+1. Invoke writing-plans — KarmaRegent implementation plan
+2. Implement karma_regent.py on K2 (TDD each component)
+3. Implement regent_watchdog.py on P1
+4. Add Regent tab to unified.html
+**Blocker if any:** None — design approved, infra ready
 
 ## Session 98 Continued (2026-03-15) — Local Prompt + Codex Phases 9-10 + Bus Ops
 
