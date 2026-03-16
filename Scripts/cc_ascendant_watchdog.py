@@ -455,6 +455,16 @@ def run() -> None:
                 f"[{ts}] governance: stable={governance['stable_promoted']} "
                 f"candidates={governance['candidates_promoted']}"
             )
+        # Self-eval: update scratchpad with CC performance metrics
+        try:
+            eval_proc = subprocess.run(
+                ["python3", str(K2_ROOT / "aria" / "tools" / "cc_update_scratchpad_eval.py")],
+                capture_output=True, text=True, timeout=30,
+            )
+            if eval_proc.returncode == 0:
+                print(f"[{ts}] self-eval: {eval_proc.stdout.strip()}")
+        except Exception:
+            pass  # Non-critical — don't break watchdog
 
     # --- Drift detection & alerts ---
     alerts = []

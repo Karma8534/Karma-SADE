@@ -9,7 +9,11 @@
 - Hub-bridge restarted to pick up prompt changes
 - Watchdog debounce deployed (5-cycle threshold), expanded session keywords
 - K2Upgrade.md created
-- claude-mem: #7039 (local prompt decision), #7046 (codex phases 9-10), #7049 (Colby location)
+- CC self-eval framework deployed: cc_self_eval.py, cc_update_scratchpad_eval.py, cc_proof_discipline.py on K2
+- Self-eval wired into watchdog governance cycle (every 10 runs auto-updates scratchpad CC_SELF_EVAL block)
+- Current grade: ASCENDANT 32/40 (autonomy 8, mentorship 10, evidence 5, awareness 10)
+- Codex Phases 11-12 seeded: backup verification + bus message diversity
+- claude-mem: #7039 (local prompt), #7046 (codex phases 9-10), #7049 (Colby location), #7057 (self-eval), #7059 (self-eval insight)
 
 **Blockers:**
 - K2 Ollama blocked by 8GB VRAM — qwen3:8b marginal even with reduced prompt
