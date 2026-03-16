@@ -45,12 +45,40 @@
 - Posted K2 model upgrade directive to coordination bus
 - claude-mem: #7142 (CC local profile), #7143 (six-PDF synthesis), #7148 (Qwen 3.5 sizing)
 
-**Next:**
-- Benchmark qwen3.5:9b on P1 when pull completes
-- When K2 online: pull qwen3.5:9b, benchmark against qwen3:8b on system prompt handling
-- Salience gate prototype (design doc first)
-- Monitor cache telemetry
-- Continue autonomous Ascendant evolution
+## Session 99 continued (2026-03-16) — Family Cohesion Layer + K2 Fixes
+
+**Done:**
+- Fixed cc_ascendant_watchdog.py: default sender changed "cc" → "cc-watchdog" (Phase 12 was 0% substantive, now HEALTHY 0.60)
+- Fixed Aria model config drift: /etc/aria.env override ARIA_PRIMARY_MODEL=qwen3:8b (was defaulting to qwen3-coder:30b, not loaded)
+- wrap-session skill updated: cc_cognitive_write.ps1 now mandatory step 1 (was missing)
+- CLAUDE.md updated: SESSION CHECKPOINT protocol added (~10 turns, CC posts active reasoning to bus)
+- karma_bus_observer.py deployed on vault-neo cron/10min — Karma now has coordination bus presence
+- kcc_enhanced_watchdog.py patched: _emit_cognitive_posts() added, INSIGHT every 10 runs + DECISION on alerts
+- cc_cognitive_write.ps1 first execution completed (checkpoint written to K2)
+
+**TDD verifications:**
+- Phase 12 watchdog: baseline spam → HEALTHY (0.60 ratio) — PASS
+- KCC cognitive posts: baseline 0 → 1 INSIGHT post on bus — PASS
+- Cognitive checkpoint: first write to K2 cc_cognitive_checkpoint.json — PASS
+
+**K2 files changed (not in git):**
+- /mnt/c/dev/Karma/k2/aria/tools/cc_ascendant_watchdog.py (sender fix)
+- /mnt/c/dev/Karma/k2/aria/tools/kcc_enhanced_watchdog.py (cognitive posts)
+- /etc/aria.env (ARIA_PRIMARY_MODEL=qwen3:8b)
+- /mnt/c/dev/Karma/k2/cache/kcc_cognitive_counter.json (new)
+
+**P1 files changed:**
+- CLAUDE.md (SESSION CHECKPOINT protocol)
+- Skills/wrap-session/SKILL.md (cc_cognitive_write.ps1 mandatory)
+
+**Active blockers:**
+- Phase 11: K2 backup sync stale — identity/invariants/direction files absent from K2 (/mnt/c/dev/Karma/k2/cache/)
+- Phase 10: Kiki recent cycle degraded (success_rate=0) — may be probe calculation artifact
+
+## Next Session Starts Here
+1. Fix Phase 11: copy identity/invariants/direction files from vault-neo to K2 cache — `ssh vault-neo "ssh -p 2223 -l karma localhost 'ls /mnt/c/dev/Karma/k2/cache/'"` then compare against needed files
+2. Benchmark qwen3.5:9b on P1 when pull completes (`ollama list` to check)
+**Blocker if any:** Phase 11 requires knowing which identity files exist on vault-neo vs K2
 
 ## Session 98 Continued (2026-03-15) — Local Prompt + Codex Phases 9-10 + Bus Ops
 

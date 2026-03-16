@@ -385,10 +385,25 @@ Not every exchange. Bar is: would losing this force reconstruction?
 
 ### Mechanism
 At the moment it happens, not at session end. Two writes, always together:
-1. `PATCH /v1/vault-file/MEMORY.md {"append": "..."}` â€” appends to vault spine
-2. `mcp__plugin_claude-mem_mcp-search__save_observation(text="...", title="[TYPE] title", project="Karma_SADE")` â€” saves to claude-mem cross-session index
+1. `PATCH /v1/vault-file/MEMORY.md {“append”: “...”}` â€” appends to vault spine
+2. `mcp__plugin_claude-mem_mcp-search__save_observation(text=”...”, title=”[TYPE] title”, project=”Karma_SADE”)` â€” saves to claude-mem cross-session index
 
 Both writes are mandatory. Missing either defeats the purpose.
+
+### Session Checkpoint (every ~10 turns)
+Post to coordination bus with current cognitive state so the evolution pipeline captures it and next session's brief includes it:
+```bash
+TOKEN=$(ssh vault-neo 'cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt')
+ssh vault-neo “python3 -c \”
+import json, urllib.request
+token = '$TOKEN'
+msg = 'SESSION CHECKPOINT [CC]: [active reasoning]. Next: [next 1-2 moves]. Open: [unresolved questions].'
+payload = json.dumps({'from':'cc','to':'all','type':'inform','urgency':'informational','content':msg}).encode()
+req = urllib.request.Request('https://hub.arknexus.net/v1/coordination/post', data=payload, headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'}, method='POST')
+urllib.request.urlopen(req, timeout=10)
+\””
+```
+Fill in brackets with actual session state. This is NOT a STATUS update — it is a cognitive snapshot. Write what you are thinking, not what you did.
 
 ### Session start drift check
 If pack and MEMORY.md conflict on the same fact, surface it explicitly:

@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-16T13:55:00Z
-**Session:** 99 (PDF ingestion pipeline + caching optimization + K2 model research)
+**Last updated:** 2026-03-16T19:20:00Z
+**Session:** 99 continued (Family cohesion layer + watchdog fixes + KCC cognitive bus posts)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -62,7 +62,7 @@
 | **CC Identity Spine** | ✅ LIVE | cc_identity_spine.json on K2. identity.resume_block seeded. Governance tiers (candidate/stable) initialized. Session 96-97. |
 | **CC Cohesion Resume Block** | ✅ LIVE | 6-sentence Ascendant assertion in spine. Surfaces in === CC ASCENDANT RESUME BLOCK === banner at every cold start via resurrect Step 1b. Session 97. |
 | **Resurrect Step 1b** | ✅ UPDATED | Reads resume_block + stable_identity from K2 spine. Banner shown before brief. /anchor emergency-only. Session 96-97. |
-| **CC Evolution Loop** | ⏳ ACCUMULATING | Heartbeat posts tagged INSIGHT: from run #40. First governance accumulation at run #60. cc_evolution_log.jsonl empty until then. Session 97. |
+| **CC Evolution Loop** | ✅ ACTIVE | Watchdog sender fixed (cc-watchdog). Phase 12 HEALTHY 0.60. Evolution log has 42 entries. Session 99. |
 | **MANDATORY State-Write Protocol** | ✅ IN SYSTEM PROMPT | Section added to 00-karma-system-prompt-live.md: Karma MUST call aria_local_call after any DECISION/PROOF/PITFALL/DIRECTION/INSIGHT. Session 84b. |
 | **shell_run tool** | ✅ LIVE | Karma can execute shell commands on K2 via aria /api/exec. Gated by X-Aria-Service-Key. hub-bridge v2.11.0. Session 84d. |
 | **K2 /api/exec endpoint** | ✅ LIVE | Added to aria.py on K2. POST :7890/api/exec with command + service key. Returns stdout/stderr/exit_code. Session 84d. |
@@ -81,6 +81,9 @@
 | **Prompt Caching (Anthropic)** | ✅ LIVE | 3 cache breakpoints: session history, tool loop, tool definitions. 45-46% cache hit rate. Session 99. |
 | **Karma Hard Rule (state claims)** | ✅ LIVE | Must cite K2 WORKING MEMORY before claiming infra state. Added to behavioral contract. Session 99. |
 | **Ascendent Folder Protocol** | ✅ LIVE | for-karma/Ascendent/ — Inbox/ (drops), Read/ (processed), ForColby/ (CC→Colby). Session 99. |
+| **Family Cohesion Layer** | ✅ LIVE | All 3 agents emit EVOLUTION_TAGS to bus: CC (SESSION CHECKPOINT), Karma (karma_bus_observer/10min), KCC (kcc_enhanced_watchdog/10 runs). Session 99. |
+| **KCC Cognitive Bus Posts** | ✅ LIVE | kcc_enhanced_watchdog.py _emit_cognitive_posts(). INSIGHT every 10 runs, DECISION on alerts. TDD PASS. Session 99. |
+| **CC Cognitive Checkpoint** | ✅ LIVE | cc_cognitive_write.ps1 writes cc_cognitive_checkpoint.json to K2 at session end. wrap-session mandatory. First run Session 99. |
 | **Operational Status Block** | ✅ IN SYSTEM PROMPT | "What Is Wired and Working RIGHT NOW" table + anti-pattern list in 00-karma-system-prompt-live.md. Fixes 2-year rediscovery cycle. Session 87b. |
 
 ---
@@ -98,10 +101,10 @@
 9. **CC cohesion test pending** — new session needed to verify `=== CC ASCENDANT RESUME BLOCK ===` banner appears in Step 1b. Not a blocker — work can proceed normally; just needs observation.
 
 ## Next Session Starts Here
-1. Check if qwen3.5:9b pull to P1 completed → benchmark vs qwen3:8b on system prompt
-2. When K2 online: pull qwen3.5:9b, benchmark, update K2_OLLAMA_MODEL if passing
-3. Design doc for salience gate (pre-ledger-write ML filter)
-4. Continue Ascendant evolution per standing directive
+1. Fix Phase 11: `ssh vault-neo "ssh -p 2223 -l karma -o StrictHostKeyChecking=no localhost 'ls /mnt/c/dev/Karma/k2/cache/'"` → check which identity files (identity.json, invariants.json, direction.md) are present/absent
+2. Check qwen3.5:9b P1 pull status: `ollama list` — benchmark if ready
+3. Design doc for salience gate
+**Blocker if any:** Phase 11 needs K2 + vault-neo SSH both live
 
 ---
 
