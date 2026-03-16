@@ -1589,6 +1589,60 @@ const TOOL_DEFINITIONS = [
       required: ["to", "content", "urgency"],
     },
   },
+  {
+    name: "k2_kiki_inject",
+    description: "Inject a task into Kiki's autonomous work queue. Kiki will pick it up on the next cycle and attempt to complete it autonomously.",
+    input_schema: {
+      type: "object",
+      properties: {
+        issue: { type: "string", description: "The task/issue description (action kiki should take)" },
+        priority: { type: "integer", description: "Priority 1-100 (lower = higher priority, default: 50)" },
+        details: { type: "string", description: "Additional context or verification criteria" },
+      },
+      required: ["issue"],
+    },
+  },
+  {
+    name: "k2_kiki_status",
+    description: "Read Kiki's current state: cycle count, success rate, open backlog, recent journal entries.",
+    input_schema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "k2_kiki_journal",
+    description: "Read Kiki's recent journal entries (actions taken, results, verifications).",
+    input_schema: {
+      type: "object",
+      properties: {
+        n: { type: "integer", description: "Number of recent entries to return (default: 20)" },
+      },
+    },
+  },
+  {
+    name: "k2_bus_post",
+    description: "Post a message to the Karma coordination bus from K2. Use DIRECTION/INSIGHT/DECISION/PROOF/PITFALL tags in content.",
+    input_schema: {
+      type: "object",
+      properties: {
+        content: { type: "string", description: "Message content (include type tag: DIRECTION/INSIGHT/DECISION/PROOF/PITFALL)" },
+      },
+      required: ["content"],
+    },
+  },
+  {
+    name: "k2_ollama_embed",
+    description: "Generate semantic embeddings using nomic-embed-text on K2 (free, local, no API cost).",
+    input_schema: {
+      type: "object",
+      properties: {
+        texts: { type: "array", items: { type: "string" }, description: "List of texts to embed" },
+        model: { type: "string", description: "Ollama model (default: nomic-embed-text:latest)" },
+      },
+      required: ["texts"],
+    },
+  },
 ];
 
 // Map of whitelisted file aliases to actual paths
@@ -1742,6 +1796,28 @@ async function executeToolCall(toolName, toolInput, writeId = null, ariaSessionI
         return { ok: true, stdout: result.stdout || "", stderr: result.stderr || "", exit_code: result.exit_code };
       } catch (e) {
         console.warn(`[TOOL-API] shell_run failed: ${e.message}`);
+        return { error: "network_error", message: e.message };
+      }
+    }
+
+    // k2_* tools -- lazy routing to K2 structured tool API (no startup dependency)
+    if (toolName.startsWith("k2_")) {
+      const k2ToolName = toolName.slice(3); // strip "k2_" prefix
+      const ARIA_KEY = process.env.ARIA_SERVICE_KEY || "";
+      if (!ARIA_KEY) return { error: "not_configured", message: "ARIA_SERVICE_KEY not set" };
+      try {
+        console.log(`[TOOL-API] k2_tool: ${k2ToolName}`);
+        const r = await fetch(`${ARIA_URL}/api/tools/execute`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Aria-Service-Key": ARIA_KEY },
+          body: JSON.stringify({ tool: k2ToolName, input: toolInput }),
+          signal: AbortSignal.timeout(35000),
+        });
+        const result = await r.json();
+        if (!result.ok) return { error: result.error || "k2_tool_failed", message: result.error };
+        return result.result || { ok: true };
+      } catch (e) {
+        console.warn(`[TOOL-API] k2_tool ${k2ToolName} failed: ${e.message}`);
         return { error: "network_error", message: e.message };
       }
     }

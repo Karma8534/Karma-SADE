@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "k2": {
+      "command": "python",
+      "args": ["Scripts/k2_mcp_proxy.py"],
+      "env": {
+        "K2_URL": "http://100.75.109.92:7890"
+      }
+    }
+  }
+}
