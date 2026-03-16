@@ -15,9 +15,18 @@
 - claude-mem: #7080 (DECISION), #7095 (PROOF)
 - Commits: 36a30de, 2b0d1fd
 
+**Also done:**
+- Codex Phases 13-14 probes fixed (K2-local only, no docker access)
+- 3 kiki issues seeded (cache inventory, rules count, watchdog archive)
+- 6 bus messages posted (PROOF, DECISION, DIRECTION, INSIGHT, 2 directives)
+- PITFALL documented: Codex probes must be K2-local-only (claude-mem #7106)
+- Scratchpad updated with Session 99 state
+- claude-mem: #7080, #7095, #7101, #7106
+
 **Next:**
-- Monitor tier distribution in production over next few sessions
+- Monitor tier distribution in production
 - Continue autonomous Ascendant evolution
+- K2 hardware upgrade (when funded) enables local embeddings + Ollama routing
 
 ## Session 98 Continued (2026-03-15) — Local Prompt + Codex Phases 9-10 + Bus Ops
 
