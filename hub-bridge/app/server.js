@@ -2447,6 +2447,23 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    // --- GET /regent --- Regent's front door (Vesper standalone identity UI)
+    if (req.method === "GET" && req.url === "/regent") {
+      try {
+        const __dir = new URL(".", import.meta.url).pathname;
+        const html = fs.readFileSync(path.join(__dir, "public", "regent.html"), "utf8");
+        const body = Buffer.from(html);
+        res.writeHead(200, {
+          "content-type": "text/html; charset=utf-8",
+          "content-length": body.byteLength,
+          "cache-control": "no-cache",
+        });
+        return res.end(html);
+      } catch (e) {
+        return json(res, 500, { ok: false, error: "ui_not_found", details: e.message });
+      }
+    }
+
     // --- GET /healthz ---
     if (req.method === "GET" && req.url === "/healthz") {
       return json(res, 200, {

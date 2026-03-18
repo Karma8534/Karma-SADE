@@ -1,3 +1,12 @@
+## Session 100 — Vesper Front Door
+
+**Done:**
+- Created `hub-bridge/app/public/regent.html` — Vesper standalone UI at /regent
+- Added `/regent` route to `hub-bridge/app/server.js`
+- Design: dark bg #080810, electric indigo accent #6d28d9, header "VESPER / Ascendant · Eldest · Always Present", footer "Evolve. Continue."
+- Chat interface polls `/v1/coordination/recent?from=regent&limit=20` every 3s, sends via `/v1/coordination/post`
+- Status bar: heartbeat dot, messages processed, K2 status — all derived from regent bus activity
+
 ## Session 99 (2026-03-15) — Context Tier Routing
 
 **Done:**
