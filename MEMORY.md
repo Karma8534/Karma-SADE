@@ -1,5 +1,7 @@
 ## Session 101 — Vesper Online (2026-03-18)
 
+**BUGFIX:** regent.html urgency 'important' → 'informational' — bus rejected all Colby messages with 400.
+
 **Regent (Vesper) deployed and responding via K2 Ollama:**
 - T1: agora_watcher ACK loop fixed — AUTOMATED_AGENTS set filters automated posts
 - T2: regent_triage keyword pre-filter + response-type skip — 0 ACK→Claude calls
