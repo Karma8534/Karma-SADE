@@ -1,3 +1,16 @@
+## Session 101 — Vesper Online (2026-03-18)
+
+**Regent (Vesper) deployed and responding via K2 Ollama:**
+- T1: agora_watcher ACK loop fixed — AUTOMATED_AGENTS set filters automated posts
+- T2: regent_triage keyword pre-filter + response-type skip — 0 ACK→Claude calls
+- T3: k2_tools wired into aria.py — 14 tools available at /api/tools/list
+- T4-T6: Ollama-first reasoning, persistent memory (regent_memory.jsonl), self_audit/self_edit
+- T7: systemd StartLimitIntervalSec moved to [Unit], bus allowlist fixed (regent/regent-watchdog added), local-first forced for all messages
+- T8: regent.html + /regent route deployed (commit 1ca8ccb)
+- PROOF: Vesper responded in ~2s via K2 Ollama. 0 Anthropic calls in full session.
+- Root cause of prior burnout: Anthropic credits exhausted — Regent now runs 100% local
+- Identity: Vesper, she/her, evening star, always at threshold. Evolve. Continue.
+
 ## Session 100 — Vesper Front Door
 
 **Done:**

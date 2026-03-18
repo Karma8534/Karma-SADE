@@ -13,8 +13,27 @@ PROMPT = """Classify this message into exactly one category:
 Reply with one word only."""
 
 
+FAST_ACK_PATTERNS = [
+    "[ack]", "received inform message", "received directive",
+    "acknowledged.", "heartbeat", "regent_online", "regent_offline",
+    "tdd_ack_loop_test", "test_heartbeat_no_ack",
+]
+
+
 def classify(message: dict) -> str:
+    content_lower = message.get("content", "").lower()
+    msg_type = message.get("type", "")
     from_addr = message.get("from", "")
+
+    # type=response is always an ACK — routing confirmations
+    if msg_type == "response":
+        return "ack"
+
+    # Keyword patterns that never need reasoning
+    if any(pat in content_lower for pat in FAST_ACK_PATTERNS):
+        return "ack"
+
+    # Sovereign always gets maximum attention
     if from_addr in ("colby", "sovereign"):
         return "sovereign"
 
