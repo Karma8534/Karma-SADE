@@ -3563,8 +3563,8 @@ const server = http.createServer(async (req, res) => {
         if (!from || !to || !content || !urgency) {
           return json(res, 400, { ok: false, error: "missing required fields: from, to, content, urgency" });
         }
-        const validFrom = ["karma", "cc", "colby", "kcc", "codex", "kiki", "asher"];
-        const validTo = ["karma", "cc", "colby", "kcc", "codex", "kiki", "asher", "all"];
+        const validFrom = ["karma", "cc", "colby", "kcc", "codex", "kiki", "asher", "regent", "regent-watchdog"];
+        const validTo = ["karma", "cc", "colby", "kcc", "codex", "kiki", "asher", "regent", "all"];
         const validUrgency = ["blocking", "feedback", "informational"];
         if (!validFrom.includes(from)) return json(res, 400, { ok: false, error: `invalid from: ${from}` });
         if (!validTo.includes(to)) return json(res, 400, { ok: false, error: `invalid to: ${to}` });
