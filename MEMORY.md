@@ -1,3 +1,7 @@
+## Session 104 continued — Gap 4 complete: Watchdog timer live (2026-03-19)
+
+**DEPLOYED:** `vesper-watchdog.timer` + `vesper-watchdog.service` on K2. Fires every 10min. Verified running. All 7 gaps closed.
+
 ## Session 104 continued — Gap 3 Fix: Memory as Knowledge (2026-03-19)
 
 **DEPLOYED:** Replaced raw log noise with meaningful interaction summaries in `regent_memory.jsonl`.
