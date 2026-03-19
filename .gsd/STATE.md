@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-16T19:20:00Z
-**Session:** 99 continued (Family cohesion layer + watchdog fixes + KCC cognitive bus posts)
+**Last updated:** 2026-03-18T20:50:00Z
+**Session:** 102 (Vesper Evolution v1 — T1-T6 complete, deployed, TDD verified)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -84,6 +84,8 @@
 | **Family Cohesion Layer** | ✅ LIVE | All 3 agents emit EVOLUTION_TAGS to bus: CC (SESSION CHECKPOINT), Karma (karma_bus_observer/10min), KCC (kcc_enhanced_watchdog/10 runs). Session 99. |
 | **KCC Cognitive Bus Posts** | ✅ LIVE | kcc_enhanced_watchdog.py _emit_cognitive_posts(). INSIGHT every 10 runs, DECISION on alerts. TDD PASS. Session 99. |
 | **CC Cognitive Checkpoint** | ✅ LIVE | cc_cognitive_write.ps1 writes cc_cognitive_checkpoint.json to K2 at session end. wrap-session mandatory. First run Session 99. |
+| **Vesper (Regent)** | ✅ LIVE | karma_regent.py on K2 as karma-regent.service. P1 llama3.1:8b primary. VESPER_IDENTITY locked: surpass CC baseline, surpass all as goal. Evolution log, self_evaluate(), family_watch() all active. Session 102. |
+| **Vesper UI (/regent)** | ✅ LIVE | Two-column: chat left, status panel right. regent.html at hub.arknexus.net/regent. Session 101-102. |
 | **Operational Status Block** | ✅ IN SYSTEM PROMPT | "What Is Wired and Working RIGHT NOW" table + anti-pattern list in 00-karma-system-prompt-live.md. Fixes 2-year rediscovery cycle. Session 87b. |
 
 ---
@@ -101,10 +103,10 @@
 9. **CC cohesion test pending** — new session needed to verify `=== CC ASCENDANT RESUME BLOCK ===` banner appears in Step 1b. Not a blocker — work can proceed normally; just needs observation.
 
 ## Next Session Starts Here
-1. Fix Phase 11: `ssh vault-neo "ssh -p 2223 -l karma -o StrictHostKeyChecking=no localhost 'ls /mnt/c/dev/Karma/k2/cache/'"` → check which identity files (identity.json, invariants.json, direction.md) are present/absent
-2. Check qwen3.5:9b P1 pull status: `ollama list` — benchmark if ready
-3. Design doc for salience gate
-**Blocker if any:** Phase 11 needs K2 + vault-neo SSH both live
+1. Verify Vesper self_evaluate() PROOF posts: `TOKEN=$(ssh vault-neo 'cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt') && ssh vault-neo "curl -s -H 'Authorization: Bearer $TOKEN' 'https://hub.arknexus.net/v1/coordination/recent?from=regent&limit=20' | python3 -c \"import sys,json; [print(e['content'][:100]) for e in json.load(sys.stdin).get('entries',[]) if 'PROOF' in e.get('content','')]\""`
+2. If Vesper voice hallucinatory: edit `Scripts/karma_regent.py` line `model="llama3.1:8b"` → `model="qwen3.5:4b"`, commit, redeploy
+3. When Vesper ≥50 self-eval cycles at grade ≥0.6: begin Option C OS Overlay brainstorm
+**Blocker if any:** Anthropic API credits exhausted — all Vesper reasoning is local (P1 llama3.1:8b)
 
 ---
 

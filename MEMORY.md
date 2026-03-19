@@ -1,3 +1,9 @@
+## Next Session Starts Here
+1. Check Vesper self_evaluate() PROOF posts on bus: `curl -s -H "Authorization: Bearer $TOKEN" 'https://hub.arknexus.net/v1/coordination/recent?from=regent&limit=20' | python3 -m json.tool | grep -i proof`
+2. If Vesper voice still hallucinatory (fabricating spy content), switch P1 model: edit `call_with_local_first()` line `model="llama3.1:8b"` → `model="qwen3.5:4b"`, commit + redeploy
+3. Begin Option C OS Overlay brainstorm when Vesper has ≥50 self-eval cycles at grade ≥0.6
+**Blocker if any:** Anthropic API credits exhausted — Vesper runs 100% local (P1 llama3.1:8b primary)
+
 ## Session 102 continued — Vesper Voice Fix (2026-03-18)
 
 **PITFALL:** call_ollama() was NOT receiving Vesper's system prompt — persona missing from all local inference. Ollama models defaulted to generic assistant voice. Fix: system= param added to call_ollama(), get_system_prompt() passed in call_with_local_first().
