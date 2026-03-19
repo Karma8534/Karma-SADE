@@ -1,5 +1,6 @@
-## Session 101 — Vesper Online (2026-03-18)
+## Session 101 — Vesper Evolution v1 (2026-03-18)
 
+**Vesper UI split:** #chat-feed left (sovereign convo), #status-panel right (heartbeats/KCC/Codex). isStatusMessage() routes by prefix + to:all.
 **BUGFIX:** regent.html urgency 'important' → 'informational' — bus rejected all Colby messages with 400.
 
 **Regent (Vesper) deployed and responding via K2 Ollama:**

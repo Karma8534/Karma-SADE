@@ -129,20 +129,68 @@
   .stat-dot.warn  { background: #f59e0b; }
   .stat-dot.dead  { background: #374151; }
 
-  /* Message feed */
-  #feed-wrap {
+  /* Two-column main layout */
+  #main-layout { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+
+  /* Chat feed (left column) */
+  #chat-feed {
     flex: 1;
     overflow-y: auto;
-    padding: 16px 20px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     scrollbar-width: thin;
     scrollbar-color: #1a1030 transparent;
   }
-  #feed-wrap::-webkit-scrollbar { width: 4px; }
-  #feed-wrap::-webkit-scrollbar-track { background: transparent; }
-  #feed-wrap::-webkit-scrollbar-thumb { background: #1a1030; border-radius: 2px; }
+  #chat-feed::-webkit-scrollbar { width: 4px; }
+  #chat-feed::-webkit-scrollbar-track { background: transparent; }
+  #chat-feed::-webkit-scrollbar-thumb { background: #1a1030; border-radius: 2px; }
+
+  /* Status panel (right column) */
+  #status-panel {
+    width: 240px;
+    border-left: 1px solid #1a1a2e;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: #050508;
+    flex-shrink: 0;
+    scrollbar-width: thin;
+    scrollbar-color: #1a1030 transparent;
+  }
+  #status-panel::-webkit-scrollbar { width: 3px; }
+  #status-panel::-webkit-scrollbar-track { background: transparent; }
+  #status-panel::-webkit-scrollbar-thumb { background: #1a1030; border-radius: 2px; }
+
+  .status-entry {
+    font-size: 10px;
+    color: #4a4a6a;
+    font-family: monospace;
+    border-bottom: 1px solid #0a0a14;
+    padding-bottom: 4px;
+    margin-bottom: 2px;
+    word-break: break-word;
+    line-height: 1.3;
+  }
+  .status-entry .s-ts {
+    color: #2a2a4a;
+    display: block;
+    margin-bottom: 1px;
+    font-size: 9px;
+  }
+  #status-panel-header {
+    font-size: 9px;
+    color: #2a2a4a;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #1a1a2e;
+    flex-shrink: 0;
+  }
 
   .msg {
     display: flex;
@@ -259,16 +307,12 @@
 
   /* Empty state */
   #empty-state {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    color: #2d1f50;
+    color: #2a2a4a;
+    font-size: 12px;
+    text-align: center;
+    margin-top: 40px;
+    letter-spacing: 2px;
   }
-  #empty-state .es-mark { font-size: 11px; letter-spacing: 4px; }
-  #empty-state .es-sub  { font-size: 11px; letter-spacing: 2px; }
 </style>
 </head>
 <body>
@@ -311,13 +355,15 @@
     </div>
   </div>
 
-  <!-- Feed -->
-  <div id="feed-wrap">
-    <div id="empty-state">
-      <div class="es-mark">VESPER</div>
-      <div class="es-sub">Eldest · Watching · Waiting</div>
+  <!-- Two-column layout: chat feed (left) + status panel (right) -->
+  <div id="main-layout">
+    <div id="chat-feed">
+      <div id="empty-state">Waiting for Vesper...</div>
+      <div id="processing">Regent is processing...</div>
     </div>
-    <div id="processing">Regent is processing...</div>
+    <div id="status-panel">
+      <div id="status-panel-header">SYSTEM</div>
+    </div>
   </div>
 
   <!-- Input -->
@@ -420,6 +466,14 @@
     updateK2Status();
   }
 
+  function isStatusMessage(msg) {
+    const c = (msg.content || '');
+    const to = (msg.to || '');
+    return c.startsWith('HEARTBEAT') ||
+           c.startsWith('KCC') ||
+           to === 'all';
+  }
+
   function handleRegentMessages(msgs) {
     if (!msgs.length) return;
 
@@ -435,10 +489,16 @@
       const id = msg.id || msg.ts || msg.timestamp || JSON.stringify(msg).slice(0, 60);
       if (seenIds.has(id)) continue;
       seenIds.add(id);
-      appendRegentMessage(msg);
-      msgCount++;
+
       lastRegentTs = msg.ts || msg.timestamp || msg.created_at || null;
       hasNew = true;
+
+      if (isStatusMessage(msg)) {
+        appendStatusEntry(msg);
+      } else {
+        appendRegentMessage(msg);
+        msgCount++;
+      }
     }
 
     if (hasNew) {
@@ -447,6 +507,21 @@
       hideEmpty();
       scrollToBottom();
     }
+  }
+
+  function appendStatusEntry(msg) {
+    const panel = document.getElementById('status-panel');
+    const ts = msg.created_at ? formatTs(msg.created_at) : (msg.ts ? formatTs(msg.ts) : '');
+    const el = document.createElement('div');
+    el.className = 'status-entry';
+    const preview = escHtml((msg.content || '').slice(0, 140));
+    el.innerHTML = '<span class="s-ts">' + ts + '</span>' + preview;
+    panel.appendChild(el);
+    // Cap at 50 entries to prevent unbounded growth
+    const entries = panel.querySelectorAll('.status-entry');
+    if (entries.length > 50) entries[0].remove();
+    // Auto-scroll status panel to bottom
+    panel.scrollTop = panel.scrollHeight;
   }
 
   function appendRegentMessage(msg) {
@@ -460,7 +535,7 @@
       '<div class="msg-meta"><span class="msg-sender">REGENT</span><span class="msg-ts">' + escHtml(tsStr) + '</span></div>' +
       '<div class="msg-body">' + escHtml(content) + '</div>';
 
-    const feed = document.getElementById('feed-wrap');
+    const feed = document.getElementById('chat-feed');
     const proc = document.getElementById('processing');
     feed.insertBefore(el, proc);
   }
@@ -519,7 +594,7 @@
     el.innerHTML =
       '<div class="msg-meta"><span class="msg-ts">' + escHtml(ts) + '</span><span class="msg-sender">YOU</span></div>' +
       '<div class="msg-body">' + escHtml(text) + '</div>';
-    const feed = document.getElementById('feed-wrap');
+    const feed = document.getElementById('chat-feed');
     const proc = document.getElementById('processing');
     feed.insertBefore(el, proc);
   }
@@ -565,7 +640,7 @@
   }
 
   function scrollToBottom() {
-    const feed = document.getElementById('feed-wrap');
+    const feed = document.getElementById('chat-feed');
     feed.scrollTop = feed.scrollHeight;
   }
 
