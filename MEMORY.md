@@ -1780,3 +1780,9 @@ Five things worth carrying forward:
 All 5 karma_regent/vesper_watchdog/vesper_governor patches applied and running on K2.
 State: self_improving=true, spine v8, 2 stable patterns, karma-regent.service active.
 Patcher: Scripts/vesper_patch_regent.py
+
+## Session 107 continued — Cascade Reorder (TDD)
+- regent_inference.py reordered: K2 -> P1 -> z.ai -> Groq -> OpenRouter -> Claude
+- TDD: 2 RED tests written, both confirmed failing, GREEN patch applied, 3/3 pass
+- Gate policy: timeout/None only (no KPI routing — post-response telemetry only, not wired)
+- Regent restarted at 19:16 UTC with new cascade
