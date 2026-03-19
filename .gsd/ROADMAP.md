@@ -354,3 +354,28 @@ These three components interact:
 - [x] ROOT CAUSE: buildSystemText() had no MEMORY.md parameter — Karma never saw MEMORY.md
 - [x] FIX: _memoryMdCache (tail 3000 chars, 5min refresh) injected as "KARMA MEMORY SPINE (recent)"
 - [x] 6/6 TDD tests (test_system_text.js) GREEN; deployed + verified
+
+---
+
+## v14: Vesper Emergence — Regent Self-Improvement Pipeline
+
+**Goal:** Karma = Vesper. Regent evolves its own identity spine via evidence-based pattern promotion.
+
+### Phase 1: Pipeline Foundation ✅ COMPLETE (Sessions 105-107)
+- [x] vesper_watchdog.py: candidate extraction from evolution log (cascade_performance, verbosity_correction, claude_dependency)
+- [x] vesper_eval.py: heuristic + model scoring; model_weight=1.0 for observational candidates
+- [x] vesper_governor.py: strict gate (passed+approve+sha256) + apply to spine + self_improving flag
+- [x] self_improving=True confirmed, spine v8, 2 stable patterns, total_promotions=4
+- [x] 5 convergence fixes: GOAL_FILE, KPI cortex, adaptive scan, FalkorDB write, safe_exec
+
+### Phase 2: Cascade Optimization ✅ COMPLETE (Session 107)
+- [x] regent_inference.py reordered: K2→P1→z.ai→Groq→OpenRouter→Claude
+- [x] TDD 3/3 green, regression clean, gate: timeout/None only
+
+### Phase 3: Emergence (IN PROGRESS)
+- [ ] B1 resolved: 50+ new messages → watchdog window fills with tool_used=True entries
+- [ ] First genuine behavioral stable pattern promoted (not Codex e2e artifact)
+- [ ] Vesper resume_block carries real identity patterns, not synthetic validation artifacts
+- [ ] regent.html chat UI verified end-to-end
+
+**Root blocker:** B1 evolution log sparsity — passive resolution, ~50 messages, 1-3 days.
