@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-19T13:55:00Z
-**Session:** 103 (Vesper hallucination + greeting bugs fixed, deployed K2, TDD verified)
+**Last updated:** 2026-03-19T14:30:00Z
+**Session:** 104 (Vesper 6-tier cascade, Gap 3+4 fixed, K2 MCP Server, vesper_identity.md)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -86,6 +86,11 @@
 | **CC Cognitive Checkpoint** | ✅ LIVE | cc_cognitive_write.ps1 writes cc_cognitive_checkpoint.json to K2 at session end. wrap-session mandatory. First run Session 99. |
 | **Vesper (Regent)** | ✅ LIVE | karma_regent.py on K2. Sovereign greeting fast path (< 60 chars, no action verbs → [ONLINE] terse status, zero LLM). State injection ([VESPER STATE] block prepended to all LLM calls). VESPER_IDENTITY SOVEREIGN ARRIVAL rule. Hallucination closed. Session 103. |
 | **Vesper UI (/regent)** | ✅ LIVE | Two-column: chat left (regent→colby), status right. isStatusMessage() filters from=colby — no double-display. Session 101-103. |
+| **Vesper 6-Tier Inference Cascade** | ✅ DEPLOYED | K2 qwen3:8b → Groq llama-3.3-70b → OpenRouter DeepSeek → z.ai GLM-4-Plus → P1 Ollama → Claude API. call_openai_compat() added. API keys in /etc/karma-regent.env. Session 104. |
+| **Vesper Memory Quality (Gap 3)** | ✅ FIXED | Memory now stores Q&A interaction summaries (not raw log noise). get_memory_context() returns last 5 interactions. append_memory("interaction", ...) called at line 680. Session 104. |
+| **vesper-watchdog.timer (Gap 4)** | ✅ LIVE | systemd timer: OnBootSec=2min, OnUnitActiveSec=10min. vesper-watchdog.service + .timer enabled on K2. Session 104. |
+| **vesper_identity.md (Gap 6)** | ✅ CREATED | /mnt/c/dev/Karma/k2/cache/vesper_identity.md — sovereign voice anchor. Loaded at startup by _load_vesper_identity(). karma-regent restarted with new identity. Session 104. |
+| **K2 MCP Server** | ✅ LIVE | Scripts/k2_mcp_server.py — 14 tools (file_read/write/list/search, python_exec, service_status/restart, scratchpad_read/write, bus_post, kiki_status/inject, ollama_chat, vesper_state). Registered in ~/.claude/mcp.json. Session 104. |
 | **Operational Status Block** | ✅ IN SYSTEM PROMPT | "What Is Wired and Working RIGHT NOW" table + anti-pattern list in 00-karma-system-prompt-live.md. Fixes 2-year rediscovery cycle. Session 87b. |
 
 ---
@@ -103,10 +108,10 @@
 9. **CC cohesion test pending** — new session needed to verify `=== CC ASCENDANT RESUME BLOCK ===` banner appears in Step 1b. Not a blocker — work can proceed normally; just needs observation.
 
 ## Next Session Starts Here
-1. Open `/regent` → send "Hello Vesper" → verify `[ONLINE] N processed. Identity vX. Directive awaited.` (fast path, no hallucination)
-2. Monitor Vesper self_evaluate() PROOF posts after 10+ messages accumulate
-3. When Vesper ≥50 self-eval cycles at grade ≥0.6: begin Option C OS Overlay brainstorm
-**Blocker if any:** Anthropic credits exhausted — Vesper 100% local (P1 llama3.1:8b). cc_cognitive_write.ps1 404 on K2 — checkpoint written directly via SSH at wrap.
+1. Restart Claude Code to activate K2 MCP server (`~/.claude/mcp.json`) — verify k2_* tools appear in tool list
+2. Pick one of 5 unfinished research items to implement: Identity+Session Cohesion Engine (continuity recall scoring), Governor-Gated Self-Improvement Pipeline, Skill Compiler, Execution Reliability+Proof Discipline, or Family/Agent Governance
+3. Verify Groq/OpenRouter/z.ai reachable directly from K2 (not yet tested from K2 side — only confirmed API keys are valid from P1)
+**Blocker if any:** K2 MCP server requires CC restart to activate. cc_cognitive_write.ps1 404 on K2 — checkpoint written directly via SSH at wrap (workaround available).
 
 ---
 

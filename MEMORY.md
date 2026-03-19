@@ -1,3 +1,9 @@
+## Session 104 wrap — STATE.md + VESPER.md updated (2026-03-19)
+
+**DONE:** STATE.md updated (session 104, 7 new rows: cascade, Gap 3, Gap 4, vesper_identity.md, K2 MCP). VESPER.md updated (live LLM status, Anthropic credits zero). vesper_identity.md written to K2. Cognitive checkpoint on K2. All commits pushed.
+
+**Next session starts here:** Restart CC → verify K2 MCP tools active → pick one of 5 unfinished research items.
+
 ## Session 104 continued — K2 MCP Server (2026-03-19)
 
 **DEPLOYED:** `Scripts/k2_mcp_server.py` — MCP stdio server registered in `~/.claude/mcp.json`.
