@@ -93,10 +93,11 @@ def load_memory():
 
 def append_memory(entry_type, content, metadata=None):
     """Append a memory entry and trim to MAX_MEMORY_ENTRIES."""
+    cap = 600 if entry_type == "interaction" else 300
     entry = {
         "ts": datetime.datetime.utcnow().isoformat() + "Z",
         "type": entry_type,
-        "content": str(content)[:300],
+        "content": str(content)[:cap],
         **(metadata or {})
     }
     try:
@@ -109,13 +110,12 @@ def append_memory(entry_type, content, metadata=None):
         log(f"memory append error: {e}")
 
 def get_memory_context():
-    """Return last 10 entries as context string."""
-    if not _memory:
+    """Return last 5 meaningful interactions as readable exchange summaries."""
+    interactions = [e for e in _memory if e.get("type") == "interaction"][-5:]
+    if not interactions:
         return ""
-    return "\n".join(
-        f"[{e['ts'][:16]}] [{e.get('type','')}] {e.get('content','')}"
-        for e in _memory[-10:]
-    )
+    lines = [f"[{e['ts'][:16]}] {e.get('content', '')}" for e in interactions]
+    return "[RECENT INTERACTIONS]\n" + "\n".join(lines)
 
 # ── Conversation Thread ────────────────────────────────────────────────────────
 _conversations: dict = {}  # {from_addr: [{"role": "user/assistant", "content": "..."}]}
@@ -677,7 +677,7 @@ def process_message(msg):
 
     log_evolution(msg_id, from_addr, category, response_source, len(response) if response else 0)
 
-    append_memory("processed", f"from={from_addr} cat={category}: {response[:100]}",
+    append_memory("interaction", f"Q({from_addr}): {content[:200]} | A: {(response or '')[:200]}",
                   {"from": from_addr, "category": category})
 
     global _eval_counter

@@ -1,3 +1,10 @@
+## Session 104 continued — Gap 3 Fix: Memory as Knowledge (2026-03-19)
+
+**DEPLOYED:** Replaced raw log noise with meaningful interaction summaries in `regent_memory.jsonl`.
+- Stores `Q(from): {question[:200]} | A: {response[:200]}` per exchange
+- `get_memory_context()` filters to `interaction` type, injects `[RECENT INTERACTIONS]` block
+- 600-char cap for interaction entries (was 300). Service restarted, verified active.
+
 ## Session 104 continued — Vesper Inference Cascade (2026-03-19)
 
 **DEPLOYED:** 6-tier inference cascade in `karma_regent.py`.
