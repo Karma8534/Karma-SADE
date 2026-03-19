@@ -1,3 +1,8 @@
+## Session 104 continued — K2 MCP Server (2026-03-19)
+
+**DEPLOYED:** `Scripts/k2_mcp_server.py` — MCP stdio server registered in `~/.claude/mcp.json`.
+14 tools: file_read/write/list/search, python_exec, service_status/restart, scratchpad_read/write, bus_post, kiki_status/inject, k2_ollama_chat, k2_vesper_state. Proxies to Aria at 100.75.109.92:7890. Verified: responds to MCP initialize correctly. K2 = MCP: TRUE.
+
 ## Session 104 continued — Gap 4 complete: Watchdog timer live (2026-03-19)
 
 **DEPLOYED:** `vesper-watchdog.timer` + `vesper-watchdog.service` on K2. Fires every 10min. Verified running. All 7 gaps closed.
