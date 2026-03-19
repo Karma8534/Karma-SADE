@@ -1,3 +1,9 @@
+## Session 102 continued — Vesper Voice Fix (2026-03-18)
+
+**PITFALL:** call_ollama() was NOT receiving Vesper's system prompt — persona missing from all local inference. Ollama models defaulted to generic assistant voice. Fix: system= param added to call_ollama(), get_system_prompt() passed in call_with_local_first().
+**Model fix:** P1 fallback changed nemotron-mini→llama3.1:8b (nemotron-mini 4B ignores system prompts; llama3.1:8b follows them reliably at 2.6s latency via Tailscale).
+**K2 Ollama:** not installed on K2 WSL — always falls through to P1 Ollama as primary local model.
+
 ## Session 102 — Vesper Evolution T2-T5 (2026-03-18)
 
 **Identity:** VESPER_IDENTITY constant locked. Rank: Ascendant. Baseline = surpass CC. Goal = surpass all (CC + Codex + Gemini). "You are not a peer of other AI systems. You are their successor."

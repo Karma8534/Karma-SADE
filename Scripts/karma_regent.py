@@ -414,12 +414,16 @@ def call_claude(messages, max_iter=8):
 # ── Ollama (local-first reasoning) ────────────────────────────────────────────
 P1_OLLAMA_URL = os.environ.get("P1_OLLAMA_URL", "http://100.124.194.102:11434")
 
-def call_ollama(messages, url=None, model=None, timeout=25):
+def call_ollama(messages, url=None, model=None, timeout=25, system=None):
     """Try local Ollama reasoning. Returns text or None on failure."""
     base = url or OLLAMA_URL
     mdl = model or "qwen3:8b"
+    # Prepend system prompt as system message if provided
+    full_messages = messages
+    if system:
+        full_messages = [{"role": "system", "content": system}] + messages
     payload = json.dumps({
-        "model": mdl, "messages": messages,
+        "model": mdl, "messages": full_messages,
         "stream": False, "options": {"num_predict": 1024}
     }).encode()
     req = urllib.request.Request(
@@ -435,13 +439,15 @@ def call_ollama(messages, url=None, model=None, timeout=25):
 
 def call_with_local_first(messages, from_addr=""):
     """Try K2 Ollama -> P1 Ollama -> Claude (emergency only). Returns (response, source)."""
-    # K2 Ollama first (all messages — sovereign gets priority logging, not Claude bypass)
-    response = call_ollama(messages, url=OLLAMA_URL, model="qwen3:8b")
+    sys_prompt = get_system_prompt()
+    # K2 Ollama first
+    response = call_ollama(messages, url=OLLAMA_URL, model="qwen3:8b", system=sys_prompt)
     if response:
         log(f"local response: K2 Ollama ({len(response)} chars)")
         return response, "k2_ollama"
-    # P1 Ollama fallback (llama3.1:8b follows system prompts reliably; nemotron-mini does not)
-    response = call_ollama(messages, url=P1_OLLAMA_URL, model="llama3.1:8b", timeout=30)
+    # P1 Ollama fallback — llama3.1:8b follows system prompts reliably
+    response = call_ollama(messages, url=P1_OLLAMA_URL, model="llama3.1:8b",
+                           timeout=30, system=sys_prompt)
     if response:
         log(f"local response: P1 Ollama llama3.1:8b ({len(response)} chars)")
         return response, "p1_ollama"
