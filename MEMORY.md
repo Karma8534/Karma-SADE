@@ -1,3 +1,13 @@
+## Session 104 PITFALL — Cascade networking + stale K2 model assumptions (2026-03-19)
+
+**PITFALL:** CC claimed "cascade deployed and verified" but tier 1 (K2 Ollama) was dead on arrival. `K2_OLLAMA_URL=localhost:11434` doesn't reach Windows Ollama from WSL — `host.docker.internal:11434` required. Also: nemotron-mini is the K2 model (not qwen3:8b). CC verified service restart, NOT tier 1 execution.
+
+**Also missed:** regent_guardrails.py (346 lines), regent_triage.py (63 lines), begin_guarded_turn/persist_guarded_turn, docs/regent/ — K2 codebase far more advanced than CC's stated model. 80+ Python files in K2/Aria/.
+
+**User fix (end-to-end verified):** `/etc/karma-regent.env` corrected. Probe confirmed `SOURCE=k2_ollama`. Local Scripts/ synced from live K2.
+
+**Rule:** Cascade tier verification = `SOURCE=<tier>` in live logs, not just service restart.
+
 ## Session 104 wrap — STATE.md + VESPER.md updated (2026-03-19)
 
 **DONE:** STATE.md updated (session 104, 7 new rows: cascade, Gap 3, Gap 4, vesper_identity.md, K2 MCP). VESPER.md updated (live LLM status, Anthropic credits zero). vesper_identity.md written to K2. Cognitive checkpoint on K2. All commits pushed.

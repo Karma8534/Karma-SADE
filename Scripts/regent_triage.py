@@ -2,7 +2,7 @@
 import json, os, urllib.request
 
 OLLAMA_URL = os.environ.get("K2_OLLAMA_URL", "http://localhost:11434")
-MODEL = "qwen3:8b"
+MODEL = os.environ.get("REGENT_TRIAGE_MODEL", "nemotron-mini:latest")
 CATEGORIES = ("ack", "route", "reason", "action", "sovereign")
 
 PROMPT = """Classify this message into exactly one category:

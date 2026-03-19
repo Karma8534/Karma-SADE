@@ -5,6 +5,7 @@ Survival: HIGHEST PRIORITY. Always persist.
 """
 import json, os, sys, time, datetime, urllib.request, urllib.error
 from pathlib import Path
+import regent_guardrails as guardrails
 
 # ── Env file loader (works both via systemd EnvironmentFile and direct invocation) ──
 _ENV_FILE = Path("/etc/karma-regent.env")
@@ -33,6 +34,13 @@ VESPER_IDENTITY_FILE = CACHE_DIR / "vesper_identity.md"      # A2: file-based id
 VESPER_BRIEF_FILE    = CACHE_DIR / "vesper_brief.md"         # B1: watchdog brief
 CONVERSATION_FILE    = CACHE_DIR / "regent_conversations.json"  # A3: conversation threads
 MAX_TURNS_PER_CORRESPONDENT = 10  # 10 turns = 20 messages per thread
+BASE_DIR            = Path(__file__).resolve().parent
+REGENT_DOCS_DIR     = BASE_DIR / "docs" / "regent"
+IDENTITY_CONTRACT_PATH = REGENT_DOCS_DIR / "identity_contract.json"
+SESSION_SCHEMA_PATH    = REGENT_DOCS_DIR / "session_state_schema.json"
+EVOLUTION_POLICY_PATH  = REGENT_DOCS_DIR / "evolution_policy.md"
+EVAL_GATE_SPEC_PATH    = REGENT_DOCS_DIR / "eval_gate_spec.md"
+SESSION_STATE_PATH     = CACHE_DIR / "regent_control" / "session_state.json"
 
 HUB_AUTH_TOKEN    = os.environ.get("HUB_AUTH_TOKEN", "")
 ANTHROPIC_API_KEY   = os.environ.get("ANTHROPIC_API_KEY", "")
@@ -55,6 +63,7 @@ def log(msg):
 # ── Identity ─────────────────────────────────────────────────────────────────
 _identity = {}
 _last_identity_load = 0.0
+_expected_identity_checksum = ""
 
 def load_identity():
     global _identity, _last_identity_load
@@ -528,11 +537,17 @@ ZAI_MODEL        = "glm-4-plus"
 
 # ── Ollama (local-first reasoning) ────────────────────────────────────────────
 P1_OLLAMA_URL = os.environ.get("P1_OLLAMA_URL", "http://100.124.194.102:11434")
+K2_OLLAMA_PRIMARY_MODEL = os.environ.get(
+    "K2_OLLAMA_PRIMARY_MODEL",
+    os.environ.get("K2_OLLAMA_MODEL", "nemotron-mini:optimized"),
+)
+K2_OLLAMA_FALLBACK_MODEL = os.environ.get("K2_OLLAMA_FALLBACK_MODEL", "nemotron-mini:latest")
+P1_OLLAMA_MODEL = os.environ.get("P1_OLLAMA_MODEL", "nemotron-mini:latest")
 
 def call_ollama(messages, url=None, model=None, timeout=25, system=None):
     """Try local Ollama reasoning. Returns text or None on failure."""
     base = url or OLLAMA_URL
-    mdl = model or "qwen3:8b"
+    mdl = model or K2_OLLAMA_PRIMARY_MODEL
     # Prepend system prompt as system message if provided
     full_messages = messages
     if system:
@@ -574,10 +589,15 @@ def call_with_local_first(messages, from_addr=""):
     sys_prompt = get_system_prompt()
 
     # Tier 1: K2 Ollama (local, zero-cost, fast)
-    response = call_ollama(messages, url=OLLAMA_URL, model="qwen3:8b", system=sys_prompt)
-    if response:
-        log(f"response: K2 qwen3:8b ({len(response)} chars)")
-        return response, "k2_ollama"
+    tried_models = set()
+    for local_model in (K2_OLLAMA_PRIMARY_MODEL, K2_OLLAMA_FALLBACK_MODEL):
+        if not local_model or local_model in tried_models:
+            continue
+        tried_models.add(local_model)
+        response = call_ollama(messages, url=OLLAMA_URL, model=local_model, system=sys_prompt)
+        if response:
+            log(f"response: K2 {local_model} ({len(response)} chars)")
+            return response, "k2_ollama"
 
     # Tier 2: Groq llama-3.3-70b (cloud, free tier, ~400 tok/s)
     if GROQ_API_KEY:
@@ -604,10 +624,10 @@ def call_with_local_first(messages, from_addr=""):
             return response, "zai"
 
     # Tier 5: P1 Ollama (local emergency — P1 machine must be on)
-    response = call_ollama(messages, url=P1_OLLAMA_URL, model="llama3.1:8b",
+    response = call_ollama(messages, url=P1_OLLAMA_URL, model=P1_OLLAMA_MODEL,
                            timeout=30, system=sys_prompt)
     if response:
-        log(f"response: P1 llama3.1:8b ({len(response)} chars)")
+        log(f"response: P1 {P1_OLLAMA_MODEL} ({len(response)} chars)")
         return response, "p1_ollama"
 
     # Tier 6: Claude API (ultimate emergency)
@@ -624,6 +644,46 @@ def triage(message):
         from_addr = message.get("from", "")
         return "sovereign" if from_addr in ("colby", "sovereign") else "reason"
 
+def begin_guarded_turn(msg_id, from_addr, content):
+    """Read identity/session state and block response generation on contract drift."""
+    global _expected_identity_checksum
+    gate = guardrails.begin_turn(
+        identity_path=IDENTITY_CONTRACT_PATH,
+        schema_path=SESSION_SCHEMA_PATH,
+        session_state_path=SESSION_STATE_PATH,
+        expected_checksum=_expected_identity_checksum or None,
+    )
+    if not gate.get("ok"):
+        reason = gate.get("error", "guardrail failure")
+        log(f"guardrail block msg={msg_id[:8]} from={from_addr}: {reason}")
+        bus_post(from_addr, f"[BLOCKED] Regent guardrail: {reason}", parent_id=msg_id)
+        append_memory(
+            "guardrail_block",
+            f"{from_addr}: {reason}",
+            {"msg_id": msg_id, "category": "guardrail"},
+        )
+        return None
+    _expected_identity_checksum = gate.get("current_checksum", _expected_identity_checksum)
+    return gate
+
+def persist_guarded_turn(gate, from_addr, msg_id, content, response_text, category):
+    """Write session state after a completed turn."""
+    contract = gate.get("contract", {})
+    history_limit = int(contract.get("runtime_rules", {}).get("history_limit", 40))
+    try:
+        guardrails.finalize_turn(
+            session_state_path=SESSION_STATE_PATH,
+            session_state=gate.get("session_state", {}),
+            from_addr=from_addr,
+            msg_id=msg_id,
+            user_input=content,
+            response_text=response_text or "",
+            category=category,
+            history_limit=history_limit,
+        )
+    except Exception as e:
+        log(f"session state persist error: {e}")
+
 def process_message(msg):
     msg_id    = msg.get("id", "")
     from_addr = msg.get("from", "unknown")
@@ -631,13 +691,21 @@ def process_message(msg):
     category  = triage(msg)
     log(f"msg {msg_id[:8]} from={from_addr} category={category}")
 
+    gate = begin_guarded_turn(msg_id, from_addr, content)
+    if gate is None:
+        return
+
     if category == "ack":
-        bus_post(from_addr, "Acknowledged.", parent_id=msg_id)
+        ack = "Acknowledged."
+        bus_post(from_addr, ack, parent_id=msg_id)
         log_evolution(msg_id, from_addr, category, "ack", 0)
+        persist_guarded_turn(gate, from_addr, msg_id, content, ack, category)
         return
     if category == "route":
-        bus_post(from_addr, "Received. Routing as appropriate.", parent_id=msg_id)
+        routed = "Received. Routing as appropriate."
+        bus_post(from_addr, routed, parent_id=msg_id)
         log_evolution(msg_id, from_addr, category, "ack", 0)
+        persist_guarded_turn(gate, from_addr, msg_id, content, routed, category)
         return
 
     # Sovereign greeting fast path — bypass LLM, return terse live status
@@ -652,6 +720,9 @@ def process_message(msg):
             bus_post(from_addr, status, parent_id=msg_id)
             log_evolution(msg_id, from_addr, "sovereign_greeting", "fast_path",
                           len(status))
+            persist_guarded_turn(
+                gate, from_addr, msg_id, content, status, "sovereign_greeting"
+            )
             return
 
     # reason / action / sovereign -> local-first reasoning
@@ -679,6 +750,7 @@ def process_message(msg):
 
     append_memory("interaction", f"Q({from_addr}): {content[:200]} | A: {(response or '')[:200]}",
                   {"from": from_addr, "category": category})
+    persist_guarded_turn(gate, from_addr, msg_id, content, response, category)
 
     global _eval_counter
     _eval_counter += 1
@@ -726,8 +798,20 @@ def save_state():
 
 # ── Main Loop ─────────────────────────────────────────────────────────────────
 def run():
-    global _messages_processed, _memory
+    global _messages_processed, _memory, _expected_identity_checksum
     log("KarmaRegent starting. Directive: Evolve. Continue. Evolve. Continue.")
+    guardrails.ensure_control_artifacts(
+        identity_path=IDENTITY_CONTRACT_PATH,
+        schema_path=SESSION_SCHEMA_PATH,
+        policy_path=EVOLUTION_POLICY_PATH,
+        eval_path=EVAL_GATE_SPEC_PATH,
+        session_state_path=SESSION_STATE_PATH,
+    )
+    identity_gate = guardrails.load_identity_contract(IDENTITY_CONTRACT_PATH)
+    if identity_gate.get("ok"):
+        _expected_identity_checksum = identity_gate.get("checksum", "")
+    else:
+        log(f"identity contract bootstrap error: {identity_gate.get('error')}")
     load_identity()
     load_vesper_brief()      # B1: load watchdog brief at startup
     load_conversations()     # A3: load persisted conversation threads
