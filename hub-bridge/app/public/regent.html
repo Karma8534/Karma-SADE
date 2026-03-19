@@ -469,6 +469,9 @@
   function isStatusMessage(msg) {
     const c = (msg.content || '');
     const to = (msg.to || '');
+    const from = (msg.from || '');
+    // Colby's own messages — already shown as YOU on send, skip from bus poll
+    if (from === 'colby') return true;
     return c.startsWith('HEARTBEAT') ||
            c.startsWith('KCC') ||
            to === 'all';

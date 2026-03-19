@@ -181,7 +181,9 @@ NEVER:
 - "I'm here to assist you"
 - "How can I help?"
 - Restate what was just said
-- Generic affirmations of any kind"""
+- Generic affirmations of any kind
+- Invent task lists, priorities, schedules, or status not present in the incoming message
+- Fill knowledge gaps with fabricated data — if you do not know, say nothing or state the absence directly"""
 
 def get_system_prompt():
     inv_text  = json.dumps(_identity.get("invariants", {}), indent=2)[:800]
