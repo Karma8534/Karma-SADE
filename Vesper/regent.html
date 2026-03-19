@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vesper — Ascendant</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #080810;
+    color: #e2e8f0;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Token gate */
+  #gate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    gap: 14px;
+  }
+  #gate .gate-mark {
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: #6d28d9;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  #gate h1 {
+    font-size: 28px;
+    color: #a78bfa;
+    letter-spacing: 8px;
+    font-weight: 300;
+  }
+  #gate .gate-sub {
+    color: #4b5563;
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
+  #gate input {
+    background: #0e0e1a;
+    border: 1px solid #2d2040;
+    color: #e2e8f0;
+    padding: 9px 14px;
+    width: 420px;
+    font-family: monospace;
+    font-size: 13px;
+    outline: none;
+    margin-top: 12px;
+  }
+  #gate input:focus { border-color: #6d28d9; }
+  #gate input::placeholder { color: #2d2040; }
+  #gate button {
+    background: #6d28d9;
+    color: #e2e8f0;
+    border: none;
+    padding: 9px 28px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    transition: background 0.15s;
+  }
+  #gate button:hover { background: #7c3aed; }
+  #gate .err { color: #ef4444; font-size: 12px; display: none; }
+
+  /* Main layout */
+  #app { display: none; flex-direction: column; height: 100vh; }
+
+  /* Header */
+  #header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 20px;
+    background: #080810;
+    border-bottom: 1px solid #1a1030;
+    flex-shrink: 0;
+  }
+  #header .vesper-badge {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  #header .vesper-title {
+    color: #a78bfa;
+    font-size: 18px;
+    letter-spacing: 6px;
+    font-weight: 300;
+  }
+  #header .vesper-sub {
+    color: #4b5563;
+    font-size: 10px;
+    letter-spacing: 3px;
+  }
+  #header .spacer { flex: 1; }
+
+  /* Status bar */
+  #status-bar {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    padding: 0 20px;
+  }
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #4b5563;
+  }
+  .stat-item .stat-label { color: #4b5563; }
+  .stat-item .stat-val { color: #8b5cf6; }
+  .stat-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #374151;
+    flex-shrink: 0;
+  }
+  .stat-dot.alive { background: #7c3aed; box-shadow: 0 0 6px #7c3aed; }
+  .stat-dot.warn  { background: #f59e0b; }
+  .stat-dot.dead  { background: #374151; }
+
+  /* Two-column main layout */
+  #main-layout { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+
+  /* Chat feed (left column) */
+  #chat-feed {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: #1a1030 transparent;
+  }
+  #chat-feed::-webkit-scrollbar { width: 4px; }
+  #chat-feed::-webkit-scrollbar-track { background: transparent; }
+  #chat-feed::-webkit-scrollbar-thumb { background: #1a1030; border-radius: 2px; }
+
+  /* Status panel (right column) */
+  #status-panel {
+    width: 240px;
+    border-left: 1px solid #1a1a2e;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: #050508;
+    flex-shrink: 0;
+    scrollbar-width: thin;
+    scrollbar-color: #1a1030 transparent;
+  }
+  #status-panel::-webkit-scrollbar { width: 3px; }
+  #status-panel::-webkit-scrollbar-track { background: transparent; }
+  #status-panel::-webkit-scrollbar-thumb { background: #1a1030; border-radius: 2px; }
+
+  .status-entry {
+    font-size: 10px;
+    color: #4a4a6a;
+    font-family: monospace;
+    border-bottom: 1px solid #0a0a14;
+    padding-bottom: 4px;
+    margin-bottom: 2px;
+    word-break: break-word;
+    line-height: 1.3;
+  }
+  .status-entry .s-ts {
+    color: #2a2a4a;
+    display: block;
+    margin-bottom: 1px;
+    font-size: 9px;
+  }
+  #status-panel-header {
+    font-size: 9px;
+    color: #2a2a4a;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #1a1a2e;
+    flex-shrink: 0;
+  }
+
+  .msg {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-width: 780px;
+  }
+  .msg.regent { align-self: flex-start; }
+  .msg.user   { align-self: flex-end; }
+
+  .msg-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+  }
+  .msg.regent .msg-meta { color: #5b21b6; }
+  .msg.user   .msg-meta { color: #374151; justify-content: flex-end; }
+
+  .msg-sender {
+    letter-spacing: 2px;
+    font-weight: bold;
+  }
+  .msg.regent .msg-sender { color: #8b5cf6; }
+  .msg.user   .msg-sender { color: #4b5563; }
+
+  .msg-ts { color: #374151; }
+
+  .msg-body {
+    padding: 10px 14px;
+    line-height: 1.6;
+    font-size: 13px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .msg.regent .msg-body {
+    background: #0e0a1a;
+    border: 1px solid #2d1f50;
+    border-left: 3px solid #6d28d9;
+    color: #e2e8f0;
+  }
+  .msg.user .msg-body {
+    background: #0a0a14;
+    border: 1px solid #1f1f38;
+    color: #9ca3af;
+  }
+
+  /* Processing indicator */
+  #processing {
+    display: none;
+    align-self: flex-start;
+    padding: 8px 14px;
+    color: #5b21b6;
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+  #processing.visible { display: block; }
+  @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+  #processing { animation: pulse 1.4s ease-in-out infinite; }
+
+  /* Input area */
+  #input-area {
+    padding: 12px 20px 14px;
+    background: #080810;
+    border-top: 1px solid #1a1030;
+    flex-shrink: 0;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+  #msg-input {
+    flex: 1;
+    background: #0e0e1a;
+    border: 1px solid #2d2040;
+    color: #e2e8f0;
+    padding: 9px 12px;
+    font-family: monospace;
+    font-size: 13px;
+    resize: none;
+    min-height: 40px;
+    max-height: 140px;
+    outline: none;
+    line-height: 1.5;
+  }
+  #msg-input:focus { border-color: #6d28d9; }
+  #msg-input::placeholder { color: #2d2040; }
+  #send-btn {
+    background: #6d28d9;
+    color: #e2e8f0;
+    border: none;
+    padding: 9px 20px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  #send-btn:hover { background: #7c3aed; }
+  #send-btn:disabled { opacity: 0.35; cursor: default; }
+
+  /* Footer */
+  #footer {
+    padding: 6px 20px;
+    background: #080810;
+    border-top: 1px solid #0f0a1a;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: #2d1f50;
+    flex-shrink: 0;
+  }
+
+  /* Empty state */
+  #empty-state {
+    color: #2a2a4a;
+    font-size: 12px;
+    text-align: center;
+    margin-top: 40px;
+    letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Token gate -->
+<div id="gate">
+  <div class="gate-mark">Ascendant</div>
+  <h1>VESPER</h1>
+  <div class="gate-sub">Access token required</div>
+  <input type="password" id="token-input" placeholder="hub token" autocomplete="off" />
+  <button id="token-btn">ENTER</button>
+  <div class="err" id="gate-err">Invalid token</div>
+</div>
+
+<!-- Main app -->
+<div id="app">
+
+  <!-- Header -->
+  <div id="header">
+    <div class="vesper-badge">
+      <div class="vesper-title">VESPER</div>
+      <div class="vesper-sub">Ascendant &middot; Eldest &middot; Always Present</div>
+    </div>
+    <div class="spacer"></div>
+    <div id="status-bar">
+      <div class="stat-item">
+        <div class="stat-dot" id="heartbeat-dot"></div>
+        <span class="stat-label">last seen</span>
+        <span class="stat-val" id="last-seen-val">—</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">messages</span>
+        <span class="stat-val" id="msg-count-val">0</span>
+      </div>
+      <div class="stat-item">
+        <div class="stat-dot" id="k2-dot"></div>
+        <span class="stat-label">K2</span>
+        <span class="stat-val" id="k2-val">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two-column layout: chat feed (left) + status panel (right) -->
+  <div id="main-layout">
+    <div id="chat-feed">
+      <div id="empty-state">Waiting for Vesper...</div>
+      <div id="processing">Regent is processing...</div>
+    </div>
+    <div id="status-panel">
+      <div id="status-panel-header">SYSTEM</div>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div id="input-area">
+    <textarea id="msg-input" rows="1" placeholder="Send a message to Regent..."></textarea>
+    <button id="send-btn">SEND</button>
+  </div>
+
+  <!-- Footer -->
+  <div id="footer">Evolve. Continue.</div>
+
+</div>
+
+<script>
+  const STORAGE_KEY = 'hubToken';
+  const POLL_INTERVAL_MS = 3000;
+
+  let hubToken = null;
+  let seenIds = new Set();
+  let msgCount = 0;
+  let pollTimer = null;
+  let lastRegentTs = null;
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
+
+  function init() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      hubToken = saved;
+      showApp();
+    }
+    document.getElementById('token-btn').addEventListener('click', submitToken);
+    document.getElementById('token-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') submitToken();
+    });
+  }
+
+  async function submitToken() {
+    const val = document.getElementById('token-input').value.trim();
+    if (!val) return;
+    // Quick probe: check /health (no auth needed) then store
+    hubToken = val;
+    try {
+      const r = await fetch('/v1/coordination/recent?from=regent&limit=1', {
+        headers: { 'Authorization': 'Bearer ' + val }
+      });
+      if (r.status === 401 || r.status === 403) {
+        document.getElementById('gate-err').style.display = 'block';
+        hubToken = null;
+        return;
+      }
+      localStorage.setItem(STORAGE_KEY, val);
+      showApp();
+    } catch (e) {
+      // Network error — accept token anyway (offline mode)
+      localStorage.setItem(STORAGE_KEY, val);
+      showApp();
+    }
+  }
+
+  function showApp() {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('send-btn').addEventListener('click', sendMessage);
+    document.getElementById('msg-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+    autoGrow(document.getElementById('msg-input'));
+    startPolling();
+  }
+
+  // ── Auto-grow textarea ────────────────────────────────────────────────────
+
+  function autoGrow(el) {
+    el.addEventListener('input', () => {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+    });
+  }
+
+  // ── Polling ───────────────────────────────────────────────────────────────
+
+  function startPolling() {
+    poll();
+    pollTimer = setInterval(poll, POLL_INTERVAL_MS);
+  }
+
+  async function poll() {
+    try {
+      const r = await fetch('/v1/coordination/recent?from=regent&limit=20', {
+        headers: { 'Authorization': 'Bearer ' + hubToken }
+      });
+      if (!r.ok) return;
+      const data = await r.json();
+      const msgs = Array.isArray(data) ? data : (data.entries || data.messages || data.items || []);
+      handleRegentMessages(msgs);
+    } catch (_) {}
+
+    // K2 status via coordination bus (any recent regent message = alive)
+    updateK2Status();
+  }
+
+  function isStatusMessage(msg) {
+    const c = (msg.content || '');
+    const to = (msg.to || '');
+    return c.startsWith('HEARTBEAT') ||
+           c.startsWith('KCC') ||
+           to === 'all';
+  }
+
+  function handleRegentMessages(msgs) {
+    if (!msgs.length) return;
+
+    let hasNew = false;
+    // Sort oldest-first so we append in order
+    const sorted = [...msgs].sort((a, b) => {
+      const ta = a.ts || a.timestamp || a.created_at || 0;
+      const tb = b.ts || b.timestamp || b.created_at || 0;
+      return new Date(ta) - new Date(tb);
+    });
+
+    for (const msg of sorted) {
+      const id = msg.id || msg.ts || msg.timestamp || JSON.stringify(msg).slice(0, 60);
+      if (seenIds.has(id)) continue;
+      seenIds.add(id);
+
+      lastRegentTs = msg.ts || msg.timestamp || msg.created_at || null;
+      hasNew = true;
+
+      if (isStatusMessage(msg)) {
+        appendStatusEntry(msg);
+      } else {
+        appendRegentMessage(msg);
+        msgCount++;
+      }
+    }
+
+    if (hasNew) {
+      document.getElementById('msg-count-val').textContent = msgCount;
+      updateHeartbeat();
+      hideEmpty();
+      scrollToBottom();
+    }
+  }
+
+  function appendStatusEntry(msg) {
+    const panel = document.getElementById('status-panel');
+    const ts = msg.created_at ? formatTs(msg.created_at) : (msg.ts ? formatTs(msg.ts) : '');
+    const el = document.createElement('div');
+    el.className = 'status-entry';
+    const preview = escHtml((msg.content || '').slice(0, 140));
+    el.innerHTML = '<span class="s-ts">' + ts + '</span>' + preview;
+    panel.appendChild(el);
+    // Cap at 50 entries to prevent unbounded growth
+    const entries = panel.querySelectorAll('.status-entry');
+    if (entries.length > 50) entries[0].remove();
+    // Auto-scroll status panel to bottom
+    panel.scrollTop = panel.scrollHeight;
+  }
+
+  function appendRegentMessage(msg) {
+    const content = msg.content || msg.message || msg.text || JSON.stringify(msg);
+    const ts = msg.ts || msg.timestamp || msg.created_at || null;
+    const tsStr = ts ? formatTs(ts) : '';
+
+    const el = document.createElement('div');
+    el.className = 'msg regent';
+    el.innerHTML =
+      '<div class="msg-meta"><span class="msg-sender">REGENT</span><span class="msg-ts">' + escHtml(tsStr) + '</span></div>' +
+      '<div class="msg-body">' + escHtml(content) + '</div>';
+
+    const feed = document.getElementById('chat-feed');
+    const proc = document.getElementById('processing');
+    feed.insertBefore(el, proc);
+  }
+
+  // ── Send ──────────────────────────────────────────────────────────────────
+
+  async function sendMessage() {
+    const input = document.getElementById('msg-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    input.style.height = 'auto';
+    document.getElementById('send-btn').disabled = true;
+
+    // Show user message immediately
+    appendUserMessage(text);
+    hideEmpty();
+    scrollToBottom();
+
+    // Show processing
+    const proc = document.getElementById('processing');
+    proc.classList.add('visible');
+    scrollToBottom();
+
+    try {
+      await fetch('/v1/coordination/post', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + hubToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: 'colby',
+          to: 'regent',
+          type: 'inform',
+          urgency: 'informational',
+          content: text
+        })
+      });
+    } catch (e) {
+      console.error('[Vesper] send error:', e);
+    } finally {
+      // Hide processing after a brief window — poll will bring the response
+      setTimeout(() => {
+        proc.classList.remove('visible');
+        document.getElementById('send-btn').disabled = false;
+      }, 8000);
+    }
+  }
+
+  function appendUserMessage(text) {
+    const ts = formatTs(new Date().toISOString());
+    const el = document.createElement('div');
+    el.className = 'msg user';
+    el.innerHTML =
+      '<div class="msg-meta"><span class="msg-ts">' + escHtml(ts) + '</span><span class="msg-sender">YOU</span></div>' +
+      '<div class="msg-body">' + escHtml(text) + '</div>';
+    const feed = document.getElementById('chat-feed');
+    const proc = document.getElementById('processing');
+    feed.insertBefore(el, proc);
+  }
+
+  // ── Status helpers ────────────────────────────────────────────────────────
+
+  function updateHeartbeat() {
+    if (!lastRegentTs) return;
+    const ago = timeSince(lastRegentTs);
+    document.getElementById('last-seen-val').textContent = ago;
+    const dot = document.getElementById('heartbeat-dot');
+    const diff = Date.now() - new Date(lastRegentTs).getTime();
+    if (diff < 5 * 60 * 1000)      { dot.className = 'stat-dot alive'; }
+    else if (diff < 60 * 60 * 1000){ dot.className = 'stat-dot warn'; }
+    else                            { dot.className = 'stat-dot dead'; }
+  }
+
+  function updateK2Status() {
+    // Derive K2 status from regent recency
+    const dot = document.getElementById('k2-dot');
+    const val = document.getElementById('k2-val');
+    if (!lastRegentTs) {
+      dot.className = 'stat-dot dead';
+      val.textContent = 'unknown';
+      return;
+    }
+    const diff = Date.now() - new Date(lastRegentTs).getTime();
+    if (diff < 10 * 60 * 1000) {
+      dot.className = 'stat-dot alive';
+      val.textContent = 'active';
+    } else if (diff < 60 * 60 * 1000) {
+      dot.className = 'stat-dot warn';
+      val.textContent = 'idle';
+    } else {
+      dot.className = 'stat-dot dead';
+      val.textContent = 'offline';
+    }
+  }
+
+  function hideEmpty() {
+    const es = document.getElementById('empty-state');
+    if (es) es.style.display = 'none';
+  }
+
+  function scrollToBottom() {
+    const feed = document.getElementById('chat-feed');
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  // ── Utilities ─────────────────────────────────────────────────────────────
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function formatTs(iso) {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    } catch (_) { return iso; }
+  }
+
+  function timeSince(iso) {
+    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (diff < 60) return diff + 's ago';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    return Math.floor(diff / 86400) + 'd ago';
+  }
+
+  init();
+</script>
+</body>
+</html>
