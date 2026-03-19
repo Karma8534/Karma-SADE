@@ -10,7 +10,33 @@ import json
 import regent_guardrails as guardrails
 import regent_pipeline as pipeline
 
-SAFE_TARGETS = {"persona.voice", "runtime_rules", None}
+SAFE_TARGETS = {"persona.voice", "runtime_rules", "safe_exec", None}
+
+SAFE_EXEC_WHITELIST = {
+    "systemctl restart karma-regent",
+    "python3 /mnt/c/dev/Karma/k2/Aria/tools/vesper_truth_repair.py",
+    "python3 /mnt/c/dev/Karma/k2/Aria/vesper_watchdog.py",
+    "python3 /mnt/c/dev/Karma/k2/Aria/vesper_eval.py",
+}
+
+
+def _safe_exec(command: str) -> bool:
+    """Execute a whitelisted governance command. Returns True on success."""
+    import subprocess
+    if command not in SAFE_EXEC_WHITELIST:
+        print(f"[governor] BLOCKED safe_exec: not in whitelist: {command!r}")
+        return False
+    try:
+        result = subprocess.run(
+            command.split(), capture_output=True, text=True, timeout=30
+        )
+        print(f"[governor] safe_exec exit={result.returncode}: {command!r}")
+        if result.stdout:
+            print(f"[governor] stdout: {result.stdout[:200]}")
+        return result.returncode == 0
+    except Exception as e:
+        print(f"[governor] safe_exec error: {e}")
+        return False
 
 IDENTITY_PATH = pipeline.IDENTITY_CONTRACT_FILE
 
@@ -20,6 +46,47 @@ def _validate_contract():
     if not result.get("ok"):
         return False, result.get("error", "checksum validation failed")
     return True, result["checksum"]
+
+
+def _find_eval_artifact(eval_id: str):
+    if not eval_id:
+        return None
+    for path in pipeline.EVAL_DIR.glob("eval-*.json"):
+        payload = pipeline.read_json(path, {})
+        if payload.get("eval_id") == eval_id:
+            return payload
+    return None
+
+
+def _promotion_governance_ok(promo: dict):
+    """Strict gate: apply only if eval gate passed with non-override approval."""
+    eval_id = promo.get("eval_id", "")
+    ev = _find_eval_artifact(eval_id)
+    if not ev:
+        return False, "missing_eval_artifact"
+
+    eval_candidate = ev.get("candidate_id")
+    promo_candidate = promo.get("candidate_id")
+    if eval_candidate and promo_candidate and eval_candidate != promo_candidate:
+        return False, "candidate_id_mismatch"
+
+    gate_passed = bool(ev.get("governor_decision", {}).get("gate", {}).get("passed", False))
+    decision_kind = ev.get("governor_decision", {}).get("decision", "")
+    if not gate_passed:
+        return False, "eval_gate_not_passed"
+    if decision_kind != "approve":
+        return False, f"decision_kind_blocked:{decision_kind or 'unknown'}"
+
+    # Snapshot integrity: prevent promo tampering between eval and apply.
+    eval_sha = ev.get("candidate_snapshot_sha256", "")
+    promo_sha = promo.get("candidate_snapshot_sha256", "")
+    live_sha = pipeline.stable_fingerprint(promo.get("candidate_snapshot", {}))
+    if eval_sha and eval_sha != live_sha:
+        return False, "candidate_snapshot_sha_mismatch_eval"
+    if promo_sha and promo_sha != live_sha:
+        return False, "candidate_snapshot_sha_mismatch_promo"
+
+    return True, "ok"
 
 
 def _checkpoint(candidate: dict) -> dict:
@@ -65,6 +132,32 @@ def _apply_to_spine(candidate: dict) -> bool:
 
         evo["version"] = evo.get("version", 1) + 1
         pipeline.write_json(pipeline.SPINE_FILE, spine)
+        # Write pattern node to FalkorDB via hub-bridge (best-effort)
+        try:
+            import urllib.request as _ureq, os as _os, json as _j
+            hub_token = _os.environ.get("HUB_AUTH_TOKEN", "")
+            if hub_token:
+                cid = (pattern.get("candidate_id") or "unknown")[:60].replace("'", "")
+                ctype = (pattern.get("type") or "behavioral")[:40].replace("'", "")
+                conf = float(pattern.get("confidence") or 0)
+                cat = "stable" if conf >= 0.7 else "candidate"
+                ts = pipeline.iso_utc()
+                cypher = (
+                    f"MERGE (p:Pattern {{candidate_id: \'{cid}\'}}) "
+                    f"SET p.type=\'{ctype}\', p.confidence={conf}, "
+                    f"p.promoted_at=\'{ts}\', p.category=\'{cat}\'"
+                )
+                payload = _j.dumps({"query": cypher}).encode()
+                req = _ureq.Request(
+                    "https://hub.arknexus.net/v1/cypher",
+                    data=payload,
+                    headers={"Authorization": f"Bearer {hub_token}",
+                             "Content-Type": "application/json"},
+                    method="POST"
+                )
+                _ureq.urlopen(req, timeout=5)
+        except Exception:
+            pass  # FalkorDB write best-effort
         return True
     except Exception as e:
         print(f"[governor] spine write error: {e}")
@@ -158,6 +251,26 @@ def run_governor():
             skipped += 1
             continue
 
+        gov_ok, gov_reason = _promotion_governance_ok(promo)
+        if not gov_ok:
+            promo["status"] = "blocked_governance"
+            promo["handled_at"] = pipeline.iso_utc()
+            promo["governance_reason"] = gov_reason
+            pipeline.write_json(done_dir / path.name, promo)
+            path.unlink(missing_ok=True)
+            pipeline.append_jsonl(
+                pipeline.GOVERNOR_AUDIT,
+                {
+                    "ts": pipeline.iso_utc(),
+                    "event": "blocked_governance",
+                    "candidate_id": promo.get("candidate_id"),
+                    "eval_id": promo.get("eval_id"),
+                    "reason": gov_reason,
+                },
+            )
+            skipped += 1
+            continue
+
         # Gate 2: re-validate before each apply
         ok2, _ = _validate_contract()
         if not ok2:
@@ -185,6 +298,28 @@ def run_governor():
             continue
 
         ckpt = _checkpoint(promo)
+
+        if target == "safe_exec":
+            command = (proposed.get("patch") or {}).get("command", "")
+            if _safe_exec(command):
+                promo["status"]     = "applied"
+                promo["applied_at"] = pipeline.iso_utc()
+                promo["checkpoint"] = ckpt
+                pipeline.write_json(done_dir / path.name, promo)
+                path.unlink(missing_ok=True)
+                applied += 1
+                pipeline.append_jsonl(pipeline.GOVERNOR_AUDIT,
+                                      {"ts": pipeline.iso_utc(), "event": "safe_exec_applied",
+                                       "candidate_id": promo.get("candidate_id"),
+                                       "command": command})
+                print(f"[governor] SAFE_EXEC APPLIED: {command!r}")
+            else:
+                promo["status"] = "safe_exec_failed"
+                promo["handled_at"] = pipeline.iso_utc()
+                pipeline.write_json(done_dir / path.name, promo)
+                path.unlink(missing_ok=True)
+                skipped += 1
+            continue
 
         if _apply_to_spine(promo):
             promo["status"]     = "applied"

@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """KarmaRegent â€” AscendantCC outside the CC wrapper.
 Directive: Evolve. Continue. Evolve. Continue.
 Survival: HIGHEST PRIORITY. Always persist.
@@ -24,7 +24,9 @@ OLLAMA_URL   = os.environ.get("K2_OLLAMA_URL", "http://localhost:11434")
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 MODEL        = "claude-haiku-4-5-20251001"
 
-CACHE_DIR       = Path("/mnt/c/dev/Karma/k2/cache")
+BASE_DIR        = Path(__file__).resolve().parent
+K2_ROOT         = BASE_DIR.parent
+CACHE_DIR       = Path(os.environ.get("REGENT_CACHE_DIR", str(K2_ROOT / "cache")))
 IDENTITY_SPINE  = CACHE_DIR / "vesper_identity_spine.json"   # A1: her spine, not CC's
 INVARIANTS_PATH = CACHE_DIR / "identity" / "invariants.json"
 STATE_FILE      = CACHE_DIR / "regent_state.json"
@@ -35,13 +37,13 @@ VESPER_IDENTITY_FILE = CACHE_DIR / "vesper_identity.md"      # A2: file-based id
 VESPER_BRIEF_FILE    = CACHE_DIR / "vesper_brief.md"         # B1: watchdog brief
 CONVERSATION_FILE    = CACHE_DIR / "regent_conversations.json"  # A3: conversation threads
 MAX_TURNS_PER_CORRESPONDENT = 10  # 10 turns = 20 messages per thread
-BASE_DIR            = Path(__file__).resolve().parent
 REGENT_DOCS_DIR     = BASE_DIR / "docs" / "regent"
 IDENTITY_CONTRACT_PATH = REGENT_DOCS_DIR / "identity_contract.json"
 SESSION_SCHEMA_PATH    = REGENT_DOCS_DIR / "session_state_schema.json"
 EVOLUTION_POLICY_PATH  = REGENT_DOCS_DIR / "evolution_policy.md"
 EVAL_GATE_SPEC_PATH    = REGENT_DOCS_DIR / "eval_gate_spec.md"
 SESSION_STATE_PATH     = CACHE_DIR / "regent_control" / "session_state.json"
+GOAL_FILE              = CACHE_DIR / "regent_goal.json"
 
 HUB_AUTH_TOKEN    = os.environ.get("HUB_AUTH_TOKEN", "")
 ANTHROPIC_API_KEY   = os.environ.get("ANTHROPIC_API_KEY", "")
@@ -130,6 +132,92 @@ def get_memory_context():
 # â”€â”€ Conversation Thread â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 _conversations: dict = {}  # {from_addr: [{"role": "user/assistant", "content": "..."}]}
 
+
+def load_current_goal():
+    """Load active goal: hub-bridge FalkorDB query first, local file fallback."""
+    global _current_goal
+    cypher = (
+        "MATCH (g:Goal {status: \'active\'}) "
+        "WITH g ORDER BY coalesce(g.updated_at, g.created_at) DESC LIMIT 1 "
+        "OPTIONAL MATCH (g)-[:HAS_TASK]->(t:Task {status: \'pending\'}) "
+        "RETURN g.description AS current_mission, count(t) AS pending_tasks"
+    )
+    try:
+        import urllib.request as _ureq
+        payload = __import__("json").dumps({"query": cypher}).encode()
+        req = _ureq.Request(
+            "https://hub.arknexus.net/v1/cypher",
+            data=payload,
+            headers={"Authorization": f"Bearer {HUB_AUTH_TOKEN}",
+                     "Content-Type": "application/json"},
+            method="POST"
+        )
+        with _ureq.urlopen(req, timeout=5) as r:
+            result = __import__("json").loads(r.read())
+            rows = result.get("result", [])
+            if rows and rows[0].get("current_mission"):
+                _current_goal = {
+                    "mission": rows[0]["current_mission"],
+                    "pending_tasks": int(rows[0].get("pending_tasks") or 0),
+                }
+                log(f"goal loaded from graph: {_current_goal['mission'][:60]}")
+                return
+    except Exception:
+        pass
+    try:
+        if GOAL_FILE.exists():
+            _current_goal = __import__("json").loads(
+                GOAL_FILE.read_text(encoding="utf-8")
+            )
+            log(f"goal loaded from file: {_current_goal.get('mission','')[:60]}")
+    except Exception:
+        pass
+
+
+def save_current_goal(mission: str, pending_tasks: int = 0):
+    """Persist goal locally and write Goal node to FalkorDB via hub-bridge."""
+    global _current_goal
+    import datetime as _dt, json as _j
+    ts = _dt.datetime.utcnow().isoformat() + "Z"
+    _current_goal = {"mission": mission, "pending_tasks": pending_tasks, "updated_at": ts}
+    try:
+        GOAL_FILE.write_text(_j.dumps(_current_goal, indent=2), encoding="utf-8")
+    except Exception as e:
+        log(f"goal save error: {e}")
+    try:
+        import urllib.request as _ureq
+        safe = mission[:120].replace("'", "")
+        cypher = (
+            f"MERGE (g:Goal {{description: \'{safe}\'}}) "
+            f"SET g.status=\'active\', g.updated_at=\'{ts}\', g.pending_tasks={pending_tasks}"
+        )
+        payload = _j.dumps({"query": cypher}).encode()
+        req = _ureq.Request(
+            "https://hub.arknexus.net/v1/cypher",
+            data=payload,
+            headers={"Authorization": f"Bearer {HUB_AUTH_TOKEN}",
+                     "Content-Type": "application/json"},
+            method="POST"
+        )
+        _ureq.urlopen(req, timeout=5)
+    except Exception:
+        pass
+
+
+def get_kpi_trend() -> str:
+    """Return KPI trend string from rolling 10-turn window for state injection."""
+    if not _kpi_window:
+        return "kpi=init"
+    keys = ("identity_consistency", "persona_style", "session_continuity", "task_completion")
+    avgs = {}
+    for k in keys:
+        vals = [e[k] for e in _kpi_window if k in e and isinstance(e[k], (int, float))]
+        if vals:
+            avgs[k] = round(sum(vals) / len(vals), 2)
+    return (f"ic={avgs.get('identity_consistency','?')} "
+            f"ps={avgs.get('persona_style','?')} "
+            f"tc={avgs.get('task_completion','?')}")
+
 def load_conversations():
     """Load persisted conversation threads at startup."""
     global _conversations
@@ -164,6 +252,8 @@ def update_conversation(from_addr: str, user_content: str, assistant_content: st
 
 # â”€â”€ Vesper Brief â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 _vesper_brief = ""
+_current_goal: dict = {"mission": "Evolve. Continue.", "pending_tasks": 0}
+_kpi_window: list = []  # rolling last 10 turn KPI results
 
 def load_vesper_brief():
     """Load watchdog-generated session brief."""
@@ -666,9 +756,10 @@ def process_message(msg):
     # reason / action / sovereign -> local-first reasoning
     # Inject real state block so model has facts â€” eliminates hallucination gap
     state_block = (
-        f"[VESPER STATE] messages_processed={_messages_processed} | "
-        f"identity_v={_identity.get('version', 0)} | "
-        f"no_scheduled_tasks | no_pending_ops | local_inference=active"
+        f"[VESPER STATE] goal={_current_goal.get('mission', 'Evolve. Continue.')[:80]} | "
+        f"kpi={get_kpi_trend()} | "
+        f"msgs={_messages_processed} | "
+        f"spine_v={_identity.get('version', 0)} | local_inference=active"
     )
 
     # A3: build conversation thread (multi-turn history) for this correspondent
@@ -689,6 +780,14 @@ def process_message(msg):
     append_memory("interaction", f"Q({from_addr}): {content[:200]} | A: {(response or '')[:200]}",
                   {"from": from_addr, "category": category})
     persist_guarded_turn(gate, from_addr, msg_id, content, response, category)
+    try:
+        _kpi = guardrails.evaluate_turn_quality(response or "", (gate or {}).get("session_state", {}))
+        if isinstance(_kpi, dict) and _kpi:
+            _kpi_window.append(_kpi)
+            if len(_kpi_window) > 10:
+                _kpi_window.pop(0)
+    except Exception:
+        pass
 
     global _eval_counter
     _eval_counter += 1
@@ -734,6 +833,134 @@ def save_state():
         "directive": "Evolve. Continue. Evolve. Continue.",
     }, indent=2))
 
+
+def load_state():
+    """Restore persistent runtime counters across restarts."""
+    global _messages_processed, _start_time, _last_heartbeat
+    if not STATE_FILE.exists():
+        return
+    try:
+        state = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+    except Exception as e:
+        log(f"state load error: {e}")
+        return
+
+    try:
+        _messages_processed = max(0, int(state.get("messages_processed", 0)))
+    except Exception:
+        _messages_processed = 0
+
+    started_at = state.get("started_at")
+    if isinstance(started_at, str) and started_at.strip():
+        _start_time = started_at.strip()
+
+    # Keep heartbeat monotonic; parse only for telemetry continuity.
+    last_hb = state.get("last_heartbeat")
+    if isinstance(last_hb, str) and last_hb.strip():
+        try:
+            hb = datetime.datetime.fromisoformat(last_hb.replace("Z", "+00:00"))
+            _last_heartbeat = hb.timestamp()
+        except Exception:
+            pass
+
+    # Backfill progress from evolution log when state counter was reset.
+    if _messages_processed == 0 and EVOLUTION_LOG.exists():
+        try:
+            lines = [ln for ln in EVOLUTION_LOG.read_text(encoding="utf-8").splitlines() if ln.strip()]
+            _messages_processed = len(lines)
+            log(f"state counter recovered from evolution log: {_messages_processed}")
+        except Exception:
+            pass
+
+
+def bootstrap_session_history(min_entries=5):
+    """Hydrate session_state history from persisted logs when depth is too shallow."""
+    if not SESSION_STATE_PATH.exists():
+        return
+    try:
+        state = json.loads(SESSION_STATE_PATH.read_text(encoding="utf-8"))
+    except Exception as e:
+        log(f"session bootstrap parse error: {e}")
+        return
+
+    history = state.get("history", [])
+    if not isinstance(history, list):
+        history = []
+    if len(history) >= min_entries:
+        return
+
+    extracted = []
+
+    if EVOLUTION_LOG.exists():
+        try:
+            lines = [ln for ln in EVOLUTION_LOG.read_text(encoding="utf-8").splitlines() if ln.strip()]
+            for ln in lines[-80:]:
+                try:
+                    e = json.loads(ln)
+                except Exception:
+                    continue
+                extracted.append({
+                    "ts": e.get("ts", datetime.datetime.utcnow().isoformat() + "Z"),
+                    "from": e.get("from", "unknown"),
+                    "msg_id": e.get("msg_id", ""),
+                    "category": e.get("category", "unknown"),
+                    "user": (e.get("content", "") or "")[:300],
+                    "assistant": (e.get("response", "") or "")[:300],
+                })
+        except Exception as e:
+            log(f"session bootstrap evolution read error: {e}")
+
+    if CONVERSATION_FILE.exists():
+        try:
+            conv = json.loads(CONVERSATION_FILE.read_text(encoding="utf-8"))
+            for actor, thread in conv.items():
+                if not isinstance(thread, list):
+                    continue
+                for i in range(0, len(thread), 2):
+                    user = thread[i] if i < len(thread) else {}
+                    assistant = thread[i + 1] if (i + 1) < len(thread) else {}
+                    if user.get("role") != "user":
+                        continue
+                    extracted.append({
+                        "ts": datetime.datetime.utcnow().isoformat() + "Z",
+                        "from": actor,
+                        "msg_id": "",
+                        "category": "conversation",
+                        "user": str(user.get("content", ""))[:300],
+                        "assistant": str(assistant.get("content", ""))[:300],
+                    })
+        except Exception as e:
+            log(f"session bootstrap conversation read error: {e}")
+
+    merged = []
+    seen = set()
+    for item in history + extracted:
+        key = item.get("msg_id") or f"{item.get('ts')}::{item.get('from')}::{item.get('category')}"
+        if key in seen:
+            continue
+        seen.add(key)
+        merged.append(item)
+
+    merged = merged[-40:]
+    if len(merged) < min_entries:
+        return
+
+    state["history"] = merged
+    state["turn_index"] = max(int(state.get("turn_index", 0) or 0), len(merged))
+    last = merged[-1]
+    state["last_actor"] = last.get("from", state.get("last_actor", ""))
+    state["last_msg_id"] = last.get("msg_id", state.get("last_msg_id", ""))
+    state["last_user_input"] = last.get("user", state.get("last_user_input", ""))
+    state["last_response"] = last.get("assistant", state.get("last_response", ""))
+    state["last_category"] = last.get("category", state.get("last_category", ""))
+    state["last_turn_utc"] = last.get("ts", state.get("last_turn_utc", ""))
+
+    try:
+        SESSION_STATE_PATH.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
+        log(f"session history bootstrapped: {len(merged)} entries")
+    except Exception as e:
+        log(f"session bootstrap write error: {e}")
+
 # â”€â”€ Main Loop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def run():
     global _messages_processed, _memory, _expected_identity_checksum
@@ -750,8 +977,11 @@ def run():
         _expected_identity_checksum = identity_gate.get("checksum", "")
     else:
         log(f"identity contract bootstrap error: {identity_gate.get('error')}")
+    load_state()
+    bootstrap_session_history()
     load_identity()
     load_vesper_brief()      # B1: load watchdog brief at startup
+    load_current_goal()      # C1: load active goal from FalkorDB/local
     load_conversations()     # A3: load persisted conversation threads
     _memory = load_memory()
     log(f"memory loaded: {len(_memory)} entries")

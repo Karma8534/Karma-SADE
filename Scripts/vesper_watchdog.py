@@ -152,15 +152,19 @@ def extract_candidates():
         return 0
 
     lines = [l for l in EVOLUTION_LOG.read_text(encoding="utf-8").splitlines() if l.strip()]
-    # Only structured entries (post log_evolution() format) have 'source' field
+    # Scan backward collecting structured entries (have source+response_len)
+    # until 50 found — avoids stale-window problem with sparse evolution logs
     structured = []
-    for l in lines[-500:]:
+    for l in reversed(lines):
+        if len(structured) >= 50:
+            break
         try:
             e = json.loads(l)
             if "source" in e and "response_len" in e:
                 structured.append(e)
         except Exception:
             pass
+    structured = list(reversed(structured))  # restore chronological order
 
     if len(structured) < 10:
         print(f"[watchdog] only {len(structured)} structured entries — skipping candidate extraction")

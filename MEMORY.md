@@ -1774,3 +1774,9 @@ Five things worth carrying forward:
 - Task 3: identity v38 loaded, bus post working
 - Task 4: systemd active, kill→restart in <10s (survival CONFIRMED)
 - Task 5: Colby→Regent round-trip <20s
+
+## Session 107 (2026-03-19) — All 5 Vesper Convergence Fixes Deployed
+
+All 5 karma_regent/vesper_watchdog/vesper_governor patches applied and running on K2.
+State: self_improving=true, spine v8, 2 stable patterns, karma-regent.service active.
+Patcher: Scripts/vesper_patch_regent.py
