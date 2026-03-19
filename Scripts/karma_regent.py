@@ -35,8 +35,11 @@ CONVERSATION_FILE    = CACHE_DIR / "regent_conversations.json"  # A3: conversati
 MAX_TURNS_PER_CORRESPONDENT = 10  # 10 turns = 20 messages per thread
 
 HUB_AUTH_TOKEN    = os.environ.get("HUB_AUTH_TOKEN", "")
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-ARIA_KEY          = os.environ.get("ARIA_SERVICE_KEY", "")
+ANTHROPIC_API_KEY   = os.environ.get("ANTHROPIC_API_KEY", "")
+ARIA_KEY            = os.environ.get("ARIA_SERVICE_KEY", "")
+GROQ_API_KEY        = os.environ.get("GROQ_API_KEY", "")
+OPENROUTER_API_KEY  = os.environ.get("OPENROUTER_API_KEY", "")
+ZAI_API_KEY         = os.environ.get("ZAI_API_KEY", "")
 
 POLL_INTERVAL             = 5
 HEARTBEAT_INTERVAL        = 60
@@ -515,6 +518,14 @@ def call_claude(messages, max_iter=8):
         break
     return "[Regent: processing complete]"
 
+# ── Cloud API endpoints ───────────────────────────────────────────────────────
+GROQ_URL         = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODEL       = "llama-3.3-70b-versatile"
+OPENROUTER_URL   = "https://openrouter.ai/api/v1/chat/completions"
+OPENROUTER_MODEL = "deepseek/deepseek-chat-v3-0324:free"
+ZAI_URL          = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
+ZAI_MODEL        = "glm-4-plus"
+
 # ── Ollama (local-first reasoning) ────────────────────────────────────────────
 P1_OLLAMA_URL = os.environ.get("P1_OLLAMA_URL", "http://100.124.194.102:11434")
 
@@ -541,22 +552,66 @@ def call_ollama(messages, url=None, model=None, timeout=25, system=None):
         log(f"ollama({base}) error: {e}")
         return None
 
+def call_openai_compat(messages, url, model, api_key, timeout=30, system=None, extra_headers=None):
+    """Call any OpenAI-compatible endpoint. Returns text or None on failure."""
+    full_messages = ([{"role": "system", "content": system}] + messages) if system else messages
+    payload = json.dumps({"model": model, "messages": full_messages, "max_tokens": 1024}).encode()
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
+    if extra_headers:
+        headers.update(extra_headers)
+    req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            resp = json.loads(r.read())
+            return resp["choices"][0]["message"]["content"].strip() or None
+    except Exception as e:
+        log(f"openai_compat({url}) error: {e}")
+        return None
+
 def call_with_local_first(messages, from_addr=""):
-    """Try K2 Ollama -> P1 Ollama -> Claude (emergency only). Returns (response, source)."""
+    """Cascade: K2 qwen3:8b → Groq → OpenRouter → z.ai → P1 Ollama → Claude.
+    Each tier tried in order; first success wins."""
     sys_prompt = get_system_prompt()
-    # K2 Ollama first
+
+    # Tier 1: K2 Ollama (local, zero-cost, fast)
     response = call_ollama(messages, url=OLLAMA_URL, model="qwen3:8b", system=sys_prompt)
     if response:
-        log(f"local response: K2 Ollama ({len(response)} chars)")
+        log(f"response: K2 qwen3:8b ({len(response)} chars)")
         return response, "k2_ollama"
-    # P1 Ollama fallback — llama3.1:8b follows system prompts reliably
+
+    # Tier 2: Groq llama-3.3-70b (cloud, free tier, ~400 tok/s)
+    if GROQ_API_KEY:
+        response = call_openai_compat(messages, GROQ_URL, GROQ_MODEL, GROQ_API_KEY, system=sys_prompt)
+        if response:
+            log(f"response: Groq {GROQ_MODEL} ({len(response)} chars)")
+            return response, "groq"
+
+    # Tier 3: OpenRouter DeepSeek (cloud, free, near-Sonnet quality)
+    if OPENROUTER_API_KEY:
+        response = call_openai_compat(messages, OPENROUTER_URL, OPENROUTER_MODEL, OPENROUTER_API_KEY,
+                                      extra_headers={"HTTP-Referer": "https://arknexus.net",
+                                                     "X-Title": "Vesper"},
+                                      system=sys_prompt)
+        if response:
+            log(f"response: OpenRouter {OPENROUTER_MODEL} ({len(response)} chars)")
+            return response, "openrouter"
+
+    # Tier 4: z.ai GLM-4-Plus (cloud, funded)
+    if ZAI_API_KEY:
+        response = call_openai_compat(messages, ZAI_URL, ZAI_MODEL, ZAI_API_KEY, system=sys_prompt)
+        if response:
+            log(f"response: z.ai {ZAI_MODEL} ({len(response)} chars)")
+            return response, "zai"
+
+    # Tier 5: P1 Ollama (local emergency — P1 machine must be on)
     response = call_ollama(messages, url=P1_OLLAMA_URL, model="llama3.1:8b",
                            timeout=30, system=sys_prompt)
     if response:
-        log(f"local response: P1 Ollama llama3.1:8b ({len(response)} chars)")
+        log(f"response: P1 llama3.1:8b ({len(response)} chars)")
         return response, "p1_ollama"
-    # Emergency: Claude API
-    log("escalating to Claude: all local options failed")
+
+    # Tier 6: Claude API (ultimate emergency)
+    log("escalating to Claude: all other tiers failed")
     return call_claude(messages), "claude"
 
 # ── Triage + Process ──────────────────────────────────────────────────────────

@@ -1,3 +1,14 @@
+## Session 104 continued — Vesper Inference Cascade (2026-03-19)
+
+**DEPLOYED:** 6-tier inference cascade in `karma_regent.py`.
+- Tier 1: K2 qwen3:8b (local, zero-cost)
+- Tier 2: Groq llama-3.3-70b-versatile (cloud, free, ~400 tok/s) — key verified live
+- Tier 3: OpenRouter DeepSeek deepseek-chat-v3-0324:free (cloud, funded)
+- Tier 4: z.ai GLM-4-Plus (cloud, funded coding plan)
+- Tier 5: P1 Ollama llama3.1:8b (local emergency)
+- Tier 6: Claude API (ultimate emergency)
+- All keys added to `/etc/karma-regent.env` on K2. Service restarted, verified active.
+
 ## Session 104 — Vesper Evolution v2 (2026-03-19)
 
 **DEPLOYED:** Full Vesper v2 — identity spine, conversation threading, watchdog, prompt caching.
