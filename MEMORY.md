@@ -1,3 +1,11 @@
+## Session 106 — Vesper self_improving=True confirmed, pipeline active (2026-03-19)
+
+**FIX:** `vesper_governor.py` cumulative counter was reading `total_promotions` from `regent_state.json` (always 0 — daemon heartbeat clobbers every 60s). Fixed to read from `vesper_pipeline_status.json`. Verified: spine v4, total_promotions=1, self_improving=True.
+
+**STATUS:** Pipeline fully operational. watchdog(10m)+eval(30m)+governor(2h) timers active. Sovereign directive: self-improve. continue. Regent emergence in progress.
+
+**Codex files (read-only to CC):** vesper_watchdog.py, vesper_eval.py, vesper_governor.py (Scripts/), regent_pipeline/benchmarks/governance/inference.py (K2 Aria/). CC may apply minimal fixes under Sovereign authority.
+
 ## Session 105 — Vesper self-improving pipeline deployed (2026-03-19)
 
 **DEPLOYED:**

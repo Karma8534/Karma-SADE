@@ -168,7 +168,8 @@ def run_governor():
             skipped += 1
 
     try:
-        total = pipeline.read_json(pipeline.STATE_FILE, {}).get("total_promotions", 0) + applied
+        status_path = pipeline.CONTROL_DIR / "vesper_pipeline_status.json"
+        total = pipeline.read_json(status_path, {}).get("total_promotions", 0) + applied
     except Exception:
         total = applied
 
