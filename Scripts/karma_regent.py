@@ -440,10 +440,10 @@ def call_with_local_first(messages, from_addr=""):
     if response:
         log(f"local response: K2 Ollama ({len(response)} chars)")
         return response, "k2_ollama"
-    # P1 Ollama fallback
-    response = call_ollama(messages, url=P1_OLLAMA_URL, model="nemotron-mini:latest", timeout=20)
+    # P1 Ollama fallback (llama3.1:8b follows system prompts reliably; nemotron-mini does not)
+    response = call_ollama(messages, url=P1_OLLAMA_URL, model="llama3.1:8b", timeout=30)
     if response:
-        log(f"local response: P1 Ollama ({len(response)} chars)")
+        log(f"local response: P1 Ollama llama3.1:8b ({len(response)} chars)")
         return response, "p1_ollama"
     # Emergency: Claude API
     log("escalating to Claude: all local options failed")
