@@ -6,16 +6,13 @@ Uses Codex's regent_* modules.
 Never mutates identity_contract.json directly.
 """
 import json
-import sys
-
-sys.path.insert(0, "/mnt/c/dev/Karma/k2/Aria")
 
 import regent_guardrails as guardrails
 import regent_pipeline as pipeline
 
 SAFE_TARGETS = {"persona.voice", "runtime_rules", None}
 
-IDENTITY_PATH = pipeline.Path("/mnt/c/dev/Karma/k2/Aria/docs/regent/identity_contract.json")
+IDENTITY_PATH = pipeline.IDENTITY_CONTRACT_FILE
 
 
 def _validate_contract():
@@ -49,13 +46,14 @@ def _apply_to_spine(candidate: dict) -> bool:
             spine["evolution"] = {"version": 1, "stable_identity": [], "candidate_patterns": []}
 
         evo = spine["evolution"]
+        candidate_snap = candidate.get("candidate_snapshot", {})
         pattern = {
-            "type":            candidate.get("type"),
+            "type":            candidate_snap.get("type", candidate.get("type")),
             "candidate_id":    candidate.get("candidate_id"),
             "promoted_at":     pipeline.iso_utc(),
-            "evidence":        candidate.get("evidence", candidate.get("candidate_snapshot", {}).get("evidence", {})),
-            "proposed_change": candidate.get("candidate_snapshot", {}).get("proposed_change"),
-            "confidence":      candidate.get("candidate_snapshot", {}).get("confidence", 0),
+            "evidence":        candidate_snap.get("evidence", candidate.get("evidence", {})),
+            "proposed_change": candidate_snap.get("proposed_change"),
+            "confidence":      candidate_snap.get("confidence", candidate.get("confidence", 0)),
         }
 
         if pattern["confidence"] >= 0.7:
@@ -94,10 +92,29 @@ def _update_state(total_applied: int):
         print(f"[governor] state update error: {e}")
 
 
+def _read_total_promotions(done_dir):
+    """Cumulative applied count from status file, with artifact-count fallback."""
+    status_path = pipeline.CONTROL_DIR / "vesper_pipeline_status.json"
+    status_total = pipeline.read_json(status_path, {}).get("total_promotions", 0)
+    if not isinstance(status_total, int):
+        status_total = 0
+
+    applied_count = 0
+    for artifact in done_dir.glob("promotion-*.json"):
+        payload = pipeline.read_json(artifact, {})
+        if payload.get("status") == "applied":
+            applied_count += 1
+    return max(status_total, applied_count)
+
+
 def run_governor():
     pipeline.ensure_pipeline_dirs()
     done_dir = pipeline.CACHE_DIR / "regent_promotions_applied"
     done_dir.mkdir(parents=True, exist_ok=True)
+    run_started = pipeline.iso_utc()
+    pipeline.append_jsonl(
+        pipeline.GOVERNOR_AUDIT, {"ts": run_started, "event": "run_started"}
+    )
 
     # Gate 1: identity contract valid
     ok, checksum_or_err = _validate_contract()
@@ -112,10 +129,21 @@ def run_governor():
     if not pending:
         print("[governor] no approved promotions pending")
         try:
-            total = pipeline.read_json(pipeline.STATE_FILE, {}).get("total_promotions", 0)
+            total = _read_total_promotions(done_dir)
         except Exception:
             total = 0
         _update_state(total)
+        pipeline.append_jsonl(
+            pipeline.GOVERNOR_AUDIT,
+            {
+                "ts": pipeline.iso_utc(),
+                "event": "run_completed",
+                "applied": 0,
+                "skipped": 0,
+                "pending_count": 0,
+                "total_promotions": total,
+            },
+        )
         return 0
 
     applied = skipped = 0
@@ -123,6 +151,10 @@ def run_governor():
     for path in pending:
         promo = pipeline.read_json(path, {})
         if not promo.get("approved"):
+            promo["status"] = promo.get("status", "rejected")
+            promo["handled_at"] = pipeline.iso_utc()
+            pipeline.write_json(done_dir / path.name, promo)
+            path.unlink(missing_ok=True)
             skipped += 1
             continue
 
@@ -141,6 +173,11 @@ def run_governor():
 
         if target not in SAFE_TARGETS:
             print(f"[governor] SKIP unsafe target={target}")
+            promo["status"] = "blocked_unsafe_target"
+            promo["handled_at"] = pipeline.iso_utc()
+            promo["unsafe_target"] = target
+            pipeline.write_json(done_dir / path.name, promo)
+            path.unlink(missing_ok=True)
             pipeline.append_jsonl(pipeline.GOVERNOR_AUDIT,
                                   {"ts": pipeline.iso_utc(), "event": "skipped_unsafe_target",
                                    "candidate_id": promo.get("candidate_id"), "target": target})
@@ -155,7 +192,7 @@ def run_governor():
             promo["checkpoint"] = ckpt
 
             pipeline.write_json(done_dir / path.name, promo)
-            path.unlink()
+            path.unlink(missing_ok=True)
             applied += 1
 
             spine_ver = pipeline.read_json(pipeline.SPINE_FILE, {}).get("evolution", {}).get("version", "?")
@@ -163,17 +200,27 @@ def run_governor():
                                   {"ts": pipeline.iso_utc(), "event": "applied",
                                    "candidate_id": promo.get("candidate_id"),
                                    "spine_version": spine_ver, "checksum": checksum_or_err})
-            print(f"[governor] APPLIED {promo.get('candidate_id', '?')} → spine v{spine_ver}")
+            print(f"[governor] APPLIED {promo.get('candidate_id', '?')} -> spine v{spine_ver}")
         else:
             skipped += 1
 
     try:
-        status_path = pipeline.CONTROL_DIR / "vesper_pipeline_status.json"
-        total = pipeline.read_json(status_path, {}).get("total_promotions", 0) + applied
+        total = _read_total_promotions(done_dir) + applied
     except Exception:
         total = applied
 
     _update_state(total)
+    pipeline.append_jsonl(
+        pipeline.GOVERNOR_AUDIT,
+        {
+            "ts": pipeline.iso_utc(),
+            "event": "run_completed",
+            "applied": applied,
+            "skipped": skipped,
+            "pending_count": len(pending),
+            "total_promotions": total,
+        },
+    )
     print(f"[governor] done: {applied} applied, {skipped} skipped "
           f"(total_promotions={total}, self_improving={total > 0})")
     return applied

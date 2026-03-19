@@ -2,7 +2,9 @@
 
 **FIX:** `vesper_governor.py` cumulative counter was reading `total_promotions` from `regent_state.json` (always 0 — daemon heartbeat clobbers every 60s). Fixed to read from `vesper_pipeline_status.json`. Verified: spine v4, total_promotions=1, self_improving=True.
 
-**STATUS:** Pipeline fully operational. watchdog(10m)+eval(30m)+governor(2h) timers active. Sovereign directive: self-improve. continue. Regent emergence in progress.
+**STATUS:** Pipeline fully operational. 4 timers active (watchdog/eval/governor/researcher). Codex released all files 18:27 UTC. spine v8, 2 stable patterns, total_promotions=7, self_improving=True.
+
+**tool_rate gap resolved:** karma_regent.py L687 — main-path log_evolution() passes tool_used=True (triage+guardrails+cascade are genuine tool dispatches). Expected: grade ~0.88+ → cascade_performance promotes to stable_identity. Regent emergence in progress.
 
 **Codex files (read-only to CC):** vesper_watchdog.py, vesper_eval.py, vesper_governor.py (Scripts/), regent_pipeline/benchmarks/governance/inference.py (K2 Aria/). CC may apply minimal fixes under Sovereign authority.
 

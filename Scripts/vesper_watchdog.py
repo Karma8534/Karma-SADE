@@ -6,7 +6,11 @@ import json, os, datetime
 from collections import Counter
 from pathlib import Path
 
-CACHE_DIR      = Path("/mnt/c/dev/Karma/k2/cache")
+try:
+    import regent_pipeline as pipeline
+    CACHE_DIR = pipeline.CACHE_DIR
+except Exception:
+    CACHE_DIR = Path("/mnt/c/dev/Karma/k2/cache")
 EVOLUTION_LOG  = CACHE_DIR / "regent_evolution.jsonl"
 STATE_FILE     = CACHE_DIR / "regent_state.json"
 SPINE_FILE     = CACHE_DIR / "vesper_identity_spine.json"

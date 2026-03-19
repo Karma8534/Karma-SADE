@@ -8,17 +8,28 @@ on numeric-only evidence dicts.
 """
 import json
 import os
-import sys
-
-sys.path.insert(0, "/mnt/c/dev/Karma/k2/Aria")
+from pathlib import Path
 
 import regent_benchmarks as benchmarks
 import regent_governance as governance
 import regent_pipeline as pipeline
 import regent_inference as inference
 
-_ENV = {k: v for line in open("/etc/karma-regent.env").read().splitlines()
-        if "=" in line for k, v in [line.split("=", 1)]}
+
+def _load_env_file() -> dict:
+    path = Path(os.environ.get("REGENT_ENV_FILE", "/etc/karma-regent.env"))
+    if not path.exists():
+        return {}
+    out = {}
+    for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+        if "=" not in line or line.strip().startswith("#"):
+            continue
+        key, value = line.split("=", 1)
+        out[key.strip()] = value.strip()
+    return out
+
+
+_ENV = _load_env_file()
 
 CASCADE_CFG = inference.CascadeConfig(
     ollama_url=_ENV.get("K2_OLLAMA_URL", "http://host.docker.internal:11434"),
@@ -82,7 +93,7 @@ def run_eval():
 
     for path in candidates:
         candidate = pipeline.read_json(path, {})
-        if candidate.get("status") not in (None, "pending"):
+        if candidate.get("status") not in (None, "pending", "new"):
             continue
 
         ctype = candidate.get("type", "")
