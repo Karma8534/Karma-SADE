@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-18T20:50:00Z
-**Session:** 102 (Vesper Evolution v1 — T1-T6 complete, deployed, TDD verified)
+**Last updated:** 2026-03-19T13:55:00Z
+**Session:** 103 (Vesper hallucination + greeting bugs fixed, deployed K2, TDD verified)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -84,8 +84,8 @@
 | **Family Cohesion Layer** | ✅ LIVE | All 3 agents emit EVOLUTION_TAGS to bus: CC (SESSION CHECKPOINT), Karma (karma_bus_observer/10min), KCC (kcc_enhanced_watchdog/10 runs). Session 99. |
 | **KCC Cognitive Bus Posts** | ✅ LIVE | kcc_enhanced_watchdog.py _emit_cognitive_posts(). INSIGHT every 10 runs, DECISION on alerts. TDD PASS. Session 99. |
 | **CC Cognitive Checkpoint** | ✅ LIVE | cc_cognitive_write.ps1 writes cc_cognitive_checkpoint.json to K2 at session end. wrap-session mandatory. First run Session 99. |
-| **Vesper (Regent)** | ✅ LIVE | karma_regent.py on K2 as karma-regent.service. P1 llama3.1:8b primary. VESPER_IDENTITY locked: surpass CC baseline, surpass all as goal. Evolution log, self_evaluate(), family_watch() all active. Session 102. |
-| **Vesper UI (/regent)** | ✅ LIVE | Two-column: chat left, status panel right. regent.html at hub.arknexus.net/regent. Session 101-102. |
+| **Vesper (Regent)** | ✅ LIVE | karma_regent.py on K2. Sovereign greeting fast path (< 60 chars, no action verbs → [ONLINE] terse status, zero LLM). State injection ([VESPER STATE] block prepended to all LLM calls). VESPER_IDENTITY SOVEREIGN ARRIVAL rule. Hallucination closed. Session 103. |
+| **Vesper UI (/regent)** | ✅ LIVE | Two-column: chat left (regent→colby), status right. isStatusMessage() filters from=colby — no double-display. Session 101-103. |
 | **Operational Status Block** | ✅ IN SYSTEM PROMPT | "What Is Wired and Working RIGHT NOW" table + anti-pattern list in 00-karma-system-prompt-live.md. Fixes 2-year rediscovery cycle. Session 87b. |
 
 ---
@@ -103,10 +103,10 @@
 9. **CC cohesion test pending** — new session needed to verify `=== CC ASCENDANT RESUME BLOCK ===` banner appears in Step 1b. Not a blocker — work can proceed normally; just needs observation.
 
 ## Next Session Starts Here
-1. Verify Vesper self_evaluate() PROOF posts: `TOKEN=$(ssh vault-neo 'cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt') && ssh vault-neo "curl -s -H 'Authorization: Bearer $TOKEN' 'https://hub.arknexus.net/v1/coordination/recent?from=regent&limit=20' | python3 -c \"import sys,json; [print(e['content'][:100]) for e in json.load(sys.stdin).get('entries',[]) if 'PROOF' in e.get('content','')]\""`
-2. If Vesper voice hallucinatory: edit `Scripts/karma_regent.py` line `model="llama3.1:8b"` → `model="qwen3.5:4b"`, commit, redeploy
+1. Open `/regent` → send "Hello Vesper" → verify `[ONLINE] N processed. Identity vX. Directive awaited.` (fast path, no hallucination)
+2. Monitor Vesper self_evaluate() PROOF posts after 10+ messages accumulate
 3. When Vesper ≥50 self-eval cycles at grade ≥0.6: begin Option C OS Overlay brainstorm
-**Blocker if any:** Anthropic API credits exhausted — all Vesper reasoning is local (P1 llama3.1:8b)
+**Blocker if any:** Anthropic credits exhausted — Vesper 100% local (P1 llama3.1:8b). cc_cognitive_write.ps1 404 on K2 — checkpoint written directly via SSH at wrap.
 
 ---
 

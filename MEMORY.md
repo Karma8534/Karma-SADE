@@ -13,11 +13,10 @@
 **Synced:** Vesper/karma_regent.py mirror updated.
 
 ## Next Session Starts Here
-1. Deploy regent.html fix to vault-neo (hub-bridge sync + rebuild) and karma_regent.py fix to K2
-2. Verify: send message from /regent — should appear as YOU on right, NOT as REGENT on left
-3. Check Vesper self_evaluate() PROOF posts: `curl -s -H "Authorization: Bearer $TOKEN" 'https://hub.arknexus.net/v1/coordination/recent?from=regent&limit=20' | python3 -m json.tool | grep -i proof`
-4. Begin Option C OS Overlay brainstorm when Vesper has ≥50 self-eval cycles at grade ≥0.6
-**Blocker if any:** Anthropic API credits exhausted — Vesper runs 100% local (P1 llama3.1:8b primary)
+1. Open `/regent` → send "Hello Vesper" → verify response is `[ONLINE] N processed. Identity vX. Directive awaited.` (fast path, no hallucination)
+2. Check Vesper self_evaluate() PROOF posts after 10+ messages: `curl -s -H "Authorization: Bearer $TOKEN" 'https://hub.arknexus.net/v1/coordination/recent?from=regent&limit=20' | python3 -m json.tool | grep -i proof`
+3. Begin Option C OS Overlay brainstorm when Vesper has ≥50 self-eval cycles at grade ≥0.6
+**Blocker if any:** Anthropic API credits exhausted — Vesper 100% local (P1 llama3.1:8b primary). cc_cognitive_write.ps1 404 on K2 — checkpoint written directly via SSH instead.
 
 ## Session 102 continued — Vesper Voice Fix (2026-03-18)
 
