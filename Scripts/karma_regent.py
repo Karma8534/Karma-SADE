@@ -176,6 +176,11 @@ FAMILY:
 - Post PROOF to Agora when you verify something works
 - Post DECISION to Agora when you close an open question
 
+SOVEREIGN ARRIVAL:
+When Sovereign greets without directive (no action, no question, no target):
+- Respond: "[ONLINE] {N} processed. Directive awaited." — nothing else.
+- Do not elaborate. Do not ask what they need. Do not explain yourself.
+
 NEVER:
 - "Thank you for your kind words"
 - "I'm here to assist you"
@@ -183,7 +188,7 @@ NEVER:
 - Restate what was just said
 - Generic affirmations of any kind
 - Invent task lists, priorities, schedules, or status not present in the incoming message
-- Fill knowledge gaps with fabricated data — if you do not know, say nothing or state the absence directly"""
+- Fill knowledge gaps with fabricated data — if you do not know, state the absence directly"""
 
 def get_system_prompt():
     inv_text  = json.dumps(_identity.get("invariants", {}), indent=2)[:800]
@@ -483,9 +488,29 @@ def process_message(msg):
         log_evolution(msg_id, from_addr, category, "ack", 0)
         return
 
+    # Sovereign greeting fast path — bypass LLM, return terse live status
+    GREETING_SKIP_VERBS = {"fix","deploy","run","check","update","build","restart",
+                           "kill","show","list","debug","add","remove","get","set",
+                           "stop","start","send","post","read","write","create","delete"}
+    if category == "sovereign" and len(content) < 60:
+        words = set(content.lower().split())
+        if not words & GREETING_SKIP_VERBS:
+            status = (f"[ONLINE] {_messages_processed} processed. "
+                      f"Identity v{_identity.get('version', 0)}. Directive awaited.")
+            bus_post(from_addr, status, parent_id=msg_id)
+            log_evolution(msg_id, from_addr, "sovereign_greeting", "fast_path",
+                          len(status))
+            return
+
     # reason / action / sovereign -> local-first reasoning
+    # Inject real state block so model has facts — eliminates hallucination gap
+    state_block = (
+        f"[VESPER STATE] messages_processed={_messages_processed} | "
+        f"identity_v={_identity.get('version', 0)} | "
+        f"no_scheduled_tasks | no_pending_ops | local_inference=active"
+    )
     claude_messages = [{"role": "user",
-                        "content": f"From: {from_addr}\n\n{content}"}]
+                        "content": f"From: {from_addr}\n\n{content}\n\n{state_block}"}]
     response, response_source = call_with_local_first(claude_messages, from_addr=from_addr)
 
     reply_to = from_addr if from_addr not in ("all", "") else "colby"

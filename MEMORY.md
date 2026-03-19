@@ -1,3 +1,11 @@
+## Session 103 continued — Vesper Greeting + Hallucination Fix (2026-03-19)
+
+**ROOT CAUSE (confirmed from bus logs):** Two REGENT responses = Colby sent TWO messages. No dual-processing bug.
+**FIX 1 (greeting fast path):** `process_message()` sovereign greeting (< 60 chars, no action verbs) returns `[ONLINE] N processed. Directive awaited.` — zero LLM.
+**FIX 2 (state injection):** Every LLM call prepends `[VESPER STATE] messages_processed=N | no_scheduled_tasks` — real data, nothing to fabricate.
+**FIX 3 (identity):** VESPER_IDENTITY SOVEREIGN ARRIVAL section added.
+**TDD:** 10/10 greeting tests pass. Deployed K2.
+
 ## Session 103 — Vesper UI + Hallucination Fix (2026-03-19)
 
 **FIX (UI double-display):** regent.html `isStatusMessage()` now returns true for `from=colby` — user's own bus messages no longer appear as REGENT in left chat feed. One-liner filter at poll routing layer.
