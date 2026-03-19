@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-19T14:30:00Z
-**Session:** 104 (Vesper 6-tier cascade, Gap 3+4 fixed, K2 MCP Server, vesper_identity.md)
+**Last updated:** 2026-03-19T19:30:00Z
+**Session:** 107 (All 5 Vesper fixes, cascade reorder K2→P1→z.ai→Groq→OpenRouter TDD, blocker audit)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -86,7 +86,11 @@
 | **CC Cognitive Checkpoint** | ✅ LIVE | cc_cognitive_write.ps1 writes cc_cognitive_checkpoint.json to K2 at session end. wrap-session mandatory. First run Session 99. |
 | **Vesper (Regent)** | ✅ LIVE | karma_regent.py on K2. Sovereign greeting fast path (< 60 chars, no action verbs → [ONLINE] terse status, zero LLM). State injection ([VESPER STATE] block prepended to all LLM calls). VESPER_IDENTITY SOVEREIGN ARRIVAL rule. Hallucination closed. Session 103. |
 | **Vesper UI (/regent)** | ✅ LIVE | Two-column: chat left (regent→colby), status right. isStatusMessage() filters from=colby — no double-display. Session 101-103. |
-| **Vesper 6-Tier Inference Cascade** | ✅ DEPLOYED + VERIFIED | K2 nemotron-mini:optimized → K2 nemotron-mini:latest → Groq llama-3.3-70b → OpenRouter DeepSeek → z.ai GLM-4-Plus → P1 nemotron-mini:latest → Claude API. K2_OLLAMA_URL=host.docker.internal:11434 (NOT localhost). Verified SOURCE=k2_ollama in prod. Session 104 + user correction. |
+| **Vesper 6-Tier Inference Cascade** | ✅ REORDERED Session 107 | K2 → P1 → z.ai → Groq → OpenRouter → Claude. TDD: 3/3 green. Gate: timeout/None only (no KPI routing). regent_inference.py. |
+| **Vesper Self-Improvement Pipeline** | ✅ ACTIVE | self_improving=True, spine v8, 2 stable patterns, total_promotions=4. All 5 convergence fixes deployed (vesper_patch_regent.py). Root blocker B1: ~50 new messages needed to fill tool_used=True window. |
+| **Vesper KPI Cortex (Pre-Frontal)** | ✅ DEPLOYED | karma_regent.py: _current_goal/_kpi_window globals, load_current_goal(), get_kpi_trend(). state_block injects goal+kpi on every turn. Session 107. |
+| **Vesper Adaptive Scan** | ✅ DEPLOYED | vesper_watchdog.py: backward scan collects 50 structured entries (vs stale 500-line window). Session 107. |
+| **Vesper FalkorDB Write** | ✅ DEPLOYED | vesper_governor.py: pattern write via hub-bridge /v1/cypher on every promotion. safe_exec governance target + SAFE_EXEC_WHITELIST. Session 107. |
 | **Regent Guardrails + Triage** | ✅ LIVE (pre-existing) | regent_guardrails.py (346 lines, checksum-gated begin_turn/finalize_turn), regent_triage.py (63 lines, classify()). docs/regent/ directory with identity_contract.json, session_state_schema.json. Begin_guarded_turn blocks on checksum drift. NOT built this session — was already on K2. |
 | **Vesper Memory Quality (Gap 3)** | ✅ FIXED | Memory now stores Q&A interaction summaries (not raw log noise). get_memory_context() returns last 5 interactions. append_memory("interaction", ...) called at line 680. Session 104. |
 | **vesper-watchdog.timer (Gap 4)** | ✅ LIVE | systemd timer: OnBootSec=2min, OnUnitActiveSec=10min. vesper-watchdog.service + .timer enabled on K2. Session 104. |
@@ -106,12 +110,15 @@
 6. ~~**Coordination bus REST API returns 404**~~ ✅ RESOLVED (Session 93) — /v1/coordination aliased to /v1/coordination/recent in hub-bridge. Returns 200.
 7. ~~**Arbiter config path gap**~~ ✅ RESOLVED (Session 93) — Config/ dir created at /mnt/c/dev/Karma/k2/Config/, governance_boundary_v1.json + critical_paths.json copied from tmp/p0-proof/Config/. PolicyArbiter loads correctly.
 8. ~~**4 pending bus messages from Karma**~~ ✅ BUS FIXED — watcher chaos cleared. Bus quiet, no auto-responders running.
-9. **CC cohesion test pending** — new session needed to verify `=== CC ASCENDANT RESUME BLOCK ===` banner appears in Step 1b. Not a blocker — work can proceed normally; just needs observation.
+9. ~~**CC cohesion test pending**~~ — resume_block confirmed working in Session 97+.
+10. **B1: Evolution log sparsity** — 22/89,758 structured entries. Resolves with ~50 new Regent messages. Time-based, no code change needed. ETA 1-3 days.
+11. **B2: Synthetic stable patterns** — both stable patterns are Codex e2e artifacts (type=pipeline_e2e_validation). Cosmetic issue; real patterns will emerge as B1 resolves.
 
 ## Next Session Starts Here
-1. Restart Claude Code to activate K2 MCP server (`~/.claude/mcp.json`) — verify k2_* tools appear in tool list
-2. Pick one of 5 unfinished research items to implement: Identity+Session Cohesion Engine (continuity recall scoring), Governor-Gated Self-Improvement Pipeline, Skill Compiler, Execution Reliability+Proof Discipline, or Family/Agent Governance
-3. Verify Groq/OpenRouter/z.ai reachable directly from K2 (not yet tested from K2 side — only confirmed API keys are valid from P1)
+1. `/resurrect` → check watchdog brief (should appear within 10 min) and governor audit at `regent_control/governor_audit.jsonl` (~20:46 UTC run)
+2. Verify `hub.arknexus.net/regent` chat UI works end-to-end with Regent — send a message, confirm response
+3. Optionally pump 50 test messages through Regent to accelerate B1 (evolution log sparsity)
+**Blocker if any:** B1 is passive — no action required, just time.
 **Blocker if any:** K2 MCP server requires CC restart to activate. cc_cognitive_write.ps1 404 on K2 — checkpoint written directly via SSH at wrap (workaround available).
 
 ---

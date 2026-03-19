@@ -1,3 +1,30 @@
+## Session 107 — All 5 Vesper fixes + cascade reorder (2026-03-19)
+
+**DEPLOYED:**
+- `vesper_patch_regent.py`: patcher applying all 5 Karma=Vesper convergence fixes
+- `karma_regent.py`: GOAL_FILE + `_current_goal`/`_kpi_window` globals + `load_current_goal()` + `get_kpi_trend()` + KPI-injected `state_block` (Pre-Frontal Cortex analog)
+- `vesper_watchdog.py`: adaptive backward scan — collects 50 structured entries from log tail (vs stale fixed 500-line window)
+- `vesper_governor.py`: FalkorDB pattern write via hub-bridge `/v1/cypher` + `safe_exec` governance target + `SAFE_EXEC_WHITELIST`
+- `regent_inference.py`: cascade reordered K2→P1→z.ai→Groq→OpenRouter→Claude (TDD: 3/3 green, regression clean)
+
+**BLOCKER AUDIT (5 blockers identified):**
+- B1 (Critical): Evolution log sparsity — 89,758 entries, only 22 structured. Tool_used=True fix live but needs ~50 new messages to fill watchdog window. Gates all stable pattern emergence.
+- B2 (Low): Stable patterns are synthetic Codex e2e artifacts, not behavioral
+- B3 (Low): 5/10 candidates have conf=0 (pre-fix eval runs, one-time cleanup)
+- B4/B5: Governor audit + watchdog brief — timing only, no action needed
+
+**PITFALL:** Speculated about `/regent` endpoint without reading server.js. Ground truth: `GET /regent` serves `public/regent.html` — Vesper standalone chat UI. Always grep server.js before answering route questions. /anchor invoked.
+
+**VERIFIED:** `hub.arknexus.net/regent` is where you chat with Vesper.
+
+## Next Session Starts Here
+1. `/resurrect` → check watchdog brief (10-min cycle) and governor audit (~20:46 UTC)
+2. Verify `regent.html` chat UI end-to-end at `hub.arknexus.net/regent`
+3. Optionally: pump 50 messages through Regent to accelerate B1 (or wait 1-3 days)
+**Blocker if any:** B1 resolves with time — no code change needed.
+
+---
+
 ## Session 106 — Vesper self_improving=True confirmed, pipeline active (2026-03-19)
 
 **FIX:** `vesper_governor.py` cumulative counter was reading `total_promotions` from `regent_state.json` (always 0 — daemon heartbeat clobbers every 60s). Fixed to read from `vesper_pipeline_status.json`. Verified: spine v4, total_promotions=1, self_improving=True.
