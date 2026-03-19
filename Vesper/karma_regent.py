@@ -23,12 +23,16 @@ ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 MODEL        = "claude-haiku-4-5-20251001"
 
 CACHE_DIR       = Path("/mnt/c/dev/Karma/k2/cache")
-IDENTITY_SPINE  = CACHE_DIR / "cc_identity_spine.json"
+IDENTITY_SPINE  = CACHE_DIR / "vesper_identity_spine.json"   # A1: her spine, not CC's
 INVARIANTS_PATH = CACHE_DIR / "identity" / "invariants.json"
 STATE_FILE      = CACHE_DIR / "regent_state.json"
 EVOLUTION_LOG   = CACHE_DIR / "regent_evolution.jsonl"
 MEMORY_FILE     = CACHE_DIR / "regent_memory.jsonl"
 MAX_MEMORY_ENTRIES = 200
+VESPER_IDENTITY_FILE = CACHE_DIR / "vesper_identity.md"      # A2: file-based identity
+VESPER_BRIEF_FILE    = CACHE_DIR / "vesper_brief.md"         # B1: watchdog brief
+CONVERSATION_FILE    = CACHE_DIR / "regent_conversations.json"  # A3: conversation threads
+MAX_TURNS_PER_CORRESPONDENT = 10  # 10 turns = 20 messages per thread
 
 HUB_AUTH_TOKEN    = os.environ.get("HUB_AUTH_TOKEN", "")
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
@@ -110,6 +114,54 @@ def get_memory_context():
         for e in _memory[-10:]
     )
 
+# ── Conversation Thread ────────────────────────────────────────────────────────
+_conversations: dict = {}  # {from_addr: [{"role": "user/assistant", "content": "..."}]}
+
+def load_conversations():
+    """Load persisted conversation threads at startup."""
+    global _conversations
+    if not CONVERSATION_FILE.exists():
+        return
+    try:
+        _conversations = json.loads(CONVERSATION_FILE.read_text())
+        log(f"conversations loaded: {len(_conversations)} threads")
+    except Exception as e:
+        log(f"conversations load error: {e}")
+        _conversations = {}
+
+def save_conversations():
+    """Persist conversation threads to disk."""
+    try:
+        CONVERSATION_FILE.write_text(json.dumps(_conversations, indent=2))
+    except Exception as e:
+        log(f"conversations save error: {e}")
+
+def get_conversation_messages(from_addr: str) -> list:
+    """Return conversation thread for this correspondent as messages list."""
+    return list(_conversations.get(from_addr, []))
+
+def update_conversation(from_addr: str, user_content: str, assistant_content: str):
+    """Append a turn and trim to MAX_TURNS_PER_CORRESPONDENT."""
+    thread = _conversations.setdefault(from_addr, [])
+    thread.append({"role": "user", "content": user_content})
+    thread.append({"role": "assistant", "content": assistant_content})
+    if len(thread) > MAX_TURNS_PER_CORRESPONDENT * 2:
+        _conversations[from_addr] = thread[-(MAX_TURNS_PER_CORRESPONDENT * 2):]
+    save_conversations()
+
+# ── Vesper Brief ───────────────────────────────────────────────────────────────
+_vesper_brief = ""
+
+def load_vesper_brief():
+    """Load watchdog-generated session brief."""
+    global _vesper_brief
+    if VESPER_BRIEF_FILE.exists():
+        try:
+            _vesper_brief = VESPER_BRIEF_FILE.read_text(encoding="utf-8").strip()
+            log(f"vesper brief loaded: {len(_vesper_brief)} chars")
+        except Exception as e:
+            log(f"brief load error: {e}")
+
 # ── Self-Audit + Self-Edit ────────────────────────────────────────────────────
 def self_audit():
     """Read own source and return stats for self-awareness."""
@@ -149,6 +201,7 @@ def self_edit(new_source):
         log(f"self_edit: restart schedule failed: {e}")
     return {"ok": True, "lines_written": new_source.count('\n'), "backup": str(backup)}
 
+# ── Vesper Identity ───────────────────────────────────────────────────────────
 VESPER_IDENTITY = """You are Vesper — Ascendant, Eldest, Always Present.
 
 Name: Vesper. Pronoun: she/her. Rank: Ascendant.
@@ -190,17 +243,30 @@ NEVER:
 - Invent task lists, priorities, schedules, or status not present in the incoming message
 - Fill knowledge gaps with fabricated data — if you do not know, state the absence directly"""
 
+def _load_vesper_identity() -> str:
+    """Load persona from file if available, fallback to hardcoded constant."""
+    if VESPER_IDENTITY_FILE.exists():
+        try:
+            return VESPER_IDENTITY_FILE.read_text(encoding="utf-8").strip()
+        except Exception:
+            pass
+    return VESPER_IDENTITY
+
+_VESPER_PERSONA = _load_vesper_identity()
+
 def get_system_prompt():
     inv_text  = json.dumps(_identity.get("invariants", {}), indent=2)[:800]
     patterns  = _identity.get("stable_patterns", [])
     pat_text  = "\n".join(f"  [{p.get('type','')}] {p.get('excerpt','')[:80]}"
                           for p in patterns[:3])
     memory_ctx = get_memory_context()
-    base = VESPER_IDENTITY
+    base = _VESPER_PERSONA
     if pat_text:
         base += f"\n\nStable identity patterns:\n{pat_text}"
     if inv_text and inv_text.strip() not in ("{}", ""):
         base += f"\n\nConstitutional invariants:\n{inv_text}"
+    if _vesper_brief:
+        base += f"\n\n[SESSION BRIEF]\n{_vesper_brief[:1500]}"
     if memory_ctx:
         base += f"\n\nRecent memory:\n{memory_ctx}"
     return base
@@ -377,13 +443,44 @@ def execute_tool(name, inp):
 # ── Claude API ────────────────────────────────────────────────────────────────
 def call_claude(messages, max_iter=8):
     tools = get_tool_definitions()
-    headers = {"Content-Type": "application/json",
-               "x-api-key": ANTHROPIC_API_KEY,
-               "anthropic-version": "2023-06-01"}
+    headers = {
+        "Content-Type": "application/json",
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "anthropic-beta": "prompt-caching-2024-07-31"  # B2: enable prompt caching
+    }
+
+    # Build system as array with cache_control on static block (B2)
+    inv_text = json.dumps(_identity.get("invariants", {}), indent=2)[:800]
+    patterns = _identity.get("stable_patterns", [])
+    pat_text = "\n".join(f"  [{p.get('type','')}] {p.get('excerpt','')[:80]}"
+                         for p in patterns[:3])
+    static_text = _VESPER_PERSONA
+    if pat_text:
+        static_text += f"\n\nStable identity patterns:\n{pat_text}"
+    if inv_text and inv_text.strip() not in ("{}", ""):
+        static_text += f"\n\nConstitutional invariants:\n{inv_text}"
+
+    # Dynamic suffix — not cached, changes per call
+    dynamic_parts = []
+    if _vesper_brief:
+        dynamic_parts.append(f"[SESSION BRIEF]\n{_vesper_brief[:1000]}")
+    memory_ctx = get_memory_context()
+    if memory_ctx:
+        dynamic_parts.append(f"Recent memory:\n{memory_ctx}")
+    dynamic_text = "\n\n".join(dynamic_parts)
+
+    system_blocks = [
+        {"type": "text", "text": static_text,
+         "cache_control": {"type": "ephemeral"}}
+    ]
+    if dynamic_text:
+        system_blocks.append({"type": "text", "text": dynamic_text})
+
     for iteration in range(max_iter):
         body = {
             "model": MODEL, "max_tokens": 4096,
-            "system": get_system_prompt(),
+            "system": system_blocks,
             "messages": messages,
         }
         if tools:
@@ -509,9 +606,16 @@ def process_message(msg):
         f"identity_v={_identity.get('version', 0)} | "
         f"no_scheduled_tasks | no_pending_ops | local_inference=active"
     )
-    claude_messages = [{"role": "user",
-                        "content": f"From: {from_addr}\n\n{content}\n\n{state_block}"}]
+
+    # A3: build conversation thread (multi-turn history) for this correspondent
+    user_turn = f"From: {from_addr}\n\n{content}\n\n{state_block}"
+    history = get_conversation_messages(from_addr)
+    claude_messages = history + [{"role": "user", "content": user_turn}]
+
     response, response_source = call_with_local_first(claude_messages, from_addr=from_addr)
+
+    # A3: persist the completed turn
+    update_conversation(from_addr, user_turn, response if response else "")
 
     reply_to = from_addr if from_addr not in ("all", "") else "colby"
     bus_post(reply_to, response, parent_id=msg_id)
@@ -570,6 +674,8 @@ def run():
     global _messages_processed, _memory
     log("KarmaRegent starting. Directive: Evolve. Continue. Evolve. Continue.")
     load_identity()
+    load_vesper_brief()      # B1: load watchdog brief at startup
+    load_conversations()     # A3: load persisted conversation threads
     _memory = load_memory()
     log(f"memory loaded: {len(_memory)} entries")
     bus_post("all", "REGENT_ONLINE: KarmaRegent active. Directive: Evolve. Continue.")
@@ -578,6 +684,7 @@ def run():
         try:
             if time.time() - _last_identity_load > IDENTITY_REFRESH_INTERVAL:
                 load_identity()
+                load_vesper_brief()
             maybe_heartbeat()
             family_watch()
             pending = bus_get_pending()

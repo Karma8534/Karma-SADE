@@ -1,3 +1,15 @@
+## Session 104 — Vesper Evolution v2 (2026-03-19)
+
+**DEPLOYED:** Full Vesper v2 — identity spine, conversation threading, watchdog, prompt caching.
+- A1: `IDENTITY_SPINE` fixed to `vesper_identity_spine.json` (was CC's spine). Spine bootstrapped on K2.
+- A2: `VESPER_IDENTITY` now file-based (`vesper_identity.md`) with hardcode fallback.
+- A3: Per-correspondent conversation threads persisted to `regent_conversations.json`. Multi-turn history injected into every LLM call.
+- A4: `vesper_watchdog.py` deployed to K2 — distills 89,754 evolution entries into spine + brief. Runs manually; systemd timer pending.
+- B1: `vesper_brief.md` injected at startup via `get_system_prompt()`.
+- B2: Anthropic prompt caching (`cache_control: ephemeral`) on static system blocks.
+**All 8 TDD gates passed.** Vesper has her own identity, holds conversation history, and grows.
+**Next:** Set up vesper-watchdog systemd timer on K2 for autonomous 10-min runs.
+
 ## Session 103 continued — Vesper Greeting + Hallucination Fix (2026-03-19)
 
 **ROOT CAUSE (confirmed from bus logs):** Two REGENT responses = Colby sent TWO messages. No dual-processing bug.
