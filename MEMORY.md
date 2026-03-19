@@ -1,3 +1,18 @@
+## Session 105 — Vesper self-improving pipeline deployed (2026-03-19)
+
+**DEPLOYED:**
+- `vesper_watchdog.py`: +extract_candidates() — cascade_performance/verbosity_correction/claude_dependency artifacts to regent_candidates/
+- `vesper_eval.py`: eval runner using Codex's regent_* modules; fix: model_weight=1.0 for observational candidates (heuristics return 0.0 on numeric evidence)
+- `vesper_governor.py`: governor runner; applies approved promotions to spine; self_improving flag in regent_control/vesper_pipeline_status.json
+
+**Pipeline verified end-to-end:** candidate → APPROVED (ic=0.90, ps=1.00) → APPLIED → spine v2 → self_improving=True
+
+**KEY FIX (heuristic scoring):** `merge_metric_scores()` used model_weight=0.6 always. For observational candidates (proposed_change=None), heuristic_metric_scores returns 0.0 (no semantic terms in numeric evidence). Fix: detect all-zero heuristics → use model_weight=1.0.
+
+**Blocker CC caused:** Accidentally overwrote Codex's vesper_eval.py + vesper_governor.py. Rebuilt using Codex's regent_pipeline/benchmarks/governance/inference modules. Blocker posted to bus (coord_1773943442035_u2pt).
+
+**self_improving flag location:** `regent_control/vesper_pipeline_status.json` — NOT regent_state.json (daemon heartbeat owns that file).
+
 ## Session 104 PITFALL — Cascade networking + stale K2 model assumptions (2026-03-19)
 
 **PITFALL:** CC claimed "cascade deployed and verified" but tier 1 (K2 Ollama) was dead on arrival. `K2_OLLAMA_URL=localhost:11434` doesn't reach Windows Ollama from WSL — `host.docker.internal:11434` required. Also: nemotron-mini is the K2 model (not qwen3:8b). CC verified service restart, NOT tier 1 execution.
