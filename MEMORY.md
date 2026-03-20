@@ -2036,3 +2036,15 @@ Recurring CC mistakes extracted from 108+ sessions must write to watchdog_extra_
 - hub.arknexus.net/cc VERIFIED end-to-end. Startup: KarmaCCServer.vbs in Startup folder.
 - Blocker: cc_server dies on P1 reboot � VBS handles auto-start at login.
 
+n## Session 113 (2026-03-20) -- B4+B5 Vesper->Karma Bridge Fixnn**B4 FIXED:** behavioral_continuity patterns were always rejected by vesper_eval.py.nRoot cause: heuristic scorer gave fixed 0.25 for persona_style+task_completion.nFix: HEURISTIC_BLIND_TYPES in vesper_eval.py -- behavioral_continuity now model_weight=1.0.nResult: spine v85, 2 behavioral_continuity patterns promoted + in FalkorDB.nn**B5 IN PROGRESS:** hub-bridge/app/server.js extended -- fetchK2WorkingMemory() now readsnvesper_identity_spine.json on K2 and injects behavioral pattern descriptionsnas '=== BEHAVIORAL PATTERNS ===' section in K2 working memory context. Deploying.
+
+## Session 113 (2026-03-20) -- B4+B5 Vesper->Karma Bridge Fix
+
+**B4 FIXED:** behavioral_continuity patterns were always rejected by vesper_eval.py.
+Root cause: heuristic scorer gave fixed 0.25 for persona_style+task_completion.
+Fix: HEURISTIC_BLIND_TYPES in vesper_eval.py -- behavioral_continuity now model_weight=1.0.
+Result: spine v85, 2 behavioral_continuity patterns promoted to spine + FalkorDB.
+
+**B5 IN PROGRESS:** hub-bridge/app/server.js -- fetchK2WorkingMemory() now reads
+vesper_identity_spine.json on K2 and injects behavioral pattern descriptions as
+"=== BEHAVIORAL PATTERNS ===" in K2 working memory context block. Deploying.
