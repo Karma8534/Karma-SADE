@@ -34,7 +34,7 @@
 **OPEN BLOCKERS:**
 - H3: cc_scratchpad.md two copies (vault-neo + K2) sync unknown
 - B4+B5: Vesper→Karma bridge dead — Phase 0 (after PRE-PHASE)
-- P0N-A: ✅ APPROVED + URGENT — build hub.arknexus.net/cc next session first
+- P0N-A: 🔄 IN PROGRESS — CC server running on P1:7891, hub-bridge deployed, verifying end-to-end
 - P0N-B: ✅ APPROVED — Channels bridge (after P0N-A)
 - P0N-C: ✅ APPROVED — PS KCC + GLM primary
 - P3-D: ✅ LIVE — 3 hooks deployed (.claude/hooks/), registered in .claude/settings.json
@@ -43,11 +43,23 @@
 - Shannon: SHELVED — requires Docker + explicit Sovereign auth per target
 - Hunter Alpha: REJECTED — logs all prompts for training, fatal for Karma context
 
+## Session 110 — P0N-A: CC server on P1 + hub-bridge /cc route (2026-03-20)
+
+**DONE:**
+- Scripts/cc_server_p1.py created and running on P1 port 7891 (auth: HUB_CHAT_TOKEN)
+- hub-bridge/app/server.js: added POST /cc + GET /cc/health proxy routes (CC_SERVER_URL constant added at line 32)
+- CC_SERVER_URL=http://100.124.194.102:7891 added to vault-neo hub.env
+- vault-neo → P1:7891 Tailscale connectivity VERIFIED (health returns {"ok":true})
+- Committed: cc_server_p1.py + server.js changes
+
+**NOTE: CC server must be running on P1 for /cc to work. On reboot: start Scripts/cc_server_p1.py with HUB_CHAT_TOKEN env var.**
+
 ## Next Session Starts Here
 1. `/resurrect`
-2. P0N-A plan is at `docs/plans/2026-03-20-p0n-a-plan.md` — SOVEREIGN APPROVED, do NOT brainstorm. Invoke `superpowers:executing-plans` and execute Task 1 (start CC server on P1 port 7891) then Task 2 (add /cc route to hub-bridge) then Task 3 (end-to-end verify from browser).
-3. CC server on P1 must be running BEFORE deploying hub-bridge route. Start `Scripts/cc_server_p1.py` locally first.
-**Blocker if any:** HUB_CHAT_TOKEN env var needed for cc_server_p1.py — get from vault-neo: `ssh vault-neo "cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt"`
+2. P0N-A end-to-end verify: `curl -X POST https://hub.arknexus.net/cc -H "Authorization: Bearer TOKEN" -H "Content-Type: application/json" -d '{"message":"reply with: CC P0N-A ONLINE"}'`
+3. If working: update Karma2/PLAN.md P0N-A status to ✅ LIVE. Start P0N-B.
+4. If CC server not running: `powershell -Command '$env:HUB_CHAT_TOKEN="TOKEN"; python Scripts/cc_server_p1.py'`
+**Blocker if any:** CC server process dies on P1 reboot — not yet persistent (no Windows service).
 
 ## Session 108 — Ground truth verification + K2 model fix (2026-03-20)
 

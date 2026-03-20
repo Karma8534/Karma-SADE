@@ -29,6 +29,7 @@ const HUB_HANDOFF_TOKEN_FILE = process.env.HUB_HANDOFF_TOKEN_FILE || "/run/secre
 const DEEP_MODE_HEADER = (process.env.DEEP_MODE_HEADER || "x-karma-deep").toLowerCase();
 const HANDOFF_DIR = process.env.HANDOFF_DIR || "/data/handoff";
 const KARMA_CONTEXT_URL = process.env.KARMA_CONTEXT_URL || "http://karma-server:8340/raw-context";
+const CC_SERVER_URL     = process.env.CC_SERVER_URL     || "http://100.124.194.102:7891";
 
 // ── Within-session conversation history ──────────────────────────────────────
 // Keeps the last N exchange pairs in memory, keyed by a hash of the bearer token.
@@ -3673,6 +3674,42 @@ const server = http.createServer(async (req, res) => {
         return json(res, 500, { ok: false, error: e.message });
       }
     }
+
+    // ── P0N-A: CC proxy routes ────────────────────────────────────────────────
+    if (req.method === "GET" && req.url === "/cc/health") {
+      try {
+        const r = await fetch(`${CC_SERVER_URL}/health`, { signal: AbortSignal.timeout(5000) });
+        const d = await r.json();
+        return json(res, 200, { ok: true, cc_server: d });
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `CC unreachable: ${e.message}` });
+      }
+    }
+
+    if (req.method === "POST" && req.url === "/cc") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      const raw = await parseBody(req, 1000000);
+      let body; try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+      const { message, session_id } = body;
+      if (!message) return json(res, 422, { ok: false, error: "message required" });
+      try {
+        const r = await fetch(`${CC_SERVER_URL}/cc`, {
+          method: "POST",
+          headers: { "Authorization": req.headers["authorization"], "Content-Type": "application/json" },
+          body: JSON.stringify({ message, session_id }),
+          signal: AbortSignal.timeout(130000),
+        });
+        const d = await r.json();
+        return json(res, r.status, d);
+      } catch (e) {
+        console.error("[/cc] proxy error:", e.message);
+        return json(res, 502, { ok: false, error: `CC proxy error: ${e.message}` });
+      }
+    }
+    // ── end P0N-A ─────────────────────────────────────────────────────────────
 
     return notFound(res);
 
