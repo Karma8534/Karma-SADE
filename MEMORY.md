@@ -75,7 +75,8 @@
 ## Next Session Starts Here
 1. `/resurrect`
 2. Bridge is live — verify with: open hub.arknexus.net/cc in browser
-3. **HAUL ASS: Fully implement Karma2/PLAN.md to 100%.** Use superpowers:subagent-driven-development. TDD verify every component. Use superpowers:verification-before-completion before declaring anything done.
+3. **TODO (UI): Fix /cc bridge — persist Bearer token in localStorage (enter once, not on every refresh). Also: copy button per message + Clear button next to Send.**
+4. **HAUL ASS: Fully implement Karma2/PLAN.md to 100%.** Use superpowers:subagent-driven-development. TDD verify every component. Use superpowers:verification-before-completion before declaring anything done.
 **Blocker if any:** CC server needs to be running on P1 (start_cc_server.ps1 auto-restart loop).
 
 ## Session 108 — Ground truth verification + K2 model fix (2026-03-20)
