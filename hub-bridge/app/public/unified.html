@@ -84,30 +84,7 @@
   #chat-feed::-webkit-scrollbar { width: 4px; }
   #chat-feed::-webkit-scrollbar-thumb { background: #1a1030; border-radius: 2px; }
 
-  /* ── Agora panel ──────────────────────────────────────────────────────── */
-  #agora-panel {
-    width: 0; overflow: hidden; transition: width 0.2s ease;
-    border-left: 0 solid #1a1a2e; background: #050508; flex-shrink: 0;
-    display: flex; flex-direction: column;
-  }
-  #agora-panel.open {
-    width: 260px; border-left-width: 1px;
-    overflow-y: auto; scrollbar-width: thin; scrollbar-color: #1a1030 transparent;
-  }
-  #agora-panel.open::-webkit-scrollbar { width: 3px; }
-  #agora-panel.open::-webkit-scrollbar-thumb { background: #1a1030; border-radius: 2px; }
-  #agora-inner { padding: 10px; display: flex; flex-direction: column; gap: 4px; min-width: 260px; }
-  #agora-header {
-    font-size: 9px; color: #2a2a4a; letter-spacing: 2px; text-transform: uppercase;
-    margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #1a1a2e; flex-shrink: 0;
-  }
-  .bus-entry {
-    font-size: 10px; color: #4a4a6a; font-family: monospace;
-    border-bottom: 1px solid #0a0a14; padding-bottom: 4px; margin-bottom: 2px;
-    word-break: break-word; line-height: 1.3;
-  }
-  .bus-entry .b-ts   { color: #2a2a4a; display: block; margin-bottom: 1px; font-size: 9px; }
-  .bus-entry .b-from { color: #5b21b6; font-size: 9px; }
+  /* Agora panel removed — bus traffic lives at /agora only */
 
   /* ── Cascade panel ────────────────────────────────────────────────────── */
   #cascade-panel {
@@ -269,11 +246,7 @@
       <div id="processing">Karma is thinking...</div>
     </div>
 
-    <div id="agora-panel">
-      <div id="agora-inner">
-        <div id="agora-header">AGORA &mdash; Coordination Bus</div>
-      </div>
-    </div>
+    <!-- Agora panel removed — bus traffic at /agora only -->
 
   </div>
 
@@ -357,8 +330,7 @@
   }
 
   function toggleAgora() {
-    document.getElementById('agora-panel').classList.toggle('open');
-    document.getElementById('agora-btn').classList.toggle('active');
+    window.open('/agora', '_blank');
   }
 
   function toggleCascade() {
@@ -423,10 +395,8 @@
 
   // ── Bus: regent / cc / codex ────────────────────────────────────────────
   async function sendToBus(target, text) {
-    // Bus responses go to Agora, not inline — open Agora panel and show routing notice
-    const agoraPanel = document.getElementById('agora-panel');
-    if (!agoraPanel.classList.contains('open')) toggleAgora();
-    appendMsg('system', '→ ' + target.toUpperCase() + ': "' + text.slice(0, 80) + (text.length > 80 ? '…' : '') + '" — routed to AGORA');
+    // Bus responses live at /agora — show routing notice with link only
+    appendMsg('system', '→ ' + target.toUpperCase() + ': "' + text.slice(0, 80) + (text.length > 80 ? '…' : '') + '" — sent to AGORA');
     scrollBottom();
     try {
       await fetch(BUS_POST_URL, {
@@ -464,12 +434,8 @@
       const content = msg.content || msg.message || msg.text || '';
       const ts      = msg.ts || msg.timestamp || msg.created_at || null;
 
-      appendAgoraEntry(msg);
-
-      const isAgent     = ['regent', 'cc', 'codex', 'karma'].includes(from);
-      const isNoise     = /^(HEARTBEAT|KCC|SESSION |CC SESSION|CHECKPOINT)/.test(content);
-
-      if (isAgent && !isNoise) {
+      const isAgent = ['regent', 'cc', 'codex', 'karma'].includes(from);
+      if (isAgent) {
         lastActivityTs = ts || new Date().toISOString();
         updateHeartbeat();
         updateK2Status();
@@ -574,25 +540,7 @@
     } catch (_) {}
   }
 
-  // ── Agora panel ─────────────────────────────────────────────────────────
-  function appendAgoraEntry(msg) {
-    const inner   = document.getElementById('agora-inner');
-    const from    = msg.from || '?';
-    const to      = msg.to   || '?';
-    const ts      = msg.ts || msg.timestamp || msg.created_at || '';
-    const content = (msg.content || '').slice(0, 160);
-    const el = document.createElement('div');
-    el.className = 'bus-entry';
-    el.innerHTML =
-      '<span class="b-ts">' + escHtml(formatTs(ts)) + '</span>' +
-      '<span class="b-from">' + escHtml(from) + ' &#8594; ' + escHtml(to) + '</span> ' +
-      escHtml(content);
-    inner.appendChild(el);
-    const entries = inner.querySelectorAll('.bus-entry');
-    if (entries.length > 80) entries[0].remove();
-    const panel = document.getElementById('agora-panel');
-    panel.scrollTop = panel.scrollHeight;
-  }
+  // Agora panel removed — bus traffic renders at /agora only
 
   // ── Persistence ──────────────────────────────────────────────────────────
   function saveMessages() {

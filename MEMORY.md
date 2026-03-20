@@ -1895,3 +1895,7 @@ Patcher: Scripts/vesper_patch_regent.py
 - B3 (P1 Ollama models) unverified — P1 not reachable through K2 tunnel
 - B6 (dedup ring persistence) not checked
 - Vesper→Karma bridge: B4 pattern types + B5 FalkorDB write — deeper audit needed
+
+- Removed embedded Agora panel from hub.arknexus.net — CC/CODEX/REGENT have zero footprint there
+- AGORA button now opens /agora in new tab
+- processBus() on hub only updates heartbeat, renders nothing
