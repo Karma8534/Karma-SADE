@@ -11,6 +11,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 
 PORT = 7891
 TOKEN = os.environ.get("HUB_CHAT_TOKEN", "")
+CLAUDE_CMD = os.environ.get("CLAUDE_CMD", r"C:\Users\raest\AppData\Roaming\npm\claude.cmd")
 
 class CCHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
@@ -54,8 +55,9 @@ class CCHandler(BaseHTTPRequestHandler):
 
         # Run claude
         try:
+            cmd = [CLAUDE_CMD, "-p", message]
             result = subprocess.run(
-                ["claude", "-p", message, "--resume"],
+                cmd,
                 capture_output=True, text=True, timeout=120,
                 cwd="C:\\Users\\raest\\Documents\\Karma_SADE"
             )

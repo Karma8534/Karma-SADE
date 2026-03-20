@@ -124,7 +124,7 @@ Why first: 108+ sessions document exactly how previous tool implementations fail
 
 **Why before PHASE 0:** CC on P1 already has browser, filesystem, Bash, and code execution natively. Building hub-bridge wrappers (Phase 1-A/B/C) duplicates CC's native tooling. Correct pattern: Karma delegates to CC via coordination bus and `/cc` route — matching Initiate→Ascendant hierarchy.
 
-**P0N-A: hub.arknexus.net/cc — CC proxy (server on P1)** ✅ APPROVED
+**P0N-A: hub.arknexus.net/cc — CC proxy (server on P1)** ✅ LIVE (session 110)
 - CC persistent server runs on **P1** (Windows, 64GB RAM, all CC memory/auth/state lives here)
 - hub-bridge adds `/cc` route proxying to P1 CC server via Tailscale (100.124.194.102)
 - Auth: **same bridge Bearer token as `/v1/chat`** (zero new auth surface, same token)
@@ -256,7 +256,7 @@ From 6-item list (obs #8077):
 | P2 | B6 | Dedup ring memory-only | 🟡 Phase 0-D |
 | P2 | B8 | Regent restart loop | 🟡 Undiagnosed, Phase 0-E |
 | P3 | B7 | KCC drift alerts | 🟡 KIKI fixed — awaiting confirm |
-| — | P0N-A | hub.arknexus.net/cc (CC on P1 via Tailscale) | ✅ APPROVED (session 109) |
+| ✅ | P0N-A | hub.arknexus.net/cc (CC on P1 via Tailscale) | ✅ LIVE (session 110) |
 | — | P0N-B | Channels bridge (bus → P1 CC) | ✅ APPROVED (session 109) |
 | — | P0N-C | KCC: PS KCC + GLM primary + Haiku fallback | ✅ APPROVED (session 109) |
 | P4 | P3-A | CLAUDE.md terminology mismatch | 🟡 Phase 3-A |
