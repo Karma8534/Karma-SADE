@@ -213,7 +213,7 @@ From 6-item list (obs #8077):
 | — | H2 | SADE doctrine file missing | ✅ Already existed — verified |
 | — | H4 | active-issues.md stale (B1+B2 resolved) | ✅ Done (session 109) |
 | — | H7 | SADE doctrine content spec | ✅ Resolved with H2 |
-| **P0** | H6 | Resurrect Step 1b spine path | 🔴 Needs Sovereign decision: cc_identity_spine.json (CC's own) vs vesper_identity_spine.json (Karma's) |
+| — | H6 | Resurrect Step 1b spine path | ✅ cc_identity_spine.json is CORRECT — CC's own spine (v38, resume_block = "You are CC, Ascendant..."). vesper_identity_spine.json = Karma's spine (name=Karma). Different files, different purposes. No change needed. |
 | P1 | H3 | cc_scratchpad.md two copies (vault-neo + K2) | 🟡 Sync unknown |
 | P1 | H5 | B7 KCC drift confirmed cleared | 🟡 Awaiting next cc_anchor run |
 | **P0** | B4+B5 | Vesper→Karma bridge dead | 🔴 Root cause known, Phase 0-A/B |

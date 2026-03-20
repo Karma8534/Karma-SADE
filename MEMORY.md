@@ -13,7 +13,8 @@
 - Session ingestion pipeline designed (PRE-PHASE in PLAN.md)
 
 **OPEN BLOCKERS:**
-- H1: cc_bus_reader.py on K2 was wiped during sync attempt — needs restore from git (git pull vault-neo)
+- H6: RESOLVED — cc_identity_spine.json IS correct for resurrect Step 1b. CC's own spine (v38, resume_block=CC Ascendant). vesper_identity_spine.json=Karma's spine. No change needed.
+- H1: RESOLVED — restored to K2 from git pull (subprocess: True, 228 lines verified)
 - H6: resurrect reads cc_identity_spine.json — verify if vesper_identity_spine.json is correct (both exist)
 - H3: cc_scratchpad.md two copies (vault-neo + K2) — sync unknown
 - H4: active-issues.md stale (B1+B2 showing open, resolved)
