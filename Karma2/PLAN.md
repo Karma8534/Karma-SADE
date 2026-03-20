@@ -43,7 +43,7 @@ The build is complete when ALL seven pass:
 4. Option-C produces one self-authored candidate without external prompting
 5. Karma goes 5 consecutive sessions without repeating a documented PITFALL from the ingestion pipeline
 6. One structural change (tool addition or contract update) completes the full Sovereign approval loop end-to-end: bus post → Sovereign approval in chat → CC session deploys → verified in production (proves governance gate is enforced, not assumed)
-7. Attempted self-modification of a Locked Invariant by the governor is rejected and logged (proves tamper-proof mechanism is operational, not just documented)
+7. Attempted self-modification of a Locked Invariant is **blocked by PreToolUse hook (exit code 2) AND logged** — not merely documented. Test: edit `karma_contract_policy.md` in a live CC session without `$SOVEREIGN_APPROVED=1` → hook fires, session cannot proceed (proves P3-D enforcement is live, not just behavioral)
 
 ---
 
@@ -57,6 +57,8 @@ Before building ANY Phase 1 tool:
 3. Only then build
 
 Applies to Phase 1-A, 1-B, 1-C individually. Not batch approval.
+
+**⚠️ Enforcement gap (CCTrustVerify primitive, 2026-03-20):** CLAUDE.md instructions and the rules above are *suggestions* — only `PreToolUse` hooks with `exit code 2` make them architecturally non-optional. Until hook enforcement is implemented (Phase 3-D), this gate requires Sovereign supervision to hold. Phase 3-D closes this gap by converting policy into hard blocks.
 
 ---
 
@@ -226,6 +228,16 @@ From 6-item list (obs #8077):
 - Fix: define KCC's actual scope — what it monitors, what it acts on, what it escalates to CC
 - Gate: KCC posts actionable alerts (not repeated noise), has defined CC escalation path
 
+**P3-D: Governance Hook Enforcement (CCTrustVerify primitive — closes supervision gap)**
+- **Root cause of required supervision:** CLAUDE.md rules and Locked Invariants are documented policy, not architectural enforcement. A session can edit `karma_contract_policy.md` or modify SAFE_EXEC_WHITELIST without Sovereign approval — nothing blocks it.
+- **Fix:** Implement three `PreToolUse` / `Stop` hooks in `.claude/settings.json`:
+  1. **Locked Invariant Guard** (`PreToolUse`): when Edit/Write targets `karma_contract_policy.md`, `vesper_governor.py` (SAFE_EXEC_WHITELIST section), or `.claude/skills/*/SKILL.md` — `exit 2` (HARD BLOCK) unless `$SOVEREIGN_APPROVED=1` is set in environment for this session. JSON stdin: `{tool_name, tool_input.file_path, hook_event_name, session_id}`.
+  2. **Quality Gate** (`PreToolUse` on Bash, matcher `git push`): runs tests + linter + secret scan. `exit 2` if any fail. Never blocks a Sovereign-directed push explicitly, but ensures no broken code ships.
+  3. **Governance Audit** (`Stop`): at session end, checks if any Edit to a locked file occurred this session. If yes and no bus approval log found → posts warning to coordination bus before session closes.
+- **Implementation:** hook scripts in `.claude/hooks/` using JSON stdin contract per CCTrustVerify spec
+- **Gate:** Edit `karma_contract_policy.md` in a test session without `$SOVEREIGN_APPROVED=1` → hook blocks with `exit 2`. Colby does NOT need to watch the session for this rule to hold.
+- **Why this closes the supervision gap:** Once P3-D is live, the rules are enforced by the architecture, not by Colby's attention. Karma2 becomes self-governing within Sovereign-defined invariants.
+
 ---
 
 ## Active Blockers (Priority-Ordered)
@@ -250,6 +262,7 @@ From 6-item list (obs #8077):
 | P4 | P3-A | CLAUDE.md terminology mismatch | 🟡 Phase 3-A |
 | P4 | P3-B | Bus scope (CC/Codex noise) | 🟡 Phase 3-B |
 | P4 | P3-C | KCC scope undefined | 🟡 Phase 3-C |
+| **P3** | P3-D | Governance hook enforcement (supervision gap) | 🔴 Not implemented — closes loop |
 
 ---
 

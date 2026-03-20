@@ -14,6 +14,8 @@
 - Vision gap analysis: 9/9 requirements verified, 3 gaps closed (Locked Invariants section, AC expanded to 7 items)
 - OpenClaw PDF ingested: 3 primitives assimilated — cc-delegation skill, --resume for Channels bridge, codex exec --sandbox for ArchonPrime
 - .claude/skills/cc-delegation/SKILL.md created and live in skills registry
+- CCTrustVerify PDF ingested: hook enforcement primitive applied as P3-D in PLAN.md — closes supervision gap by converting Governance Gate from documented policy to PreToolUse exit-2 hard blocks
+- Comprehensive plan analysis: Karma2 meets all initial Karma plan requirements; P3-D closes the last gap (governance enforcement)
 
 **ALL HOTFIXES RESOLVED (H1-H7):**
 - H1 ✅ import subprocess added, restored to K2 (verified: True, 228 lines)
@@ -28,6 +30,7 @@
 - H3: cc_scratchpad.md two copies (vault-neo + K2) sync unknown
 - B4+B5: Vesper→Karma bridge dead — Phase 0 (after PRE-PHASE)
 - P0N-A/B/C: ✅ ALL APPROVED (session 109) — build queue: hub.arknexus.net/cc, Channels bridge, PS KCC + GLM
+- P3-D: Governance hook enforcement NOT YET IMPLEMENTED — hooks in .claude/hooks/ for PreToolUse (locked invariants) + Quality Gate (git push) + Governance Audit (Stop)
 - Codex: not installed (Current_Plan/Codex Installer.exe)
 - B8: regent restart loop root cause undiagnosed
 
