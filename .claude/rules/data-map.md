@@ -30,6 +30,14 @@ docs/plans/
   YYYY-MM-DD-<topic>-design.md    ← Architecture decisions (brainstorming output)
   YYYY-MM-DD-<topic>-plan.md      ← Implementation tasks (writing-plans output)
 ```
+
+### docs/ccSessions/ — CC Session Transcripts (for ingestion)
+```
+docs/ccSessions/
+  CCSession032026A.md             ← Session 109 transcript (2026-03-20, this session)
+```
+Use these as input to the session ingestion pipeline (Task 1 alternative to IndexedDB).
+These are Colby's manually saved session exports — ingest before IndexedDB extraction.
 **Current active plans:**
 - `2026-03-20-session-ingestion-pipeline-design.md` — session pipeline architecture
 - `2026-03-20-session-ingestion-pipeline-plan.md` — session pipeline tasks

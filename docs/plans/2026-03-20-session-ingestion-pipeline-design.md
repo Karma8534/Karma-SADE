@@ -109,6 +109,20 @@ return all.map(c => ({
 
 ---
 
+## Phase 3b: Vesper Evaluation Criteria Injection (Loop Closure)
+
+**Trigger:** After Phase 3 writes, extract PITFALL patterns seen 3+ sessions.
+
+**Why this matters:** Without this step, CC mistakes live in claude-mem but Vesper never watches for them. With it, recurring CC failures become part of what Vesper's watchdog scans for in future regent turns — closing the loop: CC mistakes → Vesper detection criteria → governs future sessions.
+
+**Mechanism:** Append high-frequency PITFALL patterns to Vesper's watchdog candidate extraction config (`vesper_watchdog.py` pattern list or a config file it reads). Each pattern becomes a new candidate type Vesper can detect and flag.
+
+**Output:** SSH to K2 → append to `/mnt/c/dev/Karma/k2/cache/regent_control/watchdog_extra_patterns.json` (new file, read by vesper_watchdog.py after B4 fix).
+
+**Gate:** At least one non-`cascade_performance` candidate type appears in the next watchdog cycle.
+
+---
+
 ## Phase 4: Skill File Generation (Haiku)
 
 **Trigger:** Any PITFALL or DECISION pattern appearing in 3+ distinct sessions.

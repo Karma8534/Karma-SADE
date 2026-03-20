@@ -1908,3 +1908,6 @@ Patcher: Scripts/vesper_patch_regent.py
 - KIKI fixed: last_cycle_ts now updates on idle cycles (false drift alerts will clear)
 - cc_bus_reader.py deployed: @cc reactive on bus every 2min
 - Agora panel removed from hub.arknexus.net: CC/Codex/Regent output goes to /agora only
+
+[2026-03-20T18:30Z] DIRECTION: Session ingestion pipeline loop closure — PITFALLs feed Vesper watchdog criteria
+Recurring CC mistakes extracted from 108+ sessions must write to watchdog_extra_patterns.json on K2 so Vesper scans for them in future regent turns. Closes the CC→Vesper learning loop. Added as Phase 3b to pipeline design doc.
