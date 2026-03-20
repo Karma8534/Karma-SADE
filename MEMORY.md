@@ -1,3 +1,31 @@
+## Session 109 — Architecture revision + hotfixes (2026-03-20)
+
+**DONE:**
+- Karma2/PLAN.md: major correction (false ✅ fixed, 14 gaps covered, governance gates added)
+- Architecture revision: hub.arknexus.net/cc route (CC on P1 via Tailscale) + Channels replaces cc_bus_reader.py
+- Topology locked: P1=CC server+Channels | K2=Karma/Vesper/Aria/KCC | vault-neo=hub-bridge+FalkorDB
+- Phase 1 tools (browser/file/code) DEMOTED — delegate to CC instead of duplicating
+- KCC: GLM → qwen3:8b on K2 (local model, drops external API dependency)
+- H1 FIXED: import subprocess added to Scripts/cc_bus_reader.py
+- H2/H7 RESOLVED: SADE doctrine file already exists at for-karma/SADE — Canonical Definitions.txt
+- data-map.md created as auto-loading canonical path index
+- SovereignPeer contract merged to v1.1 (Codex additions)
+- Session ingestion pipeline designed (PRE-PHASE in PLAN.md)
+
+**OPEN BLOCKERS:**
+- H1: cc_bus_reader.py on K2 was wiped during sync attempt — needs restore from git (git pull vault-neo)
+- H6: resurrect reads cc_identity_spine.json — verify if vesper_identity_spine.json is correct (both exist)
+- H3: cc_scratchpad.md two copies (vault-neo + K2) — sync unknown
+- H4: active-issues.md stale (B1+B2 showing open, resolved)
+- B4+B5: Vesper→Karma bridge dead (all patterns cascade_performance, FalkorDB write 404)
+- P0N-A/B/C: hub.arknexus.net/cc + Channels + KCC model change — needs Sovereign approval to build
+- Codex: not installed (Current_Plan/Codex Installer.exe exists)
+
+**NEXT:**
+- git pull on vault-neo → copy Scripts/cc_bus_reader.py to K2 → verify subprocess import
+- Phase 0: fix B4+B5 (Vesper→Karma bridge)
+- Session ingestion pipeline (Task 1: IndexedDB schema discovery)
+
 ## Session 108 — Ground truth verification + K2 model fix (2026-03-20)
 
 **DONE:**

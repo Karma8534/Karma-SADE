@@ -9,6 +9,7 @@ This makes @cc in the hub UI actually responsive without requiring a CC session.
 import json
 import os
 import sys
+import subprocess
 import datetime
 import urllib.request
 import urllib.error

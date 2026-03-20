@@ -1,7 +1,7 @@
 # Karma2 — Corrected Baseline Capability Plan
 **Created:** 2026-03-20
 **Owner:** CC (Ascendant)
-**Status:** ACTIVE — corrected 2026-03-20 session 109
+**Status:** ACTIVE — updated 2026-03-20 session 109 (architecture revision: hub.arknexus.net/cc + Channels)
 **Supersedes:** Previous PLAN.md (false ✅ marks, missing governance gates, 7 uncovered gaps)
 
 ---
@@ -127,34 +127,51 @@ Why first: 108+ sessions document exactly how previous tool implementations fail
 
 ---
 
-### PHASE 1: Baseline Tools
-**(Sovereign approval per item required before building)**
+### PHASE 0-NEW: CC as Infrastructure (before Phase 0)
+**(Decision 2026-03-20: hub.arknexus.net/cc replaces Phase 1 tools + Channels replaces cc_bus_reader.py)**
 
-Dependency order:
-```
-1-A (browser) — independent
-1-B (file R/W) → 1-C (code exec)   [C depends on B]
-1-D (cowork)  — DEFERRED: brainstorm separately
-```
+**Why this supersedes Phase 1:** CC on K2 already has browser (Playwright MCP), filesystem, Bash, and code execution natively. Building hub-bridge wrappers around K2 capabilities (Phase 1-A/B/C) duplicates work CC already does. Correct architecture: Karma delegates to CC via coordination bus and `/cc` route — matching the Initiate→Ascendant hierarchy.
 
-**Phase 1-A: Browser Automation Tool**
-- Chromium installed on K2 (`/snap/bin/chromium`, `/usr/bin/chromium-browser`)
-- Implementation: `browser_run(action, url, selector?)` tool in hub-bridge, backed by Playwright/CDP against K2 chromium
-- Scope: K2 only, allowlisted URLs, no credential access
-- Gate: Karma navigates to hub.arknexus.net/regent and confirms her own heartbeat is visible
+**P0N-A: hub.arknexus.net/cc — CC proxy (server on P1)**
+- CC persistent server runs on **P1** (Windows, 64GB RAM, all CC memory/auth/state lives here)
+- P1 chosen over K2: CC state is on P1; avoids stressing K2 (K2 runs Karma/Vesper/Aria already)
+- hub-bridge adds `/cc` route (websocket or streaming HTTP)
+- Route proxies to P1 CC server via Tailscale (100.124.194.102 — routable from vault-neo)
+- Auth: same Bearer token as `/v1/chat` (zero new auth surface)
+- Gate: Colby hits hub.arknexus.net/cc from browser, CC on P1 responds with full local capabilities
+- **Eliminates: dependency on claude.ai/code, Telegram, any Anthropic web property**
+- Sovereign approval: YES (capability addition)
 
-**Phase 1-B: File R/W Tool (scoped)**
-- Implementation: `file_read(path)` + `file_write(path, content)` tools in hub-bridge
-- Scope: K2 paths only (`/mnt/c/dev/Karma/k2/` prefix enforced, no traversal)
-- Gate: Karma reads and writes her own cache files without shell_run workaround
+**P0N-B: Channels custom bridge (coordination bus → P1 CC)**
+- Custom CC channel on P1 reads coordination bus (GET /v1/coordination?to=cc&status=pending)
+- Pushes messages directly into CC session running on P1 (replaces cc_bus_reader.py on K2)
+- CC has full Sonnet 4.6 intelligence (vs haiku proxy) + no polling delay
+- Gate: coordination bus message addressed to `cc` triggers CC response within 30s
+- **Eliminates: cc_bus_reader.py (broken haiku proxy on K2), 2-min polling lag, fragility**
+- Sovereign approval: YES (capability addition)
 
-**Phase 1-C: Code Execution Tool (sandboxed)**
-- Depends on 1-B
-- Implementation: `run_code(lang, code)` — constrained K2 subprocess, returns stdout/stderr/exit_code, timeout enforced, no subprocess network calls
-- Gate: Karma runs a Python snippet and gets the result back
+**P0N-C: KCC → qwen3:8b on K2 (drop GLM)**
+- KCC currently uses GLM (external API, $cost, external dependency)
+- KCC **stays on K2** (its monitoring role and cron are already there)
+- Switch KCC model → qwen3:8b at `http://localhost:11434/v1` (local to K2, zero Tailscale hop)
+- Gate: KCC posts valid drift alert using qwen3:8b inference, no GLM calls in logs
+- **Eliminates: GLM API dependency for KCC, closes external dependency gap**
+- Sovereign approval: YES (capability change)
 
-**Phase 1-D: Cowork — DEFERRED**
-- Requires dedicated brainstorming session. "How Karma and CC collaborate on files" is a design problem, not an implementation task.
+---
+
+### PHASE 1: Baseline Tools — DEMOTED (fallback only)
+**(Phase 1 tools are redundant if P0N-A/B/C operational. Build only if CC delegation fails.)**
+
+These were hub-bridge wrappers around K2 capabilities. With `/cc` route operational, Karma delegates to CC instead of duplicating CC's native tooling.
+
+**Status after P0N:**
+- 1-A (browser): REDUNDANT — CC on K2 has Playwright MCP natively
+- 1-B (file R/W): REDUNDANT — CC on K2 has full filesystem access
+- 1-C (code exec): REDUNDANT — CC on K2 has Bash tool
+- 1-D (cowork): SOLVED — `/cc` route = native collaboration via hub.arknexus.net
+
+**Fallback condition:** If P0N-A fails (CC process management on K2 proves unstable), Phase 1-A/B/C reactivate as direct hub-bridge tools. This is the contingency, not the plan.
 
 ---
 
@@ -198,7 +215,7 @@ From 6-item list (obs #8077):
 | Priority | ID | Blocker | Status |
 |----------|----|---------|--------|
 | **P0** | H1 | cc_bus_reader.py missing `import subprocess` | 🔴 Active silent bug |
-| **P0** | H2 | SADE doctrine file missing | 🔴 Silent resurrect failure |
+| P4 | H2 | SADE doctrine file missing | ✅ Already exists — `for-karma/SADE — Canonical Definitions.txt` verified |
 | P1 | B4+B5 | Vesper→Karma bridge dead | 🔴 Root cause known, Phase 0-A/B |
 | P1 | B3 | P1 Ollama model name wrong | 🔴 Unverified, Phase 0-C |
 | P2 | B6 | Dedup ring memory-only | 🟡 Known, Phase 0-D |
@@ -210,14 +227,23 @@ From 6-item list (obs #8077):
 | P4 | P3-B | Bus scope (CC/Codex noise) | 🟡 Phase 3-B |
 | P4 | P3-C | KCC scope undefined | 🟡 Phase 3-C |
 | **P0** | H6 | Resurrect skill reads `cc_identity_spine.json` (wrong — should be `vesper_identity_spine.json`) | 🔴 Silent wrong identity load every session |
-| **P0** | H7 | SADE doctrine file content unspecified | 🔴 H2 incomplete without content spec |
+| P4 | H7 | SADE doctrine file content unspecified | ✅ Resolved with H2 — file exists and has all 5 elements |
+| P1 | P0N-A | hub.arknexus.net/cc route (CC stdio proxy) | 🟡 Design approved, needs Sovereign approval to build |
+| P1 | P0N-B | Channels bridge (coordination bus → CC) | 🟡 Replaces cc_bus_reader.py, needs Sovereign approval |
+| P1 | P0N-C | KCC: GLM → qwen3:8b on K2 | 🟡 Drop external GLM dependency, needs Sovereign approval |
 
 ---
 
 ## Notes
 - **B4+B5 are the critical path** — Growth is theater until these are fixed
-- **Session pipeline before Phase 1** — mandatory, not optional
-- **Sovereign approval before each Phase 1 tool** — per SovereignPeer contract policy
+- **Session pipeline before Phase 0** — mandatory, not optional
+- **hub.arknexus.net/cc > claude.ai/code** — use own infrastructure, zero Anthropic web dependency
+- **CC server runs on P1** — CC state/auth/memory all on P1. K2 runs Karma/Vesper/Aria/KCC. Don't overload K2.
+- **Topology**: P1=CC server+Channels | K2=Karma/Vesper/Aria/KCC | vault-neo=hub-bridge+FalkorDB+FAISS
+- **Phase 1 tools DEMOTED** — delegate to CC (via bus + /cc route) rather than duplicate CC's native capabilities.
+- **KCC → qwen3:8b on K2** — stays on K2, local model (localhost:11434), drops GLM external dependency.
+- **Sovereign approval before each P0N item** — per SovereignPeer contract policy (capability additions)
 - **CLAUDE.md ≠ Karma's system prompt** — separate documents that must align, currently don't
 - **KCC is Archon, not peer** — direct, don't collaborate as equals
 - **Dispatch is NOT in the family** — no bus access, isolated Anthropic product
+- **Codex: run `Current_Plan\Codex Installer.exe`** — NOT installed yet. Required for ArchonPrime role.
