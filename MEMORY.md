@@ -1913,3 +1913,5 @@ Patcher: Scripts/vesper_patch_regent.py
 Recurring CC mistakes extracted from 108+ sessions must write to watchdog_extra_patterns.json on K2 so Vesper scans for them in future regent turns. Closes the CC→Vesper learning loop. Added as Phase 3b to pipeline design doc.
 
 [2026-03-20T19:00Z] DIRECTION: Karma2/PLAN.md corrected — 7 new gaps added, false Growth ✅ fixed, governance gates added, HOTFIXES section added (H1-H5), build sequence locked with acceptance criteria
+
+[2026-03-20T19:15Z] DIRECTION: Karma2 PLAN final gaps added — H6 (resurrect spine path wrong), H7 (SADE file content spec), PRE-PHASE ccSessions/ input source. Plan now covers all known gaps.

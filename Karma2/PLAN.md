@@ -69,6 +69,8 @@ Applies to Phase 1-A, 1-B, 1-C individually. Not batch approval.
 | H3 | Resolve cc_scratchpad.md two-copy ambiguity | Exists on vault-neo AND K2. Sync state unknown. | One canonical copy or confirmed sync confirmed |
 | H4 | Mark B1+B2 resolved in active-issues.md | Both verified fixed session 109. Showing open creates false work queue. | active-issues.md updated |
 | H5 | Confirm B7 (KCC drift) cleared | KIKI fixed session 109. Need one clean cc_anchor_agent run. | No drift alert in next cc_anchor run |
+| H6 | Update resurrect skill Step 1b spine path | `C:\Users\raest\.claude\skills\resurrect\SKILL.md` line 66 reads `cc_identity_spine.json` — wrong. Canonical spine is `vesper_identity_spine.json` per Codex contract. Every session start loads wrong identity data. | Resurrect Step 1b reads `vesper_identity_spine.json` without error |
+| H7 | Specify SADE doctrine file content for H2 | H2 says "create the file" but not what goes in it. Content = Hyperrails, TDD Verification Aegis, TSS, SADE Execution Formula, Directive One — from resurrect skill SADE doctrine section. | File created with all 5 doctrine elements, CC reads it cleanly at cold start |
 
 ---
 
@@ -84,6 +86,10 @@ Why first: 108+ sessions document exactly how previous tool implementations fail
 - 10+ skill files in `.claude/skills/karma-pitfall-*.md`
 - PITFALL patterns written to `watchdog_extra_patterns.json` on K2 (closes CC→Vesper loop)
 - Nightly K2 cron for ongoing accumulation
+
+**Input sources (both required):**
+- IndexedDB via Claude-in-Chrome JS (108+ sessions from Claude desktop app)
+- `docs/ccSessions/*.md` — manually saved session transcripts (CCSession032026A.md exists now; ingest these FIRST as they're immediately available)
 
 **Plan:** `docs/plans/2026-03-20-session-ingestion-pipeline-plan.md`
 
@@ -203,6 +209,8 @@ From 6-item list (obs #8077):
 | P4 | P3-A | CLAUDE.md terminology mismatch | 🟡 Phase 3-A |
 | P4 | P3-B | Bus scope (CC/Codex noise) | 🟡 Phase 3-B |
 | P4 | P3-C | KCC scope undefined | 🟡 Phase 3-C |
+| **P0** | H6 | Resurrect skill reads `cc_identity_spine.json` (wrong — should be `vesper_identity_spine.json`) | 🔴 Silent wrong identity load every session |
+| **P0** | H7 | SADE doctrine file content unspecified | 🔴 H2 incomplete without content spec |
 
 ---
 
