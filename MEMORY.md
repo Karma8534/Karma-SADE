@@ -1588,7 +1588,7 @@ Karma can recall (FAISS) but cannot reason across sessions (no Entity/relationsh
 | sync-from-vault.sh pull | Every 6h | Pulls vault state to K2 |
 | sync-from-vault.sh push | Every 1h | Pushes K2 observations to vault |
 
-**Gap:** CC agents are outbound-only. No inbound reader for @cc bus messages yet.
+| cc_bus_reader.py | Every 2min | Reads bus `to: cc`, calls Anthropic haiku, posts response — **@cc reactive** |
 
 ## Known Pitfalls (active)
 - **hub-bridge Dockerfile build context = hub-bridge root (not app/)**: compose.hub.yml uses `context: .` + `dockerfile: app/Dockerfile`. Dockerfile COPYs `app/server.js` + `lib/`. server.js imports `./lib/pricing.js` (from /app). Tests import `../lib/pricing.js` (from hub-bridge/tests/).

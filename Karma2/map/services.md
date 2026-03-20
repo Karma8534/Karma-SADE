@@ -30,8 +30,9 @@ Both at: /opt/seed-vault/memory_v1/
 | sync-from-vault.sh pull | Every 6h | Pulls identity/invariants/direction/corrections from vault-neo to K2 |
 | sync-from-vault.sh push | Every 1h | Pushes k2_local_observations.jsonl to hub /v1/ambient |
 
-**CC agents are outbound-only** — they broadcast status to the bus but do NOT read/action inbound @cc messages.
-Missing piece: an inbound reader on K2 that watches bus for `to: cc` messages and triggers a CC session.
+| cc_bus_reader.py | Every 2min | Reads bus for `to: cc` messages, calls Anthropic API with CC identity, posts response back — **@cc is now reactive** |
+
+CC is now fully bidirectional on the bus.
 
 Chromium: /snap/bin/chromium + /usr/bin/chromium-browser (INSTALLED, last used 2026-03-09)
 K2 Ollama models: qwen3:8b (primary), qwen3.5:4b (fallback)
