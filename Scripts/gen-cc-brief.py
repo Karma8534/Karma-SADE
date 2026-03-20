@@ -180,6 +180,21 @@ def format_failures(lines):
     return "\n".join(bullets)
 
 
+def get_k2_crontab():
+    """Fetch K2 crontab via reverse tunnel so brief includes all running agents."""
+    try:
+        result = subprocess.run(
+            ["ssh", "-p", "2223", "-l", "karma", "-o", "StrictHostKeyChecking=no",
+             "-o", "ConnectTimeout=8", "localhost", "crontab -l"],
+            capture_output=True, text=True, timeout=15
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip()
+        return "K2 crontab unavailable"
+    except Exception as e:
+        return f"K2 crontab unavailable ({e})"
+
+
 def fetch_karma_context():
     """GET http://localhost:8340/raw-context and return trimmed context string."""
     try:
@@ -204,6 +219,7 @@ def main():
     decision_lines = read_jsonl_tail(DECISION_LOG, 3)
     failure_lines = read_jsonl_tail(FAILURE_LOG, 3)
     karma_context = fetch_karma_context()
+    k2_crontab = get_k2_crontab()
 
     # Load resurrection spine files
     identity_content = read_spine_file(IDENTITY_JSON, "identity.json")
@@ -259,6 +275,11 @@ Status: {git['status']}
 
 ## Karma Memory State
 {karma_context}
+
+## K2 Cron Agents (always running — not session-dependent)
+```
+{k2_crontab}
+```
 
 ---
 Generated: {now} | MEMORY.md last updated: {memory['last_updated']}

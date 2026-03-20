@@ -1578,6 +1578,18 @@ Karma can recall (FAISS) but cannot reason across sessions (no Entity/relationsh
 - FalkorDB graph name: `neo_workspace` (NOT `karma`)
 - Hub token path: `/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt`
 
+## K2 Cron Agents (always running — not session-dependent)
+| Script | Cadence | Role |
+|--------|---------|------|
+| cc_hourly_report.py | Every 1h | Posts CC/Karma status to bus (outbound only) |
+| cc_anchor_agent.py | Every 3h | Verifies CC identity rails; DRIFT ALERT if degraded |
+| kiki_pulse.py | Every 2h | Kiki governance heartbeat |
+| promote_shadow.py | Every 30min | Shadow pattern promotion |
+| sync-from-vault.sh pull | Every 6h | Pulls vault state to K2 |
+| sync-from-vault.sh push | Every 1h | Pushes K2 observations to vault |
+
+**Gap:** CC agents are outbound-only. No inbound reader for @cc bus messages yet.
+
 ## Known Pitfalls (active)
 - **hub-bridge Dockerfile build context = hub-bridge root (not app/)**: compose.hub.yml uses `context: .` + `dockerfile: app/Dockerfile`. Dockerfile COPYs `app/server.js` + `lib/`. server.js imports `./lib/pricing.js` (from /app). Tests import `../lib/pricing.js` (from hub-bridge/tests/).
 - **KARMA_IDENTITY_PROMPT**: hub-bridge reads system prompt from file at startup via `KARMA_SYSTEM_PROMPT_PATH`. File = `/karma/repo/Memory/00-karma-system-prompt-live.md` (volume-mounted). If file missing, WARN logged, identity block empty (hub still runs). Update cycle: git pull + docker restart only.
