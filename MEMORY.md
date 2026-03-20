@@ -59,12 +59,24 @@
 - GET /cc: browser chat UI (prompts for token, sends POST /cc in-page)
 - POST /cc: API endpoint (Bearer token required)
 
+## Session 111 — P0N-A verified live (2026-03-20)
+
+**DONE:**
+- hub.arknexus.net/cc CONFIRMED WORKING — CC Ascendant responds with identity + state
+- Docker container CAN reach P1:7891 via Tailscale direct (CC_SERVER_URL=http://100.124.194.102:7891)
+- cc_relay.py running on vault-neo host port 17891 as backup (not required)
+- PITFALL: 1.5h lost debugging already-working bridge — cc_server was simply down during initial test, auto-restart brought it back
+
+**OPEN BLOCKERS:**
+- K2 aria.service inactive (prevents cognitive snapshot writes)
+- cc_relay.py on vault-neo port 17891 — running but unnecessary, cleanup optional
+- Karma2/PLAN.md: still needs full implementation (HAUL ASS directive active)
+
 ## Next Session Starts Here
 1. `/resurrect`
-2. Start CC server if not running: `powershell -WindowStyle Hidden -File Scripts/start_cc_server.ps1`
-3. Verify bridge: `curl -s -X POST https://hub.arknexus.net/cc -H "Authorization: Bearer TOKEN" -H "Content-Type: application/json" -d '{"message":"who are you"}'`
-4. **HAUL ASS: Fully implement Karma2/PLAN.md to 100%.** Use superpowers:subagent-driven-development. TDD verify every component. Use superpowers:verification-before-completion before declaring anything done. Run until Karma2 plan = 100% implemented + 100% TDD verified + 100% optimal. If blockers: use superpowers to resolve, continue.
-**Blocker if any:** CC server needs to be running on P1 (KarmaWipWatcher scheduled task handles wip-watcher; cc_server needs start_cc_server.ps1).
+2. Bridge is live — verify with: open hub.arknexus.net/cc in browser
+3. **HAUL ASS: Fully implement Karma2/PLAN.md to 100%.** Use superpowers:subagent-driven-development. TDD verify every component. Use superpowers:verification-before-completion before declaring anything done.
+**Blocker if any:** CC server needs to be running on P1 (start_cc_server.ps1 auto-restart loop).
 
 ## Session 108 — Ground truth verification + K2 model fix (2026-03-20)
 
@@ -1984,9 +1996,9 @@ Recurring CC mistakes extracted from 108+ sessions must write to watchdog_extra_
 
 [2026-03-20T19:15Z] DIRECTION: Karma2 PLAN final gaps added — H6 (resurrect spine path wrong), H7 (SADE file content spec), PRE-PHASE ccSessions/ input source. Plan now covers all known gaps.
 
-## Session 110 � P0N-A Live (2026-03-20)
+## Session 110 � P0N-A Live (2026-03-20)
 - cc_server_p1.py: identity via --system-prompt, 300s timeout, --dangerously-skip-permissions
 - hub-bridge: CC_SERVER_URL=http://100.124.194.102:7891 + extra_hosts for container routing
 - hub.arknexus.net/cc VERIFIED end-to-end. Startup: KarmaCCServer.vbs in Startup folder.
-- Blocker: cc_server dies on P1 reboot � VBS handles auto-start at login.
+- Blocker: cc_server dies on P1 reboot � VBS handles auto-start at login.
 

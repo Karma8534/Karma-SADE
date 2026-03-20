@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-20T23:59:00Z
-**Session:** 109 COMPLETE (P3-D hooks live, 3 skills installed, Karma2 plan verified, P0N-A URGENT next)
+**Last updated:** 2026-03-21T02:00:00Z
+**Session:** 111 COMPLETE (P0N-A bridge verified live — hub.arknexus.net/cc working as CC Ascendant)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -113,14 +113,15 @@
 9. ~~**CC cohesion test pending**~~ — resume_block confirmed working in Session 97+.
 10. **B1: Evolution log sparsity** — 22/89,758 structured entries. Resolves with ~50 new Regent messages. Time-based, no code change needed. ETA 1-3 days.
 11. **B2: Synthetic stable patterns** — both stable patterns are Codex e2e artifacts (type=pipeline_e2e_validation). Cosmetic issue; real patterns will emerge as B1 resolves.
-12. **P0N-A URGENT** — hub.arknexus.net/cc route not yet built. Sovereign cannot communicate with CC via hub. Build first next session.
+12. ~~**P0N-A URGENT**~~ ✅ LIVE (Session 111) — hub.arknexus.net/cc working, CC Ascendant responds with identity + state.
 13. **P3-D** — ✅ LIVE as of session 109. Hooks deployed + committed. No longer a blocker.
+14. **K2 aria.service inactive** — prevents cognitive snapshots. Needs `systemctl --user start aria` on K2 WSL.
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Invoke `superpowers:executing-plans` with plan `docs/plans/2026-03-20-p0n-a-plan.md` — SOVEREIGN APPROVED, skip brainstorm, skip CONTEXT.md. Execute Task 1 → Task 2 → Task 3.
-3. Task 1 = start `Scripts/cc_server_p1.py` on P1 (port 7891). Task 2 = add /cc route to hub-bridge + deploy. Task 3 = end-to-end verify at hub.arknexus.net/cc.
-**Blocker if any:** P1 firewall may block 7891 — see plan Known Risks.
+2. Bridge is live — no setup needed. Verify: hub.arknexus.net/cc in browser.
+3. **HAUL ASS: Fully implement Karma2/PLAN.md to 100%** — superpowers:subagent-driven-development + TDD + verification-before-completion. Run until all phases done.
+**Blocker if any:** cc_server must be running (start_cc_server.ps1 loop on P1).
 
 ---
 
