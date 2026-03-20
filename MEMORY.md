@@ -5,7 +5,7 @@
 - Architecture revision: hub.arknexus.net/cc route (CC on P1 via Tailscale) + Channels replaces cc_bus_reader.py
 - Topology locked: P1=CC server+Channels | K2=Karma/Vesper/Aria/KCC | vault-neo=hub-bridge+FalkorDB
 - Phase 1 tools (browser/file/code) DEMOTED — delegate to CC instead of duplicating
-- KCC: GLM → qwen3:8b on K2 (local model, drops external API dependency)
+- KCC: PS KCC (C:\Users\karma, Claude Code v2.1.80 on P1) + GLM primary (funded) + Haiku 4.5 fallback. WSL GLM KCC decommissioned.
 - H1 FIXED: import subprocess added to Scripts/cc_bus_reader.py
 - H2/H7 RESOLVED: SADE doctrine file already exists at for-karma/SADE — Canonical Definitions.txt
 - data-map.md created as auto-loading canonical path index
@@ -24,13 +24,14 @@
 **OPEN BLOCKERS:**
 - H3: cc_scratchpad.md two copies (vault-neo + K2) sync unknown
 - B4+B5: Vesper→Karma bridge dead — Phase 0 (after PRE-PHASE)
-- P0N-A/B/C: Sovereign approval pending (hub.arknexus.net/cc, Channels, KCC model)
+- P0N-A/B/C: ✅ ALL APPROVED (session 109) — build queue: hub.arknexus.net/cc, Channels bridge, PS KCC + GLM
 - Codex: not installed (Current_Plan/Codex Installer.exe)
 - B8: regent restart loop root cause undiagnosed
 
 ## Next Session Starts Here
 1. `/resurrect` → execute `docs/plans/2026-03-20-session-ingestion-pipeline-plan.md` Task 1 (IndexedDB schema via Claude-in-Chrome). Claude desktop must be open.
-2. Approve P0N-A/B/C on bus if ready (hub.arknexus.net/cc + Channels + KCC model)
+2. Build P0N-A: add `/cc` route to hub-bridge on vault-neo, proxy to P1 CC via Tailscale (100.124.194.102). Gate: hit hub.arknexus.net/cc from browser, CC responds.
+3. Build P0N-C: configure PS KCC (C:\Users\karma) — GLM primary + Haiku fallback, decommission WSL GLM KCC.
 **Blocker if any:** Claude desktop app must be running for IndexedDB access
 
 ## Session 108 — Ground truth verification + K2 model fix (2026-03-20)

@@ -102,26 +102,26 @@ Why first: 108+ sessions document exactly how previous tool implementations fail
 
 **Why before PHASE 0:** CC on P1 already has browser, filesystem, Bash, and code execution natively. Building hub-bridge wrappers (Phase 1-A/B/C) duplicates CC's native tooling. Correct pattern: Karma delegates to CC via coordination bus and `/cc` route — matching Initiate→Ascendant hierarchy.
 
-**P0N-A: hub.arknexus.net/cc — CC proxy (server on P1)**
+**P0N-A: hub.arknexus.net/cc — CC proxy (server on P1)** ✅ APPROVED
 - CC persistent server runs on **P1** (Windows, 64GB RAM, all CC memory/auth/state lives here)
 - hub-bridge adds `/cc` route proxying to P1 CC server via Tailscale (100.124.194.102)
-- Auth: same Bearer token as `/v1/chat`
+- Auth: **same bridge Bearer token as `/v1/chat`** (zero new auth surface, same token)
 - Gate: Colby hits hub.arknexus.net/cc from browser, CC on P1 responds with full local capabilities
 - **Eliminates: dependency on claude.ai/code, Telegram, any Anthropic web property**
-- Sovereign approval: REQUIRED
 
-**P0N-B: Channels custom bridge (coordination bus → P1 CC)**
+**P0N-B: Channels custom bridge (coordination bus → P1 CC)** ✅ APPROVED
 - Custom CC channel on P1 replaces cc_bus_reader.py (broken haiku proxy on K2)
 - Pushes coordination bus messages directly into CC session on P1
 - Full Sonnet 4.6 intelligence, no 2-min polling lag
 - Gate: coordination bus message addressed to `cc` triggers CC response within 30s
-- Sovereign approval: REQUIRED
 
-**P0N-C: KCC → qwen3:8b on K2 (drop GLM)**
-- KCC stays on K2; switch model to `http://localhost:11434/v1`, model `qwen3:8b`
-- Zero external API dependency, same-machine inference
-- Gate: KCC posts valid drift alert using qwen3:8b, no GLM calls in logs
-- Sovereign approval: REQUIRED
+**P0N-C: KCC canonical instance — PS KCC + GLM primary + Haiku fallback** ✅ APPROVED
+- **Canonical instance:** PS KCC (`C:\Users\karma`, Claude Code v2.1.80 on P1 Windows)
+- **Primary model:** GLM (funded Coding Plan — zero marginal cost, already provisioned)
+- **Fallback model:** `claude-haiku-4-5-20251001` if GLM API unavailable
+- **Decommission:** WSL GLM KCC (redundant once PS KCC owns GLM) + remove codestral-2508 from PS KCC config
+- KCC stays on P1 Windows (`karma` user) — consistent with where Claude Code already runs
+- Gate: PS KCC posts valid drift alert using GLM, fallback confirmed with Haiku on GLM failure
 
 ---
 
@@ -161,12 +161,12 @@ Why first: 108+ sessions document exactly how previous tool implementations fail
 These were hub-bridge wrappers around K2 capabilities. With `/cc` route operational, Karma delegates to CC instead of duplicating CC's native tooling.
 
 **Status after P0N:**
-- 1-A (browser): REDUNDANT — CC on K2 has Playwright MCP natively
-- 1-B (file R/W): REDUNDANT — CC on K2 has full filesystem access
-- 1-C (code exec): REDUNDANT — CC on K2 has Bash tool
+- 1-A (browser): REDUNDANT — CC on P1 has Playwright MCP natively
+- 1-B (file R/W): REDUNDANT — CC on P1 has full filesystem access
+- 1-C (code exec): REDUNDANT — CC on P1 has Bash tool
 - 1-D (cowork): SOLVED — `/cc` route = native collaboration via hub.arknexus.net
 
-**Fallback condition:** If P0N-A fails (CC process management on K2 proves unstable), Phase 1-A/B/C reactivate as direct hub-bridge tools. This is the contingency, not the plan.
+**Fallback condition:** If P0N-A fails (CC proxy to P1 via Tailscale proves unstable), Phase 1-A/B/C reactivate as direct hub-bridge tools on K2. This is the contingency, not the plan.
 
 ---
 
@@ -221,9 +221,9 @@ From 6-item list (obs #8077):
 | P2 | B6 | Dedup ring memory-only | 🟡 Phase 0-D |
 | P2 | B8 | Regent restart loop | 🟡 Undiagnosed, Phase 0-E |
 | P3 | B7 | KCC drift alerts | 🟡 KIKI fixed — awaiting confirm |
-| P1 | P0N-A | hub.arknexus.net/cc (CC on P1 via Tailscale) | 🟡 Needs Sovereign approval |
-| P1 | P0N-B | Channels bridge (bus → P1 CC) | 🟡 Needs Sovereign approval |
-| P1 | P0N-C | KCC: GLM → qwen3:8b on K2 | 🟡 Needs Sovereign approval |
+| — | P0N-A | hub.arknexus.net/cc (CC on P1 via Tailscale) | ✅ APPROVED (session 109) |
+| — | P0N-B | Channels bridge (bus → P1 CC) | ✅ APPROVED (session 109) |
+| — | P0N-C | KCC: PS KCC + GLM primary + Haiku fallback | ✅ APPROVED (session 109) |
 | P4 | P3-A | CLAUDE.md terminology mismatch | 🟡 Phase 3-A |
 | P4 | P3-B | Bus scope (CC/Codex noise) | 🟡 Phase 3-B |
 | P4 | P3-C | KCC scope undefined | 🟡 Phase 3-C |
@@ -237,7 +237,7 @@ From 6-item list (obs #8077):
 - **CC server runs on P1** — CC state/auth/memory all on P1. K2 runs Karma/Vesper/Aria/KCC. Don't overload K2.
 - **Topology**: P1=CC server+Channels | K2=Karma/Vesper/Aria/KCC | vault-neo=hub-bridge+FalkorDB+FAISS
 - **Phase 1 tools DEMOTED** — delegate to CC (via bus + /cc route) rather than duplicate CC's native capabilities.
-- **KCC → qwen3:8b on K2** — stays on K2, local model (localhost:11434), drops GLM external dependency.
+- **KCC: PS KCC (C:\Users\karma, Claude Code v2.1.80 on P1 Windows)** — GLM Coding Plan (funded, zero marginal cost) as primary; claude-haiku-4-5-20251001 as fallback if GLM unavailable. WSL GLM KCC decommissioned. codestral-2508 removed from PS KCC config.
 - **Sovereign approval before each P0N item** — per SovereignPeer contract policy (capability additions)
 - **CLAUDE.md ≠ Karma's system prompt** — separate documents that must align, currently don't
 - **KCC is Archon, not peer** — direct, don't collaborate as equals
