@@ -12,11 +12,29 @@
 
 **PITFALL:** Resurrect protocol skipped this session — jumped to TDD without completing Steps 0-3e. Caused false diagnosis (declared nemotron wrong before live test). Strike received then removed for honesty.
 
+## Session 109 — Codex identity merge + ground-truth map (2026-03-20)
+
+**DONE:**
+- Deployed Codex's KARMA identity fix: regent.html (675 lines) + agora.html (998 lines) to hub-bridge build context
+- Rebuilt hub-bridge --no-cache, both /regent and /agora return 200 verified
+- Identity split locked: Karma = persona (UI/spine name), Vesper = runtime process label only
+- Karma2/ ground-truth map created: services, identity-state, file-structure, tools-and-apis, data-flows, active-issues
+- Karma2/PLAN.md: baseline capability roadmap (Phase 1 gaps close, Phase 2 Vesper evolution)
+- Karma2/karma_contract_policy.md + karma_contract_execution.md: policy/execution split per Codex
+
+**OPEN BLOCKERS:**
+- Regent restart loop: 3 crashes in 1 min at session-start — root cause not diagnosed (B8)
+- P1_OLLAMA_MODEL=nemotron-mini:latest in /etc/karma-regent.env — verify P1 models (B3)
+- KCC drift alert: 5 consecutive runs undiagnosed (B7)
+- All 20 stable spine patterns are cascade_performance only — watchdog not extracting diversity (B4)
+
+**DIRECTION:** Operational/strategic work should route through Karma (hub.arknexus.net) not CC. CC = code changes only. Context bloat from resurrect overhead (~15K tokens per session) makes CC wrong tool for ongoing cognitive loop.
+
 ## Next Session Starts Here
-1. `/resurrect` — do NOT skip Steps 0-3e (identity baseline, spine, SADE doctrine, brief, claude-mem, health, bus)
-2. Diagnose Regent restart loop (3 crashes in 1 min — check systemd journal on K2)
-3. Fix P1_OLLAMA_MODEL in karma-regent.env (currently nemotron-mini:latest, should be a model that exists on P1)
-**Blocker:** Regent restart loop may be crashing on qwen3:8b first-call latency — check logs before assuming model issue.
+1. `/resurrect`
+2. Verify Codex's identity fix visible at hub.arknexus.net/regent (KARMA labels in UI)
+3. Diagnose B3 (P1_OLLAMA_MODEL), B7 (KCC drift), B8 (restart loop)
+4. Session ingestion pipeline — implement writing-plans → extract IndexedDB sessions via Claude-in-Chrome
 
 ---
 

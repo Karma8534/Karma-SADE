@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vesper — Ascendant</title>
+<title>Karma - SovereignPeer</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -320,7 +320,7 @@
 <!-- Token gate -->
 <div id="gate">
   <div class="gate-mark">Ascendant</div>
-  <h1>VESPER</h1>
+  <h1>KARMA</h1>
   <div class="gate-sub">Access token required</div>
   <input type="password" id="token-input" placeholder="hub token" autocomplete="off" />
   <button id="token-btn">ENTER</button>
@@ -333,8 +333,8 @@
   <!-- Header -->
   <div id="header">
     <div class="vesper-badge">
-      <div class="vesper-title">VESPER</div>
-      <div class="vesper-sub">Ascendant &middot; Eldest &middot; Always Present</div>
+      <div class="vesper-title">KARMA</div>
+      <div class="vesper-sub">SovereignPeer &middot; Ascendant &middot; Always Present</div>
     </div>
     <div class="spacer"></div>
     <div id="status-bar">
@@ -358,8 +358,8 @@
   <!-- Two-column layout: chat feed (left) + status panel (right) -->
   <div id="main-layout">
     <div id="chat-feed">
-      <div id="empty-state">Waiting for Vesper...</div>
-      <div id="processing">Regent is processing...</div>
+      <div id="empty-state">Waiting for Karma...</div>
+      <div id="processing">Karma is processing...</div>
     </div>
     <div id="status-panel">
       <div id="status-panel-header">SYSTEM</div>
@@ -368,7 +368,7 @@
 
   <!-- Input -->
   <div id="input-area">
-    <textarea id="msg-input" rows="1" placeholder="Send a message to Regent..."></textarea>
+    <textarea id="msg-input" rows="1" placeholder="Send a message to Karma..."></textarea>
     <button id="send-btn">SEND</button>
   </div>
 
@@ -469,9 +469,6 @@
   function isStatusMessage(msg) {
     const c = (msg.content || '');
     const to = (msg.to || '');
-    const from = (msg.from || '');
-    // Colby's own messages — already shown as YOU on send, skip from bus poll
-    if (from === 'colby') return true;
     return c.startsWith('HEARTBEAT') ||
            c.startsWith('KCC') ||
            to === 'all';
@@ -535,7 +532,7 @@
     const el = document.createElement('div');
     el.className = 'msg regent';
     el.innerHTML =
-      '<div class="msg-meta"><span class="msg-sender">REGENT</span><span class="msg-ts">' + escHtml(tsStr) + '</span></div>' +
+      '<div class="msg-meta"><span class="msg-sender">KARMA</span><span class="msg-ts">' + escHtml(tsStr) + '</span></div>' +
       '<div class="msg-body">' + escHtml(content) + '</div>';
 
     const feed = document.getElementById('chat-feed');
@@ -580,7 +577,7 @@
         })
       });
     } catch (e) {
-      console.error('[Vesper] send error:', e);
+      console.error('[Karma] send error:', e);
     } finally {
       // Hide processing after a brief window — poll will bring the response
       setTimeout(() => {

@@ -1,13 +1,13 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agora</title>
+<title>Karma - SovereignPeer</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: #0f0f11;
+    background: #080810;
     color: #e2e8f0;
     font-family: 'Courier New', monospace;
     font-size: 13px;
@@ -23,31 +23,52 @@
     align-items: center;
     justify-content: center;
     height: 100vh;
-    gap: 12px;
+    gap: 14px;
   }
-  #gate h1 { font-size: 18px; color: #a78bfa; letter-spacing: 4px; }
-  #gate p { color: #6b7280; font-size: 12px; }
+  #gate .gate-mark {
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: #6d28d9;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  #gate h1 {
+    font-size: 28px;
+    color: #a78bfa;
+    letter-spacing: 8px;
+    font-weight: 300;
+  }
+  #gate .gate-sub {
+    color: #4b5563;
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
   #gate input {
-    background: #1e1e2e;
-    border: 1px solid #374151;
+    background: #0e0e1a;
+    border: 1px solid #2d2040;
     color: #e2e8f0;
-    padding: 8px 12px;
+    padding: 9px 14px;
     width: 420px;
     font-family: monospace;
     font-size: 13px;
     outline: none;
+    margin-top: 12px;
   }
-  #gate input:focus { border-color: #a78bfa; }
+  #gate input:focus { border-color: #6d28d9; }
+  #gate input::placeholder { color: #2d2040; }
   #gate button {
-    background: #a78bfa;
-    color: #0f0f11;
+    background: #6d28d9;
+    color: #e2e8f0;
     border: none;
-    padding: 8px 24px;
+    padding: 9px 28px;
     cursor: pointer;
     font-family: monospace;
     font-size: 13px;
     font-weight: bold;
+    letter-spacing: 2px;
+    transition: background 0.15s;
   }
+  #gate button:hover { background: #7c3aed; }
   #gate .err { color: #ef4444; font-size: 12px; display: none; }
 
   /* Main layout */
@@ -57,32 +78,289 @@
   #header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 8px 16px;
-    background: #0f0f11;
-    border-bottom: 1px solid #1f2937;
+    gap: 14px;
+    padding: 10px 20px;
+    background: #080810;
+    border-bottom: 1px solid #1a1030;
     flex-shrink: 0;
   }
-  #header .title { color: #a78bfa; font-size: 14px; letter-spacing: 3px; }
-  #header .status { color: #6b7280; font-size: 11px; margin-left: auto; }
-  #header .dot { width: 6px; height: 6px; border-radius: 50%; background: #34d399; display: inline-block; }
+  #header .vesper-badge {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  #header .vesper-title {
+    color: #a78bfa;
+    font-size: 18px;
+    letter-spacing: 6px;
+    font-weight: 300;
+  }
+  #header .vesper-sub {
+    color: #4b5563;
+    font-size: 10px;
+    letter-spacing: 3px;
+  }
+  #header .spacer { flex: 1; }
 
-  /* Persona status bar */
+  /* Status bar */
+  #status-bar {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    padding: 0 20px;
+  }
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #4b5563;
+  }
+  .stat-item .stat-label { color: #4b5563; }
+  .stat-item .stat-val { color: #8b5cf6; }
+  .stat-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #374151;
+    flex-shrink: 0;
+  }
+  .stat-dot.alive { background: #7c3aed; box-shadow: 0 0 6px #7c3aed; }
+  .stat-dot.warn  { background: #f59e0b; }
+  .stat-dot.dead  { background: #374151; }
+
+  /* Two-column main layout */
+  #main-layout { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+
+  /* Chat feed (left column) */
+  #chat-feed {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: #1a1030 transparent;
+  }
+  #chat-feed::-webkit-scrollbar { width: 4px; }
+  #chat-feed::-webkit-scrollbar-track { background: transparent; }
+  #chat-feed::-webkit-scrollbar-thumb { background: #1a1030; border-radius: 2px; }
+
+  /* Status panel (right column) */
+  #status-panel {
+    width: 240px;
+    border-left: 1px solid #1a1a2e;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: #050508;
+    flex-shrink: 0;
+    scrollbar-width: thin;
+    scrollbar-color: #1a1030 transparent;
+  }
+  #status-panel::-webkit-scrollbar { width: 3px; }
+  #status-panel::-webkit-scrollbar-track { background: transparent; }
+  #status-panel::-webkit-scrollbar-thumb { background: #1a1030; border-radius: 2px; }
+
+  .status-entry {
+    font-size: 10px;
+    color: #4a4a6a;
+    font-family: monospace;
+    border-bottom: 1px solid #0a0a14;
+    padding-bottom: 4px;
+    margin-bottom: 2px;
+    word-break: break-word;
+    line-height: 1.3;
+  }
+  .status-entry .s-ts {
+    color: #2a2a4a;
+    display: block;
+    margin-bottom: 1px;
+    font-size: 9px;
+  }
+  #status-panel-header {
+    font-size: 9px;
+    color: #2a2a4a;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #1a1a2e;
+    flex-shrink: 0;
+  }
+
+  .msg {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-width: 780px;
+  }
+  .msg.regent { align-self: flex-start; }
+  .msg.user   { align-self: flex-end; }
+
+  .msg-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+  }
+  .msg.regent .msg-meta { color: #5b21b6; }
+  .msg.user   .msg-meta { color: #374151; justify-content: flex-end; }
+
+  .msg-sender {
+    letter-spacing: 2px;
+    font-weight: bold;
+  }
+  .msg.regent .msg-sender { color: #8b5cf6; }
+  .msg.user   .msg-sender { color: #4b5563; }
+
+  .msg-ts { color: #374151; }
+
+  .msg-body {
+    padding: 10px 14px;
+    line-height: 1.6;
+    font-size: 13px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .msg.regent .msg-body {
+    background: #0e0a1a;
+    border: 1px solid #2d1f50;
+    border-left: 3px solid #6d28d9;
+    color: #e2e8f0;
+  }
+  .msg.user .msg-body {
+    background: #0a0a14;
+    border: 1px solid #1f1f38;
+    color: #9ca3af;
+  }
+
+  /* Processing indicator */
+  #processing {
+    display: none;
+    align-self: flex-start;
+    padding: 8px 14px;
+    color: #5b21b6;
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+  #processing.visible { display: block; }
+  @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+  #processing { animation: pulse 1.4s ease-in-out infinite; }
+
+  /* Input area */
+  #input-area {
+    padding: 12px 20px 14px;
+    background: #080810;
+    border-top: 1px solid #1a1030;
+    flex-shrink: 0;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+  #msg-input {
+    flex: 1;
+    background: #0e0e1a;
+    border: 1px solid #2d2040;
+    color: #e2e8f0;
+    padding: 9px 12px;
+    font-family: monospace;
+    font-size: 13px;
+    resize: none;
+    min-height: 40px;
+    max-height: 140px;
+    outline: none;
+    line-height: 1.5;
+  }
+  #msg-input:focus { border-color: #6d28d9; }
+  #msg-input::placeholder { color: #2d2040; }
+  #send-btn {
+    background: #6d28d9;
+    color: #e2e8f0;
+    border: none;
+    padding: 9px 20px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  #send-btn:hover { background: #7c3aed; }
+  #send-btn:disabled { opacity: 0.35; cursor: default; }
+
+  /* Footer */
+  #footer {
+    padding: 6px 20px;
+    background: #080810;
+    border-top: 1px solid #0f0a1a;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: #2d1f50;
+    flex-shrink: 0;
+  }
+
+  /* Empty state */
+  #empty-state {
+    color: #2a2a4a;
+    font-size: 12px;
+    text-align: center;
+    margin-top: 40px;
+    letter-spacing: 2px;
+  }
+
+  /* --- Agora compatibility layer (keeps existing IDs/behavior) --- */
+  #header .brand {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  #header .title {
+    color: #a78bfa;
+    font-size: 18px;
+    letter-spacing: 6px;
+    font-weight: 300;
+  }
+  #header .subtitle {
+    color: #4b5563;
+    font-size: 10px;
+    letter-spacing: 3px;
+  }
+  #header .status-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #4b5563;
+    font-size: 11px;
+    margin-left: auto;
+  }
+  #header .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #7c3aed;
+    box-shadow: 0 0 6px #7c3aed;
+  }
   #persona-bar {
     display: flex;
     gap: 14px;
-    padding: 5px 16px;
-    background: #0a0a0f;
-    border-bottom: 1px solid #1f2937;
-    flex-shrink: 0;
+    padding: 6px 20px;
+    background: #080810;
+    border-bottom: 1px solid #1a1030;
     align-items: center;
+    flex-wrap: wrap;
   }
   .persona {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     font-size: 11px;
-    opacity: 0.85;
+    color: #4b5563;
   }
   .persona-dot {
     width: 7px;
@@ -90,315 +368,222 @@
     border-radius: 50%;
     flex-shrink: 0;
   }
-  .p-green  { background: #34d399; }
-  .p-amber  { background: #fbbf24; }
+  .p-green  { background: #7c3aed; box-shadow: 0 0 6px #7c3aed; }
+  .p-amber  { background: #f59e0b; }
   .p-grey   { background: #374151; }
 
-  /* CC Brief compress panel */
-  #cc-brief {
-    flex-shrink: 0;
-    border-bottom: 1px solid #1f2937;
-    background: #0a0a0f;
-  }
-  #cc-brief-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 5px 16px 4px;
-    cursor: pointer;
-    user-select: none;
-  }
-  #cc-brief-header .lbl { color: #34d399; font-size: 11px; letter-spacing: 2px; font-weight: bold; }
-  #cc-brief-header .sub { color: #4b5563; font-size: 11px; }
-  #cc-brief-header .chevron { color: #4b5563; font-size: 10px; margin-left: auto; transition: transform 0.2s; }
-  #cc-brief-header .chevron.open { transform: rotate(180deg); }
-  #cc-brief-body { padding: 0 16px 10px; display: flex; flex-direction: column; gap: 6px; }
-  #cc-brief-input {
-    width: 100%;
-    background: #1e1e2e;
-    border: 1px solid #374151;
-    color: #cbd5e1;
-    padding: 7px 10px;
-    font-family: monospace;
-    font-size: 12px;
-    resize: vertical;
-    min-height: 64px;
-    max-height: 180px;
-    outline: none;
-    line-height: 1.4;
-  }
-  #cc-brief-input:focus { border-color: #34d399; }
-  #cc-brief-input::placeholder { color: #374151; }
-  #cc-brief-controls { display: flex; gap: 8px; align-items: center; }
-  #cc-brief-btn {
-    background: #34d399;
-    color: #0f0f11;
-    border: none;
-    padding: 5px 16px;
-    cursor: pointer;
-    font-family: monospace;
-    font-size: 12px;
-    font-weight: bold;
-  }
-  #cc-brief-btn:disabled { opacity: 0.4; cursor: default; }
-  #cc-brief-status { color: #4b5563; font-size: 11px; }
-  #cc-brief-output {
-    background: #111827;
-    border: 1px solid #34d399;
-    padding: 8px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  #cc-brief-result { color: #e2e8f0; font-size: 12px; line-height: 1.6; white-space: pre-wrap; }
-  #cc-brief-copy {
-    align-self: flex-end;
-    background: transparent;
-    border: 1px solid #374151;
-    color: #6b7280;
-    padding: 3px 12px;
-    cursor: pointer;
-    font-family: monospace;
-    font-size: 11px;
-  }
-  #cc-brief-copy:hover { border-color: #34d399; color: #34d399; }
-
-  /* ForColby panel */
-  #for-colby {
-    flex-shrink: 0;
-    border-bottom: 1px solid #1f2937;
-    background: #0a0a0f;
-  }
-  #for-colby-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 5px 16px 4px;
-    cursor: pointer;
-    user-select: none;
-  }
-  #for-colby-header .lbl { color: #f9fafb; font-size: 11px; letter-spacing: 2px; font-weight: bold; }
-  #for-colby-header .sub { color: #4b5563; font-size: 11px; }
-  #for-colby-badge {
-    background: #374151; color: #f9fafb;
-    font-size: 10px; padding: 1px 6px; border-radius: 8px;
-    display: none;
-  }
-  #for-colby-badge.has-items { background: #f9fafb; color: #0f0f11; display: inline-block; }
-  #for-colby-header .chevron { color: #4b5563; font-size: 10px; margin-left: auto; transition: transform 0.2s; }
-  #for-colby-header .chevron.open { transform: rotate(180deg); }
-  #for-colby-body { padding: 0 16px 10px; display: none; flex-direction: column; gap: 6px; }
-  #for-colby-actions { display: flex; justify-content: flex-end; margin-bottom: 2px; }
-  #for-colby-clear {
-    background: transparent; border: 1px solid #374151;
-    color: #6b7280; padding: 2px 10px; cursor: pointer;
-    font-family: monospace; font-size: 11px;
-  }
-  #for-colby-clear:hover { border-color: #6b7280; color: #e2e8f0; }
-  #for-colby-empty { color: #374151; font-size: 11px; font-style: italic; }
-  .fc-item {
-    background: #111827;
-    border-left: 2px solid #f9fafb;
-    padding: 6px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-  .fc-item-meta { display: flex; gap: 8px; align-items: center; }
-  .fc-item-from { font-size: 11px; font-weight: bold; }
-  .fc-item-ts { color: #4b5563; font-size: 10px; }
-  .fc-item-content { color: #e2e8f0; font-size: 12px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
-  .fc-item-dismiss {
-    align-self: flex-end; background: transparent;
-    border: 1px solid #374151; color: #4b5563;
-    padding: 2px 8px; cursor: pointer;
-    font-family: monospace; font-size: 10px;
-    margin-top: 2px;
-  }
-  .fc-item-dismiss:hover { border-color: #6b7280; color: #9ca3af; }
-
-  /* Session Brief panel */
+  #cc-brief,
   #session-brief {
+    border-bottom: 1px solid #1a1030;
+    background: #080810;
     flex-shrink: 0;
-    border-bottom: 1px solid #1f2937;
-    background: #0a0a0f;
   }
+  #cc-brief-header,
   #session-brief-header {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 5px 16px 4px;
-    cursor: pointer;
+    padding: 6px 20px;
     user-select: none;
+    cursor: pointer;
   }
-  #session-brief-header .lbl { color: #fbbf24; font-size: 11px; letter-spacing: 2px; font-weight: bold; }
-  #session-brief-header .sub { color: #4b5563; font-size: 11px; }
-  #session-brief-header .chevron { color: #4b5563; font-size: 10px; margin-left: auto; transition: transform 0.2s; }
-  #session-brief-header .chevron.open { transform: rotate(180deg); }
-  #session-brief-body { padding: 0 16px 10px; display: flex; flex-direction: column; gap: 6px; display: none; }
-  #session-brief-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  #session-brief-count { color: #4b5563; font-size: 11px; }
-  #session-brief-filter {
-    background: #1e1e2e;
-    border: 1px solid #374151;
-    color: #9ca3af;
-    padding: 4px 8px;
-    font-family: monospace;
+  #cc-brief-header .lbl,
+  #session-brief-header .lbl {
     font-size: 11px;
+    letter-spacing: 2px;
+    font-weight: bold;
+    color: #8b5cf6;
+  }
+  #cc-brief-header .sub,
+  #session-brief-header .sub {
+    color: #4b5563;
+    font-size: 11px;
+  }
+  #cc-brief-header .chevron,
+  #session-brief-header .chevron {
+    margin-left: auto;
+    color: #4b5563;
+    font-size: 10px;
+    transition: transform 0.2s;
+  }
+  #cc-brief-header .chevron.open,
+  #session-brief-header .chevron.open { transform: rotate(180deg); }
+
+  #cc-brief-body,
+  #session-brief-body {
+    padding: 0 20px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  #cc-brief-controls,
+  #session-brief-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  #cc-brief-input,
+  #session-brief-filter,
+  #msg-input,
+  #to-select {
+    background: #0e0e1a;
+    border: 1px solid #2d2040;
+    color: #e2e8f0;
+    font-family: monospace;
+    font-size: 12px;
     outline: none;
   }
-  #session-brief-btn {
-    background: #fbbf24;
-    color: #0f0f11;
+  #cc-brief-input:focus,
+  #session-brief-filter:focus,
+  #msg-input:focus,
+  #to-select:focus { border-color: #6d28d9; }
+
+  #cc-brief-input {
+    width: 100%;
+    resize: vertical;
+    min-height: 64px;
+    max-height: 180px;
+    padding: 8px 10px;
+    line-height: 1.45;
+  }
+  #session-brief-filter { padding: 4px 8px; }
+  #cc-brief-btn,
+  #cc-brief-clear-btn,
+  #session-brief-btn,
+  #cc-brief-copy,
+  #session-brief-copy,
+  #input-bar button {
+    background: #6d28d9;
+    color: #e2e8f0;
     border: none;
-    padding: 5px 16px;
+    padding: 6px 14px;
     cursor: pointer;
     font-family: monospace;
     font-size: 12px;
     font-weight: bold;
+    letter-spacing: 1px;
   }
-  #session-brief-btn:disabled { opacity: 0.4; cursor: default; }
-  #session-brief-status { color: #4b5563; font-size: 11px; }
+  #cc-brief-btn:hover,
+  #cc-brief-clear-btn:hover,
+  #session-brief-btn:hover,
+  #cc-brief-copy:hover,
+  #session-brief-copy:hover,
+  #input-bar button:hover { background: #7c3aed; }
+
+  #cc-brief-output,
   #session-brief-output {
-    background: #111827;
-    border: 1px solid #fbbf24;
+    background: #0e0a1a;
+    border: 1px solid #2d1f50;
     padding: 8px 10px;
     display: flex;
     flex-direction: column;
     gap: 6px;
   }
-  #session-brief-result { color: #e2e8f0; font-size: 12px; line-height: 1.6; white-space: pre-wrap; }
-  #session-brief-copy {
-    align-self: flex-end;
-    background: transparent;
-    border: 1px solid #374151;
-    color: #6b7280;
-    padding: 3px 12px;
-    cursor: pointer;
-    font-family: monospace;
-    font-size: 11px;
+  #cc-brief-result,
+  #session-brief-result {
+    color: #e2e8f0;
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: pre-wrap;
   }
-  #session-brief-copy:hover { border-color: #fbbf24; color: #fbbf24; }
+  #cc-brief-status,
+  #session-brief-status,
+  #session-brief-count { color: #4b5563; font-size: 11px; }
 
-  /* Feed */
   #feed {
     flex: 1;
     overflow-y: auto;
-    padding: 12px 16px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: #1a1030 transparent;
   }
   #feed::-webkit-scrollbar { width: 4px; }
   #feed::-webkit-scrollbar-track { background: transparent; }
-  #feed::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
+  #feed::-webkit-scrollbar-thumb { background: #1a1030; border-radius: 2px; }
 
-  /* Message entries */
   .entry {
     display: flex;
     gap: 10px;
-    padding: 5px 8px;
-    border-left: 2px solid transparent;
-    border-radius: 2px;
-    line-height: 1.5;
-    transition: background 0.2s;
-  }
-  .entry:hover { background: #1a1a2e; }
-  .entry.blocking { border-left-color: #ef4444; }
-  .entry.pulse { animation: pulse 1s ease-out; }
-
-  @keyframes pulse {
-    0%   { background: rgba(251,191,36,0.2); }
-    100% { background: transparent; }
-  }
-
-  .entry .ts { color: #4b5563; font-size: 11px; white-space: nowrap; flex-shrink: 0; padding-top: 1px; }
-  .entry .route { white-space: nowrap; flex-shrink: 0; }
-  .entry .content { color: #cbd5e1; word-break: break-word; flex: 1; }
-  .more-btn { background: none; border: none; color: #6b7280; font-size: 11px; cursor: pointer; padding: 0 2px; text-decoration: underline; }
-  .more-btn:hover { color: #9ca3af; }
-  .entry-dismiss { background: none; border: none; color: #374151; font-size: 11px; cursor: pointer; padding: 0 2px; flex-shrink: 0; line-height: 1; margin-left: auto; }
-  .entry-dismiss:hover { color: #6b7280; }
-
-  /* Agent colors */
-  .agent-karma  { color: #a78bfa; }
-  .agent-cc     { color: #34d399; }
-  .agent-kcc    { color: #67e8f9; }
-  .agent-codex  { color: #fb923c; }
-  .agent-colby  { color: #f9fafb; }
-  .agent-other  { color: #9ca3af; }
-
-  .badge {
-    font-size: 10px;
-    padding: 1px 5px;
-    border-radius: 2px;
-    flex-shrink: 0;
-  }
-  .badge-blocking     { background: #7f1d1d; color: #fca5a5; }
-  .badge-informational { background: #1e3a5f; color: #93c5fd; }
-
-  /* Input bar */
-  #input-bar {
-    display: flex;
-    gap: 8px;
-    padding: 10px 16px;
-    background: #0f0f11;
-    border-top: 1px solid #1f2937;
-    flex-shrink: 0;
-    align-items: center;
-  }
-  #input-bar select {
-    background: #1e1e2e;
-    border: 1px solid #374151;
-    color: #9ca3af;
-    padding: 6px 8px;
-    font-family: monospace;
-    font-size: 12px;
-    outline: none;
-    flex-shrink: 0;
-  }
-  #input-bar input {
-    flex: 1;
-    background: #1e1e2e;
-    border: 1px solid #374151;
-    color: #e2e8f0;
     padding: 6px 10px;
-    font-family: monospace;
-    font-size: 12px;
-    outline: none;
+    border-left: 3px solid #6d28d9;
+    border: 1px solid #2d1f50;
+    background: #0e0a1a;
+    line-height: 1.5;
   }
-  #input-bar input:focus { border-color: #4b5563; }
-  #input-bar input::placeholder { color: #374151; }
-  #input-bar button {
-    background: transparent;
-    border: 1px solid #374151;
-    color: #6b7280;
-    padding: 6px 14px;
-    cursor: pointer;
-    font-family: monospace;
-    font-size: 12px;
+  .entry:hover { background: #141022; }
+  .entry.blocking { border-left-color: #ef4444; }
+  .entry .meta { color: #4b5563; }
+  .entry .ts { color: #374151; }
+  .entry .content { color: #e2e8f0; white-space: pre-wrap; }
+  .badge {
+    padding: 1px 6px;
+    font-size: 10px;
+    border: 1px solid #2d1f50;
+    border-radius: 999px;
+  }
+  .badge-blocking { color: #fecaca; background: rgba(127,29,29,.35); }
+  .badge-informational { color: #ddd6fe; background: rgba(91,33,182,.28); }
+
+  #input-bar {
+    padding: 12px 20px 14px;
+    background: #080810;
+    border-top: 1px solid #1a1030;
+    display: flex;
+    gap: 10px;
+    align-items: center;
     flex-shrink: 0;
   }
-  #input-bar button:hover { border-color: #6b7280; color: #e2e8f0; }
+  #to-select { padding: 7px 8px; min-width: 110px; }
+  #msg-input {
+    flex: 1;
+    padding: 9px 12px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+
+  @media (max-width: 900px) {
+    #header { padding: 10px 14px; }
+    #header .title { font-size: 16px; letter-spacing: 4px; }
+    #header .subtitle { letter-spacing: 2px; }
+    #persona-bar,
+    #cc-brief-header,
+    #session-brief-header,
+    #cc-brief-body,
+    #session-brief-body,
+    #feed,
+    #input-bar { padding-left: 12px; padding-right: 12px; }
+    #input-bar { flex-wrap: wrap; }
+    #to-select { min-width: 100%; }
+  }
 </style>
 </head>
 <body>
 
 <!-- Token gate -->
 <div id="gate">
-  <h1>AGORA</h1>
-  <p>convergence room</p>
+  <div class="gate-mark">Ascendant</div>
+  <h1>KARMA</h1>
+  <div class="gate-sub">Access token required</div>
   <input id="token-input" type="password" placeholder="hub chat token" />
-  <button onclick="submitToken()">enter</button>
+  <button onclick="submitToken()">ENTER</button>
   <span class="err" id="gate-err">invalid token</span>
 </div>
 
 <!-- Main app -->
 <div id="app">
   <div id="header">
-    <span class="title">AGORA</span>
-    <span class="dot" id="status-dot"></span>
-    <span class="status" id="status-text">connecting...</span>
+    <div class="brand">
+      <span class="title">KARMA</span>
+      <span class="subtitle">SovereignPeer Â· Ascendant Â· Always Present</span>
+    </div>
+    <div class="status-wrap">
+      <span class="dot" id="status-dot"></span>
+      <span class="status" id="status-text">connecting...</span>
+    </div>
   </div>
   <div id="persona-bar"></div>
 
@@ -407,12 +592,13 @@
     <div id="cc-brief-header" onclick="toggleBrief()">
       <span class="lbl">CC BRIEF</span>
       <span class="sub">compress agent output for CC</span>
-      <span class="chevron" id="cc-brief-chevron">▼</span>
+      <span class="chevron" id="cc-brief-chevron">â–¼</span>
     </div>
     <div id="cc-brief-body">
       <textarea id="cc-brief-input" rows="4" placeholder="paste Karma / Codex / Kiki output here..."></textarea>
       <div id="cc-brief-controls">
         <button id="cc-brief-btn" onclick="compressForCC()">compress</button>
+        <button id="cc-brief-clear-btn" onclick="clearBrief()">clear</button>
         <span id="cc-brief-status"></span>
       </div>
       <div id="cc-brief-output" style="display:none">
@@ -422,28 +608,12 @@
     </div>
   </div>
 
-  <!-- ForColby panel — messages explicitly addressed to Colby -->
-  <div id="for-colby">
-    <div id="for-colby-header" onclick="toggleForColby()">
-      <span class="lbl">FOR COLBY</span>
-      <span id="for-colby-badge"></span>
-      <span class="sub" id="for-colby-sub">agents post here when action/review needed</span>
-      <span class="chevron" id="for-colby-chevron">▼</span>
-    </div>
-    <div id="for-colby-body">
-      <div id="for-colby-actions">
-        <button id="for-colby-clear" onclick="clearForColby()">clear all</button>
-      </div>
-      <div id="for-colby-list"></div>
-    </div>
-  </div>
-
   <!-- Session Brief panel -->
   <div id="session-brief">
     <div id="session-brief-header" onclick="toggleSessionBrief()">
       <span class="lbl">SESSION BRIEF</span>
-      <span class="sub">auto-reads live bus feed (no paste) → builds CC session opener</span>
-      <span class="chevron" id="session-brief-chevron">▼</span>
+      <span class="sub">compress bus feed â†’ paste into CC to start session</span>
+      <span class="chevron" id="session-brief-chevron">â–¼</span>
     </div>
     <div id="session-brief-body">
       <div id="session-brief-controls">
@@ -467,11 +637,11 @@
   <div id="feed"></div>
   <div id="input-bar">
     <select id="to-select">
-      <option value="all">→ all</option>
-      <option value="karma">→ karma</option>
-      <option value="cc">→ cc</option>
-      <option value="kcc">→ kcc</option>
-      <option value="codex">→ codex</option>
+      <option value="all">â†’ all</option>
+      <option value="karma">â†’ karma</option>
+      <option value="cc">â†’ cc</option>
+      <option value="kcc">â†’ kcc</option>
+      <option value="codex">â†’ codex</option>
     </select>
     <input id="msg-input" type="text" placeholder="post to bus..." />
     <button onclick="postMessage()">send</button>
@@ -551,7 +721,7 @@ function updatePersonaBar() {
     const ms = lastSeen[p.name];
     const ago = ms ? (now - ms) : Infinity;
     const dotClass = ago < 5 * 60000 ? 'p-green' : ago < 15 * 60000 ? 'p-amber' : 'p-grey';
-    const label = ms ? (ago < 60000 ? 'now' : `${Math.floor(ago/60000)}m`) : '—';
+    const label = ms ? (ago < 60000 ? 'now' : `${Math.floor(ago/60000)}m`) : 'â€”';
     return `<span class="persona"><span class="persona-dot ${dotClass}"></span><span style="color:${p.color}">${p.name}</span><span style="color:#4b5563">${label}</span></span>`;
   }).join('');
 }
@@ -575,7 +745,6 @@ async function poll() {
       renderEntry(e, true);
     }
     updatePersonaBar();
-    renderForColby();
     setStatus('live', `${seenIds.size} messages`);
   } catch (err) {
     setStatus('error', `error: ${err.message}`);
@@ -629,15 +798,10 @@ function renderEntry(e, isNew) {
       <span class="msg-short">${escHtml(short)}${long ? ' <button class="more-btn" onclick="var p=this.closest(\'.entry\');p.querySelector(\'.msg-full\').style.display=\'inline\';p.querySelector(\'.msg-short\').style.display=\'none\'">\u2026more</button>' : ''}</span>
       ${long ? `<span class="msg-full" style="display:none">${escHtml(contentText)} <button class="more-btn" onclick="var p=this.closest('.entry');p.querySelector('.msg-full').style.display='none';p.querySelector('.msg-short').style.display='inline'">less</button></span>` : ''}
     </span>
-    <button class="entry-dismiss" onclick="dismissEntry(this)" title="dismiss">×</button>
   `;
 
   feed.appendChild(div);
   if (autoScroll) feed.scrollTop = feed.scrollHeight;
-}
-
-function dismissEntry(btn) {
-  btn.closest('.entry').remove();
 }
 
 async function postMessage() {
@@ -670,69 +834,7 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── ForColby panel ───────────────────────────────────────────────────────────
-let forColbyOpen = false;
-const dismissedForColby = new Set();
-
-function toggleForColby() {
-  forColbyOpen = !forColbyOpen;
-  document.getElementById('for-colby-body').style.display = forColbyOpen ? 'flex' : 'none';
-  document.getElementById('for-colby-chevron').classList.toggle('open', forColbyOpen);
-}
-
-function renderForColby() {
-  const items = busEntries.filter(e =>
-    e.to === 'colby' && !dismissedForColby.has(e.id)
-  ).slice().reverse(); // most recent first
-
-  const badge = document.getElementById('for-colby-badge');
-  const sub = document.getElementById('for-colby-sub');
-  badge.textContent = items.length || '';
-  badge.classList.toggle('has-items', items.length > 0);
-  sub.textContent = items.length
-    ? `${items.length} item${items.length > 1 ? 's' : ''} need your attention`
-    : 'agents post here when action/review needed';
-
-  if (!forColbyOpen && items.length > 0) {
-    // Auto-open when new items arrive
-    forColbyOpen = true;
-    document.getElementById('for-colby-body').style.display = 'flex';
-    document.getElementById('for-colby-chevron').classList.add('open');
-  }
-
-  const list = document.getElementById('for-colby-list');
-  list.innerHTML = '';
-  if (!items.length) {
-    list.innerHTML = '<div class="fc-item-empty" style="color:#374151;font-size:11px;font-style:italic;">no items</div>';
-    return;
-  }
-  for (const e of items) {
-    const fromClass = agentClass(e.from);
-    const div = document.createElement('div');
-    div.className = 'fc-item';
-    div.innerHTML = `
-      <div class="fc-item-meta">
-        <span class="fc-item-from ${fromClass}">${escHtml(e.from)}</span>
-        <span class="fc-item-ts">${formatTs(e.created_at)}</span>
-      </div>
-      <div class="fc-item-content">${escHtml(e.content || '')}</div>
-      <button class="fc-item-dismiss" onclick="dismissForColby('${e.id}')">dismiss</button>
-    `;
-    list.appendChild(div);
-  }
-}
-
-function dismissForColby(id) {
-  dismissedForColby.add(id);
-  renderForColby();
-}
-
-function clearForColby() {
-  busEntries.filter(e => e.to === 'colby').forEach(e => dismissedForColby.add(e.id));
-  renderForColby();
-}
-
-// ── Session Brief panel ───────────────────────────────────────────────────────
+// â”€â”€ Session Brief panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Stores raw bus entries as they arrive for use in session brief
 const busEntries = [];
 let sessionBriefOpen = false;
@@ -782,7 +884,7 @@ async function buildSessionBrief() {
   output.style.display = 'none';
 
   const raw = entries.map(e =>
-    `[${e.from}→${e.to} ${(e.created_at||'').slice(11,16)}] ${e.content||''}`
+    `[${e.from}â†’${e.to} ${(e.created_at||'').slice(11,16)}] ${e.content||''}`
   ).join('\n');
 
   const prompt =
@@ -823,7 +925,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('session-brief-filter').addEventListener('change', updateSessionBriefCount);
 });
 
-// ── CC Brief compress panel ──────────────────────────────────────────────────
+// â”€â”€ CC Brief compress panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let briefOpen = true;
 
 function toggleBrief() {
@@ -858,11 +960,9 @@ async function compressForCC() {
     const text = data.response || data.text || data.assistant_text || data.content || JSON.stringify(data);
     result.textContent = text;
     output.style.display = 'flex';
-    status.textContent = 'copied to clipboard ✓';
-    setTimeout(() => { status.textContent = ''; }, 2000);
-    // auto-copy + clear input
+    status.textContent = '';
+    // auto-copy
     navigator.clipboard.writeText(text).catch(() => {});
-    document.getElementById('cc-brief-input').value = '';
   } catch (err) {
     status.textContent = `error: ${err.message}`;
   } finally {
@@ -878,6 +978,21 @@ function copyBrief() {
     setTimeout(() => { btn.textContent = 'copy to clipboard'; }, 1500);
   });
 }
+
+function clearBrief() {
+  const input = document.getElementById('cc-brief-input');
+  const status = document.getElementById('cc-brief-status');
+  const output = document.getElementById('cc-brief-output');
+  const result = document.getElementById('cc-brief-result');
+  input.value = '';
+  result.textContent = '';
+  output.style.display = 'none';
+  status.textContent = 'cleared';
+  setTimeout(() => {
+    if (status.textContent === 'cleared') status.textContent = '';
+  }, 1500);
+}
 </script>
 </body>
 </html>
+
