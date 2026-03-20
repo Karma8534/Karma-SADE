@@ -97,6 +97,9 @@
 
 **PITFALL:** Spent 1.5h debugging P0N-A bridge (cc_server was just down, not a Docker/Tailscale problem)
 
+- aria.service crash loop FIXED: SIGTERM handler now calls sys.exit(0), RestartSec 5→15s, get_all_sessions guarded — NRestarts=0 verified
+- /resurrect fully verified: Get-KarmaContext.ps1 generates brief (14,487 chars), Step 3e bus check works, aria stable
+
 **OPEN BLOCKERS:**
 - /cc bridge UI: Bearer token re-entered on every browser refresh — needs localStorage persistence
 - /cc bridge UI: no copy button per message, no Clear button
