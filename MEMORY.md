@@ -52,7 +52,11 @@
 - vault-neo → P1:7891 Tailscale connectivity VERIFIED (health returns {"ok":true})
 - Committed: cc_server_p1.py + server.js changes
 
-**NOTE: CC server must be running on P1 for /cc to work. On reboot: start Scripts/cc_server_p1.py with HUB_CHAT_TOKEN env var.**
+**NOTE: CC server must be running on P1 for /cc to work.**
+- Auto-restart wrapper: `Scripts/start_cc_server.ps1` — loops with 5s restart on crash
+- Start: `powershell -WindowStyle Hidden -File Scripts/start_cc_server.ps1`
+- GET /cc: browser chat UI (prompts for token, sends POST /cc in-page)
+- POST /cc: API endpoint (Bearer token required)
 
 ## Next Session Starts Here
 1. `/resurrect`
