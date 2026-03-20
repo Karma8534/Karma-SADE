@@ -3681,15 +3681,17 @@ const server = http.createServer(async (req, res) => {
       res.end(`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CC — Ascendant</title>
 <style>*{box-sizing:border-box;margin:0;padding:0}body{background:#0d1117;color:#e6edf3;font-family:-apple-system,sans-serif;display:flex;flex-direction:column;height:100vh;padding:12px;gap:8px}
 #log{flex:1;overflow-y:auto;background:#161b22;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px}
-.msg{padding:8px 12px;border-radius:8px;max-width:85%;white-space:pre-wrap;font-size:14px;line-height:1.5}
+.msg{position:relative;padding:8px 12px;border-radius:8px;max-width:85%;white-space:pre-wrap;font-size:14px;line-height:1.5}
 .user{background:#1f6feb;align-self:flex-end}.cc{background:#21262d;align-self:flex-start;border:1px solid #30363d}
 .err{background:#3d1f1f;align-self:flex-start;border:1px solid #6e3232;color:#f85149}
 .thinking{color:#8b949e;font-style:italic}
 #form{display:flex;gap:8px}#msg{flex:1;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px 14px;color:#e6edf3;font-size:15px;resize:none;height:52px}
 #send{background:#1f6feb;border:none;border-radius:8px;color:#fff;padding:0 20px;font-size:15px;cursor:pointer;white-space:nowrap}
-#send:disabled{background:#21262d;color:#8b949e}</style></head>
+#send:disabled{background:#21262d;color:#8b949e}
+#clear{background:#21262d;border:1px solid #30363d;border-radius:8px;color:#8b949e;padding:0 16px;font-size:15px;cursor:pointer;white-space:nowrap}#clear:hover{background:#30363d;color:#e6edf3}
+.copy-btn{position:absolute;top:4px;right:6px;background:none;border:none;color:#8b949e;cursor:pointer;font-size:12px;opacity:0;transition:opacity .15s;padding:2px 5px;border-radius:4px}.copy-btn:hover{color:#e6edf3;background:#30363d}.msg:hover .copy-btn{opacity:1}</style></head>
 <body><div id="log"><div class="msg cc">CC Ascendant online. Send a message.</div></div>
-<form id="form"><textarea id="msg" placeholder="Message CC..." rows="1"></textarea><button id="send" type="submit">Send</button></form>
+<form id="form"><textarea id="msg" placeholder="Message CC..." rows="1"></textarea><button id="send" type="submit">Send</button><button id="clear" type="button">Clear</button></form>
 <script>
 const TOKEN = prompt("Bearer token:") || "";
 const log = document.getElementById("log");
@@ -3700,10 +3702,25 @@ function addMsg(text, cls) {
   const d = document.createElement("div");
   d.className = "msg " + cls;
   d.textContent = text;
+  const cpBtn = document.createElement("button");
+  cpBtn.className = "copy-btn";
+  cpBtn.textContent = "\u29c9";
+  cpBtn.title = "Copy";
+  cpBtn.addEventListener("click", () => {
+    navigator.clipboard.writeText(text).then(() => {
+      cpBtn.textContent = "\u2713";
+      setTimeout(() => { cpBtn.textContent = "\u29c9"; }, 1500);
+    });
+  });
+  d.appendChild(cpBtn);
   log.appendChild(d);
   log.scrollTop = log.scrollHeight;
   return d;
 }
+document.getElementById("clear").addEventListener("click", () => {
+  log.innerHTML = "";
+  addMsg("CC Ascendant online. Send a message.", "cc");
+});
 inp.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
 form.addEventListener("submit", async e => {
   e.preventDefault();
