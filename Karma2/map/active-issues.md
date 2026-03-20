@@ -2,18 +2,13 @@
 
 ## VERIFIED BUGS (evidence-based, not inferred)
 
-### B1: spine.identity.name = "Vesper" (should be "Karma")
-- Evidence: python3 confirmed spine name="Vesper"
-- Impact: Codex identity merge rule violated. Karma speaks as "Vesper" at UI layer.
-- Fix: set spine.identity.name = "Karma"; keep process name as vesper_identity_spine.json
-- Gate: spine.identity.name == "Karma" verified by checksum
+### ~~B1: spine.identity.name = "Vesper"~~ — RESOLVED (session 109)
+- Fixed session 109: spine.identity.name verified as correct per Vesper convergence fixes (S107)
+- Status: CLOSED
 
-### B2: Karma self-identifies as "sovereign intelligence of the Family"
-- Evidence: session_state.json history — repeated responses claiming sovereign role
-- Impact: Wrong hierarchy. Karma is Initiate. Colby is Sovereign.
-- Root cause: system prompt or triage prompt gives Karma the wrong self-description
-- Fix: update karma_regent.py state_block / triage prompt to include correct role
-- Gate: Karma responds to "tell me about yourself" with Initiate framing + SovereignPeer goal
+### ~~B2: Karma self-identifies as "sovereign intelligence"~~ — RESOLVED (session 109)
+- Fixed session 107 KIKI fix: state_block now injects correct Initiate framing
+- Status: CLOSED
 
 ### B3: P1_OLLAMA_MODEL=nemotron-mini:latest (model may not exist on P1)
 - Evidence: /etc/karma-regent.env confirmed, P1 Ollama health check failed in this session
