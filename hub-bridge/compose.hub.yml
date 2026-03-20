@@ -53,6 +53,8 @@ services:
       - /opt/seed-vault:/karma/vault:ro
       - /opt/seed-vault/memory_v1/ledger:/karma/ledger:rw
       - /home/neo/karma-sade/MEMORY.md:/karma/MEMORY.md:rw
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - anr-vault-net
     restart: unless-stopped
