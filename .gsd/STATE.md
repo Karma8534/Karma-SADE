@@ -117,10 +117,10 @@
 13. **P3-D** — ✅ LIVE as of session 109. Hooks deployed + committed. No longer a blocker.
 
 ## Next Session Starts Here
-1. `/resurrect` → BUILD P0N-A IMMEDIATELY: add `/cc` proxy route to hub-bridge pointing to P1 CC server at Tailscale 100.124.194.102. Auth = same Bearer token as /v1/chat. Gate: `curl https://hub.arknexus.net/cc` responds from CC on P1.
-2. Build P0N-B: Channels bridge using `claude -p "msg" --resume` on P1, replacing cc_bus_reader.py on K2.
-3. Build P0N-C: PS KCC (C:\Users\karma) — GLM primary + Haiku 4.5 fallback, decommission WSL GLM KCC.
-**Blocker if any:** P0N-A requires hub-bridge code change + deploy to vault-neo (use karma-hub-deploy skill).
+1. `/resurrect`
+2. Invoke `superpowers:executing-plans` with plan `docs/plans/2026-03-20-p0n-a-plan.md` — SOVEREIGN APPROVED, skip brainstorm, skip CONTEXT.md. Execute Task 1 → Task 2 → Task 3.
+3. Task 1 = start `Scripts/cc_server_p1.py` on P1 (port 7891). Task 2 = add /cc route to hub-bridge + deploy. Task 3 = end-to-end verify at hub.arknexus.net/cc.
+**Blocker if any:** P1 firewall may block 7891 — see plan Known Risks.
 
 ---
 

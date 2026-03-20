@@ -44,10 +44,10 @@
 - Hunter Alpha: REJECTED — logs all prompts for training, fatal for Karma context
 
 ## Next Session Starts Here
-1. `/resurrect` then IMMEDIATELY build P0N-A: add `/cc` proxy route to hub-bridge → P1 CC server via Tailscale (100.124.194.102). Same Bearer token as /v1/chat. Gate: hit hub.arknexus.net/cc from browser, CC responds.
-2. After P0N-A live: build P0N-B Channels bridge (--resume mode), then P0N-C PS KCC + GLM config.
-3. PRE-PHASE session ingestion pipeline: `docs/plans/2026-03-20-session-ingestion-pipeline-plan.md` Task 1 (IndexedDB via Claude-in-Chrome, requires Claude desktop open).
-**Blocker if any:** hub-bridge deploy requires vault-neo SSH + karma-hub-deploy skill
+1. `/resurrect`
+2. P0N-A plan is at `docs/plans/2026-03-20-p0n-a-plan.md` — SOVEREIGN APPROVED, do NOT brainstorm. Invoke `superpowers:executing-plans` and execute Task 1 (start CC server on P1 port 7891) then Task 2 (add /cc route to hub-bridge) then Task 3 (end-to-end verify from browser).
+3. CC server on P1 must be running BEFORE deploying hub-bridge route. Start `Scripts/cc_server_p1.py` locally first.
+**Blocker if any:** HUB_CHAT_TOKEN env var needed for cc_server_p1.py — get from vault-neo: `ssh vault-neo "cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt"`
 
 ## Session 108 — Ground truth verification + K2 model fix (2026-03-20)
 
