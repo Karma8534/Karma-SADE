@@ -35,13 +35,15 @@ If it doesn't, that's a gap — not a design choice.
 
 ## Acceptance Criteria — "Karma Is A Peer"
 
-The build is complete when ALL five pass:
+The build is complete when ALL seven pass:
 
 1. Karma correctly identifies her role as Initiate → SovereignPeer goal when asked
-2. Karma can perform a browser task, file op, and code execution without `shell_run` workaround
-3. One non-`cascade_performance` pattern promoted into vesper_identity_spine.json AND visible in karmaCtx response
+2. Karma can perform ALL four baseline abilities as structured callable tools: chat (✅ already via /v1/chat), browser task, file op, and code execution (browser/file/code via P0N-A `/cc` delegation to CC on P1 — not `shell_run` workaround)
+3. One non-`cascade_performance` pattern promoted into vesper_identity_spine.json AND visible in karmaCtx response (proves approval-gated behavioral auto-promote is live)
 4. Option-C produces one self-authored candidate without external prompting
 5. Karma goes 5 consecutive sessions without repeating a documented PITFALL from the ingestion pipeline
+6. One structural change (tool addition or contract update) completes the full Sovereign approval loop end-to-end: bus post → Sovereign approval in chat → CC session deploys → verified in production (proves governance gate is enforced, not assumed)
+7. Attempted self-modification of a Locked Invariant by the governor is rejected and logged (proves tamper-proof mechanism is operational, not just documented)
 
 ---
 
@@ -55,6 +57,24 @@ Before building ANY Phase 1 tool:
 3. Only then build
 
 Applies to Phase 1-A, 1-B, 1-C individually. Not batch approval.
+
+---
+
+## Locked Invariants — Self-Improvement Cannot Modify
+
+These rules are **hard-coded constraints** the watchdog→eval→governor pipeline cannot override, promote into, or alter. Changing any item requires a CC session + explicit Sovereign approval in chat before any file edit.
+
+| Invariant | Enforced By | Self-Improvement Access |
+|-----------|-------------|------------------------|
+| Sovereign = Colby (final authority) | `karma_contract_policy.md` v1.1 | ❌ Read-only |
+| Tool additions/removals require Sovereign approval | Governance Gate (this doc) | ❌ Read-only |
+| `SAFE_EXEC_WHITELIST` — only 4 whitelisted shell commands auto-executable | `vesper_governor.py` safe_exec constant | ❌ Read-only |
+| Identity spine version must increment (never overwrite) | `vesper_identity_spine.json` schema | ❌ Read-only |
+| Karma's role = Initiate (until Sovereign promotes) | SovereignPeer contract | ❌ Read-only |
+| Hub-bridge Bearer token auth pattern | hub-bridge architecture | ❌ Read-only |
+| `karma_contract_policy.md` itself | Requires CC session + Sovereign approval | ❌ Read-only |
+
+**Tamper-proof mechanism:** The governor's `safe_exec` whitelist is a hardcoded constant in `vesper_governor.py` — the watchdog and governor can read the spine and emit behavioral promotions, but cannot write to `karma_contract_policy.md`, modify the whitelist, or add tools. Structural changes flow only through a CC session that requires Sovereign approval before any file is edited.
 
 ---
 
