@@ -16,6 +16,8 @@
 - .claude/skills/cc-delegation/SKILL.md created and live in skills registry
 - CCTrustVerify PDF ingested: hook enforcement primitive applied as P3-D in PLAN.md — closes supervision gap by converting Governance Gate from documented policy to PreToolUse exit-2 hard blocks
 - Comprehensive plan analysis: Karma2 meets all initial Karma plan requirements; P3-D closes the last gap (governance enforcement)
+- P3-D IMPLEMENTED: 3 hooks live (.claude/hooks/locked-invariant-guard.py, quality-gate.py, governance-audit.py), registered in .claude/settings.json — Locked Invariants now architecturally enforced
+- Excalidraw diagram skill installed: .claude/skills/excalidraw-diagram/SKILL.md — invocable as /excalidraw-diagram
 
 **ALL HOTFIXES RESOLVED (H1-H7):**
 - H1 ✅ import subprocess added, restored to K2 (verified: True, 228 lines)
