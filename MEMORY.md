@@ -53,6 +53,7 @@
 - Committed: cc_server_p1.py + server.js changes
 
 **NOTE: CC server must be running on P1 for /cc to work.**
+- cc_server mode: `--system-prompt CC_SYSTEM_PROMPT` (identity assertion) + `--dangerously-skip-permissions`. No `--continue` (session too large). Hub-bridge timeout: 240s.
 - Auto-restart wrapper: `Scripts/start_cc_server.ps1` — loops with 5s restart on crash
 - Start: `powershell -WindowStyle Hidden -File Scripts/start_cc_server.ps1`
 - GET /cc: browser chat UI (prompts for token, sends POST /cc in-page)

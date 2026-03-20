@@ -3751,7 +3751,7 @@ form.addEventListener("submit", async e => {
           method: "POST",
           headers: { "Authorization": req.headers["authorization"], "Content-Type": "application/json" },
           body: JSON.stringify({ message, session_id }),
-          signal: AbortSignal.timeout(130000),
+          signal: AbortSignal.timeout(240000),  // 240s — MCP loading + response time
         });
         const d = await r.json();
         return json(res, r.status, d);
