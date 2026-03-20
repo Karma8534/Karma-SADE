@@ -34,16 +34,20 @@
 **OPEN BLOCKERS:**
 - H3: cc_scratchpad.md two copies (vault-neo + K2) sync unknown
 - B4+B5: Vesper→Karma bridge dead — Phase 0 (after PRE-PHASE)
-- P0N-A/B/C: ✅ ALL APPROVED (session 109) — build queue: hub.arknexus.net/cc, Channels bridge, PS KCC + GLM
-- P3-D: Governance hook enforcement NOT YET IMPLEMENTED — hooks in .claude/hooks/ for PreToolUse (locked invariants) + Quality Gate (git push) + Governance Audit (Stop)
+- P0N-A: ✅ APPROVED + URGENT — build hub.arknexus.net/cc next session first
+- P0N-B: ✅ APPROVED — Channels bridge (after P0N-A)
+- P0N-C: ✅ APPROVED — PS KCC + GLM primary
+- P3-D: ✅ LIVE — 3 hooks deployed (.claude/hooks/), registered in .claude/settings.json
 - Codex: not installed (Current_Plan/Codex Installer.exe)
 - B8: regent restart loop root cause undiagnosed
+- Shannon: SHELVED — requires Docker + explicit Sovereign auth per target
+- Hunter Alpha: REJECTED — logs all prompts for training, fatal for Karma context
 
 ## Next Session Starts Here
-1. `/resurrect` → execute `docs/plans/2026-03-20-session-ingestion-pipeline-plan.md` Task 1 (IndexedDB schema via Claude-in-Chrome). Claude desktop must be open.
-2. Build P0N-A: add `/cc` route to hub-bridge on vault-neo, proxy to P1 CC via Tailscale (100.124.194.102). Gate: hit hub.arknexus.net/cc from browser, CC responds.
-3. Build P0N-C: configure PS KCC (C:\Users\karma) — GLM primary + Haiku fallback, decommission WSL GLM KCC.
-**Blocker if any:** Claude desktop app must be running for IndexedDB access
+1. `/resurrect` then IMMEDIATELY build P0N-A: add `/cc` proxy route to hub-bridge → P1 CC server via Tailscale (100.124.194.102). Same Bearer token as /v1/chat. Gate: hit hub.arknexus.net/cc from browser, CC responds.
+2. After P0N-A live: build P0N-B Channels bridge (--resume mode), then P0N-C PS KCC + GLM config.
+3. PRE-PHASE session ingestion pipeline: `docs/plans/2026-03-20-session-ingestion-pipeline-plan.md` Task 1 (IndexedDB via Claude-in-Chrome, requires Claude desktop open).
+**Blocker if any:** hub-bridge deploy requires vault-neo SSH + karma-hub-deploy skill
 
 ## Session 108 — Ground truth verification + K2 model fix (2026-03-20)
 

@@ -58,7 +58,7 @@ Before building ANY Phase 1 tool:
 
 Applies to Phase 1-A, 1-B, 1-C individually. Not batch approval.
 
-**⚠️ Enforcement gap (CCTrustVerify primitive, 2026-03-20):** CLAUDE.md instructions and the rules above are *suggestions* — only `PreToolUse` hooks with `exit code 2` make them architecturally non-optional. Until hook enforcement is implemented (Phase 3-D), this gate requires Sovereign supervision to hold. Phase 3-D closes this gap by converting policy into hard blocks.
+**✅ P3-D LIVE (session 109):** `PreToolUse` hooks with `exit code 2` are now deployed — `locked-invariant-guard.py`, `quality-gate.py`, `governance-audit.py` registered in `.claude/settings.json`. Locked Invariants are architecturally enforced, not just documented. Colby supervision no longer required for this gate to hold.
 
 ---
 
@@ -262,7 +262,7 @@ From 6-item list (obs #8077):
 | P4 | P3-A | CLAUDE.md terminology mismatch | 🟡 Phase 3-A |
 | P4 | P3-B | Bus scope (CC/Codex noise) | 🟡 Phase 3-B |
 | P4 | P3-C | KCC scope undefined | 🟡 Phase 3-C |
-| **P3** | P3-D | Governance hook enforcement (supervision gap) | 🔴 Not implemented — closes loop |
+| — | P3-D | Governance hook enforcement (supervision gap) | ✅ LIVE — 3 hooks deployed + committed (session 109) |
 
 ---
 

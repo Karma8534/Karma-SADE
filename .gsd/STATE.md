@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-20T22:00:00Z
-**Session:** 109 (Architecture revision: hub.arknexus.net/cc on P1, KCC→qwen3:8b, Phase 1 demoted, all H1-H7 hotfixes resolved, PRE-PHASE next)
+**Last updated:** 2026-03-20T23:59:00Z
+**Session:** 109 COMPLETE (P3-D hooks live, 3 skills installed, Karma2 plan verified, P0N-A URGENT next)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -113,13 +113,14 @@
 9. ~~**CC cohesion test pending**~~ — resume_block confirmed working in Session 97+.
 10. **B1: Evolution log sparsity** — 22/89,758 structured entries. Resolves with ~50 new Regent messages. Time-based, no code change needed. ETA 1-3 days.
 11. **B2: Synthetic stable patterns** — both stable patterns are Codex e2e artifacts (type=pipeline_e2e_validation). Cosmetic issue; real patterns will emerge as B1 resolves.
+12. **P0N-A URGENT** — hub.arknexus.net/cc route not yet built. Sovereign cannot communicate with CC via hub. Build first next session.
+13. **P3-D** — ✅ LIVE as of session 109. Hooks deployed + committed. No longer a blocker.
 
 ## Next Session Starts Here
-1. `/resurrect` → check watchdog brief (should appear within 10 min) and governor audit at `regent_control/governor_audit.jsonl` (~20:46 UTC run)
-2. Verify `hub.arknexus.net/regent` chat UI works end-to-end with Regent — send a message, confirm response
-3. Optionally pump 50 test messages through Regent to accelerate B1 (evolution log sparsity)
-**Blocker if any:** B1 is passive — no action required, just time.
-**Blocker if any:** K2 MCP server requires CC restart to activate. cc_cognitive_write.ps1 404 on K2 — checkpoint written directly via SSH at wrap (workaround available).
+1. `/resurrect` → BUILD P0N-A IMMEDIATELY: add `/cc` proxy route to hub-bridge pointing to P1 CC server at Tailscale 100.124.194.102. Auth = same Bearer token as /v1/chat. Gate: `curl https://hub.arknexus.net/cc` responds from CC on P1.
+2. Build P0N-B: Channels bridge using `claude -p "msg" --resume` on P1, replacing cc_bus_reader.py on K2.
+3. Build P0N-C: PS KCC (C:\Users\karma) — GLM primary + Haiku 4.5 fallback, decommission WSL GLM KCC.
+**Blocker if any:** P0N-A requires hub-bridge code change + deploy to vault-neo (use karma-hub-deploy skill).
 
 ---
 
