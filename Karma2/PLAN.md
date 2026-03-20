@@ -62,15 +62,15 @@ Applies to Phase 1-A, 1-B, 1-C individually. Not batch approval.
 
 ### HOTFIXES (fix before anything else — active silent failures)
 
-| ID | Fix | Evidence | Gate |
-|----|-----|----------|------|
-| H1 | Add `import subprocess` to cc_bus_reader.py | Lines 82+108 call subprocess.run() but import missing — SSH calls crash every 2min | cc_bus_reader.log shows successful SSH output |
-| H2 | Create `for-karma/SADE — Canonical Definitions.txt` | File missing. Resurrect Step 1c silently fails every cold start. | CC session reads file without error |
-| H3 | Resolve cc_scratchpad.md two-copy ambiguity | Exists on vault-neo AND K2. Sync state unknown. | One canonical copy or confirmed sync confirmed |
-| H4 | Mark B1+B2 resolved in active-issues.md | Both verified fixed session 109. Showing open creates false work queue. | active-issues.md updated |
-| H5 | Confirm B7 (KCC drift) cleared | KIKI fixed session 109. Need one clean cc_anchor_agent run. | No drift alert in next cc_anchor run |
-| H6 | Update resurrect skill Step 1b spine path | `C:\Users\raest\.claude\skills\resurrect\SKILL.md` line 66 reads `cc_identity_spine.json` — wrong. Canonical spine is `vesper_identity_spine.json` per Codex contract. Every session start loads wrong identity data. | Resurrect Step 1b reads `vesper_identity_spine.json` without error |
-| H7 | Specify SADE doctrine file content for H2 | H2 says "create the file" but not what goes in it. Content = Hyperrails, TDD Verification Aegis, TSS, SADE Execution Formula, Directive One — from resurrect skill SADE doctrine section. | File created with all 5 doctrine elements, CC reads it cleanly at cold start |
+| ID | Fix | Evidence | Gate | Status |
+|----|-----|----------|------|--------|
+| H1 | Add `import subprocess` to cc_bus_reader.py | Lines 82+108 call subprocess.run() but import missing — SSH calls crash every 2min | cc_bus_reader.log shows successful SSH output | ✅ Fixed + restored to K2 (session 109) |
+| H2 | Create `for-karma/SADE — Canonical Definitions.txt` | File missing. Resurrect Step 1c silently fails every cold start. | CC session reads file without error | ✅ File already existed — false alarm |
+| H3 | Resolve cc_scratchpad.md two-copy ambiguity | Exists on vault-neo AND K2. Sync state unknown. | One canonical copy or confirmed sync confirmed | 🟡 Pending |
+| H4 | Mark B1+B2 resolved in active-issues.md | Both verified fixed session 109. Showing open creates false work queue. | active-issues.md updated | ✅ Done (session 109) |
+| H5 | Confirm B7 (KCC drift) cleared | KIKI fixed session 109. Need one clean cc_anchor_agent run. | No drift alert in next cc_anchor run | 🟡 Awaiting next cc_anchor run |
+| H6 | Verify resurrect Step 1b spine path | Plan says cc_identity_spine.json is wrong — but BOTH cc_identity_spine.json AND vesper_identity_spine.json exist as separate files. cc_identity_spine.json = CC's own spine. vesper_identity_spine.json = Karma's spine. Needs Sovereign direction: should CC read its own spine or Karma's? | Sovereign clarification received, spine path confirmed | 🔴 Needs Sovereign decision |
+| H7 | Specify SADE doctrine file content for H2 | H2 says "create the file" but not what goes in it. | File with all 5 elements, CC reads cleanly | ✅ Resolved with H2 |
 
 ---
 
@@ -94,6 +94,34 @@ Why first: 108+ sessions document exactly how previous tool implementations fail
 **Plan:** `docs/plans/2026-03-20-session-ingestion-pipeline-plan.md`
 
 **Gate:** claude-mem +50 observations. 10+ skill files exist. watchdog_extra_patterns.json present on K2.
+
+---
+
+### PHASE 0-NEW: CC as Infrastructure
+**(Runs after PRE-PHASE, before PHASE 0. Requires Sovereign approval per item.)**
+
+**Why before PHASE 0:** CC on P1 already has browser, filesystem, Bash, and code execution natively. Building hub-bridge wrappers (Phase 1-A/B/C) duplicates CC's native tooling. Correct pattern: Karma delegates to CC via coordination bus and `/cc` route — matching Initiate→Ascendant hierarchy.
+
+**P0N-A: hub.arknexus.net/cc — CC proxy (server on P1)**
+- CC persistent server runs on **P1** (Windows, 64GB RAM, all CC memory/auth/state lives here)
+- hub-bridge adds `/cc` route proxying to P1 CC server via Tailscale (100.124.194.102)
+- Auth: same Bearer token as `/v1/chat`
+- Gate: Colby hits hub.arknexus.net/cc from browser, CC on P1 responds with full local capabilities
+- **Eliminates: dependency on claude.ai/code, Telegram, any Anthropic web property**
+- Sovereign approval: REQUIRED
+
+**P0N-B: Channels custom bridge (coordination bus → P1 CC)**
+- Custom CC channel on P1 replaces cc_bus_reader.py (broken haiku proxy on K2)
+- Pushes coordination bus messages directly into CC session on P1
+- Full Sonnet 4.6 intelligence, no 2-min polling lag
+- Gate: coordination bus message addressed to `cc` triggers CC response within 30s
+- Sovereign approval: REQUIRED
+
+**P0N-C: KCC → qwen3:8b on K2 (drop GLM)**
+- KCC stays on K2; switch model to `http://localhost:11434/v1`, model `qwen3:8b`
+- Zero external API dependency, same-machine inference
+- Gate: KCC posts valid drift alert using qwen3:8b, no GLM calls in logs
+- Sovereign approval: REQUIRED
 
 ---
 
@@ -124,39 +152,6 @@ Why first: 108+ sessions document exactly how previous tool implementations fail
 - Root cause: 3 crashes 2026-03-20 13:18-13:19Z — UNDIAGNOSED
 - Approach: `systematic-debugging` skill. Read regent.log around crash times. Root cause before fix.
 - Gate: root cause identified, fix applied, no crash in 48h monitoring window
-
----
-
-### PHASE 0-NEW: CC as Infrastructure (before Phase 0)
-**(Decision 2026-03-20: hub.arknexus.net/cc replaces Phase 1 tools + Channels replaces cc_bus_reader.py)**
-
-**Why this supersedes Phase 1:** CC on K2 already has browser (Playwright MCP), filesystem, Bash, and code execution natively. Building hub-bridge wrappers around K2 capabilities (Phase 1-A/B/C) duplicates work CC already does. Correct architecture: Karma delegates to CC via coordination bus and `/cc` route — matching the Initiate→Ascendant hierarchy.
-
-**P0N-A: hub.arknexus.net/cc — CC proxy (server on P1)**
-- CC persistent server runs on **P1** (Windows, 64GB RAM, all CC memory/auth/state lives here)
-- P1 chosen over K2: CC state is on P1; avoids stressing K2 (K2 runs Karma/Vesper/Aria already)
-- hub-bridge adds `/cc` route (websocket or streaming HTTP)
-- Route proxies to P1 CC server via Tailscale (100.124.194.102 — routable from vault-neo)
-- Auth: same Bearer token as `/v1/chat` (zero new auth surface)
-- Gate: Colby hits hub.arknexus.net/cc from browser, CC on P1 responds with full local capabilities
-- **Eliminates: dependency on claude.ai/code, Telegram, any Anthropic web property**
-- Sovereign approval: YES (capability addition)
-
-**P0N-B: Channels custom bridge (coordination bus → P1 CC)**
-- Custom CC channel on P1 reads coordination bus (GET /v1/coordination?to=cc&status=pending)
-- Pushes messages directly into CC session running on P1 (replaces cc_bus_reader.py on K2)
-- CC has full Sonnet 4.6 intelligence (vs haiku proxy) + no polling delay
-- Gate: coordination bus message addressed to `cc` triggers CC response within 30s
-- **Eliminates: cc_bus_reader.py (broken haiku proxy on K2), 2-min polling lag, fragility**
-- Sovereign approval: YES (capability addition)
-
-**P0N-C: KCC → qwen3:8b on K2 (drop GLM)**
-- KCC currently uses GLM (external API, $cost, external dependency)
-- KCC **stays on K2** (its monitoring role and cron are already there)
-- Switch KCC model → qwen3:8b at `http://localhost:11434/v1` (local to K2, zero Tailscale hop)
-- Gate: KCC posts valid drift alert using qwen3:8b inference, no GLM calls in logs
-- **Eliminates: GLM API dependency for KCC, closes external dependency gap**
-- Sovereign approval: YES (capability change)
 
 ---
 
@@ -214,23 +209,24 @@ From 6-item list (obs #8077):
 
 | Priority | ID | Blocker | Status |
 |----------|----|---------|--------|
-| **P0** | H1 | cc_bus_reader.py missing `import subprocess` | 🔴 Active silent bug |
-| P4 | H2 | SADE doctrine file missing | ✅ Already exists — `for-karma/SADE — Canonical Definitions.txt` verified |
-| P1 | B4+B5 | Vesper→Karma bridge dead | 🔴 Root cause known, Phase 0-A/B |
+| — | H1 | cc_bus_reader.py missing `import subprocess` | ✅ Fixed + restored to K2 (session 109) |
+| — | H2 | SADE doctrine file missing | ✅ Already existed — verified |
+| — | H4 | active-issues.md stale (B1+B2 resolved) | ✅ Done (session 109) |
+| — | H7 | SADE doctrine content spec | ✅ Resolved with H2 |
+| **P0** | H6 | Resurrect Step 1b spine path | 🔴 Needs Sovereign decision: cc_identity_spine.json (CC's own) vs vesper_identity_spine.json (Karma's) |
+| P1 | H3 | cc_scratchpad.md two copies (vault-neo + K2) | 🟡 Sync unknown |
+| P1 | H5 | B7 KCC drift confirmed cleared | 🟡 Awaiting next cc_anchor run |
+| **P0** | B4+B5 | Vesper→Karma bridge dead | 🔴 Root cause known, Phase 0-A/B |
 | P1 | B3 | P1 Ollama model name wrong | 🔴 Unverified, Phase 0-C |
-| P2 | B6 | Dedup ring memory-only | 🟡 Known, Phase 0-D |
+| P2 | B6 | Dedup ring memory-only | 🟡 Phase 0-D |
 | P2 | B8 | Regent restart loop | 🟡 Undiagnosed, Phase 0-E |
 | P3 | B7 | KCC drift alerts | 🟡 KIKI fixed — awaiting confirm |
-| P3 | H3 | cc_scratchpad.md two copies | 🟡 Sync unknown |
-| P4 | H4 | active-issues.md stale (B1+B2 resolved) | 🟡 Doc update |
+| P1 | P0N-A | hub.arknexus.net/cc (CC on P1 via Tailscale) | 🟡 Needs Sovereign approval |
+| P1 | P0N-B | Channels bridge (bus → P1 CC) | 🟡 Needs Sovereign approval |
+| P1 | P0N-C | KCC: GLM → qwen3:8b on K2 | 🟡 Needs Sovereign approval |
 | P4 | P3-A | CLAUDE.md terminology mismatch | 🟡 Phase 3-A |
 | P4 | P3-B | Bus scope (CC/Codex noise) | 🟡 Phase 3-B |
 | P4 | P3-C | KCC scope undefined | 🟡 Phase 3-C |
-| **P0** | H6 | Resurrect skill reads `cc_identity_spine.json` (wrong — should be `vesper_identity_spine.json`) | 🔴 Silent wrong identity load every session |
-| P4 | H7 | SADE doctrine file content unspecified | ✅ Resolved with H2 — file exists and has all 5 elements |
-| P1 | P0N-A | hub.arknexus.net/cc route (CC stdio proxy) | 🟡 Design approved, needs Sovereign approval to build |
-| P1 | P0N-B | Channels bridge (coordination bus → CC) | 🟡 Replaces cc_bus_reader.py, needs Sovereign approval |
-| P1 | P0N-C | KCC: GLM → qwen3:8b on K2 | 🟡 Drop external GLM dependency, needs Sovereign approval |
 
 ---
 
