@@ -2086,13 +2086,14 @@ async function callLLMWithTools(model, messages, maxTokens, writeId = null, aria
     const systemBlock = [];
     const staticSystem = messages.find(m => m.role === "system" && m._static);
     const volatileSystem = messages.find(m => m.role === "system" && !m._static);
-    if (staticSystem) systemBlock.push({ type: "text", text: staticSystem.content, cache_control: { type: "ephemeral" } });
+    if (staticSystem) systemBlock.push({ type: "text", text: staticSystem.content, cache_control: { type: "ephemeral", ttl: "1h" } });
     if (volatileSystem) systemBlock.push({ type: "text", text: volatileSystem.content });
-    if (!systemBlock.length && systemPrompt) systemBlock.push({ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } });
+    if (!systemBlock.length && systemPrompt) systemBlock.push({ type: "text", text: systemPrompt, cache_control: { type: "ephemeral", ttl: "1h" } });
 
     // Tool loop cache optimization: mark last message in allMessages with cache_control
     // so each tool iteration caches the growing conversation prefix (system+history+tool results).
     // On iteration 2+, the entire prefix from previous iterations is cached at 10% cost.
+    // TTL: 5m (conversation-specific, changes every turn — short TTL appropriate)
     const cachedMessages = allMessages.map((m, i) => {
       if (i === allMessages.length - 1 && iterations > 1) {
         // Mark the last message (tool_result from prior iteration) as cache breakpoint
@@ -2112,8 +2113,9 @@ async function callLLMWithTools(model, messages, maxTokens, writeId = null, aria
 
     // Cache-aware tool definitions: mark the last tool with cache_control
     // so tool schema prefix is cached (stable across all requests).
+    // TTL: 1h (tool definitions never change at runtime — maximize cache lifetime)
     const cachedTools = TOOL_DEFINITIONS.length > 0
-      ? TOOL_DEFINITIONS.map((t, i) => i === TOOL_DEFINITIONS.length - 1 ? { ...t, cache_control: { type: "ephemeral" } } : t)
+      ? TOOL_DEFINITIONS.map((t, i) => i === TOOL_DEFINITIONS.length - 1 ? { ...t, cache_control: { type: "ephemeral", ttl: "1h" } } : t)
       : TOOL_DEFINITIONS;
 
     const resp = await anthropic.messages.create({
@@ -2304,9 +2306,9 @@ async function callLLM(model, messages, maxTokens) {
     const systemBlock = [];
     const staticSystem = messages.find(m => m.role === "system" && m._static);
     const volatileSystem = messages.find(m => m.role === "system" && !m._static);
-    if (staticSystem) systemBlock.push({ type: "text", text: staticSystem.content, cache_control: { type: "ephemeral" } });
+    if (staticSystem) systemBlock.push({ type: "text", text: staticSystem.content, cache_control: { type: "ephemeral", ttl: "1h" } });
     if (volatileSystem) systemBlock.push({ type: "text", text: volatileSystem.content });
-    if (!systemBlock.length && systemPrompt) systemBlock.push({ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } });
+    if (!systemBlock.length && systemPrompt) systemBlock.push({ type: "text", text: systemPrompt, cache_control: { type: "ephemeral", ttl: "1h" } });
     const resp = await anthropic.messages.create({ model, system: systemBlock.length ? systemBlock : undefined, messages: apiMessages, max_tokens: maxTokens });
     const cacheCreate = resp.usage?.cache_creation_input_tokens || 0;
     const cacheRead = resp.usage?.cache_read_input_tokens || 0;

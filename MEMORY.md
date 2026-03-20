@@ -72,6 +72,18 @@
 - cc_relay.py on vault-neo port 17891 — running but unnecessary, cleanup optional
 - Karma2/PLAN.md: still needs full implementation (HAUL ASS directive active)
 
+## Session 113 — Anthropic cache TTL upgrade: 5m → 1h for stable blocks (2026-03-20)
+
+**DONE:**
+- hub-bridge server.js: static system block + tool definitions upgraded from `ephemeral` (5m default) to `ephemeral, ttl: "1h"`
+- Applies to: callLLMWithTools static block, callLLM static block, tool definitions last-tool marker
+- Stays at 5m: tool loop conversation prefix, session history marker (per-turn content, correct)
+- TDD verified: 5x ttl:1h confirmed, 3x no-ttl (5m) for conversation-specific markers
+- PROOF: identity block (15K chars) and tool defs now survive across conversations within the hour
+
+**OPEN BLOCKERS:**
+- /cc bridge UI: Bearer token localStorage persistence + copy button + Clear button
+
 ## Session 112 — /resurrect skill full audit + 4 escaping bugs fixed (2026-03-20)
 
 **DONE:**
