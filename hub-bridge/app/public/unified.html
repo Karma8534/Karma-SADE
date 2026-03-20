@@ -5,1130 +5,666 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Karma</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg-primary:    #0f1117;
-    --bg-secondary:  #1a1d27;
-    --bg-card:       #1e2130;
-    --border:        #2a2d3e;
-    --text-primary:  #e2e8f0;
-    --text-secondary:#8892a4;
-    --accent-purple: #a78bfa;
-    --accent-blue:   #60a5fa;
-    --accent-green:  #34d399;
-    --status-ok:     #34d399;
-    --status-warn:   #f59e0b;
-    --status-err:    #f87171;
-    --user-bubble:   #2d3a5e;
-    --karma-bubble:  #1e2130;
-  }
-
-  html, body { height: 100%; overflow: hidden; }
-
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    font-size: 14px;
+    background: #080810;
+    color: #e2e8f0;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    height: 100vh;
     display: flex;
     flex-direction: column;
   }
 
-  /* ── Top bar ── */
-  .topbar {
+  /* ── Gate ─────────────────────────────────────────────────────────────── */
+  #gate {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-    height: 44px;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-    gap: 16px;
+    justify-content: center;
+    height: 100vh;
+    gap: 14px;
   }
-  .topbar-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--accent-purple);
-    letter-spacing: 0.02em;
+  #gate .gate-mark { font-size: 11px; letter-spacing: 6px; color: #6d28d9; text-transform: uppercase; margin-bottom: 4px; }
+  #gate h1 { font-size: 28px; color: #a78bfa; letter-spacing: 8px; font-weight: 300; }
+  #gate .gate-sub { color: #4b5563; font-size: 11px; letter-spacing: 2px; }
+  #gate input {
+    background: #0e0e1a; border: 1px solid #2d2040; color: #e2e8f0;
+    padding: 9px 14px; width: 420px; font-family: monospace; font-size: 13px;
+    outline: none; margin-top: 12px;
   }
-  .topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    font-size: 12px;
-    color: var(--text-secondary);
+  #gate input:focus { border-color: #6d28d9; }
+  #gate input::placeholder { color: #2d2040; }
+  #gate button {
+    background: #6d28d9; color: #e2e8f0; border: none; padding: 9px 28px;
+    cursor: pointer; font-family: monospace; font-size: 13px; font-weight: bold;
+    letter-spacing: 2px; transition: background 0.15s;
   }
-  .status-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--status-ok);
-    display: inline-block;
-    margin-right: 5px;
-  }
-  .model-badge {
-    background: rgba(167,139,250,0.15);
-    color: var(--accent-purple);
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: 500;
-  }
-  .spend-badge {
-    color: var(--text-secondary);
-    font-size: 12px;
-  }
-  #topbar-clock { color: var(--text-secondary); font-size: 12px; }
+  #gate button:hover { background: #7c3aed; }
+  #gate .err { color: #ef4444; font-size: 12px; display: none; }
 
-  /* ── Main layout ── */
-  .layout {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-  }
+  /* ── App shell ────────────────────────────────────────────────────────── */
+  #app { display: none; flex-direction: column; height: 100vh; }
 
-  /* ── Chat panel ── */
-  .chat-panel {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid var(--border);
-    min-width: 0;
+  /* ── Header ───────────────────────────────────────────────────────────── */
+  #header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 20px; background: #080810;
+    border-bottom: 1px solid #1a1030; flex-shrink: 0;
   }
-  .chat-messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  #header .karma-badge { display: flex; flex-direction: column; gap: 1px; }
+  #header .karma-title { color: #a78bfa; font-size: 18px; letter-spacing: 6px; font-weight: 300; }
+  #header .karma-sub   { color: #4b5563; font-size: 10px; letter-spacing: 3px; }
+  #header .spacer { flex: 1; }
+  #status-bar { display: flex; gap: 20px; align-items: center; }
+  .stat-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #4b5563; }
+  .stat-label { color: #4b5563; }
+  .stat-val   { color: #8b5cf6; }
+  .stat-dot { width: 6px; height: 6px; border-radius: 50%; background: #374151; flex-shrink: 0; }
+  .stat-dot.alive { background: #7c3aed; box-shadow: 0 0 6px #7c3aed; }
+  .stat-dot.warn  { background: #f59e0b; }
+  .stat-dot.dead  { background: #374151; }
+  .hdr-btn {
+    background: none; border: 1px solid #2d2040; color: #4b5563;
+    padding: 4px 10px; cursor: pointer; font-family: monospace; font-size: 10px;
+    letter-spacing: 1px; transition: all 0.15s;
   }
-  .chat-messages::-webkit-scrollbar { width: 4px; }
-  .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .hdr-btn:hover { border-color: #6d28d9; color: #a78bfa; }
+  .hdr-btn.active { border-color: #6d28d9; color: #a78bfa; background: #1a0a2e; }
 
-  .msg { max-width: 85%; display: flex; flex-direction: column; gap: 3px; }
-  .msg.user  { align-self: flex-end; }
-  .msg.karma { align-self: flex-start; }
-  .msg-bubble {
-    padding: 10px 14px;
-    border-radius: 12px;
-    line-height: 1.5;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  .msg.user  .msg-bubble { background: var(--user-bubble); color: var(--text-primary); border-bottom-right-radius: 3px; }
-  .msg.karma .msg-bubble { background: var(--karma-bubble); color: var(--text-primary); border: 1px solid var(--border); border-bottom-left-radius: 3px; }
-  .msg.system .msg-bubble { background: transparent; color: var(--text-secondary); font-size: 12px; font-style: italic; border: none; padding: 4px 0; }
-  .msg-meta { font-size: 11px; color: var(--text-secondary); padding: 0 4px; display: flex; align-items: center; gap: 8px; }
-  .msg.user .msg-meta { justify-content: flex-end; }
+  /* ── Main layout ──────────────────────────────────────────────────────── */
+  #main-layout { display: flex; flex: 1; overflow: hidden; min-height: 0; }
 
-  /* ── Feedback buttons ── */
-  .feedback-btns { display: inline-flex; gap: 2px; margin-left: 4px; }
+  /* ── Chat feed ────────────────────────────────────────────────────────── */
+  #chat-feed {
+    flex: 1; overflow-y: auto; padding: 20px;
+    display: flex; flex-direction: column; gap: 12px;
+    scrollbar-width: thin; scrollbar-color: #1a1030 transparent;
+  }
+  #chat-feed::-webkit-scrollbar { width: 4px; }
+  #chat-feed::-webkit-scrollbar-thumb { background: #1a1030; border-radius: 2px; }
+
+  /* ── Agora panel ──────────────────────────────────────────────────────── */
+  #agora-panel {
+    width: 0; overflow: hidden; transition: width 0.2s ease;
+    border-left: 0 solid #1a1a2e; background: #050508; flex-shrink: 0;
+    display: flex; flex-direction: column;
+  }
+  #agora-panel.open {
+    width: 260px; border-left-width: 1px;
+    overflow-y: auto; scrollbar-width: thin; scrollbar-color: #1a1030 transparent;
+  }
+  #agora-panel.open::-webkit-scrollbar { width: 3px; }
+  #agora-panel.open::-webkit-scrollbar-thumb { background: #1a1030; border-radius: 2px; }
+  #agora-inner { padding: 10px; display: flex; flex-direction: column; gap: 4px; min-width: 260px; }
+  #agora-header {
+    font-size: 9px; color: #2a2a4a; letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #1a1a2e; flex-shrink: 0;
+  }
+  .bus-entry {
+    font-size: 10px; color: #4a4a6a; font-family: monospace;
+    border-bottom: 1px solid #0a0a14; padding-bottom: 4px; margin-bottom: 2px;
+    word-break: break-word; line-height: 1.3;
+  }
+  .bus-entry .b-ts   { color: #2a2a4a; display: block; margin-bottom: 1px; font-size: 9px; }
+  .bus-entry .b-from { color: #5b21b6; font-size: 9px; }
+
+  /* ── Cascade panel ────────────────────────────────────────────────────── */
+  #cascade-panel {
+    display: none; padding: 8px 20px; background: #050508;
+    border-bottom: 1px solid #1a1030; font-size: 10px; color: #4b5563;
+    flex-shrink: 0; gap: 8px; align-items: center; flex-wrap: wrap;
+  }
+  #cascade-panel.open { display: flex; }
+  .cascade-node { display: flex; align-items: center; gap: 4px; }
+  .cascade-node .cn-dot { width: 5px; height: 5px; border-radius: 50%; background: #374151; }
+  .cascade-node .cn-dot.alive { background: #7c3aed; box-shadow: 0 0 4px #7c3aed; }
+  .cascade-arrow { color: #2a2a4a; margin: 0 2px; }
+
+  /* ── Messages ─────────────────────────────────────────────────────────── */
+  .msg { display: flex; flex-direction: column; gap: 3px; max-width: 820px; }
+  .msg.user    { align-self: flex-end; }
+  .msg.karma, .msg.regent, .msg.cc, .msg.codex { align-self: flex-start; }
+
+  .msg-meta { display: flex; align-items: center; gap: 8px; font-size: 10px; }
+  .msg.user .msg-meta { color: #374151; justify-content: flex-end; }
+  .msg-sender { letter-spacing: 2px; font-weight: bold; }
+
+  .msg.karma  .msg-sender { color: #8b5cf6; }
+  .msg.regent .msg-sender { color: #6d6dcc; }
+  .msg.cc     .msg-sender { color: #3b82f6; }
+  .msg.codex  .msg-sender { color: #10b981; }
+  .msg.user   .msg-sender { color: #4b5563; }
+  .msg.system .msg-sender { color: #6b7280; }
+  .msg-ts { color: #374151; }
+
+  .msg-body {
+    padding: 10px 14px; line-height: 1.6; font-size: 13px;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .msg.karma  .msg-body { background: #0e0a1a; border: 1px solid #2d1f50; border-left: 3px solid #6d28d9; color: #e2e8f0; }
+  .msg.regent .msg-body { background: #0a0a18; border: 1px solid #1f1f48; border-left: 3px solid #4040a0; color: #c4c4e0; }
+  .msg.cc     .msg-body { background: #0a0f1a; border: 1px solid #1f2f48; border-left: 3px solid #2563eb; color: #bfcfe0; }
+  .msg.codex  .msg-body { background: #0a1410; border: 1px solid #1f3828; border-left: 3px solid #059669; color: #b0d4c0; }
+  .msg.user   .msg-body { background: #0a0a14; border: 1px solid #1f1f38; color: #9ca3af; }
+  .msg.system .msg-body { background: #0a0a10; border: 1px solid #1a1a28; color: #6b7280; font-size: 11px; }
+
+  .msg-body.pending { color: #3b3b60; font-style: italic; animation: pulse 1.6s ease-in-out infinite; }
+
+  /* Feedback */
+  .feedback-btns { display: inline-flex; gap: 6px; margin-left: 8px; }
   .feedback-btns button {
-    background: none; border: none; cursor: pointer;
-    font-size: 13px; opacity: 0.35; padding: 0 2px;
-    transition: opacity 0.15s;
+    background: none; border: none; cursor: pointer; font-size: 12px;
+    opacity: 0.35; transition: opacity 0.15s; padding: 0;
   }
-  .feedback-btns button:hover { opacity: 0.8; }
-  .feedback-btns button.active { opacity: 1; }
-  .feedback-btns button.active.up { color: var(--accent-green); }
-  .feedback-btns button.active.down { color: var(--status-err); }
-  .write-confirmed { font-size: 0.75em; color: var(--accent-green); margin-left: 4px;
-    animation: fadeConfirm 2s ease forwards; pointer-events: none; }
-  @keyframes fadeConfirm { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
+  .feedback-btns button:hover, .feedback-btns button.active { opacity: 1; }
+  .write-confirmed { color: #7c3aed; font-size: 10px; margin-left: 6px; }
+  .feedback-note { margin-top: 6px; display: flex; flex-direction: column; gap: 6px; }
+  .feedback-note textarea {
+    background: #0e0e1a; border: 1px solid #2d2040; color: #e2e8f0;
+    padding: 6px 10px; font-family: monospace; font-size: 12px;
+    resize: vertical; min-height: 48px; outline: none;
+  }
+  .feedback-note textarea:focus { border-color: #6d28d9; }
+  .feedback-note button {
+    align-self: flex-end; background: #3b1f6a; color: #e2e8f0; border: none;
+    padding: 4px 12px; cursor: pointer; font-family: monospace; font-size: 11px;
+  }
+  .feedback-note button:hover { background: #6d28d9; }
 
-  /* ── Feedback note (inline correction after thumbs-down) ── */
-  .feedback-note { margin-top: 4px; }
-  .feedback-note textarea { width: 100%; font-size: 0.9em; }
-  .feedback-note button { margin-top: 4px; font-size: 0.85em; }
+  /* Processing */
+  #processing { display: none; align-self: flex-start; padding: 8px 14px; color: #5b21b6; font-size: 12px; letter-spacing: 1px; }
+  #processing.visible { display: block; }
+  @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+  #processing { animation: pulse 1.4s ease-in-out infinite; }
 
-  /* ── Input area ── */
-  .chat-input-area {
-    border-top: 1px solid var(--border);
-    padding: 12px 16px;
-    flex-shrink: 0;
+  /* ── Input area ───────────────────────────────────────────────────────── */
+  #input-area {
+    padding: 12px 20px 14px; background: #080810;
+    border-top: 1px solid #1a1030; flex-shrink: 0;
+    display: flex; gap: 10px; align-items: flex-end;
   }
-  .file-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 8px;
+  #msg-input {
+    flex: 1; background: #0e0e1a; border: 1px solid #2d2040; color: #e2e8f0;
+    padding: 9px 12px; font-family: monospace; font-size: 13px;
+    resize: none; min-height: 40px; max-height: 140px; outline: none; line-height: 1.5;
   }
-  .file-chip {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 3px 8px;
-    font-size: 12px;
-    color: var(--text-secondary);
+  #msg-input:focus { border-color: #6d28d9; }
+  #msg-input::placeholder { color: #2d2040; }
+  #send-btn {
+    background: #6d28d9; color: #e2e8f0; border: none; padding: 9px 20px;
+    cursor: pointer; font-family: monospace; font-size: 12px; font-weight: bold;
+    letter-spacing: 1px; transition: background 0.15s; flex-shrink: 0;
   }
-  .file-chip-remove {
-    cursor: pointer;
-    color: var(--text-secondary);
-    margin-left: 2px;
-    line-height: 1;
-  }
-  .file-chip-remove:hover { color: var(--status-err); }
+  #send-btn:hover { background: #7c3aed; }
+  #send-btn:disabled { opacity: 0.35; cursor: default; }
 
-  textarea#chat-input {
-    width: 100%;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text-primary);
-    padding: 10px 12px;
-    font-size: 14px;
-    font-family: inherit;
-    resize: none;
-    outline: none;
-    min-height: 60px;
-    max-height: 160px;
-    overflow-y: auto;
-    line-height: 1.5;
+  /* ── Route hint + footer ──────────────────────────────────────────────── */
+  #route-hint { font-size: 10px; color: #3a2a5a; padding: 0 20px 4px; flex-shrink: 0; }
+  #route-hint span { margin-right: 14px; letter-spacing: 1px; }
+  #route-hint .rh-target { color: #6d28d9; }
+  #footer {
+    padding: 6px 20px; background: #080810; border-top: 1px solid #0f0a1a;
+    text-align: center; font-size: 10px; letter-spacing: 4px; color: #2d1f50; flex-shrink: 0;
   }
-  textarea#chat-input:focus { border-color: var(--accent-purple); }
-  textarea#chat-input::placeholder { color: var(--text-secondary); }
-
-  .input-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 8px;
-  }
-  .conn-status {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: var(--text-secondary);
-  }
-  .conn-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--status-ok);
-  }
-  .input-actions { display: flex; gap: 8px; align-items: center; }
-
-  button {
-    cursor: pointer;
-    border: none;
-    border-radius: 6px;
-    font-size: 13px;
-    font-family: inherit;
-    transition: opacity 0.15s;
-  }
-  button:disabled { opacity: 0.45; cursor: not-allowed; }
-  .btn-icon {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    color: var(--text-primary);
-    padding: 6px 10px;
-  }
-  .btn-icon:hover:not(:disabled) { border-color: var(--accent-purple); }
-  .btn-send {
-    background: var(--accent-purple);
-    color: #fff;
-    padding: 6px 16px;
-    font-weight: 500;
-  }
-  .btn-send:hover:not(:disabled) { opacity: 0.85; }
-  .btn-deep {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    padding: 6px 10px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
-  }
-  .btn-deep.active {
-    background: rgba(139, 92, 246, 0.18);
-    border-color: var(--accent-purple);
-    color: var(--accent-purple);
-  }
-  .btn-deep:hover:not(.active) { border-color: var(--accent-purple); }
-
-  input[type="file"] { display: none; }
-
-  /* ── Sidebar ── */
-  .sidebar {
-    width: 260px;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    padding: 16px 12px;
-    gap: 4px;
-  }
-  .sidebar::-webkit-scrollbar { width: 4px; }
-  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  .sidebar-section {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 8px;
-  }
-  .sidebar-section-title {
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-secondary);
-    margin-bottom: 8px;
-  }
-  .sidebar-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 4px 0;
-    font-size: 13px;
-    border-bottom: 1px solid var(--border);
-  }
-  .sidebar-row:last-child { border-bottom: none; }
-  .sidebar-row-label { color: var(--text-secondary); }
-  .sidebar-row-value { color: var(--text-primary); font-weight: 500; text-align: right; }
-
-  .service-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 0;
-    font-size: 13px;
-    border-bottom: 1px solid var(--border);
-  }
-  .service-row:last-child { border-bottom: none; }
-  .service-name { color: var(--text-secondary); }
-  .service-status {
-    font-size: 11px;
-    font-weight: 500;
-    padding: 2px 7px;
-    border-radius: 10px;
-  }
-  .service-status.ok { background: rgba(52,211,153,0.15); color: var(--status-ok); }
-  .service-status.warn { background: rgba(245,158,11,0.15); color: var(--status-warn); }
-
-  /* ── Coordination panel ── */
-  .coord-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-  .coord-count {
-    font-size: 10px;
-    font-weight: 600;
-    background: rgba(245,158,11,0.2);
-    color: var(--status-warn);
-    padding: 1px 6px;
-    border-radius: 8px;
-    min-width: 18px;
-    text-align: center;
-  }
-  .coord-count.zero { background: rgba(52,211,153,0.15); color: var(--status-ok); }
-  .coord-entry {
-    padding: 6px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 12px;
-    cursor: pointer;
-  }
-  .coord-entry:last-child { border-bottom: none; }
-  .coord-entry-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 4px;
-  }
-  .coord-from { color: var(--accent-purple); font-weight: 600; }
-  .coord-time { color: var(--text-secondary); font-size: 11px; }
-  .coord-status {
-    font-size: 10px;
-    font-weight: 500;
-    padding: 1px 5px;
-    border-radius: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  .coord-status.pending { background: rgba(245,158,11,0.15); color: var(--status-warn); }
-  .coord-status.responded { background: rgba(52,211,153,0.15); color: var(--status-ok); }
-  .coord-preview {
-    color: var(--text-secondary);
-    margin-top: 3px;
-    line-height: 1.4;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .coord-entry.expanded .coord-preview {
-    white-space: pre-wrap;
-    overflow: visible;
-    text-overflow: unset;
-  }
-  #coord-list {
-    max-height: 200px;
-    overflow-y: auto;
-  }
-  #coord-list::-webkit-scrollbar { width: 3px; }
-  #coord-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-  .coord-empty {
-    color: var(--text-secondary);
-    font-size: 12px;
-    font-style: italic;
-    padding: 4px 0;
-  }
-  .coord-compose { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
-  .coord-compose select { width: 100%; padding: 4px 6px; font-size: 11px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 4px; }
-  .coord-compose-row { display: flex; gap: 4px; }
-  .coord-compose-row input { flex: 1; padding: 5px 8px; font-size: 12px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px; outline: none; }
-  .coord-compose-row input:focus { border-color: var(--accent-purple); }
-  .coord-compose-row button { padding: 4px 10px; font-size: 12px; background: var(--accent-purple); color: white; border: none; border-radius: 6px; cursor: pointer; }
-  .coord-compose-row button:hover { opacity: 0.85; }
-  .coord-compose-row button:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  /* ── Typing indicator ── */
-  .typing-indicator .msg-bubble {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-    padding: 12px 14px;
-  }
-  .typing-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--text-secondary);
-    animation: bounce 1.2s infinite;
-  }
-  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes bounce {
-    0%, 60%, 100% { transform: translateY(0); }
-    30% { transform: translateY(-5px); }
-  }
+  #empty-state { color: #2a2a4a; font-size: 12px; text-align: center; margin-top: 40px; letter-spacing: 2px; }
 </style>
 </head>
 <body>
 
-<!-- Top bar -->
-<div class="topbar">
-  <span class="topbar-title">Karma</span>
-  <div class="topbar-right">
-    <span><span class="status-dot" id="topbar-dot"></span>All Systems Operational</span>
-    <span class="model-badge" id="topbar-model">loading…</span>
-    <span class="spend-badge" id="topbar-spend">— / $35.00</span>
-    <span id="topbar-clock"></span>
-  </div>
+<!-- Gate -->
+<div id="gate">
+  <div class="gate-mark">Ascendant</div>
+  <h1>KARMA</h1>
+  <div class="gate-sub">Access token required</div>
+  <input type="password" id="token-input" placeholder="hub token" autocomplete="off" />
+  <button id="token-btn">ENTER</button>
+  <div class="err" id="gate-err">Invalid token</div>
 </div>
 
-<!-- Main layout -->
-<div class="layout">
+<!-- App -->
+<div id="app">
 
-  <!-- Chat panel -->
-  <div class="chat-panel">
-    <div class="chat-messages" id="chat-messages"></div>
-
-    <div class="chat-input-area">
-      <div class="file-list" id="file-list"></div>
-      <textarea id="chat-input" placeholder="Ask Karma anything… (Enter to send, Shift+Enter for new line)" rows="2"></textarea>
-      <input type="file" id="file-input" multiple accept="*/*">
-      <div class="input-row">
-        <div class="conn-status">
-          <span class="conn-dot" id="conn-dot"></span>
-          <span id="conn-status">Connected</span>
-        </div>
-        <div class="input-actions">
-          <button class="btn-icon" id="file-btn" title="Attach files (Ctrl+Shift+U)">📎</button>
-          <button class="btn-icon" id="new-chat-btn" title="New conversation">🔄</button>
-          <button class="btn-deep" id="deep-btn" title="Enable deep mode (tool use + graph queries)">DEEP</button>
-          <button class="btn-send" id="send-btn">Send</button>
-        </div>
+  <div id="header">
+    <div class="karma-badge">
+      <div class="karma-title">KARMA</div>
+      <div class="karma-sub">SovereignPeer &middot; Ascendant &middot; Always Present</div>
+    </div>
+    <div class="spacer"></div>
+    <div id="status-bar">
+      <div class="stat-item">
+        <div class="stat-dot" id="heartbeat-dot"></div>
+        <span class="stat-label">last seen</span>
+        <span class="stat-val" id="last-seen-val">—</span>
+      </div>
+      <div class="stat-item">
+        <div class="stat-dot" id="k2-dot"></div>
+        <span class="stat-label">K2</span>
+        <span class="stat-val" id="k2-val">—</span>
       </div>
     </div>
+    <button class="hdr-btn" id="cascade-btn">CASCADE</button>
+    <button class="hdr-btn" id="agora-btn">AGORA</button>
+    <button class="hdr-btn" id="clear-btn">CLEAR</button>
   </div>
 
-  <!-- Sidebar -->
-  <div class="sidebar">
+  <div id="cascade-panel">
+    <div class="cascade-node"><div class="cn-dot" id="cn-k2"></div><span>K2</span></div>
+    <span class="cascade-arrow">&#8594;</span>
+    <div class="cascade-node"><div class="cn-dot" id="cn-p1"></div><span>P1</span></div>
+    <span class="cascade-arrow">&#8594;</span>
+    <div class="cascade-node"><div class="cn-dot" id="cn-zai"></div><span>z.ai</span></div>
+    <span class="cascade-arrow">&#8594;</span>
+    <div class="cascade-node"><div class="cn-dot" id="cn-groq"></div><span>Groq</span></div>
+    <span class="cascade-arrow">&#8594;</span>
+    <div class="cascade-node"><div class="cn-dot" id="cn-or"></div><span>OpenRouter</span></div>
+    <span class="cascade-arrow">&#8594;</span>
+    <div class="cascade-node"><div class="cn-dot alive" id="cn-claude"></div><span>Claude</span></div>
+  </div>
 
-    <div class="sidebar-section">
-      <div class="sidebar-section-title">Session</div>
-      <div class="sidebar-row">
-        <span class="sidebar-row-label">Model</span>
-        <span class="sidebar-row-value" id="sb-model">—</span>
-      </div>
-      <div class="sidebar-row">
-        <span class="sidebar-row-label">This request</span>
-        <span class="sidebar-row-value" id="sb-last-cost">—</span>
-      </div>
-      <div class="sidebar-row">
-        <span class="sidebar-row-label">Month spend</span>
-        <span class="sidebar-row-value" id="sb-spend">—</span>
-      </div>
-      <div class="sidebar-row">
-        <span class="sidebar-row-label">Cap</span>
-        <span class="sidebar-row-value" id="sb-cap">$35.00</span>
-      </div>
+  <div id="main-layout">
+
+    <div id="chat-feed">
+      <div id="empty-state">Waiting for Karma...</div>
+      <div id="processing">Karma is thinking...</div>
     </div>
 
-    <div class="sidebar-section">
-      <div class="sidebar-section-title">Services</div>
-      <div class="service-row">
-        <span class="service-name">hub-bridge</span>
-        <span class="service-status ok">Running</span>
-      </div>
-      <div class="service-row">
-        <span class="service-name">karma-server</span>
-        <span class="service-status ok">Running</span>
-      </div>
-      <div class="service-row">
-        <span class="service-name">falkordb</span>
-        <span class="service-status ok">Running</span>
-      </div>
-      <div class="service-row">
-        <span class="service-name">vault-api</span>
-        <span class="service-status ok">Running</span>
-      </div>
-    </div>
-
-    <div class="sidebar-section" id="coord-section">
-      <div class="coord-header">
-        <span class="sidebar-section-title" style="margin-bottom:0">Coordination</span>
-        <span class="coord-count zero" id="coord-count">0</span>
-      </div>
-      <div id="coord-list">
-        <div class="coord-empty">No messages yet</div>
-      </div>
-      <div class="coord-compose">
-        <select id="coord-to">
-          <option value="karma">→ Karma</option>
-          <option value="cc">→ CC</option>
-          <option value="regent">→ Regent</option>
-        </select>
-        <div class="coord-compose-row">
-          <input type="text" id="coord-input" placeholder="Message..." maxlength="500" />
-          <button id="coord-send" title="Send coordination message">▶</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Regent chat section -->
-    <div class="sidebar-section" id="regent-section" style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px">
-      <div class="coord-header">
-        <span class="sidebar-section-title" style="margin-bottom:0;color:#9b8fff">&#9889; Regent</span>
-        <span id="regent-status-dot" style="font-size:10px;color:#34d399">&#9679;</span>
-      </div>
-      <div id="regent-chat-log" style="max-height:220px;overflow-y:auto;font-size:12px;margin-bottom:6px"></div>
-      <div class="coord-compose">
-        <div class="coord-compose-row">
-          <input type="text" id="regent-chat-input" placeholder="Message Regent..." maxlength="500" />
-          <button id="regent-chat-send" title="Send to Regent" style="background:#4a3a8a">&#9654;</button>
-        </div>
+    <div id="agora-panel">
+      <div id="agora-inner">
+        <div id="agora-header">AGORA &mdash; Coordination Bus</div>
       </div>
     </div>
 
   </div>
+
+  <div id="route-hint">
+    <span>default &#8594; <span class="rh-target">KARMA</span></span>
+    <span>@regent &#8594; <span class="rh-target">REGENT</span></span>
+    <span>@cc &#8594; <span class="rh-target">CC</span></span>
+    <span>@codex &#8594; <span class="rh-target">CODEX</span></span>
+  </div>
+
+  <div id="input-area">
+    <textarea id="msg-input" rows="1" placeholder="Message Karma... (@cc, @codex, @regent to route)"></textarea>
+    <button id="send-btn">SEND</button>
+  </div>
+
+  <div id="footer">Evolve. Continue.</div>
+
 </div>
 
 <script>
-  // ── Config ──────────────────────────────────────────────────────────────
-  const API_URL = '/v1/chat';
+  const CHAT_URL     = '/v1/chat';
+  const BUS_POST_URL = '/v1/coordination/post';
+  const BUS_POLL_URL = '/v1/coordination/recent?limit=40';
+  const POLL_MS      = 5000;
+  const TOKEN_KEY    = 'hubToken';
+  const CONV_KEY     = 'karmaConvId';
+  const MSG_KEY      = 'karmaMessages';
 
-  function getToken()  { return localStorage.getItem('karma_hub_token') || ''; }
-  function saveToken(t){ localStorage.setItem('karma_hub_token', t.trim()); }
-  function clearToken(){ localStorage.removeItem('karma_hub_token'); }
-  function promptToken() {
-    const t = prompt('Enter your Karma hub token:');
-    if (t && t.trim()) { saveToken(t); return t.trim(); }
-    return '';
+  let hubToken       = null;
+  let conversationId = localStorage.getItem(CONV_KEY) || crypto.randomUUID();
+  let seenBusIds     = new Set();
+  let pendingBus     = new Map();
+  let lastActivityTs = null;
+
+  localStorage.setItem(CONV_KEY, conversationId);
+
+  // ── Auth ────────────────────────────────────────────────────────────────
+  function init() {
+    const saved = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('karma_hub_token');
+    if (saved) { hubToken = saved; localStorage.setItem(TOKEN_KEY, saved); showApp(); return; }
+    document.getElementById('token-btn').addEventListener('click', submitToken);
+    document.getElementById('token-input').addEventListener('keydown', e => { if (e.key === 'Enter') submitToken(); });
   }
 
-  // ── State ────────────────────────────────────────────────────────────────
-  let conversationId = localStorage.getItem('karma_conversation_id');
-  if (!conversationId) {
-    conversationId = crypto.randomUUID();
-    localStorage.setItem('karma_conversation_id', conversationId);
-  }
-  let selectedFiles  = [];
-
-  // ── Conversation persistence ──────────────────────────────────────────
-  function saveMessages() {
-    const msgs = [];
-    $messages.querySelectorAll('.msg').forEach(el => {
-      const role = el.classList.contains('user') ? 'user' : el.classList.contains('karma') ? 'karma' : 'system';
-      const bubble = el.querySelector('.msg-bubble');
-      if (!bubble) return;
-      msgs.push({ role, text: bubble.textContent, writeId: el.dataset.writeId || null, turnId: el.dataset.turnId || null });
-    });
-    localStorage.setItem('karma_messages', JSON.stringify(msgs));
-  }
-
-  function loadSavedMessages() {
-    const raw = localStorage.getItem('karma_messages');
-    if (!raw) return;
+  async function submitToken() {
+    const val = document.getElementById('token-input').value.trim();
+    if (!val) return;
+    hubToken = val;
     try {
-      const msgs = JSON.parse(raw);
-      msgs.forEach(m => addMessage(m.role, m.text, m.writeId, m.turnId));
-    } catch (e) { /* corrupt data, ignore */ }
+      const r = await fetch('/v1/coordination/recent?limit=1', { headers: auth() });
+      if (r.status === 401 || r.status === 403) {
+        document.getElementById('gate-err').style.display = 'block';
+        hubToken = null; return;
+      }
+    } catch (_) {}
+    localStorage.setItem(TOKEN_KEY, val);
+    showApp();
   }
 
-  function clearConversation() {
-    localStorage.removeItem('karma_messages');
-    localStorage.removeItem('karma_conversation_id');
-    conversationId = crypto.randomUUID();
-    localStorage.setItem('karma_conversation_id', conversationId);
-    $messages.innerHTML = '';
+  function auth() { return { 'Authorization': 'Bearer ' + hubToken }; }
+
+  function showApp() {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('send-btn').addEventListener('click', sendMessage);
+    document.getElementById('msg-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+    document.getElementById('agora-btn').addEventListener('click', toggleAgora);
+    document.getElementById('cascade-btn').addEventListener('click', toggleCascade);
+    document.getElementById('clear-btn').addEventListener('click', clearConversation);
+    autoGrow(document.getElementById('msg-input'));
+    loadSavedMessages();
+    pollBus();
+    setInterval(pollBus, POLL_MS);
+    setInterval(updateHeartbeat, 15000);
   }
 
-  // ── DOM refs ─────────────────────────────────────────────────────────────
-  const $messages  = document.getElementById('chat-messages');
-  const $input     = document.getElementById('chat-input');
-  const $sendBtn   = document.getElementById('send-btn');
-  const $deepBtn   = document.getElementById('deep-btn');
-  const $fileBtn   = document.getElementById('file-btn');
-  let deepMode = false;
-  $deepBtn.addEventListener('click', () => {
-    deepMode = !deepMode;
-    $deepBtn.classList.toggle('active', deepMode);
-  });
-  const $fileInput = document.getElementById('file-input');
-  const $fileList  = document.getElementById('file-list');
-  const $connDot   = document.getElementById('conn-dot');
-  const $connStatus= document.getElementById('conn-status');
-  const $sbModel   = document.getElementById('sb-model');
-  const $sbLastCost= document.getElementById('sb-last-cost');
-  const $sbSpend   = document.getElementById('sb-spend');
-  const $sbCap     = document.getElementById('sb-cap');
-  const $topModel  = document.getElementById('topbar-model');
-  const $topSpend  = document.getElementById('topbar-spend');
-  const $topClock  = document.getElementById('topbar-clock');
-
-  // ── Clock ────────────────────────────────────────────────────────────────
-  function updateClock() {
-    $topClock.textContent = new Date().toLocaleTimeString();
+  function autoGrow(el) {
+    el.addEventListener('input', () => { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 140) + 'px'; });
   }
 
-  // ── Connection status ────────────────────────────────────────────────────
-  function setConnStatus(text, ok) {
-    $connStatus.textContent = text;
-    $connDot.style.background = ok ? 'var(--status-ok)' : 'var(--status-err)';
+  function toggleAgora() {
+    document.getElementById('agora-panel').classList.toggle('open');
+    document.getElementById('agora-btn').classList.toggle('active');
   }
 
-  // ── Sidebar update from response telemetry ───────────────────────────────
-  function updateSidebar(data) {
-    // Model: ALWAYS update (multiple fallback sources for reliability)
-    const model = data.model || data.canonical?.model || 'unknown';
-    if (model && model !== 'unknown') {
-      $sbModel.textContent  = model;
-      $topModel.textContent = model;
-      console.log('[UI] Model updated to:', model);
+  function toggleCascade() {
+    document.getElementById('cascade-panel').classList.toggle('open');
+    document.getElementById('cascade-btn').classList.toggle('active');
+  }
+
+  // ── Routing ─────────────────────────────────────────────────────────────
+  function parseTarget(text) {
+    const m = text.match(/^@(\w+)\s*/i);
+    if (!m) return { target: 'karma', text };
+    const tag = m[1].toLowerCase();
+    if (['cc', 'codex', 'regent'].includes(tag)) return { target: tag, text: text.slice(m[0].length).trim() };
+    return { target: 'karma', text };
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('msg-input');
+    const raw   = input.value.trim();
+    if (!raw) return;
+    const { target, text } = parseTarget(raw);
+    input.value = '';
+    input.style.height = 'auto';
+    document.getElementById('send-btn').disabled = true;
+    appendMsg('user', raw);
+    hideEmpty();
+    scrollBottom();
+    if (target === 'karma') {
+      await sendToKarma(text);
     } else {
-      console.warn('[UI] Model field missing in response:', data);
+      await sendToBus(target, text);
     }
+    document.getElementById('send-btn').disabled = false;
+    document.getElementById('msg-input').focus();
+  }
 
-    // Cost estimate
-    if (data.usd_estimate != null) {
-      $sbLastCost.textContent = '$' + data.usd_estimate.toFixed(4);
-    }
-
-    // Spend tracking
-    if (data.spend) {
-      const spent = data.spend.usd_spent ?? data.spend.spend_used_usd ?? 0;
-      const cap   = data.spend.cap_usd   ?? data.spend.spend_cap_usd  ?? 35;
-      $sbSpend.textContent = '$' + spent.toFixed(2);
-      $sbCap.textContent   = '$' + cap.toFixed(2);
-      $topSpend.textContent = '$' + spent.toFixed(2) + ' / $' + cap.toFixed(2);
+  // ── Karma: /v1/chat ─────────────────────────────────────────────────────
+  async function sendToKarma(text) {
+    const proc = document.getElementById('processing');
+    proc.classList.add('visible');
+    scrollBottom();
+    try {
+      const res = await fetch(CHAT_URL, {
+        method: 'POST',
+        headers: { ...auth(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, conversation_id: conversationId, session_id: conversationId, stream: false })
+      });
+      if (res.status === 401) { proc.classList.remove('visible'); appendMsg('system', 'Token rejected.'); return; }
+      const data = await res.json();
+      proc.classList.remove('visible');
+      const content = data.assistant_text || data.response || data.content || data.error || '(no response)';
+      const writeId = data.write_id ?? null;
+      const turnId  = data.canonical?.turn_id ?? null;
+      appendMsg('karma', content, writeId, turnId);
+      lastActivityTs = new Date().toISOString();
+      updateHeartbeat();
+    } catch (err) {
+      proc.classList.remove('visible');
+      appendMsg('system', 'Error: ' + err.message);
     }
   }
 
-  // ── Typing indicator ─────────────────────────────────────────────────────
-  let typingEl = null;
-  function showTyping() {
-    typingEl = document.createElement('div');
-    typingEl.className = 'msg karma typing-indicator';
-    typingEl.innerHTML = '<div class="msg-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>';
-    $messages.appendChild(typingEl);
-    $messages.scrollTop = $messages.scrollHeight;
-  }
-  function hideTyping() {
-    if (typingEl) { typingEl.remove(); typingEl = null; }
+  // ── Bus: regent / cc / codex ────────────────────────────────────────────
+  async function sendToBus(target, text) {
+    const pendingId   = 'p-' + Date.now();
+    const placeholder = appendPending(target, pendingId);
+    pendingBus.set(pendingId, { el: placeholder, target, sentAt: Date.now() });
+    scrollBottom();
+    try {
+      await fetch(BUS_POST_URL, {
+        method: 'POST',
+        headers: { ...auth(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: 'colby', to: target, type: 'inform', urgency: 'informational', content: text })
+      });
+    } catch (err) {
+      const body = placeholder.querySelector('.msg-body');
+      if (body) { body.textContent = 'Send failed: ' + err.message; body.classList.remove('pending'); }
+    }
+    setTimeout(() => {
+      if (!pendingBus.has(pendingId)) return;
+      const { el } = pendingBus.get(pendingId);
+      const body = el && el.querySelector('.msg-body');
+      if (body) { body.textContent = '[' + target.toUpperCase() + ' — no response after 5m]'; body.classList.remove('pending'); }
+      pendingBus.delete(pendingId);
+    }, 5 * 60 * 1000);
   }
 
-  // ── Add message ──────────────────────────────────────────────────────────
-  function addMessage(role, content, writeId, turnId = null) {
-    const wrap    = document.createElement('div');
-    wrap.className = 'msg ' + role;
-    if (writeId) wrap.dataset.writeId = writeId;
-    if (turnId) wrap.dataset.turnId = turnId;
-    const bubble  = document.createElement('div');
-    bubble.className = 'msg-bubble';
-    bubble.textContent = content;
-    const meta    = document.createElement('div');
-    meta.className = 'msg-meta';
-    const label = (role === 'user' ? 'You' : role === 'karma' ? 'Karma' : '');
-    const timeStr = new Date().toLocaleTimeString();
-    meta.innerHTML = '<span>' + label + ' &middot; ' + timeStr + '</span>';
-    // Add feedback buttons for all Karma messages (write_id takes priority; falls back to turn_id)
-    if (role === 'karma' && (writeId || turnId)) {
-      const btns = document.createElement('span');
-      btns.className = 'feedback-btns';
-      btns.innerHTML = '<button class="up" title="Good response">&#x1F44D;</button><button class="down" title="Bad response">&#x1F44E;</button>';
-      btns.querySelector('.up').onclick = function() { sendFeedback(writeId, turnId, 'up', this); };
-      btns.querySelector('.down').onclick = function() { sendFeedback(writeId, turnId, 'down', this, wrap); };
-      meta.appendChild(btns);
+  // ── Polling ─────────────────────────────────────────────────────────────
+  async function pollBus() {
+    try {
+      const r = await fetch(BUS_POLL_URL, { headers: auth() });
+      if (!r.ok) return;
+      const data = await r.json();
+      const msgs = Array.isArray(data) ? data : (data.entries || data.messages || data.items || []);
+      processBus(msgs);
+    } catch (_) {}
+  }
+
+  function processBus(msgs) {
+    if (!msgs.length) return;
+    const sorted = [...msgs].sort((a, b) =>
+      new Date(a.ts || a.timestamp || a.created_at || 0) - new Date(b.ts || b.timestamp || b.created_at || 0)
+    );
+    for (const msg of sorted) {
+      const id = msg.id || msg.ts || msg.timestamp || JSON.stringify(msg).slice(0, 80);
+      if (seenBusIds.has(id)) continue;
+      seenBusIds.add(id);
+
+      const from    = (msg.from || '').toLowerCase();
+      const content = msg.content || msg.message || msg.text || '';
+      const ts      = msg.ts || msg.timestamp || msg.created_at || null;
+
+      appendAgoraEntry(msg);
+
+      const isAgent     = ['regent', 'cc', 'codex', 'karma'].includes(from);
+      const isNoise     = /^(HEARTBEAT|KCC|SESSION |CC SESSION|CHECKPOINT)/.test(content);
+      const isToColby   = (msg.to === 'colby' || msg.to === 'all');
+
+      if (isAgent && !isNoise && isToColby) {
+        const resolved = resolvePending(from);
+        if (!resolved) appendMsg(from, content);
+        lastActivityTs = ts || new Date().toISOString();
+        updateHeartbeat();
+        updateK2Status();
+        scrollBottom();
+      }
     }
-    wrap.appendChild(bubble);
-    if (role !== 'system') wrap.appendChild(meta);
-    $messages.appendChild(wrap);
-    setTimeout(() => { $messages.scrollTop = $messages.scrollHeight; }, 10);
+  }
+
+  function resolvePending(from) {
+    for (const [pid, info] of pendingBus.entries()) {
+      const match = info.target === from || (from === 'karma' && info.target === 'regent');
+      if (!match) continue;
+      const el = info.el;
+      if (el && el.parentNode) el.remove();
+      pendingBus.delete(pid);
+      return true;
+    }
+    return false;
+  }
+
+  // ── Rendering ───────────────────────────────────────────────────────────
+  const SENDER_LABELS = { karma: 'KARMA', regent: 'REGENT', cc: 'CC', codex: 'CODEX', user: 'YOU', system: 'SYS' };
+
+  function appendMsg(role, content, writeId, turnId) {
+    const ts  = formatTs(new Date().toISOString());
+    const lbl = SENDER_LABELS[role] || role.toUpperCase();
+    const el  = document.createElement('div');
+    el.className = 'msg ' + role;
+    if (writeId) el.dataset.writeId = writeId;
+    if (turnId)  el.dataset.turnId  = turnId;
+
+    const hasFeedback = role !== 'user' && role !== 'system' && (writeId || turnId);
+    const metaLeft  = role === 'user'
+      ? '<span class="msg-ts">' + escHtml(ts) + '</span><span class="msg-sender">' + lbl + '</span>'
+      : '<span class="msg-sender">' + lbl + '</span><span class="msg-ts">' + escHtml(ts) + '</span>';
+    const fbHtml = hasFeedback
+      ? '<span class="feedback-btns"><button class="up">&#x1F44D;</button><button class="down">&#x1F44E;</button></span>'
+      : '';
+
+    el.innerHTML =
+      '<div class="msg-meta">' + metaLeft + fbHtml + '</div>' +
+      '<div class="msg-body">' + escHtml(content) + '</div>';
+
+    if (hasFeedback) wireFeedback(el, writeId, turnId);
+
+    const feed = document.getElementById('chat-feed');
+    feed.insertBefore(el, document.getElementById('processing'));
     saveMessages();
+    return el;
   }
 
-  // ── Send feedback ─────────────────────────────────────────────────────────
+  function appendPending(target, pid) {
+    const lbl = (SENDER_LABELS[target] || target.toUpperCase());
+    const ts  = formatTs(new Date().toISOString());
+    const el  = document.createElement('div');
+    el.className = 'msg ' + target;
+    el.id = pid;
+    el.innerHTML =
+      '<div class="msg-meta"><span class="msg-sender">' + lbl + '</span><span class="msg-ts">' + escHtml(ts) + '</span></div>' +
+      '<div class="msg-body pending">' + lbl + ' &mdash; waiting...</div>';
+    const feed = document.getElementById('chat-feed');
+    feed.insertBefore(el, document.getElementById('processing'));
+    return el;
+  }
+
+  // ── Feedback ────────────────────────────────────────────────────────────
+  function wireFeedback(msgEl, writeId, turnId) {
+    const btns = msgEl.querySelector('.feedback-btns');
+    if (!btns) return;
+    btns.querySelector('.up').onclick   = () => sendFeedback(writeId, turnId, 'up',   btns.querySelector('.up'),   null);
+    btns.querySelector('.down').onclick = () => sendFeedback(writeId, turnId, 'down', btns.querySelector('.down'), msgEl);
+  }
+
   async function sendFeedback(writeId, turnId, signal, btnEl, msgWrap) {
-    const token = getToken();
-    if (!token) return;
-    // Visual: highlight clicked, dim sibling
     const btns = btnEl.parentElement;
     btns.querySelectorAll('button').forEach(b => b.classList.remove('active'));
     btnEl.classList.add('active');
-
-    // Build payload: write_id takes priority; falls back to turn_id for general feedback
-    function buildFeedbackPayload(sig, note) {
-      const p = { signal: sig };
-      if (writeId) p.write_id = writeId;
-      else if (turnId) p.turn_id = turnId;
-      if (note) p.note = note;
-      return p;
-    }
-
+    const payload = { signal };
+    if (writeId) payload.write_id = writeId; else if (turnId) payload.turn_id = turnId;
     if (signal === 'down' && msgWrap) {
-      // Remove any existing feedback-note first (re-click)
-      const existingNote = msgWrap.querySelector('.feedback-note');
-      if (existingNote) existingNote.remove();
-
-      // Inject inline correction textarea below the message
-      const noteId = 'fn-' + (writeId || turnId || 'unknown');
-      const noteDiv = document.createElement('div');
-      noteDiv.className = 'feedback-note';
-      noteDiv.id = noteId;
-      noteDiv.innerHTML =
-        '<textarea placeholder="What should Karma have said? (optional)" rows="2"></textarea>' +
-        '<button>Submit</button>';
-      msgWrap.appendChild(noteDiv);
-      setTimeout(() => { $messages.scrollTop = $messages.scrollHeight; }, 10);
-
-      noteDiv.querySelector('button').onclick = async function() {
+      const nd = document.createElement('div');
+      nd.className = 'feedback-note';
+      nd.innerHTML = '<textarea placeholder="What should Karma have said? (optional)" rows="2"></textarea><button>Submit</button>';
+      msgWrap.appendChild(nd);
+      scrollBottom();
+      nd.querySelector('button').onclick = async function() {
         this.disabled = true;
-        const token = getToken();
-        const note = noteDiv.querySelector('textarea').value.trim() || undefined;
-        try {
-          await fetch('/v1/feedback', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-            body: JSON.stringify(buildFeedbackPayload('down', note))
-          });
-        } catch (err) {
-          console.warn('[UI] Feedback note send failed:', err.message);
-        }
-        noteDiv.remove();
+        const note = nd.querySelector('textarea').value.trim();
+        if (note) payload.note = note;
+        try { await fetch('/v1/feedback', { method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); } catch (_) {}
+        nd.remove();
       };
-      return; // Don't POST immediately for down — wait for note submit
+      return;
     }
-
-    // 👍 (or down without msgWrap): POST immediately
     try {
-      await fetch('/v1/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify(buildFeedbackPayload(signal))
-      });
-      // Show confirmation if this was a memory write (write_id present)
+      await fetch('/v1/feedback', { method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       if (signal === 'up' && writeId) {
-        const btns = btnEl.parentElement;
         const conf = document.createElement('span');
-        conf.className = 'write-confirmed';
-        conf.textContent = '✓ saved';
+        conf.className = 'write-confirmed'; conf.textContent = '&#x2713; saved';
         btns.appendChild(conf);
         setTimeout(() => conf.remove(), 2100);
       }
-    } catch (err) {
-      console.warn('[UI] Feedback send failed:', err.message);
-    }
+    } catch (_) {}
   }
 
-  // ── Handle response ──────────────────────────────────────────────────────
-  function handleMessage(data) {
-    hideTyping();
-    console.log('[UI] handleMessage received:', data);
-    if (data.assistant_text || data.response || data.content) {
-      const text = data.assistant_text || data.response || data.content;
-      const writeId = data.write_id ?? null;
-      const turnId = data.canonical?.turn_id ?? null;
-      addMessage('karma', text, writeId, turnId);
-      updateSidebar(data);
-      setConnStatus('Connected', true);
-    } else if (data.error) {
-      addMessage('system', 'Error: ' + data.error);
-      setConnStatus('Error', false);
-    }
+  // ── Agora panel ─────────────────────────────────────────────────────────
+  function appendAgoraEntry(msg) {
+    const inner   = document.getElementById('agora-inner');
+    const from    = msg.from || '?';
+    const to      = msg.to   || '?';
+    const ts      = msg.ts || msg.timestamp || msg.created_at || '';
+    const content = (msg.content || '').slice(0, 160);
+    const el = document.createElement('div');
+    el.className = 'bus-entry';
+    el.innerHTML =
+      '<span class="b-ts">' + escHtml(formatTs(ts)) + '</span>' +
+      '<span class="b-from">' + escHtml(from) + ' &#8594; ' + escHtml(to) + '</span> ' +
+      escHtml(content);
+    inner.appendChild(el);
+    const entries = inner.querySelectorAll('.bus-entry');
+    if (entries.length > 80) entries[0].remove();
+    const panel = document.getElementById('agora-panel');
+    panel.scrollTop = panel.scrollHeight;
   }
 
-  // ── File handling ────────────────────────────────────────────────────────
-  function renderFileList() {
-    $fileList.innerHTML = '';
-    selectedFiles.forEach((f, i) => {
-      const chip = document.createElement('div');
-      chip.className = 'file-chip';
-      chip.innerHTML = getFileIcon(f.type) + ' <span>' + f.name + '</span>'
-        + '<span class="file-chip-remove" onclick="removeFile(' + i + ')">×</span>';
-      $fileList.appendChild(chip);
+  // ── Persistence ──────────────────────────────────────────────────────────
+  function saveMessages() {
+    const msgs = [];
+    document.querySelectorAll('#chat-feed .msg').forEach(el => {
+      const role = [...el.classList].find(c => c !== 'msg') || 'system';
+      const body = el.querySelector('.msg-body');
+      if (!body || body.classList.contains('pending')) return;
+      msgs.push({ role, text: body.textContent, writeId: el.dataset.writeId || null, turnId: el.dataset.turnId || null });
     });
-  }
-  function removeFile(i) { selectedFiles.splice(i, 1); renderFileList(); }
-  function getFileIcon(mime) {
-    if (mime.startsWith('image/')) return '🖼️';
-    if (mime.includes('pdf'))      return '📄';
-    if (mime.includes('text') || mime.includes('json')) return '📝';
-    if (mime.includes('spreadsheet') || mime.includes('csv')) return '📊';
-    return '📎';
-  }
-  function formatBytes(b) {
-    if (b < 1024) return b + ' B';
-    if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
-    return (b/1048576).toFixed(1) + ' MB';
+    try { localStorage.setItem(MSG_KEY, JSON.stringify(msgs.slice(-200))); } catch (_) {}
   }
 
-  // ── Send message ─────────────────────────────────────────────────────────
-  async function sendMessage() {
-    const text = $input.value.trim();
-    if (!text && selectedFiles.length === 0) return;
-
-    let token = getToken();
-    if (!token) {
-      token = promptToken();
-      if (!token) return;
-      setConnStatus('Connected', true);
-    }
-
-    // Show user message
-    let display = text;
-    if (selectedFiles.length > 0) {
-      display += (text ? '\n' : '') + '📎 ' + selectedFiles.map(f => f.name).join(', ');
-    }
-    addMessage('user', display);
-    $input.value = '';
-    $sendBtn.disabled = true;
-    showTyping();
-
+  function loadSavedMessages() {
     try {
-      let fetchOpts = {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token, ...(deepMode ? { 'x-karma-deep': 'true' } : {}) }
-      };
-      let body;
-
-      fetchOpts.headers['Content-Type'] = 'application/json';
-      if (selectedFiles.length > 0) {
-        const files = await Promise.all(selectedFiles.map(f => new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve({ name: f.name, data_b64: reader.result.split(',')[1] });
-          reader.onerror = reject;
-          reader.readAsDataURL(f);
-        })));
-        body = JSON.stringify({ message: text, conversation_id: conversationId, session_id: conversationId, stream: false, files });
-      } else {
-        body = JSON.stringify({ message: text, conversation_id: conversationId, session_id: conversationId, stream: false });
-      }
-      fetchOpts.body = body;
-
-      const res = await fetch(API_URL, fetchOpts);
-
-      if (res.status === 401) {
-        hideTyping();
-        clearToken();
-        setConnStatus('Token invalid — re-enter', false);
-        addMessage('system', 'Token rejected. Click Send again to re-enter.');
-        return;
-      }
-
-      const data = await res.json();
-      handleMessage(data);
-      selectedFiles = [];
-      renderFileList();
-
-    } catch (err) {
-      hideTyping();
-      addMessage('system', 'Error: ' + err.message);
-      setConnStatus('Request failed', false);
-    } finally {
-      $sendBtn.disabled = false;
-      $input.focus();
-    }
+      const raw = localStorage.getItem(MSG_KEY);
+      if (!raw) return;
+      JSON.parse(raw).forEach(m => appendMsg(m.role, m.text, m.writeId, m.turnId));
+      if (document.querySelectorAll('#chat-feed .msg').length) hideEmpty();
+    } catch (_) {}
   }
 
-  // ── Init ─────────────────────────────────────────────────────────────────
-  function init() {
-    updateClock();
-    setInterval(updateClock, 1000);
-
-    setConnStatus(getToken() ? 'Connected' : 'Token required', !!getToken());
-
-    $sendBtn.addEventListener('click', sendMessage);
-    $fileBtn.addEventListener('click', () => $fileInput.click());
-    $fileInput.addEventListener('change', (e) => {
-      const incoming = Array.from(e.target.files);
-      selectedFiles = [...selectedFiles, ...incoming].slice(0, 50);
-      if (selectedFiles.length === 50) addMessage('system', '⚠ Maximum 50 files');
-      renderFileList();
-      $fileInput.value = '';
-    });
-
-    $input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-      if (e.ctrlKey && e.shiftKey && e.key === 'U') { e.preventDefault(); $fileInput.click(); }
-    });
-
-    // Load saved conversation from localStorage
-    loadSavedMessages();
-
-    // New chat button
-    document.getElementById('new-chat-btn').addEventListener('click', clearConversation);
-
-    // Initial coordination fetch
-    fetchCoordination();
-
-    // Image paste: Ctrl+V with an image in clipboard adds it to selectedFiles
-    $input.addEventListener('paste', (e) => {
-      const items = Array.from(e.clipboardData?.items || []);
-      const imageItems = items.filter(item => item.type.startsWith('image/'));
-      if (!imageItems.length) return; // no images — let normal text paste proceed
-      e.preventDefault();
-      const incoming = imageItems.map(item => {
-        const blob = item.getAsFile();
-        const ext = (blob.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
-        return new File([blob], `pasted-image-${Date.now()}.${ext}`, { type: blob.type });
-      });
-      selectedFiles = [...selectedFiles, ...incoming].slice(0, 50);
-      if (selectedFiles.length === 50) addMessage('system', '⚠ Maximum 50 files');
-      renderFileList();
-    });
+  function clearConversation() {
+    localStorage.removeItem(MSG_KEY);
+    conversationId = crypto.randomUUID();
+    localStorage.setItem(CONV_KEY, conversationId);
+    const feed = document.getElementById('chat-feed');
+    feed.innerHTML = '<div id="empty-state">Waiting for Karma...</div><div id="processing">Karma is thinking...</div>';
+    pendingBus.clear();
   }
 
-  // ── Coordination panel ───────────────────────────────────────────────
-  const $coordList  = document.getElementById('coord-list');
-  const $coordCount = document.getElementById('coord-count');
-  let coordEntries  = [];
-
-  function relativeTime(iso) {
-    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-    if (diff < 60) return 'just now';
-    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
-    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
-    return Math.floor(diff / 86400) + 'd ago';
+  // ── Status ───────────────────────────────────────────────────────────────
+  function updateHeartbeat() {
+    if (!lastActivityTs) return;
+    document.getElementById('last-seen-val').textContent = timeSince(lastActivityTs);
+    const diff = Date.now() - new Date(lastActivityTs).getTime();
+    document.getElementById('heartbeat-dot').className =
+      diff < 5*60*1000 ? 'stat-dot alive' : diff < 3600*1000 ? 'stat-dot warn' : 'stat-dot dead';
   }
 
-  function renderCoordination() {
-    // Filter out resolved/timeout — only show active messages
-    const active = coordEntries.filter(e => e.status !== 'resolved' && e.status !== 'timeout');
-    if (!active.length) {
-      $coordList.innerHTML = '<div class="coord-empty">No messages yet</div>';
-      $coordCount.textContent = '0';
-      $coordCount.className = 'coord-count zero';
-      return;
-    }
-    const pending = active.filter(e => e.status === 'pending').length;
-    $coordCount.textContent = pending;
-    $coordCount.className = 'coord-count' + (pending === 0 ? ' zero' : '');
-
-    $coordList.innerHTML = '';
-    active.forEach(entry => {
-      const div = document.createElement('div');
-      div.className = 'coord-entry';
-      div.dataset.id = entry.id;
-      const from = (entry.from || 'unknown').charAt(0).toUpperCase() + (entry.from || 'unknown').slice(1);
-      const st = entry.status || 'pending';
-      const statusClass = st === 'pending' ? 'pending' : 'responded';
-      const statusLabel = st.charAt(0).toUpperCase() + st.slice(1);
-      const preview = (entry.content || '').replace(/\n/g, ' ').slice(0, 100);
-      div.innerHTML =
-        '<div class="coord-entry-header">' +
-          '<span class="coord-from">' + from + '</span>' +
-          '<span class="coord-status ' + statusClass + '">' + statusLabel + '</span>' +
-        '</div>' +
-        '<div class="coord-entry-header" style="margin-top:2px">' +
-          '<span class="coord-time">' + relativeTime(entry.created_at) + '</span>' +
-        '</div>' +
-        '<div class="coord-preview">' + escapeHtml(preview) + '</div>';
-      div.addEventListener('click', () => div.classList.toggle('expanded'));
-      $coordList.appendChild(div);
-    });
+  function updateK2Status() {
+    if (!lastActivityTs) return;
+    const diff = Date.now() - new Date(lastActivityTs).getTime();
+    document.getElementById('k2-dot').className  = diff < 10*60*1000 ? 'stat-dot alive' : diff < 3600*1000 ? 'stat-dot warn' : 'stat-dot dead';
+    document.getElementById('k2-val').textContent = diff < 10*60*1000 ? 'active' : diff < 3600*1000 ? 'idle' : 'offline';
   }
 
-  function escapeHtml(str) {
-    const d = document.createElement('div');
-    d.textContent = str;
-    return d.innerHTML;
+  // ── Utilities ────────────────────────────────────────────────────────────
+  function hideEmpty() { const e = document.getElementById('empty-state'); if (e) e.style.display = 'none'; }
+  function scrollBottom() { const f = document.getElementById('chat-feed'); setTimeout(() => { f.scrollTop = f.scrollHeight; }, 10); }
+  function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function formatTs(iso) { try { return new Date(iso).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' }); } catch(_) { return String(iso||''); } }
+  function timeSince(iso) {
+    const d = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (d < 60) return d + 's ago';
+    if (d < 3600) return Math.floor(d/60) + 'm ago';
+    if (d < 86400) return Math.floor(d/3600) + 'h ago';
+    return Math.floor(d/86400) + 'd ago';
   }
-
-  async function fetchCoordination() {
-    const token = getToken();
-    if (!token) return;
-    try {
-      const res = await fetch('/v1/coordination/recent?limit=20', {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data.ok && Array.isArray(data.entries)) {
-        coordEntries = data.entries;
-        renderCoordination();
-      }
-    } catch (e) {
-      console.warn('[Coord] fetch failed:', e.message);
-    }
-  }
-
-  // Poll every 10 seconds
-  setInterval(fetchCoordination, 10000);
-
-  // ── Coordination compose ───────────────────────────────────────────
-  const $coordInput = document.getElementById('coord-input');
-  const $coordSend  = document.getElementById('coord-send');
-  const $coordTo    = document.getElementById('coord-to');
-
-  async function sendCoordination() {
-    const token = getToken();
-    const content = ($coordInput.value || '').trim();
-    if (!token || !content) return;
-    $coordSend.disabled = true;
-    try {
-      const res = await fetch('/v1/coordination/post', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: 'colby', to: $coordTo.value, content, urgency: 'informational' })
-      });
-      if (res.ok) {
-        $coordInput.value = '';
-        await fetchCoordination();
-      }
-    } catch (e) {
-      console.warn('[Coord] send failed:', e.message);
-    } finally {
-      $coordSend.disabled = false;
-    }
-  }
-
-  $coordSend.addEventListener('click', sendCoordination);
-  $coordInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); sendCoordination(); }
-  });
 
   init();
-
-  // ── Regent chat ───────────────────────────────────────────────────────────
-  const $regentLog   = document.getElementById('regent-chat-log');
-  const $regentInput = document.getElementById('regent-chat-input');
-  const $regentSend  = document.getElementById('regent-chat-send');
-  const $regentDot   = document.getElementById('regent-status-dot');
-  let regentLastPoll = null;
-  let regentPollTimer = null;
-
-  function appendRegentMsg(sender, text, isRegent) {
-    const div = document.createElement('div');
-    div.style.cssText = 'margin:4px 0;padding:6px 8px;border-radius:4px;'
-      + (isRegent ? 'background:#1a1430;border-left:2px solid #9b8fff' : 'background:#1a2a1a;border-left:2px solid #34d399');
-    const label = document.createElement('span');
-    label.style.cssText = 'font-size:10px;font-weight:600;color:' + (isRegent ? '#9b8fff' : '#34d399');
-    label.textContent = sender;
-    const body = document.createElement('div');
-    body.style.cssText = 'color:#d0d0d0;margin-top:2px;white-space:pre-wrap;word-break:break-word';
-    body.textContent = text;
-    div.appendChild(label);
-    div.appendChild(body);
-    $regentLog.appendChild(div);
-    $regentLog.scrollTop = $regentLog.scrollHeight;
-  }
-
-  async function sendToRegent() {
-    const token = getToken();
-    const content = ($regentInput.value || '').trim();
-    if (!token || !content) return;
-    $regentSend.disabled = true;
-    appendRegentMsg('Sovereign', content, false);
-    $regentInput.value = '';
-    const sent_at = new Date().toISOString();
-    try {
-      await fetch('/v1/coordination/post', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: 'colby', to: 'regent', content, urgency: 'blocking' })
-      });
-      // Poll for response
-      regentLastPoll = sent_at;
-      if (!regentPollTimer) {
-        regentPollTimer = setInterval(pollRegentReply, 3000);
-      }
-    } catch (e) {
-      appendRegentMsg('Error', e.message, true);
-    } finally {
-      $regentSend.disabled = false;
-    }
-  }
-
-  async function pollRegentReply() {
-    const token = getToken();
-    if (!token || !regentLastPoll) return;
-    try {
-      const res = await fetch('/v1/coordination/recent?from=regent&limit=10',
-        { headers: { 'Authorization': 'Bearer ' + token } });
-      const data = await res.json();
-      const replies = (data.entries || []).filter(e =>
-        (e.to === 'colby' || e.to === 'all') &&
-        new Date(e.created_at) > new Date(regentLastPoll)
-      );
-      if (replies.length > 0) {
-        clearInterval(regentPollTimer);
-        regentPollTimer = null;
-        replies.forEach(r => appendRegentMsg('Regent', r.content, true));
-        regentLastPoll = null;
-      }
-    } catch (e) { /* poll silently */ }
-  }
-
-  async function loadRegentHistory() {
-    const token = getToken();
-    if (!token) return;
-    try {
-      const res = await fetch('/v1/coordination/recent?from=regent&limit=10',
-        { headers: { 'Authorization': 'Bearer ' + token } });
-      const data = await res.json();
-      $regentLog.innerHTML = '';
-      (data.entries || []).slice(0, 5).reverse().forEach(e => {
-        appendRegentMsg('Regent', (e.content || '').slice(0, 200), true);
-      });
-      // Check regent heartbeat for status dot
-      const hasRecent = (data.entries || []).some(e => {
-        const age = (Date.now() - new Date(e.created_at).getTime()) / 1000;
-        return age < 180 && (e.content.includes('HEARTBEAT') || e.content.includes('REGENT_ONLINE'));
-      });
-      $regentDot.style.color = hasRecent ? '#34d399' : '#f59e0b';
-      $regentDot.title = hasRecent ? 'Regent online' : 'Heartbeat stale';
-    } catch(e) {}
-  }
-
-  $regentSend.addEventListener('click', sendToRegent);
-  $regentInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); sendToRegent(); }
-  });
-
-  // Load on init and refresh every 30s
-  loadRegentHistory();
-  setInterval(loadRegentHistory, 30000);
-
 </script>
 </body>
 </html>

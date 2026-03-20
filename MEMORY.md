@@ -30,9 +30,14 @@
 
 **DIRECTION:** Operational/strategic work should route through Karma (hub.arknexus.net) not CC. CC = code changes only. Context bloat from resurrect overhead (~15K tokens per session) makes CC wrong tool for ongoing cognitive loop.
 
+**Session 109 continued — unified hub UI:**
+- hub.arknexus.net now serves /regent aesthetic (dark, monospace, violet)
+- @mention routing: default→Karma(/v1/chat), @regent/@cc/@codex→coordination bus
+- Agora collapsible panel, CASCADE hidden toggle, async pending placeholders, thumbs preserved
+
 ## Next Session Starts Here
 1. `/resurrect`
-2. Verify Codex's identity fix visible at hub.arknexus.net/regent (KARMA labels in UI)
+2. Open hub.arknexus.net — verify new unified UI loads with /regent aesthetic
 3. Diagnose B3 (P1_OLLAMA_MODEL), B7 (KCC drift), B8 (restart loop)
 4. Session ingestion pipeline — implement writing-plans → extract IndexedDB sessions via Claude-in-Chrome
 
