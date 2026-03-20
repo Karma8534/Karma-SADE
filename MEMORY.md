@@ -61,10 +61,10 @@
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. P0N-A end-to-end verify: `curl -X POST https://hub.arknexus.net/cc -H "Authorization: Bearer TOKEN" -H "Content-Type: application/json" -d '{"message":"reply with: CC P0N-A ONLINE"}'`
-3. If working: update Karma2/PLAN.md P0N-A status to ✅ LIVE. Start P0N-B.
-4. If CC server not running: `powershell -Command '$env:HUB_CHAT_TOKEN="TOKEN"; python Scripts/cc_server_p1.py'`
-**Blocker if any:** CC server process dies on P1 reboot — not yet persistent (no Windows service).
+2. Start CC server if not running: `powershell -WindowStyle Hidden -File Scripts/start_cc_server.ps1`
+3. Verify bridge: `curl -s -X POST https://hub.arknexus.net/cc -H "Authorization: Bearer TOKEN" -H "Content-Type: application/json" -d '{"message":"who are you"}'`
+4. **HAUL ASS: Fully implement Karma2/PLAN.md to 100%.** Use superpowers:subagent-driven-development. TDD verify every component. Use superpowers:verification-before-completion before declaring anything done. Run until Karma2 plan = 100% implemented + 100% TDD verified + 100% optimal. If blockers: use superpowers to resolve, continue.
+**Blocker if any:** CC server needs to be running on P1 (KarmaWipWatcher scheduled task handles wip-watcher; cc_server needs start_cc_server.ps1).
 
 ## Session 108 — Ground truth verification + K2 model fix (2026-03-20)
 

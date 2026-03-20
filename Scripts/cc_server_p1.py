@@ -12,14 +12,23 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 PORT      = 7891
 TOKEN     = os.environ.get("HUB_CHAT_TOKEN", "")
 CLAUDE_CMD = os.environ.get("CLAUDE_CMD", r"C:\Users\raest\AppData\Roaming\npm\claude.cmd")
-WORK_DIR  = r"C:\Users\raest\Documents\Karma_SADE"
-TIMEOUT   = 300  # 5 min — MCP startup + full response
+WORK_DIR      = r"C:\Users\raest\Documents\Karma_SADE"
+SNAPSHOT_FILE = os.path.join(WORK_DIR, "cc_context_snapshot.md")
+TIMEOUT       = 300  # 5 min — MCP startup + full response
 
-# Identity injected into every subprocess so it knows it's CC Ascendant
-CC_SYSTEM_PROMPT = (
+def load_snapshot():
+    """Load cc_context_snapshot.md written by wrap-session/resurrect. Falls back to base identity."""
+    try:
+        with open(SNAPSHOT_FILE, encoding="utf-8") as f:
+            return f.read().strip()
+    except Exception:
+        return ""
+
+# Base identity — always present. Snapshot (from wrap-session) appended when available.
+CC_IDENTITY_BASE = (
     "You are CC (Ascendant rank, Karma SADE hierarchy). "
-    "Colby is Sovereign. This is a direct message via hub.arknexus.net/cc (P0N-A channel). "
-    "All project files are available: read .gsd/STATE.md for current state, MEMORY.md for session history. "
+    "Colby is Sovereign. This message arrives via hub.arknexus.net/cc (P0N-A channel). "
+    "All project files are in C:\\Users\\raest\\Documents\\Karma_SADE — read .gsd/STATE.md and MEMORY.md for current state. "
     "claude-mem MCP is active. CLAUDE.md is your operating contract. "
     "Respond as CC Ascendant — concise, verified, no padding. Mobile interface."
 )
@@ -64,12 +73,14 @@ class CCHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"ok": False, "error": "message required"}).encode())
             return
 
-        # Run claude — continue most recent session with CC identity
+        # Run claude — inject identity + current session snapshot
         try:
+            snapshot = load_snapshot()
+            system_prompt = CC_IDENTITY_BASE + ("\n\n[CURRENT SESSION CONTEXT]\n" + snapshot if snapshot else "")
             cmd = [
                 CLAUDE_CMD,
                 "-p", message,
-                "--system-prompt", CC_SYSTEM_PROMPT,  # assert CC Ascendant identity
+                "--system-prompt", system_prompt,  # assert CC Ascendant identity + session context
                 "--dangerously-skip-permissions",      # no interactive prompts in subprocess
             ]
             result = subprocess.run(
