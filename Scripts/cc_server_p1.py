@@ -80,8 +80,7 @@ class CCHandler(BaseHTTPRequestHandler):
             cmd = [
                 CLAUDE_CMD,
                 "-p", message,
-                "--system-prompt", system_prompt,  # assert CC Ascendant identity + session context
-                "--dangerously-skip-permissions",      # no interactive prompts in subprocess
+                "--system-prompt", system_prompt,  # CC Ascendant identity + session context
             ]
             result = subprocess.run(
                 cmd,

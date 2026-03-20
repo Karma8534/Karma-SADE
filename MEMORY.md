@@ -1983,3 +1983,10 @@ Recurring CC mistakes extracted from 108+ sessions must write to watchdog_extra_
 [2026-03-20T19:00Z] DIRECTION: Karma2/PLAN.md corrected â€” 7 new gaps added, false Growth âœ… fixed, governance gates added, HOTFIXES section added (H1-H5), build sequence locked with acceptance criteria
 
 [2026-03-20T19:15Z] DIRECTION: Karma2 PLAN final gaps added â€” H6 (resurrect spine path wrong), H7 (SADE file content spec), PRE-PHASE ccSessions/ input source. Plan now covers all known gaps.
+
+## Session 110 — P0N-A Live (2026-03-20)
+- cc_server_p1.py: identity via --system-prompt, 300s timeout, --dangerously-skip-permissions
+- hub-bridge: CC_SERVER_URL=http://100.124.194.102:7891 + extra_hosts for container routing
+- hub.arknexus.net/cc VERIFIED end-to-end. Startup: KarmaCCServer.vbs in Startup folder.
+- Blocker: cc_server dies on P1 reboot — VBS handles auto-start at login.
+
