@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-19T19:30:00Z
-**Session:** 107 (All 5 Vesper fixes, cascade reorder K2→P1→z.ai→Groq→OpenRouter TDD, blocker audit)
+**Last updated:** 2026-03-20T18:00:00Z
+**Session:** 108 (Ground truth check, K2 model fixed to qwen3:8b, grade persistence confirmed, resurrect skipped pitfall)
 **Canonical source:** This file. Read at session start.
 
 ---

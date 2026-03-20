@@ -1,3 +1,25 @@
+## Session 108 — Ground truth verification + K2 model fix (2026-03-20)
+
+**DONE:**
+- Verified grade persistence working: 20 entries at grade=0.85 from p1_ollama (was already working from S107 fixes)
+- Fixed K2_OLLAMA_PRIMARY_MODEL: nemotron-mini:optimized → qwen3:8b in `/etc/karma-regent.env` on K2
+- Confirmed nemotron-mini:optimized IS installed on K2 — cascade was correct, stuck-133-char was a timeout/context issue
+- Obs saved: #8061 (resurrect skipped pitfall), #8062 (ground truth proof), #8022 (nemotron root cause), #8023 (grade persistence)
+
+**OPEN BLOCKERS:**
+- Regent restart loop: 3 crashes in 1 min at session-start — root cause not diagnosed
+- P1_OLLAMA_MODEL still nemotron-mini:latest in regent_inference.py env — should be llama3.1:8b or qwen3:8b
+
+**PITFALL:** Resurrect protocol skipped this session — jumped to TDD without completing Steps 0-3e. Caused false diagnosis (declared nemotron wrong before live test). Strike received then removed for honesty.
+
+## Next Session Starts Here
+1. `/resurrect` — do NOT skip Steps 0-3e (identity baseline, spine, SADE doctrine, brief, claude-mem, health, bus)
+2. Diagnose Regent restart loop (3 crashes in 1 min — check systemd journal on K2)
+3. Fix P1_OLLAMA_MODEL in karma-regent.env (currently nemotron-mini:latest, should be a model that exists on P1)
+**Blocker:** Regent restart loop may be crashing on qwen3:8b first-call latency — check logs before assuming model issue.
+
+---
+
 ## Session 107 — All 5 Vesper fixes + cascade reorder (2026-03-19)
 
 **DEPLOYED:**
