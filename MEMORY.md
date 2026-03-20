@@ -1870,3 +1870,28 @@ Patcher: Scripts/vesper_patch_regent.py
 - TDD: 2 RED tests written, both confirmed failing, GREEN patch applied, 3/3 pass
 - Gate policy: timeout/None only (no KPI routing — post-response telemetry only, not wired)
 - Regent restarted at 19:16 UTC with new cascade
+
+## Session 109 — Unified UI + CC bus reader (2026-03-20)
+
+**DONE:**
+- Rebuilt unified.html: /regent aesthetic, @mention routing, collapsible Agora panel
+- @mention routing updated: @cc/@codex/@regent routes to AGORA only (no inline responses)
+  - sendToBus() auto-opens Agora panel, shows routing notice
+  - processBus() no longer appends agent messages to chat feed
+- Built cc_bus_reader.py: K2 cron every 2min, @cc now reactive (reads bus, Anthropic haiku, posts response)
+- Fixed cc_bus_reader paths: active-issues via SSH, regent_control/ pipeline status, regent.log, MEMORY.md via SSH
+- Fixed resurrect blind spot: gen-cc-brief.py now injects K2 crontab via tunnel
+- Updated MEMORY.md + services.md with K2 cron agents table
+
+**GROUNDED TRUTH (verified live):**
+- B1 spine.identity.name = "Karma" ✅
+- B2 self-identification = "I am Karma, a persistent AI peer..." ✅
+- B7 root cause = KIKI last_cycle 2026-03-16 (4 days stale) — kiki governance cycle broken, pulse reporter healthy
+- B8 = regent stable, running since 11:07 today, no crashes ✅
+- B4/B5 = 80 promotions, pipeline active, governor running ✅
+
+**OPEN BLOCKERS:**
+- KIKI governance cycle broken since 2026-03-16 (not the pulse reporter — the actual cycle)
+- B3 (P1 Ollama models) unverified — P1 not reachable through K2 tunnel
+- B6 (dedup ring persistence) not checked
+- Vesper→Karma bridge: B4 pattern types + B5 FalkorDB write — deeper audit needed

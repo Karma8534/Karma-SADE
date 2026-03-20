@@ -285,7 +285,7 @@
   </div>
 
   <div id="input-area">
-    <textarea id="msg-input" rows="1" placeholder="Message Karma... (@cc, @codex, @regent to route)"></textarea>
+    <textarea id="msg-input" rows="1" placeholder="Message Karma... (@cc @codex @regent → routes to AGORA)"></textarea>
     <button id="send-btn">SEND</button>
   </div>
 
@@ -423,9 +423,10 @@
 
   // ── Bus: regent / cc / codex ────────────────────────────────────────────
   async function sendToBus(target, text) {
-    const pendingId   = 'p-' + Date.now();
-    const placeholder = appendPending(target, pendingId);
-    pendingBus.set(pendingId, { el: placeholder, target, sentAt: Date.now() });
+    // Bus responses go to Agora, not inline — open Agora panel and show routing notice
+    const agoraPanel = document.getElementById('agora-panel');
+    if (!agoraPanel.classList.contains('open')) toggleAgora();
+    appendMsg('system', '→ ' + target.toUpperCase() + ': "' + text.slice(0, 80) + (text.length > 80 ? '…' : '') + '" — routed to AGORA');
     scrollBottom();
     try {
       await fetch(BUS_POST_URL, {
@@ -434,16 +435,8 @@
         body: JSON.stringify({ from: 'colby', to: target, type: 'inform', urgency: 'informational', content: text })
       });
     } catch (err) {
-      const body = placeholder.querySelector('.msg-body');
-      if (body) { body.textContent = 'Send failed: ' + err.message; body.classList.remove('pending'); }
+      appendMsg('system', 'Bus send failed: ' + err.message);
     }
-    setTimeout(() => {
-      if (!pendingBus.has(pendingId)) return;
-      const { el } = pendingBus.get(pendingId);
-      const body = el && el.querySelector('.msg-body');
-      if (body) { body.textContent = '[' + target.toUpperCase() + ' — no response after 5m]'; body.classList.remove('pending'); }
-      pendingBus.delete(pendingId);
-    }, 5 * 60 * 1000);
   }
 
   // ── Polling ─────────────────────────────────────────────────────────────
@@ -475,15 +468,11 @@
 
       const isAgent     = ['regent', 'cc', 'codex', 'karma'].includes(from);
       const isNoise     = /^(HEARTBEAT|KCC|SESSION |CC SESSION|CHECKPOINT)/.test(content);
-      const isToColby   = (msg.to === 'colby' || msg.to === 'all');
 
-      if (isAgent && !isNoise && isToColby) {
-        const resolved = resolvePending(from);
-        if (!resolved) appendMsg(from, content);
+      if (isAgent && !isNoise) {
         lastActivityTs = ts || new Date().toISOString();
         updateHeartbeat();
         updateK2Status();
-        scrollBottom();
       }
     }
   }
