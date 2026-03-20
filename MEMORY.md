@@ -1911,3 +1911,5 @@ Patcher: Scripts/vesper_patch_regent.py
 
 [2026-03-20T18:30Z] DIRECTION: Session ingestion pipeline loop closure — PITFALLs feed Vesper watchdog criteria
 Recurring CC mistakes extracted from 108+ sessions must write to watchdog_extra_patterns.json on K2 so Vesper scans for them in future regent turns. Closes the CC→Vesper learning loop. Added as Phase 3b to pipeline design doc.
+
+[2026-03-20T19:00Z] DIRECTION: Karma2/PLAN.md corrected — 7 new gaps added, false Growth ✅ fixed, governance gates added, HOTFIXES section added (H1-H5), build sequence locked with acceptance criteria
