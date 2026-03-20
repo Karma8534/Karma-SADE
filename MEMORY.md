@@ -1899,3 +1899,12 @@ Patcher: Scripts/vesper_patch_regent.py
 - Removed embedded Agora panel from hub.arknexus.net — CC/CODEX/REGENT have zero footprint there
 - AGORA button now opens /agora in new tab
 - processBus() on hub only updates heartbeat, renders nothing
+
+## Session 109 (2026-03-20) — Canonical Data Map + SovereignPeer Contract Merge
+
+- Created `.claude/rules/data-map.md` — auto-loads every session, maps every canonical file path, prevents duplication
+- Merged Codex v1.0 into `Karma2/karma_contract_policy.md` v1.1 (cadence, routing cascade, change taxonomy, verification loop)
+- Session ingestion pipeline: design + plan written to `docs/plans/`
+- KIKI fixed: last_cycle_ts now updates on idle cycles (false drift alerts will clear)
+- cc_bus_reader.py deployed: @cc reactive on bus every 2min
+- Agora panel removed from hub.arknexus.net: CC/Codex/Regent output goes to /agora only
