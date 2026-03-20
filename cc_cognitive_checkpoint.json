@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-03-20T00:00:00Z",
+  "session": "109",
+  "active_reasoning": "Architecture revision: CC persistent server on P1 via hub.arknexus.net/cc Tailscale proxy. KCC stays on K2, switches GLM to qwen3:8b local. Phase 1 tools demoted to fallback. All H1-H7 hotfixes resolved. cc_identity_spine.json verified correct for resurrect Step 1b.",
+  "next_moves": [
+    "New Sonnet session: /resurrect then execute docs/plans/2026-03-20-session-ingestion-pipeline-plan.md Task 1 IndexedDB schema via Claude-in-Chrome",
+    "Post P0N-A/B/C to coordination bus for Sovereign approval",
+    "Phase 0 B4+B5 after PRE-PHASE gate met"
+  ],
+  "open_questions": "P0N-A/B/C Sovereign approval pending. H3 scratchpad sync unverified. B8 regent restart root cause undiagnosed.",
+  "agent_context": "Session 109. CC on P1 not K2. KCC GLM->qwen3:8b. Phase 1 demoted. All hotfixes closed. Plan at git ef11787. PLAN.md is ground truth."
+}

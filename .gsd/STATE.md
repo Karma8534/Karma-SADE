@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-20T18:00:00Z
-**Session:** 108 (Ground truth check, K2 model fixed to qwen3:8b, grade persistence confirmed, resurrect skipped pitfall)
+**Last updated:** 2026-03-20T22:00:00Z
+**Session:** 109 (Architecture revision: hub.arknexus.net/cc on P1, KCC→qwen3:8b, Phase 1 demoted, all H1-H7 hotfixes resolved, PRE-PHASE next)
 **Canonical source:** This file. Read at session start.
 
 ---

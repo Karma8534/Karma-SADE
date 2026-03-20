@@ -12,20 +12,26 @@
 - SovereignPeer contract merged to v1.1 (Codex additions)
 - Session ingestion pipeline designed (PRE-PHASE in PLAN.md)
 
-**OPEN BLOCKERS:**
-- H6: RESOLVED — cc_identity_spine.json IS correct for resurrect Step 1b. CC's own spine (v38, resume_block=CC Ascendant). vesper_identity_spine.json=Karma's spine. No change needed.
-- H1: RESOLVED — restored to K2 from git pull (subprocess: True, 228 lines verified)
-- H6: resurrect reads cc_identity_spine.json — verify if vesper_identity_spine.json is correct (both exist)
-- H3: cc_scratchpad.md two copies (vault-neo + K2) — sync unknown
-- H4: active-issues.md stale (B1+B2 showing open, resolved)
-- B4+B5: Vesper→Karma bridge dead (all patterns cascade_performance, FalkorDB write 404)
-- P0N-A/B/C: hub.arknexus.net/cc + Channels + KCC model change — needs Sovereign approval to build
-- Codex: not installed (Current_Plan/Codex Installer.exe exists)
+**ALL HOTFIXES RESOLVED (H1-H7):**
+- H1 ✅ import subprocess added, restored to K2 (verified: True, 228 lines)
+- H2 ✅ SADE doctrine file already existed at for-karma/SADE — Canonical Definitions.txt
+- H3 🟡 cc_scratchpad.md two copies — sync still unverified (carry to next session)
+- H4 ✅ active-issues.md B1+B2 marked resolved
+- H5 🟡 B7 KCC drift — awaiting next cc_anchor run
+- H6 ✅ cc_identity_spine.json IS correct for resurrect (CC's own spine v38)
+- H7 ✅ resolved with H2
 
-**NEXT:**
-- git pull on vault-neo → copy Scripts/cc_bus_reader.py to K2 → verify subprocess import
-- Phase 0: fix B4+B5 (Vesper→Karma bridge)
-- Session ingestion pipeline (Task 1: IndexedDB schema discovery)
+**OPEN BLOCKERS:**
+- H3: cc_scratchpad.md two copies (vault-neo + K2) sync unknown
+- B4+B5: Vesper→Karma bridge dead — Phase 0 (after PRE-PHASE)
+- P0N-A/B/C: Sovereign approval pending (hub.arknexus.net/cc, Channels, KCC model)
+- Codex: not installed (Current_Plan/Codex Installer.exe)
+- B8: regent restart loop root cause undiagnosed
+
+## Next Session Starts Here
+1. `/resurrect` → execute `docs/plans/2026-03-20-session-ingestion-pipeline-plan.md` Task 1 (IndexedDB schema via Claude-in-Chrome). Claude desktop must be open.
+2. Approve P0N-A/B/C on bus if ready (hub.arknexus.net/cc + Channels + KCC model)
+**Blocker if any:** Claude desktop app must be running for IndexedDB access
 
 ## Session 108 — Ground truth verification + K2 model fix (2026-03-20)
 
