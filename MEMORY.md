@@ -72,11 +72,29 @@
 - cc_relay.py on vault-neo port 17891 — running but unnecessary, cleanup optional
 - Karma2/PLAN.md: still needs full implementation (HAUL ASS directive active)
 
+## Session 112 — /resurrect skill full audit + 4 escaping bugs fixed (2026-03-20)
+
+**DONE:**
+- K2 aria.service crash-loop fixed: killed conflicting Python process on port 7890, aria.service now running + autostart enabled
+- /resurrect skill Step 1b: heredoc-piped-to-SSH pattern (zero escaping) — fixes triple-shell SyntaxError on K2
+- /resurrect skill Step 4: single SSH with token read in Python (fixes Windows cross-shell TOKEN variable issue)
+- /resurrect skill DUAL-WRITE PROTOCOL: same single-SSH fix applied
+- /resurrect skill session-end cognitive snapshot: heredoc-piped-to-SSH fix applied
+- All 4 fixes TDD verified: Step 1b produces `Spine v38 | stable=8` with resume block confirmed
+- PROOF obs #8485 saved to claude-mem
+
+**PITFALL:** Spent 1.5h debugging P0N-A bridge (cc_server was just down, not a Docker/Tailscale problem)
+
+**OPEN BLOCKERS:**
+- /cc bridge UI: Bearer token re-entered on every browser refresh — needs localStorage persistence
+- /cc bridge UI: no copy button per message, no Clear button
+- Karma2/PLAN.md: still needs full implementation (HAUL ASS directive active)
+- H3: cc_scratchpad.md two copies sync still unverified
+
 ## Next Session Starts Here
 1. `/resurrect`
-2. Bridge is live — verify with: open hub.arknexus.net/cc in browser
-3. **TODO (UI): Fix /cc bridge — persist Bearer token in localStorage (enter once, not on every refresh). Also: copy button per message + Clear button next to Send.**
-4. **HAUL ASS: Fully implement Karma2/PLAN.md to 100%.** Use superpowers:subagent-driven-development. TDD verify every component. Use superpowers:verification-before-completion before declaring anything done.
+2. **TODO (UI): Fix /cc bridge — persist Bearer token in localStorage. Add copy button per message + Clear button next to Send.**
+3. **HAUL ASS: Fully implement Karma2/PLAN.md to 100%.** PRE-PHASE session ingestion → Phase 0 Vesper→Karma bridge (B4+B5) → P0N-B Channels → P0N-C KCC.
 **Blocker if any:** CC server needs to be running on P1 (start_cc_server.ps1 auto-restart loop).
 
 ## Session 108 — Ground truth verification + K2 model fix (2026-03-20)
