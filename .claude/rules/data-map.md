@@ -31,6 +31,14 @@ docs/plans/
   YYYY-MM-DD-<topic>-plan.md      ← Implementation tasks (writing-plans output)
 ```
 
+### docs/wip/ — Primitives Intake (auto-ingested)
+```
+docs/wip/
+  *.pdf / *.md / *.txt     ← Drop here → wip-watcher.ps1 auto-sends to /v1/ingest
+```
+**Watcher:** `Scripts/wip-watcher.ps1` — FileSystemWatcher, registered as `KarmaWipWatcher` scheduled task (runs at login).
+**Use for:** Any doc, PDF, or note you want CC or Karma to pull as primitives. Drop it, it ingests automatically.
+
 ### docs/ccSessions/ — CC Session Transcripts (for ingestion)
 ```
 docs/ccSessions/
