@@ -18,6 +18,9 @@
 - Comprehensive plan analysis: Karma2 meets all initial Karma plan requirements; P3-D closes the last gap (governance enforcement)
 - P3-D IMPLEMENTED: 3 hooks live (.claude/hooks/locked-invariant-guard.py, quality-gate.py, governance-audit.py), registered in .claude/settings.json — Locked Invariants now architecturally enforced
 - Excalidraw diagram skill installed: .claude/skills/excalidraw-diagram/SKILL.md — invocable as /excalidraw-diagram
+- CCSkills.pdf fully ingested (10 skills evaluated): 2 genuinely new installed (security-auditor, api-design-principles), 5 already covered by existing MCPs/superpowers, 2 irrelevant to Karma, Shannon deferred
+- .claude/skills/security-auditor/SKILL.md — OWASP Top 10 + Karma-specific surface areas (hub-bridge, bus, FalkorDB injection, K2 exec)
+- .claude/skills/api-design-principles/SKILL.md — REST conventions, backwards compatibility, hub-bridge patterns, hooks.py ALLOWED_TOOLS gate
 
 **ALL HOTFIXES RESOLVED (H1-H7):**
 - H1 ✅ import subprocess added, restored to K2 (verified: True, 228 lines)
