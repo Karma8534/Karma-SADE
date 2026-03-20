@@ -108,9 +108,9 @@
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. **TODO (UI): Fix /cc bridge — persist Bearer token in localStorage. Add copy button per message + Clear button next to Send.**
-3. **HAUL ASS: Fully implement Karma2/PLAN.md to 100%.** PRE-PHASE session ingestion → Phase 0 Vesper→Karma bridge (B4+B5) → P0N-B Channels → P0N-C KCC.
-**Blocker if any:** CC server needs to be running on P1 (start_cc_server.ps1 auto-restart loop).
+2. **HAUL ASS — Karma2/PLAN.md to 100%.** Read Karma2/PLAN.md. Execute: PRE-PHASE session ingestion pipeline → Phase 0 Vesper→Karma bridge (B4+B5) → P0N-B Channels bridge → P0N-C KCC canonical instance. Use superpowers:subagent-driven-development. TDD + verification-before-completion on every component.
+3. TODO (deferred): /cc bridge UI — localStorage token persistence + copy button + Clear button.
+**Blocker if any:** CC server must be running on P1 (start_cc_server.ps1 auto-restart loop).
 
 ## Session 108 — Ground truth verification + K2 model fix (2026-03-20)
 
