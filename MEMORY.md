@@ -11,6 +11,9 @@
 - data-map.md created as auto-loading canonical path index
 - SovereignPeer contract merged to v1.1 (Codex additions)
 - Session ingestion pipeline designed (PRE-PHASE in PLAN.md)
+- Vision gap analysis: 9/9 requirements verified, 3 gaps closed (Locked Invariants section, AC expanded to 7 items)
+- OpenClaw PDF ingested: 3 primitives assimilated — cc-delegation skill, --resume for Channels bridge, codex exec --sandbox for ArchonPrime
+- .claude/skills/cc-delegation/SKILL.md created and live in skills registry
 
 **ALL HOTFIXES RESOLVED (H1-H7):**
 - H1 ✅ import subprocess added, restored to K2 (verified: True, 228 lines)

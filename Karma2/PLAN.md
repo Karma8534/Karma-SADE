@@ -128,12 +128,14 @@ Why first: 108+ sessions document exactly how previous tool implementations fail
 - Auth: **same bridge Bearer token as `/v1/chat`** (zero new auth surface, same token)
 - Gate: Colby hits hub.arknexus.net/cc from browser, CC on P1 responds with full local capabilities
 - **Eliminates: dependency on claude.ai/code, Telegram, any Anthropic web property**
+- **Required companion:** Create `.claude/skills/cc-delegation/SKILL.md` — teaches Karma WHEN to delegate to CC via /cc route, what task types qualify (code gen, file ops, browser, debugging), and invocation priority rule (CC=default, Codex=explicit-only). Without this skill, Karma won't reliably route to /cc even after P0N-A is live.
 
 **P0N-B: Channels custom bridge (coordination bus → P1 CC)** ✅ APPROVED
 - Custom CC channel on P1 replaces cc_bus_reader.py (broken haiku proxy on K2)
 - Pushes coordination bus messages directly into CC session on P1
 - Full Sonnet 4.6 intelligence, no 2-min polling lag
-- Gate: coordination bus message addressed to `cc` triggers CC response within 30s
+- **Invocation mode: `claude -p "message" --resume`** — resume mode preserves codebase context across bus messages. One-shot mode (`claude -p` without `--resume`) loses context between messages, making CC stateless and unaware of prior bus exchanges. The Channels bridge MUST use `--resume` to maintain session continuity. SDK alternative: `const { claude } = require('@anthropic-ai/claude-code')` for programmatic control.
+- Gate: coordination bus message addressed to `cc` triggers CC response within 30s, and a follow-up message demonstrates context retention from prior exchange
 
 **P0N-C: KCC canonical instance — PS KCC + GLM primary + Haiku fallback** ✅ APPROVED
 - **Canonical instance:** PS KCC (`C:\Users\karma`, Claude Code v2.1.80 on P1 Windows)
@@ -141,7 +143,8 @@ Why first: 108+ sessions document exactly how previous tool implementations fail
 - **Fallback model:** `claude-haiku-4-5-20251001` if GLM API unavailable
 - **Decommission:** WSL GLM KCC (redundant once PS KCC owns GLM) + remove codestral-2508 from PS KCC config
 - KCC stays on P1 Windows (`karma` user) — consistent with where Claude Code already runs
-- Gate: PS KCC posts valid drift alert using GLM, fallback confirmed with Haiku on GLM failure
+- **Codex invocation primitive: `codex exec "prompt" --sandbox`** — non-interactive mode, scriptable from bus automation, filesystem access scoped by `--sandbox`. Do NOT use bare `codex "prompt"` (launches interactive TUI, unusable from automation) or `--full-auto` without sandbox (unsafe unscoped execution). For parallel sub-tasks: `codex fork` branches current Codex session into a new thread without contaminating the main session.
+- Gate: PS KCC posts valid drift alert using GLM, fallback confirmed with Haiku on GLM failure; `codex exec` responds non-interactively to a test prompt within 15s
 
 ---
 
