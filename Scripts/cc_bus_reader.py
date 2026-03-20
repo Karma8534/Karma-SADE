@@ -24,7 +24,7 @@ MEMORY_F     = Path("/mnt/c/dev/Karma/k2/cache/MEMORY.md")
 TOKEN        = os.environ.get("HUB_AUTH_TOKEN", "")
 ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 MODEL        = "claude-haiku-4-5-20251001"
-MAX_TOKENS   = 1024
+MAX_TOKENS   = 2048
 
 # Messages from these senders addressed to cc are actionable
 ACTIONABLE_FROM = {"colby", "karma", "codex", "kcc", "regent"}
@@ -76,27 +76,42 @@ def get_cc_identity():
     except Exception:
         pass
 
-    # Inject live K2 context: active issues, pipeline status, regent log tail
+    # Inject live K2 context
+    # 1. Active issues — lives on vault-neo git repo, fetch via SSH
     try:
-        issues = (CACHE / ".." / ".." / "Documents" / "Karma_SADE" / "Karma2" / "map" / "active-issues.md")
-        # Try local K2 path
-        active_issues_path = Path("/mnt/c/dev/Karma/k2/aria/docs") / "active-issues.md"
-        for candidate in [active_issues_path, CACHE.parent / "Karma2" / "map" / "active-issues.md"]:
-            if candidate.exists():
-                base += f"\n\n--- ACTIVE ISSUES ---\n{candidate.read_text()[:1500]}"
-                break
+        result = subprocess.run(
+            ["ssh", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5",
+             "vault-neo", "cat /home/neo/karma-sade/Karma2/map/active-issues.md"],
+            capture_output=True, text=True, timeout=10
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            base += f"\n\n--- ACTIVE ISSUES ---\n{result.stdout[:2000]}"
     except Exception:
         pass
 
+    # 2. Pipeline status — correct path is regent_control/
     try:
-        pipeline = json.loads((CACHE / "vesper_pipeline_status.json").read_text())
-        base += f"\n\n--- PIPELINE STATUS ---\n{json.dumps(pipeline, indent=2)[:600]}"
+        pipeline = json.loads((CACHE / "regent_control" / "vesper_pipeline_status.json").read_text())
+        base += f"\n\n--- PIPELINE STATUS ---\n{json.dumps(pipeline, indent=2)[:800]}"
     except Exception:
         pass
 
+    # 3. Regent log tail
     try:
-        log_lines = Path("/mnt/c/dev/Karma/k2/cache/regent.log").read_text().splitlines()
+        log_lines = (CACHE / "regent.log").read_text().splitlines()
         base += f"\n\n--- REGENT LOG (last 20 lines) ---\n" + "\n".join(log_lines[-20:])
+    except Exception:
+        pass
+
+    # 4. MEMORY.md tail — lives on vault-neo, fetch via SSH
+    try:
+        result = subprocess.run(
+            ["ssh", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5",
+             "vault-neo", "tail -60 /home/neo/karma-sade/MEMORY.md"],
+            capture_output=True, text=True, timeout=10
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            base += f"\n\n--- MEMORY.md (recent) ---\n{result.stdout}"
     except Exception:
         pass
 
