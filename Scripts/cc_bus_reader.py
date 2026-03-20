@@ -76,7 +76,31 @@ def get_cc_identity():
     except Exception:
         pass
 
-    base += "\n\nYou are responding via the coordination bus — a lightweight async response. You have no file editing or bash access in this context. Reason from your identity, hierarchy knowledge, and system state. Be concise. If the request requires a full CC session (code changes, deployments), say so explicitly and explain what you'd need."
+    # Inject live K2 context: active issues, pipeline status, regent log tail
+    try:
+        issues = (CACHE / ".." / ".." / "Documents" / "Karma_SADE" / "Karma2" / "map" / "active-issues.md")
+        # Try local K2 path
+        active_issues_path = Path("/mnt/c/dev/Karma/k2/aria/docs") / "active-issues.md"
+        for candidate in [active_issues_path, CACHE.parent / "Karma2" / "map" / "active-issues.md"]:
+            if candidate.exists():
+                base += f"\n\n--- ACTIVE ISSUES ---\n{candidate.read_text()[:1500]}"
+                break
+    except Exception:
+        pass
+
+    try:
+        pipeline = json.loads((CACHE / "vesper_pipeline_status.json").read_text())
+        base += f"\n\n--- PIPELINE STATUS ---\n{json.dumps(pipeline, indent=2)[:600]}"
+    except Exception:
+        pass
+
+    try:
+        log_lines = Path("/mnt/c/dev/Karma/k2/cache/regent.log").read_text().splitlines()
+        base += f"\n\n--- REGENT LOG (last 20 lines) ---\n" + "\n".join(log_lines[-20:])
+    except Exception:
+        pass
+
+    base += "\n\nYou are responding via the coordination bus as CC Ascendant. You have READ access to K2 filesystem — the context above includes live system state. You do NOT have write/edit/deploy access in this context; those require a full CC session. Diagnose, advise, and answer from evidence. Be concise. Only escalate to 'needs full CC session' for actions that require code changes or deployments."
     return base
 
 
