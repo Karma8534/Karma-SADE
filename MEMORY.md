@@ -12,11 +12,13 @@
 - banked-approvals: k2_ssh_write 16→13, ac_execution 20→17, total consumed 26
 - PLAN.md: AC4/AC7/AC9/AC10/P0-F all marked VERIFIED PASS/DEPLOYED
 
+**PROOF-B VERIFIED PASS:** AC1 (Initiate rank) + AC3 (PITFALL patterns visible) confirmed post-surgery. governor spine backup added (spine_backup_pre_promote.json before each _apply_to_spine promotion). Smoke test scripts in Scripts/proof_b_*.ps1.
+
 **NEXT (remaining open items):**
-- PROOF-B: regression detection after governor promotion (smoke test AC1+AC3 after each promotion)
-- PROOF-A: Codex as automated ArchonPrime (background service invocation)
+- PROOF-A: Codex as automated ArchonPrime (background service invocation) — needs separate session
 - AC8: requires actual P1 reboot test (Windows service survival — deferred)
 - P0-G: local inference wiring (M4 hardware not yet acquired)
+- AC5: ongoing 5-consecutive-session tracking (no PITFALL repeat) — passive monitoring
 
 ## Session 114 (2026-03-21) — PRE-PHASE session ingestion pipeline complete
 

@@ -26,7 +26,7 @@
     },
     "k2_ssh_write": {
       "description": "K2 file writes via SSH (karma_regent.py, vesper_*.py, spine edits, cache files, aria service)",
-      "remaining": 13,
+      "remaining": 12,
       "initial": 20,
       "log": [
         {"timestamp": "2026-03-21T06:35:00Z", "action": "vesper_watchdog.py: skip already-promoted PITFALL patterns (P0-F F-2)", "phase_ac_reference": "P0-F"},
@@ -35,7 +35,8 @@
         {"timestamp": "2026-03-21T09:50:00Z", "action": "Kiki multi-file structure: KIKI.md + .kiki/rules/family.md + scope.md + execution.md on K2; karma_regent.py patched to load+inject at startup", "phase_ac_reference": "KIKI-STRUCT"},
         {"timestamp": "2026-03-21T10:32:00Z", "action": "vesper_watchdog.py: F-1 LTM buffer + F-2 stable-filename dedup + _already_promoted_pattern checks CANDIDATES_DIR (P0-F F-1+F-2)", "phase_ac_reference": "P0-F"},
         {"timestamp": "2026-03-21T10:32:00Z", "action": "karma_regent.py: AC10 _proactive_outreach() — detects new research_skill_card in spine, posts to bus from Karma to Colby autonomously", "phase_ac_reference": "AC10"},
-        {"timestamp": "2026-03-21T10:32:00Z", "action": "vesper_identity_spine.json: surgery — removed 13 duplicate PITFALL entries, spine 20→7 stable (4 unique PITFALLs + 3 rsc)", "phase_ac_reference": "P0-F"}
+        {"timestamp": "2026-03-21T10:32:00Z", "action": "vesper_identity_spine.json: surgery — removed 13 duplicate PITFALL entries, spine 20→7 stable (4 unique PITFALLs + 3 rsc)", "phase_ac_reference": "P0-F"},
+        {"timestamp": "2026-03-21T10:38:00Z", "action": "vesper_governor.py: PROOF-B spine backup before each _apply_to_spine() promotion (spine_backup_pre_promote.json for regression rollback)", "phase_ac_reference": "PROOF-B"}
       ]
     },
     "tool_addition": {
@@ -95,8 +96,8 @@
   },
   "totals": {
     "initial": 300,
-    "consumed": 26,
-    "remaining": 274
+    "consumed": 27,
+    "remaining": 273
   },
   "usage_protocol": {
     "step_1": "Identify which category applies to the intended action",

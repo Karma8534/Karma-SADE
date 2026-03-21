@@ -444,7 +444,7 @@ The family operates autonomously when this loop completes without Colby relaying
 | — | A-4 | family-health.sh | ✅ Deployed session 113 — 9/9 HEALTHY verified |
 | — | PRE | watchdog_extra_patterns.json on K2 | ✅ EXISTS — 10 PITFALL patterns v2.0 (session 113) |
 | **P2** | PROOF-A | Codex as automated ArchonPrime (background service) | 🔴 Not implemented — Phase PROOF |
-| **P2** | PROOF-B | Regression detection after governor promotion | 🔴 Not implemented — Phase PROOF |
+| **P2** | PROOF-B | Regression detection after governor promotion | ✅ VERIFIED PASS (session 113) — AC1+AC3 pass post-surgery; governor spine backup added |
 | **P2** | AC9 | Full autonomous family loop | ✅ VERIFIED PASS (session 113) — bus→channels_bridge→CC server→bus reply |
 | **P2** | AC10 | Karma proactive outreach without prompting | ✅ IMPLEMENTED (session 113) — _proactive_outreach() in karma_regent.py |
 | **P2** | AC4 | Option-C self-authored research candidates | ✅ VERIFIED PASS (session 113) — 3 rsc in stable_identity, 47 research cards |
