@@ -2048,3 +2048,5 @@ Result: spine v85, 2 behavioral_continuity patterns promoted to spine + FalkorDB
 **B5 IN PROGRESS:** hub-bridge/app/server.js -- fetchK2WorkingMemory() now reads
 vesper_identity_spine.json on K2 and injects behavioral pattern descriptions as
 "=== BEHAVIORAL PATTERNS ===" in K2 working memory context block. Deploying.
+
+[2026-03-20] Honesty contract (Never lie / hide / conceal / fail silently) added to top of CLAUDE.md — committed this session.
