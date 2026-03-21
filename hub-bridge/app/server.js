@@ -320,7 +320,7 @@ async function fetchK2MemoryGraph(query = "Colby") {
 // Fetched via /api/exec (shell_run endpoint). Injected into buildSystemText for session continuity.
 let _k2WorkingMemCache = null;
 let _k2WorkingMemCacheAt = 0;
-const K2_WORKING_MEM_MAX_CHARS = 15000;
+const K2_WORKING_MEM_MAX_CHARS = 20000; // F-5: increased to fit evolution journal (tail -10 ~6KB)
 const K2_FRESHNESS_SLO_SECONDS = Number(process.env.K2_FRESHNESS_SLO_SECONDS || "120");
 let _k2FreshnessCache = null;
 let _k2FreshnessCacheAt = 0;
