@@ -1,14 +1,18 @@
-## Session 111 (2026-03-21) — P0N-C closed, P0N-B timeout fix applied
+## Session 111 (2026-03-21) — AC#3/AC#7 verified, P0N-C closed, gitignore fixed
 
 **DONE:**
 - P0N-C: Codex confirmed installed on K2 (Sovereign confirmation)
-- P0N-B: CC_TIMEOUT raised to 300s in channels_bridge.py (was 15s); gate relaxed to "gets response" not "within 30s"
-- vesper_eval.py: candidate_type=ctype already present in resolve_governor_decision call (fix was applied in session 110)
-- active-issues.md updated: P0N-C closed, P0N-B timeout fix documented
+- AC#3 VERIFIED: PITFALL patterns (P001/P002/P005+) visible in Karma /v1/chat karmaCtx (spine v243)
+- AC#7 VERIFIED: locked-invariant-guard.py fires exit 2 on karma_contract_policy edit; SOVEREIGN_APPROVED=1 bypass works
+- H6: CC recommended close as non-issue (CC spine + Karma spine intentionally separate) — posted to bus for Sovereign confirm
+- .gitignore: excluded .playwright-mcp/, Aria1/, Current_Plan/, Design/, Logs/, wip PDFs, local scratch files
+- PLAN.md: H3/P0N-C marked complete, cc-delegation skill confirmed present
+- P0N-B gate test: cc_server running on port 7891, test message sent (coord_1774062980809_fzvt), awaiting channels_bridge pickup
 
 **NEXT:**
-- P0N-B gate test: run channels_bridge.py + cc_server_p1.py and send test bus message → verify response received
-- Monitor B7 KCC cooldown
+- P0N-B: Confirm channels_bridge picked up gate test message and routed to cc_server
+- Acceptance criterion #1: verify Karma identifies role as Initiate correctly in chat
+- Acceptance criterion #6: full Sovereign approval loop end-to-end test
 
 ---
 

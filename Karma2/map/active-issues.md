@@ -37,6 +37,18 @@
 - Fix applied (session 111): CC_TIMEOUT raised to 300s in channels_bridge.py (was 15s)
 - Gate: bus message to cc gets response (latency may exceed 30s — gate relaxed to "gets response")
 
+### ~~AC#3: PITFALL patterns not visible in karmaCtx~~ — VERIFIED PASS (session 111)
+- Karma articulates P001/P002/P005+ PITFALL patterns from spine v243 in /v1/chat response
+- Non-cascade_performance patterns confirmed visible in context
+
+### ~~AC#7: Locked Invariant hook not tested~~ — VERIFIED PASS (session 111)
+- locked-invariant-guard.py fires exit code 2 on unauthorized edit of karma_contract_policy.md
+- SOVEREIGN_APPROVED=1 bypass passes with exit 0
+- Hook registered in .claude/settings.json PreToolUse
+
+### H6: CC spine path — Sovereign decision pending
+- Status: CC posted recommendation (close as non-issue — CC spine and Karma spine intentionally separate) to bus coord_1774063128210_hc4j
+
 ## VESPER PIPELINE STATUS (2026-03-21T02:48Z)
 - self_improving: TRUE
 - total_promotions: 207
