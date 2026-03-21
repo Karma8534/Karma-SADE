@@ -2238,3 +2238,11 @@ ARIA_SERVICE_KEY added to hub.env (pre-existing key `Bt1MU_...` was already ther
 - AC4 VERIFIED PASS — production criterion met
 
 **Next:** Session/claude-mem pipeline (prerequisite for AC5 PITFALL repeat tracking), then AC5/AC6/AC9/AC10
+
+## Session 115 (2026-03-21) — AC6 hub_file_read tool
+
+**AC6 scoped file_read tool added to hub-bridge:**
+- New `hub_file_read` tool: read-only, scoped to `/opt/seed-vault/memory_v1/hub_bridge/` only
+- Path traversal protection enforced in handler
+- Banked approval consumed: tool_addition 10→9
+- Pending: deploy + verify AC6 pass

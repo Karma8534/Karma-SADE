@@ -1645,6 +1645,18 @@ const TOOL_DEFINITIONS = [
       required: ["texts"],
     },
   },
+  // AC6: Scoped hub config file reader — read-only, hub_bridge directory only
+  {
+    name: "hub_file_read",
+    description: "Read a file from the hub-bridge configuration directory. Read-only access scoped strictly to /opt/seed-vault/memory_v1/hub_bridge/. Use to inspect hub.env, compose.hub.yml, or other hub-bridge config files. Path traversal outside the scope is blocked.",
+    input_schema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Relative path within hub-bridge dir (e.g. 'config/hub.env', 'compose.hub.yml')" },
+      },
+      required: ["path"],
+    },
+  },
 ];
 
 // Map of whitelisted file aliases to actual paths
@@ -1868,6 +1880,25 @@ async function executeToolCall(toolName, toolInput, writeId = null, ariaSessionI
         const trimmed = content.slice(0, 20_000); // 20KB cap
         console.log(`[TOOL-API] get_vault_file '${alias}' → ${filePath} (${trimmed.length} chars)`);
         return { ok: true, alias, path: filePath, content: trimmed };
+      } catch (e) {
+        return { error: "file_read_error", message: e.message };
+      }
+    }
+
+    // hub_file_read — read-only, scoped to /opt/seed-vault/memory_v1/hub_bridge/ (AC6)
+    if (toolName === "hub_file_read") {
+      const HUB_SCOPE = "/opt/seed-vault/memory_v1/hub_bridge";
+      const relPath = (toolInput.path || "").trim();
+      if (!relPath) return { error: "missing_path", message: "path is required" };
+      const resolved = path.resolve(HUB_SCOPE, relPath);
+      if (!resolved.startsWith(HUB_SCOPE + "/") && resolved !== HUB_SCOPE) {
+        return { error: "scope_violation", message: `Path traversal denied. Access limited to ${HUB_SCOPE}/` };
+      }
+      try {
+        const content = fs.readFileSync(resolved, "utf8");
+        const trimmed = content.slice(0, 20_000);
+        console.log(`[TOOL-API] hub_file_read '${relPath}' → ${resolved} (${trimmed.length} chars)`);
+        return { ok: true, path: resolved, content: trimmed };
       } catch (e) {
         return { error: "file_read_error", message: e.message };
       }

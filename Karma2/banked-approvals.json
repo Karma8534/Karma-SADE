@@ -31,9 +31,11 @@
     },
     "tool_addition": {
       "description": "New TOOL_DEFINITIONS entries in hub-bridge server.js (each tool addition = 1 approval)",
-      "remaining": 10,
+      "remaining": 9,
       "initial": 10,
-      "log": []
+      "log": [
+        {"timestamp": "2026-03-21T09:00:00Z", "action": "hub-bridge: add scoped hub_file_read tool (read-only, /opt/seed-vault/memory_v1/hub_bridge/ scope)", "phase_ac_reference": "AC6"}
+      ]
     },
     "claude_md_edit": {
       "description": "CLAUDE.md edits — non-policy sections only. Edits to karma_contract_policy.md require SOVEREIGN_APPROVED=1 and are NOT covered by banked approvals.",
@@ -73,8 +75,8 @@
   },
   "totals": {
     "initial": 300,
-    "consumed": 9,
-    "remaining": 291
+    "consumed": 10,
+    "remaining": 290
   },
   "usage_protocol": {
     "step_1": "Identify which category applies to the intended action",
