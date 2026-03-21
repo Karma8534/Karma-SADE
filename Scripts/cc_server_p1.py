@@ -2,11 +2,11 @@
 """
 P0N-A: CC persistent server on P1.
 Accepts POST /cc with JSON {message, session_id?}
-Runs: claude -p "message" --continue (resumes most recent session in project dir)
-Returns: {response, ok, exit_code}
+Uses local Ollama for inference — Anthropic-independent, no MCP startup overhead (3-8s).
+Returns: {response, ok}
 Auth: Bearer token checked against HUB_CHAT_TOKEN env var.
 """
-import os, subprocess, json, sys
+import os, json, sys, urllib.request, urllib.error
 from http.server import HTTPServer, BaseHTTPRequestHandler
 sys.path.insert(0, os.path.dirname(__file__))
 try:
@@ -15,12 +15,13 @@ try:
 except Exception:
     GMAIL_AVAILABLE = False
 
-PORT      = 7891
-TOKEN     = os.environ.get("HUB_CHAT_TOKEN", "")
-CLAUDE_CMD = os.environ.get("CLAUDE_CMD", r"C:\Users\raest\AppData\Roaming\npm\claude.cmd")
+PORT          = 7891
+TOKEN         = os.environ.get("HUB_CHAT_TOKEN", "")
 WORK_DIR      = r"C:\Users\raest\Documents\Karma_SADE"
 SNAPSHOT_FILE = os.path.join(WORK_DIR, "cc_context_snapshot.md")
-TIMEOUT       = 300  # 5 min — MCP startup + full response
+OLLAMA_URL    = os.environ.get("OLLAMA_URL", "http://localhost:11434")
+OLLAMA_MODEL  = os.environ.get("OLLAMA_MODEL", "llama3.1:8b")
+API_TIMEOUT   = 30   # seconds — local Ollama, fast
 
 def load_snapshot():
     """Load cc_context_snapshot.md written by wrap-session/resurrect. Falls back to base identity."""
@@ -105,34 +106,33 @@ class CCHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"ok": False, "error": "message required"}).encode())
             return
 
-        # Run claude — inject identity + current session snapshot
+        # Call local Ollama — Anthropic-independent, no MCP startup (3-8s vs 240s+)
         try:
             snapshot = load_snapshot()
-            system_prompt = CC_IDENTITY_BASE + ("\n\n[CURRENT SESSION CONTEXT]\n" + snapshot if snapshot else "")
-            cmd = [
-                CLAUDE_CMD,
-                "-p", message,
-                "--system-prompt", system_prompt,  # CC Ascendant identity + session context
-            ]
-            result = subprocess.run(
-                cmd,
-                capture_output=True, text=True, timeout=TIMEOUT,
-                cwd=WORK_DIR
+            system_prompt = CC_IDENTITY_BASE
+            if snapshot:
+                system_prompt += "\n\n[CURRENT SESSION CONTEXT]\n" + snapshot
+            payload = json.dumps({
+                "model": OLLAMA_MODEL,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user",   "content": message}
+                ],
+                "stream": False
+            }).encode()
+            req = urllib.request.Request(
+                f"{OLLAMA_URL}/v1/chat/completions",
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST"
             )
-            response_text = (result.stdout or "").strip() or (result.stderr or "").strip() or "(no output)"
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({
-                "ok": True,
-                "response": response_text,
-                "exit_code": result.returncode
-            }).encode())
-        except subprocess.TimeoutExpired:
-            self.send_response(504)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"ok": False, "error": f"Claude timeout ({TIMEOUT}s)"}).encode())
+            with urllib.request.urlopen(req, timeout=API_TIMEOUT) as r:
+                d = json.loads(r.read())
+            response_text = d["choices"][0]["message"]["content"].strip()
+            self._json(200, {"ok": True, "response": response_text})
+        except urllib.error.HTTPError as e:
+            err = e.read().decode()[:200]
+            self._json(502, {"ok": False, "error": f"Ollama error {e.code}: {err}"})
         except Exception as e:
             self.send_response(500)
             self.send_header("Content-Type", "application/json")
@@ -142,6 +142,6 @@ class CCHandler(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     print(f"[cc-server] Starting on port {PORT}")
     print(f"[cc-server] Auth: {'ENABLED' if TOKEN else 'DISABLED (set HUB_CHAT_TOKEN)'}")
-    print(f"[cc-server] Mode: --continue (resumes most recent session) + identity assertion")
+    print(f"[cc-server] Inference: Ollama {OLLAMA_URL} model={OLLAMA_MODEL}")
     server = HTTPServer(("0.0.0.0", PORT), CCHandler)
     server.serve_forever()

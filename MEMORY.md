@@ -2300,3 +2300,12 @@ ARIA_SERVICE_KEY added to hub.env (pre-existing key `Bt1MU_...` was already ther
 - karma_regent.py patched: _load_kiki_doctrine() + injected into state_block
 - Regent restarted (spine v1018, 20 stable patterns). Doctrine loads: 4089 chars, all 4 files.
 - Pattern: Kiki now has same multi-file structure as CC (.claude/rules/) and Karma (Memory/)
+
+## 2026-03-21 — cc_server /cc Ollama fix
+
+- **Changed:** cc_server_p1.py /cc now uses local Ollama (localhost:11434, llama3.1:8b)
+- **Root cause:** claude -p loaded 10+ MCPs (60-120s startup) -> hub-bridge 240s timeout -> 502
+- **Wrong fix attempted:** direct Anthropic API (broke Anthropic-independent architecture) — PITFALL logged
+- **Correct fix:** local Ollama — 3-8s, zero Anthropic dependency, zero MCP overhead
+- **Verified:** vault-neo -> P1:7891/cc OK in 20.1s. Response: CONTINUE_MODE_VERIFIED
+- **Next:** browser test via hub.arknexus.net/cc
