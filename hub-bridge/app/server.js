@@ -1885,14 +1885,14 @@ async function executeToolCall(toolName, toolInput, writeId = null, ariaSessionI
       }
     }
 
-    // hub_file_read — read-only, scoped to /opt/seed-vault/memory_v1/hub_bridge/ (AC6)
+    // hub_file_read — read-only, scoped to /karma/vault/memory_v1/hub_bridge/ (container path, AC6)
     if (toolName === "hub_file_read") {
-      const HUB_SCOPE = "/opt/seed-vault/memory_v1/hub_bridge";
+      const HUB_SCOPE = "/karma/vault/memory_v1/hub_bridge";
       const relPath = (toolInput.path || "").trim();
       if (!relPath) return { error: "missing_path", message: "path is required" };
       const resolved = path.resolve(HUB_SCOPE, relPath);
       if (!resolved.startsWith(HUB_SCOPE + "/") && resolved !== HUB_SCOPE) {
-        return { error: "scope_violation", message: `Path traversal denied. Access limited to ${HUB_SCOPE}/` };
+        return { error: "scope_violation", message: "Path traversal denied. Access limited to hub_bridge directory." };
       }
       try {
         const content = fs.readFileSync(resolved, "utf8");
