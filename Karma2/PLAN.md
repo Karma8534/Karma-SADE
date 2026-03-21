@@ -88,7 +88,7 @@ These rules are **hard-coded constraints** the watchdog→eval→governor pipeli
 |----|-----|----------|------|--------|
 | H1 | Add `import subprocess` to cc_bus_reader.py | Lines 82+108 call subprocess.run() but import missing — SSH calls crash every 2min | cc_bus_reader.log shows successful SSH output | ✅ Fixed + restored to K2 (session 109) |
 | H2 | Create `for-karma/SADE — Canonical Definitions.txt` | File missing. Resurrect Step 1c silently fails every cold start. | CC session reads file without error | ✅ File already existed — false alarm |
-| H3 | Resolve cc_scratchpad.md two-copy ambiguity | Exists on vault-neo AND K2. Sync state unknown. | One canonical copy or confirmed sync confirmed | 🟡 Pending |
+| H3 | Resolve cc_scratchpad.md two-copy ambiguity | Exists on vault-neo AND K2. Sync state unknown. | One canonical copy or confirmed sync confirmed | ✅ Resolved (session 110) — K2 canonical (135 lines Mar 20), synced to vault-neo |
 | H4 | Mark B1+B2 resolved in active-issues.md | Both verified fixed session 109. Showing open creates false work queue. | active-issues.md updated | ✅ Done (session 109) |
 | H5 | Confirm B7 (KCC drift) cleared | KIKI fixed session 109. Need one clean cc_anchor_agent run. | No drift alert in next cc_anchor run | 🟡 Awaiting next cc_anchor run |
 | H6 | Verify resurrect Step 1b spine path | Plan says cc_identity_spine.json is wrong — but BOTH cc_identity_spine.json AND vesper_identity_spine.json exist as separate files. cc_identity_spine.json = CC's own spine. vesper_identity_spine.json = Karma's spine. Needs Sovereign direction: should CC read its own spine or Karma's? | Sovereign clarification received, spine path confirmed | 🔴 Needs Sovereign decision |
@@ -130,7 +130,7 @@ Why first: 108+ sessions document exactly how previous tool implementations fail
 - Auth: **same bridge Bearer token as `/v1/chat`** (zero new auth surface, same token)
 - Gate: Colby hits hub.arknexus.net/cc from browser, CC on P1 responds with full local capabilities
 - **Eliminates: dependency on claude.ai/code, Telegram, any Anthropic web property**
-- **Required companion:** Create `.claude/skills/cc-delegation/SKILL.md` — teaches Karma WHEN to delegate to CC via /cc route, what task types qualify (code gen, file ops, browser, debugging), and invocation priority rule (CC=default, Codex=explicit-only). Without this skill, Karma won't reliably route to /cc even after P0N-A is live.
+- **Required companion:** `.claude/skills/cc-delegation/SKILL.md` ✅ EXISTS (session 111)
 
 **P0N-B: Channels custom bridge (coordination bus → P1 CC)** ✅ APPROVED
 - Custom CC channel on P1 replaces cc_bus_reader.py (broken haiku proxy on K2)
@@ -139,7 +139,8 @@ Why first: 108+ sessions document exactly how previous tool implementations fail
 - **Invocation mode: `claude -p "message" --resume`** — resume mode preserves codebase context across bus messages. One-shot mode (`claude -p` without `--resume`) loses context between messages, making CC stateless and unaware of prior bus exchanges. The Channels bridge MUST use `--resume` to maintain session continuity. SDK alternative: `const { claude } = require('@anthropic-ai/claude-code')` for programmatic control.
 - Gate: coordination bus message addressed to `cc` triggers CC response within 30s, and a follow-up message demonstrates context retention from prior exchange
 
-**P0N-C: KCC canonical instance — PS KCC + GLM primary + Haiku fallback** ✅ APPROVED
+**P0N-C: KCC canonical instance — PS KCC + GLM primary + Haiku fallback** ✅ COMPLETE (session 111)
+- **Codex installed on K2** — confirmed by Sovereign 2026-03-21
 - **Canonical instance:** PS KCC (`C:\Users\karma`, Claude Code v2.1.80 on P1 Windows)
 - **Primary model:** GLM (funded Coding Plan — zero marginal cost, already provisioned)
 - **Fallback model:** `claude-haiku-4-5-20251001` if GLM API unavailable
