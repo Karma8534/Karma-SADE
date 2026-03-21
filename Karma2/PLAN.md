@@ -428,24 +428,21 @@ The family operates autonomously when this loop completes without Colby relaying
 | — | H6 | Resurrect Step 1b spine path | ✅ cc_identity_spine.json is CORRECT — CC's own spine. vesper_identity_spine.json = Karma's spine. No change needed. |
 | P1 | H3 | cc_scratchpad.md two copies (vault-neo + K2) | ✅ Resolved session 110 — K2 canonical |
 | P1 | H5 | B7 KCC drift confirmed cleared | ✅ Resolved session 111 |
-| **P0** | B4+B5 | Vesper→Karma bridge dead | 🔴 Root cause known, Phase 0-A/B |
+| — | B3+B4+B5+B6+B8 | Phase 0-A/B/C/D/E bugs | ✅ ALL RESOLVED session 110-111 (verified 2026-03-21) |
 | **P0** | P0-F | TITANS primitives missing from Vesper (cascade_performance monoculture root cause) | 🔴 Not implemented — Phase 0-F |
 | **P1** | P0-G | Local inference wiring + degradation tiers (M4-ready, activate via config flag) | 🔴 Not implemented — Phase 0-G |
-| P1 | B3 | P1 Ollama model name wrong | 🔴 Unverified, Phase 0-C |
-| P2 | B6 | Dedup ring memory-only | 🟡 Phase 0-D |
-| P2 | B8 | Regent restart loop | 🟡 Undiagnosed, Phase 0-E |
 | P3 | B7 | KCC drift alerts | ✅ Cooldown applied session 110 |
 | ✅ | P0N-A | hub.arknexus.net/cc (CC on P1 via Tailscale) | ✅ LIVE (session 110) |
-| **P1** | AC8 | CC server Windows service (reboot persistence) | 🔴 UNVERIFIED — SSH verify required |
+| — | AC8 | CC server Windows service (reboot persistence) | ✅ LIVE session 112 (HKCU Run key, port 7891) |
 | — | P0N-B | Channels bridge (bus → P1 CC) | ✅ Gate test passed session 111 |
 | — | P0N-C | KCC: PS KCC + GLM primary + Haiku fallback | ✅ COMPLETE session 111 |
 | P4 | P3-A | CLAUDE.md terminology mismatch | 🟡 Phase 3-A |
 | P4 | P3-B | Bus scope (CC/Codex noise) | 🟡 Phase 3-B |
 | P4 | P3-C | KCC scope undefined | 🟡 Phase 3-C (KCC scope manifest written — verify) |
 | — | P3-D | Governance hook enforcement (supervision gap) | ✅ LIVE — 3 hooks deployed + committed (session 109) |
-| **P1** | A-1 | cc-scope-index.md | 🔴 Does not exist yet — Phase A |
-| **P1** | A-4 | family-health.sh | 🔴 Does not exist yet — Phase A |
-| **P1** | PRE | watchdog_extra_patterns.json on K2 | 🔴 Existence UNCONFIRMED — SSH verify required |
+| — | A-1 | cc-scope-index.md | ✅ Built session 113 (10 pitfalls + 10 decisions) |
+| — | A-4 | family-health.sh | ✅ Deployed session 113 — 9/9 HEALTHY verified |
+| — | PRE | watchdog_extra_patterns.json on K2 | ✅ EXISTS — 6 PITFALL patterns from CCSession032026A |
 | **P2** | PROOF-A | Codex as automated ArchonPrime (background service) | 🔴 Not implemented — Phase PROOF |
 | **P2** | PROOF-B | Regression detection after governor promotion | 🔴 Not implemented — Phase PROOF |
 | **P2** | AC9 | Full autonomous family loop | 🔴 Not implemented — Phase PROOF |

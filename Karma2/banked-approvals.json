@@ -9,9 +9,11 @@
   "categories": {
     "vault_neo_deploy": {
       "description": "Hub-bridge or karma-server deploys to vault-neo (includes build, sync, deploy, verify steps)",
-      "remaining": 20,
+      "remaining": 19,
       "initial": 20,
-      "log": []
+      "log": [
+        {"timestamp": "2026-03-21T06:28:00Z", "action": "hub-bridge deploy: credit burn alarm (P0-G)", "phase_ac_reference": "P0-G"}
+      ]
     },
     "k2_ssh_write": {
       "description": "K2 file writes via SSH (karma_regent.py, vesper_*.py, spine edits, cache files, aria service)",
@@ -33,9 +35,11 @@
     },
     "ac_execution": {
       "description": "AC test runs, verification commands, gate confirmations (each AC verification cycle = 1 approval)",
-      "remaining": 25,
+      "remaining": 24,
       "initial": 25,
-      "log": []
+      "log": [
+        {"timestamp": "2026-03-21T06:25:00Z", "action": "AC1 live chat verify — Karma rank Initiate check", "phase_ac_reference": "AC1"}
+      ]
     },
     "governance_loop": {
       "description": "Coordination bus posts from CC, spine rank updates, governance audit actions",
@@ -52,8 +56,8 @@
   },
   "totals": {
     "initial": 100,
-    "consumed": 0,
-    "remaining": 100
+    "consumed": 2,
+    "remaining": 98
   },
   "usage_protocol": {
     "step_1": "Identify which category applies to the intended action",

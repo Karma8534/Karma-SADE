@@ -2119,9 +2119,18 @@ async function callLLMWithTools(model, messages, maxTokens, writeId = null, aria
       ? TOOL_DEFINITIONS.map((t, i) => i === TOOL_DEFINITIONS.length - 1 ? { ...t, cache_control: { type: "ephemeral", ttl: "1h" } } : t)
       : TOOL_DEFINITIONS;
 
-    const resp = await anthropic.messages.create({
-      model, system: systemBlock.length ? systemBlock : undefined, messages: cachedMessages, max_tokens: maxTokens, tools: cachedTools,
-    });
+    let resp;
+    try {
+      resp = await anthropic.messages.create({
+        model, system: systemBlock.length ? systemBlock : undefined, messages: cachedMessages, max_tokens: maxTokens, tools: cachedTools,
+      });
+    } catch (err) {
+      const status = err.status || err.statusCode;
+      if (status === 402 || status === 429 || (status >= 400 && status < 500)) {
+        postCreditAlertToBus(err.message || "API error", status);
+      }
+      throw err;
+    }
     // Cache telemetry — log every call so we can verify caching is working
     const cacheCreate = resp.usage?.cache_creation_input_tokens || 0;
     const cacheRead = resp.usage?.cache_read_input_tokens || 0;
@@ -2294,6 +2303,33 @@ async function callWithK2Fallback(model, messages, maxTokens, deep_mode, writeId
     : callLLM(model, messages, maxTokens);
 }
 
+// --- Credit burn alarm (P0-G) ---
+// Posts to coordination bus when Anthropic API returns 402 (credits exhausted) or persistent 429.
+// 30-minute cooldown to avoid flooding the bus.
+let _creditAlertLastPosted = 0;
+function postCreditAlertToBus(reason, statusCode) {
+  const now = Date.now();
+  if (now - _creditAlertLastPosted < 30 * 60 * 1000) return; // 30 min cooldown
+  _creditAlertLastPosted = now;
+  const id = `credit_alert_${now}`;
+  const entry = {
+    id,
+    from: "hub-bridge",
+    to: "cc",
+    type: "alert",
+    urgency: "high",
+    status: "pending",
+    content: `CREDIT_ALERT: Anthropic API error ${statusCode} — ${reason}. Hub-bridge is degraded. Local fallback (K2_INFERENCE_ENABLED) may be needed. Check credits at console.anthropic.com.`,
+    parent_id: null,
+    response_id: null,
+    context: null,
+    created_at: new Date().toISOString(),
+  };
+  _coordinationCache.set(id, entry);
+  saveCoordinationToDisk();
+  console.warn(`[CREDIT_ALARM] HTTP ${statusCode} — posted alert to bus (id=${id})`);
+}
+
 async function callLLM(model, messages, maxTokens) {
   if (isAnthropicModel(model)) {
     if (!anthropic) throw new Error("Anthropic client unavailable — ANTHROPIC_API_KEY not loaded");
@@ -2310,7 +2346,16 @@ async function callLLM(model, messages, maxTokens) {
     if (staticSystem) systemBlock.push({ type: "text", text: staticSystem.content, cache_control: { type: "ephemeral", ttl: "1h" } });
     if (volatileSystem) systemBlock.push({ type: "text", text: volatileSystem.content });
     if (!systemBlock.length && systemPrompt) systemBlock.push({ type: "text", text: systemPrompt, cache_control: { type: "ephemeral", ttl: "1h" } });
-    const resp = await anthropic.messages.create({ model, system: systemBlock.length ? systemBlock : undefined, messages: apiMessages, max_tokens: maxTokens });
+    let resp;
+    try {
+      resp = await anthropic.messages.create({ model, system: systemBlock.length ? systemBlock : undefined, messages: apiMessages, max_tokens: maxTokens });
+    } catch (err) {
+      const status = err.status || err.statusCode;
+      if (status === 402 || status === 429 || (status >= 400 && status < 500)) {
+        postCreditAlertToBus(err.message || "API error", status);
+      }
+      throw err;
+    }
     const cacheCreate = resp.usage?.cache_creation_input_tokens || 0;
     const cacheRead = resp.usage?.cache_read_input_tokens || 0;
     const inputTokens = resp.usage?.input_tokens || 0;
