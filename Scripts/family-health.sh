@@ -3,7 +3,7 @@
 # Run on vault-neo: bash Scripts/family-health.sh
 # Checks 7 components → HEALTHY / DEGRADED / DOWN
 
-set -euo pipefail
+set -uo pipefail
 
 PASS=0
 WARN=0
