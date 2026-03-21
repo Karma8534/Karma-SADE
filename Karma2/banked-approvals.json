@@ -1,0 +1,66 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "created": "2026-03-21",
+    "description": "Sovereign pre-authorized approvals for CC to use without mid-session interruption. CC decrements the appropriate category before proceeding and logs action + phase/AC reference. If a category hits 0, CC STOPS and posts to bus for explicit re-authorization.",
+    "refill_command": "Sovereign posts 'refill banked approvals [category]' to coordination bus",
+    "governance_rule": "This file is read-only by Karma/Vesper/KCC. Only CC (Ascendant) may decrement. Only Sovereign may refill."
+  },
+  "categories": {
+    "vault_neo_deploy": {
+      "description": "Hub-bridge or karma-server deploys to vault-neo (includes build, sync, deploy, verify steps)",
+      "remaining": 20,
+      "initial": 20,
+      "log": []
+    },
+    "k2_ssh_write": {
+      "description": "K2 file writes via SSH (karma_regent.py, vesper_*.py, spine edits, cache files, aria service)",
+      "remaining": 20,
+      "initial": 20,
+      "log": []
+    },
+    "tool_addition": {
+      "description": "New TOOL_DEFINITIONS entries in hub-bridge server.js (each tool addition = 1 approval)",
+      "remaining": 10,
+      "initial": 10,
+      "log": []
+    },
+    "claude_md_edit": {
+      "description": "CLAUDE.md edits — non-policy sections only. Edits to karma_contract_policy.md require SOVEREIGN_APPROVED=1 and are NOT covered by banked approvals.",
+      "remaining": 10,
+      "initial": 10,
+      "log": []
+    },
+    "ac_execution": {
+      "description": "AC test runs, verification commands, gate confirmations (each AC verification cycle = 1 approval)",
+      "remaining": 25,
+      "initial": 25,
+      "log": []
+    },
+    "governance_loop": {
+      "description": "Coordination bus posts from CC, spine rank updates, governance audit actions",
+      "remaining": 5,
+      "initial": 5,
+      "log": []
+    },
+    "misc_structural": {
+      "description": "Structural changes not covered by above categories — CC must log what category it applied before consuming",
+      "remaining": 10,
+      "initial": 10,
+      "log": []
+    }
+  },
+  "totals": {
+    "initial": 100,
+    "consumed": 0,
+    "remaining": 100
+  },
+  "usage_protocol": {
+    "step_1": "Identify which category applies to the intended action",
+    "step_2": "Check remaining > 0 for that category",
+    "step_3": "Log the action: { timestamp, category, action_description, phase_ac_reference }",
+    "step_4": "Decrement category.remaining by 1 and increment totals.consumed by 1",
+    "step_5": "Proceed with the action",
+    "step_6": "If remaining == 0 after decrement: STOP, post to coordination bus requesting re-authorization before next action in that category"
+  }
+}

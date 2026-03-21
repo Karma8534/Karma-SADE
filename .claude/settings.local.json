@@ -313,7 +313,13 @@
       "Bash(powershell -Command \"Get-ChildItem ''C:\\\\Users\\\\raest\\\\AppData\\\\Roaming\\\\Claude'' -Recurse -Depth 3 | Where-Object { $_.Extension -in ''.json'',''.jsonl'',''.db'',''.sqlite'',''.log'' -or $_.Name -like ''*session*'' -or $_.Name -like ''*conversation*'' -or $_.Name -like ''*leveldb*'' -or $_.Name -like ''*IndexedDB*'' } | Select-Object FullName, Length | Sort-Object Length -Descending | Select-Object -First 20\")",
       "Bash(grep \"\\\\.jsonl$\")",
       "Bash(powershell -Command \"git add Scripts/channels_bridge.py Scripts/start_channels_bridge.ps1 .claude/settings.local.json; git commit -m ''feat\\(p0n-b\\): channels bridge — coord bus to CC server + bypass permissions settings''\")",
-      "Bash(powershell -Command \"git add Scripts/channels_bridge.py Scripts/start_channels_bridge.ps1 .claude/settings.local.json MEMORY.md; git commit -m ''feat\\(p0n-b\\): channels bridge + bypass permissions — coord bus routes to CC server on P1''\")"
+      "Bash(powershell -Command \"git add Scripts/channels_bridge.py Scripts/start_channels_bridge.ps1 .claude/settings.local.json MEMORY.md; git commit -m ''feat\\(p0n-b\\): channels bridge + bypass permissions — coord bus routes to CC server on P1''\")",
+      "Bash(python3 -c \"import json; d = json.load\\(open\\(''C:/Users/raest/Documents/Karma_SADE/Karma2/banked-approvals.json''\\)\\); total = sum\\(c[''remaining''] for c in d[''categories''].values\\(\\)\\); print\\(f''Categories: {len\\(d[\"\"categories\"\"]\\)}''\\); print\\(f''Total remaining: {total}''\\); print\\(f''All categories: {list\\(d[\"\"categories\"\"].keys\\(\\)\\)}''\\)\")",
+      "Bash(powershell -Command \"Get-Content ''C:\\\\Users\\\\raest\\\\Documents\\\\Karma_SADE\\\\Karma2\\\\banked-approvals.json'' | ConvertFrom-Json | Select-Object -ExpandProperty totals\")",
+      "Bash(powershell.exe -Command \"$d = Get-Content ''C:\\\\Users\\\\raest\\\\Documents\\\\Karma_SADE\\\\Karma2\\\\banked-approvals.json'' | ConvertFrom-Json; $total = $d.categories.vault_neo_deploy.remaining + $d.categories.k2_ssh_write.remaining + $d.categories.tool_addition.remaining + $d.categories.claude_md_edit.remaining + $d.categories.ac_execution.remaining + $d.categories.governance_loop.remaining + $d.categories.misc_structural.remaining; Write-Host \\(''7 categories, sum='' + $total + '', meta.total='' + $d.totals.initial\\)\")",
+      "Bash(powershell.exe -Command \":*)",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\raest\\\\Documents\\\\Karma_SADE''; git add Karma2/PLAN.md Karma2/banked-approvals.json; git status --short\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\raest\\\\Documents\\\\Karma_SADE''; git add .claude/hookify.plan-before-patch.local.md .claude/hookify.verification-gate.local.md .claude/settings.local.json; git commit -m ''feat\\(karma2\\): surgical merge 15 gaps + banked-approvals.json + harness hooks:*)"
     ],
     "defaultMode": "bypassPermissions"
   },

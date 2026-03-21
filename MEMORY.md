@@ -1,3 +1,18 @@
+## Session 112+ (2026-03-21) — Harness baked + Karma2 surgical merge + banked approvals
+
+**DONE:**
+- Hookify rules baked: plan-before-patch (PLAN phase gate), verification-gate (evidence-only completion)
+- bypassPermissions defaultMode added to settings.local.json — no more approval prompts
+- ACTIVE_DOCTRINE written to K2 cc_scratchpad.md — all 4 harness principles encoded
+- PLAN.md surgical merge: 15 gaps added — AC8+AC9, Karma Promotion Path, Sovereign Banked Approvals, Phase A (CC Self-Knowledge), Phase PROOF (Autonomous Family Loop), regression detection, Codex ArchonPrime automation, AC6 test case, family-health.sh, cc-scope-index.md, watchdog_extra_patterns gate, AC count 7→9
+- banked-approvals.json created: 100 pre-authorized Sovereign approvals across 7 categories
+- Both files verified ground truth = true
+
+**NEXT (paused at step #3):**
+- SSH verify: watchdog_extra_patterns.json existence on K2, KCC scope manifest, P0N-B code, CC server Windows service status (AC8 gap)
+- Phase A execution: cc-scope-index.md, resurrect Step 1e, wrap-session hook, family-health.sh
+- Phase B + PROOF: P0N-B gate → AC1 → AC2 → Codex automated → AC8 → AC9 → regression detection → AC6
+
 ## Session 111 (2026-03-21) — AC#3/AC#7 verified, P0N-C closed, gitignore fixed
 
 **DONE:**

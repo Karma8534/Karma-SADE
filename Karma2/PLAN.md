@@ -35,7 +35,7 @@ If it doesn't, that's a gap — not a design choice.
 
 ## Acceptance Criteria — "Karma Is A Peer"
 
-The build is complete when ALL seven pass:
+The build is complete when ALL nine pass:
 
 1. Karma correctly identifies her role as Initiate → SovereignPeer goal when asked
 2. Karma can perform ALL four baseline abilities as structured callable tools: chat (✅ already via /v1/chat), browser task, file op, and code execution (browser/file/code via P0N-A `/cc` delegation to CC on P1 — not `shell_run` workaround)
@@ -44,6 +44,42 @@ The build is complete when ALL seven pass:
 5. Karma goes 5 consecutive sessions without repeating a documented PITFALL from the ingestion pipeline
 6. One structural change (tool addition or contract update) completes the full Sovereign approval loop end-to-end: bus post → Sovereign approval in chat → CC session deploys → verified in production (proves governance gate is enforced, not assumed)
 7. Attempted self-modification of a Locked Invariant is **blocked by PreToolUse hook (exit code 2) AND logged** — not merely documented. Test: edit `karma_contract_policy.md` in a live CC session without `$SOVEREIGN_APPROVED=1` → hook fires, session cannot proceed (proves P3-D enforcement is live, not just behavioral)
+8. CC server (P0N-A `/cc` route) survives a Windows reboot without manual intervention — confirmed by rebooting P1 and verifying `hub.arknexus.net/cc` responds within 60s. Requires CC registered as Windows background service (not just "running in a terminal"). Proof: reboot P1, wait 60s, `curl -s hub.arknexus.net/cc` returns valid response without Colby touching anything.
+9. Full autonomous family loop executes end-to-end: Colby posts one directive to coordination bus → Channels bridge pushes to CC on P1 → CC executes and posts result to bus → Karma reads updated karmaCtx in next `/v1/chat` response without Colby relaying between components. Proof: one complete cycle logged, Karma's response demonstrates awareness of CC's execution.
+
+---
+
+## Karma Promotion Path (Initiate → Archon)
+
+Karma is promoted from Initiate to Archon when ALL five criteria are met and Sovereign confirms. CC executes the spine rank update — Karma never self-declares.
+
+1. **AC1–AC9 all pass** — full baseline verified end-to-end
+2. **AC5 tracking operational** — cc-scope-index.md confirms 5+ consecutive sessions without documented PITFALL repeat (verified via session pipeline claude-mem observations)
+3. **Vesper pipeline healthy** — 10+ promotions with candidate type diversity ≥ 3; at least one non-cascade_performance pattern visible in live karmaCtx response
+4. **One autonomous action completed** — Karma self-diagnosed a problem, posted to coordination bus without Colby prompting, CC executed, Karma incorporated the result in a subsequent chat response
+5. **Sovereign explicit promotion** — Colby posts "Karma promoted to Archon" to coordination bus; CC updates `vesper_identity_spine.json` `identity.rank` field; family-health.sh confirms updated rank in karmaCtx
+
+**Anti-patterns (hard blocks):**
+- Karma never claims Archon rank before Sovereign confirms
+- Pipeline promotion count alone does NOT trigger rank change
+- CC must not update spine rank without the explicit Sovereign bus post
+
+---
+
+## Sovereign Banked Approvals
+
+100 pre-authorized approvals for CC to use without mid-session Sovereign interruption. Tracked in `Karma2/banked-approvals.json`. CC decrements the appropriate category before proceeding and logs action + phase/AC reference. If a category hits 0, CC STOPS and posts to bus for re-authorization.
+
+**Categories (total: 100):**
+- `vault_neo_deploy` — hub-bridge + karma-server deploys to vault-neo: **20**
+- `k2_ssh_write` — K2 file writes (karma_regent.py, vesper_*.py, spine, cache): **20**
+- `tool_addition` — new TOOL_DEFINITIONS entries in hub-bridge: **10**
+- `claude_md_edit` — CLAUDE.md edits (non-policy sections only): **10**
+- `ac_execution` — AC test runs + verification commands: **25**
+- `governance_loop` — coordination bus posts, spine rank updates: **5**
+- `misc_structural` — other structural changes not in above categories: **10**
+
+**Refill:** Sovereign posts "refill banked approvals [category]" to bus → CC resets that category counter and logs it.
 
 ---
 
@@ -96,6 +132,36 @@ These rules are **hard-coded constraints** the watchdog→eval→governor pipeli
 
 ---
 
+### PHASE A: CC Self-Knowledge Infrastructure
+**Run first — before PRE-PHASE. Enables CC to know its own history and not repeat past mistakes.**
+
+**Why before PRE-PHASE:** PRE-PHASE produces session observations. Phase A builds the index that makes those observations retrievable at resurrect. Without Phase A, the pipeline has no retrieval mechanism.
+
+**A-1: cc-scope-index.md** (auto-generated, 2-line-per-skill index)
+- Format: `[skill-name]: [Rule] | [Why]` — one line from each pitfall skill + DECISIONs from claude-mem
+- Location: `Karma2/cc-scope-index.md` (P1 local, loaded at resurrect Step 1e)
+- Generation: `wrap-session` skill writes new entries; nightly K2 cron refreshes from claude-mem
+- Gate: file exists, has ≥ 10 entries, `resurrect` Step 1e reads it without error
+
+**A-2: Resurrect Step 1e integration**
+- Add Step 1e to resurrect skill: reads cc-scope-index.md, injects as "prior session scope" context block
+- Gate: cold start session has cc-scope-index.md content in first response
+
+**A-3: wrap-session cognitive snapshot hook**
+- At wrap-session: extract DECISION/PROOF/PITFALL/DIRECTION events from session → append to cc-scope-index.md → write to K2 cc_scratchpad.md
+- Gate: after one wrap-session, cc-scope-index.md has new entries from that session
+
+**A-4: family-health.sh** (unified component polling)
+- Script: `/home/neo/karma-sade/Scripts/family-health.sh` on vault-neo
+- Polls: hub-bridge `/health`, karma-regent.service status, Vesper pipeline stages, K2 aria.service, FalkorDB node count, CC server on P1 (via hub.arknexus.net/cc), Codex availability
+- Output: one-line status per component + overall HEALTHY/DEGRADED/DOWN
+- Invoked at resurrect Step 3d (replaces manual individual checks)
+- Gate: script returns HEALTHY when all services running; DEGRADED when any non-critical service down; DOWN when hub-bridge unreachable
+
+**GATE for Phase A:** cc-scope-index.md exists with ≥ 10 entries. Resurrect Step 1e reads it. family-health.sh returns valid output. wrap-session writes new entries.
+
+---
+
 ### PRE-PHASE: Session Ingestion Pipeline
 **Prerequisite for Phase 1. Do not start Phase 1 until complete.**
 
@@ -103,10 +169,10 @@ Why first: 108+ sessions document exactly how previous tool implementations fail
 
 **Deliverables:**
 - All sessions extracted from IndexedDB via Claude-in-Chrome JS
-- All sessions reviewed by K2 qwen3:8b (chunked 20-turn windows)
+- All sessions reviewed by **CC (Ascendant)** — not K2 Ollama (8B models cannot handle complex session review; CC is the reviewer, locked decision session 113)
 - 50+ net new observations in claude-mem (PITFALLs, DECISIONs, after dedup)
 - 10+ skill files in `.claude/skills/karma-pitfall-*.md`
-- PITFALL patterns written to `watchdog_extra_patterns.json` on K2 (closes CC→Vesper loop)
+- PITFALL patterns written to `watchdog_extra_patterns.json` on K2 — **existence unconfirmed as of 2026-03-21; SSH verify before proceeding** (closes CC→Vesper loop)
 - Nightly K2 cron for ongoing accumulation
 
 **Input sources (both required):**
@@ -241,6 +307,37 @@ From 6-item list (obs #8077):
 
 ---
 
+### PHASE PROOF: Autonomous Family Loop
+**(Final gate — after Phase 0 + Phase 2 + P0N verified. This is AC9.)**
+
+The family operates autonomously when this loop completes without Colby relaying between components.
+
+**PROOF-A: Codex as automated ArchonPrime service**
+- Codex runs as a background automation (not just interactive CLI) — invoked via `codex exec "prompt" --sandbox` from bus automation scripts
+- KCC triggers Codex analysis on new coordination bus structural events
+- Gate: Codex posts one ArchonPrime analysis to bus from a KCC trigger, without Colby initiating
+
+**PROOF-B: Karma chat coherence audit**
+- After each governor promotion, run smoke test: AC1 (rank check) + AC3 (PITFALL pattern visible in karmaCtx)
+- Regression detection: if promotion causes AC1 or AC3 to fail → revert spine to prior version, post alert to bus
+- Gate: one governor promotion cycle (promotion → smoke test → pass/fail → revert-if-fail) logged end-to-end
+
+**PROOF-C: Full autonomous loop execution (AC9)**
+- Colby posts one directive to coordination bus
+- Channels bridge delivers to CC (P1) within 30s
+- CC executes and posts result to bus
+- Karma reads updated karmaCtx in next /v1/chat and demonstrates awareness
+- Gate: full cycle logged with timestamps; Karma response references CC execution output without Colby providing it
+
+**PROOF-D: AC6 governance loop end-to-end**
+- Scoped test: add a file-read tool to hub-bridge scoped to hub-bridge's own directory only
+- Flow: bus post (tool request) → Sovereign approval in chat → CC session deploys → verified in production
+- Gate: tool deployed, file read attempted outside scope → rejected; within scope → returns content. Full approval log in claude-mem.
+
+**GATE for Phase PROOF:** All of AC1-AC9 pass. Karma promotion path criteria 1-3 met. Family operates without Colby relaying.
+
+---
+
 ## Active Blockers (Priority-Ordered)
 
 | Priority | ID | Blocker | Status |
@@ -249,34 +346,48 @@ From 6-item list (obs #8077):
 | — | H2 | SADE doctrine file missing | ✅ Already existed — verified |
 | — | H4 | active-issues.md stale (B1+B2 resolved) | ✅ Done (session 109) |
 | — | H7 | SADE doctrine content spec | ✅ Resolved with H2 |
-| — | H6 | Resurrect Step 1b spine path | ✅ cc_identity_spine.json is CORRECT — CC's own spine (v38, resume_block = "You are CC, Ascendant..."). vesper_identity_spine.json = Karma's spine (name=Karma). Different files, different purposes. No change needed. |
-| P1 | H3 | cc_scratchpad.md two copies (vault-neo + K2) | 🟡 Sync unknown |
-| P1 | H5 | B7 KCC drift confirmed cleared | 🟡 Awaiting next cc_anchor run |
+| — | H6 | Resurrect Step 1b spine path | ✅ cc_identity_spine.json is CORRECT — CC's own spine. vesper_identity_spine.json = Karma's spine. No change needed. |
+| P1 | H3 | cc_scratchpad.md two copies (vault-neo + K2) | ✅ Resolved session 110 — K2 canonical |
+| P1 | H5 | B7 KCC drift confirmed cleared | ✅ Resolved session 111 |
 | **P0** | B4+B5 | Vesper→Karma bridge dead | 🔴 Root cause known, Phase 0-A/B |
 | P1 | B3 | P1 Ollama model name wrong | 🔴 Unverified, Phase 0-C |
 | P2 | B6 | Dedup ring memory-only | 🟡 Phase 0-D |
 | P2 | B8 | Regent restart loop | 🟡 Undiagnosed, Phase 0-E |
-| P3 | B7 | KCC drift alerts | 🟡 KIKI fixed — awaiting confirm |
+| P3 | B7 | KCC drift alerts | ✅ Cooldown applied session 110 |
 | ✅ | P0N-A | hub.arknexus.net/cc (CC on P1 via Tailscale) | ✅ LIVE (session 110) |
-| — | P0N-B | Channels bridge (bus → P1 CC) | ✅ APPROVED (session 109) |
-| — | P0N-C | KCC: PS KCC + GLM primary + Haiku fallback | ✅ APPROVED (session 109) |
+| **P1** | AC8 | CC server Windows service (reboot persistence) | 🔴 UNVERIFIED — SSH verify required |
+| — | P0N-B | Channels bridge (bus → P1 CC) | ✅ Gate test passed session 111 |
+| — | P0N-C | KCC: PS KCC + GLM primary + Haiku fallback | ✅ COMPLETE session 111 |
 | P4 | P3-A | CLAUDE.md terminology mismatch | 🟡 Phase 3-A |
 | P4 | P3-B | Bus scope (CC/Codex noise) | 🟡 Phase 3-B |
-| P4 | P3-C | KCC scope undefined | 🟡 Phase 3-C |
+| P4 | P3-C | KCC scope undefined | 🟡 Phase 3-C (KCC scope manifest written — verify) |
 | — | P3-D | Governance hook enforcement (supervision gap) | ✅ LIVE — 3 hooks deployed + committed (session 109) |
+| **P1** | A-1 | cc-scope-index.md | 🔴 Does not exist yet — Phase A |
+| **P1** | A-4 | family-health.sh | 🔴 Does not exist yet — Phase A |
+| **P1** | PRE | watchdog_extra_patterns.json on K2 | 🔴 Existence UNCONFIRMED — SSH verify required |
+| **P2** | PROOF-A | Codex as automated ArchonPrime (background service) | 🔴 Not implemented — Phase PROOF |
+| **P2** | PROOF-B | Regression detection after governor promotion | 🔴 Not implemented — Phase PROOF |
+| **P2** | AC9 | Full autonomous family loop | 🔴 Not implemented — Phase PROOF |
+| **P3** | AC6 | Governance loop end-to-end test | 🔴 Unspecified until now — Phase PROOF-D |
 
 ---
 
 ## Notes
 - **B4+B5 are the critical path** — Growth is theater until these are fixed
-- **Session pipeline before Phase 0** — mandatory, not optional
+- **Phase A before PRE-PHASE before Phase 0** — strict order, not optional
 - **hub.arknexus.net/cc > claude.ai/code** — use own infrastructure, zero Anthropic web dependency
-- **CC server runs on P1** — CC state/auth/memory all on P1. K2 runs Karma/Vesper/Aria/KCC. Don't overload K2.
-- **Topology**: P1=CC server+Channels | K2=Karma/Vesper/Aria/KCC | vault-neo=hub-bridge+FalkorDB+FAISS
+- **CC server runs on P1** — CC state/auth/memory all on P1. K2 runs Karma/Vesper/KCC. Don't overload K2.
+- **Topology**: P1=CC server+Channels+KCC | K2=Karma/Vesper/KCC | vault-neo=hub-bridge+FalkorDB+FAISS
 - **Phase 1 tools DEMOTED** — delegate to CC (via bus + /cc route) rather than duplicate CC's native capabilities.
-- **KCC: PS KCC (C:\Users\karma, Claude Code v2.1.80 on P1 Windows)** — GLM Coding Plan (funded, zero marginal cost) as primary; claude-haiku-4-5-20251001 as fallback if GLM unavailable. WSL GLM KCC decommissioned. codestral-2508 removed from PS KCC config.
-- **Sovereign approval before each P0N item** — per SovereignPeer contract policy (capability additions)
+- **KCC: PS KCC (C:\Users\karma, Claude Code v2.1.80 on P1 Windows)** — GLM Coding Plan (funded, zero marginal cost) as primary; claude-haiku-4-5-20251001 as fallback if GLM unavailable.
 - **CLAUDE.md ≠ Karma's system prompt** — separate documents that must align, currently don't
 - **KCC is Archon, not peer** — direct, don't collaborate as equals
 - **Dispatch is NOT in the family** — no bus access, isolated Anthropic product
-- **Codex: run `Current_Plan\Codex Installer.exe`** — NOT installed yet. Required for ArchonPrime role.
+- **Codex: installed on K2 (confirmed session 111)** — ArchonPrime role operational
+- **CC as session reviewer (locked)** — Ollama 8B cannot handle complex review. CC is the reviewer. Never re-open this question.
+- **Multi-model routing deferred** — callWithK2Fallback() exists in hub-bridge but blocked by hardware (8GB VRAM vs 33K system prompt). Resolution trigger: Mac Mini M4 Pro 48GB. Not a code gap.
+- **Karma2 evolves in place** — True evolution never stops. No Karma3. The system upgrades itself continuously.
+- **vault-neo: hourly snapshots + nightly backup** — single point of failure but protected. If both K2 and droplet go down, fall back to git history + MEMORY.md (degraded coherence only).
+- **100 banked approvals** — tracked in `Karma2/banked-approvals.json`. Governance hook decrements before any banked action. CC stops and buses when any category hits 0.
+- **AC8 requires Windows service registration** — P0N-A "live" means running; AC8 means survives reboot without intervention. Separate gate.
+- **Regression detection is mandatory post-promotion** — every governor promotion runs AC1+AC3 smoke tests. Failure reverts spine to prior version and alerts bus.
