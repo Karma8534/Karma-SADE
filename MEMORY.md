@@ -2158,3 +2158,4 @@ ARIA_SERVICE_KEY added to hub.env (pre-existing key `Bt1MU_...` was already ther
 - AgentHarness.PDF: M2.7 RSI 100 rounds — validates Vesper pipeline. Bug pattern search, loop detection = same primitives Karma uses.
 
 **Next:** Phase 2 (Vesper Optimization) — reduce SELF_EVAL_INTERVAL to 1, drive 20 qualified cycles, verify PITFALL patterns visible in karmaCtx response via /v1/chat
+
