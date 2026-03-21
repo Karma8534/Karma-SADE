@@ -30,12 +30,11 @@
 ### H5: B7 KCC drift cleared — awaiting confirmation
 - Status: cc_anchor confirmation pending
 
-### P0N-B: Channels bridge gate test inconclusive
-- Evidence: CC server on port 7891 times out on /cc requests (claude CLI slow startup)
-- Impact: coordination bus → CC routing not verified end-to-end
-- Root cause: cc_server_p1.py spawns `claude -p` subprocess which takes >15s to start
-- Fix applied (session 111): CC_TIMEOUT raised to 300s in channels_bridge.py (was 15s)
-- Gate: bus message to cc gets response (latency may exceed 30s — gate relaxed to "gets response")
+### ~~P0N-B: Channels bridge gate test~~ — VERIFIED PASS (session 111)
+- Gate test v2 response: coord_1774063773241_hfep — CC responded via bus
+- K2 readable: Kiki 7933 cycles, 576 succeeded, 0 open issues
+- Bus write: operational end-to-end
+- Note: mcp__k2__bus_post needs HUB_AUTH_TOKEN; SSH fallback works
 
 ### ~~AC#3: PITFALL patterns not visible in karmaCtx~~ — VERIFIED PASS (session 111)
 - Karma articulates P001/P002/P005+ PITFALL patterns from spine v243 in /v1/chat response
@@ -52,6 +51,13 @@
 - Root cause: spine was set to Ascendant in a prior session (unknown when/by what)
 - Fix applied: spine.identity.rank patched to "Initiate" (banked approval used)
 - Gate: Karma responds "Initiate" when asked her rank ← verify AC#1 after karma-regent picks up new spine
+
+### AC8: CC server registered as persistent Windows service — LIVE (session 112+)
+- `Scripts/Start-CCServer.ps1` created — auto-restart loop, reads token from .hub-chat-token
+- Registered in `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` as KarmaCCServer
+- Fires at every login, no admin required
+- Health verified: `http://localhost:7891/health` → `{"ok": true, "service": "cc-server-p1"}`
+- Note: HKCU Run key fires at login (requires user session). For true pre-login persistence, run once as admin: `Register-ScheduledTask` with RunLevel Highest.
 
 ### ~~H6: CC spine path~~ — CLOSED (session 111)
 - CC reads cc_identity_spine.json (CC's own spine). Karma evolves vesper_identity_spine.json (Karma's spine). Intentionally separate. No conflict.

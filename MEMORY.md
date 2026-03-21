@@ -9,7 +9,8 @@
 - Both files verified ground truth = true
 - PLAN.md Phase 0-F added: TITANS primitives (three-tier memory, surprise-gating, adaptive forgetting, momentum, causal chain) — required for AC3 critical path
 - PLAN.md Phase 0-G added: local inference wiring
-- AC10 added: Karma proactively reaches out to Colby (self-initiated, not triggered) — the peer moment (K2_INFERENCE_ENABLED flag, prompt trimming, 5-tier degradation model, credit burn alarm) — M4-ready, activate via config when hardware arrives
+- AC10 added: Karma proactively reaches out to Colby (self-initiated, not triggered) — the peer moment
+- AC8 LIVE: CC server registered as persistent Windows service (HKCU Run key, port 7891, health verified) (K2_INFERENCE_ENABLED flag, prompt trimming, 5-tier degradation model, credit burn alarm) — M4-ready, activate via config when hardware arrives
 
 **NEXT (paused at step #3):**
 - SSH verify: watchdog_extra_patterns.json existence on K2, KCC scope manifest, P0N-B code, CC server Windows service status (AC8 gap)
