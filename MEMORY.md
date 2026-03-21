@@ -9,12 +9,15 @@
 - PLAN.md: H3/P0N-C marked complete, cc-delegation skill confirmed present
 - P0N-B gate test: cc_server running on port 7891, test message sent (coord_1774062980809_fzvt), awaiting channels_bridge pickup
 
-- AC#1 FAILS: Karma claims Ascendant rank — vesper_identity_spine.json identity.rank="Ascendant" (should be Initiate per Locked Invariant). Documented as B9. Sovereign approval needed to fix.
+- B9 FIXED: spine.identity.rank patched Ascendant→Initiate (banked approval used). AC#1 will pass after karma-regent picks up new spine.
+- H6 CLOSED: CC spine and Karma spine intentionally separate — non-issue.
+- P0N-B: channels_bridge started, fresh gate test sent, awaiting response (90s window)
+- Standing order ingested: banked approvals = execute without asking. No more pausing for Sovereign input on queued decisions.
 
 **NEXT:**
-- B9: Await Sovereign approval, then patch spine rank to Initiate
-- P0N-B: Confirm channels_bridge picked up gate test message and routed to cc_server
-- Acceptance criterion #6: full Sovereign approval loop end-to-end test
+- Confirm P0N-B gate test passes (channels_bridge → cc_server → response on bus)
+- AC#1 re-verify after karma-regent loads updated spine
+- AC#6 closes when P0N-B + B9 approval loop completes
 
 ---
 
