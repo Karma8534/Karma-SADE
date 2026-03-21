@@ -128,7 +128,7 @@ These rules are **hard-coded constraints** the watchdog→eval→governor pipeli
 | H3 | Resolve cc_scratchpad.md two-copy ambiguity | Exists on vault-neo AND K2. Sync state unknown. | One canonical copy or confirmed sync confirmed | ✅ Resolved (session 110) — K2 canonical (135 lines Mar 20), synced to vault-neo |
 | H4 | Mark B1+B2 resolved in active-issues.md | Both verified fixed session 109. Showing open creates false work queue. | active-issues.md updated | ✅ Done (session 109) |
 | H5 | Confirm B7 (KCC drift) cleared | KIKI fixed session 109. Need one clean cc_anchor_agent run. | No drift alert in next cc_anchor run | 🟡 Awaiting next cc_anchor run |
-| H6 | Verify resurrect Step 1b spine path | Plan says cc_identity_spine.json is wrong — but BOTH cc_identity_spine.json AND vesper_identity_spine.json exist as separate files. cc_identity_spine.json = CC's own spine. vesper_identity_spine.json = Karma's spine. Needs Sovereign direction: should CC read its own spine or Karma's? | Sovereign clarification received, spine path confirmed | 🔴 Needs Sovereign decision |
+| — | H6 | Resurrect Step 1b spine path | cc_identity_spine.json = CC sacred memory; vesper_identity_spine.json = Karma spine. Memory sovereign to each Family member. CC may mentor Karma — explicit CC choice only. | Sovereign directive 2026-03-21 obs#9293 | ✅ RESOLVED |
 | H7 | Specify SADE doctrine file content for H2 | H2 says "create the file" but not what goes in it. | File with all 5 elements, CC reads cleanly | ✅ Resolved with H2 |
 
 ---
