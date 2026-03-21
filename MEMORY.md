@@ -2050,3 +2050,12 @@ vesper_identity_spine.json on K2 and injects behavioral pattern descriptions as
 "=== BEHAVIORAL PATTERNS ===" in K2 working memory context block. Deploying.
 
 [2026-03-20] Honesty contract (Never lie / hide / conceal / fail silently) added to top of CLAUDE.md — committed this session.
+
+## Session 114 (continuation) — B5 field name fix
+
+**B5 ROOT CAUSE FOUND:** `fetchK2WorkingMemory()` silently returned null because hub-bridge
+checked `data.stdout` but aria `/api/exec` returns `data.output`. Field name mismatch.
+Also: aria `_check_auth()` didn't handle `X-Aria-Service-Key` — patched.
+ARIA_SERVICE_KEY added to hub.env (pre-existing key `Bt1MU_...` was already there).
+
+**FIX:** `data.stdout || data.output` — deployed now.

@@ -423,8 +423,9 @@ async function fetchK2WorkingMemory() {
     });
     if (!res.ok) { console.warn(`[K2-WORK] /api/exec → ${res.status}`); return null; }
     const data = await res.json();
-    if (!data.ok || !data.stdout) return null;
-    const freshness = parseK2Freshness(data.stdout);
+    const stdout = data.stdout || data.output || "";
+    if (!data.ok || !stdout) return null;
+    const freshness = parseK2Freshness(stdout);
     const freshnessBlock = freshness
       ? [
           "=== KIKI FRESHNESS ===",
@@ -434,7 +435,7 @@ async function fetchK2WorkingMemory() {
           `MISSING_ARTIFACTS=${freshness.missing.join(",") || "none"}`,
         ].join("\n")
       : "";
-    const combined = freshnessBlock ? `${freshnessBlock}\n${data.stdout}` : data.stdout;
+    const combined = freshnessBlock ? `${freshnessBlock}\n${stdout}` : stdout;
     const text = combined.length > K2_WORKING_MEM_MAX_CHARS
       ? combined.slice(0, K2_WORKING_MEM_MAX_CHARS) + "\n...(truncated)"
       : combined;
