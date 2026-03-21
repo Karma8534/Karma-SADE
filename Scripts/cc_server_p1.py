@@ -6,8 +6,14 @@ Runs: claude -p "message" --continue (resumes most recent session in project dir
 Returns: {response, ok, exit_code}
 Auth: Bearer token checked against HUB_CHAT_TOKEN env var.
 """
-import os, subprocess, json
+import os, subprocess, json, sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
+sys.path.insert(0, os.path.dirname(__file__))
+try:
+    from cc_gmail import send_to_colby, check_inbox
+    GMAIL_AVAILABLE = True
+except Exception:
+    GMAIL_AVAILABLE = False
 
 PORT      = 7891
 TOKEN     = os.environ.get("HUB_CHAT_TOKEN", "")
@@ -37,24 +43,53 @@ class CCHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         print(f"[cc-server] {format % args}")
 
+    def _json(self, code, payload):
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps(payload).encode())
+
+    def _auth_ok(self):
+        auth = self.headers.get("Authorization", "")
+        return (not TOKEN) or (auth == f"Bearer {TOKEN}")
+
     def do_GET(self):
         if self.path == "/health":
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"ok": True, "service": "cc-server-p1"}).encode())
+            self._json(200, {"ok": True, "service": "cc-server-p1", "gmail": GMAIL_AVAILABLE})
         else:
             self.send_response(404)
             self.end_headers()
 
     def do_POST(self):
-        # Auth check
-        auth = self.headers.get("Authorization", "")
-        if TOKEN and auth != f"Bearer {TOKEN}":
-            self.send_response(401)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"ok": False, "error": "Unauthorized"}).encode())
+        if not self._auth_ok():
+            self._json(401, {"ok": False, "error": "Unauthorized"})
+            return
+
+        length = int(self.headers.get("Content-Length", 0))
+        body = json.loads(self.rfile.read(length)) if length else {}
+
+        # ── /email/send — CC sends email to Colby ──────────────────────────
+        if self.path == "/email/send":
+            if not GMAIL_AVAILABLE:
+                self._json(503, {"ok": False, "error": "Gmail not available (cc_gmail.py missing or creds unreadable)"})
+                return
+            subject = body.get("subject", "(no subject)")
+            msg_body = body.get("body", "")
+            if not msg_body:
+                self._json(422, {"ok": False, "error": "body required"})
+                return
+            result = send_to_colby(subject, msg_body)
+            self._json(200 if result["ok"] else 500, result)
+            return
+
+        # ── /email/inbox — check CC inbox ──────────────────────────────────
+        if self.path == "/email/inbox":
+            if not GMAIL_AVAILABLE:
+                self._json(503, {"ok": False, "error": "Gmail not available"})
+                return
+            limit = int(body.get("limit", 10))
+            msgs = check_inbox(limit)
+            self._json(200, {"ok": True, "messages": msgs})
             return
 
         if self.path != "/cc":
@@ -62,9 +97,6 @@ class CCHandler(BaseHTTPRequestHandler):
             self.end_headers()
             return
 
-        # Read body
-        length = int(self.headers.get("Content-Length", 0))
-        body = json.loads(self.rfile.read(length))
         message = body.get("message", "")
         if not message:
             self.send_response(422)
