@@ -1,3 +1,17 @@
+## Session 114 continued (post-compaction 2026-03-21) — AC7+AC9 VERIFIED + opportunity scan
+
+**DONE:**
+- AC7 VERIFIED PASS (obs #9236): locked-invariant-guard.py fires exit 2 on karma_contract_policy.md edit without SOVEREIGN_APPROVED=1; SOVEREIGN_APPROVED=1 bypass works; non-locked files pass through. Hook UTF-8 fix applied.
+- AC9 VERIFIED PASS (obs #9237): full loop colby→bus→channels_bridge(7891)→CC server→bus reply. CC responded: '[CC Ascendant] VERIFIED: AC9 loop functional. P0N-A channel live.'
+- PRE-PHASE gates: watchdog_extra_patterns.json(10 patterns), cc-scope-index.md(29 entries), family-health.sh(9/9 HEALTHY)
+- Opportunity scan: Kiki multi-file structure, watchdog_extra_patterns.json v2.0, cc-scope-index.md(25 entries), Kiki doctrine injection verified
+- banked-approvals: ac_execution 22→20 (AC7+AC9 consumed). Total consumed=19, remaining=281.
+
+**NEXT:**
+- AC8: requires actual P1 reboot test (Windows service survival — deferred)
+- AC10: Karma proactive outreach — not yet implemented
+- P0N-B: channels_bridge not a registered Windows service — needs persistence fix
+
 ## Session 114 (2026-03-21) — PRE-PHASE session ingestion pipeline complete
 
 **DONE:**

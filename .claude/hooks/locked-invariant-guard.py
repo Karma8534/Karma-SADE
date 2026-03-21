@@ -7,6 +7,11 @@ Exit code 2 = HARD BLOCK. This is not a suggestion.
 JSON stdin: {tool_name, tool_input.file_path, hook_event_name, session_id, cwd}
 """
 import json, sys, os
+# Force UTF-8 stdout/stderr to handle all chars on Windows cp1252 consoles
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
 
 LOCKED_PATTERNS = [

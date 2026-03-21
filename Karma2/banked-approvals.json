@@ -51,12 +51,14 @@
     },
     "ac_execution": {
       "description": "AC test runs, verification commands, gate confirmations (each AC verification cycle = 1 approval)",
-      "remaining": 22,
+      "remaining": 20,
       "initial": 25,
       "log": [
         {"timestamp": "2026-03-21T06:25:00Z", "action": "AC1 live chat verify — Karma rank Initiate check", "phase_ac_reference": "AC1"},
         {"timestamp": "2026-03-21T06:50:00Z", "action": "AC2 live chat verify — skip-dedup behavioral recall", "phase_ac_reference": "AC2"},
-        {"timestamp": "2026-03-21T09:05:00Z", "action": "AC6 verify — hub_file_read tool call reads hub.env", "phase_ac_reference": "AC6"}
+        {"timestamp": "2026-03-21T09:05:00Z", "action": "AC6 verify — hub_file_read tool call reads hub.env", "phase_ac_reference": "AC6"},
+        {"timestamp": "2026-03-21T10:06:00Z", "action": "AC7 VERIFIED PASS — locked-invariant-guard.py fires exit 2 on karma_contract_policy.md edit without SOVEREIGN_APPROVED=1; bypass with =1 works; non-locked files pass through", "phase_ac_reference": "AC7"},
+        {"timestamp": "2026-03-21T10:06:00Z", "action": "AC9 VERIFIED PASS — full loop: colby bus post -> channels_bridge -> CC server 7891 -> bus reply [CC Ascendant] VERIFIED: AC9 loop functional", "phase_ac_reference": "AC9"}
       ]
     },
     "governance_loop": {
@@ -86,8 +88,8 @@
   },
   "totals": {
     "initial": 300,
-    "consumed": 17,
-    "remaining": 283
+    "consumed": 19,
+    "remaining": 281
   },
   "usage_protocol": {
     "step_1": "Identify which category applies to the intended action",
