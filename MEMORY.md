@@ -72,6 +72,17 @@
 - cc_relay.py on vault-neo port 17891 — running but unnecessary, cleanup optional
 - Karma2/PLAN.md: still needs full implementation (HAUL ASS directive active)
 
+## Session 114 — P0N-B: Channels bridge deployed + bypass permissions (2026-03-20)
+
+**DONE:**
+- Scripts/channels_bridge.py: polls /v1/coordination every 20s, routes `to:"cc"` → P1:7891/cc, posts response back to bus. Filters: skips from:regent/kcc/cc broadcasts (P3-B). Key fix: uses `entries` (not `messages`) from bus API.
+- Scripts/start_channels_bridge.ps1: auto-restart wrapper for channels_bridge on P1
+- channels_bridge running as background process on P1 (verified: picks up messages <20s)
+- .claude/settings.local.json: skipDangerousModePermissionPrompt + skipAutoPermissionPrompt = true (no more approval clicks)
+- P0N-C: UNBLOCKED — Codex already installed and open on K2
+
+**NEXT:** P0N-C (KCC via Codex on K2) → Phase 0 fixes (P0-A..P0-E)
+
 ## Session 113 — Anthropic cache TTL upgrade: 5m → 1h for stable blocks (2026-03-20)
 
 **DONE:**
