@@ -2059,3 +2059,13 @@ Also: aria `_check_auth()` didn't handle `X-Aria-Service-Key` â€” patched.
 ARIA_SERVICE_KEY added to hub.env (pre-existing key `Bt1MU_...` was already there).
 
 **FIX:** `data.stdout || data.output` â€” deployed now.
+
+## Session 113 PRE-PHASE (2026-03-20)
+- B5 VERIFIED: hub-bridge log shows '[K2-WORK] working memory loaded (6015 chars)' — behavioral patterns injecting into Karma context
+- bypassPermissions set in settings.local.json — no more approval prompts
+- PRE-PHASE started: CCSession032026A.md ingested, 10 observations written to claude-mem (#8651-8660)
+- 3 pitfall skill files created: karma-pitfall-architecture-divergence, undocumented-k2-agents, vesper-falkordb-unverified
+- watchdog_extra_patterns.json written to K2 (6 patterns)
+- IndexedDB extraction: NEXT (Task 1 schema discovery via Claude-in-Chrome)
+- Scripts: Scripts/md_to_session_json.py, Scripts/session_review.py created
+
