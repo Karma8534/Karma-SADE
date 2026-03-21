@@ -8,6 +8,7 @@
 - banked-approvals.json created: 100 pre-authorized Sovereign approvals across 7 categories
 - Both files verified ground truth = true
 - PLAN.md Phase 0-F added: TITANS primitives (three-tier memory, surprise-gating, adaptive forgetting, momentum, causal chain) — required for AC3 critical path
+- PLAN.md Phase 0-G added: local inference wiring (K2_INFERENCE_ENABLED flag, prompt trimming, 5-tier degradation model, credit burn alarm) — M4-ready, activate via config when hardware arrives
 
 **NEXT (paused at step #3):**
 - SSH verify: watchdog_extra_patterns.json existence on K2, KCC scope manifest, P0N-B code, CC server Windows service status (AC8 gap)

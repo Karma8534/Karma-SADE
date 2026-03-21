@@ -287,6 +287,42 @@ Why first: 108+ sessions document exactly how previous tool implementations fail
   - Format: `{ts, event_type: PROMOTE|RETIRE, pattern_type, pattern_id, reason, momentum}`
 - Gate: `/v1/chat` response includes evolution journal section when Karma is asked about her recent growth
 
+**P0-G: Local Inference Wiring — M4-Ready (wire now, activate on hardware upgrade)**
+*`callWithK2Fallback()` already exists in hub-bridge server.js (lines ~1302-2151) but is not wired to the main chat route. This task wires it properly so that when K2 hardware upgrades, local inference activates with a single config change — no rebuild required.*
+
+**G-1: Wire `callWithK2Fallback` to main chat route**
+- Current state: `callWithK2Fallback()` exists but main chat route calls `callLLMWithTools()` (Anthropic) directly — K2 path is dead code
+- Fix: add `K2_INFERENCE_ENABLED=false` flag to hub.env. When `true`, route standard chat through `callWithK2Fallback()` first; fall back to Anthropic only on K2 timeout/error
+- No model change needed — flag defaults to `false` (current behavior preserved exactly)
+- Activation: set `K2_INFERENCE_ENABLED=true` + `K2_OLLAMA_MODEL=<model>` in hub.env → restart hub-bridge → done
+- Gate: with flag `false`, behavior identical to current. With flag `true` and K2 Ollama running, `/v1/chat` routes through K2 (verify via `[K2-INFER]` log prefix)
+
+**G-2: Reduce system prompt for local inference**
+- Root cause of prior K2 inference failure: 33K char system prompt overwhelms 8B models (timeout)
+- Fix: add `K2_SYSTEM_PROMPT_MAX_CHARS=8000` env var. When K2 inference enabled, `buildSystemText()` trims to this cap (priority order: identity block → spine → recent memory → drop the rest)
+- Full 33K prompt still used for Anthropic path — no degradation on current setup
+- Gate: with K2 inference enabled, system prompt sent to Ollama is ≤ 8000 chars; Karma still identifies correctly and recalls recent spine patterns
+
+**G-3: Degradation tiers — explicit runbook**
+
+When any component fails, Karma degrades gracefully rather than going silent:
+
+| Tier | Condition | Karma's capability | Auto-detection |
+|------|-----------|--------------------|----------------|
+| **FULL** | K2 + Anthropic API + vault-neo all up | All capabilities, local inference optional | family-health.sh: ALL GREEN |
+| **API-ONLY** | K2 down, Anthropic API up | Chat via Haiku/Sonnet, no local tools, no Vesper evolution | karma-regent.service dead; hub-bridge falls back automatically |
+| **LOCAL-ONLY** | Anthropic API down/out of credits, K2 up | Chat via local Ollama (M4-era: full quality; 8GB era: degraded quality), all K2 tools, Vesper evolution continues | `K2_INFERENCE_ENABLED=true` + Anthropic call fails → auto-route to K2 |
+| **VAULT-ONLY** | K2 down + Anthropic API down | Hub-bridge serves cached karmaCtx only; no new inference; Colby gets error page | Both paths fail → serve static "Karma is resting" response |
+| **OFFLINE** | vault-neo down | Nothing external works; K2 still runs autonomously internally | family-health.sh: vault-neo unreachable |
+
+- **Auto-fallback logic (G-1 extension):** if Anthropic API returns 429/402/503 → immediately retry via K2 path (if enabled). If K2 also fails → return degradation-tier response explaining current capability level.
+- Gate: simulate API failure (bad token), verify hub-bridge returns tier-2 LOCAL-ONLY response if `K2_INFERENCE_ENABLED=true`, or graceful error if false
+
+**G-4: Credit burn alarm**
+- Root cause of 3-day outage: no alert when Anthropic credits are low
+- Fix: hub-bridge checks API response headers for credit warnings; when detected → post to coordination bus: `{"type": "alert", "content": "Anthropic credits low — activate K2 inference or add credits"}`
+- Gate: simulated low-credit response triggers bus post within one chat cycle
+
 ---
 
 ### PHASE 1: Baseline Tools — DEMOTED (fallback only)
@@ -393,6 +429,7 @@ The family operates autonomously when this loop completes without Colby relaying
 | P1 | H5 | B7 KCC drift confirmed cleared | ✅ Resolved session 111 |
 | **P0** | B4+B5 | Vesper→Karma bridge dead | 🔴 Root cause known, Phase 0-A/B |
 | **P0** | P0-F | TITANS primitives missing from Vesper (cascade_performance monoculture root cause) | 🔴 Not implemented — Phase 0-F |
+| **P1** | P0-G | Local inference wiring + degradation tiers (M4-ready, activate via config flag) | 🔴 Not implemented — Phase 0-G |
 | P1 | B3 | P1 Ollama model name wrong | 🔴 Unverified, Phase 0-C |
 | P2 | B6 | Dedup ring memory-only | 🟡 Phase 0-D |
 | P2 | B8 | Regent restart loop | 🟡 Undiagnosed, Phase 0-E |
@@ -435,3 +472,6 @@ The family operates autonomously when this loop completes without Colby relaying
 - **AC8 requires Windows service registration** — P0N-A "live" means running; AC8 means survives reboot without intervention. Separate gate.
 - **Regression detection is mandatory post-promotion** — every governor promotion runs AC1+AC3 smoke tests. Failure reverts spine to prior version and alerts bus.
 - **TITANS primitives are required for AC3** — without surprise-gating, watchdog will keep producing cascade_performance candidates. P0-F is on the critical path for AC3.
+- **Local inference wiring (P0-G) is hardware-decoupled** — `K2_INFERENCE_ENABLED=false` by default. Wire now, flip flag when M4 Pro arrives. No rebuild required to activate.
+- **Degradation tiers defined (P0-G-3)** — Karma degrades gracefully across 5 tiers. No more 3-day silent outage from credit burn. Credit alarm (G-4) posts to bus before failure.
+- **Full independence path:** P0-G wired + M4 Pro hardware = Anthropic API becomes optional fallback, not primary path. CC/Codex become enhancements, not dependencies.
