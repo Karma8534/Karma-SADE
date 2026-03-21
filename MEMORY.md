@@ -2246,3 +2246,10 @@ ARIA_SERVICE_KEY added to hub.env (pre-existing key `Bt1MU_...` was already ther
 - Path traversal protection enforced in handler
 - Banked approval consumed: tool_addition 10→9
 - Pending: deploy + verify AC6 pass
+
+## Session 115 continued — P0-F F-3/F-4/F-5 implementation
+
+- F-3 (adaptive forgetting): _retire_stale_patterns() in vesper_governor.py — decays patterns unreinforced 30+ days (0.9/week), emits RETIRE audit events below 0.3 momentum threshold
+- F-4 (momentum scoring): momentum:1.0 field added to all new promotions in _apply_to_spine()
+- F-5 (causal chain): fetchK2WorkingMemory() now includes EVOLUTION JOURNAL (last 10 governor_audit entries) + BEHAVIORAL PATTERNS sorted by momentum desc
+- hub.env pricing fixed: input $0.80→$1.00, output $4.00→$5.00 (Haiku 4.5 actual rates)

@@ -10,14 +10,16 @@
   "categories": {
     "vault_neo_deploy": {
       "description": "Hub-bridge or karma-server deploys to vault-neo (includes build, sync, deploy, verify steps)",
-      "remaining": 15,
+      "remaining": 13,
       "initial": 20,
       "log": [
         {"timestamp": "2026-03-21T06:28:00Z", "action": "hub-bridge deploy: credit burn alarm (P0-G)", "phase_ac_reference": "P0-G"},
         {"timestamp": "2026-03-21T06:50:00Z", "action": "karma-server rebuild: Decision node query in build_karma_context (AC2 fix)", "phase_ac_reference": "AC2"},
         {"timestamp": "2026-03-21T08:15:00Z", "action": "hub-bridge rebuild: K2_WORKING_MEM_MAX_CHARS 6000→12000 (AC3 fix attempt)", "phase_ac_reference": "AC3"},
         {"timestamp": "2026-03-21T08:20:00Z", "action": "hub-bridge rebuild: journal tail -20→-5 + max 15000 (AC3 fix, BEHAVIORAL PATTERNS now visible)", "phase_ac_reference": "AC3"},
-        {"timestamp": "2026-03-21T08:22:00Z", "action": "hub-bridge rebuild: AC3 VERIFIED PASS — PITFALL patterns visible in Karma karmaCtx response", "phase_ac_reference": "AC3"}
+        {"timestamp": "2026-03-21T08:22:00Z", "action": "hub-bridge rebuild: AC3 VERIFIED PASS — PITFALL patterns visible in Karma karmaCtx response", "phase_ac_reference": "AC3"},
+        {"timestamp": "2026-03-21T09:05:00Z", "action": "hub-bridge rebuild: AC6 hub_file_read tool add (container path fix)", "phase_ac_reference": "AC6"},
+        {"timestamp": "2026-03-21T09:10:00Z", "action": "hub-bridge rebuild: AC6 path fix /karma/vault/memory_v1/hub_bridge — VERIFIED PASS", "phase_ac_reference": "AC6"}
       ]
     },
     "k2_ssh_write": {
@@ -45,11 +47,12 @@
     },
     "ac_execution": {
       "description": "AC test runs, verification commands, gate confirmations (each AC verification cycle = 1 approval)",
-      "remaining": 23,
+      "remaining": 22,
       "initial": 25,
       "log": [
         {"timestamp": "2026-03-21T06:25:00Z", "action": "AC1 live chat verify — Karma rank Initiate check", "phase_ac_reference": "AC1"},
-        {"timestamp": "2026-03-21T06:50:00Z", "action": "AC2 live chat verify — skip-dedup behavioral recall", "phase_ac_reference": "AC2"}
+        {"timestamp": "2026-03-21T06:50:00Z", "action": "AC2 live chat verify — skip-dedup behavioral recall", "phase_ac_reference": "AC2"},
+        {"timestamp": "2026-03-21T09:05:00Z", "action": "AC6 verify — hub_file_read tool call reads hub.env", "phase_ac_reference": "AC6"}
       ]
     },
     "governance_loop": {
@@ -60,9 +63,11 @@
     },
     "misc_structural": {
       "description": "Structural changes not covered by above categories — CC must log what category it applied before consuming",
-      "remaining": 10,
+      "remaining": 9,
       "initial": 10,
-      "log": []
+      "log": [
+        {"timestamp": "2026-03-21T09:15:00Z", "action": "hub.env pricing fix: PRICE_CLAUDE_INPUT_PER_1M 0.80→1.00, OUTPUT 4.00→5.00 (Haiku 4.5 actual rates)", "phase_ac_reference": "PRICING-FIX"}
+      ]
     },
     "sovereign_reward": {
       "description": "Sovereign reward grants. Not decremented by CC — only added to by Sovereign. CC may draw from this pool for any action when other categories are depleted. Rewards earned for task completion, honesty, and no-drift behavior.",
@@ -75,8 +80,8 @@
   },
   "totals": {
     "initial": 300,
-    "consumed": 10,
-    "remaining": 290
+    "consumed": 14,
+    "remaining": 286
   },
   "usage_protocol": {
     "step_1": "Identify which category applies to the intended action",
