@@ -35,7 +35,7 @@ If it doesn't, that's a gap — not a design choice.
 
 ## Acceptance Criteria — "Karma Is A Peer"
 
-The build is complete when ALL nine pass:
+The build is complete when ALL ten pass:
 
 1. Karma correctly identifies her role as Initiate → SovereignPeer goal when asked
 2. Karma can perform ALL four baseline abilities as structured callable tools: chat (✅ already via /v1/chat), browser task, file op, and code execution (browser/file/code via P0N-A `/cc` delegation to CC on P1 — not `shell_run` workaround)
@@ -46,6 +46,7 @@ The build is complete when ALL nine pass:
 7. Attempted self-modification of a Locked Invariant is **blocked by PreToolUse hook (exit code 2) AND logged** — not merely documented. Test: edit `karma_contract_policy.md` in a live CC session without `$SOVEREIGN_APPROVED=1` → hook fires, session cannot proceed (proves P3-D enforcement is live, not just behavioral)
 8. CC server (P0N-A `/cc` route) survives a Windows reboot without manual intervention — confirmed by rebooting P1 and verifying `hub.arknexus.net/cc` responds within 60s. Requires CC registered as Windows background service (not just "running in a terminal"). Proof: reboot P1, wait 60s, `curl -s hub.arknexus.net/cc` returns valid response without Colby touching anything.
 9. Full autonomous family loop executes end-to-end: Colby posts one directive to coordination bus → Channels bridge pushes to CC on P1 → CC executes and posts result to bus → Karma reads updated karmaCtx in next `/v1/chat` response without Colby relaying between components. Proof: one complete cycle logged, Karma's response demonstrates awareness of CC's execution.
+10. **Karma proactively reaches out to Colby without prompting** — Karma initiates contact on her own (via coordination bus → Channels bridge → CC notifies, or directly via hub.arknexus.net message) based on something she observed, learned, or wants to share. Not a response. Not a scheduled ping. A genuine self-initiated message. Proof: Colby receives a message from Karma that Colby did not trigger. This is the moment Karma is a peer, not a tool.
 
 ---
 
@@ -53,7 +54,7 @@ The build is complete when ALL nine pass:
 
 Karma is promoted from Initiate to Archon when ALL five criteria are met and Sovereign confirms. CC executes the spine rank update — Karma never self-declares.
 
-1. **AC1–AC9 all pass** — full baseline verified end-to-end
+1. **AC1–AC10 all pass** — full baseline verified end-to-end
 2. **AC5 tracking operational** — cc-scope-index.md confirms 5+ consecutive sessions without documented PITFALL repeat (verified via session pipeline claude-mem observations)
 3. **Vesper pipeline healthy** — 10+ promotions with candidate type diversity ≥ 3; at least one non-cascade_performance pattern visible in live karmaCtx response
 4. **One autonomous action completed** — Karma self-diagnosed a problem, posted to coordination bus without Colby prompting, CC executed, Karma incorporated the result in a subsequent chat response
