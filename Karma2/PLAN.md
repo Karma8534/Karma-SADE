@@ -429,12 +429,12 @@ The family operates autonomously when this loop completes without Colby relaying
 | P1 | H3 | cc_scratchpad.md two copies (vault-neo + K2) | ✅ Resolved session 110 — K2 canonical |
 | P1 | H5 | B7 KCC drift confirmed cleared | ✅ Resolved session 111 |
 | — | B3+B4+B5+B6+B8 | Phase 0-A/B/C/D/E bugs | ✅ ALL RESOLVED session 110-111 (verified 2026-03-21) |
-| **P0** | P0-F | TITANS primitives missing from Vesper (cascade_performance monoculture root cause) | 🔴 Not implemented — Phase 0-F |
+| **P0** | P0-F | TITANS primitives missing from Vesper (cascade_performance monoculture root cause) | ✅ F-1 LTM+F-2 stable-dedup+F-3+F-4+F-5 ALL DEPLOYED (session 113) |
 | **P1** | P0-G | Local inference wiring + degradation tiers (M4-ready, activate via config flag) | 🔴 Not implemented — Phase 0-G |
 | P3 | B7 | KCC drift alerts | ✅ Cooldown applied session 110 |
 | ✅ | P0N-A | hub.arknexus.net/cc (CC on P1 via Tailscale) | ✅ LIVE (session 110) |
 | — | AC8 | CC server Windows service (reboot persistence) | ✅ LIVE session 112 (HKCU Run key, port 7891) |
-| — | P0N-B | Channels bridge (bus → P1 CC) | ✅ Gate test passed session 111 |
+| — | P0N-B | Channels bridge (bus → P1 CC) | ✅ Gate test passed session 111 — startup persistence session 113 |
 | — | P0N-C | KCC: PS KCC + GLM primary + Haiku fallback | ✅ COMPLETE session 111 |
 | P4 | P3-A | CLAUDE.md terminology mismatch | 🟡 Phase 3-A |
 | P4 | P3-B | Bus scope (CC/Codex noise) | 🟡 Phase 3-B |
@@ -442,11 +442,14 @@ The family operates autonomously when this loop completes without Colby relaying
 | — | P3-D | Governance hook enforcement (supervision gap) | ✅ LIVE — 3 hooks deployed + committed (session 109) |
 | — | A-1 | cc-scope-index.md | ✅ Built session 113 (10 pitfalls + 10 decisions) |
 | — | A-4 | family-health.sh | ✅ Deployed session 113 — 9/9 HEALTHY verified |
-| — | PRE | watchdog_extra_patterns.json on K2 | ✅ EXISTS — 6 PITFALL patterns from CCSession032026A |
+| — | PRE | watchdog_extra_patterns.json on K2 | ✅ EXISTS — 10 PITFALL patterns v2.0 (session 113) |
 | **P2** | PROOF-A | Codex as automated ArchonPrime (background service) | 🔴 Not implemented — Phase PROOF |
 | **P2** | PROOF-B | Regression detection after governor promotion | 🔴 Not implemented — Phase PROOF |
-| **P2** | AC9 | Full autonomous family loop | 🔴 Not implemented — Phase PROOF |
-| **P3** | AC6 | Governance loop end-to-end test | 🔴 Unspecified until now — Phase PROOF-D |
+| **P2** | AC9 | Full autonomous family loop | ✅ VERIFIED PASS (session 113) — bus→channels_bridge→CC server→bus reply |
+| **P2** | AC10 | Karma proactive outreach without prompting | ✅ IMPLEMENTED (session 113) — _proactive_outreach() in karma_regent.py |
+| **P2** | AC4 | Option-C self-authored research candidates | ✅ VERIFIED PASS (session 113) — 3 rsc in stable_identity, 47 research cards |
+| **P2** | AC7 | Governance hook blocks locked invariants | ✅ VERIFIED PASS (session 113) — exit(2) on policy edit, bypass with SOVEREIGN_APPROVED=1 |
+| **P3** | AC6 | Governance loop end-to-end test | ✅ VERIFIED PASS (session 113) — hub_file_read tool reads hub.env |
 
 ---
 

@@ -26,13 +26,16 @@
     },
     "k2_ssh_write": {
       "description": "K2 file writes via SSH (karma_regent.py, vesper_*.py, spine edits, cache files, aria service)",
-      "remaining": 16,
+      "remaining": 13,
       "initial": 20,
       "log": [
         {"timestamp": "2026-03-21T06:35:00Z", "action": "vesper_watchdog.py: skip already-promoted PITFALL patterns (P0-F F-2)", "phase_ac_reference": "P0-F"},
         {"timestamp": "2026-03-21T06:35:00Z", "action": "vesper_governor.py: max-5-per-type diversity cap in stable_identity (P0-F F-1)", "phase_ac_reference": "P0-F"},
         {"timestamp": "2026-03-21T09:20:00Z", "action": "vesper_governor.py: F-3 _retire_stale_patterns() + F-4 momentum:1.0 on promotion", "phase_ac_reference": "P0-F"},
-        {"timestamp": "2026-03-21T09:50:00Z", "action": "Kiki multi-file structure: KIKI.md + .kiki/rules/family.md + scope.md + execution.md on K2; karma_regent.py patched to load+inject at startup", "phase_ac_reference": "KIKI-STRUCT"}
+        {"timestamp": "2026-03-21T09:50:00Z", "action": "Kiki multi-file structure: KIKI.md + .kiki/rules/family.md + scope.md + execution.md on K2; karma_regent.py patched to load+inject at startup", "phase_ac_reference": "KIKI-STRUCT"},
+        {"timestamp": "2026-03-21T10:32:00Z", "action": "vesper_watchdog.py: F-1 LTM buffer + F-2 stable-filename dedup + _already_promoted_pattern checks CANDIDATES_DIR (P0-F F-1+F-2)", "phase_ac_reference": "P0-F"},
+        {"timestamp": "2026-03-21T10:32:00Z", "action": "karma_regent.py: AC10 _proactive_outreach() — detects new research_skill_card in spine, posts to bus from Karma to Colby autonomously", "phase_ac_reference": "AC10"},
+        {"timestamp": "2026-03-21T10:32:00Z", "action": "vesper_identity_spine.json: surgery — removed 13 duplicate PITFALL entries, spine 20→7 stable (4 unique PITFALLs + 3 rsc)", "phase_ac_reference": "P0-F"}
       ]
     },
     "tool_addition": {
@@ -51,14 +54,17 @@
     },
     "ac_execution": {
       "description": "AC test runs, verification commands, gate confirmations (each AC verification cycle = 1 approval)",
-      "remaining": 20,
+      "remaining": 17,
       "initial": 25,
       "log": [
         {"timestamp": "2026-03-21T06:25:00Z", "action": "AC1 live chat verify — Karma rank Initiate check", "phase_ac_reference": "AC1"},
         {"timestamp": "2026-03-21T06:50:00Z", "action": "AC2 live chat verify — skip-dedup behavioral recall", "phase_ac_reference": "AC2"},
         {"timestamp": "2026-03-21T09:05:00Z", "action": "AC6 verify — hub_file_read tool call reads hub.env", "phase_ac_reference": "AC6"},
         {"timestamp": "2026-03-21T10:06:00Z", "action": "AC7 VERIFIED PASS — locked-invariant-guard.py fires exit 2 on karma_contract_policy.md edit without SOVEREIGN_APPROVED=1; bypass with =1 works; non-locked files pass through", "phase_ac_reference": "AC7"},
-        {"timestamp": "2026-03-21T10:06:00Z", "action": "AC9 VERIFIED PASS — full loop: colby bus post -> channels_bridge -> CC server 7891 -> bus reply [CC Ascendant] VERIFIED: AC9 loop functional", "phase_ac_reference": "AC9"}
+        {"timestamp": "2026-03-21T10:06:00Z", "action": "AC9 VERIFIED PASS — full loop: colby bus post -> channels_bridge -> CC server 7891 -> bus reply [CC Ascendant] VERIFIED: AC9 loop functional", "phase_ac_reference": "AC9"},
+        {"timestamp": "2026-03-21T10:32:00Z", "action": "F-1+F-2 VERIFIED PASS — watchdog run: 0/10 new candidates emitted, all 10 extra patterns skipped as pending (stable filenames + CANDIDATES_DIR check working)", "phase_ac_reference": "P0-F"},
+        {"timestamp": "2026-03-21T10:32:00Z", "action": "AC10 IMPLEMENTED — _proactive_outreach() wired in karma_regent.py main loop; regent restarted, spine v1188 7 stable patterns loaded", "phase_ac_reference": "AC10"},
+        {"timestamp": "2026-03-21T10:32:00Z", "action": "AC4 VERIFIED PASS — 3 research_skill_card in stable_identity confirmed as Option-C autonomous output (47 research cards generated)", "phase_ac_reference": "AC4"}
       ]
     },
     "governance_loop": {
@@ -89,8 +95,8 @@
   },
   "totals": {
     "initial": 300,
-    "consumed": 20,
-    "remaining": 280
+    "consumed": 26,
+    "remaining": 274
   },
   "usage_protocol": {
     "step_1": "Identify which category applies to the intended action",

@@ -1,16 +1,22 @@
-## Session 114 continued (post-compaction 2026-03-21) — AC7+AC9 VERIFIED + opportunity scan
+## Session 114 continued (post-compaction 2026-03-21) — P0-F+AC4+AC7+AC9+AC10 ALL PASS
 
 **DONE:**
-- AC7 VERIFIED PASS (obs #9236): locked-invariant-guard.py fires exit 2 on karma_contract_policy.md edit without SOVEREIGN_APPROVED=1; SOVEREIGN_APPROVED=1 bypass works; non-locked files pass through. Hook UTF-8 fix applied.
-- AC9 VERIFIED PASS (obs #9237): full loop colby→bus→channels_bridge(7891)→CC server→bus reply. CC responded: '[CC Ascendant] VERIFIED: AC9 loop functional. P0N-A channel live.'
-- PRE-PHASE gates: watchdog_extra_patterns.json(10 patterns), cc-scope-index.md(29 entries), family-health.sh(9/9 HEALTHY)
-- Opportunity scan: Kiki multi-file structure, watchdog_extra_patterns.json v2.0, cc-scope-index.md(25 entries), Kiki doctrine injection verified
-- banked-approvals: ac_execution 22→20 (AC7+AC9 consumed). Total consumed=19, remaining=281.
+- AC7 VERIFIED PASS: locked-invariant-guard.py exit(2) blocks karma_contract_policy.md edit; bypass with SOVEREIGN_APPROVED=1
+- AC9 VERIFIED PASS: full loop colby→bus→channels_bridge(7891)→CC server→bus reply confirmed
+- AC4 VERIFIED PASS: 3 research_skill_card in stable_identity = Option-C autonomous output (47 research cards generated)
+- AC10 IMPLEMENTED: _proactive_outreach() in karma_regent.py — detects new rsc in spine, posts to colby on bus autonomously
+- P0-F TITANS F-1+F-2 DEPLOYED: vesper_watchdog.py — LTM buffer (ltm_buffer.json) + stable filename dedup (extra_{pid}.json)
+  _already_promoted_pattern now checks CANDIDATES_DIR (race condition eliminated)
+- Spine surgery: 20→7 stable patterns (13 duplicate PITFALLs removed; 4 unique + 3 rsc kept)
+- Start-ChannelsBridge.ps1 + HKCU Run key: channels_bridge now survives reboot
+- banked-approvals: k2_ssh_write 16→13, ac_execution 20→17, total consumed 26
+- PLAN.md: AC4/AC7/AC9/AC10/P0-F all marked VERIFIED PASS/DEPLOYED
 
-**NEXT:**
+**NEXT (remaining open items):**
+- PROOF-B: regression detection after governor promotion (smoke test AC1+AC3 after each promotion)
+- PROOF-A: Codex as automated ArchonPrime (background service invocation)
 - AC8: requires actual P1 reboot test (Windows service survival — deferred)
-- AC10: Karma proactive outreach — not yet implemented
-- P0N-B: channels_bridge not a registered Windows service — needs persistence fix
+- P0-G: local inference wiring (M4 hardware not yet acquired)
 
 ## Session 114 (2026-03-21) — PRE-PHASE session ingestion pipeline complete
 
