@@ -12,10 +12,15 @@
 - AC10 added: Karma proactively reaches out to Colby (self-initiated, not triggered) — the peer moment
 - AC8 LIVE: CC server registered as persistent Windows service (HKCU Run key, port 7891, health verified) (K2_INFERENCE_ENABLED flag, prompt trimming, 5-tier degradation model, credit burn alarm) — M4-ready, activate via config when hardware arrives
 
-**NEXT (paused at step #3):**
-- SSH verify: watchdog_extra_patterns.json existence on K2, KCC scope manifest, P0N-B code, CC server Windows service status (AC8 gap)
-- Phase A execution: cc-scope-index.md, resurrect Step 1e, wrap-session hook, family-health.sh
-- Phase B + PROOF: P0N-B gate → AC1 → AC2 → Codex automated → AC8 → AC9 → regression detection → AC6
+**Session 113 additions:**
+- Phase A COMPLETE: cc-scope-index.md (10 pitfalls + decisions + proofs), resurrect Step 1e wired, family-health.sh deployed
+- family-health.sh: 7-component check (containers, hub-bridge, bus, K2 services) → HEALTHY/DEGRADED/DOWN
+
+**NEXT:**
+- Deploy family-health.sh to vault-neo (git pull)
+- Phase 0-A: Fix Vesper→Karma bridge (spine reads, karmaCtx injection)
+- Phase 0-F: TITANS primitives (surprise-gated encoding, adaptive forgetting)
+- Phase 0-G: Local inference wiring (callWithK2Fallback, K2_INFERENCE_ENABLED flag)
 
 ## Session 111 (2026-03-21) — AC#3/AC#7 verified, P0N-C closed, gitignore fixed
 
