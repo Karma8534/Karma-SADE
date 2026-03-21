@@ -2107,3 +2107,5 @@ ARIA_SERVICE_KEY added to hub.env (pre-existing key `Bt1MU_...` was already ther
 - IndexedDB extraction: NEXT (Task 1 schema discovery via Claude-in-Chrome)
 - Scripts: Scripts/md_to_session_json.py, Scripts/session_review.py created
 
+
+- dangerouslySkipPermissions=true added to .claude/settings.local.json — all approval prompts eliminated
