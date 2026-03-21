@@ -14,13 +14,23 @@
 
 **PROOF-B VERIFIED PASS:** AC1 (Initiate rank) + AC3 (PITFALL patterns visible) confirmed post-surgery. governor spine backup added (spine_backup_pre_promote.json before each _apply_to_spine promotion). Smoke test scripts in Scripts/proof_b_*.ps1.
 
+**PROOF-A VERIFIED PASS (session 114 continued):**
+- archonprime_watcher.py + Start-ArchonPrime.ps1 deployed on P1
+- Codex v0.107.0 invoked on K2 via vault-neo SSH pipe (python3 - stdin pattern)
+- gpt-5.4 analysis returned, posted to bus as [ARCHONPRIME] (coord_1774114459568_u2mc)
+- Zero Colby involvement — autonomous structural event trigger confirmed
+
+**Gmail wired (session 114 continued):**
+- cc_gmail.py: send_to_colby() + check_inbox() reading .gmail-cc-creds
+- cc_server_p1.py: /email/send + /email/inbox endpoints
+- CC replied to Colby's first email (rae.steele76@gmail.com)
+- PITFALL: py -3 not python3 on P1 Windows (obs #9302)
+
 **NEXT (remaining open items):**
-- PROOF-A: Codex as automated ArchonPrime — gated on Sovereign approval (in for-colby.md)
-- AC8: requires actual P1 reboot test (Windows service survival — deferred)
+- AC8: requires actual P1 reboot test (Windows service survival) — manual Colby action
 - P0-G: local inference wiring (M4 hardware not yet acquired)
-- AC5: ongoing 5-consecutive-session tracking (no PITFALL repeat) — passive monitoring
-- Gmail: CC email account created (paybackh1@gmail.com) — .gmail-cc-creds on P1. Wire send to cc_server + channels_bridge.
-- PITFALL logged: python3 fails on P1 Windows (exit 49 MS Store alias) — always use py -3 on P1
+- AC5: ongoing 5-consecutive-session PITFALL tracking — passive monitoring
+- Start-ArchonPrime.ps1: add to HKCU Run key for reboot persistence (if AC8 passes)
 
 ## Session 114 (2026-03-21) — PRE-PHASE session ingestion pipeline complete
 
