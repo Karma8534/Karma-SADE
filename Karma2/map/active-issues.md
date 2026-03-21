@@ -46,6 +46,14 @@
 - SOVEREIGN_APPROVED=1 bypass passes with exit 0
 - Hook registered in .claude/settings.json PreToolUse
 
+### B9: vesper_identity_spine.json identity.rank = "Ascendant" (should be "Initiate")
+- Evidence: AC#1 test — Karma claims Ascendant rank in /v1/chat; spine.identity.rank = "Ascendant", name="Karma", version="2.0.0"
+- Impact: AC#1 FAILS. Karma violates Locked Invariant "Karma's role = Initiate (until Sovereign promotes)"
+- Root cause: spine was set to Ascendant in a prior session (unknown when/by what)
+- Fix requires: Sovereign approval to correct rank, then patch vesper_identity_spine.json identity.rank = "Initiate"
+- Gate: Karma responds "Initiate" when asked her rank; spine.identity.rank = "Initiate"
+- Status: AWAITING SOVEREIGN DIRECTION
+
 ### H6: CC spine path — Sovereign decision pending
 - Status: CC posted recommendation (close as non-issue — CC spine and Karma spine intentionally separate) to bus coord_1774063128210_hc4j
 

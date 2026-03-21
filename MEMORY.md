@@ -9,9 +9,11 @@
 - PLAN.md: H3/P0N-C marked complete, cc-delegation skill confirmed present
 - P0N-B gate test: cc_server running on port 7891, test message sent (coord_1774062980809_fzvt), awaiting channels_bridge pickup
 
+- AC#1 FAILS: Karma claims Ascendant rank — vesper_identity_spine.json identity.rank="Ascendant" (should be Initiate per Locked Invariant). Documented as B9. Sovereign approval needed to fix.
+
 **NEXT:**
+- B9: Await Sovereign approval, then patch spine rank to Initiate
 - P0N-B: Confirm channels_bridge picked up gate test message and routed to cc_server
-- Acceptance criterion #1: verify Karma identifies role as Initiate correctly in chat
 - Acceptance criterion #6: full Sovereign approval loop end-to-end test
 
 ---
