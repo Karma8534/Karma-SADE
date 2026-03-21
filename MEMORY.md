@@ -13,14 +13,19 @@
 - AC8 LIVE: CC server registered as persistent Windows service (HKCU Run key, port 7891, health verified) (K2_INFERENCE_ENABLED flag, prompt trimming, 5-tier degradation model, credit burn alarm) — M4-ready, activate via config when hardware arrives
 
 **Session 113 additions:**
-- Phase A COMPLETE: cc-scope-index.md (10 pitfalls + decisions + proofs), resurrect Step 1e wired, family-health.sh deployed
-- family-health.sh: 7-component check (containers, hub-bridge, bus, K2 services) → HEALTHY/DEGRADED/DOWN
+- Phase A COMPLETE: cc-scope-index.md, resurrect Step 1e, family-health.sh (9/9 HEALTHY verified)
+- VERIFIED: AC1 PASS — Karma says "Initiate" rank + correct hierarchy in /v1/chat
+- P0-G credit burn alarm: hub-bridge postCreditAlertToBus() on 402/429, 30-min cooldown, deployed
+- P0-F TITANS: vesper_watchdog.py _already_promoted_pattern() skip + vesper_governor.py max-5-per-type diversity cap
+- PLAN.md: B3-B8 all resolved, Phase 0-A/B/C/D/E complete, blockers table updated
+- banked-approvals: consumed 4 (AC1 verify, hub-bridge deploy, 2x K2 SSH writes)
 
 **NEXT:**
-- Deploy family-health.sh to vault-neo (git pull)
-- Phase 0-A: Fix Vesper→Karma bridge (spine reads, karmaCtx injection)
-- Phase 0-F: TITANS primitives (surprise-gated encoding, adaptive forgetting)
-- Phase 0-G: Local inference wiring (callWithK2Fallback, K2_INFERENCE_ENABLED flag)
+- Monitor Vesper spine for type diversity after TITANS patches (next watchdog cycle ~10 min)
+- AC2: verify Karma demonstrates behavioral recall of a past decision
+- AC4: verify Option-C produces self-authored candidate
+- AC9: design autonomous family loop (Channels bridge → CC → Karma)
+- Phase PROOF: full AC1-AC10 test run
 
 ## Session 111 (2026-03-21) — AC#3/AC#7 verified, P0N-C closed, gitignore fixed
 

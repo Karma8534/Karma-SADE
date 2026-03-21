@@ -17,9 +17,12 @@
     },
     "k2_ssh_write": {
       "description": "K2 file writes via SSH (karma_regent.py, vesper_*.py, spine edits, cache files, aria service)",
-      "remaining": 20,
+      "remaining": 18,
       "initial": 20,
-      "log": []
+      "log": [
+        {"timestamp": "2026-03-21T06:35:00Z", "action": "vesper_watchdog.py: skip already-promoted PITFALL patterns (P0-F F-2)", "phase_ac_reference": "P0-F"},
+        {"timestamp": "2026-03-21T06:35:00Z", "action": "vesper_governor.py: max-5-per-type diversity cap in stable_identity (P0-F F-1)", "phase_ac_reference": "P0-F"}
+      ]
     },
     "tool_addition": {
       "description": "New TOOL_DEFINITIONS entries in hub-bridge server.js (each tool addition = 1 approval)",
@@ -56,8 +59,8 @@
   },
   "totals": {
     "initial": 100,
-    "consumed": 2,
-    "remaining": 98
+    "consumed": 4,
+    "remaining": 96
   },
   "usage_protocol": {
     "step_1": "Identify which category applies to the intended action",
