@@ -2259,3 +2259,10 @@ ARIA_SERVICE_KEY added to hub.env (pre-existing key `Bt1MU_...` was already ther
 - F-5 gate fail x2: evolution journal placed last in K2 working mem cmd, truncated by 20000 char cap
 - Fix: moved EVOLUTION JOURNAL first in cmd; compact python extraction (ts/event/candidate_id/pattern_type/reason/momentum/spine_version only)
 - Deploying now: commit → push → vault-neo pull → sync build context → build --no-cache → up -d
+
+## Session 115 Kiki multi-file structure (2026-03-21)
+
+- KIKI.md + .kiki/rules/{family,scope,execution}.md written to K2 /mnt/c/dev/Karma/k2/kiki/
+- karma_regent.py patched: _load_kiki_doctrine() + injected into state_block
+- Regent restarted (spine v1018, 20 stable patterns). Doctrine loads: 4089 chars, all 4 files.
+- Pattern: Kiki now has same multi-file structure as CC (.claude/rules/) and Karma (Memory/)

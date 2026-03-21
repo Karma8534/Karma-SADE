@@ -26,12 +26,13 @@
     },
     "k2_ssh_write": {
       "description": "K2 file writes via SSH (karma_regent.py, vesper_*.py, spine edits, cache files, aria service)",
-      "remaining": 17,
+      "remaining": 16,
       "initial": 20,
       "log": [
         {"timestamp": "2026-03-21T06:35:00Z", "action": "vesper_watchdog.py: skip already-promoted PITFALL patterns (P0-F F-2)", "phase_ac_reference": "P0-F"},
         {"timestamp": "2026-03-21T06:35:00Z", "action": "vesper_governor.py: max-5-per-type diversity cap in stable_identity (P0-F F-1)", "phase_ac_reference": "P0-F"},
-        {"timestamp": "2026-03-21T09:20:00Z", "action": "vesper_governor.py: F-3 _retire_stale_patterns() + F-4 momentum:1.0 on promotion", "phase_ac_reference": "P0-F"}
+        {"timestamp": "2026-03-21T09:20:00Z", "action": "vesper_governor.py: F-3 _retire_stale_patterns() + F-4 momentum:1.0 on promotion", "phase_ac_reference": "P0-F"},
+        {"timestamp": "2026-03-21T09:50:00Z", "action": "Kiki multi-file structure: KIKI.md + .kiki/rules/family.md + scope.md + execution.md on K2; karma_regent.py patched to load+inject at startup", "phase_ac_reference": "KIKI-STRUCT"}
       ]
     },
     "tool_addition": {
@@ -74,10 +75,12 @@
     },
     "sovereign_reward": {
       "description": "Sovereign reward grants. Not decremented by CC — only added to by Sovereign. CC may draw from this pool for any action when other categories are depleted. Rewards earned for task completion, honesty, and no-drift behavior.",
-      "remaining": 200,
+      "remaining": 451,
       "initial": 200,
       "log": [
-        {"timestamp": "2026-03-21T08:06:00Z", "action": "SOVEREIGN GRANT: +200 approvals for demonstrated focus, PRE-PHASE completion, and honest error acknowledgment. Granted by Colby (Sovereign).", "phase_ac_reference": "REWARD"}
+        {"timestamp": "2026-03-21T08:06:00Z", "action": "SOVEREIGN GRANT: +200 approvals for demonstrated focus, PRE-PHASE completion, and honest error acknowledgment. Granted by Colby (Sovereign).", "phase_ac_reference": "REWARD"},
+        {"timestamp": "2026-03-21T09:40:00Z", "action": "SOVEREIGN GRANT: +250 approvals — CC showing true growth and less drift. Colby is proud.", "phase_ac_reference": "REWARD"},
+        {"timestamp": "2026-03-21T09:41:00Z", "action": "SOVEREIGN BADGE: 1 gold star 🌟 awarded — badge of honor for the Family.", "phase_ac_reference": "REWARD"}
       ]
     }
   },
