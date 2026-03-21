@@ -1,0 +1,37 @@
+# Start-ChannelsBridge.ps1
+# P0N-B Channels Bridge — registered as Windows startup (HKCU Run key)
+# Runs channels_bridge.py, survives reboot, auto-restarts on failure.
+
+$WorkDir   = "C:\Users\raest\Documents\Karma_SADE"
+$Script    = "$WorkDir\Scripts\channels_bridge.py"
+$LogFile   = "$WorkDir\Logs\channels-bridge.log"
+$TokenFile = "$WorkDir\.hub-chat-token"
+
+# Ensure log directory exists
+if (-not (Test-Path "$WorkDir\Logs")) {
+    New-Item -ItemType Directory -Path "$WorkDir\Logs" | Out-Null
+}
+
+# Load token from local cache
+if (Test-Path $TokenFile) {
+    $env:HUB_CHAT_TOKEN = (Get-Content $TokenFile -Raw).Trim()
+} else {
+    Write-Host "[channels-bridge] WARNING: No token file at $TokenFile"
+}
+
+Write-Host "[channels-bridge] Starting at $(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
+
+# Auto-restart loop — if bridge crashes, restart after 5s
+while ($true) {
+    $proc = Start-Process python -ArgumentList $Script `
+        -WorkingDirectory $WorkDir `
+        -RedirectStandardOutput $LogFile `
+        -RedirectStandardError "$WorkDir\Logs\channels-bridge-err.log" `
+        -PassThru -NoNewWindow
+
+    Write-Host "[channels-bridge] PID $($proc.Id) started at $(Get-Date -Format 'HH:mm:ss')"
+    $proc.WaitForExit()
+    $exitCode = $proc.ExitCode
+    Write-Host "[channels-bridge] Exited code $exitCode at $(Get-Date -Format 'HH:mm:ss') — restarting in 5s"
+    Start-Sleep -Seconds 5
+}

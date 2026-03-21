@@ -69,10 +69,11 @@
     },
     "misc_structural": {
       "description": "Structural changes not covered by above categories — CC must log what category it applied before consuming",
-      "remaining": 9,
+      "remaining": 8,
       "initial": 10,
       "log": [
-        {"timestamp": "2026-03-21T09:15:00Z", "action": "hub.env pricing fix: PRICE_CLAUDE_INPUT_PER_1M 0.80→1.00, OUTPUT 4.00→5.00 (Haiku 4.5 actual rates)", "phase_ac_reference": "PRICING-FIX"}
+        {"timestamp": "2026-03-21T09:15:00Z", "action": "hub.env pricing fix: PRICE_CLAUDE_INPUT_PER_1M 0.80→1.00, OUTPUT 4.00→5.00 (Haiku 4.5 actual rates)", "phase_ac_reference": "PRICING-FIX"},
+        {"timestamp": "2026-03-21T10:10:00Z", "action": "Start-ChannelsBridge.ps1 + HKCU Run key 'KarmaChannelsBridge' — channels_bridge now survives reboot like CC server (P0N-B persistence)", "phase_ac_reference": "P0N-B"}
       ]
     },
     "sovereign_reward": {
@@ -88,8 +89,8 @@
   },
   "totals": {
     "initial": 300,
-    "consumed": 19,
-    "remaining": 281
+    "consumed": 20,
+    "remaining": 280
   },
   "usage_protocol": {
     "step_1": "Identify which category applies to the intended action",
