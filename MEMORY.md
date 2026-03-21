@@ -10,8 +10,9 @@
 - karma-regent restarted — active, P3-C fix live
 
 **NEXT:**
-- WIP PDF ingestion: DeepAgents.PDF + AgentHarness.PDF via PowerShell ingest
-- Phase 4: K2→vault-neo sync audit, session pipeline, KCC installation
+- P0N-B gate: fix CC server timeout (claude CLI >15s startup → channels bridge gate fails)
+- P0N-C: requires Codex Installer.exe (Sovereign action — GUI install)
+- Monitor B7 KCC cooldown (30-min gate now active)
 
 ---
 

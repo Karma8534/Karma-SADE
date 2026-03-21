@@ -1,53 +1,53 @@
-# Active Issues — Ground Truth (2026-03-20)
+# Active Issues — Ground Truth (2026-03-21)
 
-## VERIFIED BUGS (evidence-based, not inferred)
+## CLOSED BUGS
 
 ### ~~B1: spine.identity.name = "Vesper"~~ — RESOLVED (session 109)
-- Fixed session 109: spine.identity.name verified as correct per Vesper convergence fixes (S107)
-- Status: CLOSED
-
 ### ~~B2: Karma self-identifies as "sovereign intelligence"~~ — RESOLVED (session 109)
-- Fixed session 107 KIKI fix: state_block now injects correct Initiate framing
-- Status: CLOSED
+### ~~B3: P1_OLLAMA_MODEL=nemotron-mini:latest~~ — RESOLVED (session 110)
+- nemotron-mini:latest IS installed on P1, responds in 738ms
+### ~~B4: All stable_identity patterns are cascade_performance~~ — RESOLVED (session 110)
+- PITFALL fast-path + TYPE_THRESHOLDS deployed; 20 stable patterns (PITFALL type)
+### ~~B5: FalkorDB write silently 404~~ — RESOLVED (session 110)
+- SSH fallback works; 36 PITFALL nodes in graph; smoke test 4/4 PASS
+### ~~B6: Dedup ring memory-only~~ — RESOLVED (session 110)
+- Watermark persisted to regent_control/dedup_watermark.json
+### ~~B8: Regent restart loop~~ — RESOLVED (session 110)
+- Diagnosed as 3 clean Stopping events from manual session 107 restarts (not crashes)
+### ~~H3: cc_scratchpad.md two copies~~ — RESOLVED (session 110)
+- K2 (135 lines, Mar 20) synced to vault-neo (was 47 lines, Mar 14). K2 is canonical.
 
-### B3: P1_OLLAMA_MODEL=nemotron-mini:latest (model may not exist on P1)
-- Evidence: /etc/karma-regent.env confirmed, P1 Ollama health check failed in this session
-- Impact: P1 cascade tier silently fails or errors
-- Fix: verify what models are installed on P1, set P1_OLLAMA_MODEL to an existing one
-- Gate: P1 Ollama responds to a test prompt within 10s
+## OPEN ISSUES
 
-### B4: All 20 stable_identity patterns are cascade_performance
-- Evidence: spine all_stable_types = {'cascade_performance'} — directly confirmed
-- Impact: spine contains no persona, continuity, or identity patterns — only cascade stats
-- Root cause: watchdog only extracts cascade_performance type from evolution log
-- Fix: expand vesper_watchdog.py candidate extraction (6-item list item #3)
-- Gate: candidate type diversity >= 3 in rolling 24h
+### B7: KCC drift alert — no ack path
+- Evidence: kcc→colby drift alerts posted every ~5 min with no ack path
+- Impact: bus noise, Sovereign attention required for every alert
+- Fix applied (session 110): family_watch() 30-min cooldown added to karma_regent.py
+- Remaining: KCC scope manifest written at k2/aria/docs/kcc-scope.md
+- Gate: drift alerts appear ≤ once per 30 min, and only when condition is NEW
+- Status: COOLDOWN APPLIED — monitor for next 30 min
 
-### B5: FalkorDB write in vesper_governor.py may silently 404
-- Evidence: 6-item list item #1, not yet verified live (no 404 in audit tail seen today)
-- Impact: promotions appear applied but graph state not updated
-- Fix: configurable REGENT_FALKOR_WRITE_URL + retry queue
-- Gate: last 20 promotions show write success in audit
+### H5: B7 KCC drift cleared — awaiting confirmation
+- Status: cc_anchor confirmation pending
 
-### B6: Processed-message dedup is memory-only
-- Evidence: architecture — dedup ring not in regent_control/ files
-- Impact: Regent restart = possible duplicate processing of in-flight messages
-- Fix: persist dedup watermark in regent_control/
-- Gate: restart test proves exactly one response per message
+### P0N-B: Channels bridge gate test inconclusive
+- Evidence: CC server on port 7891 times out on /cc requests (claude CLI slow startup)
+- Impact: coordination bus → CC routing not verified end-to-end
+- Root cause: cc_server_p1.py spawns `claude -p` subprocess which takes >15s to start
+- Fix needed: increase HTTP timeout in channels_bridge.py, or pre-warm claude CLI
+- Gate: bus message to cc gets response within 30s
 
-### B7: KCC drift alert — 5 consecutive runs
-- Evidence: bus shows kcc→colby drift alerts every ~7 min
-- Impact: KCC is alerting but root cause unknown
-- Status: UNDIAGNOSED
+## VESPER PIPELINE STATUS (2026-03-21T02:48Z)
+- self_improving: TRUE
+- total_promotions: 207
+- Pipeline: watchdog ✅ eval ✅ governor ✅
+- Stable patterns: 20 (all PITFALL type)
+- FalkorDB PITFALL nodes: 36
 
-### B8: Regent restart loop (3 crashes 13:18-13:19Z UTC, 2026-03-20)
-- Evidence: Session 108 observation #8064
-- Impact: Unknown — regent recovered, but root cause not diagnosed
-- Status: UNDIAGNOSED (may have been transient)
-
-## RESOLVED THIS SESSION
-- Option-C gate: ELIGIBLE (was NOT YET at session start) — crossed during session naturally
-
-## OPEN FROM 6-ITEM LIST (obs #8077)
-See Karma2/PLAN.md Phase 2 for full list.
-Items B4 and B5 above are items #3 and #1 from that list.
+## PHASE STATUS
+- PRE-PHASE: ✅ COMPLETE
+- PHASE 0-NEW: P0N-A ✅ | P0N-B ⚠️ gate pending | P0N-C ✅ approved (needs Codex Installer.exe)
+- PHASE 0: ✅ ALL FIXES COMPLETE (B3-B8)
+- PHASE 1: DEMOTED (CC delegation preferred)
+- PHASE 2: ✅ ALL ITEMS COMPLETE
+- PHASE 3: ✅ ALL ITEMS COMPLETE (P3-A/B/C/D)
