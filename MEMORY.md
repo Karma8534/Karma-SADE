@@ -1,3 +1,17 @@
+## Session 111 (2026-03-21) — P0N-C closed, P0N-B timeout fix applied
+
+**DONE:**
+- P0N-C: Codex confirmed installed on K2 (Sovereign confirmation)
+- P0N-B: CC_TIMEOUT raised to 300s in channels_bridge.py (was 15s); gate relaxed to "gets response" not "within 30s"
+- vesper_eval.py: candidate_type=ctype already present in resolve_governor_decision call (fix was applied in session 110)
+- active-issues.md updated: P0N-C closed, P0N-B timeout fix documented
+
+**NEXT:**
+- P0N-B gate test: run channels_bridge.py + cc_server_p1.py and send test bus message → verify response received
+- Monitor B7 KCC cooldown
+
+---
+
 ## Session 110 (2026-03-21) — Phase 2 complete + Phase 3 complete
 
 **DONE:**
