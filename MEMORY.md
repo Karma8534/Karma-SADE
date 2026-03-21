@@ -2309,3 +2309,8 @@ ARIA_SERVICE_KEY added to hub.env (pre-existing key `Bt1MU_...` was already ther
 - **Correct fix:** local Ollama — 3-8s, zero Anthropic dependency, zero MCP overhead
 - **Verified:** vault-neo -> P1:7891/cc OK in 20.1s. Response: CONTINUE_MODE_VERIFIED
 - **Next:** browser test via hub.arknexus.net/cc
+
+## Fix #3 — Stop hook for cc_context_snapshot.md
+- Added Scripts/cc_snapshot_guard.ps1 — fires on session end, stamps snapshot if stale (>30min)
+- Added Stop hook in .claude/settings.local.json — enforces without exception
+- Script verified: runs clean, correctly detects fresh vs stale snapshot
