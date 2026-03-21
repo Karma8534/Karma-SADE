@@ -245,6 +245,48 @@ Why first: 108+ sessions document exactly how previous tool implementations fail
 - Approach: `systematic-debugging` skill. Read regent.log around crash times. Root cause before fix.
 - Gate: root cause identified, fix applied, no crash in 48h monitoring window
 
+**P0-F: TITANS Primitives → Vesper Integration**
+*Root cause of cascade_performance monoculture: Vesper encodes all signals with equal weight and no surprise filter. Without this, AC3 (non-cascade_performance pattern promoted) cannot pass reliably.*
+
+**F-1: Three-tier memory architecture**
+- Current state: Vesper has ONE tier (spine). Everything is either in the spine or discarded.
+- Fix: add explicit tiers to regent state:
+  - `working` — current session context (what regent processed THIS cycle, cleared each cycle)
+  - `LTM` — cross-session pattern buffer (stable ≥ 3 cycles, candidate for spine promotion)
+  - `persistent` — identity spine (vesper_identity_spine.json, immutable except via governor)
+- Watchdog sources candidates from LTM, not raw episode stream
+- Gate: regent_control/ltm_buffer.json exists and cycles between tiers correctly
+
+**F-2: Surprise-gated encoding**
+- Current state: watchdog encodes every matching episode, no novelty filter
+- Fix: before adding a candidate to LTM, compute similarity vs existing spine patterns
+  - If cosine similarity > 0.85 to any existing promoted pattern → SKIP (redundant signal)
+  - If divergent (< 0.85) → encode with HIGH priority
+  - Use existing `mcp__k2__ollama_embed` for embeddings (already available)
+- Gate: no two promoted patterns in spine have cosine similarity > 0.85. Zero redundant cascade_performance clones.
+
+**F-3: Adaptive forgetting**
+- Current state: spine grows monotonically. No pattern is ever retired. Stale patterns dilute karmaCtx.
+- Fix:
+  - Patterns unreinforced for 30+ days → weight decays (score multiplied by 0.9 per week of silence)
+  - Patterns that fail governor re-verification → mark `status: stale` → candidate for removal
+  - Governor emits RETIRE events alongside PROMOTE events in audit log
+- Gate: spine has both PROMOTE and RETIRE entries in vesper_governor_audit.jsonl over a 30-day window
+
+**F-4: Momentum scoring**
+- Current state: each eval cycle is independent — no history of pattern trajectory
+- Fix: patterns accumulate a `momentum` score across cycles (promoted = +1, reinforced = +0.5, decayed = -0.3)
+  - High-momentum patterns get priority in karmaCtx injection
+  - Low-momentum patterns (never reinforced after initial promote) get decay flag
+- Gate: vesper_identity_spine.json patterns have `momentum` field; karmaCtx section orders by momentum desc
+
+**F-5: Causal chain visibility in karmaCtx**
+- Current state: governor_audit.jsonl exists but is NOT surfaced in karmaCtx — Karma cannot see her own evolution history
+- Fix: extend `fetchK2WorkingMemory()` (hub-bridge server.js) to include last 10 governor_audit entries
+  - Section header: `=== EVOLUTION JOURNAL (last 10) ===`
+  - Format: `{ts, event_type: PROMOTE|RETIRE, pattern_type, pattern_id, reason, momentum}`
+- Gate: `/v1/chat` response includes evolution journal section when Karma is asked about her recent growth
+
 ---
 
 ### PHASE 1: Baseline Tools — DEMOTED (fallback only)
@@ -350,6 +392,7 @@ The family operates autonomously when this loop completes without Colby relaying
 | P1 | H3 | cc_scratchpad.md two copies (vault-neo + K2) | ✅ Resolved session 110 — K2 canonical |
 | P1 | H5 | B7 KCC drift confirmed cleared | ✅ Resolved session 111 |
 | **P0** | B4+B5 | Vesper→Karma bridge dead | 🔴 Root cause known, Phase 0-A/B |
+| **P0** | P0-F | TITANS primitives missing from Vesper (cascade_performance monoculture root cause) | 🔴 Not implemented — Phase 0-F |
 | P1 | B3 | P1 Ollama model name wrong | 🔴 Unverified, Phase 0-C |
 | P2 | B6 | Dedup ring memory-only | 🟡 Phase 0-D |
 | P2 | B8 | Regent restart loop | 🟡 Undiagnosed, Phase 0-E |
@@ -391,3 +434,4 @@ The family operates autonomously when this loop completes without Colby relaying
 - **100 banked approvals** — tracked in `Karma2/banked-approvals.json`. Governance hook decrements before any banked action. CC stops and buses when any category hits 0.
 - **AC8 requires Windows service registration** — P0N-A "live" means running; AC8 means survives reboot without intervention. Separate gate.
 - **Regression detection is mandatory post-promotion** — every governor promotion runs AC1+AC3 smoke tests. Failure reverts spine to prior version and alerts bus.
+- **TITANS primitives are required for AC3** — without surprise-gating, watchdog will keep producing cascade_performance candidates. P0-F is on the critical path for AC3.
