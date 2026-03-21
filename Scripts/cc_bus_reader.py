@@ -27,8 +27,8 @@ ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 MODEL        = "claude-haiku-4-5-20251001"
 MAX_TOKENS   = 2048
 
-# Messages from these senders addressed to cc are actionable
-ACTIONABLE_FROM = {"colby", "karma", "codex", "kcc", "regent"}
+# P3-B: Only Sovereign (Colby) can initiate CC responses — no CC↔peer exchanges without Sovereign
+ACTIONABLE_FROM = {"colby"}
 
 
 def auth_headers():

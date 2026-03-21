@@ -1,3 +1,20 @@
+## Session 110 (2026-03-21) — Phase 2 complete + Phase 3 complete
+
+**DONE:**
+- Phase 2 item 4: Synthetic spine artifacts scrub — stable_identity all clean (20 PITFALL patterns); candidate_patterns deduped 10→2 (P003×5, P004×5 duplicates removed)
+- Phase 2 item 6: FalkorDB smoke test written + passing (4/4: baseline=36 PITFALL nodes, write, verify, cleanup) — script at k2/scripts/smoke_test_falkor_write.py
+- P3-A: CLAUDE.md North Star updated — Karma=Kiki+Aria+Sonnet 4-6; removed stale Resurrection Packs/memory lanes terminology
+- P3-B: cc_bus_reader.py ACTIONABLE_FROM restricted to {colby} only — no CC↔peer bus noise
+- P3-C: family_watch() alert cooldown (1800s) added to karma_regent.py; KCC scope manifest written to k2/aria/docs/kcc-scope.md
+- P3-D: Already live (session 109)
+- karma-regent restarted — active, P3-C fix live
+
+**NEXT:**
+- WIP PDF ingestion: DeepAgents.PDF + AgentHarness.PDF via PowerShell ingest
+- Phase 4: K2→vault-neo sync audit, session pipeline, KCC installation
+
+---
+
 ## Session 109 — Architecture revision + hotfixes (2026-03-20)
 
 **DONE:**

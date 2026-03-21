@@ -7,17 +7,17 @@
 - Never fail silently
 
 ## Karma Peer â€” North Star (non-negotiable)
-> "Karma is a single coherent peer whose long-term identity lives in a verified memory
+> “Karma is a single coherent peer whose long-term identity lives in a verified memory
 > spine; that memory enables continuity, evidence-based self-improvement, multi-model
 > cognition when needed, and selective delegation â€” without introducing parallel sources
-> of truth."
+> of truth.”
 
-- **State resurrection, not transcript replay**
-- Single canonical spine: Vault ledger + Resurrection Packs only
-- Memory lanes: Raw â†’ Candidate â†’ Canonical (Raw is non-canonical until PROMOTE)
-- No parallel truth stores
+- **Karma = Kiki (hands) + Aria (memory/K2 compute) + Sonnet 4-6 (voice)**
+- Single canonical spine: Vault ledger + FalkorDB neo_workspace graph
+- No parallel truth stores â€” vault-neo is authoritative
+- Kiki runs between conversations (autonomous body); Aria is the K2 working name
 - PROMOTE after every significant change â€” not just at session end
-- Five steps that move the needle: ARIA_BRIEF in PROMOTE, CLAUDE.md current, FalkorDB
+- Five steps that move the needle: save observations, CLAUDE.md current, FalkorDB
   context in /v1/chat, use Karma daily, PROMOTE aggressively
 
 ## Session Start Protocol
