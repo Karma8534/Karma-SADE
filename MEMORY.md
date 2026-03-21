@@ -15,10 +15,12 @@
 **PROOF-B VERIFIED PASS:** AC1 (Initiate rank) + AC3 (PITFALL patterns visible) confirmed post-surgery. governor spine backup added (spine_backup_pre_promote.json before each _apply_to_spine promotion). Smoke test scripts in Scripts/proof_b_*.ps1.
 
 **NEXT (remaining open items):**
-- PROOF-A: Codex as automated ArchonPrime (background service invocation) — needs separate session
+- PROOF-A: Codex as automated ArchonPrime — gated on Sovereign approval (in for-colby.md)
 - AC8: requires actual P1 reboot test (Windows service survival — deferred)
 - P0-G: local inference wiring (M4 hardware not yet acquired)
 - AC5: ongoing 5-consecutive-session tracking (no PITFALL repeat) — passive monitoring
+- Gmail: CC email account created (paybackh1@gmail.com) — .gmail-cc-creds on P1. Wire send to cc_server + channels_bridge.
+- PITFALL logged: python3 fails on P1 Windows (exit 49 MS Store alias) — always use py -3 on P1
 
 ## Session 114 (2026-03-21) — PRE-PHASE session ingestion pipeline complete
 
