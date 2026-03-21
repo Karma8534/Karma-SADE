@@ -10,7 +10,7 @@
   "categories": {
     "vault_neo_deploy": {
       "description": "Hub-bridge or karma-server deploys to vault-neo (includes build, sync, deploy, verify steps)",
-      "remaining": 13,
+      "remaining": 12,
       "initial": 20,
       "log": [
         {"timestamp": "2026-03-21T06:28:00Z", "action": "hub-bridge deploy: credit burn alarm (P0-G)", "phase_ac_reference": "P0-G"},
@@ -19,16 +19,19 @@
         {"timestamp": "2026-03-21T08:20:00Z", "action": "hub-bridge rebuild: journal tail -20→-5 + max 15000 (AC3 fix, BEHAVIORAL PATTERNS now visible)", "phase_ac_reference": "AC3"},
         {"timestamp": "2026-03-21T08:22:00Z", "action": "hub-bridge rebuild: AC3 VERIFIED PASS — PITFALL patterns visible in Karma karmaCtx response", "phase_ac_reference": "AC3"},
         {"timestamp": "2026-03-21T09:05:00Z", "action": "hub-bridge rebuild: AC6 hub_file_read tool add (container path fix)", "phase_ac_reference": "AC6"},
-        {"timestamp": "2026-03-21T09:10:00Z", "action": "hub-bridge rebuild: AC6 path fix /karma/vault/memory_v1/hub_bridge — VERIFIED PASS", "phase_ac_reference": "AC6"}
+        {"timestamp": "2026-03-21T09:10:00Z", "action": "hub-bridge rebuild: AC6 path fix /karma/vault/memory_v1/hub_bridge — VERIFIED PASS", "phase_ac_reference": "AC6"},
+        {"timestamp": "2026-03-21T09:20:00Z", "action": "hub-bridge rebuild: F-5 EVOLUTION JOURNAL + momentum-sorted BEHAVIORAL PATTERNS", "phase_ac_reference": "P0-F"},
+        {"timestamp": "2026-03-21T09:35:00Z", "action": "hub-bridge rebuild: F-5 reorder — EVOLUTION JOURNAL first in cmd + compact python extraction to prevent truncation", "phase_ac_reference": "P0-F"}
       ]
     },
     "k2_ssh_write": {
       "description": "K2 file writes via SSH (karma_regent.py, vesper_*.py, spine edits, cache files, aria service)",
-      "remaining": 18,
+      "remaining": 17,
       "initial": 20,
       "log": [
         {"timestamp": "2026-03-21T06:35:00Z", "action": "vesper_watchdog.py: skip already-promoted PITFALL patterns (P0-F F-2)", "phase_ac_reference": "P0-F"},
-        {"timestamp": "2026-03-21T06:35:00Z", "action": "vesper_governor.py: max-5-per-type diversity cap in stable_identity (P0-F F-1)", "phase_ac_reference": "P0-F"}
+        {"timestamp": "2026-03-21T06:35:00Z", "action": "vesper_governor.py: max-5-per-type diversity cap in stable_identity (P0-F F-1)", "phase_ac_reference": "P0-F"},
+        {"timestamp": "2026-03-21T09:20:00Z", "action": "vesper_governor.py: F-3 _retire_stale_patterns() + F-4 momentum:1.0 on promotion", "phase_ac_reference": "P0-F"}
       ]
     },
     "tool_addition": {
@@ -80,8 +83,8 @@
   },
   "totals": {
     "initial": 300,
-    "consumed": 14,
-    "remaining": 286
+    "consumed": 17,
+    "remaining": 283
   },
   "usage_protocol": {
     "step_1": "Identify which category applies to the intended action",

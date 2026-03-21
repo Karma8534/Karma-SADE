@@ -2253,3 +2253,9 @@ ARIA_SERVICE_KEY added to hub.env (pre-existing key `Bt1MU_...` was already ther
 - F-4 (momentum scoring): momentum:1.0 field added to all new promotions in _apply_to_spine()
 - F-5 (causal chain): fetchK2WorkingMemory() now includes EVOLUTION JOURNAL (last 10 governor_audit entries) + BEHAVIORAL PATTERNS sorted by momentum desc
 - hub.env pricing fixed: input $0.80→$1.00, output $4.00→$5.00 (Haiku 4.5 actual rates)
+
+## Session 115 F-5 deploy (2026-03-21) — Evolution journal reorder fix
+
+- F-5 gate fail x2: evolution journal placed last in K2 working mem cmd, truncated by 20000 char cap
+- Fix: moved EVOLUTION JOURNAL first in cmd; compact python extraction (ts/event/candidate_id/pattern_type/reason/momentum/spine_version only)
+- Deploying now: commit → push → vault-neo pull → sync build context → build --no-cache → up -d
