@@ -1,5 +1,55 @@
 {
-  "source": "CCSession032026A.json",
-  "event_count": 0,
-  "events": []
+  "source": "CCSession032026A.md",
+  "event_count": 7,
+  "events": [
+    {
+      "type": "PITFALL",
+      "title": "K2/Vault-Neo Inversion",
+      "body": "K2 was incorrectly treated as authoritative, causing Karma to stop functioning when K2 went down. This architectural inversion prevented reliable operation.",
+      "session_date": "032026",
+      "session_title": "CCSession032026A"
+    },
+    {
+      "type": "DECISION",
+      "title": "Baseline Capabilities Reframe",
+      "body": "Shifted focus from incremental features to closing 7 baseline capabilities first. This prioritizes foundational tools before self-improvement optimization.",
+      "session_date": "032026",
+      "session_title": "CCSession032026A"
+    },
+    {
+      "type": "PROOF",
+      "title": "Browser Automation Fix",
+      "body": "Playwright MCP was wired into hub-bridge as a Karma tool. This confirmed Karma's ability to drive browsers, closing a critical capability gap.",
+      "session_date": "032026",
+      "session_title": "CCSession032026A"
+    },
+    {
+      "type": "DIRECTION",
+      "title": "Phase 1 Prioritization",
+      "body": "All baseline gaps (7 capabilities) become Phase 1 requirements. This ensures foundational tools are implemented before advancing to Vesper list features.",
+      "session_date": "032026",
+      "session_title": "CCSession032026A"
+    },
+    {
+      "type": "PITFALL",
+      "title": "Capability Registry Missing",
+      "body": "Karma forgot previously used tools like chromium. This indicated a critical gap in tracking available capabilities, affecting reliability.",
+      "session_date": "032026",
+      "session_title": "CCSession032026A"
+    },
+    {
+      "type": "PROOF",
+      "title": "Capability Registry Added",
+      "body": "Spine now stores both behavioral patterns and available capabilities. This resolved Karma's memory loss for tools and ensured consistent functionality.",
+      "session_date": "032026",
+      "session_title": "CCSession032026A"
+    },
+    {
+      "type": "DIRECTION",
+      "title": "Session Chunking Strategy",
+      "body": "Long sessions will be split into 20-turn windows for thorough review. This enables comprehensive analysis without context window limitations.",
+      "session_date": "032026",
+      "session_title": "CCSession032026A"
+    }
+  ]
 }

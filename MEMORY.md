@@ -1,3 +1,23 @@
+## Session 114 (2026-03-21) — PRE-PHASE session ingestion pipeline complete
+
+**DONE:**
+- extract_cc_sessions.py: parses CC JSONL (ast.literal_eval for Python repr format), extracts 67 usable sessions from 137 JSONL files
+- session_review.py: Ollama/CC review pipeline for JSON+MD sources (25-turn chunks, PITFALL/DECISION/PROOF/DIRECTION extraction)
+- session_obs_writer.py: dedup + emit pipeline; prints to stdout for CC to write to claude-mem
+- 50+ net new claude-mem observations written this session (#9144-#9200)
+- 10 karma-pitfall-*.md skill files committed (gate: 10+ ✅)
+- PRE-PHASE gate: 50+ obs ✅, 10+ skills ✅, watchdog_extra_patterns.json ✅
+
+**BLOCKERS:**
+- K2 reverse tunnel (vault-neo:2223) DOWN — nightly cron setup blocked until tunnel restored
+- Nightly K2 cron for session accumulation: PENDING (requires tunnel)
+
+**NEXT:**
+- Restore K2 tunnel → set up nightly cron → declare PRE-PHASE COMPLETE
+- Phase 0-NEW already LIVE (P0N-A/B/C all done) — verify via family-health.sh
+- Phase 0-F/G: verify Vesper bridge active (B4+B5 gap)
+- Begin Phase PROOF: AC1-AC10 full verification run
+
 ## Session 112+ (2026-03-21) — Harness baked + Karma2 surgical merge + banked approvals
 
 **DONE:**

@@ -1,39 +1,59 @@
 #!/usr/bin/env python3
 """
-session_review.py — Phase 2 of session ingestion pipeline.
-Reads sessions_raw/*.json, reviews with local Ollama qwen3:8b,
-writes structured events to sessions_reviewed/*.json.
-Run on K2 (http://100.75.109.92:11434) or P1 (http://localhost:11434).
+session_review.py — Karma session ingestion pipeline, Phase 2.
+
+Reads sessions from Logs/sessions_raw/ (JSON from IndexedDB) or
+docs/ccSessions/ (Markdown transcripts), reviews each with a local
+Ollama model, writes structured events to Logs/sessions_reviewed/.
+
+Usage:
+  python3 Scripts/session_review.py [--source md|json|both] [--limit N] [--force]
+
+Env vars:
+  OLLAMA_URL    default: http://localhost:11434
+  REVIEW_MODEL  default: qwen3:8b
 """
-import json, os, glob, pathlib, urllib.request, urllib.error, sys
-sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+import argparse
+import json
+import os
+import pathlib
+import sys
+import urllib.request
+import urllib.error
+import re
 
 RAW_DIR      = pathlib.Path("Logs/sessions_raw")
+CC_DIR       = pathlib.Path("docs/ccSessions")
 REVIEWED_DIR = pathlib.Path("Logs/sessions_reviewed")
+
 OLLAMA_URL   = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 MODEL        = os.environ.get("REVIEW_MODEL", "qwen3:8b")
-CHUNK_SIZE   = 20  # turns per chunk
-OVERLAP      = 2   # overlap between chunks
+CHUNK_SIZE   = 25
+OVERLAP      = 2
 
 REVIEW_PROMPT = """Review this Claude Code session excerpt. Extract ONLY high-signal events.
 
-Return a JSON array of objects. Each object must have:
+Return a JSON array of objects. Each object MUST have:
 - "type": one of PITFALL, DECISION, PROOF, DIRECTION
-- "title": short title (under 80 chars)
-- "body": 2-3 sentences — what happened, root cause (if pitfall), what changed
+- "title": short title under 80 chars
+- "body": 2-3 sentences describing what happened, root cause (PITFALL), or what changed
 
 Only extract events where losing this would force reconstruction later.
-Skip: status narration, routine file reads, progress updates.
+PITFALL = something broke, root cause identified
+DECISION = architectural or process choice that closed an open question
+PROOF = tested and confirmed working end-to-end
+DIRECTION = course change with a reason that matters
+
+Skip: status narration, routine file reads, progress updates, repeated summaries.
 
 SESSION EXCERPT:
 {turns}
 
-Return ONLY valid JSON array, no explanation, no markdown fences.
-Example: [{{"type":"PITFALL","title":"hub-bridge sync misses lib/ files","body":"When syncing hub-bridge code, only server.js was copied but lib/*.js files were missed, causing stale code in the container. The build context is at /opt/seed-vault/.../hub_bridge/ and requires explicit per-file copies. cp -r does NOT overwrite existing files in dest/."}}]
-If no high-signal events: return []"""
+Return ONLY valid JSON array, no preamble, no markdown fences.
+If no high-signal events: []"""
 
 
-def call_ollama(prompt):
+def call_ollama(prompt: str) -> str:
     payload = json.dumps({
         "model": MODEL,
         "prompt": prompt,
@@ -49,82 +69,139 @@ def call_ollama(prompt):
     try:
         with urllib.request.urlopen(req, timeout=120) as r:
             return json.loads(r.read())["response"].strip()
+    except urllib.error.URLError as e:
+        print(f"  [ollama] connection error: {e}", file=sys.stderr)
+        return "[]"
     except Exception as e:
-        print(f"    -> ollama error: {e}")
+        print(f"  [ollama] error: {e}", file=sys.stderr)
         return "[]"
 
 
-def chunk_turns(turns):
-    if len(turns) <= CHUNK_SIZE:
-        return [turns]
-    chunks = []
-    i = 0
-    while i < len(turns):
-        chunks.append(turns[i:i + CHUNK_SIZE])
-        i += CHUNK_SIZE - OVERLAP
+def parse_events(raw: str) -> list:
+    raw = raw.strip()
+    raw = re.sub(r"^```(?:json)?\s*", "", raw)
+    raw = re.sub(r"\s*```$", "", raw)
+    raw = raw.strip()
+    try:
+        result = json.loads(raw)
+        return result if isinstance(result, list) else []
+    except Exception:
+        match = re.search(r"\[.*\]", raw, re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group(0))
+            except Exception:
+                pass
+        return []
+
+
+def chunk_items(items: list, size: int, overlap: int) -> list:
+    if len(items) <= size:
+        return [items]
+    chunks, i = [], 0
+    while i < len(items):
+        chunks.append(items[i:i + size])
+        i += size - overlap
     return chunks
 
 
-def format_turns(turns):
-    lines = []
-    for t in turns:
-        role = (t.get("role") or "unknown").upper()
-        text = (t.get("text") or "").strip()[:2000]
-        lines.append(f"[{role}]: {text}")
-    return "\n\n".join(lines)
+# ── JSON sessions (IndexedDB export) ─────────────────────────────────────────
 
-
-def review_session(session):
-    turns  = session.get("turns", [])
+def review_json_session(session: dict) -> list:
+    turns = session.get("turns", session.get("messages", []))
     events = []
-    for i, chunk in enumerate(chunk_turns(turns)):
-        print(f"  chunk {i+1}/{len(chunk_turns(turns))} ({len(chunk)} turns)...")
-        prompt   = REVIEW_PROMPT.format(turns=format_turns(chunk))
-        raw      = call_ollama(prompt)
-        raw = raw.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
-        try:
-            chunk_events = json.loads(raw)
-            if isinstance(chunk_events, list):
-                events.extend(chunk_events)
-                print(f"    -> {len(chunk_events)} events")
-        except Exception as ex:
-            print(f"    -> parse error: {ex}")
+    for chunk in chunk_items(turns, CHUNK_SIZE, OVERLAP):
+        lines = []
+        for t in chunk:
+            role = (t.get("role") or t.get("sender") or "unknown").upper()
+            text = (t.get("text") or t.get("content") or "").strip()[:2500]
+            lines.append(f"[{role}]: {text}")
+        raw = call_ollama(REVIEW_PROMPT.format(turns="\n\n".join(lines)))
+        events.extend(parse_events(raw))
     return events
 
 
+def process_json_file(path: pathlib.Path) -> dict:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    sessions = data if isinstance(data, list) else [data]
+    all_events = []
+    for s in sessions:
+        ev    = review_json_session(s)
+        date  = s.get("date", s.get("createdAt", ""))
+        title = s.get("title", s.get("name", path.stem))
+        for e in ev:
+            e.setdefault("session_date", date)
+            e.setdefault("session_title", title)
+        all_events.extend(ev)
+    return {"source": path.name, "event_count": len(all_events), "events": all_events}
+
+
+# ── Markdown sessions (docs/ccSessions/ format) ───────────────────────────────
+
+def parse_markdown_session(text: str) -> list:
+    blocks = re.split(r"\n-{4,}\n", text)
+    return [b.strip() for b in blocks if b.strip()]
+
+
+def review_markdown_session(path: pathlib.Path) -> list:
+    text   = path.read_text(encoding="utf-8")
+    blocks = parse_markdown_session(text)
+    events = []
+    for chunk in chunk_items(blocks, CHUNK_SIZE, OVERLAP):
+        turns_text = "\n\n---\n\n".join(chunk)
+        raw = call_ollama(REVIEW_PROMPT.format(turns=turns_text[:12000]))
+        events.extend(parse_events(raw))
+    return events
+
+
+def process_markdown_file(path: pathlib.Path) -> dict:
+    events = review_markdown_session(path)
+    m      = re.search(r"(\d{6,8})", path.stem)
+    date   = m.group(1) if m else ""
+    for e in events:
+        e.setdefault("session_date", date)
+        e.setdefault("session_title", path.stem)
+    return {"source": path.name, "event_count": len(events), "events": events}
+
+
+# ── Main ─────────────────────────────────────────────────────────────────────
+
 def main():
+    parser = argparse.ArgumentParser(description="Session ingestion pipeline — review step")
+    parser.add_argument("--limit",  type=int, default=0,       help="Max files (0=all)")
+    parser.add_argument("--source", choices=["json", "md", "both"], default="both")
+    parser.add_argument("--force",  action="store_true",       help="Re-process already-reviewed files")
+    args = parser.parse_args()
+
     REVIEWED_DIR.mkdir(parents=True, exist_ok=True)
-    raw_files = sorted(RAW_DIR.glob("*.json"))
-    if not raw_files:
-        print(f"No files in {RAW_DIR}")
+
+    files_to_process = []
+    if args.source in ("json", "both") and RAW_DIR.exists():
+        files_to_process += [(p, "json") for p in sorted(RAW_DIR.glob("*.json"))]
+    if args.source in ("md", "both") and CC_DIR.exists():
+        files_to_process += [(p, "md") for p in sorted(CC_DIR.glob("*.md"))]
+
+    if not files_to_process:
+        print(f"No input files. Checked: {RAW_DIR}, {CC_DIR}")
         return
 
-    for path in raw_files:
-        out_path = REVIEWED_DIR / path.name
-        if out_path.exists():
+    if args.limit:
+        files_to_process = files_to_process[:args.limit]
+
+    total_events = 0
+    for path, ftype in files_to_process:
+        out_path = REVIEWED_DIR / (path.stem + ".json")
+        if out_path.exists() and not args.force:
             print(f"SKIP {path.name} (already reviewed)")
             continue
 
-        print(f"Reviewing {path.name}...")
-        with open(path) as f:
-            data = json.load(f)
+        print(f"Processing {path.name} [{ftype}]...", end=" ", flush=True)
+        result = process_json_file(path) if ftype == "json" else process_markdown_file(path)
+        out_path.write_text(json.dumps(result, indent=2, ensure_ascii=False))
+        total_events += result["event_count"]
+        print(f"{result['event_count']} events → {out_path.name}")
 
-        sessions = data if isinstance(data, list) else [data]
-        all_events = []
-        for s in sessions:
-            print(f"  session: {s.get('title','')} ({len(s.get('turns',[]))} turns)")
-            events = review_session(s)
-            for e in events:
-                e["session_date"] = s.get("date", "")
-                e["session_title"] = s.get("title", "")
-            all_events.extend(events)
-
-        out_path.write_text(json.dumps({
-            "source": path.name,
-            "event_count": len(all_events),
-            "events": all_events
-        }, indent=2))
-        print(f"DONE {path.name} -> {len(all_events)} events")
+    print(f"\nDone. Total events extracted: {total_events}")
 
 
 if __name__ == "__main__":
