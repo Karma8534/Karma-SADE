@@ -2197,3 +2197,19 @@ ARIA_SERVICE_KEY added to hub.env (pre-existing key `Bt1MU_...` was already ther
 
 **Next:** Phase 2 (Vesper Optimization) — reduce SELF_EVAL_INTERVAL to 1, drive 20 qualified cycles, verify PITFALL patterns visible in karmaCtx response via /v1/chat
 
+
+## Session 113+ — AC2 + AC4 Verified Pass (2026-03-21)
+
+### AC2: Behavioral Recall Fix
+- Root cause: build_karma_context() had no Decision node query; decisions buried under 3000+ recency-based Episodic nodes
+- Fix: 4 Decision nodes created in FalkorDB neo_workspace (skip-dedup, FalkorDB env vars, neo_workspace, hub-bridge build context)
+- Fix: karma-server server.py patched to query all settled Decision nodes and inject into karmaCtx
+- Pitfall: Python patch via SSH wrote literal 0x0a byte instead of \n escape → SyntaxError. Fixed with byte-level replacement (Scripts/fix_decision_newline.py)
+- AC2 VERIFIED PASS via live /v1/chat test
+
+### AC4: Self-Authored Candidate
+- cand_20260320T143554Z_behavioral_continuity.json confirmed self-authored by vesper_watchdog
+- 50-turn behavioral analysis, confidence=0.943, no external prompt triggered it
+- AC4 VERIFIED PASS — production criterion met
+
+**Next:** Session/claude-mem pipeline (prerequisite for AC5 PITFALL repeat tracking), then AC5/AC6/AC9/AC10

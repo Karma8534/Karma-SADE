@@ -9,10 +9,11 @@
   "categories": {
     "vault_neo_deploy": {
       "description": "Hub-bridge or karma-server deploys to vault-neo (includes build, sync, deploy, verify steps)",
-      "remaining": 19,
+      "remaining": 18,
       "initial": 20,
       "log": [
-        {"timestamp": "2026-03-21T06:28:00Z", "action": "hub-bridge deploy: credit burn alarm (P0-G)", "phase_ac_reference": "P0-G"}
+        {"timestamp": "2026-03-21T06:28:00Z", "action": "hub-bridge deploy: credit burn alarm (P0-G)", "phase_ac_reference": "P0-G"},
+        {"timestamp": "2026-03-21T06:50:00Z", "action": "karma-server rebuild: Decision node query in build_karma_context (AC2 fix)", "phase_ac_reference": "AC2"}
       ]
     },
     "k2_ssh_write": {
@@ -38,10 +39,11 @@
     },
     "ac_execution": {
       "description": "AC test runs, verification commands, gate confirmations (each AC verification cycle = 1 approval)",
-      "remaining": 24,
+      "remaining": 23,
       "initial": 25,
       "log": [
-        {"timestamp": "2026-03-21T06:25:00Z", "action": "AC1 live chat verify — Karma rank Initiate check", "phase_ac_reference": "AC1"}
+        {"timestamp": "2026-03-21T06:25:00Z", "action": "AC1 live chat verify — Karma rank Initiate check", "phase_ac_reference": "AC1"},
+        {"timestamp": "2026-03-21T06:50:00Z", "action": "AC2 live chat verify — skip-dedup behavioral recall", "phase_ac_reference": "AC2"}
       ]
     },
     "governance_loop": {
@@ -59,8 +61,8 @@
   },
   "totals": {
     "initial": 100,
-    "consumed": 4,
-    "remaining": 96
+    "consumed": 6,
+    "remaining": 94
   },
   "usage_protocol": {
     "step_1": "Identify which category applies to the intended action",
