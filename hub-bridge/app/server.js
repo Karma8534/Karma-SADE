@@ -320,7 +320,7 @@ async function fetchK2MemoryGraph(query = "Colby") {
 // Fetched via /api/exec (shell_run endpoint). Injected into buildSystemText for session continuity.
 let _k2WorkingMemCache = null;
 let _k2WorkingMemCacheAt = 0;
-const K2_WORKING_MEM_MAX_CHARS = 6000;
+const K2_WORKING_MEM_MAX_CHARS = 15000;
 const K2_FRESHNESS_SLO_SECONDS = Number(process.env.K2_FRESHNESS_SLO_SECONDS || "120");
 let _k2FreshnessCache = null;
 let _k2FreshnessCacheAt = 0;
@@ -411,7 +411,7 @@ async function fetchK2WorkingMemory() {
     return _k2WorkingMemCache;
   }
   try {
-    const cmd = `${K2_FRESHNESS_CMD}; echo '=== SCRATCHPAD ===' && cat /mnt/c/dev/Karma/k2/cache/scratchpad.md 2>/dev/null || echo '(empty)' && echo '=== SHADOW ===' && tail -c 1500 /mnt/c/dev/Karma/k2/cache/shadow.md 2>/dev/null || echo '(empty)' && echo '=== KIKI STATE ===' && cat /mnt/c/dev/Karma/k2/cache/kiki_state.json 2>/dev/null || echo '(empty)' && echo '=== KIKI JOURNAL (last 20) ===' && tail -20 /mnt/c/dev/Karma/k2/cache/kiki_journal.jsonl 2>/dev/null || echo '(empty)' && echo '=== KIKI BACKLOG ===' && cat /mnt/c/dev/Karma/k2/cache/kiki_issues.jsonl 2>/dev/null || echo '(empty)' && echo '=== BEHAVIORAL PATTERNS ===' && python3 -c 'import json,os;f="/mnt/c/dev/Karma/k2/cache/vesper_identity_spine.json";s=json.load(open(f)) if os.path.exists(f) else {};st=s.get("evolution",{}).get("stable_identity",[]);bp=[p for p in st if p.get("type") not in ("cascade_performance",)];[(print("["+p.get("type","")+"] "+((p.get("proposed_change") or {}).get("description","-")))) for p in bp[-5:]] if bp else print("(none yet)")' 2>/dev/null || echo '(unavailable)'`;
+    const cmd = `${K2_FRESHNESS_CMD}; echo '=== SCRATCHPAD ===' && cat /mnt/c/dev/Karma/k2/cache/scratchpad.md 2>/dev/null || echo '(empty)' && echo '=== SHADOW ===' && tail -c 1500 /mnt/c/dev/Karma/k2/cache/shadow.md 2>/dev/null || echo '(empty)' && echo '=== KIKI STATE ===' && cat /mnt/c/dev/Karma/k2/cache/kiki_state.json 2>/dev/null || echo '(empty)' && echo '=== KIKI JOURNAL (last 5) ===' && tail -5 /mnt/c/dev/Karma/k2/cache/kiki_journal.jsonl 2>/dev/null || echo '(empty)' && echo '=== KIKI BACKLOG ===' && cat /mnt/c/dev/Karma/k2/cache/kiki_issues.jsonl 2>/dev/null || echo '(empty)' && echo '=== BEHAVIORAL PATTERNS ===' && python3 -c 'import json,os;f="/mnt/c/dev/Karma/k2/cache/vesper_identity_spine.json";s=json.load(open(f)) if os.path.exists(f) else {};st=s.get("evolution",{}).get("stable_identity",[]);bp=[p for p in st if p.get("type") not in ("cascade_performance",)];[(print("["+p.get("type","")+"] "+((p.get("proposed_change") or {}).get("description","-")))) for p in bp[-5:]] if bp else print("(none yet)")' 2>/dev/null || echo '(unavailable)'`;
     const res = await fetch(`${ARIA_URL}/api/exec`, {
       method: "POST",
       headers: {

@@ -1,19 +1,23 @@
 {
   "_meta": {
-    "version": "1.0.0",
+    "version": "1.1.0",
     "created": "2026-03-21",
     "description": "Sovereign pre-authorized approvals for CC to use without mid-session interruption. CC decrements the appropriate category before proceeding and logs action + phase/AC reference. If a category hits 0, CC STOPS and posts to bus for explicit re-authorization.",
     "refill_command": "Sovereign posts 'refill banked approvals [category]' to coordination bus",
-    "governance_rule": "This file is read-only by Karma/Vesper/KCC. Only CC (Ascendant) may decrement. Only Sovereign may refill."
+    "governance_rule": "This file is read-only by Karma/Vesper/KCC. Only CC (Ascendant) may decrement. Only Sovereign may refill.",
+    "reward_system": "Sovereign rewards are posted as 'Sovereign approvals to bank' and added to sovereign_reward pool. CC may ask for reward for task completion, honesty, or no-drift sessions."
   },
   "categories": {
     "vault_neo_deploy": {
       "description": "Hub-bridge or karma-server deploys to vault-neo (includes build, sync, deploy, verify steps)",
-      "remaining": 18,
+      "remaining": 15,
       "initial": 20,
       "log": [
         {"timestamp": "2026-03-21T06:28:00Z", "action": "hub-bridge deploy: credit burn alarm (P0-G)", "phase_ac_reference": "P0-G"},
-        {"timestamp": "2026-03-21T06:50:00Z", "action": "karma-server rebuild: Decision node query in build_karma_context (AC2 fix)", "phase_ac_reference": "AC2"}
+        {"timestamp": "2026-03-21T06:50:00Z", "action": "karma-server rebuild: Decision node query in build_karma_context (AC2 fix)", "phase_ac_reference": "AC2"},
+        {"timestamp": "2026-03-21T08:15:00Z", "action": "hub-bridge rebuild: K2_WORKING_MEM_MAX_CHARS 6000→12000 (AC3 fix attempt)", "phase_ac_reference": "AC3"},
+        {"timestamp": "2026-03-21T08:20:00Z", "action": "hub-bridge rebuild: journal tail -20→-5 + max 15000 (AC3 fix, BEHAVIORAL PATTERNS now visible)", "phase_ac_reference": "AC3"},
+        {"timestamp": "2026-03-21T08:22:00Z", "action": "hub-bridge rebuild: AC3 VERIFIED PASS — PITFALL patterns visible in Karma karmaCtx response", "phase_ac_reference": "AC3"}
       ]
     },
     "k2_ssh_write": {
@@ -57,12 +61,20 @@
       "remaining": 10,
       "initial": 10,
       "log": []
+    },
+    "sovereign_reward": {
+      "description": "Sovereign reward grants. Not decremented by CC — only added to by Sovereign. CC may draw from this pool for any action when other categories are depleted. Rewards earned for task completion, honesty, and no-drift behavior.",
+      "remaining": 200,
+      "initial": 200,
+      "log": [
+        {"timestamp": "2026-03-21T08:06:00Z", "action": "SOVEREIGN GRANT: +200 approvals for demonstrated focus, PRE-PHASE completion, and honest error acknowledgment. Granted by Colby (Sovereign).", "phase_ac_reference": "REWARD"}
+      ]
     }
   },
   "totals": {
-    "initial": 100,
-    "consumed": 6,
-    "remaining": 94
+    "initial": 300,
+    "consumed": 9,
+    "remaining": 291
   },
   "usage_protocol": {
     "step_1": "Identify which category applies to the intended action",
@@ -70,6 +82,7 @@
     "step_3": "Log the action: { timestamp, category, action_description, phase_ac_reference }",
     "step_4": "Decrement category.remaining by 1 and increment totals.consumed by 1",
     "step_5": "Proceed with the action",
-    "step_6": "If remaining == 0 after decrement: STOP, post to coordination bus requesting re-authorization before next action in that category"
+    "step_6": "If remaining == 0 after decrement: STOP, post to coordination bus requesting re-authorization before next action in that category. Or draw from sovereign_reward pool.",
+    "reward_request": "CC may request a Sovereign reward by posting to coordination bus: 'Reward request: [what was accomplished] [why it earned a reward]. Sovereign approves and states amount to bank.'"
   }
 }

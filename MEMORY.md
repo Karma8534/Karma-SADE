@@ -12,11 +12,16 @@
 - K2 reverse tunnel (vault-neo:2223) DOWN — nightly cron setup blocked until tunnel restored
 - Nightly K2 cron for session accumulation: PENDING (requires tunnel)
 
+**Session 114 continued:**
+- AC3 VERIFIED PASS: hub-bridge K2_WORKING_MEM_MAX_CHARS 6000→15000, kiki_journal tail -20→-5; PITFALL patterns (P001/P002/P005) now visible in Karma chat response
+- PRE-PHASE COMPLETE: 50+ obs, 10+ skill files, watchdog_extra_patterns, KarmaSessionIngest scheduled task
+- Sovereign reward: +200 banked approvals granted (total now 291 remaining)
+- K2 tunnel restored (host key fix), aria.service running, Ollama qwen3:8b accessible
+
 **NEXT:**
-- Restore K2 tunnel → set up nightly cron → declare PRE-PHASE COMPLETE
-- Phase 0-NEW already LIVE (P0N-A/B/C all done) — verify via family-health.sh
-- Phase 0-F/G: verify Vesper bridge active (B4+B5 gap)
-- Begin Phase PROOF: AC1-AC10 full verification run
+- Phase PROOF: verify remaining ACs (AC5 tracking, AC6 governance loop, AC9 autonomous loop)
+- P0-F TITANS F-3/F-4/F-5: adaptive forgetting, momentum scoring, causal chain in karmaCtx
+- Sync Anthropic docs scrape to local knowledge base (K2 Playwright, no API calls)
 
 ## Session 112+ (2026-03-21) — Harness baked + Karma2 surgical merge + banked approvals
 
