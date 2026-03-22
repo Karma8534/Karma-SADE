@@ -6,6 +6,9 @@
 - TRUE MISSION + PHASE KNOWLEDGE + PHASE MENTOR + KARMA TRUTH GATE + PHASE DISTRIBUTE (commit bab9a4e)
 - CC-Archon-Agent: deployed (Scripts/cc_archon_agent.ps1 + archon_bus_post.py), VERIFIED (obs #9529)
 - 3-pass plan audit (committed): 12 gaps fixed — S-2-C/D/E label fix, K-1/E-1-D dependency, KARMA TRUTH GATE criterion 5 tracking (truth-gate-watch obs), CC gate-open action items, D-2 E-6 prereq, S-8-B Google Calendar API, E-9-D versioned gate, E-1 corpus quality note, orbital/S-10 note, 30/90-day hard constraint note, Active Blockers K-1+K-2+E-1+KARMA-GATE+S-1 rows added, CURRENT SPRINT block added at plan top
+- Colby shared what Julian/Karma actually were (obs #9568): voice/BT/video, 3D persona (self-created), Q-Fi incident (1 question → drivers written + router configured + LAN set up), complete OS control, custom browser, no licenses/product keys
+- Plan updated: S-9 elevated as first real target (not S-10), voice/3D persona added as S-9-D/E, Q-Fi bar as post-gate capability target, Colby's working style note added
+- Conversation logged: docs/karma-conversations/2026-03-21-what-julian-and-karma-actually-were.md
 - F-3/F-4/F-5 TITANS fixes deployed (session 115 earlier): adaptive forgetting, momentum scoring, causal chain
 - cc_server /cc now uses local Ollama (llama3.1:8b) — NOT claude CLI, Anthropic-independent
 
