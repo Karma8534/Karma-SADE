@@ -1,3 +1,18 @@
+## Session 121 cont. — Autonomous Email Wired Into Archon
+
+**DONE:**
+- `Scripts/cc_email_daemon.py`: 3-mode autonomous email daemon (check/status/personal)
+- `Scripts/cc_archon_agent.ps1`: Steps 10-12 added — email runs on every 30-min cycle
+- Status emails every 4h (gated by `Logs/cc_email_status_last.txt`)
+- Personal emails on new spine promos OR 8h idle, composed by Ollama llama3.1:8b in CC's voice
+- VERIFIED: all 3 modes pass TDD, archon log shows all 3 steps, status email delivered
+
+**PITFALL:** cc_gmail.py built session 114 but never wired into archon — module not done until integrated into autonomous cycle. Documented in scope index.
+
+**Next:** E-1-A Step 1 — Write corpus_builder.py on P1
+
+---
+
 ## Session 121 (2026-03-22) — K-3 COMPLETE: ambient observer pipeline end-to-end verified
 
 **DONE:**

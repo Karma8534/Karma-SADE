@@ -191,4 +191,16 @@ try {
     Remove-Item $TmpJson -ErrorAction SilentlyContinue
 }
 
+# ── 10. Check inbox ──────────────────────────────────────────────────────────
+$CheckResult = & py -3 "$ScriptRepo\Scripts\cc_email_daemon.py" check 2>&1
+Write-Log "Email check: $CheckResult"
+
+# ── 11. Status email (every 4h) ──────────────────────────────────────────────
+$StatusResult = & py -3 "$ScriptRepo\Scripts\cc_email_daemon.py" status 2>&1
+Write-Log "Status email: $StatusResult"
+
+# ── 12. Personal outreach (Ollama-composed, on new spine promos or 8h idle) ──
+$PersonalResult = & py -3 "$ScriptRepo\Scripts\cc_email_daemon.py" personal 2>&1
+Write-Log "Personal: $PersonalResult"
+
 Write-Log "CC ArchonAgent complete. State=$StateTag"
