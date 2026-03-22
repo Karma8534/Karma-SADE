@@ -2348,3 +2348,27 @@ ARIA_SERVICE_KEY added to hub.env (pre-existing key `Bt1MU_...` was already ther
 
 ## K-1 marked complete in CURRENT SPRINT (2026-03-21)
 Next task: K-2 — Anthropic docs scrape (606 pages)
+
+## Session 116 (2026-03-21) — K-1 Complete + Session Protocol Locked
+
+### What Was Done
+- K-1 COMPLETE: 145 CC sessions extracted from ~/.claude/projects/C--Users-raest-Documents-Karma-SADE/*.jsonl
+  - Output: docs/ccSessions/from-cc-sessions/ (local only, gitignored — contains API keys)
+  - PowerShell extraction: user/assistant turns, 100K char cap, 3.2MB total
+  - Spans Feb 24 — Mar 21 2026 full Karma SADE arc
+- Session protocol confirmed by Sovereign: /resurrect -> one task -> verify -> "wrap up" -> repeat
+- S-9 vision locked: Karma is the compositor shell, not a panel (obs #9570)
+- Long-term direction: CC+Karma generate income, acquire own hardware (obs #9571)
+- Pushed commits: 7da2b14 (S-9 elevation), 57e3c73 (gitignore), cbc2ad2 (K-1 marked done)
+
+### What Changed
+- .gitignore: added docs/ccSessions/from-cc-sessions/
+- Karma2/PLAN.md: K-1 marked complete, K-2 is next
+- cc_context_snapshot.md: updated
+- obs saved: #9570, #9571, #9572, #9597, #9609, #9610
+
+### Next Session Starts Here
+1. /resurrect — read STATE.md — confirm K-2 is next
+2. K-2: scrape 606 Anthropic docs pages via Playwright MCP
+3. Save to docs/knowledge/anthropic-docs/, gitignore if needed, commit, wrap
+**Blocker:** None. K-2 has no prerequisites.
