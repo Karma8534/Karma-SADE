@@ -1,3 +1,25 @@
+## Session 121 (2026-03-22) — K-3 COMPLETE: ambient observer pipeline end-to-end verified
+
+**DONE:**
+- `Scripts/ambient_observer.py`: polls coordination bus, calls nemotron-mini:optimized, writes to regent_evolution.jsonl, 6h dedup
+- `aria_consciousness.py`: Phase 7 AMBIENT block integrated after Echo step
+- `vesper_watchdog.py`: `extract_ambient_candidates()` emitting `cand_ambient_*.json`
+- `vesper_eval.py`: `ambient_observation` added to `AWARENESS_TYPES` (PITFALL fast-path, conf=0.82 passes)
+- `karma_regent.py`: `_last_ambient_count` global + `should_fire` logic + correct insight path + urgency fix
+- VERIFIED: `regent → colby | [KARMA AMBIENT] I noticed something: The coordination signaling...` on bus 07:45:38Z
+
+**Pitfalls (for cc-scope-index.md):**
+- Candidate must have `cand_` prefix or `list_candidate_files()` misses it
+- Hub rejects urgency `"low"` — use `"informational"`
+- Spine stores ambient insight at `proposed_change.patch.ambient_insight` not `excerpt`
+
+**Current blockers:** None
+
+## Next Session Starts Here
+1. /resurrect
+2. E-1-A Step 1: Write `corpus_builder.py` — extract ledger instruction pairs for LoRA training (no GPU needed, P1)
+**Blocker if any:** None
+
 ## Session 120 (2026-03-22) — Resurrect/Wrap/PLAN x5 audit + K-3 GSD docs created
 
 **DONE:**

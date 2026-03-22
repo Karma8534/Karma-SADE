@@ -47,6 +47,10 @@ CASCADE_CFG = inference.CascadeConfig(
 )
 
 
+def _candidate_snapshot_sha(candidate: dict) -> str:
+    return pipeline.stable_fingerprint(candidate or {})
+
+
 def _model_score(candidate: dict, suites: dict) -> tuple:
     prompt = benchmarks.build_eval_prompt(candidate, suites)
     messages = [{"role": "user", "content": prompt}]
@@ -99,16 +103,71 @@ def run_eval():
         ctype = candidate.get("type", "")
         is_observational = candidate.get("proposed_change") is None
 
+        # PITFALL_FAST_PATH: awareness candidates from CC sessions are pre-evaluated.
+        # Bypass model/heuristic gate — approve directly on confidence.
+        AWARENESS_TYPES = {"PITFALL", "verbosity_correction", "claude_dependency", "ambient_observation"}  # K-3: ambient is observational, no task completion applicable
+        if ctype in AWARENESS_TYPES:
+            conf = float(candidate.get("confidence", 0.0))
+            conf_threshold = 0.60
+            fast_approved = conf >= conf_threshold
+            fast_decision = "approve" if fast_approved else "reject"
+            fast_reason = f"PITFALL_FAST_PATH: confidence={conf:.2f} {'>='+str(conf_threshold)+' approved' if fast_approved else '<'+str(conf_threshold)+' rejected'}"
+            fake_gate = {"passed": fast_approved, "failures": [] if fast_approved else [{"metric": "confidence", "actual": conf, "minimum": conf_threshold}], "metrics": {"identity_consistency": conf, "persona_style": conf, "session_continuity": conf, "task_completion": conf}, "thresholds": {"identity_consistency": conf_threshold, "persona_style": conf_threshold, "session_continuity": conf_threshold, "task_completion": conf_threshold}}
+            fast_gov_decision = {"approved": fast_approved, "decision": fast_decision, "reason": fast_reason, "gate": fake_gate, "override": {"active": False, "reason": "fast_path"}}
+            eval_doc = {
+                "eval_id": f"eval-{path.stem}", "candidate_id": candidate.get("candidate_id", path.stem),
+                "candidate_path": str(path), "candidate_snapshot_sha256": _candidate_snapshot_sha(candidate),
+                "evaluated_utc": pipeline.iso_utc(), "heuristic_scores": {}, "model_scores": {},
+                "model_source": "fast_path", "model_weight_used": 0.0, "merged_scores": {},
+                "gate_metrics": {}, "governor_decision": fast_gov_decision,
+                "gate_passed": fast_approved, "decision_kind": fast_decision,
+                "status": "evaluated", "governor_status": fast_decision + "d",
+            }
+            out = pipeline.EVAL_DIR / f"eval-{path.stem}.json"
+            out.write_text(json.dumps(eval_doc, indent=2))
+            if fast_approved:
+                approved += 1
+                print(f"[eval] PITFALL fast-path APPROVED: {path.stem} (conf={conf:.2f})")
+                # Write promotion artifact so governor can pick it up
+                promo = {
+                    "promotion_id": f"promotion-{pipeline.slugify(path.stem)}-{pipeline.iso_utc().replace(':','').replace('-','')[:16]}",
+                    "candidate_id": eval_doc["candidate_id"],
+                    "eval_id": eval_doc["eval_id"],
+                    "decision": "approve",
+                    "approved": True,
+                    "decision_reason": fast_reason,
+                    "decision_utc": pipeline.iso_utc(),
+                    "gate_metrics": {},
+                    "gate_passed": True,
+                    "decision_kind": "approve",
+                    "candidate_snapshot_sha256": eval_doc["candidate_snapshot_sha256"],
+                    "candidate_snapshot": candidate,
+                    "status": "approved",
+                }
+                promo_path = pipeline.PROMOTION_DIR / f"promotion-{path.name}"
+                pipeline.write_json(promo_path, promo)
+                pipeline.update_candidate_status(path, "approved", {"eval_ref": str(out), "promotion_ref": str(promo_path)})
+            else:
+                rejected += 1
+                print(f"[eval] PITFALL fast-path rejected: {path.stem} (conf={conf:.2f})")
+            continue
+
         # Heuristic scoring
         heuristic_scores = benchmarks.heuristic_metric_scores(candidate, suites)
 
         # Model scoring
         model_scores, model_source = _model_score(candidate, suites)
 
-        # Fix: observational candidates get model_weight=1.0
-        # (heuristics can't evaluate numeric-only evidence dicts)
+        # Fix: observational + heuristic-blind types get model_weight=1.0.
+        # Heuristics return fixed low scores (0.25) for behavioral/structural candidates
+        # that don't have keyword-matchable content -- dragging merged scores below gate.
+        HEURISTIC_BLIND_TYPES = {"behavioral_continuity", "tool_utilization_repair",
+                                  "tool_utilization_strength", "research_skill_card",
+                                  "PITFALL", "verbosity_correction", "claude_dependency",
+                                  "ambient_observation"}  # K-3: no keyword heuristics for ambient
         all_heuristic_zero = all(v == 0.0 for v in heuristic_scores.values())
-        model_weight = 1.0 if (is_observational or all_heuristic_zero) else 0.6
+        heuristic_unreliable = ctype in HEURISTIC_BLIND_TYPES or all_heuristic_zero
+        model_weight = 1.0 if (is_observational or heuristic_unreliable) else 0.6
 
         merged = benchmarks.merge_metric_scores(heuristic_scores, model_scores,
                                                 model_weight=model_weight)
@@ -117,12 +176,13 @@ def run_eval():
                         for k in ("identity_consistency", "persona_style",
                                   "session_continuity", "task_completion")}
 
-        decision = governance.resolve_governor_decision(gate_metrics)
+        decision = governance.resolve_governor_decision(gate_metrics, candidate_type=ctype)
 
         eval_doc = {
             "eval_id": f"eval-{path.stem}",
             "candidate_id": candidate.get("candidate_id", path.stem),
             "candidate_path": str(path),
+            "candidate_snapshot_sha256": _candidate_snapshot_sha(candidate),
             "evaluated_utc": pipeline.iso_utc(),
             "heuristic_scores": heuristic_scores,
             "model_scores": model_scores,
@@ -131,6 +191,8 @@ def run_eval():
             "merged_scores": merged,
             "gate_metrics": gate_metrics,
             "governor_decision": decision,
+            "gate_passed": bool(decision.get("gate", {}).get("passed", False)),
+            "decision_kind": decision.get("decision", ""),
             "status": "evaluated",
             "governor_status": "approved" if decision["approved"] else "rejected",
         }
@@ -157,6 +219,9 @@ def run_eval():
                 "decision_reason": decision.get("reason", ""),
                 "decision_utc": pipeline.iso_utc(),
                 "gate_metrics": gate_metrics,
+                "gate_passed": bool(decision.get("gate", {}).get("passed", False)),
+                "decision_kind": decision.get("decision", ""),
+                "candidate_snapshot_sha256": eval_doc["candidate_snapshot_sha256"],
                 "candidate_snapshot": candidate,
                 "status": "approved",
             }

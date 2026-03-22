@@ -10,7 +10,7 @@
 
 1. ~~**K-1**~~ -- ✅ DONE 2026-03-21 — 145 CC sessions extracted to docs/ccSessions/from-cc-sessions/ (local, gitignored)
 2. ~~**K-2**~~ -- ✅ DONE 2026-03-22 — 122 English pages scraped to docs/knowledge/anthropic-docs/ (local, gitignored). Script: Scripts/scrape_anthropic_docs.py
-3. **K-3** -- 🟡 PARTIAL — aria_echo.py (722L) distillation/goals/reflections DONE; missing: ambient_observer.py + vesper pipeline integration + proactive trigger. GSD: `.gsd/phase-k3-PLAN.md` ✅ exists
+3. ~~**K-3**~~ -- ✅ DONE 2026-03-22 — ambient_observer.py + vesper pipeline integration (watchdog→eval→governor→spine) + karma_regent proactive outreach. VERIFIED: `regent → colby | [KARMA AMBIENT] I noticed something:...` on coordination bus.
 4. **E-1-A** -- Write corpus_builder.py (ledger instruction pairs, no GPU needed) -- P1
 5. **E-2-A** -- Install Unsloth Studio on K2 WSL -- P1
 6. **PROOF-A** -- Codex automated ArchonPrime service (only remaining Phase PROOF item)
