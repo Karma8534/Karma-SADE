@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-22T08:40:00Z
-**Session:** 121 COMPLETE (K-3 end-to-end verified, autonomous email pipeline live — check/status/personal in archon, Colby confirmed both emails received)
+**Last updated:** 2026-03-22T09:30:00Z
+**Session:** 122 COMPLETE (E-1-A done — corpus_builder.py, 2817 Alpaca pairs from vault ledger. E-2-A GSD docs pre-created.)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -580,3 +580,16 @@ Karma lost an entire conversation mid-session (2026-03-12 ~12:03 PM) after an `i
 **Active models:** MODEL_DEFAULT=claude-haiku-4-5-20251001, MODEL_DEEP=claude-sonnet-4-6 (both LIVE)
 **hub-bridge:** v2.11.0, RestartCount=0, 2026-03-12
 **K2 tools:** 9 k2_* structured tools LIVE via /api/tools/execute
+
+---
+
+## Session 122 (2026-03-22) — E-1-A Complete
+
+**Done:** E-1-A corpus builder — Scripts/corpus_builder.py (146 lines), 2817 Alpaca pairs from 3191 vault ledger hub+chat entries. Logs/corpus_alpaca.jsonl (5.2MB, gitignored, local).
+
+**Active Blockers:** None.
+
+**Next Session Starts Here:**
+1. /resurrect
+2. E-2-A Step 1: SSH K2 tunnel, verify nvidia-smi + python3 + curl prerequisites for Unsloth Studio
+   GSD docs: .gsd/phase-e2a-PLAN.md (4 tasks pre-created)

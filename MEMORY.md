@@ -2507,5 +2507,5 @@ Next task: K-2 — Anthropic docs scrape (606 pages)
 
 ### Next Session Starts Here
 1. /resurrect
-2. E-2-A per PLAN.md (next PHASE KNOWLEDGE task)
-**Blocker:** None.
+2. E-2-A Step 1: SSH to K2 via tunnel, verify nvidia-smi + python3 + curl (prerequisites check)
+**Blocker:** None. GSD docs at .gsd/phase-e2a-PLAN.md.
