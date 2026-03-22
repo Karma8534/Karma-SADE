@@ -53,7 +53,8 @@ The resurrect skill IS the session start protocol. It verifies Ascendant identit
 | Before doing this... | Invoke this skill first |
 |---------------------|------------------------|
 | Debugging any bug, test failure, or unexpected behavior | `superpowers:systematic-debugging` |
-| Creating features, building components, adding functionality | `superpowers:brainstorming` |
+| Creating features WITH no existing spec in PLAN.md and no `.gsd/phase-X-PLAN.md` | `superpowers:brainstorming` |
+| Creating features WITH existing spec in PLAN.md OR `.gsd/phase-X-PLAN.md` exists | **SKIP brainstorming** — write GSD docs from spec (if needed) then execute first task |
 | Claiming work is complete, fixed, or passing | `superpowers:verification-before-completion` |
 | Implementing any feature or bugfix | `superpowers:test-driven-development` |
 | Starting any session | `superpowers:using-superpowers` (via resurrect skill) |

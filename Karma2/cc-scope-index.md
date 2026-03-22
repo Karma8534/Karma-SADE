@@ -233,6 +233,14 @@ B001 [resurrect-no-autostart]:
 Rule: After Step 5 announcement, response MUST end with tool calls for item 2 — not prose. "Starting now." with no following tool call = B001 violation.
 Why: Step 5 annotated [immediately executes item 2] as prose, not contract. Session 118: CC announced "Starting now" and response terminated — Colby had to say "go". Wasted round-trip every session until fixed 2026-03-22.
 
+P044 [brainstorm-when-spec-exists]:
+Rule: Do NOT invoke superpowers:brainstorming when PLAN.md has full spec for the current task OR .gsd/phase-[X]-PLAN.md already exists. Write GSD docs from the spec and execute Task 1 immediately.
+Why: Session 120: K-3 had full spec in PLAN.md. Brainstorming was invoked anyway — asking "which signal source? a/b/c?" — wasting a full round-trip. PLAN.md IS the design. Brainstorming = only when no spec exists anywhere.
+
+B002 [wrap-missing-gsd-docs]:
+Rule: Before closing any session, .gsd/phase-[next-task]-PLAN.md MUST exist. If it doesn't, create it before closing. MEMORY.md item 2 must be the exact first atomic step from that file.
+Why: If GSD docs are missing at wrap, next session cold-starts on design work — invokes brainstorming, asks questions, loses the round-trip. The wrap creates the track; resurrect runs on it. Fixed Session 120: wrap-session Step 2c made mandatory.
+
 D014 [falkordb-oom-threshold]:
 Decision: FalkorDB OOM on 4GB droplet at ~1200 episodes without delta queries + tiered memory. Delta queries (new-only) and graph bounds (hot entities only) are required from launch.
 Why: 605 episodes = 200MB, 10k episodes (with indexes, active loop) = ~4.5GB — exceeds 4GB droplet. Mathematical projection validated Feb 19, 2026.

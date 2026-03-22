@@ -6,12 +6,15 @@
 
 
 **--> CURRENT SPRINT (start here each session):**
+> Session protocol: if `.gsd/phase-[task-id]-PLAN.md` exists → execute first incomplete task directly (no brainstorming). If not → write GSD docs from spec below (no questions). See resurrect Step 5b.
+
 1. ~~**K-1**~~ -- ✅ DONE 2026-03-21 — 145 CC sessions extracted to docs/ccSessions/from-cc-sessions/ (local, gitignored)
 2. ~~**K-2**~~ -- ✅ DONE 2026-03-22 — 122 English pages scraped to docs/knowledge/anthropic-docs/ (local, gitignored). Script: Scripts/scrape_anthropic_docs.py
-3. **E-1-A** -- Write corpus_builder.py (ledger instruction pairs, no GPU needed) -- P1
-4. **E-2-A** -- Install Unsloth Studio on K2 WSL -- P1
-5. **PROOF-A** -- Codex automated ArchonPrime service (only remaining Phase PROOF item)
-6. **S-1** -- Interface audit design (no prerequisites, background design task)
+3. **K-3** -- 🟡 PARTIAL — aria_echo.py (722L) distillation/goals/reflections DONE; missing: ambient_observer.py + vesper pipeline integration + proactive trigger. GSD: `.gsd/phase-k3-PLAN.md` ✅ exists
+4. **E-1-A** -- Write corpus_builder.py (ledger instruction pairs, no GPU needed) -- P1
+5. **E-2-A** -- Install Unsloth Studio on K2 WSL -- P1
+6. **PROOF-A** -- Codex automated ArchonPrime service (only remaining Phase PROOF item)
+7. **S-1** -- Interface audit design (no prerequisites, background design task)
 
 Read .gsd/STATE.md before picking. If it conflicts with this list, STATE.md wins.
 ---
@@ -603,7 +606,7 @@ These tasks feed CC's self-knowledge and Karma's behavioral evolution. No future
 - **Why this matters:** Echo is the mechanism for AC10 (Karma proactive outreach). It is already implemented as `_proactive_outreach()` in `karma_regent.py`. Echo intelligence makes it meaningful, not just scheduled pings.
 - **K2 implementation target:** `aria.py` + `karma_regent.py` — add `ambient_observer` class that feeds behavioral signals to the vesper watchdog
 - **Gate:** Karma sends one unprompted message based on an ambient observation (not a scheduled ping, not a random fact — a genuine inference from observed context)
-- **Status:** Pattern documented, not implemented in K2 code
+- **Status:** 🟡 PARTIAL — `aria_echo.py` (722L) implements distillation/goals/reflections, hooked into `aria_consciousness.py`. **Missing:** `ambient_observer.py` reading coordination bus → `regent_evolution.jsonl` → vesper pipeline → enhanced `_proactive_outreach()` ambient trigger. GSD plan: `.gsd/phase-k3-PLAN.md`
 
 ---
 

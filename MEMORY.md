@@ -1,3 +1,24 @@
+## Session 120 (2026-03-22) — Resurrect/Wrap/PLAN x5 audit + K-3 GSD docs created
+
+**DONE:**
+- Identified root cause of session-start questions: wrap never pre-created GSD docs → resurrect cold-started on design → brainstorming triggered
+- resurrect SKILL.md: Step 5 replaced with 5a (PLAN.md validation) + 5b CASE A/B/C (GSD path logic) + 5c (binding contract)
+- wrap-session SKILL.md: Step 2 expanded to 2a/2b/2c (GSD pre-creation MANDATORY)/2d (item 2 format enforcement)
+- CLAUDE.md: brainstorming table split — with-spec=SKIP, without-spec=invoke
+- Karma2/PLAN.md: K-3 at position 3 PARTIAL with `.gsd/phase-k3-PLAN.md ✅ exists`; K-3 status updated from stale to accurate
+- Created `.gsd/phase-k3-CONTEXT.md` (7 design decisions locked)
+- Created `.gsd/phase-k3-PLAN.md` (8 atomic tasks, Task 1 = read existing code)
+- cc-scope-index.md: added P044 (brainstorm-when-spec-exists) + B002 (wrap-missing-gsd-docs)
+- claude-mem: obs #9738 (DECISION pre-planned step), #9739 (DECISION brainstorm exception), #9740 (PROOF 7 files), #9741 (PITFALL P044)
+- Coordination bus: 4 entries dual-written
+
+**Current blockers:** None
+
+## Next Session Starts Here
+1. /resurrect
+2. K-3 Step 1: SSH to K2 and read aria_consciousness.py Echo step location + _proactive_outreach() line + vesper_watchdog.py source detection pattern
+**Blocker if any:** None — phase-k3-PLAN.md exists, Task 1 executes immediately
+
 ## Session 115 continued (2026-03-21) — PLAN.md 3-pass audit + PHASE SURFACE + PHASE EVOLVE complete
 
 **DONE:**
