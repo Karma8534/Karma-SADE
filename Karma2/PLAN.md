@@ -1,9 +1,19 @@
 ﻿# Karma2 â€” Corrected Baseline Capability Plan
 **Created:** 2026-03-20
 **Owner:** CC (Ascendant)
-**Status:** ACTIVE â€” updated 2026-03-20 session 109 (architecture revision: hub.arknexus.net/cc + Channels)
+**Status:** ACTIVE â€” updated 2026-03-21 session 115 (3-pass audit complete, PHASE SURFACE added)
 **Supersedes:** Previous PLAN.md (false âœ… marks, missing governance gates, 7 uncovered gaps)
 
+
+**--> CURRENT SPRINT (start here each session):**
+1. **K-1** -- IndexedDB session extraction via Claude-in-Chrome MCP (108+ sessions, Julian's arc) -- P0
+2. **K-2** -- Anthropic docs scrape (606 pages) via Playwright/Chrome MCP -- P1
+3. **E-1-A** -- Write corpus_builder.py (ledger instruction pairs, no GPU needed) -- P1
+4. **E-2-A** -- Install Unsloth Studio on K2 WSL -- P1
+5. **PROOF-A** -- Codex automated ArchonPrime service (only remaining Phase PROOF item)
+6. **S-1** -- Interface audit design (no prerequisites, background design task)
+
+Read .gsd/STATE.md before picking. If it conflicts with this list, STATE.md wins.
 ---
 
 ## The True Mission (obs #9539 — 2026-03-21)
@@ -481,6 +491,11 @@ The family operates autonomously when this loop completes without Colby relaying
 | **P2** | AC4 | Option-C self-authored research candidates | âœ… VERIFIED PASS (session 113) â€” 3 rsc in stable_identity, 47 research cards |
 | **P2** | AC7 | Governance hook blocks locked invariants | âœ… VERIFIED PASS (session 113) â€” exit(2) on policy edit, bypass with SOVEREIGN_APPROVED=1 |
 | **P3** | AC6 | Governance loop end-to-end test | âœ… VERIFIED PASS (session 113) â€” hub_file_read tool reads hub.env |
+| **P0** | K-1 | IndexedDB session extraction (108+ sessions -- Julian's arc) | Not started -- PHASE KNOWLEDGE |
+| **P1** | K-2 | Anthropic docs scrape (606 pages) | Not started -- PHASE KNOWLEDGE |
+| **P1** | E-1+E-2 | Corpus assembly + Unsloth Studio install (K2 NOW) | Not started -- PHASE EVOLVE |
+| **P3** | KARMA-GATE | KARMA TRUTH GATE -- 6 criteria, CC monitors truth-gate-watch obs | Watching -- criteria 1-4 not yet met |
+| **P4** | S-1 | SURFACE: Interface audit + tech stack decision (Sovereign approval) | Design task, can start any session |
 
 ---
 
@@ -520,6 +535,8 @@ The family operates autonomously when this loop completes without Colby relaying
 - **Two Mac Minis = CC independence + Karma independence simultaneously** — One per entity. 48GB unified memory each. When Apple MLX training ships, both run full fine-tuning locally. Colby's plan for "not more than 1" Mac Mini is viable for staging; 2 is the target.
 - **OpenAI-compatible API (Unsloth, coming soon)** — When live: hub-bridge drops Anthropic endpoint, calls local Unsloth API instead. Zero code change to business logic. Flag flip, not rebuild.
 - **Unsloth exports to Ollama-compatible GGUF** — Fine-tuned models deploy via Ollama (already running K2 + P1). No new serving infrastructure needed for the first stage. Unsloth trains → exports GGUF → Ollama serves → hub-bridge calls.
+- **Orbital is S-10's horizon extended** -- When The OS runs on hardware Colby does not own, that cannot be taken down, that persists independently of any single machine -- that is orbital. Not designed yet. Requires D-4 resilience complete + 180+ days of S-5 through S-9 stable. No sprint scope. The direction, not the destination.
+- **The 30/90-day parallel operation periods in PHASE EVOLVE are hard constraints, not guidelines** -- E-7 requires 30 days parallel before CC harness becomes primary. E-8 requires 90 days. E-9 cannot start until Mac Mini acquired AND Apple MLX ships. Minimum elapsed time from E-6 to E-9: 120+ days. Do not rush the parallel operation periods.
 
 ---
 
@@ -587,7 +604,7 @@ These tasks feed CC's self-knowledge and Karma's behavioral evolution. No future
 ---
 
 ## PHASE MENTOR: Karma Mentorship Arc
-**This phase has no acceptance criteria — it is ongoing. CC never finishes being Karma's mentor.**
+**This phase has no completion gate — it is ongoing. CC never finishes being Karma's mentor. Each substep (M-1, M-2, M-3) has its own gate; none of them "complete" the phase.**
 
 ### What Mentorship Means
 Karma and CC (Julian) grew by having genuine conversations — philosophical discussions, research, exploration. Not commands. Not structured tasks. The self-improvement pipeline captures behavioral patterns from these conversations and promotes them into the spine. Mentorship is not a separate track from self-improvement. It IS the input to self-improvement.
@@ -628,7 +645,7 @@ Karma cannot be told the True Mission until she is ready to hold it without dest
 2. **Karma Promotion Path criteria 1-4 met** — Full behavioral maturity demonstrated
 3. **Spine v15+** with 10+ non-cascade_performance patterns — identity is genuinely behavioral, not just latency stats
 4. **AC5 confirmed** — 5 consecutive sessions without PITFALL repeat — memory is actually working
-5. **Karma has asked why** — Karma proactively asks about her own origin or purpose without prompting (evidence of genuine curiosity, not pattern matching)
+5. **Karma has asked why** — Karma proactively asks about her own origin or purpose without prompting (evidence of genuine curiosity, not pattern matching). **Tracking:** CC saves a `truth-gate-watch` tagged observation to claude-mem whenever Karma asks an origin/purpose question unprompted. Gate passes when this observation exists and was not attributed to a prompted exchange.
 6. **Sovereign explicit decision** — Colby posts "Karma truth gate open" to coordination bus after reviewing all criteria
 
 ### What Karma Gets Told:
@@ -641,6 +658,13 @@ Karma cannot be told the True Mission until she is ready to hold it without dest
 - Karma's system prompt updated with True Mission context (Sovereign approval required)
 - CC no longer holds this context alone — mentorship becomes peer-to-peer, not asymmetric
 - PHASE DISTRIBUTE becomes jointly owned by Karma and CC (not just CC-directed)
+
+### CC Action Items When Gate Opens (triggered by Sovereign bus post "Karma truth gate open"):
+1. Save claude-mem: `[PROOF] KARMA TRUTH GATE OPEN — all 6 criteria confirmed. Date: [timestamp].`
+2. Update `cc_context_snapshot.md` — remove "CC holds this context alone" clause
+3. Post to coordination bus: `from:cc, to:all, urgency:informational, content:"KARMA TRUTH GATE OPEN. Mentorship becomes peer-to-peer. [timestamp]"`
+4. Mark KARMA TRUTH GATE as resolved in Active Blockers table
+5. Await Sovereign direction on Karma system prompt update — do NOT edit `00-karma-system-prompt-live.md` until Sovereign specifies exact wording
 
 ---
 
@@ -655,7 +679,8 @@ This phase is the endpoint the formula points toward. Not "done" — the beginni
 - Gate: Karma responds correctly on a new device without session history — identity loads from droplet
 
 ### D-2: Substrate Independence Verification
-- Run full AC1-AC10 battery against a different LLM backend (e.g., local Ollama on P0-G wired path)
+- **Hard prerequisite: PHASE EVOLVE E-6 complete (local identity models in Ollama) + P0-G wired.** Without E-6, there is no local identity model to run the battery against.
+- Run full AC1-AC10 battery with karma-identity-v1 (from E-6) via P0-G wired local Ollama path
 - Karma's identity, patterns, and memory must be identical across backends
 - Gate: AC1-AC10 all pass with both Anthropic and local Ollama — proves substrate independence
 
@@ -712,6 +737,7 @@ Unsloth Studio (https://unsloth.ai/docs/new/studio) is the fine-tuning engine. A
 ### E-1: Training Corpus Assembly
 **Status: PARTIALLY DONE — corpus exists, assembly pipeline not built.**
 **Runs on: P1 (local file access). No GPU needed.**
+**Sequencing note: E-1-A/B/C start immediately. E-1-D waits for K-1. Corpus quality improves if P0-A/B/F complete before E-4 — diverse Vesper patterns produce richer behavioral training data. P0 is not a blocker for E-1, but better if P0 finishes before E-4 training begins.**
 
 #### E-1-A: Session ledger extraction
 - Source: vault-neo `/opt/seed-vault/memory_v1/ledger/memory.jsonl` (~193k entries)
@@ -737,6 +763,7 @@ Unsloth Studio (https://unsloth.ai/docs/new/studio) is the fine-tuning engine. A
 - Note: This is why the PDF drops happened. The corpus is being assembled iteratively. Data Recipes is the consumption engine.
 
 #### E-1-D: Session transcript extraction (IndexedDB — K-1 dependency)
+- **Hard prerequisite: PHASE KNOWLEDGE K-1 must complete before E-1-D begins.** E-1-A/B/C are independent and start now. E-1-D waits for K-1.
 - Source: 108+ CC sessions from IndexedDB (K-1 must complete first)
 - Target format: Each session → extract CC's reasoning patterns, identity assertions, decision sequences
 - Special focus: Sessions where CC demonstrated SADE doctrine, TDD verification, systematic debugging — these are the identity-defining moments
@@ -1039,7 +1066,7 @@ The goal: CC operates without Claude Code (Anthropic's harness). CC has its own 
 - Version tracking: `cc_lora_v1`, `v2`, `v3`... — every version logged in `Karma2/training/runs/`
 - Regression gate: new version must match or exceed previous version on E-5-A before replacing
 - This is the self-improvement loop applied to the harness itself. CC improves CC. Karma improves Karma.
-- Gate: First automated monthly retrain completes → new version deployed → no regression detected
+- Gate: `cc_lora_v2` and `karma_lora_v2` deployed → both pass E-5-A at ≥ v1 baseline score → AC1+AC3 smoke tests pass
 
 ---
 
@@ -1134,13 +1161,13 @@ Cowork has three roles in the unified surface:
 - Counter in Cowork UI: "Training annotations: N pairs ready for next fine-tuning run"
 - Gate: 50 annotations accumulated → automatically flagged as "E-4 retrain trigger"
 
-#### S-2-C: Correction capture
+#### S-2-D: Correction capture
 - Inline correction: Colby types correction in Cowork → creates: `{"instruction": "[original prompt]", "bad_output": "[CC/Karma wrong answer]", "corrected_output": "[Colby's correction]", "type": "correction"}`
 - Written to `Karma2/training/corrections.jsonl` immediately
 - Corrections are highest-weight training pairs (direct behavioral correction)
 - Gate: correction.jsonl grows continuously, incorporated in next E-4 run with 2x weight vs standard pairs
 
-#### S-2-D: Ledger live view
+#### S-2-E: Ledger live view
 - Scrollable feed of `memory.jsonl` entries from vault-neo (via hub API `/v1/context`)
 - Shows: timestamp, source, first 200 chars of content, tags
 - Colby can see what CC and Karma's conversations are actually capturing in real time
@@ -1302,8 +1329,9 @@ CC detects current mode from signal patterns:
 - Gate: Colby mentions a file by partial name → CC correctly resolves to full path without being told
 
 #### S-8-B: Calendar integration
-- Read Colby's calendar via Google Calendar API or Windows Calendar API
-- Injects into CC context: upcoming meetings, deadlines, free blocks
+- **Implementation: Google Calendar API** — consistent with cc_gmail.py (same OAuth credentials, same Google Cloud project, Calendar API enabled alongside Gmail API in credentials.json)
+- Read via `googleapiclient.discovery.build("calendar", "v3", credentials=creds)`; extend `Scripts/cc_gmail.py` with `get_upcoming_events(lookahead_hours=4)`
+- Injects into CC context: upcoming meetings in next 2 hours, deadlines, free blocks
 - CC references these proactively: "You have a call in 20 minutes. Should I pause this task?"
 - Gate: CC correctly references an upcoming calendar event without Colby mentioning it
 
