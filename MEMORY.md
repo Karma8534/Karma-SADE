@@ -2524,6 +2524,5 @@ Next task: K-2 — Anthropic docs scrape (606 pages)
 
 ### Next Session Starts Here
 1. /resurrect
-2. Create Karma2/training/corpus_cc.jsonl (separate ledger pass, CC session tag filter)
-3. Add K2_INFERENCE_ENABLED=false to hub.env (P0-G wiring)
-**Blocker:** aria.service monitoring (watch for zombie PID pattern recurring).
+2. PROOF-A Task 1: Run `codex exec "What is 2+2? Answer in one word." --sandbox` from C:\Users\karma on P1 — verify non-interactive, no TUI, exits clean.
+**Blocker if any:** codex must be on PATH for karma user on P1. GSD docs at .gsd/phase-proof-a-PLAN.md.

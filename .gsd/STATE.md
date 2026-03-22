@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-22T10:30:00Z
-**Session:** 123 IN PROGRESS (Plan audit: PHASE EVOLVE tabled, K-3 PARTIAL, E-1-A PARTIAL, aria.service blocker identified)
+**Last updated:** 2026-03-22T14:30:00Z
+**Session:** 123 COMPLETE (Plan audit: PHASE EVOLVE tabled, K-3 DONE verified, E-1-A corpus_karma.jsonl done/corpus_cc.jsonl tabled, aria.service fixed, PROOF-A GSD docs created)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -111,19 +111,19 @@
 7. ~~**Arbiter config path gap**~~ ✅ RESOLVED (Session 93) — Config/ dir created at /mnt/c/dev/Karma/k2/Config/, governance_boundary_v1.json + critical_paths.json copied from tmp/p0-proof/Config/. PolicyArbiter loads correctly.
 8. ~~**4 pending bus messages from Karma**~~ ✅ BUS FIXED — watcher chaos cleared. Bus quiet, no auto-responders running.
 9. ~~**CC cohesion test pending**~~ — resume_block confirmed working in Session 97+.
-10. **B1: Evolution log sparsity** -- Spine v1228, 10 stable patterns (4 PITFALL + 5 research_skill_card + 1 ambient_observation). Pipeline active. Pattern diversity improved (P0-F Session 107). Remaining gap: ambient_observer.py not wired.
+10. **B1: Evolution log sparsity** -- Spine v1228, 10 stable patterns (4 PITFALL + 5 research_skill_card + 1 ambient_observation). Pipeline active. Pattern diversity improved (P0-F Session 107). K-3 ambient_observer.py WIRED (verified 2026-03-22 via aria_consciousness.py Phase 7). Blocker 10 RESOLVED.
 11. **B2: Synthetic stable patterns** -- RESOLVED: 10 diverse stable patterns now present (no longer all cascade_performance). research_skill_card + PITFALL types confirmed.
 12. ~~**P0N-A URGENT**~~ ✅ LIVE (Session 111) — hub.arknexus.net/cc working, CC Ascendant responds with identity + state.
 13. **P3-D** — ✅ LIVE as of session 109. Hooks deployed + committed. No longer a blocker.
 14. **K2 aria.service** -- FIXED 2026-03-22 (zombie PID holding port 7890 killed, service restarted, now active). Monitor for recurrence. If crash-loops again: check for orphan python3 processes, add ExecStartPre kill to service file.
-16. **E-1-A artifacts WRONG LOCATION** -- corpus_builder.py done, 2817 pairs at Logs/corpus_alpaca.jsonl. Gate requires corpus_cc.jsonl + corpus_karma.jsonl in Karma2/training/ (dir missing). Sprint item E-1-A incorrectly marked DONE.
-17. **P0-G dead code** -- callWithK2Fallback() exists in server.js (~10 refs) but K2_INFERENCE_ENABLED flag NOT in hub.env. Wiring incomplete.
+16. **E-1-A corpus_cc.jsonl pending** -- Karma2/training/ created (2026-03-22). corpus_karma.jsonl written (2817 pairs). corpus_cc.jsonl needs separate ledger pass with CC session tag filter. TABLED with PHASE EVOLVE.
+17. **P0-G dead code** -- callWithK2Fallback() exists in server.js (~10 refs) but K2_INFERENCE_ENABLED flag NOT in hub.env. Wiring incomplete. Tabled until P0-G resumes.
+18. **PROOF-A pending** -- Codex as automated ArchonPrime service. GSD docs created (phase-proof-a-CONTEXT.md + phase-proof-a-PLAN.md). Task 1: verify `codex exec --sandbox` non-interactive from KCC context.
 
 ## Next Session Starts Here
 1. /resurrect
-2. aria.service: Fixed (killed zombie PID holding port 7890). Monitor for stability. Restart_count was 1931 but service now active. Add auto-kill to service ExecStartPre if needed.
-3. Create Karma2/training/ + copy/split corpus_alpaca.jsonl into corpus_karma.jsonl (E-1-A gate completion)
-**Blocker:** aria.service restart monitoring needed (blocker 14 resolved); E-1-A artifacts wrong location (blocker 16); P0-G dead code (blocker 17).
+2. PROOF-A Task 1: Run `codex exec "What is 2+2? Answer in one word." --sandbox` from C:\Users\karma on P1 — verify non-interactive, no TUI, exits clean.
+**Blocker if any:** codex must be on PATH for karma user on P1. GSD docs at .gsd/phase-proof-a-PLAN.md.
 
 ---
 
@@ -591,7 +591,17 @@ Karma lost an entire conversation mid-session (2026-03-12 ~12:03 PM) after an `i
 
 **Active Blockers:** None.
 
-**Next Session Starts Here:**
-1. /resurrect
-2. E-2-A Step 1: SSH K2 tunnel, verify nvidia-smi + python3 + curl prerequisites for Unsloth Studio
-   GSD docs: .gsd/phase-e2a-PLAN.md (4 tasks pre-created)
+---
+
+## Session 123 (2026-03-22) — Plan Audit: PHASE EVOLVE Tabled, Gaps Resolved
+
+**Done:**
+- PHASE EVOLVE (Unsloth/training) tabled with explicit gate conditions in PLAN.md
+- K-3 re-verified DONE: aria_consciousness.py Phase 7 → ambient_observer.py → regent_evolution.jsonl → vesper_watchdog.extract_ambient_candidates() → spine. 1 ambient_observation stable pattern confirmed.
+- E-1-A: Karma2/training/ created. corpus_karma.jsonl written (2817 pairs). corpus_cc.jsonl tabled.
+- aria.service fixed: zombie PID 278124 killed, service active PID 278533.
+- PROOF-A GSD docs created: phase-proof-a-CONTEXT.md + phase-proof-a-PLAN.md (4 tasks)
+- P045: K-3 audit pitfall added to cc-scope-index.md
+- STATE.md blockers 14-18 updated
+
+**Active Blockers:** 16 (corpus_cc.jsonl tabled), 17 (P0-G dead code tabled), 18 (PROOF-A pending)
