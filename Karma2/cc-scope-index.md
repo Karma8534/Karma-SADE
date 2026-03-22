@@ -225,6 +225,14 @@ P042 [hub-auth-token-extension-not-hot-patchable]:
 Rule: Any hub endpoint auth token change requires simultaneous Chrome extension update + user reinstall. Extension token is in chrome.storage.local — not server-patchable.
 Why: Hub v2.1.0 switched to HUB_CAPTURE_TOKEN; extension kept sending old Vault bearer → all captures silently failed (popup 0/0, no error).
 
+P043 [brief-k2-status-unverified]:
+Rule: Never accept cc-session-brief.md "K2 Unavailable" as ground truth. Always run direct SSH at Step 1b: `ssh vault-neo "ssh -p 2223 -l karma localhost 'echo K2_REACHABLE'"`.
+Why: Brief probes Aria HTTP (port 7890); SSH tunnel is independent. Aria down ≠ K2 down. Skipping Step 1b loses resume_block + stable patterns for the entire session. Verified 2026-03-22: brief said Unavailable, direct SSH returned K2_REACHABLE + spine v38 instantly.
+
+B001 [resurrect-no-autostart]:
+Rule: After Step 5 announcement, response MUST end with tool calls for item 2 — not prose. "Starting now." with no following tool call = B001 violation.
+Why: Step 5 annotated [immediately executes item 2] as prose, not contract. Session 118: CC announced "Starting now" and response terminated — Colby had to say "go". Wasted round-trip every session until fixed 2026-03-22.
+
 D014 [falkordb-oom-threshold]:
 Decision: FalkorDB OOM on 4GB droplet at ~1200 episodes without delta queries + tiered memory. Delta queries (new-only) and graph bounds (hot entities only) are required from launch.
 Why: 605 episodes = 200MB, 10k episodes (with indexes, active loop) = ~4.5GB — exceeds 4GB droplet. Mathematical projection validated Feb 19, 2026.

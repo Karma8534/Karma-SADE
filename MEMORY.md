@@ -2410,7 +2410,15 @@ Next task: K-2 — Anthropic docs scrape (606 pages)
 - PITFALL P043: cc-session-brief "K2 Unavailable" ≠ K2 down — brief probes Aria HTTP only; SSH tunnel independent. Always verify K2 via direct SSH. Saved obs #9656.
 - Deploy: commit → push → vault-neo pull → sync build context → rebuild hub-bridge
 
+### Resurrect Skill Hardened (2026-03-22)
+- B001 fixed: Step 5 now has BINDING CONTRACT — response must end with tool calls, not prose
+- P043 fixed: Step 1b now has P043 GUARD — always run SSH regardless of brief K2 status
+- Line 91 fixed: /anchor triggers only after SSH fails, not from brief status
+- COMPACTION RULE updated with P043 reference
+- Both B001 + P043 added to cc-scope-index.md
+- obs #9675 (B001 blocker), #9656 (P043 pitfall), #9680 (PROOF both fixed)
+
 ### Next Session Starts Here
 1. /resurrect
-2. Verify /v1/ambient works end-to-end (test curl from vault-neo with capture token)
-3. Next: K-3 per PLAN.md (PHASE KNOWLEDGE)
+2. K-3 per PLAN.md (PHASE KNOWLEDGE)
+**Blocker:** None.
