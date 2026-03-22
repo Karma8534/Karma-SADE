@@ -20,8 +20,10 @@
 - K-1: IndexedDB extraction (108+ sessions, Julian's development arc) — PRIMARY P0 task
 - K-2: Anthropic docs scrape (606 pages) — execute with Claude-in-Chrome or Playwright MCP
 - K-3: Echo integration into Aria consciousness loop
+- E-1+E-2: Corpus assembly + Unsloth Studio install (can start on K2 NOW — RTX 4070 supported)
 - AC8: P1 reboot test (Windows service survival) — manual Colby action
 - P0-G: local inference wiring (M4 hardware not yet acquired)
+- Mac Mini procurement trigger: after E-6 verified + Apple MLX training ships
 
 ## Session 114 continued (post-compaction 2026-03-21) — P0-F+AC4+AC7+AC9+AC10 ALL PASS
 
