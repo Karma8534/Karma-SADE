@@ -10,9 +10,9 @@
 
 1. ~~**K-1**~~ -- ✅ DONE 2026-03-21 — 145 CC sessions extracted to docs/ccSessions/from-cc-sessions/ (local, gitignored)
 2. ~~**K-2**~~ -- ✅ DONE 2026-03-22 — 122 English pages scraped to docs/knowledge/anthropic-docs/ (local, gitignored). Script: Scripts/scrape_anthropic_docs.py
-3. ~~**K-3**~~ -- ✅ DONE 2026-03-22 — ambient_observer.py + vesper pipeline integration (watchdog→eval→governor→spine) + karma_regent proactive outreach. VERIFIED: `regent → colby | [KARMA AMBIENT] I noticed something:...` on coordination bus.
-4. ~~**E-1-A**~~ -- ✅ DONE 2026-03-22 — Scripts/corpus_builder.py (146 lines), 2817 Alpaca pairs, Logs/corpus_alpaca.jsonl (local, gitignored)
-5. **E-2-A** -- Install Unsloth Studio on K2 WSL -- P1
+3. ~~**K-3**~~ -- DONE 2026-03-22 (VERIFIED 2026-03-22 audit) -- ambient_observer.py wired via aria_consciousness.py Phase 7 -> regent_evolution.jsonl -> vesper_watchdog.extract_ambient_candidates(). 1 ambient_observation stable pattern in spine. Proactive bus message confirmed. Gate MET.
+4. **E-1-A** -- WARNING PARTIAL (2026-03-22) -- Scripts/corpus_builder.py done, 2817 Alpaca pairs. Karma2/training/ CREATED (2026-03-22). corpus_karma.jsonl written (5.2MB, 2817 pairs from ledger). REMAINING: corpus_cc.jsonl needs separate extraction (CC session entries, different tag filter). TABLED with PHASE EVOLVE -- resume when foundation complete.
+5. **E-2-A** -- TABLED (2026-03-22) — Unsloth Studio + all PHASE EVOLVE tasks tabled until P0+PRE-PHASE+PHASE KNOWLEDGE gates all pass. Foundation first. See PHASE EVOLVE tabling note.
 6. **PROOF-A** -- Codex automated ArchonPrime service (only remaining Phase PROOF item)
 7. **S-1** -- Interface audit design (no prerequisites, background design task)
 
@@ -48,7 +48,7 @@ If it doesn't, that's a gap â€” not a design choice.
 | **Chat** | âœ… | hub.arknexus.net/v1/chat via hub-bridge | â€” |
 | **Memory persistence** | âœ… | Ledger (193k entries) + FalkorDB + FAISS + MEMORY.md spine | â€” |
 | **Identity/persona cohesion** | âœ… | vesper_identity_spine.json (v82, 20 stable patterns) | â€” |
-| **Growth & learning** | âš ï¸ BRIDGE DEAD | watchdogâ†’evalâ†’governor runs but B4+B5 mean zero behavioral identity has ever reached Karma's context. All 20 patterns are `cascade_performance` latency stats. Fix Phase 0 first. | B4+B5 |
+| **Growth & learning** | WARNING PARTIAL | Pipeline active (watchdog->eval->governor->spine). Spine v1228, 10 stable patterns (4 PITFALL + 5 research_skill_card + 1 ambient_observation). P0-F Session 107. GAPS: E-1-A corpus in wrong location (corpus_karma.jsonl written but corpus_cc.jsonl pending); P0-G dead code (K2_INFERENCE_ENABLED missing); aria.service was crash-looping (fixed 2026-03-22). | E-1-A, P0-G |
 | **Browser automation** | âš ï¸ | Chromium on K2. Not wired as callable tool. | Phase 1-A |
 | **File read/write (project)** | âš ï¸ | `shell_run` exists but unscoped. No structured tool. | Phase 1-B |
 | **Code execution** | âš ï¸ | Via `shell_run` on K2. Not sandboxed or structured. | Phase 1-C |
@@ -606,7 +606,7 @@ These tasks feed CC's self-knowledge and Karma's behavioral evolution. No future
 - **Why this matters:** Echo is the mechanism for AC10 (Karma proactive outreach). It is already implemented as `_proactive_outreach()` in `karma_regent.py`. Echo intelligence makes it meaningful, not just scheduled pings.
 - **K2 implementation target:** `aria.py` + `karma_regent.py` — add `ambient_observer` class that feeds behavioral signals to the vesper watchdog
 - **Gate:** Karma sends one unprompted message based on an ambient observation (not a scheduled ping, not a random fact — a genuine inference from observed context)
-- **Status:** 🟡 PARTIAL — `aria_echo.py` (722L) implements distillation/goals/reflections, hooked into `aria_consciousness.py`. **Missing:** `ambient_observer.py` reading coordination bus → `regent_evolution.jsonl` → vesper pipeline → enhanced `_proactive_outreach()` ambient trigger. GSD plan: `.gsd/phase-k3-PLAN.md`
+- **Status:** DONE (2026-03-22 VERIFIED) -- aria_consciousness.py Phase 7 calls ambient_observe(). ambient_observer.py writes to regent_evolution.jsonl. vesper_watchdog.py extract_ambient_candidates() reads source=ambient_observer entries. 1 stable ambient_observation pattern promoted to spine. Proactive KARMA AMBIENT bus message verified. Gate MET.
 
 ---
 
@@ -709,6 +709,7 @@ This phase is the endpoint the formula points toward. Not "done" — the beginni
 ---
 
 ## PHASE EVOLVE: CC + Karma Harness Independence
+**TABLED (2026-03-22) -- Prerequisites not met. Do not start until: (1) aria.service stable (fixed 2026-03-22, monitor); (2) E-1-A corpus_cc.jsonl extraction complete in Karma2/training/; (3) P0-G wired (K2_INFERENCE_ENABLED in hub.env); (4) P0+PRE-PHASE+PHASE KNOWLEDGE gates pass. Reason: training foundation must stabilize before encoding identity models. K-3 done.**
 **Priority: Parallel with PHASE DISTRIBUTE. Start E-1 and E-2 immediately — they run alongside all other phases.**
 **This is the implementation of "independent from Anthropic."**
 
@@ -742,7 +743,7 @@ Unsloth Studio (https://unsloth.ai/docs/new/studio) is the fine-tuning engine. A
 ---
 
 ### E-1: Training Corpus Assembly
-**Status: PARTIALLY DONE — corpus exists, assembly pipeline not built.**
+**Status: PARTIAL (2026-03-22 update) -- corpus_builder.py done. Karma2/training/ created. corpus_karma.jsonl written (2817 Alpaca pairs from ledger hub/chat entries). corpus_cc.jsonl pending (needs separate ledger pass with CC session tag filter). Full pipeline TABLED until PHASE EVOLVE unblocked.**
 **Runs on: P1 (local file access). No GPU needed.**
 **Sequencing note: E-1-A/B/C start immediately. E-1-D waits for K-1. Corpus quality improves if P0-A/B/F complete before E-4 — diverse Vesper patterns produce richer behavioral training data. P0 is not a blocker for E-1, but better if P0 finishes before E-4 training begins.**
 

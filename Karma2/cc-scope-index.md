@@ -268,3 +268,5 @@ Evidence-only done: Never claim fixed without running verify_cmd and showing out
 Scratchpad at discovery: Write to cc_scratchpad.md the moment insight occurs — not batched at session end.
 TodoWrite canonical: Read before every action. Update immediately after every sub-step.
 Dual-write captures: Every DECISION/PROOF/PITFALL → MEMORY.md + claude-mem save_observation (both required).
+
+P045: K-3 audit — check aria_consciousness.py not karma_regent.py for ambient_observer wiring. Integration path: consciousness.py Phase 7 -> ambient_observer.py -> regent_evolution.jsonl -> vesper_watchdog. (obs #9890)

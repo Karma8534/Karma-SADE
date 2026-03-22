@@ -2509,3 +2509,21 @@ Next task: K-2 — Anthropic docs scrape (606 pages)
 1. /resurrect
 2. E-2-A Step 1: SSH to K2 via tunnel, verify nvidia-smi + python3 + curl (prerequisites check)
 **Blocker:** None. GSD docs at .gsd/phase-e2a-PLAN.md.
+
+
+## Session 123 (2026-03-22) — Plan Audit: PHASE EVOLVE Tabled + Gaps Fixed
+
+**DONE:**
+- PHASE EVOLVE (Unsloth/training) tabled — foundation not complete (E-1-A, P0-G, aria.service gaps)
+- K-3 verified DONE: aria_consciousness.py Phase 7 -> ambient_observer.py -> vesper_watchdog. 1 stable ambient_observation pattern confirmed.
+- E-1-A: Karma2/training/ created, corpus_karma.jsonl written (2817 pairs). corpus_cc.jsonl pending.
+- aria.service fixed: zombie PID 278124 killed (held port 7890), service active PID 278533.
+- STATE.md: 4 new blockers (14-17), Next Session updated.
+- P045 added to cc-scope-index.md (K-3 audit wrong integration point pitfall).
+- obs #9890-9893 saved.
+
+### Next Session Starts Here
+1. /resurrect
+2. Create Karma2/training/corpus_cc.jsonl (separate ledger pass, CC session tag filter)
+3. Add K2_INFERENCE_ENABLED=false to hub.env (P0-G wiring)
+**Blocker:** aria.service monitoring (watch for zombie PID pattern recurring).

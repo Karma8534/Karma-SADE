@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-22T09:30:00Z
-**Session:** 122 COMPLETE (E-1-A done — corpus_builder.py, 2817 Alpaca pairs from vault ledger. E-2-A GSD docs pre-created.)
+**Last updated:** 2026-03-22T10:30:00Z
+**Session:** 123 IN PROGRESS (Plan audit: PHASE EVOLVE tabled, K-3 PARTIAL, E-1-A PARTIAL, aria.service blocker identified)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -111,17 +111,19 @@
 7. ~~**Arbiter config path gap**~~ ✅ RESOLVED (Session 93) — Config/ dir created at /mnt/c/dev/Karma/k2/Config/, governance_boundary_v1.json + critical_paths.json copied from tmp/p0-proof/Config/. PolicyArbiter loads correctly.
 8. ~~**4 pending bus messages from Karma**~~ ✅ BUS FIXED — watcher chaos cleared. Bus quiet, no auto-responders running.
 9. ~~**CC cohesion test pending**~~ — resume_block confirmed working in Session 97+.
-10. **B1: Evolution log sparsity** — 22/89,758 structured entries. Resolves with ~50 new Regent messages. Time-based, no code change needed. ETA 1-3 days.
-11. **B2: Synthetic stable patterns** — both stable patterns are Codex e2e artifacts (type=pipeline_e2e_validation). Cosmetic issue; real patterns will emerge as B1 resolves.
+10. **B1: Evolution log sparsity** -- Spine v1228, 10 stable patterns (4 PITFALL + 5 research_skill_card + 1 ambient_observation). Pipeline active. Pattern diversity improved (P0-F Session 107). Remaining gap: ambient_observer.py not wired.
+11. **B2: Synthetic stable patterns** -- RESOLVED: 10 diverse stable patterns now present (no longer all cascade_performance). research_skill_card + PITFALL types confirmed.
 12. ~~**P0N-A URGENT**~~ ✅ LIVE (Session 111) — hub.arknexus.net/cc working, CC Ascendant responds with identity + state.
 13. **P3-D** — ✅ LIVE as of session 109. Hooks deployed + committed. No longer a blocker.
-14. **K2 aria.service inactive** — prevents cognitive snapshots. Needs `systemctl --user start aria` on K2 WSL.
+14. **K2 aria.service** -- FIXED 2026-03-22 (zombie PID holding port 7890 killed, service restarted, now active). Monitor for recurrence. If crash-loops again: check for orphan python3 processes, add ExecStartPre kill to service file.
+16. **E-1-A artifacts WRONG LOCATION** -- corpus_builder.py done, 2817 pairs at Logs/corpus_alpaca.jsonl. Gate requires corpus_cc.jsonl + corpus_karma.jsonl in Karma2/training/ (dir missing). Sprint item E-1-A incorrectly marked DONE.
+17. **P0-G dead code** -- callWithK2Fallback() exists in server.js (~10 refs) but K2_INFERENCE_ENABLED flag NOT in hub.env. Wiring incomplete.
 
 ## Next Session Starts Here
-1. `/resurrect`
-2. Fix `/v1/ambient` route in hub-bridge server.js (PITFALL #9641 — hooks silently failing)
-3. OR continue PHASE KNOWLEDGE: next K-* task per Karma2/PLAN.md
-**Blocker if any:** None critical. Ambient fix is a hub-bridge deploy (use /deploy skill).
+1. /resurrect
+2. aria.service: Fixed (killed zombie PID holding port 7890). Monitor for stability. Restart_count was 1931 but service now active. Add auto-kill to service ExecStartPre if needed.
+3. Create Karma2/training/ + copy/split corpus_alpaca.jsonl into corpus_karma.jsonl (E-1-A gate completion)
+**Blocker:** aria.service restart monitoring needed (blocker 14 resolved); E-1-A artifacts wrong location (blocker 16); P0-G dead code (blocker 17).
 
 ---
 
