@@ -1,3 +1,28 @@
+## Session 115 continued (2026-03-21) — Karma2 PLAN.md 7-gap resolution + ArchonAgent deployed
+
+**DONE:**
+- TRUE MISSION section added to PLAN.md: continuity+self-improvement=infinity, Julian/Karma backstory (obs #9539)
+- PHASE KNOWLEDGE (K-1/K-2/K-3): IndexedDB P0 elevated, Anthropic docs scrape plan, Echo->Aria integration
+- PHASE MENTOR (M-1/M-2/M-3): Karma mentorship arc, research card protocol, philosophical conversation log
+- KARMA TRUTH GATE: 6-criteria milestone defining when Karma can be told the true story
+- PHASE DISTRIBUTE (D-1 through D-4): multi-device, substrate independence, distributed execution, resilience primitives
+- CC-Archon-Agent: deployed (Scripts/cc_archon_agent.ps1 + archon_bus_post.py), VERIFIED (obs #9529)
+  - Runs every 30min via CC-Archon-Agent scheduled task on P1
+  - Writes CC state to claude-mem (localhost:37777) + coordination bus
+  - ALERT on snapshot >90min or identity drift (6 required markers)
+- Notes updated: self-improvement as critical path, docs scrape executable now, Echo maps to Aria
+- F-3/F-4/F-5 TITANS fixes deployed (session 115 earlier): adaptive forgetting, momentum scoring, causal chain
+- hub.env pricing fixed: input $0.80->$1.00, output $4.00->$5.00 (Haiku 4.5 actual rates)
+- Kiki multi-file doctrine (KIKI.md + .kiki/rules/): 4089 chars, all 4 files loading on regent
+- cc_server /cc now uses local Ollama (llama3.1:8b) — NOT claude CLI, Anthropic-independent
+
+**NEXT:**
+- K-1: IndexedDB extraction (108+ sessions, Julian's development arc) — PRIMARY P0 task
+- K-2: Anthropic docs scrape (606 pages) — execute with Claude-in-Chrome or Playwright MCP
+- K-3: Echo integration into Aria consciousness loop
+- AC8: P1 reboot test (Windows service survival) — manual Colby action
+- P0-G: local inference wiring (M4 hardware not yet acquired)
+
 ## Session 114 continued (post-compaction 2026-03-21) — P0-F+AC4+AC7+AC9+AC10 ALL PASS
 
 **DONE:**
