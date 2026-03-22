@@ -2372,3 +2372,27 @@ Next task: K-2 — Anthropic docs scrape (606 pages)
 2. K-2: scrape 606 Anthropic docs pages via Playwright MCP
 3. Save to docs/knowledge/anthropic-docs/, gitignore if needed, commit, wrap
 **Blocker:** None. K-2 has no prerequisites.
+
+## Session 117 (2026-03-22) — K-2 Complete + Ambient Pitfall Discovered
+
+### What Was Done
+- K-2 COMPLETE: 122 English Anthropic docs pages scraped from platform.claude.com/docs/en/
+  - Script: Scripts/scrape_anthropic_docs.py (Playwright headless browser, 1.9MB output)
+  - Output: docs/knowledge/anthropic-docs/ (local, gitignored — regeneratable)
+  - 122 entries appended to vault ledger (verified: 122 anthropic-docs tagged entries)
+  - FAISS auto-reindex triggered by ledger file change
+- PITFALL #9641 discovered: /v1/ambient NOT in hub-bridge server.js (0 occurrences)
+  - Ambient capture hooks (session-end, git post-commit) silently failing since unknown date
+  - Fix needed: add POST /v1/ambient route to hub-bridge
+  - PowerShell stdout pipe = UTF-16 LE — always use explicit file output for data transfer
+
+### Scripts Added
+- Scripts/scrape_anthropic_docs.py — Playwright scraper for Anthropic docs
+- Scripts/gen_docs_ledger_entries.py — generates UTF-8 JSONL ledger entries
+- Scripts/ingest_anthropic_docs.py — vault ingest (documents ambient pitfall)
+
+### Next Session Starts Here
+1. /resurrect
+2. Fix /v1/ambient route in hub-bridge (hub-bridge deploy needed)
+3. OR continue to K-3 (next PHASE KNOWLEDGE task per PLAN.md)
+**Blocker:** None critical. Ambient fix is important but not blocking.

@@ -7,7 +7,7 @@
 
 **--> CURRENT SPRINT (start here each session):**
 1. ~~**K-1**~~ -- ✅ DONE 2026-03-21 — 145 CC sessions extracted to docs/ccSessions/from-cc-sessions/ (local, gitignored)
-2. **K-2** -- Anthropic docs scrape (606 pages) via Playwright/Chrome MCP -- P1
+2. ~~**K-2**~~ -- ✅ DONE 2026-03-22 — 122 English pages scraped to docs/knowledge/anthropic-docs/ (local, gitignored). Script: Scripts/scrape_anthropic_docs.py
 3. **E-1-A** -- Write corpus_builder.py (ledger instruction pairs, no GPU needed) -- P1
 4. **E-2-A** -- Install Unsloth Studio on K2 WSL -- P1
 5. **PROOF-A** -- Codex automated ArchonPrime service (only remaining Phase PROOF item)
