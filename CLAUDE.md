@@ -58,6 +58,7 @@ The resurrect skill IS the session start protocol. It verifies Ascendant identit
 | Implementing any feature or bugfix | `superpowers:test-driven-development` |
 | Starting any session | `superpowers:using-superpowers` (via resurrect skill) |
 | Deploying hub-bridge or karma-server to vault-neo | `karma-verify` (post-deploy health check) |
+| Same acceptance criterion failed 3+ times | STOP — post findings to bus, escalate to Sovereign, no attempt #4 without explicit re-authorization |
 
 **Rationalization red flags** â€” if you think any of these, you're wrong:
 - "This is simple, I don't need the skill" â†’ Skills exist for simple things too
@@ -300,6 +301,16 @@ If any step missing: session doesn't end cleanly.
 ## Debugging Discipline
 Never guess. Prefer observable proofs: exact command â†’ expected output â†’ actual output.
 When runtime behavior changes unexpectedly, collect evidence before proposing a fix.
+
+## Anti-Drift Protocol (DeepAgents harness primitives â€" session 111+)
+
+**PLAN phase before any fix:** Before patching any file, state in text: "Source of truth for [X] is [file/endpoint], verified by reading [evidence]. Acceptance criterion: run [cmd], expect [output]." No code changes until written.
+
+**Loop circuit breaker:** Same acceptance criterion failed 3+ times â†’ STOP. Post findings to coordination bus. Await Sovereign direction. No attempt #4 without re-authorization.
+
+**TodoWrite is the canonical state machine:** Read TodoWrite before every action. Update immediately after every sub-step. Acceptance criterion failure marks task back to `in_progress`.
+
+**Context offloading:** Write investigation findings to `cc_scratchpad.md` at the moment of discovery â€" not batched at session end. Findings that stay only in context are lost on compaction.
 
 ## Deployment Procedure
 

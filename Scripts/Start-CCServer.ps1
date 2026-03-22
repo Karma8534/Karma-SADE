@@ -24,7 +24,7 @@ Write-Host "[cc-server] Starting cc_server_p1.py on port 7891 at $(Get-Date -For
 
 # Auto-restart loop — if server crashes, restart after 10s
 while ($true) {
-    $proc = Start-Process python -ArgumentList $Script `
+    $proc = Start-Process py -ArgumentList "-3",$Script `
         -WorkingDirectory $WorkDir `
         -RedirectStandardOutput $LogFile `
         -RedirectStandardError "$WorkDir\Logs\cc-server-err.log" `

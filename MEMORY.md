@@ -2396,3 +2396,7 @@ Next task: K-2 — Anthropic docs scrape (606 pages)
 2. Fix /v1/ambient route in hub-bridge (hub-bridge deploy needed)
 3. OR continue to K-3 (next PHASE KNOWLEDGE task per PLAN.md)
 **Blocker:** None critical. Ambient fix is important but not blocking.
+
+## Session 117 Wrap Complete (2026-03-22)
+- STATE.md: session updated to 117, Next Session Starts Here points to /v1/ambient fix
+- cc_context_snapshot.md: updated with Session 117 cognitive state

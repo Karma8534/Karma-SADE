@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-21T02:00:00Z
-**Session:** 111 COMPLETE (P0N-A bridge verified live — hub.arknexus.net/cc working as CC Ascendant)
+**Last updated:** 2026-03-22T01:00:00Z
+**Session:** 117 COMPLETE (K-2 done — 122 Anthropic docs scraped + ingested to vault ledger)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -119,9 +119,9 @@
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Bridge is live — no setup needed. Verify: hub.arknexus.net/cc in browser.
-3. **HAUL ASS: Fully implement Karma2/PLAN.md to 100%** — superpowers:subagent-driven-development + TDD + verification-before-completion. Run until all phases done.
-**Blocker if any:** cc_server must be running (start_cc_server.ps1 loop on P1).
+2. Fix `/v1/ambient` route in hub-bridge server.js (PITFALL #9641 — hooks silently failing)
+3. OR continue PHASE KNOWLEDGE: next K-* task per Karma2/PLAN.md
+**Blocker if any:** None critical. Ambient fix is a hub-bridge deploy (use /deploy skill).
 
 ---
 
