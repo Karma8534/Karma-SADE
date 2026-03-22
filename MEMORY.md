@@ -32,7 +32,7 @@
 
 ## Next Session Starts Here
 1. /resurrect
-2. E-1-A Step 1: Write `corpus_builder.py` — extract ledger instruction pairs for LoRA training (no GPU needed, P1)
+2. E-1-A Step 1: SSH to vault-neo, fetch 3 sample hub+chat ledger entries, confirm user/assistant field names (Task 1 of .gsd/phase-e1a-PLAN.md)
 **Blocker if any:** None
 
 ## Session 120 (2026-03-22) — Resurrect/Wrap/PLAN x5 audit + K-3 GSD docs created
