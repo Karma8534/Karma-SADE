@@ -2552,3 +2552,12 @@ Next task: K-2 — Anthropic docs scrape (606 pages)
 2. Fix research_skill_card convergence loop in Option-C (add 24h dedup + 0.05 improvement gate)
 3. Fix ambient_observer input quality (filter heartbeat spam before analysis)
 **Blocker:** K-1 real IndexedDB extraction is blocking HARVEST meaningful output and PRE-PHASE gate.
+
+## Session 125 — Archon Email Fix + Full System Audit
+
+**DONE:**
+- FIXED cc_email_daemon.py: snapshot read now uses utf-8-sig (strips BOM) + ASCII sanitize on summary. Root cause: double-encoded mojibake from PS cp1252 reads of UTF-8 source files.
+- FIXED cc_archon_agent.ps1: snapshot age now uses file LastWriteTime (not content regex). Old regex never matched Generated: 2026-03-22 (Session N) format -> perpetual SnapshotAge=9999/ALERT state.
+- Commit: email encoding + snapshot age fix
+
+**Ongoing:** Action items 2-7 from Sovereign in progress.

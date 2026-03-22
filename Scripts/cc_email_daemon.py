@@ -148,9 +148,14 @@ def _read_spine_info() -> dict:
 
 
 def _read_snapshot_summary() -> str:
-    """Read cc_context_snapshot.md, extract key fields for email content."""
+    """Read cc_context_snapshot.md, extract key fields for email content.
+
+    Uses utf-8-sig to strip the UTF-8 BOM that PowerShell Set-Content writes.
+    Sanitizes non-ASCII bytes (which are often double-encoded mojibake from
+    PowerShell reading source files with cp1252) before building email content.
+    """
     try:
-        text = SNAPSHOT_FILE.read_text(encoding="utf-8")
+        text = SNAPSHOT_FILE.read_text(encoding="utf-8-sig")  # strip BOM
         # Extract the most useful sections
         sections = []
         capture = False
@@ -164,7 +169,9 @@ def _read_snapshot_summary() -> str:
                 sections.append(line.strip())
             if len(sections) >= 25:
                 break
-        return "\n".join(sections)[:800]
+        summary = "\n".join(sections)[:800]
+        # Sanitize: replace any non-ASCII (mojibake or Unicode) with '?' for safe SMTP
+        return summary.encode("ascii", "replace").decode("ascii")
     except Exception:
         return "(snapshot unavailable)"
 

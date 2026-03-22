@@ -40,14 +40,13 @@ $SnapshotContent = ""
 if (Test-Path $SnapshotFile) {
     $SnapshotContent = Get-Content $SnapshotFile -Raw -Encoding UTF8
 
-    # Extract Generated timestamp
-    if ($SnapshotContent -match 'Generated:\s*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)') {
-        $SnapshotTimestamp = $Matches[1]
-        try {
-            $SnapDt = [datetime]::ParseExact($SnapshotTimestamp, "yyyy-MM-ddTHH:mm:ssZ", $null, [System.Globalization.DateTimeStyles]::AssumeUniversal)
-            $SnapshotAge = [int](($NowDt.ToUniversalTime() - $SnapDt).TotalMinutes)
-        } catch { $SnapshotAge = 9999 }
-    }
+    # Use file LastWriteTime for age — snapshot content timestamp format varies
+    # (avoids regex mismatch that caused perpetual SnapshotAge=9999/ALERT state)
+    try {
+        $SnapDt = (Get-Item $SnapshotFile).LastWriteTimeUtc
+        $SnapshotAge = [int](($NowDt.ToUniversalTime() - $SnapDt).TotalMinutes)
+        $SnapshotTimestamp = $SnapDt.ToString("yyyy-MM-ddTHH:mm:ssZ")
+    } catch { $SnapshotAge = 9999; $SnapshotTimestamp = "unknown" }
 
     # Extract active blockers (non-resolved)
     $Lines = $SnapshotContent -split "`n"
