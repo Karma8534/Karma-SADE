@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-22T05:30:00Z
-**Session:** 119 COMPLETE (wrap-session skill hardened — 5 fixes: cc_scratchpad write, D003 git, bus post, /resurrect enforced, hash verify)
+**Last updated:** 2026-03-22T07:15:00Z
+**Session:** 120 COMPLETE (resurrect/wrap/plan x5 audit — pre-planned next step principle, P044 brainstorm exception, K-3 GSD docs created)
 **Canonical source:** This file. Read at session start.
 
 ---
