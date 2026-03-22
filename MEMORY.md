@@ -2422,3 +2422,19 @@ Next task: K-2 — Anthropic docs scrape (606 pages)
 1. /resurrect
 2. K-3 per PLAN.md (PHASE KNOWLEDGE)
 **Blocker:** None.
+
+## Session 119 (2026-03-22) — wrap-session skill hardened
+
+**DONE:**
+- Systematic wrap-session evaluation: 5 issues identified (W002 CRITICAL, W004 CRITICAL, W003 HIGH, W005/W007 LOW)
+- W002 FIXED: cc_scratchpad.md SSH heredoc write added to Step 1 — resurrect Step 1b resume_block cognitive trail now populated every session
+- W003 FIXED: Step 4 git ops now use `powershell -Command "..."` — D003 compliance enforced
+- W004 FIXED: Coordination bus post added to Step 4 after push — DUAL-WRITE complete at wrap, watchdog evolution pipeline fed
+- W005 FIXED: `/resurrect` hardcoded as item 1 in "Next Session Starts Here" template
+- W007 FIXED: `git log -1 --oneline` added to Step 5 SSH call — vault-neo sync verifies commit hash
+- PROOF obs #9694 saved + bus coord_1774158924732 posted
+
+### Next Session Starts Here
+1. /resurrect
+2. K-3 per PLAN.md (PHASE KNOWLEDGE)
+**Blocker:** None.
