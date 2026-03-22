@@ -2526,3 +2526,29 @@ Next task: K-2 — Anthropic docs scrape (606 pages)
 1. /resurrect
 2. PROOF-A Task 1: Run `codex exec "What is 2+2? Answer in one word." --sandbox` from C:\Users\karma on P1 — verify non-interactive, no TUI, exits clean.
 **Blocker if any:** codex must be on PATH for karma user on P1. GSD docs at .gsd/phase-proof-a-PLAN.md.
+
+## Session 124 (2026-03-22) — Deep Reverse Analysis: 5 New PITFALLs, K-3/K-1/K-2 Corrected
+
+**DONE:**
+- Loaded systematic-debugging + brainstorming + harvest skills
+- Verified K-3 LIVE state: ambient_observer ran ONCE (aria.service crash-loop). Insight = heartbeat spam analysis. NOT real learning.
+- Verified research_skill_card convergence failure: 5 redundant persona_style cards promoted today, baseline 0.481->0.489, loop is broken (P049)
+- Verified K-1 DONE was CLI stubs (145 files, 2-message AC9 pings, zero content). Real IndexedDB extraction NOT STARTED (P050)
+- Verified K-2 PARTIAL: 122/606 pages (20%). Not DONE.
+- Verified vesper_pipeline_status.json does not exist. All total_promotions counts were fabricated (P051)
+- Verified spine field: evolution.stable_identity (not stable_patterns). Previous 0-count checks were wrong (P048)
+- PITFALL P047: PROOF-BY-WIRING — marking DONE on wiring not output quality
+- PITFALL P048: wrong spine field name
+- PITFALL P049: research_skill_card convergence loop
+- PITFALL P050: K-1 stub vs real extraction
+- PITFALL P051: ghost file metrics
+- HARVEST: 7 session files processed (all AC9 stubs, 0 extractable events). Watermark 108.
+- PLAN.md corrected: K-1/K-2/K-3 status, capability audit v82->v1232, AC4 loop noted
+- cc-scope-index.md: 5 new entries (P047-P051). Total: 50 entries.
+- obs #9939-9949 saved.
+
+### Next Session Starts Here
+1. /resurrect
+2. Fix research_skill_card convergence loop in Option-C (add 24h dedup + 0.05 improvement gate)
+3. Fix ambient_observer input quality (filter heartbeat spam before analysis)
+**Blocker:** K-1 real IndexedDB extraction is blocking HARVEST meaningful output and PRE-PHASE gate.

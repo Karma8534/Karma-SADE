@@ -8,9 +8,9 @@
 **--> CURRENT SPRINT (start here each session):**
 > Session protocol: if `.gsd/phase-[task-id]-PLAN.md` exists → execute first incomplete task directly (no brainstorming). If not → write GSD docs from spec below (no questions). See resurrect Step 5b.
 
-1. ~~**K-1**~~ -- ✅ DONE 2026-03-21 — 145 CC sessions extracted to docs/ccSessions/from-cc-sessions/ (local, gitignored)
-2. ~~**K-2**~~ -- ✅ DONE 2026-03-22 — 122 English pages scraped to docs/knowledge/anthropic-docs/ (local, gitignored). Script: Scripts/scrape_anthropic_docs.py
-3. ~~**K-3**~~ -- DONE 2026-03-22 (VERIFIED 2026-03-22 audit) -- ambient_observer.py wired via aria_consciousness.py Phase 7 -> regent_evolution.jsonl -> vesper_watchdog.extract_ambient_candidates(). 1 ambient_observation stable pattern in spine. Proactive bus message confirmed. Gate MET.
+1. ~~**K-1**~~ -- WARNING PARTIAL (2026-03-22 audit) -- 145 CLI stub sessions extracted (from-cc-sessions/, all 2-message AC9 test pings, zero learning content). REAL K-1 (IndexedDB 108+ historical sessions, Julian arc) = NOT STARTED. See PITFALL P050 (obs #9943).
+2. ~~**K-2**~~ -- WARNING PARTIAL (2026-03-22 audit) -- 122/606 pages scraped (20%). Gate requires 600+ pages indexed in FAISS. TABLED pending K-1 real extraction first.
+3. **K-3** -- WARNING (2026-03-22 audit) -- Gate technically met (1 ambient_obs promoted, proactive bus msg sent) BUT MECHANISM BROKEN: aria.service crash-looped, ran once. Insight = heartbeat spam analysis. research_skill_card loop: 5 redundant persona_style cards today, baseline not improving. See PITFALL P047+P049.
 4. **E-1-A** -- WARNING PARTIAL (2026-03-22) -- Scripts/corpus_builder.py done, 2817 Alpaca pairs. Karma2/training/ CREATED (2026-03-22). corpus_karma.jsonl written (5.2MB, 2817 pairs from ledger). REMAINING: corpus_cc.jsonl needs separate extraction (CC session entries, different tag filter). TABLED with PHASE EVOLVE -- resume when foundation complete.
 5. **E-2-A** -- TABLED (2026-03-22) — Unsloth Studio + all PHASE EVOLVE tasks tabled until P0+PRE-PHASE+PHASE KNOWLEDGE gates all pass. Foundation first. See PHASE EVOLVE tabling note.
 6. **PROOF-A** -- Codex automated ArchonPrime service (only remaining Phase PROOF item)
@@ -47,7 +47,7 @@ If it doesn't, that's a gap â€” not a design choice.
 |------------|--------|-----|-----|
 | **Chat** | âœ… | hub.arknexus.net/v1/chat via hub-bridge | â€” |
 | **Memory persistence** | âœ… | Ledger (193k entries) + FalkorDB + FAISS + MEMORY.md spine | â€” |
-| **Identity/persona cohesion** | âœ… | vesper_identity_spine.json (v82, 20 stable patterns) | â€” |
+| **Identity/persona cohesion** | âœ… | vesper_identity_spine.json (v1232, 10 stable_identity patterns (field: evolution.stable_identity)) | â€” |
 | **Growth & learning** | WARNING PARTIAL | Pipeline active (watchdog->eval->governor->spine). Spine v1228, 10 stable patterns (4 PITFALL + 5 research_skill_card + 1 ambient_observation). P0-F Session 107. GAPS: E-1-A corpus in wrong location (corpus_karma.jsonl written but corpus_cc.jsonl pending); P0-G dead code (K2_INFERENCE_ENABLED missing); aria.service was crash-looping (fixed 2026-03-22). | E-1-A, P0-G |
 | **Browser automation** | âš ï¸ | Chromium on K2. Not wired as callable tool. | Phase 1-A |
 | **File read/write (project)** | âš ï¸ | `shell_run` exists but unscoped. No structured tool. | Phase 1-B |
@@ -491,11 +491,11 @@ The family operates autonomously when this loop completes without Colby relaying
 | **P2** | PROOF-B | Regression detection after governor promotion | âœ… VERIFIED PASS (session 113) â€” AC1+AC3 pass post-surgery; governor spine backup added |
 | **P2** | AC9 | Full autonomous family loop | âœ… VERIFIED PASS (session 113) â€” busâ†’channels_bridgeâ†’CC serverâ†’bus reply |
 | **P2** | AC10 | Karma proactive outreach without prompting | âœ… IMPLEMENTED (session 113) â€” _proactive_outreach() in karma_regent.py |
-| **P2** | AC4 | Option-C self-authored research candidates | âœ… VERIFIED PASS (session 113) â€” 3 rsc in stable_identity, 47 research cards |
+| **P2** | AC4 | Option-C self-authored research candidates | âœ… VERIFIED PASS (session 113) â€” 3 rsc at s113 BUT NOW loop active (P049) -- 5 persona_style cards in 6h, baseline 0.481->0.489. AC4 gate real at s113, loop broken 2026-03-22. |
 | **P2** | AC7 | Governance hook blocks locked invariants | âœ… VERIFIED PASS (session 113) â€” exit(2) on policy edit, bypass with SOVEREIGN_APPROVED=1 |
 | **P3** | AC6 | Governance loop end-to-end test | âœ… VERIFIED PASS (session 113) â€” hub_file_read tool reads hub.env |
-| **P0** | K-1 | IndexedDB session extraction (108+ sessions -- Julian's arc) | Not started -- PHASE KNOWLEDGE |
-| **P1** | K-2 | Anthropic docs scrape (606 pages) | Not started -- PHASE KNOWLEDGE |
+| **P0** | K-1 | IndexedDB session extraction (108+ sessions -- Julian's arc) | PARTIAL -- 145 CLI stubs (AC9 pings). IndexedDB real corpus NOT STARTED. See PITFALL P050. |
+| **P1** | K-2 | Anthropic docs scrape (606 pages) | PARTIAL -- 122/606 pages. K-1 must complete first. |
 | **P1** | E-1+E-2 | Corpus assembly + Unsloth Studio install (K2 NOW) | Not started -- PHASE EVOLVE |
 | **P3** | KARMA-GATE | KARMA TRUTH GATE -- 6 criteria, CC monitors truth-gate-watch obs | Watching -- criteria 1-4 not yet met |
 | **P4** | S-1 | SURFACE: Interface audit + tech stack decision (Sovereign approval) | Design task, can start any session |

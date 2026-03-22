@@ -270,3 +270,11 @@ TodoWrite canonical: Read before every action. Update immediately after every su
 Dual-write captures: Every DECISION/PROOF/PITFALL → MEMORY.md + claude-mem save_observation (both required).
 
 P045: K-3 audit — check aria_consciousness.py not karma_regent.py for ambient_observer wiring. Integration path: consciousness.py Phase 7 -> ambient_observer.py -> regent_evolution.jsonl -> vesper_watchdog. (obs #9890)
+
+## Session 124 Additions (2026-03-22 reverse analysis)
+
+P047 [proof-by-wiring]: Rule: Never mark DONE based on pipeline wiring alone -- verify output quality against stated goal. | Why: K-3 wired but ambient_observer ran once (heartbeat spam in, useless insight out); aria.service crash-loop caused silence.
+P048 [spine-field-name]: Rule: Spine patterns are at s[evolution][stable_identity], NOT s[stable_patterns]. | Why: Previous checks used wrong field name, returning 0 patterns and causing false diagnosis every session.
+P049 [research-card-loop]: Rule: Add dedup guard (24h min) on research card generation per metric + require 0.05 baseline improvement before next card for same metric. | Why: Option-C promotes same persona_style card every 90min with baseline barely moving (0.481->0.489 over 5 cycles).
+P050 [k1-stub-extraction]: Rule: K-1 DONE requires real IndexedDB sessions (>50KB each, conversation content) not CLI stubs. Verify size + content before marking. | Why: 145 extracted files are 2-message AC9 test pings (4.7KB) with zero learning value. Real IndexedDB (Julian arc) NOT STARTED.
+P051 [ghost-pipeline-file]: Rule: Always verify a file exists via SSH before citing metrics from it. | Why: vesper_pipeline_status.json never existed -- all total_promotions counts were fabricated from a ghost file reference.
