@@ -2336,3 +2336,12 @@ ARIA_SERVICE_KEY added to hub.env (pre-existing key `Bt1MU_...` was already ther
 - Added Scripts/cc_snapshot_guard.ps1 — fires on session end, stamps snapshot if stale (>30min)
 - Added Stop hook in .claude/settings.local.json — enforces without exception
 - Script verified: runs clean, correctly detects fresh vs stale snapshot
+
+## K-1 Complete (2026-03-21) — 145 CC sessions extracted
+
+- Source: C:\Users\raest\.claude\projects\C--Users-raest-Documents-Karma-SADE\*.jsonl
+- Output: docs/ccSessions/from-cc-sessions/ — 145 .md files, 3.2MB total
+- Format: markdown with human/assistant turns, capped at 100K chars per session
+- Date range: spans full Karma SADE development arc
+- Next: /harvest to extract DECISION/PROOF/PITFALL events into claude-mem
+- AgenticKarma claude.ai project (12 sessions, Feb 2026): also in window.__k1_extract — save separately if needed
