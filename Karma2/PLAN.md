@@ -6,7 +6,7 @@
 
 
 **--> CURRENT SPRINT (start here each session):**
-1. **K-1** -- IndexedDB session extraction via Claude-in-Chrome MCP (108+ sessions, Julian's arc) -- P0
+1. ~~**K-1**~~ -- ✅ DONE 2026-03-21 — 145 CC sessions extracted to docs/ccSessions/from-cc-sessions/ (local, gitignored)
 2. **K-2** -- Anthropic docs scrape (606 pages) via Playwright/Chrome MCP -- P1
 3. **E-1-A** -- Write corpus_builder.py (ledger instruction pairs, no GPU needed) -- P1
 4. **E-2-A** -- Install Unsloth Studio on K2 WSL -- P1

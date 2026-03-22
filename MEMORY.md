@@ -2345,3 +2345,6 @@ ARIA_SERVICE_KEY added to hub.env (pre-existing key `Bt1MU_...` was already ther
 - Date range: spans full Karma SADE development arc
 - Next: /harvest to extract DECISION/PROOF/PITFALL events into claude-mem
 - AgenticKarma claude.ai project (12 sessions, Feb 2026): also in window.__k1_extract — save separately if needed
+
+## K-1 marked complete in CURRENT SPRINT (2026-03-21)
+Next task: K-2 — Anthropic docs scrape (606 pages)
