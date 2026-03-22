@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-22T14:30:00Z
-**Session:** 123 COMPLETE (Plan audit: PHASE EVOLVE tabled, K-3 DONE verified, E-1-A corpus_karma.jsonl done/corpus_cc.jsonl tabled, aria.service fixed, PROOF-A GSD docs created)
+**Last updated:** 2026-03-22T19:30:00Z
+**Session:** 125 COMPLETE (Email mojibake + archon ALERT fixed, full Karma2 ground-truth audit, HARVEST ran (206 stubs/2 real transcripts pending), audit report emailed to Sovereign, aria.service re-entered crash loop — GSD phase-aria-crash created)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -115,15 +115,15 @@
 11. **B2: Synthetic stable patterns** -- RESOLVED: 10 diverse stable patterns now present (no longer all cascade_performance). research_skill_card + PITFALL types confirmed.
 12. ~~**P0N-A URGENT**~~ ✅ LIVE (Session 111) — hub.arknexus.net/cc working, CC Ascendant responds with identity + state.
 13. **P3-D** — ✅ LIVE as of session 109. Hooks deployed + committed. No longer a blocker.
-14. **K2 aria.service** -- FIXED 2026-03-22 (zombie PID holding port 7890 killed, service restarted, now active). Monitor for recurrence. If crash-loops again: check for orphan python3 processes, add ExecStartPre kill to service file.
+14. **K2 aria.service** -- ⚠️ CRASH LOOP RECURRENCE (Session 125 audit, 2026-03-22 ~14:00 UTC). Was fixed Session 123 (zombie PID killed). Re-entered crash loop, restart #2015+. Root cause unknown — journalctl traceback NOT read. GSD: phase-aria-crash-PLAN.md Task 1 = read traceback. CRITICAL blocker: ambient pipeline, shell_run, /api/exec all dead.
 16. **E-1-A corpus_cc.jsonl pending** -- Karma2/training/ created (2026-03-22). corpus_karma.jsonl written (2817 pairs). corpus_cc.jsonl needs separate ledger pass with CC session tag filter. TABLED with PHASE EVOLVE.
 17. **P0-G dead code** -- callWithK2Fallback() exists in server.js (~10 refs) but K2_INFERENCE_ENABLED flag NOT in hub.env. Wiring incomplete. Tabled until P0-G resumes.
 18. **PROOF-A pending** -- Codex as automated ArchonPrime service. GSD docs created (phase-proof-a-CONTEXT.md + phase-proof-a-PLAN.md). Task 1: verify `codex exec --sandbox` non-interactive from KCC context.
 
 ## Next Session Starts Here
 1. /resurrect
-2. PROOF-A Task 1: Run `codex exec "What is 2+2? Answer in one word." --sandbox` from C:\Users\karma on P1 — verify non-interactive, no TUI, exits clean.
-**Blocker if any:** codex must be on PATH for karma user on P1. GSD docs at .gsd/phase-proof-a-PLAN.md.
+2. aria-crash Task 1: SSH to K2, run `journalctl --user -xe -u aria.service -n 100 --no-pager` to get Python startup traceback — then fix root cause
+**Blocker if any:** K2 SSH must be reachable (vault-neo reverse tunnel). GSD docs at .gsd/phase-aria-crash-PLAN.md.
 
 ---
 

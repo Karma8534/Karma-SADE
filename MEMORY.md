@@ -2565,5 +2565,5 @@ Next task: K-2 — Anthropic docs scrape (606 pages)
 
 ### Next Session Starts Here
 1. /resurrect
-2. Diagnose aria.service crash loop on K2 (systemd journal + python traceback)
+2. aria-crash Task 1: SSH to K2, run journalctl --user -xe -u aria.service -n 100 to get Python startup traceback
 **Blocker:** aria.service restart #2015+ -- ambient pipeline + shell_run dead until fixed.
