@@ -2496,3 +2496,16 @@ Next task: K-2 — Anthropic docs scrape (606 pages)
 1. /resurrect
 2. K-3 per PLAN.md (PHASE KNOWLEDGE)
 **Blocker:** None.
+
+## Session 122 (2026-03-22) — E-1-A: Corpus Builder
+
+**DONE:**
+- E-1-A Task 1: Ledger sample fetched — user_message, assistant_text/assistant_message fields confirmed
+- E-1-A Task 2: Scripts/corpus_builder.py written (146 lines) — SSH streams ledger, Alpaca JSONL output
+- E-1-A Task 3: --limit 100 run verified — 100 lines, valid instruction/input/output structure
+- E-1-A Task 4: Full run — 2817 pairs, 5.2MB, Logs/corpus_alpaca.jsonl (gitignored, exists locally)
+
+### Next Session Starts Here
+1. /resurrect
+2. E-2-A per PLAN.md (next PHASE KNOWLEDGE task)
+**Blocker:** None.
