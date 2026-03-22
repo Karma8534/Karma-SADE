@@ -2400,3 +2400,17 @@ Next task: K-2 — Anthropic docs scrape (606 pages)
 ## Session 117 Wrap Complete (2026-03-22)
 - STATE.md: session updated to 117, Next Session Starts Here points to /v1/ambient fix
 - cc_context_snapshot.md: updated with Session 117 cognitive state
+
+## Session 118 (2026-03-22) — /v1/ambient route added to hub-bridge
+
+**DONE:**
+- Added POST /v1/ambient route to hub-bridge/app/server.js (line 3403)
+- Auth: HUB_CAPTURE_TOKEN; normalizes via buildVaultRecord(); writes to vault /v1/memory
+- Fixes silently-failing session-end + git post-commit ambient hooks (unknown duration)
+- PITFALL P043: cc-session-brief "K2 Unavailable" ≠ K2 down — brief probes Aria HTTP only; SSH tunnel independent. Always verify K2 via direct SSH. Saved obs #9656.
+- Deploy: commit → push → vault-neo pull → sync build context → rebuild hub-bridge
+
+### Next Session Starts Here
+1. /resurrect
+2. Verify /v1/ambient works end-to-end (test curl from vault-neo with capture token)
+3. Next: K-3 per PLAN.md (PHASE KNOWLEDGE)

@@ -3400,6 +3400,47 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    // --- POST /v1/ambient ---
+    // Accepts ambient capture payloads from internal hooks (git post-commit, session-end, K2 push cron).
+    // Auth: HUB_CAPTURE_TOKEN. Normalizes and writes to vault /v1/memory.
+    if (req.method === "POST" && req.url === "/v1/ambient") {
+      const token = bearerToken(req);
+      if (!HUB_CAPTURE_TOKEN || !token || token !== HUB_CAPTURE_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+
+      const raw = await parseBody(req);
+      let body;
+      try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+
+      if (!body.type || !body.content) {
+        return json(res, 400, { ok: false, error: "type and content required" });
+      }
+
+      const record = buildVaultRecord({
+        type: body.type,
+        content: body.content,
+        tags: body.tags,
+        source: body.source?.ref || String(body.source || "ambient"),
+        confidence: body.confidence,
+        verifiedAtIso: body.verification?.verified_at,
+        verifier: body.verification?.verifier,
+        verificationNotes: body.verification?.notes,
+      });
+
+      const r = await vaultPost("/v1/memory", VAULT_BEARER, record);
+      if (r.status >= 300) {
+        console.error(`[AMBIENT] vault write failed: ${r.status} ${r.text?.slice(0, 200)}`);
+        return json(res, 502, { ok: false, error: "vault_write_failed", status: r.status });
+      }
+
+      let vaultId;
+      try { vaultId = JSON.parse(r.text)?.id; } catch { vaultId = null; }
+      const tagStr = Array.isArray(body.tags) ? body.tags.join(",") : "";
+      console.log(`[AMBIENT] captured: type=${body.type} tags=${tagStr} vault_id=${vaultId}`);
+      return json(res, 200, { ok: true, id: vaultId });
+    }
+
     // --- POST /v1/ingest ---
     // Accepts a base64-encoded PDF/text file, sends to Karma for evaluation,
     // detects ASSIMILATE/DEFER/DISCARD signal, writes synthesis to FalkorDB.
