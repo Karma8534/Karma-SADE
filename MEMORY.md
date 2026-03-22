@@ -2561,3 +2561,9 @@ Next task: K-2 — Anthropic docs scrape (606 pages)
 - Commit: email encoding + snapshot age fix
 
 **Ongoing:** Action items 2-7 from Sovereign in progress.
+
+
+### Next Session Starts Here
+1. /resurrect
+2. Diagnose aria.service crash loop on K2 (systemd journal + python traceback)
+**Blocker:** aria.service restart #2015+ -- ambient pipeline + shell_run dead until fixed.
