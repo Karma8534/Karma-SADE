@@ -1,0 +1,226 @@
+version: "1"
+# Karma Peer — Declarative Harness Policy (RuleZ-compatible)
+# Generated: 2026-03-22 | Source: 3LayerHarness.PDF analysis (Session 126)
+#
+# LAYER MAPPING (Boeckeler / Hightower 3-Layer Model):
+#   Layer 1 — Context Engineering: dynamic injection, compaction cliff prevention
+#   Layer 2 — Architectural Constraints: deterministic blocks, governance gates
+#   Layer 3 — Feedback Loops: failure capture, incident→rule pipeline
+#
+# STATUS: Native Claude Code settings.json is the active enforcement mechanism.
+# This file is RuleZ-compatible documentation + future activation target.
+# Install RuleZ for sub-10ms Rust enforcement:
+#   claude plugins install github:SpillwaveSolutions/agent_rulez
+#
+# Core philosophy (3LayerHarness.PDF p.24):
+#   "Context engineering asks: What do we show the agent?
+#    Harness engineering asks: What do we prevent, measure, control, and fix?"
+#   "The model is the CPU. The harness is the OS."
+
+settings:
+  fail_open: true        # On rule eval error, allow (don't silently block work)
+  script_timeout: 5      # 5s max for validator scripts
+  log_level: "info"      # Log all rule firings
+
+rules:
+
+  # =========================================================
+  # LAYER 2: ARCHITECTURAL CONSTRAINTS (deterministic gates)
+  # =========================================================
+
+  - name: block-force-push
+    description: "Prevents force push — can destroy shared git history"
+    priority: 1
+    mode: enforce
+    matchers:
+      operations: [PreToolUse]
+      tools: [Bash]
+      command_match: "git push.*(--force|-f)"
+    actions:
+      block: true
+    metadata:
+      reason: "Force push destroys shared git history. Use PR workflow."
+      confidence: "high"
+
+  - name: block-hard-reset
+    description: "Blocks git reset --hard — destroys uncommitted work"
+    priority: 1
+    mode: enforce
+    matchers:
+      operations: [PreToolUse]
+      tools: [Bash]
+      command_match: "git reset --hard"
+    actions:
+      inject_inline: |
+        ⚠️ **git reset --hard BLOCKED** — This destroys uncommitted work permanently.
+        Use `git stash` to save work first, or `git diff HEAD` to review what would be lost.
+        If you truly need to reset: set SOVEREIGN_APPROVED=1 and retry.
+
+  - name: locked-invariant-guard
+    description: "Blocks edits to SovereignPeer policy without SOVEREIGN_APPROVED=1 (P3-D)"
+    priority: 2
+    mode: enforce
+    matchers:
+      operations: [PreToolUse]
+      tools: [Edit, Write, NotebookEdit]
+    actions:
+      run: .claude/hooks/locked-invariant-guard.py
+    metadata:
+      reason: "Locked Invariants per Karma2/PLAN.md §Locked Invariants. Sovereign (Colby) approval required."
+      ticket: "P3-D CCTrustVerify"
+      confidence: "high"
+
+  - name: secret-scan-on-push
+    description: "Secret scan before git push (Windows-safe Python re scanner)"
+    priority: 2
+    mode: enforce
+    matchers:
+      operations: [PreToolUse]
+      tools: [Bash]
+      command_match: "git push"
+    actions:
+      run: .claude/hooks/quality-gate.py
+    metadata:
+      reason: "Prevent secrets in git history. Uses Python re (not grep) for Windows compatibility."
+
+  - name: warn-vault-neo-direct-edit
+    description: "Warns when writing directly to vault-neo source files (droplet = deploy target only)"
+    priority: 5
+    mode: warn
+    matchers:
+      operations: [PreToolUse]
+      tools: [Bash]
+      command_match: "(vim|nano|tee |echo .* >|cat .* >) .*(server\\.js|\\.py|\\.sh)"
+    actions:
+      inject_inline: |
+        ⚠️ **P004/D002: DROPLET IS A DEPLOYMENT TARGET — NOT A DEV ENVIRONMENT**
+        Never edit files directly on vault-neo. The correct workflow:
+          1. Edit on P1 → git commit → git push origin main
+          2. ssh vault-neo "cd /home/neo/karma-sade && git pull"
+          3. Rebuild Docker image if karma-core/ changed
+        Session-58: 1754 lines of production code written directly on droplet, never in git.
+        One `git checkout .` would have destroyed it permanently.
+    metadata:
+      reason: "P004: cp -r silently skips existing files. Direct edits on vault-neo are never in git."
+
+  - name: warn-k2-wrong-ssh-user
+    description: "Catches neo@localhost for K2 — K2 has no neo account"
+    priority: 5
+    mode: warn
+    matchers:
+      operations: [PreToolUse]
+      tools: [Bash]
+      command_match: "ssh.*(neo@localhost.*2223|2223.*neo@localhost)"
+    actions:
+      inject_inline: |
+        ⚠️ **D007: WRONG K2 SSH USER** — K2 has no `neo` account.
+        Correct command: `ssh -p 2223 -l karma localhost '...'`
+        Or via vault-neo: `ssh vault-neo "ssh -p 2223 -l karma localhost '...'"`
+
+  - name: warn-docker-restart-no-env
+    description: "Warns that docker restart does not re-read hub.env"
+    priority: 5
+    mode: warn
+    matchers:
+      operations: [PreToolUse]
+      tools: [Bash]
+      command_match: "docker restart anr-hub-bridge"
+    actions:
+      inject_inline: |
+        ⚠️ **P006: docker restart does NOT re-read hub.env**
+        To pick up new env_file entries: `docker compose -f compose.hub.yml up -d`
+        (docker restart reuses existing container env — new entries are invisible)
+
+  - name: warn-cp-r-overwrite
+    description: "Warns that cp -r silently skips existing files (P004)"
+    priority: 5
+    mode: warn
+    matchers:
+      operations: [PreToolUse]
+      tools: [Bash]
+      command_match: "cp -r "
+    actions:
+      inject_inline: |
+        ⚠️ **P004: cp -r silently skips files already present in dest/**
+        Use explicit per-file copies: `cp /path/source/file /path/dest/file`
+        This is the #1 cause of stale build context deploys.
+
+  - name: warn-heredoc-js-py-write
+    description: "Warns against heredoc to write JS/Python files on vault-neo (P019)"
+    priority: 5
+    mode: warn
+    matchers:
+      operations: [PreToolUse]
+      tools: [Bash]
+      command_match: "EOF.*\\.js|EOF.*\\.py|cat <<.*\\.js|cat <<.*\\.py"
+    actions:
+      inject_inline: |
+        ⚠️ **P019: HEREDOC CORRUPTS JS/PY FILES** — \\n in heredoc becomes literal newline.
+        JavaScript sees unterminated string literal → SyntaxError.
+        Write file locally then scp to vault-neo. Never use heredoc to write source files.
+
+  # =========================================================
+  # LAYER 1: CONTEXT ENGINEERING (dynamic injection)
+  # =========================================================
+
+  - name: scope-rules-on-session-start
+    description: "Inject CC scope PITFALL/DECISION rules at session start (Layer 1)"
+    priority: 80
+    matchers:
+      operations: [SessionStart]
+    actions:
+      inject: Karma2/cc-scope-index.md
+    metadata:
+      reason: "Layer 1: Inject full PITFALL/DECISION index at cold start for immediate context."
+
+  - name: compaction-cliff-guard
+    description: "Re-inject scope rules on every user message — prevents compaction cliff (Layer 1)"
+    priority: 90
+    matchers:
+      operations: [UserPromptSubmit]
+    actions:
+      run: .claude/hooks/compaction-cliff-guard.py
+    metadata:
+      reason: |
+        Layer 1 + Layer 3 feedback: cc-scope-index.md disappears mid-session when context
+        compacts. Event-driven re-injection on every UserPromptSubmit ensures PITFALL rules
+        are always present. Reference: 3LayerHarness.PDF p.55-56 (compaction cliff).
+
+  # =========================================================
+  # LAYER 3: FEEDBACK LOOPS (incident capture → rule pipeline)
+  # =========================================================
+
+  - name: tool-failure-logger
+    description: "Auto-capture tool failures to Logs/cc_tool_failures.log (Layer 3)"
+    priority: 90
+    matchers:
+      operations: [PostToolUseFailure]
+    actions:
+      run: .claude/hooks/post-tool-failure-logger.py
+    metadata:
+      reason: |
+        Layer 3: Every tool failure is a harness improvement opportunity.
+        Auto-capture removes the requirement for manual PITFALL logging.
+        Pipeline: failure logged → CC reviews Logs/cc_tool_failures.log at session end →
+        new PITFALL added to cc-scope-index.md → injected by compaction-cliff-guard.
+        "Each line is an improvement to the system." — Mitchell Hashimoto
+
+  - name: session-end-ambient-capture
+    description: "Capture CC session metadata to vault ledger at session end (Layer 3)"
+    priority: 90
+    matchers:
+      operations: [SessionEnd]
+    actions:
+      run: .claude/hooks/session-end.sh
+    metadata:
+      reason: "Layer 3: All CC sessions recorded to vault ledger for Karma's consciousness pipeline."
+
+  - name: stop-governance-audit
+    description: "Advisory audit at session stop — check for unapproved locked invariant edits"
+    priority: 90
+    matchers:
+      operations: [Stop]
+    actions:
+      run: .claude/hooks/governance-audit.py
+    metadata:
+      reason: "Layer 3: Advisory check — warns if locked invariant files were modified without approval."

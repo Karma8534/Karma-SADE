@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
 """
 Locked Invariant Guard — PreToolUse hook (CCTrustVerify P3-D)
-Blocks Edit/Write to governance-critical files without SOVEREIGN_APPROVED=1.
+Blocks Edit/Write/NotebookEdit to governance-critical files without SOVEREIGN_APPROVED=1.
 Exit code 2 = HARD BLOCK. This is not a suggestion.
+
+Locked files per Karma2/PLAN.md §Locked Invariants:
+  - karma_contract_policy  — SovereignPeer policy v1.1
+  - vesper_governor        — Contains SAFE_EXEC_WHITELIST constant
+  - SAFE_EXEC_WHITELIST    — Direct reference guard
+  - banked-approvals.json  — Governance approval budget (incrementing requires Sovereign)
+  - governance_boundary    — PolicyArbiter governance config
 
 JSON stdin: {tool_name, tool_input.file_path, hook_event_name, session_id, cwd}
 """
 import json, sys, os
+
 # Force UTF-8 stdout/stderr to handle all chars on Windows cp1252 consoles
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
@@ -18,6 +26,8 @@ LOCKED_PATTERNS = [
     "karma_contract_policy",   # SovereignPeer policy v1.1
     "vesper_governor",         # Contains SAFE_EXEC_WHITELIST constant
     "SAFE_EXEC_WHITELIST",     # Shouldn't appear standalone but just in case
+    "banked-approvals.json",   # Governance budget — incrementing requires Sovereign approval
+    "governance_boundary",     # PolicyArbiter governance config (Karma2/map/)
 ]
 
 

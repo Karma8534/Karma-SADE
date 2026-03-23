@@ -1,3 +1,16 @@
+---
+
+## Session 126 (2026-03-23) — 3-Layer Harness Hardening (3LayerHarness.PDF analysis)
+
+**DONE:**
+- Analyzed 3LayerHarness.PDF (61 pages, Rick Hightower) + agent_rulez v2.3.0 + agent-brain RAG repos
+- Layer 1: NEW compaction-cliff-guard.py (UserPromptSubmit) — re-injects 24 PITFALL/DECISION rules every turn, solves compaction cliff (3500 char context block)
+- Layer 2: ENHANCED locked-invariant-guard.py (adds banked-approvals.json + governance_boundary). FIXED quality-gate.py (Python re, Windows-safe). NEW hooks.yaml (RuleZ-compatible declarative policy with 10 rules including cp-r, heredoc, docker-restart, K2 SSH user warnings)
+- Layer 3: NEW post-tool-failure-logger.py (PostToolUseFailure auto-capture to Logs/cc_tool_failures.log)
+- settings.json: Added UserPromptSubmit + PostToolUseFailure hooks
+- 14/14 TDD PASS (all 4 hook scripts verified)
+
+**Next:** Full Karma2 audit vs PLAN.md + email report to Sovereign
 ## Session 121 cont. — Autonomous Email Wired Into Archon
 
 **DONE:**
