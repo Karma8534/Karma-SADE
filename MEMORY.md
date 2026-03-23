@@ -2736,7 +2736,27 @@ Next task: K-2 — Anthropic docs scrape (606 pages)
 - cc-scope-index.md: P054 (case-c-directive-brainstorm) + B003 (vague-memory-item2) added
 - .gsd/phase-k1-PLAN.md pre-created (K-1 IndexedDB extraction, 5 tasks)
 
+## Session 131+132 (2026-03-23) — K-3 Heartbeat Filter + CC Regent Deployed
+
+### Session 131 — K-3 Task 9 Heartbeat Filter
+**DONE:**
+- ambient_observer.py: heartbeat spam filter — dedup window 6h, only posts "I noticed" if bus was silent for 6h
+- aria.service restarted (PID confirmed active); filter verified in logs
+- K-3 Summary Gate: pending 6h dedup window to verify non-heartbeat "I noticed" fires
+
+### Session 132 — cc_regent.py Deployed (CC Persistent Agent Layer)
+**DONE:**
+- cc_regent.py: CC's persistent agent layer on K2 — mirrors karma_regent.py for CC identity continuity
+- Reads `<!-- COGNITIVE_STATE -->` from cc_scratchpad.md → rebuilds resume_block in cc_identity_spine.json
+- State-only between sessions (no inference), 5min polling loop, mtime-change detection, circuit breaker
+- Deployed to K2: `/mnt/c/dev/Karma/k2/aria/cc_regent.py`
+- cc-regent.service: systemd service enabled + running (PID 600393, active)
+- First cycle: spine v38 written, resume_block=2044 chars with cognitive trail from Meta session
+- wrap-session SKILL.md: added explicit `cc_regent --integrate` trigger after COGNITIVE_STATE write
+- .gsd/phase-cc-regent-PLAN.md: all 6 tasks `<done>`
+- PLAN.md: cc-regent marked ✅ DONE (2026-03-23 Session 132)
+
 ## Next Session Starts Here
 1. /resurrect
-2. K-1 Step 1: Navigate to claude.ai via Claude-in-Chrome MCP — verify browser connection before IndexedDB extraction
-**Blocker if any:** None. .gsd/phase-k1-PLAN.md pre-created. Claude-in-Chrome MCP must be available.
+2. PROOF-A Task 1: Run `codex exec "What is 2+2?" --sandbox` from KCC context (C:\Users\karma) — verify non-interactive output
+**Blocker if any:** None. .gsd/phase-proof-a-PLAN.md pre-created per PLAN.md spec.
