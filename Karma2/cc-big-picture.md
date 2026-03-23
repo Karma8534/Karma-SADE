@@ -1,5 +1,5 @@
 # Karma SADE — Project Arc
-Generated: 2026-03-21 by HARVEST. Updated: 2026-03-23 (Session 129).
+Generated: 2026-03-21 by HARVEST. Updated: 2026-03-23 (Session 133 — from-cc-sessions harvest).
 
 ## Origin
 
@@ -19,6 +19,8 @@ Early approach (Sessions 1-5, Feb 2026): Chrome extension scraping DOM from clau
 
 **Phase 5 — P0N-A and CC Infrastructure (Sessions 108-113):** cc_server_p1.py on P1 gives Karma a local Ollama-backed CC endpoint (hub.arknexus.net/cc). Karma delegates browser/file/code tasks to CC via coordination bus. CC processes session corpus via /harvest. Three-fix CC continuity plan deployed: Stop hook + hourly snapshot + HARVEST corpus ingestion.
 
+**Phase 6 — CC Regent + WebMCP Architecture (Sessions 129-133, 2026-03-23):** cc_regent.service deployed on K2 as CC's persistent agent layer. Reads sessions via KO/KFH doctrine, writes cognitive trail to spine. Resurrect Step 1b now loads regent-integrated state. HARVEST processed 551 session files including 13 high-priority from-cc-sessions transcripts (ccKarma2-1 through ccKarma2-10). WebMCP Early Preview confirmed available (Chrome 146, `#enable-webmcp-testing` already Enabled) — browser-native W3C tool registry for in-page AI agents. Chrome Gemini Nano APIs (Prompt, Writer, Rewriter, Proofreader) available via flags.
+
 ## Key Failures and Lessons
 
 1. **Chrome extension was never reliable** — DOM scraping is inherently fragile. Hook-based capture (git, session-end) is the correct pattern. Never build on DOM scraping.
@@ -35,15 +37,21 @@ Early approach (Sessions 1-5, Feb 2026): Chrome extension scraping DOM from clau
 
 7. **Always check local files before going online** — K-1 plan assumed browser IndexedDB; 327 session files were already local in docs/ccSessions/ the entire time. Third occurrence of this pattern (P055). No exceptions: Glob docs/ccSessions/ FIRST.
 
+8. **/v1/ambient silently absent** — hub-bridge served for unknown duration without the ambient endpoint. All git post-commit and session-end hook captures 404'd silently (JSON body `not_found`, not HTTP 404). Always grep server.js before assuming an endpoint exists.
+
+9. **Resurrect B001 pattern** — CC announces task start then stops with no tool calls. Root cause: Step 5 "execute immediately" annotation was prose, not instruction. Fixed by making first tool call mandatory in same response as announcement.
+
 ## Current State
 
 - **Chat:** Operational via hub.arknexus.net/v1/chat (Haiku 4.5)
-- **Memory:** 190k+ ledger entries, FalkorDB neo_workspace, FAISS, cc-scope-index.md (P001-P055)
-- **Identity:** vesper_identity_spine.json v8+, 20 stable patterns (behavioral, not just latency)
-- **CC proxy:** hub.arknexus.net/cc → P1:7891 (Ollama llama3.1:8b) — Anthropic-independent
-- **Governance:** PreToolUse hooks with exit code 2 enforce Locked Invariants
-- **Corpus:** ALL 537 session files processed → Learned/. Full corpus harvested Session 129.
+- **Memory:** 190k+ ledger entries, FalkorDB neo_workspace, FAISS, cc-scope-index.md (P001-P026)
+- **Identity:** vesper_identity_spine.json v8+, 20+ stable patterns; cc_regent.service active on K2
+- **K-2 DONE:** 170 Anthropic docs scraped (128 platform + 30 code.claude.com), 2551 FAISS vectors, searchable
+- **K-3 MECHANISM FIXED:** heartbeat spam filter deployed; SUMMARY GATE pending (next consciousness cycle)
+- **Corpus:** 551 session files processed. 13 from-cc-sessions files harvested this run.
+- **Skill files:** 13 karma-pitfall-*.md auto-synthesized (resurrect, aria, hub-bridge are new)
+- **WebMCP:** Chrome 146 already has `#enable-webmcp-testing` Enabled. Gemini Nano APIs available via flags.
 
 ## Next
 
-Per Karma2/PLAN.md: K-1 REAL extraction needs reassessment (data is local, not in IndexedDB — update the plan). Then K-2 (PDF indexing), K-3 (ambient pipeline fix). PRE-PHASE gate status: check claude-mem observation count vs 50+ net new target.
+Per Karma2/PLAN.md: K-3 SUMMARY GATE (wait for first non-heartbeat "I noticed" bus message from ambient_observer after next consciousness cycle). Then PRE-PHASE gate: verify claude-mem ≥50 net new observations, then PHASE KNOWLEDGE (WebMCP + Chrome AI integration into Julian/Karma harness).

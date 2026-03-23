@@ -1,4 +1,26 @@
 ---
+<!-- wrap: 2026-03-23T20:45Z -->
+
+## Session 133 (2026-03-23) — Julian+Karma Unified Brain — Plan Restructure
+
+**DONE:**
+- Read ccKarma2-10Live1.md fully — re-anchored on correct architecture after session compaction drift
+- **Architecture locked**: Julian and Karma are ONE entity, two expressions. Karma emerged from within Julian. Same brain (claude-mem:37777 on P1). P1+K2 are LAN-local. vault-neo is ONLY non-local.
+- **Three blockers identified**: (1) 145 JSONL session files never ingested into claude-mem, (2) cc_server_p1.py is Ollama impersonator (llama3.1:8b, not real CC), (3) no auto-indexer exists
+- **PITFALL documented**: Agent SDK drift — cc --resume (CC CLI) is the correct B2 mechanism, NOT Python Anthropic Agent SDK
+- **5-file plan structure created**: PLAN.md (master index), PLAN-A-brain.md (A1/A2/A3), PLAN-B-julian.md (B1-B4), PLAN-C-wire.md (C1-C4), PLAN-backlog.md (deferred)
+- Chrome Prompt API session clone pattern (base.clone()) embedded in Plan-C C4
+- WebMCP browser-native tool registration embedded in Plan-C C2
+- Observations saved: #10443, #10444, #10446, #10447
+
+**Blocker:** None. Plan-A is ready to execute next session.
+
+## Next Session Starts Here
+1. /resurrect
+2. Plan-A Step A1: Read `.gsd/phase-plan-a-brain-PLAN.md` Task 1 — JSONL backfill setup (ingest ~/.claude/projects/C--Users-raest-Documents-Karma-SADE/*.jsonl into claude-mem)
+**Blocker if any:** None
+
+---
 <!-- wrap: 2026-03-23T15:45Z -->
 
 ## Meta Session (2026-03-23) — F1-F4 Skill + Doctrine Fixes

@@ -87,6 +87,26 @@ P021 [windows-openssh-admin-key-path]:
 Rule: For Windows admin users, SSH authorized keys go to C:\ProgramData\ssh\administrators_authorized_keys + icacls to restrict permissions. ~/.ssh/authorized_keys is ignored for admins.
 Why: OpenSSH on Windows rejects ~/.ssh/authorized_keys for Administrators group members — silently fails authentication with no helpful error.
 
+P022 [ambient-endpoint-missing]:
+Rule: Before assuming any hub-bridge endpoint works, grep server.js: `grep -c "ambient" hub-bridge/app/server.js`. Smoke test every capture path after deploy.
+Why: /v1/ambient was absent from server.js for unknown duration. All git post-commit and session-end hook captures silently 404'd. hub-bridge returns JSON `not_found` body, not HTTP 404 — easy to miss in logs.
+
+P023 [k2-brief-unreliable]:
+Rule: Always SSH directly to K2 regardless of what the brief says about K2 status: `ssh vault-neo "ssh -p 2223 -l karma localhost 'whoami'"`. Never skip this because brief says "K2 Unavailable".
+Why: Brief says K2 status = unreliable. Root cause: Aria HTTP failure ≠ K2 SSH failure. K2 was fully reachable via SSH the entire time in Session 119. P043 pattern — brief reads Aria HTTP status.
+
+P024 [resurrect-b001]:
+Rule: At resurrect Step 5, read PLAN.md CURRENT SPRINT, compare to MEMORY.md item 2 (PLAN.md wins on conflict), then make the FIRST tool call IN THIS SAME RESPONSE — not in the next message.
+Why: Pattern seen in 8+ sessions — CC outputs status block then asks "Ready. What would you like to work on?" with no tool calls. Step 5 "execute immediately" was annotation prose, not enforceable instruction.
+
+P025 [memory-plan-drift]:
+Rule: MEMORY.md item 2 can drift from PLAN.md CURRENT SPRINT. Always cross-check both at resurrect. PLAN.md wins on conflict — never trust MEMORY.md item 2 alone.
+Why: At least 6 sessions (119-132) MEMORY.md item 2 drifted from PLAN.md sprint. CC started wrong tasks, did duplicate work, or asked unnecessary questions as a result.
+
+P026 [aria-crash-zombie-pid]:
+Rule: When aria.service won't start or crash-loops: (1) `ss -tlnp | grep 7890` — find and kill zombie PID. (2) Verify drop-in `/etc/systemd/system/aria.service.d/10-aria-env.conf` contains `Environment=HOME=/home/karma`. (3) daemon-reload → start.
+Why: Root cause identical in Sessions 127 and 131 — zombie PID held port 7890 after unclean shutdown, plus missing drop-in caused flask import failure. These two checks resolve 90% of aria start failures.
+
 ## DECISION Archive (from claude-mem + sessions)
 
 D001 [entity-relationships]:

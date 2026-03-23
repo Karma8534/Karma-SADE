@@ -9,11 +9,13 @@ Execute one task at a time. Mark `<done>` only after `<verify>` passes.
 
 ## Task 1: Verify Codex exec non-interactive mode works from KCC context
 <verify>`codex exec "What is 2+2?" --sandbox` completes without launching TUI, returns text output to stdout, exits cleanly. Run from C:\Users\karma context.</verify>
-<done>false</done>
+<done>true — 2026-03-23 Session 133</done>
 
-```powershell
-# Run as karma user on P1
-codex exec "What is 2+2? Answer in one word." --sandbox
+**PROOF:** `npx codex exec --sandbox read-only --skip-git-repo-check "What is 2+2? Respond with just the number."` → stdout: `4\n`, rc: 0. Model: gpt-5.4, provider: openai. Runs on K2 (karma user). Flags required: `--sandbox read-only --skip-git-repo-check`.
+
+```bash
+# Verified invocation on K2:
+npx codex exec --sandbox read-only --skip-git-repo-check "$PROMPT"
 ```
 
 ---
