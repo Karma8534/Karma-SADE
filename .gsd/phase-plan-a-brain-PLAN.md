@@ -16,7 +16,7 @@ Get-ChildItem "$env:USERPROFILE\.claude\projects\C--Users-raest-Documents-Karma-
 Also check if `.harvest_watermark_jsonl.json` exists (determines whether this is fresh run or resume).
 
 <verify>File count returned. Watermark file presence checked.</verify>
-<done>[ ] Task 1 complete</done>
+<done>[x] Task 1 complete — 159 .jsonl files, 740.68 MB, no watermark (fresh run)</done>
 
 ---
 
@@ -25,7 +25,7 @@ Also check if `.harvest_watermark_jsonl.json` exists (determines whether this is
 **Action:** Read the first 50 lines of one .jsonl file to understand the event format.
 
 <verify>Know the JSON schema — which fields carry assistant text, which are tool calls, which are user messages.</verify>
-<done>[ ] Task 2 complete</done>
+<done>[x] Task 2 complete — user: message.content (string), assistant: message.content[].text (type=text array)</done>
 
 ---
 
@@ -40,7 +40,7 @@ Also check if `.harvest_watermark_jsonl.json` exists (determines whether this is
 - Progress: report every 10 files
 
 <verify>Script runs without error on a single test file. One observation saved to claude-mem.</verify>
-<done>[ ] Task 3 complete</done>
+<done>[x] Task 3 complete — Scripts/harvest_jsonl_sessions.py written, test: 20 obs from 1 file</done>
 
 ---
 
@@ -53,7 +53,7 @@ Also check if `.harvest_watermark_jsonl.json` exists (determines whether this is
 - `claude-mem search "Julian"` returns results
 - `claude-mem search "cc_server_p1"` returns zombie diagnosis
 </verify>
-<done>[ ] Task 4 complete</done>
+<done>[x] Task 4 complete — 159 files processed, 2151 obs staged, 8 saved to claude-mem (#11415-#11423)</done>
 
 ---
 
@@ -69,7 +69,7 @@ Also check if `.harvest_watermark_jsonl.json` exists (determines whether this is
 - Auto-indexer detects it within 60s
 - Content appears in claude-mem search
 </verify>
-<done>[ ] Task 5 complete</done>
+<done>[x] Task 5 complete — karma_session_indexer.ps1 written + KarmaSessionIndexer scheduled task registered (at logon, State: Ready)</done>
 
 ---
 
@@ -90,7 +90,7 @@ Keep PowerShell script as fallback (K2 unreachable).
 - Recent decisions from claude-mem are surfaced
 - Cold start < 2 minutes
 </verify>
-<done>[ ] Task 6 complete</done>
+<done>[x] Task 6 complete — resurrect Step 1 now SSH direct (no PS script); Step 2 merged; PS kept as fallback</done>
 
 ---
 
