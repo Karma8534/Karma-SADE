@@ -43,10 +43,29 @@
 
 **Current blockers:** None
 
+## Session 126 (2026-03-22) — 3-Layer Harness + Karma2 Audit Complete
+
+**DONE:**
+- Ingested + analyzed 3LayerHarness.PDF (61 pages, Hightower/Boeckeler 3-layer model)
+- Layer 1: NEW compaction-cliff-guard.py (UserPromptSubmit) — re-injects cc-scope-index.md rules every turn
+- Layer 2: FIXED quality-gate.py (Python re scanner, Windows-native). ENHANCED locked-invariant-guard (2->5 patterns). NEW hooks.yaml (RuleZ-compatible, 10 rules including warn patterns)
+- Layer 3: NEW post-tool-failure-logger.py (PostToolUseFailure -> Logs/cc_tool_failures.log)
+- settings.json: UserPromptSubmit + PostToolUseFailure hooks added
+- 14/14 TDD PASS — all hooks verified
+- Karma2 live audit: 4 critical blockers identified (aria.service crash loop, /v1/cypher broken, karma-regent not in systemd, ledger 30x drift)
+- Email report sent to Sovereign ({'ok': True})
+- Commit 912f3c0 pushed to main
+
+**Blockers found:**
+- aria.service: CRASH LOOP (K2) — ambient pipeline dead
+- /v1/cypher: returns not_found — FalkorDB graph queries from Karma broken (NEW gap)
+- karma-regent: nohup only, not systemd — dies on K2 reboot
+- STATE.md ledger count: 6,571 stated vs 200,445 actual (30x drift)
+
 ## Next Session Starts Here
 1. /resurrect
-2. E-1-A Step 1: SSH to vault-neo, fetch 3 sample hub+chat ledger entries, confirm user/assistant field names (Task 1 of .gsd/phase-e1a-PLAN.md)
-**Blocker if any:** None
+2. aria-crash Task 1: SSH K2, run `python3 /mnt/c/dev/Karma/k2/aria/aria.py` directly to get full Python startup traceback, then fix root cause
+**Blocker if any:** K2 must be reachable via vault-neo reverse tunnel. GSD: .gsd/phase-aria-crash-PLAN.md
 
 ## Session 120 (2026-03-22) — Resurrect/Wrap/PLAN x5 audit + K-3 GSD docs created
 

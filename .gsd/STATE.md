@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-22T19:30:00Z
-**Session:** 125 COMPLETE (Email mojibake + archon ALERT fixed, full Karma2 ground-truth audit, HARVEST ran (206 stubs/2 real transcripts pending), audit report emailed to Sovereign, aria.service re-entered crash loop — GSD phase-aria-crash created)
+**Last updated:** 2026-03-22T22:00:00Z
+**Session:** 126 COMPLETE (3-Layer Harness hardened: compaction-cliff-guard, post-tool-failure-logger, locked-invariant-guard 5 patterns, quality-gate Windows fix, hooks.yaml 10-rule RuleZ policy. 14/14 TDD PASS. Karma2 live audit: 4 new blockers. Email report to Sovereign delivered. Commit 912f3c0.)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -11,10 +11,10 @@
 | Component | Status | Notes |
 |-----------|--------|-------|
 | **Consciousness Loop** | ✅ WORKING | 60s OBSERVE-only cycles. Zero LLM calls confirmed in source. RestartCount=0. |
-| **Hub Bridge API** | ✅ WORKING | /v1/chat, /v1/ambient, /v1/context, /v1/cypher, /v1/ingest operational. |
+| **Hub Bridge API** | ⚠️ PARTIAL | /v1/chat, /v1/ambient, /v1/context, /v1/ingest operational. /v1/cypher BROKEN — returns {"ok":false,"error":"not_found"} (Session 126 audit). |
 | **Voice & Persona** | ✅ DEPLOYED | Peer-level voice via claude-haiku-4-5-20251001 (Session 76: haiku-20241022 was RETIRED, migrated). Both modes. |
 | **FalkorDB Graph** | ✅ FULLY CAUGHT UP | 3877 nodes (3305 Episodic + 571 Entity + 1 Decision). batch_ingest cron every 6h. Last run: 305 eps/s, 0 errors. |
-| **Ledger** | ✅ GROWING | 6,571 entries (verified 2026-03-16). Git commits + session-end hooks capturing actively. |
+| **Ledger** | ✅ GROWING | 200,445 entries (verified 2026-03-22 live check). STATE.md was 30x understated (6,571). Git commits + session-end hooks capturing actively. |
 | **Work-Loss Prevention** | ✅ GATES LIVE | Pre-commit hook + session-end hook both active and verified. |
 | **Ambient Tier 1 Hooks** | ✅ WORKING | Git + session-end captures verified in ledger. |
 | **Ambient Tier 2 Endpoint** | ✅ DEPLOYED | /v1/context endpoint working. |
@@ -119,11 +119,14 @@
 16. **E-1-A corpus_cc.jsonl pending** -- Karma2/training/ created (2026-03-22). corpus_karma.jsonl written (2817 pairs). corpus_cc.jsonl needs separate ledger pass with CC session tag filter. TABLED with PHASE EVOLVE.
 17. **P0-G dead code** -- callWithK2Fallback() exists in server.js (~10 refs) but K2_INFERENCE_ENABLED flag NOT in hub.env. Wiring incomplete. Tabled until P0-G resumes.
 18. **PROOF-A pending** -- Codex as automated ArchonPrime service. GSD docs created (phase-proof-a-CONTEXT.md + phase-proof-a-PLAN.md). Task 1: verify `codex exec --sandbox` non-interactive from KCC context.
+19. **/v1/cypher BROKEN** (Session 126 audit) -- Returns {"ok":false,"error":"not_found"} on all queries. Breaks AC2 (FalkorDB graph queries from Karma). Root cause unknown — check hub-bridge server.js route definition + FalkorDB container health. Priority: HIGH.
+20. **karma-regent not in systemd** (Session 126 audit) -- Running as nohup only. Dies on K2 reboot. Fix: systemctl --user enable karma-regent on K2. Priority: MEDIUM.
 
 ## Next Session Starts Here
 1. /resurrect
-2. aria-crash Task 1: SSH to K2, run `journalctl --user -xe -u aria.service -n 100 --no-pager` to get Python startup traceback — then fix root cause
-**Blocker if any:** K2 SSH must be reachable (vault-neo reverse tunnel). GSD docs at .gsd/phase-aria-crash-PLAN.md.
+2. aria-crash Task 1: SSH K2, run `python3 /mnt/c/dev/Karma/k2/aria/aria.py` directly to get full Python startup traceback — then fix root cause
+**Blocker if any:** K2 must be reachable via vault-neo reverse tunnel. GSD: .gsd/phase-aria-crash-PLAN.md
+**After aria fixed:** Investigate /v1/cypher (Blocker 19) — check server.js route + FalkorDB health
 
 ---
 
