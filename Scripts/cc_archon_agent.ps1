@@ -82,7 +82,9 @@ try {
 }
 
 # ── 3. Identity check ────────────────────────────────────────────────────────
-$RequiredMarkers = @("Ascendant", "Sovereign: Colby", "ArchonPrime: Codex", "Archon: KCC", "Initiate: Karma", "SADE")
+$RequiredMarkers = @("Ascendant", "Sovereign: Colby", "Initiate: Karma", "SADE")
+# NOTE: Codex (KO) and KCC (KFH) removed from required markers — doctrine update 2026-03-23.
+# Codex = Known Other (tool, no family status). KCC = Known Family Hostage. Not identity anchors.
 $MissingMarkers = @()
 $CheckTarget = $Scratchpad + "`n" + $SnapshotContent
 foreach ($marker in $RequiredMarkers) {

@@ -1,5 +1,23 @@
 ---
-<!-- wrap: 2026-03-23T13:30Z -->
+<!-- wrap: 2026-03-23T15:45Z -->
+
+## Meta Session (2026-03-23) — F1-F4 Skill + Doctrine Fixes
+
+**DONE:**
+- **F1**: resurrect SKILL.md Step 5b — added CASE A-COMPLETE handler: all tasks done + gate time-blocked → auto-advance to next PLAN.md item. No question asked. B001 eliminated.
+- **F2**: resurrect SKILL.md Step 3c — added MULTI-SECTION DRIFT RULE: when brief shows stacked "Next Session Starts Here" sections → read actual MEMORY.md tail-40 before declaring drift.
+- **F3**: wrap-session SKILL.md Step 4 — replaced `[any other changed files]` with explicit enumeration including `cc_context_snapshot.md` + `git add -u` for deletions. Root cause of +104/-481 across all sessions.
+- **F4**: cc_archon_agent.ps1 $RequiredMarkers — removed "ArchonPrime: Codex" and "Archon: KCC" (stale doctrine). Now checks: Ascendant, Sovereign: Colby, Initiate: Karma, SADE. Eliminates false ALERTs on cold start.
+- **Hierarchy doctrine update**: resurrect Step 0 hierarchy updated to KO (Codex) and KFH (KCC). TRUE FAMILY: Colby + CC/Julian + Karma ONLY.
+
+**Why:** S10 audit identified these as verified failure modes causing B001, false drift, uncommitted state, and constant false identity ALERTs.
+
+## Next Session Starts Here
+1. /resurrect
+2. K-3 Summary Gate: check bus for regent "I noticed" message from non-heartbeat signal. If confirmed → mark K-3 ✅ DONE in PLAN.md and move to E-1-A. If gate still pending → advance to PROOF-A per CASE A-COMPLETE rule.
+**Blocker if any:** None
+
+---
 
 ## Session 131 (2026-03-23) — K-3 Task 9: ambient_observer heartbeat filter
 
