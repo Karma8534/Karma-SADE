@@ -2783,5 +2783,6 @@ Next task: K-2 — Anthropic docs scrape (606 pages)
 
 ## Next Session Starts Here
 1. /resurrect
-2. PROOF-A Task 1: Run `codex exec "What is 2+2?" --sandbox` from KCC context (C:\Users\karma) — verify non-interactive output
-**Blocker if any:** None. .gsd/phase-proof-a-PLAN.md pre-created per PLAN.md spec.
+2. Plan-A Task 1: Read `.gsd/phase-plan-a-brain-PLAN.md` Task 1 — survey JSONL files in `~/.claude/projects/C--Users-raest-Documents-Karma-SADE/`
+**Blocker if any:** None. GSD plan pre-created. PLAN.md line 81: "Start with PLAN-A. Nothing else until A3 is done."
+**Note:** PROOF-A Tasks 2+3 were written by a broken session that ran the wrong sprint. Scripts exist (kcc_codex_trigger.ps1, kcc_bus_monitor.ps1) but PROOF-A is backlog — do not resume until Plan-A is complete.

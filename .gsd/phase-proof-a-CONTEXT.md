@@ -14,7 +14,8 @@ Do NOT use `--full-auto` without sandbox.
 
 ### Trigger source: KCC
 KCC detects structural coordination bus events and triggers Codex analysis.
-KCC is on P1 (C:\Users\karma, Claude Code v2.1.80). It monitors the bus already.
+KCC is on K2 (karma@192.168.0.226, Claude Code). It monitors the bus already.
+NOTE: KCC is NOT on P1. P1 is CC's machine (C:\Users\raest). K2 is KCC's machine.
 
 ### Output path: coordination bus post
 Codex analysis result gets posted back to bus as an ArchonPrime analysis.

@@ -113,6 +113,7 @@ The MCP registry has connectors for all three. Pattern = coordination bus webhoo
 - **Discord**: Official Claude integration + MCP connector
 - **Telegram**: Official Claude Telegram bot integration + MCP connector
 - **SMS/Voice**: Twilio credentials in mylocks — voice calling and SMS are wired, not invented
+- **FakeChat (localhost)**: Researched 2026-03-23. Runs locally, could POST directly to hub.arknexus.net or /cc. Zero external dependency, familiar chat UX, no API cost. Docs in /wip — ingest will surface specifics. Could be the simplest local channel surface before Slack/Discord wiring is worth building.
 - **PhoneLink (P1 → S23 Ultra)**: PhoneLink is installed on P1 and paired to the S23 Ultra.
   This is a potential future agent surface — notifications, SMS relay, voice channel.
   Not a build task yet, but PhoneLink bridge = real hardware path to mobile.

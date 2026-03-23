@@ -22,7 +22,9 @@ npx codex exec --sandbox read-only --skip-git-repo-check "$PROMPT"
 
 ## Task 2: Write KCC Codex trigger script
 <verify>Script `Scripts/kcc_codex_trigger.ps1` exists, accepts a `-Prompt` parameter, runs `codex exec --sandbox`, captures output, returns text. Test with a simple prompt.</verify>
-<done>false</done>
+<done>true — 2026-03-23 Session 134</done>
+
+**PROOF:** `Scripts\kcc_codex_trigger.ps1 -Prompt "What is 2+2? Respond with just the number."` → stdout: `4`, rc: 0. SSHes to karma@192.168.0.226, suppresses codex banner (stderr), returns clean stdout. Key fix: `2>$null` on SSH call — codex prints version banner to stderr which triggered PS exception with `$ErrorActionPreference = "Stop"`.
 
 Script should:
 1. Accept `-Prompt` (the analysis request)
@@ -34,7 +36,9 @@ Script should:
 
 ## Task 3: Wire KCC bus event detection → Codex trigger
 <verify>When a structural bus event arrives (type="request" or content contains "ArchonPrime"), KCC calls `kcc_codex_trigger.ps1` and posts the Codex response to the coordination bus.</verify>
-<done>false</done>
+<done>true — 2026-03-23 Session 134</done>
+
+**PROOF:** Posted codex request (coord_1774300883680_ztwd, from=colby, to=codex). Monitor script detected it, called kcc_codex_trigger.ps1 (SSH to K2), Codex produced 681-char analysis of CURRENT SPRINT. ARCHONPRIME response posted as coord_1774300994349_0j7t. Full pipeline: bus poll → detect (to=codex) → trigger → Codex → bus post ✅. `kcc_bus_monitor.ps1` created with 60s loop, processed-ID persistence (P022), and `KCC-Codex-Monitor` scheduled task registration.
 
 Structural event pattern to detect: bus messages with `to="codex"` OR `content` containing "analyze" OR "ArchonPrime".
 Post result back: `from=codex, to=all, type=inform, content="[ARCHONPRIME] <codex output>"`.
