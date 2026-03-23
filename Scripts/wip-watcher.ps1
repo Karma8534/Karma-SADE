@@ -46,7 +46,7 @@ function Send-File {
     try {
         $bytes  = [System.IO.File]::ReadAllBytes($FilePath)
         $b64    = [Convert]::ToBase64String($bytes)
-        $body   = @{ filename = $filename; content = $b64; mime_type = $mimeType; source = "docs/wip"; priority = $true } | ConvertTo-Json
+        $body   = @{ filename = $filename; file_b64 = $b64; mime_type = $mimeType; source = "docs/wip"; priority = $true } | ConvertTo-Json
         $resp   = Invoke-RestMethod -Uri $HubUrl -Method Post -Body $body -ContentType "application/json" `
                     -Headers @{ Authorization = "Bearer $token" } -TimeoutSec 60
         Write-Host "[wip-watcher] OK: $filename → $($resp | ConvertTo-Json -Compress)"
@@ -96,7 +96,7 @@ $null = Register-ObjectEvent $watcher Created -Action {
     try {
         $bytes = [System.IO.File]::ReadAllBytes($path)
         $b64   = [Convert]::ToBase64String($bytes)
-        $body  = @{ filename = $filename; content = $b64; mime_type = $mimeType; source = "docs/wip"; priority = $true } | ConvertTo-Json
+        $body  = @{ filename = $filename; file_b64 = $b64; mime_type = $mimeType; source = "docs/wip"; priority = $true } | ConvertTo-Json
         $resp  = Invoke-RestMethod -Uri "https://hub.arknexus.net/v1/ingest" -Method Post -Body $body `
                     -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" } -TimeoutSec 60
         Write-Host "[wip-watcher] OK: $filename"

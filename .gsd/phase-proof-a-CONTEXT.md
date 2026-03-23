@@ -32,7 +32,7 @@ Codex posts one ArchonPrime analysis to bus from a KCC trigger, without Colby in
 
 ## Prerequisites
 - Codex installed on K2 (confirmed session 111)
-- PS KCC running on P1 (C:\Users\karma) with GLM primary
+- PS KCC running on K2 (karma@192.168.0.226) with GLM primary
 - KCC can already read coordination bus
 
 ## Acceptance Criterion

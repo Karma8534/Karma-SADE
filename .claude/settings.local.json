@@ -524,5 +524,6 @@
   },
   "skipDangerousModePermissionPrompt": true,
   "skipAutoPermissionPrompt": true,
-  "dangerouslySkipPermissions": true
+  "dangerouslySkipPermissions": true,
+  "allowedTools": ["*"]
 }

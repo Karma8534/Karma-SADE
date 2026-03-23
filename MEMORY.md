@@ -2800,3 +2800,16 @@ Next task: K-2 — Anthropic docs scrape (606 pages)
 2. Plan-A Task 1: Read `.gsd/phase-plan-a-brain-PLAN.md` Task 1 — survey JSONL files in `~/.claude/projects/C--Users-raest-Documents-Karma-SADE/`
 **Blocker if any:** None. GSD plan pre-created. PLAN.md line 81: "Start with PLAN-A. Nothing else until A3 is done."
 **Note:** PROOF-A Tasks 2+3 were written by a broken session that ran the wrong sprint. Scripts exist (kcc_codex_trigger.ps1, kcc_bus_monitor.ps1) but PROOF-A is backlog — do not resume until Plan-A is complete.
+
+## Session 135 — Bug Fixes: wip-watcher, allowedTools, resurrect duplicate, KCC location
+**DONE:**
+- Scripts/wip-watcher.ps1: fixed field name `content` → `file_b64` (root cause of all wip ingestion failures)
+- .claude/settings.local.json: added `allowedTools: ["*"]` (eliminates permission prompts)
+- ~/.claude/plugins/cache/karma-local/karma-tools/.../resurrect/: deleted stale duplicate skill (root cause of resurrect double-execution)
+- .gsd/phase-proof-a-CONTEXT.md: corrected KCC location P1 → K2 in Prerequisites section
+- Backlog-8 (PLAN-backlog.md): already updated from previous session (FakeChat, PhoneLink, channels)
+
+## Next Session Starts Here
+1. /resurrect
+2. Plan-A Task 1: Read `.gsd/phase-plan-a-brain-PLAN.md` Task 1 — survey JSONL files in `~/.claude/projects/C--Users-raest-Documents-Karma-SADE/`
+**Blocker if any:** None. GSD plan pre-created. PLAN.md line 81: "Start with PLAN-A. Nothing else until A3 is done."
