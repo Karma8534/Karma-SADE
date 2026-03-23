@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-22T22:00:00Z
-**Session:** 126 COMPLETE (3-Layer Harness hardened: compaction-cliff-guard, post-tool-failure-logger, locked-invariant-guard 5 patterns, quality-gate Windows fix, hooks.yaml 10-rule RuleZ policy. 14/14 TDD PASS. Karma2 live audit: 4 new blockers. Email report to Sovereign delivered. Commit 912f3c0.)
+**Last updated:** 2026-03-23T00:45:00Z
+**Session:** 127 IN PROGRESS (aria.service crash loop fixed: zombie PID + drop-in recreated. aria.service active PID 423990, /api/exec verified: aria-exec-ok. Blocker 14 RESOLVED.)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -115,7 +115,7 @@
 11. **B2: Synthetic stable patterns** -- RESOLVED: 10 diverse stable patterns now present (no longer all cascade_performance). research_skill_card + PITFALL types confirmed.
 12. ~~**P0N-A URGENT**~~ ✅ LIVE (Session 111) — hub.arknexus.net/cc working, CC Ascendant responds with identity + state.
 13. **P3-D** — ✅ LIVE as of session 109. Hooks deployed + committed. No longer a blocker.
-14. **K2 aria.service** -- ⚠️ CRASH LOOP RECURRENCE (Session 125 audit, 2026-03-22 ~14:00 UTC). Was fixed Session 123 (zombie PID killed). Re-entered crash loop, restart #2015+. Root cause unknown — journalctl traceback NOT read. GSD: phase-aria-crash-PLAN.md Task 1 = read traceback. CRITICAL blocker: ambient pipeline, shell_run, /api/exec all dead.
+14. ~~**K2 aria.service**~~ ✅ FIXED Session 127 (2026-03-23). Root cause: zombie python3 PID 278533 (Session 123 process never killed) holding port 7890, blocking systemd restarts. Fix: stop service + pkill -9 -f aria.py + recreated drop-in /etc/systemd/system/aria.service.d/10-aria-env.conf (HOME=/home/karma) + restart. PROOF: service active PID 423990, /api/exec → {exit_code:0,output:"aria-exec-ok"}.
 16. **E-1-A corpus_cc.jsonl pending** -- Karma2/training/ created (2026-03-22). corpus_karma.jsonl written (2817 pairs). corpus_cc.jsonl needs separate ledger pass with CC session tag filter. TABLED with PHASE EVOLVE.
 17. **P0-G dead code** -- callWithK2Fallback() exists in server.js (~10 refs) but K2_INFERENCE_ENABLED flag NOT in hub.env. Wiring incomplete. Tabled until P0-G resumes.
 18. **PROOF-A pending** -- Codex as automated ArchonPrime service. GSD docs created (phase-proof-a-CONTEXT.md + phase-proof-a-PLAN.md). Task 1: verify `codex exec --sandbox` non-interactive from KCC context.
@@ -124,9 +124,8 @@
 
 ## Next Session Starts Here
 1. /resurrect
-2. aria-crash Task 1: SSH K2, run `python3 /mnt/c/dev/Karma/k2/aria/aria.py` directly to get full Python startup traceback — then fix root cause
-**Blocker if any:** K2 must be reachable via vault-neo reverse tunnel. GSD: .gsd/phase-aria-crash-PLAN.md
-**After aria fixed:** Investigate /v1/cypher (Blocker 19) — check server.js route + FalkorDB health
+2. Investigate /v1/cypher BROKEN (Blocker 19) — check hub-bridge server.js route definition + FalkorDB container health
+**Blocker if any:** None known. aria.service now FIXED.
 
 ---
 

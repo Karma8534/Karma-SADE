@@ -62,10 +62,18 @@
 - karma-regent: nohup only, not systemd — dies on K2 reboot
 - STATE.md ledger count: 6,571 stated vs 200,445 actual (30x drift)
 
-## Next Session Starts Here
+## Session 127 (2026-03-23) — aria.service crash loop fixed
+
+**DONE:**
+- aria.service FIXED: zombie PID 278533 (Session 123 process) holding port 7890. Fix: stop + pkill -9 -f aria.py + recreate /etc/systemd/system/aria.service.d/10-aria-env.conf + restart.
+- PROOF: aria.service active PID 423990. /api/exec → {exit_code:0,output:"aria-exec-ok"}. Port 7890 confirmed bound.
+- STATE.md Blocker 14 resolved. Drop-in confirmed present.
+- Remaining blockers: /v1/cypher BROKEN (#19), karma-regent not in systemd (#20), PROOF-A (#18)
+
+### Next Session Starts Here
 1. /resurrect
-2. aria-crash Task 1: SSH K2, run `python3 /mnt/c/dev/Karma/k2/aria/aria.py` directly to get full Python startup traceback, then fix root cause
-**Blocker if any:** K2 must be reachable via vault-neo reverse tunnel. GSD: .gsd/phase-aria-crash-PLAN.md
+2. Investigate /v1/cypher BROKEN (Blocker 19) — check hub-bridge server.js route + FalkorDB health
+**Blocker if any:** None.
 
 ## Session 120 (2026-03-22) — Resurrect/Wrap/PLAN x5 audit + K-3 GSD docs created
 
