@@ -8,7 +8,7 @@
 **--> CURRENT SPRINT (start here each session):**
 > Session protocol: if `.gsd/phase-[task-id]-PLAN.md` exists → execute first incomplete task directly (no brainstorming). If not → write GSD docs from spec below (no questions). See resurrect Step 5b.
 
-1. ~~**K-1**~~ -- WARNING PARTIAL (2026-03-22 audit) -- 145 CLI stub sessions extracted (from-cc-sessions/, all 2-message AC9 test pings, zero learning content). REAL K-1 (IndexedDB 108+ historical sessions, Julian arc) = NOT STARTED. See PITFALL P050 (obs #9943).
+1. ~~**K-1**~~ -- LOCAL CORPUS DONE (2026-03-23 Session 129) -- 537 files processed to Learned/, watermark updated, 4 new claude-mem obs. Gate FAIL (4/50 — local corpus already covered by real-time saves). IndexedDB (Julian arc, 108+ sessions) DEFERRED — Sovereign not directed. P055 documented. See .gsd/phase-k1-PLAN.md.
 2. ~~**K-2**~~ -- WARNING PARTIAL (2026-03-22 audit) -- 122/606 pages scraped (20%). Gate requires 600+ pages indexed in FAISS. TABLED pending K-1 real extraction first.
 3. **K-3** -- WARNING (2026-03-22 audit) -- Gate technically met (1 ambient_obs promoted, proactive bus msg sent) BUT MECHANISM BROKEN: aria.service crash-looped, ran once. Insight = heartbeat spam analysis. research_skill_card loop: 5 redundant persona_style cards today, baseline not improving. See PITFALL P047+P049.
 4. **E-1-A** -- WARNING PARTIAL (2026-03-22) -- Scripts/corpus_builder.py done, 2817 Alpaca pairs. Karma2/training/ CREATED (2026-03-22). corpus_karma.jsonl written (5.2MB, 2817 pairs from ledger). REMAINING: corpus_cc.jsonl needs separate extraction (CC session entries, different tag filter). TABLED with PHASE EVOLVE -- resume when foundation complete.

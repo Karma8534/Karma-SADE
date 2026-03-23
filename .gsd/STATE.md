@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-23T14:00:00Z
-**Session:** 128 COMPLETE (resurrect+wrap-session full audit; B001/CASE C root cause fixed; cc_email_daemon blocker status added; P054+B003 documented; .gsd/phase-k1-PLAN.md pre-created for next session)
+**Last updated:** 2026-03-23T23:00:00Z
+**Session:** 129 COMPLETE (/harvest: 537 files local corpus ingested; P055 documented in scope-index+claude-mem+watchdog; cc-big-picture.md updated; phase-k1-PLAN.md corrected; phase-k2-PLAN.md pre-created; wrap complete)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -125,8 +125,8 @@
 
 ## Next Session Starts Here
 1. /resurrect
-2. K-1 Step 1: Navigate to claude.ai via Claude-in-Chrome MCP to verify browser connection before IndexedDB extraction
-**Blocker if any:** None. .gsd/phase-k1-PLAN.md pre-created. Claude-in-Chrome MCP must be available.
+2. K-2 Step 1: Read .gsd/phase-k2-PLAN.md Task 1 — fetch docs.anthropic.com sitemap to get full page list before scraping
+**Blocker if any:** None. .gsd/phase-k2-PLAN.md pre-created. Playwright MCP must be available.
 
 ---
 

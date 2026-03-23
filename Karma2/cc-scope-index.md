@@ -290,6 +290,10 @@ P054 [case-c-directive-brainstorm]:
 Rule: When MEMORY.md item 2 is a Sovereign directive (contains audit/fix/verify/resolve/implement/investigate) with no GSD plan → write .gsd/phase-[slug]-PLAN.md from the directive and execute Task 1. NEVER invoke brainstorming.
 Why: "Audit resurrect + wrap-session + fix issues" → no GSD plan → CASE C → brainstorming → clarifying questions → CC asked for direction instead of acting. Wasted round-trip. Directive IS the spec.
 
+P055 [online-before-local-check]:
+Rule: Before ANY extraction/ingestion/data task, check docs/ccSessions/ and local filesystem FIRST. Never go online (browser, API, IndexedDB, claude.ai) to fetch data that may already be local.
+Why: K-1 plan assumed browser IndexedDB → CC spent entire session probing claude.ai API, navigating tabs, downloading JSON. 327 session files were already in docs/ccSessions/ the whole time. Third documented occurrence of this same pattern.
+
 B003 [vague-memory-item2]:
 Rule: MEMORY.md "Next Session Starts Here" item 2 MUST be a specific first action (verb + file + purpose). "X OR Y" = choice = CASE C-AMBIGUOUS trigger at next resurrect = brainstorming = questions.
 Why: wrap-session wrote "Continue Karma2 audit OR start K-1" — OR made both options ambiguous, no GSD plan for either → CASE C triggered → brainstorming asked Sovereign for direction. Session 128.

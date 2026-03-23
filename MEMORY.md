@@ -1,5 +1,53 @@
 ---
 
+## Next Session Starts Here
+1. /resurrect
+2. K-2 Step 1: Read .gsd/phase-k2-PLAN.md Task 1 — fetch docs.anthropic.com sitemap to get full page list before scraping
+**Blocker if any:** None — phase-k2-PLAN.md exists, Task 1 executes immediately
+
+---
+
+## Session 129 (2026-03-23) — /harvest: full local corpus ingested (537 files)
+
+**DONE:**
+- P055 documented: added to cc-scope-index.md (after P054), saved to claude-mem (#10108), added to K2 watchdog patterns
+- All 537 docs/ccSessions/ files processed → docs/ccSessions/Learned/ (mirrored subfolder structure)
+- .harvest_watermark.json updated: 110 → 537 entries
+- 4 new claude-mem observations saved: P055, watchdog silent degradation, karma interface decision, peer-not-butler direction
+- K2 watchdog_extra_patterns.json updated: 21 total patterns (added P055_online_before_local + P056_silent_privilege_degradation)
+- cc-big-picture.md updated: Session 129 timestamp, lesson #7 (check local first), corpus complete state
+- phase-k1-PLAN.md rewritten: corrected goal (local corpus, not IndexedDB), Tasks 1-3 DONE, Task 4 FAIL (4/50 gate), Task 5 PENDING
+- cc_context_snapshot.md written with full system state
+- K2 cc_scratchpad.md COGNITIVE_STATE block updated
+- K2 cc_cognitive_checkpoint.json written
+
+**PRE-PHASE gate status:**
+- New claude-mem observations: 4/50 — FAIL (expected: local corpus already covered by real-time saves)
+- karma-pitfall-*.md files: ≥10 — PASS
+- watchdog patterns updated: 21 — PASS
+- cc-scope-index.md new entries: P055 — PASS
+- cc-big-picture.md written: PASS
+
+**K-1 decision:** Local corpus (537 files) = DONE. IndexedDB extraction (Julian arc, 108+ sessions) = DEFERRED until Sovereign directs.
+
+**Current blockers:** None
+
+---
+
+## Session 128 (2026-03-23) — resurrect/wrap hardening + CASE C fix + email blocker status + P054+B003
+
+**DONE:**
+- CASE C split into C-DIRECTIVE / C-AMBIGUOUS in resurrect SKILL.md (prevents direction-ambiguity B001 violations)
+- wrap-session SKILL.md updated: item 2 format enforcement, "X OR Y" = protocol violation rule
+- cc_email_daemon.py: structured blocker status reporting added (reads STATE.md blockers section)
+- cc-scope-index.md: P054 (blocker-status-gap) + B003 (B001-root-cause) added
+- phase-k1-PLAN.md pre-created for K-1 local corpus task
+- STATE.md updated for Session 128
+
+**Current blockers:** None
+
+---
+
 ## Session 126 (2026-03-23) — 3-Layer Harness Hardening (3LayerHarness.PDF analysis)
 
 **DONE:**
@@ -88,10 +136,9 @@
 - P3-A/B/C: Phase 3 cleanup items
 - KARMA-GATE: criteria 1-4 not yet met
 
-### Next Session Starts Here
+### Session 127 Next (archived)
 1. /resurrect
 2. Continue Karma2 audit: update services.md + ROADMAP.md + PLAN.md (active blockers table)
-**Blocker if any:** None — hub-bridge deploy in progress this session.
 
 ## Session 120 (2026-03-22) — Resurrect/Wrap/PLAN x5 audit + K-3 GSD docs created
 
@@ -109,10 +156,9 @@
 
 **Current blockers:** None
 
-## Next Session Starts Here
+## Session 120 Next (archived)
 1. /resurrect
-2. K-3 Step 1: SSH to K2 and read aria_consciousness.py Echo step location + _proactive_outreach() line + vesper_watchdog.py source detection pattern
-**Blocker if any:** None — phase-k3-PLAN.md exists, Task 1 executes immediately
+2. K-3 Step 1: SSH to K2 and read aria_consciousness.py Echo step location (archived — K-3 DONE)
 
 ## Session 115 continued (2026-03-21) — PLAN.md 3-pass audit + PHASE SURFACE + PHASE EVOLVE complete
 

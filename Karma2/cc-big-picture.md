@@ -1,5 +1,5 @@
 # Karma SADE — Project Arc
-Generated: 2026-03-21 by HARVEST. Updated each /harvest run.
+Generated: 2026-03-21 by HARVEST. Updated: 2026-03-23 (Session 129).
 
 ## Origin
 
@@ -33,15 +33,17 @@ Early approach (Sessions 1-5, Feb 2026): Chrome extension scraping DOM from clau
 
 6. **Behavioral patterns never reached Karma** — vesper pipeline ran but B4+B5 (FalkorDB write, spine injection into context) were broken. All 20 spine patterns were latency stats, not behavioral identity. Fixed Session 113.
 
+7. **Always check local files before going online** — K-1 plan assumed browser IndexedDB; 327 session files were already local in docs/ccSessions/ the entire time. Third occurrence of this pattern (P055). No exceptions: Glob docs/ccSessions/ FIRST.
+
 ## Current State
 
 - **Chat:** Operational via hub.arknexus.net/v1/chat (Haiku 4.5)
-- **Memory:** 190k+ ledger entries, FalkorDB neo_workspace, FAISS, cc-scope-index.md (P001-P036)
+- **Memory:** 190k+ ledger entries, FalkorDB neo_workspace, FAISS, cc-scope-index.md (P001-P055)
 - **Identity:** vesper_identity_spine.json v8+, 20 stable patterns (behavioral, not just latency)
 - **CC proxy:** hub.arknexus.net/cc → P1:7891 (Ollama llama3.1:8b) — Anthropic-independent
 - **Governance:** PreToolUse hooks with exit code 2 enforce Locked Invariants
-- **Corpus:** 175 session files processed → Learned/; From CAI/ subdir processing in progress
+- **Corpus:** ALL 537 session files processed → Learned/. Full corpus harvested Session 129.
 
 ## Next
 
-Per Karma2/PLAN.md: Fix B4+B5 (Phase 0) so non-cascade_performance patterns reach Karma's context. Then Phase 1 tools (browser, file, code) via CC delegation. Goal: AC2 (structured tools), AC3 (behavioral pattern in response), AC6 (full governance loop).
+Per Karma2/PLAN.md: K-1 REAL extraction needs reassessment (data is local, not in IndexedDB — update the plan). Then K-2 (PDF indexing), K-3 (ambient pipeline fix). PRE-PHASE gate status: check claude-mem observation count vs 50+ net new target.
