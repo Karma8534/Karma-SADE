@@ -1,4 +1,5 @@
 ---
+<!-- wrap: 2026-03-23T13:30Z -->
 
 ## Session 131 (2026-03-23) — K-3 Task 9: ambient_observer heartbeat filter
 

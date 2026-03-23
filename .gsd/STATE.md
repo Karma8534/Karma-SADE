@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-23T05:30:00Z
-**Session:** 130 COMPLETE (K-2 Anthropic docs scrape: 170 files scraped, 124 ledger entries tagged anthropic-docs, 2551 FAISS vectors. Fixed 3 vault-search bugs: P056 null-ID dedup, P057 value-key indexing, coordination tag filter. batch-ingest-docs.ps1 created.)
+**Last updated:** 2026-03-23T13:30:00Z
+**Session:** 131 COMPLETE (K-3 Task 9: ambient_observer heartbeat spam filter deployed to K2. NOISE_CONTENT_PREFIXES + _is_noise_message() + MIN_SIGNAL_MESSAGES=3. Verified on K2. K-3 Summary Gate pending next consciousness cycle 6h window.)
 **Canonical source:** This file. Read at session start.
 
 ---
