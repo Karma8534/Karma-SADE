@@ -8,6 +8,7 @@
 **--> CURRENT SPRINT (start here each session):**
 > Session protocol: if `.gsd/phase-[task-id]-PLAN.md` exists → execute first incomplete task directly (no brainstorming). If not → write GSD docs from spec below (no questions). See resurrect Step 5b.
 
+0. **cc-regent** — SOVEREIGN DIRECTIVE (2026-03-23 Meta session) — Build cc_regent.py: CC's persistent agent layer on K2. Missing middle layer — CC has voice + memory but no between-session state holder. Mirrors karma_regent.py. See .gsd/phase-cc-regent-PLAN.md. **FIRST SPRINT ITEM.**
 1. ~~**K-1**~~ -- LOCAL CORPUS DONE (2026-03-23 Session 129) -- 537 files processed to Learned/, watermark updated, 4 new claude-mem obs. Gate FAIL (4/50 — local corpus already covered by real-time saves). IndexedDB (Julian arc, 108+ sessions) DEFERRED — Sovereign not directed. P055 documented. See .gsd/phase-k1-PLAN.md.
 2. ~~**K-2**~~ ✅ DONE (2026-03-23 Session 130) -- 170 files scraped (128 platform.claude.com + 30 code.claude.com), 124 ledger entries tagged anthropic-docs, 2551 FAISS vectors. 3 vault-search bugs fixed (P056/P057). Docs searchable. See .gsd/phase-k2-PLAN.md.
 3. **K-3** -- MECHANISM FIXED (2026-03-23 Session 131) -- aria.service active (Session 127 fix), P049 fixed (Session 127), Task 9 deployed: heartbeat spam filter in ambient_observer.py (NOISE_CONTENT_PREFIXES + MIN_SIGNAL_MESSAGES=3). SUMMARY GATE PENDING: next consciousness cycle (6h dedup) must produce non-heartbeat "I noticed" bus message. See .gsd/phase-k3-PLAN.md.

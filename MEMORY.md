@@ -14,8 +14,8 @@
 
 ## Next Session Starts Here
 1. /resurrect
-2. K-3 Summary Gate: check bus for regent "I noticed" message from non-heartbeat signal. If confirmed → mark K-3 ✅ DONE in PLAN.md and move to E-1-A. If gate still pending → advance to PROOF-A per CASE A-COMPLETE rule.
-**Blocker if any:** None
+2. cc-regent Step 1: Read karma_regent.py via K2 SSH to understand pattern — then build cc_regent.py (CC's persistent agent layer).
+**Blocker if any:** None. K-3 Summary Gate still pending — check bus but advance to cc-regent regardless per CASE A-COMPLETE.
 
 ---
 
