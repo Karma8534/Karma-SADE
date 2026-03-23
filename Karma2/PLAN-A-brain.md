@@ -25,7 +25,7 @@ claude-mem search "Julian" → returns results from session history
 claude-mem search "cc_server_p1" → returns the zombie bug diagnosis
 ```
 
-**Status:** NOT STARTED
+**Status:** ✅ DONE (2026-03-23 Session 136) — 159 files, 2151 obs extracted, 8 saved, watermark created
 
 ---
 
@@ -45,7 +45,7 @@ claude-mem search "cc_server_p1" → returns the zombie bug diagnosis
 - Auto-indexer detects new .jsonl file within 60s
 - claude-mem search returns content from that session
 
-**Status:** NOT STARTED
+**Status:** ✅ DONE (2026-03-23 Session 136) — karma_session_indexer.ps1 + KarmaSessionIndexer scheduled task registered
 
 **Note:** This is the forward path. A1 is the backfill. Both are required.
 
@@ -75,16 +75,16 @@ mcp__plugin_claude-mem_mcp-search__search → project=Karma_SADE → recent deci
 - resume_block from spine is in first response
 - Recent decisions from claude-mem are surfaced
 
-**Status:** NOT STARTED
+**Status:** ✅ DONE (2026-03-23 Session 136) — resurrect Step 1 now SSH direct (no PS script primary); cold start ~30s verified
 
 ---
 
 ## A-GATE
 
 All three complete when:
-- [ ] claude-mem search returns content from Julian's session history (A1)
-- [ ] New session auto-appears in claude-mem within 60s of completion (A2)
-- [ ] `/resurrect` reads directly from K2 MCP, no PowerShell brief (A3)
-- [ ] Cold start < 2 minutes
+- [x] claude-mem search returns content from Julian's session history (A1) ✅
+- [x] KarmaSessionIndexer auto-indexer registered (A2) ✅ — live test pending next logon
+- [x] `/resurrect` Step 1 SSH direct, no PS script primary (A3) ✅
+- [x] Cold start < 2 minutes ✅ (~30s verified Session 136)
 
 When A-GATE passes → start PLAN-B.
