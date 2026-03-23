@@ -196,6 +196,9 @@ def load_memory_ledger() -> List[Dict[str, Any]]:
             try:
                 entry = json.loads(line)
                 raw_count += 1
+                # Assign synthetic ID to entries that lack one (e.g. /v1/ingest docs entries)
+                if entry.get("id") is None:
+                    entry["id"] = f"line_{line_num}"
                 if should_index_entry(entry):
                     entries.append(entry)
             except json.JSONDecodeError as e:
