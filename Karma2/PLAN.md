@@ -491,7 +491,9 @@ The family operates autonomously when this loop completes without Colby relaying
 | **P2** | PROOF-B | Regression detection after governor promotion | âœ… VERIFIED PASS (session 113) â€” AC1+AC3 pass post-surgery; governor spine backup added |
 | **P2** | AC9 | Full autonomous family loop | âœ… VERIFIED PASS (session 113) â€” busâ†’channels_bridgeâ†’CC serverâ†’bus reply |
 | **P2** | AC10 | Karma proactive outreach without prompting | âœ… IMPLEMENTED (session 113) â€” _proactive_outreach() in karma_regent.py |
-| **P2** | AC4 | Option-C self-authored research candidates | âœ… VERIFIED PASS (session 113) â€” 3 rsc at s113 BUT NOW loop active (P049) -- 5 persona_style cards in 6h, baseline 0.481->0.489. AC4 gate real at s113, loop broken 2026-03-22. |
+| **P2** | AC4 | Option-C self-authored research candidates | ✅ VERIFIED PASS (session 113) — P049 loop FIXED 2026-03-23: 24h dedup + 0.05 improvement gate in vesper_researcher.py. Researcher skips when score stagnant. |
+| — | B19 | /v1/cypher HTTP route missing from hub-bridge | ✅ FIXED 2026-03-23 session 127 — POST /v1/cypher added to hub-bridge, proxies to karma-server graph_query. Verified: count(e)=4877. |
+| — | B14 | aria.service crash loop (zombie PID 278533 holding port 7890) | ✅ FIXED 2026-03-23 session 127 — zombie killed, drop-in recreated, service active PID 423990. |
 | **P2** | AC7 | Governance hook blocks locked invariants | âœ… VERIFIED PASS (session 113) â€” exit(2) on policy edit, bypass with SOVEREIGN_APPROVED=1 |
 | **P3** | AC6 | Governance loop end-to-end test | âœ… VERIFIED PASS (session 113) â€” hub_file_read tool reads hub.env |
 | **P0** | K-1 | IndexedDB session extraction (108+ sessions -- Julian's arc) | PARTIAL -- 145 CLI stubs (AC9 pings). IndexedDB real corpus NOT STARTED. See PITFALL P050. |

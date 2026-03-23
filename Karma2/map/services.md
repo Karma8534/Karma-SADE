@@ -1,9 +1,9 @@
-# Services — Ground Truth (2026-03-20)
+# Services — Ground Truth (2026-03-23, updated session 127)
 
 ## vault-neo (arknexus.net, DigitalOcean NYC3)
 | Container | Status | Image | Role |
 |-----------|--------|-------|------|
-| anr-hub-bridge | Up 26h | hub_bridge-hub-bridge | API gateway, model routing, tools |
+| anr-hub-bridge | Up (rebuilt session 127) | hub_bridge-hub-bridge | API gateway, model routing, tools. /v1/cypher LIVE. |
 | karma-server | Up 7d HEALTHY | compose-karma-server | FalkorDB queries, batch_ingest, consciousness loop |
 | anr-vault-search | Up 8d HEALTHY | compose-search | FAISS semantic search |
 | anr-vault-db | Up 2wk HEALTHY | postgres:16-alpine | Vault API database |
@@ -17,8 +17,8 @@ Both at: /opt/seed-vault/memory_v1/
 ## K2 (192.168.0.226 / Tailscale 100.75.109.92)
 | Service | Status | File |
 |---------|--------|------|
-| aria.service | RUNNING | /mnt/c/dev/Karma/k2/aria/aria.py |
-| karma-regent.service | RUNNING | /mnt/c/dev/Karma/k2/aria/karma_regent.py |
+| aria.service | RUNNING (PID 423990, fixed session 127 — zombie+drop-in fix) | /mnt/c/dev/Karma/k2/aria/aria.py |
+| karma-regent.service | RUNNING via systemd (enabled, /etc/systemd/system/karma-regent.service, PID 243460) | /mnt/c/dev/Karma/k2/aria/karma_regent.py |
 
 ### K2 Cron Agents (always running — NOT session-dependent)
 | Script | Cadence | Role |
@@ -39,7 +39,7 @@ K2 Ollama models: qwen3:8b (primary), qwen3.5:4b (fallback)
 
 ## P1 (PAYBACK / 100.124.194.102)
 Ollama: running (localhost:11434)
-P1_OLLAMA_MODEL=nemotron-mini:latest — OPEN BLOCKER (model may not exist on P1)
+P1_OLLAMA_MODEL=nemotron-mini:latest — RESOLVED (model exists, verified session 125)
 P1_OLLAMA_URL: http://100.124.194.102:11434
 
 ## Coordination Bus

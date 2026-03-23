@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-23T00:45:00Z
-**Session:** 127 IN PROGRESS (aria.service crash loop fixed: zombie PID + drop-in recreated. aria.service active PID 423990, /api/exec verified: aria-exec-ok. Blocker 14 RESOLVED.)
+**Last updated:** 2026-03-23T06:00:00Z
+**Session:** 127 COMPLETE (aria.service fixed B14; /v1/cypher added to hub-bridge B19; P049 researcher dedup fix; karma-regent confirmed systemd-managed. Full Karma2 audit done.)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -11,7 +11,7 @@
 | Component | Status | Notes |
 |-----------|--------|-------|
 | **Consciousness Loop** | ✅ WORKING | 60s OBSERVE-only cycles. Zero LLM calls confirmed in source. RestartCount=0. |
-| **Hub Bridge API** | ⚠️ PARTIAL | /v1/chat, /v1/ambient, /v1/context, /v1/ingest operational. /v1/cypher BROKEN — returns {"ok":false,"error":"not_found"} (Session 126 audit). |
+| **Hub Bridge API** | ✅ WORKING | /v1/chat, /v1/ambient, /v1/context, /v1/ingest, /v1/cypher all operational. /v1/cypher added session 127 — verified count(e)=4877. |
 | **Voice & Persona** | ✅ DEPLOYED | Peer-level voice via claude-haiku-4-5-20251001 (Session 76: haiku-20241022 was RETIRED, migrated). Both modes. |
 | **FalkorDB Graph** | ✅ FULLY CAUGHT UP | 3877 nodes (3305 Episodic + 571 Entity + 1 Decision). batch_ingest cron every 6h. Last run: 305 eps/s, 0 errors. |
 | **Ledger** | ✅ GROWING | 200,445 entries (verified 2026-03-22 live check). STATE.md was 30x understated (6,571). Git commits + session-end hooks capturing actively. |
@@ -119,13 +119,14 @@
 16. **E-1-A corpus_cc.jsonl pending** -- Karma2/training/ created (2026-03-22). corpus_karma.jsonl written (2817 pairs). corpus_cc.jsonl needs separate ledger pass with CC session tag filter. TABLED with PHASE EVOLVE.
 17. **P0-G dead code** -- callWithK2Fallback() exists in server.js (~10 refs) but K2_INFERENCE_ENABLED flag NOT in hub.env. Wiring incomplete. Tabled until P0-G resumes.
 18. **PROOF-A pending** -- Codex as automated ArchonPrime service. GSD docs created (phase-proof-a-CONTEXT.md + phase-proof-a-PLAN.md). Task 1: verify `codex exec --sandbox` non-interactive from KCC context.
-19. **/v1/cypher BROKEN** (Session 126 audit) -- Returns {"ok":false,"error":"not_found"} on all queries. Breaks AC2 (FalkorDB graph queries from Karma). Root cause unknown — check hub-bridge server.js route definition + FalkorDB container health. Priority: HIGH.
-20. **karma-regent not in systemd** (Session 126 audit) -- Running as nohup only. Dies on K2 reboot. Fix: systemctl --user enable karma-regent on K2. Priority: MEDIUM.
+19. ~~**/v1/cypher BROKEN**~~ ✅ FIXED Session 127 (2026-03-23). POST /v1/cypher route added to hub-bridge server.js — proxies to karma-server graph_query tool. Verified: count(e)=4877. Vesper governor HTTP path now works.
+20. ~~**karma-regent not in systemd**~~ ✅ FALSE POSITIVE — session 127 audit confirmed karma-regent.service IS at /etc/systemd/system/karma-regent.service, enabled, running PID 243460. No fix needed. Duplicate nohup process (PID 243451) killed.
+21. **P049 researcher loop** — ✅ FIXED Session 127. vesper_researcher.py: 24h dedup + 0.05 improvement gate added. 73 redundant persona_style cards had been generated every 90min. Researcher now skips when metric was targeted recently and improvement < 0.05.
 
 ## Next Session Starts Here
 1. /resurrect
-2. Investigate /v1/cypher BROKEN (Blocker 19) — check hub-bridge server.js route definition + FalkorDB container health
-**Blocker if any:** None known. aria.service now FIXED.
+2. Continue Karma2 audit documentation OR start K-1 IndexedDB extraction (highest-impact unblocked task)
+**Blocker if any:** None. All session 127 fixes deployed + verified.
 
 ---
 
