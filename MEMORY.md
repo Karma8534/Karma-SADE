@@ -2,8 +2,22 @@
 
 ## Next Session Starts Here
 1. /resurrect
-2. K-2 Step 1: Read .gsd/phase-k2-PLAN.md Task 1 — fetch docs.anthropic.com sitemap to get full page list before scraping
-**Blocker if any:** None — phase-k2-PLAN.md exists, Task 1 executes immediately
+2. K-2 complete — verify /v1/context returns anthropic-docs results; check FAISS indexed all 124+ doc entries
+**Blocker if any:** None — K-2 scrape+ingest done, FAISS fix deployed
+
+---
+
+## Session 130 (2026-03-23) — K-2: Scrape + Ingest Anthropic Docs
+
+**DONE:**
+- Scraped 170 .md files from platform.claude.com/docs/en/ (128 pages) and code.claude.com/docs/en/ (30 pages) + inventory files
+- Saved to docs/anthropic-docs/ organized by section (agent-sdk, api, build-with-claude, agents-and-tools, test-and-evaluate, claude-code, about-claude)
+- Batch ingested all 170 files to vault ledger via /v1/ingest — 163/170 succeeded first pass, 7 retried, all 170 complete
+- 124 entries with tag "anthropic-docs" now in ledger
+- Fixed anr-vault-search/search_service.py: should_index_entry now handles content={"value":"..."} format used by /v1/ingest docs entries; deployed and rebuilding container
+- FAISS reindex in progress — will pick up 124+ doc entries on next cycle
+
+**Blocker:** None
 
 ---
 

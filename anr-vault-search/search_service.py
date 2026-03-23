@@ -127,6 +127,9 @@ def extract_text_for_embedding(entry: Dict[str, Any]) -> str:
             return f"[{platform}] User: {user_msg}"
         elif "message" in content:
             return f"[{platform}] {content['message']}"
+        elif "value" in content:
+            # Knowledge entries (docs, notes) stored as {"value": "..."}
+            return f"[docs] {content['value']}"
         else:
             return f"[{platform}] {json.dumps(content)}"
     return f"[{platform}] {str(content)}"
@@ -144,6 +147,8 @@ def extract_content_preview(entry: Dict[str, Any], max_length: int = 200) -> str
             text = content["user_message"]
         elif "message" in content:
             text = content["message"]
+        elif "value" in content:
+            text = content["value"]
         else:
             text = json.dumps(content, indent=2)
     else:
@@ -160,6 +165,9 @@ def should_index_entry(entry: Dict[str, Any]) -> bool:
     if content.get("assistant_message"):
         return True
     if content.get("message"):
+        return True
+    # Index knowledge entries (docs, notes) stored as {"value": "..."}
+    if content.get("value"):
         return True
     # Skip user-only records to reduce semantic noise.
     if content.get("user_message") and not content.get("assistant_message"):
