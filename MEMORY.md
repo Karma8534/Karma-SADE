@@ -1,6 +1,20 @@
 ---
 <!-- wrap: 2026-03-23T20:45Z -->
 
+## Session 134 (2026-03-23) — Resurrect Repair + Permissions Fix
+
+**DONE:**
+- Fixed 5 resurrect root causes (commit 2611eee):
+  - RC1: disabled karma-tools@karma-local plugin — duplicate skill was doubling every step
+  - RC2: wrap-session template hierarchy fixed to KO/KFH (was stale ARCHONPRIME/ARCHON)
+  - RC3: phase-proof-a-CONTEXT.md KCC location corrected to K2 (was P1 — broke Task 2/3)
+  - RC4: resurrect Step 5c now has pre-execution state surface block before first tool call
+  - RC5: MEMORY.md item 2 corrected to Plan-A Task 1 (was PROOF-A — wrong sprint)
+- Permissions wildcard: `Bash(*) + mcp__*` added to `~/.claude/settings.json` — no more per-command prompts
+- `/review` skill created: `~/.claude/skills/review/SKILL.md` — state surface, no execution
+- Backlog-8 updated: FakeChat localhost channel, Slack/Discord/Telegram MCP connectors, Twilio, PhoneLink
+- Observations saved: #10861 (resurrect doubling), #10865 (stale hierarchy), #10870 (permissions), #10875 (/review skill)
+
 ## Session 133 wrap addendum (2026-03-23) — Backlog-8 channel notes added
 - PLAN-backlog.md Backlog-8 updated: Slack/Discord/Telegram MCP connectors (Anthropic ships these), Twilio SMS/voice (credentials in mylocks), PhoneLink on P1 paired to S23 Ultra (future mobile agent surface). Wiring is documentation work, not engineering.
 
