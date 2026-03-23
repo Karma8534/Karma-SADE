@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-23T06:00:00Z
-**Session:** 127 COMPLETE (aria.service fixed B14; /v1/cypher added to hub-bridge B19; P049 researcher dedup fix; karma-regent confirmed systemd-managed. Full Karma2 audit done.)
+**Last updated:** 2026-03-23T14:00:00Z
+**Session:** 128 COMPLETE (resurrect+wrap-session full audit; B001/CASE C root cause fixed; cc_email_daemon blocker status added; P054+B003 documented; .gsd/phase-k1-PLAN.md pre-created for next session)
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -125,8 +125,8 @@
 
 ## Next Session Starts Here
 1. /resurrect
-2. Continue Karma2 audit documentation OR start K-1 IndexedDB extraction (highest-impact unblocked task)
-**Blocker if any:** None. All session 127 fixes deployed + verified.
+2. K-1 Step 1: Navigate to claude.ai via Claude-in-Chrome MCP to verify browser connection before IndexedDB extraction
+**Blocker if any:** None. .gsd/phase-k1-PLAN.md pre-created. Claude-in-Chrome MCP must be available.
 
 ---
 

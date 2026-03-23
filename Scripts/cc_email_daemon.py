@@ -147,6 +147,55 @@ def _read_spine_info() -> dict:
         return {"version": 0, "recent": [], "error": str(e)}
 
 
+def _read_state_blockers() -> str:
+    """Parse .gsd/STATE.md Active Blockers section. Returns per-blocker status with counts.
+
+    Classifies each numbered blocker as FIXED/RESOLVED, FALSE POSITIVE, or OPEN.
+    Used in status emails so Sovereign can see not just how many blockers but their status.
+    """
+    import re
+    state_file = REPO / ".gsd" / "STATE.md"
+    try:
+        text = state_file.read_text(encoding="utf-8", errors="replace")
+        start = text.find("## Active Blockers")
+        if start == -1:
+            return "(Active Blockers section not found in STATE.md)"
+        end = text.find("\n## ", start + 1)
+        section = text[start:end] if end != -1 else text[start:start + 4000]
+
+        fixed = 0
+        false_positive = 0
+        open_count = 0
+        lines_out = []
+        for line in section.splitlines():
+            line = line.strip()
+            m = re.match(r'^(\d+)\.\s+(.+)$', line)
+            if not m:
+                continue
+            num, content = m.group(1), m.group(2)
+            cu = content.upper()
+            if 'FALSE POSITIVE' in cu:
+                status = 'FALSE POSITIVE'
+                false_positive += 1
+            elif '\u2705' in content or ('~~' in content and content.count('~~') >= 2):
+                status = 'FIXED/RESOLVED'
+                fixed += 1
+            else:
+                status = 'OPEN'
+                open_count += 1
+            title_m = re.search(r'\*\*([^*]+)\*\*', content)
+            title = title_m.group(1)[:60] if title_m else content[:60]
+            lines_out.append(f"  B{num}: [{status}] {title}")
+
+        summary = (
+            f"Blocker Status: {open_count} OPEN | {fixed} FIXED/RESOLVED | "
+            f"{false_positive} FALSE POSITIVE\n"
+        ) + "\n".join(lines_out[:20])
+        return summary.encode("ascii", "replace").decode("ascii")
+    except Exception as e:
+        return f"(STATE.md read error: {e})"
+
+
 def _read_snapshot_summary() -> str:
     """Read cc_context_snapshot.md, extract key fields for email content.
 
@@ -232,6 +281,7 @@ def cmd_status() -> str:
         return f"skipped ({hours:.1f}h since last, threshold={STATUS_INTERVAL_H}h)"
 
     snapshot = _read_snapshot_summary()
+    blocker_status = _read_state_blockers()
     now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
     subject = f"[CC STATUS] {now}"
@@ -239,6 +289,9 @@ def cmd_status() -> str:
 {now}
 
 {snapshot}
+
+--- Blocker Status (live from STATE.md) ---
+{blocker_status}
 
 ---
 Sent every {STATUS_INTERVAL_H}h | CC Ascendant (paybackh1@gmail.com)

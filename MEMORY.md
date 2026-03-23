@@ -2621,7 +2621,32 @@ Next task: K-2 — Anthropic docs scrape (606 pages)
 **Ongoing:** Action items 2-7 from Sovereign in progress.
 
 
-### Next Session Starts Here
+### Next Session Starts Here (Session 127 wrap)
 1. /resurrect
 2. aria-crash Task 1: SSH to K2, run journalctl --user -xe -u aria.service -n 100 to get Python startup traceback
 **Blocker:** aria.service restart #2015+ -- ambient pipeline + shell_run dead until fixed.
+
+## Session 127+128 (2026-03-23) — Karma2 Full Audit + Resurrect/Wrap Hardening
+
+### Session 127 — Karma2 Ground Truth Audit
+**DONE:**
+- Full Karma2 audit: 7-parallel SSH investigations + PLAN.md read
+- B14 FIXED: aria.service crash loop — zombie PID 278533 holding port 7890; drop-in HOME=/home/karma recreated; service active PID 423990
+- B19 FIXED: /v1/cypher route added to hub-bridge server.js — proxies graph_query to karma-server; verified count(e)=4877
+- B20 FALSE POSITIVE: karma-regent IS in systemd (PID 243460 enabled); duplicate nohup process (PID 243451) killed
+- P049 FIXED: vesper_researcher.py — 24h dedup + 0.05 improvement gate; SKIPPED output verified
+- Services.md, PLAN.md, STATE.md updated; pushed + vault-neo synced
+
+### Session 128 — Resurrect + Wrap-Session Hardening
+**DONE:**
+- Root cause found: CC asked for directions because MEMORY.md item 2 was "X OR Y" (no GSD plan) → CASE C → brainstorming → asked Sovereign
+- resurrect SKILL.md: CASE C split into C-DIRECTIVE (write GSD plan from directive, execute) and C-AMBIGUOUS (only case for brainstorming)
+- wrap-session SKILL.md: Step 2c+2d — "X OR Y" item 2 is now an explicit protocol violation; directive tasks must pre-create .gsd plan
+- cc_email_daemon.py: `_read_state_blockers()` added; cmd_status() now includes per-blocker status from STATE.md in every status email
+- cc-scope-index.md: P054 (case-c-directive-brainstorm) + B003 (vague-memory-item2) added
+- .gsd/phase-k1-PLAN.md pre-created (K-1 IndexedDB extraction, 5 tasks)
+
+## Next Session Starts Here
+1. /resurrect
+2. K-1 Step 1: Navigate to claude.ai via Claude-in-Chrome MCP — verify browser connection before IndexedDB extraction
+**Blocker if any:** None. .gsd/phase-k1-PLAN.md pre-created. Claude-in-Chrome MCP must be available.

@@ -283,3 +283,13 @@ P051 [ghost-pipeline-file]: Rule: Always verify a file exists via SSH before cit
 
 P052 [snapshot-age-regex]: Rule: Never parse embedded timestamps from content files for freshness checks; use filesystem LastWriteTime. | Why: Archon regex expected yyyy-MM-ddTHH:mm:ssZ but snapshot writes 2026-03-22 (Session N) -- SnapshotAge was always 9999, ALERT state spammed bus for entire deployment.
 P053 [ps-cp1252-utf8-mojibake]: Rule: Always use -Encoding UTF8 when reading UTF-8 files in PowerShell; always use utf-8-sig + ASCII sanitize for any PS-read content going into emails/bus. | Why: PS default cp1252 decodes UTF-8 bytes as separate chars (E2->a, 80->euro, 94->quote), then Set-Content UTF8 re-encodes each -- double mojibake in output files.
+
+## Session 128 Additions (2026-03-23 resurrect+wrap audit)
+
+P054 [case-c-directive-brainstorm]:
+Rule: When MEMORY.md item 2 is a Sovereign directive (contains audit/fix/verify/resolve/implement/investigate) with no GSD plan → write .gsd/phase-[slug]-PLAN.md from the directive and execute Task 1. NEVER invoke brainstorming.
+Why: "Audit resurrect + wrap-session + fix issues" → no GSD plan → CASE C → brainstorming → clarifying questions → CC asked for direction instead of acting. Wasted round-trip. Directive IS the spec.
+
+B003 [vague-memory-item2]:
+Rule: MEMORY.md "Next Session Starts Here" item 2 MUST be a specific first action (verb + file + purpose). "X OR Y" = choice = CASE C-AMBIGUOUS trigger at next resurrect = brainstorming = questions.
+Why: wrap-session wrote "Continue Karma2 audit OR start K-1" — OR made both options ambiguous, no GSD plan for either → CASE C triggered → brainstorming asked Sovereign for direction. Session 128.
