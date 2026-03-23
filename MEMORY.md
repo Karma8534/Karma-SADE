@@ -70,10 +70,28 @@
 - STATE.md Blocker 14 resolved. Drop-in confirmed present.
 - Remaining blockers: /v1/cypher BROKEN (#19), karma-regent not in systemd (#20), PROOF-A (#18)
 
+### Session 127 continued — Comprehensive Karma2 Audit
+
+**DONE:**
+- Full ground-truth audit: PLAN.md vs live K2/vault-neo state (Phase 1+2 complete)
+- FIXED /v1/cypher: added POST /v1/cypher route to hub-bridge server.js (proxies to karma-server graph_query). Blocker 19 resolved.
+- FIXED P049: vesper_researcher.py now has 24h dedup + 0.05 improvement gate — persona_style loop stopped.
+- FOUND: karma-regent.service IS enabled via systemd at /etc/systemd/system/ (Blocker 20 was false positive)
+- KILLED: duplicate karma-regent nohup process (PID 243451)
+- FOUND: ambient_observer runs INSIDE aria_consciousness.py (K-3 fully working — no separate process needed)
+- FOUND: vesper spine v1236, 11 stable patterns, promotion fired at 00:44:41Z this session
+
+**Remaining open gaps:**
+- K-1: IndexedDB extraction NOT started (145 CLI stubs only)
+- K-2: 122/606 Anthropic docs pages scraped
+- P0-G: local inference wiring (hardware-blocked, flip flag when M4 arrives)
+- P3-A/B/C: Phase 3 cleanup items
+- KARMA-GATE: criteria 1-4 not yet met
+
 ### Next Session Starts Here
 1. /resurrect
-2. Investigate /v1/cypher BROKEN (Blocker 19) — check hub-bridge server.js route + FalkorDB health
-**Blocker if any:** None.
+2. Continue Karma2 audit: update services.md + ROADMAP.md + PLAN.md (active blockers table)
+**Blocker if any:** None — hub-bridge deploy in progress this session.
 
 ## Session 120 (2026-03-22) — Resurrect/Wrap/PLAN x5 audit + K-3 GSD docs created
 

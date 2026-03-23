@@ -3622,6 +3622,35 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    // ─── FalkorDB Cypher endpoint (/v1/cypher) ──────────────────────────
+    // Accepts: {cypher:"..."} or {query:"..."} or {tool:"graph_query",input:{cypher:"..."}}
+    // Used by vesper_governor.py to write patterns to FalkorDB via hub-bridge
+    if (req.method === "POST" && req.url === "/v1/cypher") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      let body;
+      try { body = JSON.parse(await parseBody(req, 500000)); } catch (e) {
+        return json(res, 400, { ok: false, error: "invalid_json" });
+      }
+      const cypher = body.cypher || body.query
+        || (body.input && body.input.cypher)
+        || (body.tool_input && body.tool_input.cypher);
+      if (!cypher) return json(res, 400, { ok: false, error: "missing_cypher", hint: "provide 'cypher', 'query', or 'input.cypher'" });
+      try {
+        const proxyRes = await fetch("http://karma-server:8340/v1/tools/execute", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tool_name: "graph_query", tool_input: { cypher } }),
+        });
+        const data = await proxyRes.json();
+        return json(res, proxyRes.ok ? 200 : proxyRes.status, data);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: "karma_server_unavailable", message: e.message });
+      }
+    }
+
     // ─── Memory API Proxy Routes (Phase 1) ─────────────────────────────
     // Proxy POST requests to karma-server for memory operations
     const MEMORY_PROXY_ROUTES = [
