@@ -1,9 +1,20 @@
 ---
 
+## Session 131 (2026-03-23) — K-3 Task 9: ambient_observer heartbeat filter
+
+**DONE:**
+- K-3 Task 9: Fixed ambient_observer.py heartbeat spam filter. Root cause: _extract_signal_batch() processed ALL bus messages including regent HEARTBEAT spam → useless Ollama insight.
+- Added NOISE_CONTENT_PREFIXES (6 prefixes), _is_noise_message(), MIN_SIGNAL_MESSAGES=3
+- Deployed to K2 /mnt/c/dev/Karma/k2/aria/ambient_observer.py via scp
+- Verified: import OK, _is_noise_message("HEARTBEAT: ...") → True, signal msg → False
+- obs #10250, bus coord_1774268999901_0h7d
+
+**Blocker:** K-3 Summary Gate pending — need next consciousness cycle to confirm clean ambient insight on bus
+
 ## Next Session Starts Here
 1. /resurrect
-2. K-3 Step 1: Read .gsd/phase-k3-PLAN.md — all 8 tasks marked done but PLAN.md says mechanism broken (aria crash-loop, redundant research_skill_cards). Verify aria.service status and check if ambient_observer producing quality insights.
-**Blocker if any:** None — K-3 GSD plan exists, Task 1 is read + verify
+2. K-3 Summary Gate: check bus for regent "I noticed" message from non-heartbeat signal. If confirmed → mark K-3 ✅ DONE in PLAN.md and move to E-1-A.
+**Blocker if any:** None
 
 ---
 

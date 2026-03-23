@@ -17,6 +17,17 @@ OLLAMA_MODEL = "nemotron-mini:optimized"
 HUB_AUTH_TOKEN = os.environ.get("HUB_AUTH_TOKEN", "")
 EVOLUTION_LOG = Path("/mnt/c/dev/Karma/k2/cache/regent_evolution.jsonl")
 DEDUP_HOURS = 6
+MIN_SIGNAL_MESSAGES = 3  # K-3 Task 9: require at least 3 non-noise messages
+
+# K-3 Task 9: prefixes that identify heartbeat/noise messages — skip before analysis
+NOISE_CONTENT_PREFIXES = (
+    "HEARTBEAT:",
+    "SESSION WRAP",
+    "SESSION CHECKPOINT",
+    "SESSION START",
+    "CC SESSION",
+    "INSIGHT: CC WATCHDOG",
+)
 
 STOPWORDS = {
     "the", "a", "an", "is", "in", "it", "of", "to", "and", "for", "on",
@@ -25,7 +36,16 @@ STOPWORDS = {
     "i", "you", "we", "they", "he", "she", "my", "your", "our", "their",
     "no", "so", "do", "if", "up", "out", "me", "him", "us", "them",
     "cc", "karma", "colby", "regent", "aria", "vesper",  # project-specific noise
+    # K-3 Task 9: heartbeat-specific noise words
+    "heartbeat", "online", "processed", "messages", "evolve", "continue",
+    "aliases", "runtime", "89831", "status", "complete",
 }
+
+
+def _is_noise_message(msg: dict) -> bool:
+    """Return True if this message is a heartbeat or system log — not a behavioral signal."""
+    content = (msg.get("content", "") or "").strip()
+    return any(content.startswith(prefix) for prefix in NOISE_CONTENT_PREFIXES)
 
 
 def _get_last_ambient_ts() -> datetime.datetime | None:
@@ -140,12 +160,17 @@ def observe(cycle_id: str) -> list[dict]:
         if age_hours < DEDUP_HOURS:
             return []
 
-    # Fetch and extract signals
-    messages = _fetch_bus_signals()
-    if not messages:
+    # Fetch signals
+    all_messages = _fetch_bus_signals()
+    if not all_messages:
         return []
 
-    batch = _extract_signal_batch(messages)
+    # K-3 Task 9: filter noise (heartbeats, session logs) before analysis
+    signal_messages = [m for m in all_messages if not _is_noise_message(m)]
+    if len(signal_messages) < MIN_SIGNAL_MESSAGES:
+        return []  # Not enough meaningful signal — skip this cycle
+
+    batch = _extract_signal_batch(signal_messages)
     if not batch["senders"] and not batch["top_words"]:
         return []
 
@@ -168,6 +193,7 @@ def observe(cycle_id: str) -> list[dict]:
         "cycle_id": cycle_id,
         "insight": insight,
         "signal_count": batch["message_count"],
+        "signal_messages": len(signal_messages),
         "senders": batch["senders"],
         "top_words": batch["top_words"],
     }

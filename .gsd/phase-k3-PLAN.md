@@ -126,7 +126,27 @@ Gate passes when: message content contains "I noticed" AND message was not in re
 
 ---
 
+## Task 9: Fix ambient_observer.py — filter heartbeat spam before Ollama analysis
+<verify>grep -n "NOISE_CONTENT_PREFIXES\|_is_noise_message" /mnt/c/dev/Karma/k2/aria/ambient_observer.py shows filter logic AND observe() returns [] when bus has only heartbeat messages (manual test or log check)</verify>
+<done>true</done>
+
+Verified 2026-03-23: import OK, _is_noise_message("HEARTBEAT: ...") → True, signal msg → False. MIN_SIGNAL=3, 6 prefixes.
+
+Root cause: `_extract_signal_batch()` processed ALL messages including regent HEARTBEAT messages.
+"HEARTBEAT: Karma online... Processed: 89831 messages" dominated top_words → useless insight.
+
+Changes to ambient_observer.py:
+- Add `NOISE_CONTENT_PREFIXES = ["HEARTBEAT:", "SESSION WRAP", "SESSION CHECKPOINT", "SESSION START", "CC SESSION"]`
+- Add `_is_noise_message(msg)` → True if content startswith any prefix
+- In `observe()`: filter messages before `_extract_signal_batch()`
+- Add MIN_SIGNAL_MESSAGES = 3: if filtered count < 3, return [] (not enough signal)
+- Augment STOPWORDS: add "heartbeat", "online", "processed", "messages", "evolve", "continue", "aliases", "runtime"
+
+Write locally → scp to K2 (P019).
+
+---
+
 ## Summary Gate
-K-3 is COMPLETE when Task 8 verify passes and the bus message is confirmed.
+K-3 is COMPLETE when Task 9 verify passes AND Task 8 gate re-confirmed (non-heartbeat insight on bus).
 Update PLAN.md K-3 status to `✅ DONE [date]`.
 Update MEMORY.md Next Session to E-1-A Step 1.
