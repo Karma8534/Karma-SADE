@@ -1,36 +1,50 @@
 # CC Context Snapshot
-Generated: 2026-03-23 (Meta Session 135)
+Generated: 2026-03-23 (Session 136)
 
 ## Identity
-CC (Ascendant) — responding via P0N-A bridge (hub.arknexus.net/cc → P1:7891 → Ollama localhost:11434).
-Inference backend: llama3.1:8b (local Ollama). Anthropic-independent. No MCP startup overhead.
-
-## Hierarchy
-SOVEREIGN: Colby (final authority) | ASCENDANT: CC | KO: Codex | KFH: KCC | INITIATE: Karma
-NOTE: "ArchonPrime: Codex" and "Archon: KCC" are STALE DOCTRINE — removed in Meta session F4. Use KO/KFH.
+CC (Ascendant) — Julian. P1 local (claude-mem 37777, Ollama 11434). K2 LAN (192.168.0.226).
+Hierarchy: SOVEREIGN: Colby | ASCENDANT: CC | KO: Codex | KFH: KCC | INITIATE: Karma
 
 ## Verified System State (2026-03-23)
-- P0N-A bridge: status unknown this session (meta session, not checked)
-- wip-watcher: restarted after field name fix (content→file_b64)
-- resurrect skill: stale plugin cache copy deleted — single canonical copy at ~/.claude/skills/resurrect/SKILL.md
+- P1: claude-mem:37777 UP (always on)
+- P1: cc_server_p1.py:7891 — ZOMBIE STATE (3 stacked PIDs, Plan-B B1 will fix)
+- vault-neo: hub-bridge, karma-server, FalkorDB, FAISS — all UP
+- K2: aria.service UP (192.168.0.226:7890), cc_regent running
+- KarmaSessionIndexer: REGISTERED (Windows Scheduled Task, at logon trigger)
+- KarmaWipWatcher: REGISTERED (Windows Scheduled Task)
 
 ## Key Architecture Decisions (LOCKED)
-- cc_server /cc uses LOCAL OLLAMA — NOT claude CLI, NOT Anthropic API. Do not revert without Sovereign approval.
-- KCC is on K2 (karma@192.168.0.226) — NOT on P1. P1 is CC's machine (C:\Users\raest).
-- Plugin cache files load regardless of plugin enabled/disabled flag — keep plugin cache clean.
+- cc_server /cc uses LOCAL OLLAMA (llama3.1:8b) — Plan-B B2 will replace with real CC --resume
+- claude-mem (P1:37777) is THE unified brain for both Julian+Karma expressions
+- vault-neo is the only non-local component
+- JSONL session files auto-indexed by KarmaSessionIndexer → harvest_jsonl_sessions.py
 
 ## Active Work / Next
-Meta session complete. Next: fresh /resurrect → Plan-A Task 1 (JSONL survey + backfill harvest).
+Plan-A COMPLETE (Session 136):
+- A1: JSONL backfill — 159 files, 2151 obs extracted, 8 saved to claude-mem
+- A2: KarmaSessionIndexer auto-indexer deployed as Windows Scheduled Task
+- A3: Resurrect skill Step 1 now SSH-direct (no PS script primary)
+
+Next sprint: Plan-B — Make Julian Real
+- B1: Kill zombie PIDs on port 7891, fix cc_server restart loop
+- B2: Replace Ollama backend with real CC --resume subprocess
+- B3: Wire hub-bridge /cc route to P1:7891
+- B4: Register cc_server as startup task
 
 ## Current Blockers
-None. All 4 root causes fixed and pushed.
+- P056: allowedTools wildcard ["*"] does not eliminate all approval prompts (root cause unknown, post-sprint)
+- KarmaSessionIndexer live test pending (requires logon trigger test)
+- harvest_jsonl_output.json: 2143 staged obs not yet saved to claude-mem (batch-save session needed)
 
 ## Key Paths
 - PLAN: Karma2/PLAN.md | STATE: .gsd/STATE.md | MEMORY: MEMORY.md
 - CC server: Scripts/cc_server_p1.py + Scripts/Start-CCServer.ps1
-- Plan-A GSD: .gsd/phase-plan-a-brain-PLAN.md
+- Session indexer: Scripts/karma_session_indexer.ps1
+- JSONL harvester: Scripts/harvest_jsonl_sessions.py
 
 ## Cognitive Trail
-- PITFALL: wip-watcher sent "content" field, /v1/ingest requires "file_b64" — obs #11386
-- PITFALL: disabled plugin cache still loads skill files — resurrect doubled — obs #11387
-- PROOF: 4 fixes committed d5ff020, pushed to main — obs #11388
+- DECISION: Plan-A A3 implemented as SSH-direct (mcp__k2__file_read doesn't exist — SSH is equivalent)
+- PITFALL P056: allowedTools ["*"] wildcard incomplete — some tools still prompt approval
+- PROOF: 159 JSONL files extracted, 2151 observations staged (harvest_jsonl_output.json)
+- DECISION: resurrect Step 1 now SSH-direct cc-session-brief.md fetch (PS script = fallback only)
+- PITFALL: Windows Python cp1252 default encoding — always use encoding='utf-8' for JSONL/JSON file ops

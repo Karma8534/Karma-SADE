@@ -314,6 +314,10 @@ P055 [online-before-local-check]:
 Rule: Before ANY extraction/ingestion/data task, check docs/ccSessions/ and local filesystem FIRST. Never go online (browser, API, IndexedDB, claude.ai) to fetch data that may already be local.
 Why: K-1 plan assumed browser IndexedDB → CC spent entire session probing claude.ai API, navigating tabs, downloading JSON. 327 session files were already in docs/ccSessions/ the whole time. Third documented occurrence of this same pattern.
 
+P056 [allowed-tools-bypass-incomplete]:
+Rule: `allowedTools: ["*"]` in settings.local.json does NOT eliminate all approval prompts. Some tools still prompt. Verify end-to-end before declaring "all permissions granted". Investigate per-MCP-tool permissions as separate layer. Post-sprint fix.
+Why: Session 136 — wildcard set but manual approvals still required mid-session. Root cause unknown. Interrupts autonomous execution.
+
 B003 [vague-memory-item2]:
 Rule: MEMORY.md "Next Session Starts Here" item 2 MUST be a specific first action (verb + file + purpose). "X OR Y" = choice = CASE C-AMBIGUOUS trigger at next resurrect = brainstorming = questions.
 Why: wrap-session wrote "Continue Karma2 audit OR start K-1" — OR made both options ambiguous, no GSD plan for either → CASE C triggered → brainstorming asked Sovereign for direction. Session 128.
