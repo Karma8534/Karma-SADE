@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-23T16:00:00Z
-**Session:** Meta Session COMPLETE (2026-03-23). F1-F4 skill fixes committed (49e4578). KO/KFH doctrine locked. PHASE EVOLVE gated behind 5-criteria baseline. cc_regent.py identified as next sprint item (Sovereign directive). GSD docs created.
+**Last updated:** 2026-03-23T23:45:00Z
+**Session:** Session 136 COMPLETE (2026-03-23). Plan-A complete: JSONL backfill (A1), auto-indexer (A2), resurrect SSH-direct (A3). P056 documented. GSD docs pre-created for Plan-B. Next: Plan-B B1 — kill zombie PIDs on port 7891.
 **Canonical source:** This file. Read at session start.
 
 ---
