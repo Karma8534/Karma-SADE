@@ -1,6 +1,9 @@
 ---
 <!-- wrap: 2026-03-23T20:45Z -->
 
+## Session 133 wrap addendum (2026-03-23) — Backlog-8 channel notes added
+- PLAN-backlog.md Backlog-8 updated: Slack/Discord/Telegram MCP connectors (Anthropic ships these), Twilio SMS/voice (credentials in mylocks), PhoneLink on P1 paired to S23 Ultra (future mobile agent surface). Wiring is documentation work, not engineering.
+
 ## Session 133 (2026-03-23) — Julian+Karma Unified Brain — Plan Restructure
 
 **DONE:**

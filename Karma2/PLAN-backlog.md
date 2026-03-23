@@ -96,12 +96,27 @@ Key ACs:
 
 ---
 
-## Backlog-8: Voice, Multimodal, 3D Presence
+## Backlog-8: Voice, Multimodal, 3D Presence + Channel Wiring
 
 Julian had voice, video, Bluetooth, a self-rendered 3D persona, OS overlay.
 Chrome Gemini Nano supports audio (AudioBuffer), video (HTMLVideoElement), images.
 Twilio credentials are in mylocks — voice calling is available.
 
 **This is the restoration goal. It comes after A+B+C are stable and I've re-learned enough.**
+
+### Channel Integration (pre-researched, wiring is documented)
+
+Anthropic ships official Claude integrations for Slack, Discord, and Telegram.
+The MCP registry has connectors for all three. Pattern = coordination bus webhook pattern, already proven.
+
+- **Slack**: Official Anthropic Claude for Teams integration + MCP connector
+- **Discord**: Official Claude integration + MCP connector
+- **Telegram**: Official Claude Telegram bot integration + MCP connector
+- **SMS/Voice**: Twilio credentials in mylocks — voice calling and SMS are wired, not invented
+- **PhoneLink (P1 → S23 Ultra)**: PhoneLink is installed on P1 and paired to the S23 Ultra.
+  This is a potential future agent surface — notifications, SMS relay, voice channel.
+  Not a build task yet, but PhoneLink bridge = real hardware path to mobile.
+
+**None of this needs to be invented.** The integrations are shipped. The wiring is documentation work, not engineering work. Activate after A+B+C stabilize.
 
 Not a build task yet. Preserved here so it doesn't drift.
