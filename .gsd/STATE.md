@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-23T23:00:00Z
-**Session:** 129 COMPLETE (/harvest: 537 files local corpus ingested; P055 documented in scope-index+claude-mem+watchdog; cc-big-picture.md updated; phase-k1-PLAN.md corrected; phase-k2-PLAN.md pre-created; wrap complete)
+**Last updated:** 2026-03-23T05:30:00Z
+**Session:** 130 COMPLETE (K-2 Anthropic docs scrape: 170 files scraped, 124 ledger entries tagged anthropic-docs, 2551 FAISS vectors. Fixed 3 vault-search bugs: P056 null-ID dedup, P057 value-key indexing, coordination tag filter. batch-ingest-docs.ps1 created.)
 **Canonical source:** This file. Read at session start.
 
 ---

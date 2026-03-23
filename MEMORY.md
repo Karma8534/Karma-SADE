@@ -2,8 +2,8 @@
 
 ## Next Session Starts Here
 1. /resurrect
-2. K-2 complete — verify /v1/context returns anthropic-docs results; check FAISS indexed all 124+ doc entries
-**Blocker if any:** None — K-2 scrape+ingest done, FAISS fix deployed
+2. K-3 Step 1: Read .gsd/phase-k3-PLAN.md — all 8 tasks marked done but PLAN.md says mechanism broken (aria crash-loop, redundant research_skill_cards). Verify aria.service status and check if ambient_observer producing quality insights.
+**Blocker if any:** None — K-3 GSD plan exists, Task 1 is read + verify
 
 ---
 
