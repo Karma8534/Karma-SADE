@@ -166,9 +166,12 @@ def should_index_entry(entry: Dict[str, Any]) -> bool:
         return True
     if content.get("message"):
         return True
-    # Index knowledge entries (docs, notes) stored as {"value": "..."}
+    # Index knowledge/docs entries stored as {"value": "..."} but skip coordination noise
     if content.get("value"):
-        return True
+        tags = entry.get("tags", [])
+        skip_tags = {"coordination", "regent", "heartbeat"}
+        if not skip_tags.intersection(set(tags)):
+            return True
     # Skip user-only records to reduce semantic noise.
     if content.get("user_message") and not content.get("assistant_message"):
         return False

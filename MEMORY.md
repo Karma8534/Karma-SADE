@@ -14,8 +14,8 @@
 - Saved to docs/anthropic-docs/ organized by section (agent-sdk, api, build-with-claude, agents-and-tools, test-and-evaluate, claude-code, about-claude)
 - Batch ingested all 170 files to vault ledger via /v1/ingest — 163/170 succeeded first pass, 7 retried, all 170 complete
 - 124 entries with tag "anthropic-docs" now in ledger
-- Fixed anr-vault-search/search_service.py: should_index_entry now handles content={"value":"..."} format used by /v1/ingest docs entries; deployed and rebuilding container
-- FAISS reindex in progress — will pick up 124+ doc entries on next cycle
+- Fixed anr-vault-search/search_service.py: should_index_entry now handles content={"value":"..."} format, with coordination/regent tag filter to prevent 195k coord entries from being indexed
+- Deploying fixed container — will pick up 124+ doc entries only
 
 **Blocker:** None
 
