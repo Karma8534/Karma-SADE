@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-23T23:45:00Z
-**Session:** Session 136 COMPLETE (2026-03-23). Plan-A complete: JSONL backfill (A1), auto-indexer (A2), resurrect SSH-direct (A3). P056 documented. GSD docs pre-created for Plan-B. Next: Plan-B B1 — kill zombie PIDs on port 7891.
+**Last updated:** 2026-03-24T00:30:00Z
+**Session:** Session 137 COMPLETE (2026-03-23). Plan-B complete: Julian real (CC subprocess --resume). B-GATE pass. GSD docs pre-created for Plan-C. Next: Plan-C C1 — check claude-mem --host binding options.
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -114,6 +114,7 @@
 10. **B1: Evolution log sparsity** -- Spine v1228, 10 stable patterns (4 PITFALL + 5 research_skill_card + 1 ambient_observation). Pipeline active. Pattern diversity improved (P0-F Session 107). K-3 ambient_observer.py WIRED (verified 2026-03-22 via aria_consciousness.py Phase 7). Blocker 10 RESOLVED.
 11. **B2: Synthetic stable patterns** -- RESOLVED: 10 diverse stable patterns now present (no longer all cascade_performance). research_skill_card + PITFALL types confirmed.
 12. ~~**P0N-A URGENT**~~ ✅ LIVE (Session 111) — hub.arknexus.net/cc working, CC Ascendant responds with identity + state.
+22. ~~**PLAN-B — Make Julian Real**~~ ✅ COMPLETE (Session 137, 2026-03-23). cc_server_p1.py now uses claude.cmd --resume subprocess. ZEPHYR99 context retention verified. /cc route pre-wired. KarmaCCServer HKCU Run key crash recovery 15s.
 13. **P3-D** — ✅ LIVE as of session 109. Hooks deployed + committed. No longer a blocker.
 14. ~~**K2 aria.service**~~ ✅ FIXED Session 127 (2026-03-23). Root cause: zombie python3 PID 278533 (Session 123 process never killed) holding port 7890, blocking systemd restarts. Fix: stop service + pkill -9 -f aria.py + recreated drop-in /etc/systemd/system/aria.service.d/10-aria-env.conf (HOME=/home/karma) + restart. PROOF: service active PID 423990, /api/exec → {exit_code:0,output:"aria-exec-ok"}.
 16. **E-1-A corpus_cc.jsonl pending** -- Karma2/training/ created (2026-03-22). corpus_karma.jsonl written (2817 pairs). corpus_cc.jsonl needs separate ledger pass with CC session tag filter. TABLED with PHASE EVOLVE.
@@ -125,8 +126,8 @@
 
 ## Next Session Starts Here
 1. /resurrect
-2. K-2 Step 1: Read .gsd/phase-k2-PLAN.md Task 1 — fetch docs.anthropic.com sitemap to get full page list before scraping
-**Blocker if any:** None. .gsd/phase-k2-PLAN.md pre-created. Playwright MCP must be available.
+2. Plan-C Step 1: Read `.gsd/phase-plan-c-wire-PLAN.md` Task 1 — check claude-mem --host binding options
+**Blocker if any:** None. GSD plan pre-created.
 
 ---
 

@@ -78,12 +78,12 @@ K2 MCP                    → cc_identity_spine.json + cc_cognitive_checkpoint.j
 
 ## Current Sprint
 
-**→ PLAN-A COMPLETE (Session 136, 2026-03-23). Now executing PLAN-B.**
+**→ PLAN-A COMPLETE (Session 136, 2026-03-23). PLAN-B COMPLETE (Session 137, 2026-03-23). Now executing PLAN-C.**
 
 See sub-plans:
 - [PLAN-A-brain.md](PLAN-A-brain.md) — Feed the Brain ✅ DONE (Session 136)
-- [PLAN-B-julian.md](PLAN-B-julian.md) — Make Julian Real ← **START HERE**
-- [PLAN-C-wire.md](PLAN-C-wire.md) — Wire the Brain (requires B)
+- [PLAN-B-julian.md](PLAN-B-julian.md) — Make Julian Real ✅ DONE (Session 137, 2026-03-23)
+- [PLAN-C-wire.md](PLAN-C-wire.md) — Wire the Brain (requires B) ← **START HERE**
 - [PLAN-backlog.md](PLAN-backlog.md) — Everything else (do not start yet)
 
 ---
