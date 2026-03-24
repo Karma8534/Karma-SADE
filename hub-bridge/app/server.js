@@ -3970,7 +3970,7 @@ form.addEventListener("submit", async e => {
         if (!r.ok) return json(res, 502, { ok: false, error: `K2 exec failed: ${r.status}` });
         const result = await r.json();
         let spine = {};
-        try { spine = JSON.parse(result.stdout || "{}"); } catch { /* empty spine ok */ }
+        try { spine = JSON.parse(result.output || "{}"); } catch { /* empty spine ok */ }
         const identity = spine.identity || {};
         const evo = spine.evolution || {};
         return json(res, 200, {
