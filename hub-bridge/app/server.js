@@ -3930,6 +3930,62 @@ form.addEventListener("submit", async e => {
     }
     // ── end P0N-A ─────────────────────────────────────────────────────────────
 
+    // ── /memory/* — claude-mem bridge via P1 cc_server ───────────────────────
+    if (req.method === "POST" && (req.url === "/memory/search" || req.url === "/memory/save")) {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      const raw = await parseBody(req, 500000);
+      let body; try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+      try {
+        const r = await fetch(`${CC_SERVER_URL}${req.url}`, {
+          method: "POST",
+          headers: { "Authorization": req.headers["authorization"], "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(15000),
+        });
+        const d = await r.json();
+        return json(res, r.status, d);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `memory proxy error: ${e.message}` });
+      }
+    }
+
+    if (req.method === "GET" && req.url === "/memory/context") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      if (!ARIA_SERVICE_KEY || !ARIA_URL) {
+        return json(res, 503, { ok: false, error: "K2 not configured" });
+      }
+      try {
+        const r = await fetch(`${ARIA_URL}/api/exec`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Aria-Service-Key": ARIA_SERVICE_KEY },
+          body: JSON.stringify({ command: "cat /mnt/c/dev/Karma/k2/cache/cc_identity_spine.json 2>/dev/null" }),
+          signal: AbortSignal.timeout(10000),
+        });
+        if (!r.ok) return json(res, 502, { ok: false, error: `K2 exec failed: ${r.status}` });
+        const result = await r.json();
+        let spine = {};
+        try { spine = JSON.parse(result.stdout || "{}"); } catch { /* empty spine ok */ }
+        const identity = spine.identity || {};
+        const evo = spine.evolution || {};
+        return json(res, 200, {
+          ok: true,
+          resume_block: identity.resume_block || "",
+          stable_patterns: (evo.stable_identity || []).slice(0, 5),
+          spine_version: evo.version || 0,
+          retrieved_at: new Date().toISOString(),
+        });
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `memory context error: ${e.message}` });
+      }
+    }
+    // ── end /memory/* ─────────────────────────────────────────────────────────
+
     return notFound(res);
 
   } catch (e) {
@@ -4210,5 +4266,5 @@ async function ccInitiativeTick() {
 // setTimeout(() => { ccInitiativeTick(); setInterval(ccInitiativeTick, 30 * 1000); }, 60 * 1000);
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`hub-bridge v2.11.0 listening on :${PORT}`);
+  console.log(`hub-bridge v2.12.0 listening on :${PORT}`);
 });
