@@ -22,6 +22,17 @@ if (Test-Path $TokenFile) {
 
 Write-Host "[cc-server] Starting cc_server_p1.py on port 7891 at $(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
 
+# Kill any existing processes on port 7891 before spawning new one
+$existingPids = @(netstat -ano | Select-String ":7891 " | ForEach-Object {
+    $parts = ($_ -split '\s+') | Where-Object { $_ -ne '' }
+    $parts[-1]
+} | Select-Object -Unique)
+if ($existingPids.Count -gt 0) {
+    Write-Host "[cc-server] Killing $($existingPids.Count) existing process(es) on port 7891: $($existingPids -join ', ')"
+    $existingPids | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }
+    Start-Sleep -Seconds 1
+}
+
 # Auto-restart loop — if server crashes, restart after 10s
 while ($true) {
     $proc = Start-Process py -ArgumentList "-3",$Script `
