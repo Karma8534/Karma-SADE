@@ -6,7 +6,7 @@ Uses local Ollama for inference — Anthropic-independent, no MCP startup overhe
 Returns: {response, ok}
 Auth: Bearer token checked against HUB_CHAT_TOKEN env var.
 """
-import os, json, sys, subprocess, pathlib
+import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, socket
 from http.server import HTTPServer, BaseHTTPRequestHandler
 sys.path.insert(0, os.path.dirname(__file__))
 try:
@@ -20,8 +20,28 @@ TOKEN         = os.environ.get("HUB_CHAT_TOKEN", "")
 WORK_DIR      = r"C:\Users\raest\Documents\Karma_SADE"
 SNAPSHOT_FILE = os.path.join(WORK_DIR, "cc_context_snapshot.md")
 SESSION_FILE  = pathlib.Path.home() / ".cc_server_session_id"
-CLAUDE_CMD    = r"C:\Users\raest\AppData\Roaming\npm\claude.cmd"
-API_TIMEOUT   = 120  # seconds — CC subprocess can be slow on complex tasks
+CLAUDE_CMD     = r"C:\Users\raest\AppData\Roaming\npm\claude.cmd"
+API_TIMEOUT    = 120  # seconds — CC subprocess can be slow on complex tasks
+CLAUDEMEM_URL  = "http://127.0.0.1:37777"  # claude-mem worker (loopback)
+
+def claudemem_proxy(path, method="GET", body=None, timeout=10):
+    """Proxy a request to the local claude-mem worker at 127.0.0.1:37777."""
+    url = f"{CLAUDEMEM_URL}{path}"
+    data = json.dumps(body).encode() if body is not None else None
+    req = urllib.request.Request(url, data=data, method=method)
+    if data:
+        req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return resp.status, json.loads(resp.read().decode())
+    except urllib.error.HTTPError as e:
+        try:
+            return e.code, json.loads(e.read().decode())
+        except Exception:
+            return e.code, {"error": str(e)}
+    except Exception as e:
+        return 503, {"error": f"claude-mem unavailable: {str(e)}"}
+
 
 def load_session_id():
     """Load persisted session ID for --resume continuity."""
@@ -88,6 +108,8 @@ class CCHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/health":
             self._json(200, {"ok": True, "service": "cc-server-p1", "gmail": GMAIL_AVAILABLE})
+        elif self.path == "/memory/health":
+            self._json(200, {"ok": True, "service": "cc-server-p1", "claudemem_url": CLAUDEMEM_URL})
         else:
             self.send_response(404)
             self.end_headers()
@@ -99,6 +121,18 @@ class CCHandler(BaseHTTPRequestHandler):
 
         length = int(self.headers.get("Content-Length", 0))
         body = json.loads(self.rfile.read(length)) if length else {}
+
+        # ── /memory/search — proxy to claude-mem ──────────────────────────
+        if self.path == "/memory/search":
+            code, payload = claudemem_proxy("/api/search", "POST", body, timeout=5)
+            self._json(code, payload)
+            return
+
+        # ── /memory/save — proxy to claude-mem ────────────────────────────
+        if self.path == "/memory/save":
+            code, payload = claudemem_proxy("/api/memory/save", "POST", body, timeout=5)
+            self._json(code, payload)
+            return
 
         # ── /email/send — CC sends email to Colby ──────────────────────────
         if self.path == "/email/send":
