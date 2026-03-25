@@ -1191,20 +1191,56 @@ async function writeFactsToVault(extractedFacts, bearer) {
   return results;
 }
 
+// --- Memory classification helpers (from agent-memory primitives, 2026-03-25) ---
+
+function classifyMemoryKind(text) {
+  const t = (text || "").toLowerCase();
+  if (/\bnever\b|\bmust not\b|\bforbidden\b|\bblocked\b|\bdo not\b|\bno worktrees?\b|\bhard ban\b|\bhard rule\b/.test(t)) return "Constraint";
+  if (/\bsteps?\b|\bhow to\b|\bworkflow\b|\bprocess\b|\balgorithm\b|\bprocedure\b|\bprotocol\b|\bsequence\b/.test(t)) return "Procedure";
+  if (/\bprefer\b|\balways use\b|\bconvention\b|\bstyle\b|\bdefault to\b|\bwe use\b/.test(t)) return "Preference";
+  if (/\bis defined as\b|\bmeans\b|\brefers to\b|\bstands for\b|\babbreviation\b/.test(t)) return "Definition";
+  return "Observation";
+}
+
+function computeSalience(text, kind, isPinned) {
+  const lengthDensity = Math.min((text || "").length / 500, 1.0) * 0.45;
+  const kindBoost = (kind === "Constraint" || kind === "Procedure") ? 0.20 : 0.0;
+  const pinnedBoost = isPinned ? 0.20 : 0.0;
+  return Math.min(0.35 + lengthDensity + kindBoost + pinnedBoost, 1.0);
+}
+
 // --- Vault record builder ---
 
 function buildVaultRecord({ type, content, tags, source, confidence, verifiedAtIso, verifier, verificationNotes }) {
   const t = (type || "").toString();
   const tagArr = Array.isArray(tags) ? tags.filter(x => typeof x === "string" && x.trim().length) : [];
   const ts = nowIso();
+
+  // Resolve text content for classification
+  let rawText = content && typeof content === "object" ? (content.value || JSON.stringify(content)) : String(content ?? "");
+
+  // Pinned detection: [PINNED] prefix → strip prefix, set flag, boost tags
+  let isPinned = false;
+  if (rawText.startsWith("[PINNED]")) {
+    isPinned = true;
+    rawText = rawText.slice(8).trimStart();
+    if (!tagArr.includes("pinned")) tagArr.push("pinned");
+  }
+
+  const kind = classifyMemoryKind(rawText);
+  const salience = computeSalience(rawText, kind, isPinned);
+
   return {
     type: t,
-    content: content && typeof content === "object" ? content : { value: String(content ?? "") },
+    content: content && typeof content === "object" ? content : { value: rawText },
     tags: tagArr,
     source: { kind: "tool", ref: (source || HUB_SOURCE).toString() },
     created_at: ts,
     updated_at: ts,
     confidence: Number.isFinite(confidence) ? confidence : 0.9,
+    kind,
+    salience,
+    is_pinned: isPinned,
     verification: {
       protocol_version: "fp.v1",
       verified_at: verifiedAtIso || ts,
@@ -3902,12 +3938,13 @@ const server = http.createServer(async (req, res) => {
         appendCoordinationToDisk(entry);
         evictExpiredCoordination();
 
-        // Fire-and-forget write to vault ledger
+        // Fire-and-forget write to vault ledger (kind + salience applied via buildVaultRecord)
         try {
+          const urgencyBoost = urgency === "blocking" ? "[PINNED] " : "";
           const record = buildVaultRecord({
             type: "log",
-            content: `[COORD] ${from}\u2192${to} (${urgency}): ${content}`,
-            tags: ["coordination", from, to],
+            content: `${urgencyBoost}[COORD] ${from}\u2192${to} (${urgency}): ${content}`,
+            tags: ["coordination", "bus", from, to, data.type || "request"],
             source: "coordination-bus",
             confidence: 1.0
           });

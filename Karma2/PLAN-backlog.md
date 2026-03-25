@@ -126,3 +126,42 @@ Not a build task yet. Preserved here so it doesn't drift.
 **Gate:** First rule self-extracted and visible in a live /v1/chat context injection.
 
 **Sovereign approval required** before build.
+
+---
+
+## Backlog-10: Julian Memory Primitives (from agent-memory analysis, 2026-03-25)
+
+**Why:** agent-memory (SpillwaveSolutions) revealed 4 gaps in Julian's continuity foundation:
+1. Coordination bus posts are ephemeral — DECISION/PROOF/PITFALL events vanish between sessions
+2. All vault writes are undifferentiated — no kind/importance signal for retrieval ranking
+3. Critical decisions get buried by recency — no pinned-memory concept
+4. Retrieval degrades silently — no stop conditions or fallback tiers
+
+**What (4 primitives, in priority order):**
+
+### B10-1: Bus → Ledger (every coord post persists to JSONL + FalkorDB)
+- In POST /v1/coordination/post handler: also POST to vault-api /v1/ambient
+- Tags: `["coordination", "bus", agent_from, message_type]`
+- Effect: every CC/Karma/Codex DECISION/PROOF/PITFALL is a permanent ledger entry
+- Route: hub-bridge change only (no other services touched)
+
+### B10-2: MemoryKind classification at write time
+- Add `classifyMemoryKind(text)` in hub-bridge — keyword detector, ~30 lines JS
+- Kinds: Observation / Preference / Procedure / Constraint / Definition
+- Inject as `kind` tag in `buildVaultRecord()` and `/v1/ambient` writes
+- Effect: retrieval can surface Constraints above raw Observations
+
+### B10-3: Salience score on vault writes
+- Formula: `0.35 + length_density(0–0.45) + kind_boost(0.20 for Constraint/Procedure) + pinned_boost(0.20)`
+- Stored as `salience` float in vault entry metadata
+- FalkorDB batch_ingest picks it up as node property
+- Effect: `query_relevant_relationships()` can weight by importance, not just co-occurrence
+
+### B10-4: Pinned memory flag
+- `pinned: true` tag on vault entries / `is_pinned: true` in claude-mem observations
+- hub-bridge: any entry with `[PINNED]` prefix in content → set pinned flag
+- Effect: critical decisions (e.g., anti-capture doctrine) always surface, not buried by recency
+
+**Gate:** B10-1 verified (check ledger: bus posts appear as entries) before B10-2 starts.
+
+**Sovereign approval:** Authorized 2026-03-25 (user: "fold it into the plan and get to work").

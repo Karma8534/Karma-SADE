@@ -1,7 +1,8 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-25T (Session 142 wrap)
-**Session:** Session 142 COMPLETE (2026-03-25). Context + primitives session. WebMCP vision fully specified by Sovereign — 7 dimensions, 8 tools, spec in docs/plans/2026-03-25-webmcp-julian-persistence-vision.md. Sovereign directives locked: K2 gifted to Julian, P1 shared with Julian, permission boundary = financial + OS only. PROOF-A marked done. A1 backfill re-run (PID 69288, result pending). Next: C3 /memory proxy fix (spec ready), verify A1 backfill result.
+**Last updated:** 2026-03-25 Session 144 (continued)
+**Active: Task COMPLETE — Backlog-4 AC2 baseline tools DONE**
+**Session:** Session 144 COMPLETE. AC2 fully authorized and built. 4 baseline tools deployed and e2e verified: read_project_file (cc_server_p1.py GET /file), write_project_file (cc_server_p1.py POST /file), code_exec (K2 aria /api/exec + base64 + blocklist), browse (fetch + HTML-to-text 16KB). Security: pip-audit run on karma-server, 3 CVEs patched (setuptools, filelock, requests). CLAUDE.md: Dependency Management section + GSD step 7 positional format. resurrect SKILL.md: mid-session cognitive snapshot protocol. Next: evaluate SpillwaveSolutions/agent-memory primitives (pending user request), then P0-A Vesper watchdog pattern diversity.
 **Canonical source:** This file. Read at session start.
 
 ---
