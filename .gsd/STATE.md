@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-24T00:30:00Z
-**Session:** Session 137 COMPLETE (2026-03-23). Plan-B complete: Julian real (CC subprocess --resume). B-GATE pass. GSD docs pre-created for Plan-C. Next: Plan-C C1 — check claude-mem --host binding options.
+**Last updated:** 2026-03-25T (Session ~140 wrap)
+**Session:** Session ~140 COMPLETE (2026-03-25). State audit only — no code changes. Found Plan-C completion unverified (C1-C4 say NOT STARTED in plan file, C-GATE checked). Found 4 pre-compaction items still open. P0 sprint (Backlog-3) confirmed done. Next: live check Plan-C on vault-neo + fix 4 pre-compaction items.
 **Canonical source:** This file. Read at session start.
 
 ---
@@ -126,7 +126,8 @@
 
 ## Next Session Starts Here
 1. /resurrect
-2. Plan-C Step 1: Read `.gsd/phase-plan-c-wire-PLAN.md` Task 1 — check claude-mem --host binding options
+2. Plan-C verify: `TOKEN=$(ssh vault-neo 'cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt'); curl -s -X POST https://hub.arknexus.net/memory/search -H "Authorization: Bearer $TOKEN" -d '{"query":"zombie processes cc_server"}'` — if returns obs, C3 unblocked (zombie socket cleared by CC restart). Then continue phase-plan-c-wire-PLAN.md Task 4 (WebMCP tools).
+**Blocker if any:** None — pure verify step
 **Blocker if any:** None. GSD plan pre-created.
 
 ---

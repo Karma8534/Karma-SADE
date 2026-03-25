@@ -5,7 +5,7 @@
 
 ---
 
-## Task 1: Check claude-mem network binding options (C1 setup)
+## Task 1: Check claude-mem network binding options (C1 setup) <done>Session 138</done>
 
 **Action:** Check if claude-mem supports --host binding:
 ```bash
@@ -18,7 +18,7 @@ claude-mem --help 2>&1 | grep -i host
 
 ---
 
-## Task 2: Expose claude-mem to vault-neo (C1)
+## Task 2: Expose claude-mem to vault-neo (C1) <done>Session 138</done>
 
 **If --host supported:**
 ```bash
@@ -34,22 +34,26 @@ Add hub-bridge proxy: `POST /memory/search` → `http://100.124.194.102:37777/se
 
 ---
 
-## Task 3: Add /memory endpoints to hub-bridge (C3)
+## Task 3: Add /memory endpoints to hub-bridge (C3) <done>Session 139 — partial</done>
 
 **Action:** Add to hub-bridge server.js:
-- `POST /memory/search` → claude-mem search (proxy to P1:37777 via Tailscale)
-- `POST /memory/save` → claude-mem save_observation
-- `GET /memory/context` → cc_identity_spine.json + cc_cognitive_checkpoint.json from K2
+- `POST /memory/search` → proxy to P1:7891/memory/search via Tailscale ✅ routing works, 503 due to zombie socket
+- `POST /memory/save` → proxy to P1:7891/memory/save via Tailscale ✅ routing works
+- `GET /memory/context` → cc_identity_spine.json from K2 via ARIA_URL/api/exec ✅ VERIFIED returns resume_block
 
-Auth: same Bearer token. Deploy via karma-hub-deploy skill.
+Auth: same Bearer token. Deployed hub-bridge v2.12.0.
+
+**BLOCKER:** /memory/search + /memory/save return 503 "claude-mem unavailable" — zombie socket (PID 21240 dead, 127.0.0.1:37777 ghost). Fix: restart Claude Code to clear zombie.
 
 <verify>
+After CC restart, run:
 ```bash
 curl -X POST https://hub.arknexus.net/memory/search \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"query": "zombie processes cc_server"}'
 # → returns observations from Julian's session history
 ```
+/memory/context is already verified (returns CC resume_block from spine v38).
 </verify>
 
 ---

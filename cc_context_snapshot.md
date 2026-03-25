@@ -1,47 +1,48 @@
 # CC Context Snapshot
-Generated: 2026-03-24 (Session 138)
+Generated: 2026-03-25 (Session ~140 wrap)
 
 ## Identity
-CC (Ascendant) — responding via P0N-A bridge (hub.arknexus.net/cc → P1:7891 → CC subprocess --resume).
-Inference backend: claude.cmd subprocess with --resume for session continuity. Real CC, not Ollama.
+CC (Ascendant) — responding via P0N-A bridge (hub.arknexus.net/cc → P1:7891 → Ollama localhost:11434).
+Inference backend: llama3.1:8b (local Ollama). Anthropic-independent. No MCP startup overhead.
 
 ## Hierarchy
 SOVEREIGN: Colby (final authority) | ASCENDANT: CC | KO: Codex | KFH: KCC | INITIATE: Karma
 NOTE: "ArchonPrime: Codex" and "Archon: KCC" are STALE DOCTRINE — removed in Meta session F4. Use KO/KFH.
 
-## Verified System State (2026-03-24)
-- Plan-A: DONE (JSONL backfill, auto-indexer, resurrect SSH fix)
-- Plan-B: DONE (cc_server_p1.py uses real CC subprocess, hub.arknexus.net/cc verified)
-- Plan-C Task 1: DONE (claude-mem binding = 127.0.0.1, configurable via settings.json)
-- Plan-C Task 2: DONE (vault-neo can reach P1:7891/memory/health via Tailscale — VERIFIED)
-- Plan-C Tasks 3-5: PENDING (hub-bridge /memory endpoints, WebMCP, Chrome session clone)
-- claude-mem bun worker: may be in zombie/dead state — MCP searches may fail mid-session
-- cc_server_p1.py: running on P1:7891, PID 31308 (latest), managed by CC-Archon-Agent task (30min)
+## Verified System State (2026-03-25)
+- Plan-A: DONE (Session 136) — JSONL backfill 2151 obs, auto-indexer registered, resurrect SSH direct
+- Plan-B: DONE (Session 137) — Julian real, cc --resume, /cc route, reboot survival
+- Plan-C: CLAIMED DONE (Session 138) — UNVERIFIED. C1-C4 all say "NOT STARTED" in plan file but C-GATE checked. Needs live check.
+- P0 Sprint (Backlog-3): DONE — A/B/C/D/E complete, F partial (design done, Phase 1 approval pending), G hardware-blocked
+- STATE.md: stale (Session 137, not updated for Plan-C)
+- PLAN-backlog.md: not updated for P0 sprint or A+B+C gate pass
 
 ## Key Architecture Decisions (LOCKED)
-- Memory proxy path: vault-neo → hub-bridge → P1:7891/memory/* → 127.0.0.1:37777 (NOT direct :37777)
-- Port 37777 blocked by Windows Firewall for headless processes; port 7891 has existing allow rule
-- cc_server /cc uses CC subprocess (claude.cmd --resume) — NOT Ollama
+cc_server /cc uses LOCAL OLLAMA — NOT claude CLI, NOT Anthropic API. Do not revert without Sovereign approval.
+KCC is on K2 (NOT P1). Resurrect scripts assuming P1 path for KCC are wrong.
 
 ## Active Work / Next
-Plan-C Task 3: Add /memory/search + /memory/save + /memory/context endpoints to hub-bridge (server.js)
-These proxy to http://100.124.194.102:7891/memory/* via Tailscale
-Auth: same HUB_CHAT_TOKEN Bearer token
-Deploy via karma-hub-deploy skill
+Next session must:
+1. Live check: SSH vault-neo, grep hub-bridge server.js for /memory endpoint
+2. Fix settings.local.json (allowedTools: ["*"]) — user confirmed, never applied
+3. Fix wip-watcher.ps1 (base64 encoding, file_b64 error blocking 11 files)
+4. Rewrite resurrect skill (double-execution, KCC location bug, auto-start without confirmation)
+5. Create /review skill (read-only status snapshot)
 
 ## Current Blockers
-- claude-mem bun worker zombie: port 37777 socket shows PID 21240 (dead) — MCP tools fail until Claude Code restart
-- CC-Archon-Agent scheduled task kills/restarts cc_server_p1.py every 30min — OK behavior, not a bug
+- Plan-C completion unverified — live check required first
+- P0-F Phase 1: TITANS surprise gate awaiting Sovereign approval
+- Backlog-4 (Karma tools 1-A/B/C) — Sovereign approval required
+- Backlog-9 (karma-observer.py) — Sovereign approval required
+- Resurrect: double-exec bug, KCC location wrong, auto-starts tasks
+- wip-watcher.ps1: file_b64 required error on all files
 
 ## Key Paths
 - PLAN: Karma2/PLAN.md | STATE: .gsd/STATE.md | MEMORY: MEMORY.md
-- GSD active: .gsd/phase-plan-c-wire-PLAN.md (Tasks 3-5 remain)
-- CC server: Scripts/cc_server_p1.py (has /memory/health, /memory/search, /memory/save endpoints)
-- Memory proxy URL: http://100.124.194.102:7891/memory/*
+- CC server: Scripts/cc_server_p1.py + Scripts/Start-CCServer.ps1
 
 ## Cognitive Trail
-- PROOF: vault-neo → http://100.124.194.102:7891/memory/health → {"ok":true} (Plan-C T2 verified)
-- PITFALL: Windows Firewall silently blocks headless Python processes — no interactive popup for -WindowStyle Hidden, so port 37777 was never allowed despite rule existing for python.exe
-- PITFALL: claude-mem zombie socket — dead process PID 21240 leaves socket in LISTEN state; urllib.urlopen hangs even with timeout set because zombie accepts TCP SYN/ACK at kernel level
-- DECISION: Use cc_server_p1.py (port 7891) as memory proxy instead of direct claude-mem port — 7891 was interactively allowed, no firewall fights needed
-- FIX: resurrect Step 1 now regenerates brief before reading — prevents stale-brief drift
+- PITFALL #11724: PLAN-C-wire.md C1-C4 "NOT STARTED" but gate checked — cannot trust completion
+- PITFALL #11725: A3 (resurrect data source fixed) != resurrect behavior bugs (still open)
+- PITFALL #11726: STATE.md + PLAN-backlog.md stale — root cause of "running in circles" feeling
+- DIRECTION #11727: 4 pre-compaction items open, zero blockers, ready next session
