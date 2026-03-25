@@ -609,3 +609,22 @@ Karma lost an entire conversation mid-session (2026-03-12 ~12:03 PM) after an `i
 - STATE.md blockers 14-18 updated
 
 **Active Blockers:** 16 (corpus_cc.jsonl tabled), 17 (P0-G dead code tabled), 18 (PROOF-A pending)
+
+---
+
+## Session 138 (2026-03-25) — Plan-C C-GATE PASSED
+
+**Done:**
+- Plan-C C1: vault-neo reaches claude-mem at 100.124.194.102:37777 via Tailscale ✅
+- Plan-C C2: registerWebMCPTools() in unified.html; WebMCP content script logged "3 tools" on hub.arknexus.net ✅
+- Plan-C C3: /memory/search proxies to claude-mem GET /api/search?query= ✅
+- Plan-C C4: loadBrainContext() localStorage 1hr TTL, "restored" on reload ✅
+- C-GATE PASSED: family is wired
+- Gemini Nano: LanguageModel.availability()="available" on localhost Chrome 146
+- PITFALL captured (obs #11594): Chrome DevTools MCP uses isolated profile — always test Chrome APIs in user's browser
+
+**Active Blockers:** 16 (corpus_cc.jsonl tabled), 17 (P0-G dead code tabled), 18 (PROOF-A Task 4 pending)
+
+## Next Session Starts Here
+1. /resurrect
+2. PROOF-A Task 4: Post bus message `to=codex` → verify KCC detects → [ARCHONPRIME] response on bus within 60s (see .gsd/phase-proof-a-PLAN.md Task 4)
