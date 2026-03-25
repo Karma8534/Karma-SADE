@@ -219,6 +219,11 @@
         <span class="stat-label">K2</span>
         <span class="stat-val" id="k2-val">—</span>
       </div>
+      <div class="stat-item">
+        <div class="stat-dot" id="brain-dot"></div>
+        <span class="stat-label">brain</span>
+        <span class="stat-val" id="brain-val">—</span>
+      </div>
     </div>
     <button class="hdr-btn" id="cascade-btn">CASCADE</button>
     <button class="hdr-btn" id="agora-btn">AGORA</button>
@@ -274,6 +279,8 @@
   const TOKEN_KEY    = 'hubToken';
   const CONV_KEY     = 'karmaConvId';
   const MSG_KEY      = 'karmaMessages';
+  const BRAIN_KEY    = 'unifiedBrain';
+  const BRAIN_TTL    = 60 * 60 * 1000; // 1 hour
 
   let hubToken       = null;
   let conversationId = localStorage.getItem(CONV_KEY) || crypto.randomUUID();
@@ -320,9 +327,37 @@
     document.getElementById('clear-btn').addEventListener('click', clearConversation);
     autoGrow(document.getElementById('msg-input'));
     loadSavedMessages();
+    loadBrainContext();
     pollBus();
     setInterval(pollBus, POLL_MS);
     setInterval(updateHeartbeat, 15000);
+  }
+
+  async function loadBrainContext() {
+    const dot = document.getElementById('brain-dot');
+    const val = document.getElementById('brain-val');
+    const cached = (() => { try { return JSON.parse(localStorage.getItem(BRAIN_KEY) || 'null'); } catch { return null; } })();
+    const fresh = cached && (Date.now() - cached.ts < BRAIN_TTL);
+    if (fresh) {
+      dot.className = 'stat-dot online';
+      val.textContent = 'restored';
+      return cached.context;
+    }
+    try {
+      dot.className = 'stat-dot';
+      val.textContent = 'loading';
+      const r = await fetch('/memory/context', { headers: auth() });
+      if (!r.ok) throw new Error(r.status);
+      const context = await r.json();
+      localStorage.setItem(BRAIN_KEY, JSON.stringify({ context, ts: Date.now() }));
+      dot.className = 'stat-dot online';
+      val.textContent = 'live';
+      return context;
+    } catch (e) {
+      dot.className = 'stat-dot offline';
+      val.textContent = 'err';
+      return null;
+    }
   }
 
   function autoGrow(el) {
