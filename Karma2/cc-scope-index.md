@@ -103,6 +103,10 @@ P025 [memory-plan-drift]:
 Rule: MEMORY.md item 2 can drift from PLAN.md CURRENT SPRINT. Always cross-check both at resurrect. PLAN.md wins on conflict — never trust MEMORY.md item 2 alone.
 Why: At least 6 sessions (119-132) MEMORY.md item 2 drifted from PLAN.md sprint. CC started wrong tasks, did duplicate work, or asked unnecessary questions as a result.
 
+P027 [no-worktrees]:
+Rule: NEVER invoke `superpowers:using-git-worktrees` or `Agent(isolation: "worktree")` or `EnterWorktree`. Work in main always. If detected mid-session: use absolute paths to main repo.
+Why: using-git-worktrees triggers Agent(isolation='worktree') which bypasses the EnterWorktree hook entirely. Creates orphaned branches that persist on disk — next session starts inside the worktree, invisible to normal git ops. 6 orphaned worktrees caused 5 sessions of invisible commits (PITFALL #11813, 2026-03-25).
+
 P026 [aria-crash-zombie-pid]:
 Rule: When aria.service won't start or crash-loops: (1) `ss -tlnp | grep 7890` — find and kill zombie PID. (2) Verify drop-in `/etc/systemd/system/aria.service.d/10-aria-env.conf` contains `Environment=HOME=/home/karma`. (3) daemon-reload → start.
 Why: Root cause identical in Sessions 127 and 131 — zombie PID held port 7890 after unclean shutdown, plus missing drop-in caused flask import failure. These two checks resolve 90% of aria start failures.

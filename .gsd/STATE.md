@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-25T (Session ~140 wrap)
-**Session:** Session ~140 COMPLETE (2026-03-25). State audit only — no code changes. Found Plan-C completion unverified (C1-C4 say NOT STARTED in plan file, C-GATE checked). Found 4 pre-compaction items still open. P0 sprint (Backlog-3) confirmed done. Next: live check Plan-C on vault-neo + fix 4 pre-compaction items.
+**Last updated:** 2026-03-25T (Session 142 wrap)
+**Session:** Session 142 COMPLETE (2026-03-25). Context + primitives session. WebMCP vision fully specified by Sovereign — 7 dimensions, 8 tools, spec in docs/plans/2026-03-25-webmcp-julian-persistence-vision.md. Sovereign directives locked: K2 gifted to Julian, P1 shared with Julian, permission boundary = financial + OS only. PROOF-A marked done. A1 backfill re-run (PID 69288, result pending). Next: C3 /memory proxy fix (spec ready), verify A1 backfill result.
 **Canonical source:** This file. Read at session start.
 
 ---

@@ -124,6 +124,7 @@ Every session follows this exact frame. No deviations, no "good enough":
 - Never hardcode API keys, bearer tokens, or secrets in any committed file
 - Bearer token location: /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt (never read or log the value)
 - Push to GitHub after every significant change
+- **NEVER invoke `superpowers:using-git-worktrees`** — worktrees are permanently banned in this project. Sessions must always run in main. This skill triggers `Agent(isolation: "worktree")` which bypasses the EnterWorktree hook. If you feel a 1% urge to invoke it: the answer is NO.
 - Run pre-commit secret scan before every push
 
 ## Droplet Is a Deployment Target â€” NEVER a Dev Environment

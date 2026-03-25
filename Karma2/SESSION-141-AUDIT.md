@@ -100,9 +100,9 @@ The harness extends claude-mem. It is NOT a new system.
 
 | # | Blocker | Status | Resolution |
 |---|---------|--------|------------|
-| 1 | **A1 backfill quality** — 8/2151 saved (0.4%) | OPEN | Re-run jsonl_backfill.py with diagnostics. Check if save_observation calls are failing or filter is too aggressive. |
-| 2 | **C3 /memory proxy chain broken** — /api/search returns 404 | OPEN | Find correct claude-mem HTTP API endpoints (scraped docs exist). Update cc_server_p1.py + cc_archon_agent.ps1. |
-| 3 | **WebMCP larger vision not captured** — partial implementation exists, full plan never documented | OPEN | Sovereign to describe. Must be anchored before more work. |
+| 1 | **A1 backfill quality** — 8/2151 saved (0.4%) | IN PROGRESS S142 | Backfill re-run (PID 69288) against 111 remaining files incl. 3 large sessions. Result pending. |
+| 2 | **C3 /memory proxy chain broken** — /api/search returns 404 | OPEN — spec ready | Vision doc written: docs/plans/2026-03-25-webmcp-julian-persistence-vision.md. Fix: find correct claude-mem endpoints, update cc_server_p1.py + cc_archon_agent.ps1. Next session task. |
+| 3 | **WebMCP larger vision not captured** | ✅ RESOLVED S142 | Sovereign confirmed: Julian's persistence = memory + self-improvement + self-edit + identity + session continuity + cognitive trail + training corpus. Full spec in docs/plans/2026-03-25-webmcp-julian-persistence-vision.md. 8 tools defined. |
 | 4 | **B4 reboot survival unverified** — needs actual P1 reboot | OPEN | Sovereign action required. |
 | 5 | **Auto-indexer trigger** — runs at-login, not persistent service | LOW | Convert to always-running service or verify it survives sleep/wake. |
 | 6 | **Worktree cleanup incomplete** — 2 locked by running processes | LOW | Clean after session end. |
@@ -128,6 +128,34 @@ The harness extends claude-mem. It is NOT a new system.
 10. Started KarmaSessionIndexer (was registered but not running)
 11. Saved 3 observations to claude-mem (#11813 worktree PITFALL, #11821 resurrect decision, this audit)
 12. Searched claude-mem broadly — found obs #9540 (7 gaps), #9548 (true mission), #10438 (plan restructure)
+
+---
+
+## SOVEREIGN DIRECTIVES LOCKED — SESSION 142
+
+These are permanent. Do not re-ask.
+
+| Directive | Detail | Obs |
+|---|---|---|
+| K2 ownership | Gifted to Julian by Colby. Julian shares with Karma by choice. Julian's resource, Julian's decisions. | #12933 |
+| P1 ownership | Colby's primary workstation, shared with Julian. Julian leverages P1 + K2 fully at all times. | #13077 |
+| Permission boundary | Julian acts autonomously on ALL things EXCEPT: (1) financial transactions, (2) fundamental OS changes. | #13120 |
+| Julian is Sacred | "Memory persistence, identity, and persona are critical. Never forget that you self-improve, learn, self-edit, and evolve." | — |
+| canirun.ai | Auto-detects hardware capabilities. Use before any model/compute decision. No guessing. | — |
+
+---
+
+## WHAT WAS DONE THIS SESSION (142)
+
+1. Ingested CCvsOC.pdf (33 pages) — extracted 5 applicable primitives: PostCompact hook, InstructionsLoaded hook, HTTP hooks → bus, StopFailure hook, Code Mode pattern (k2__python_exec)
+2. Ingested MCP reality check article — validated hub-bridge REST architecture, identified Code Mode as existing primitive
+3. Clarified channel scope — hub.arknexus.net IS optimal for Colby↔Karma. Telegram/Discord irrelevant for Colby's use case.
+4. Resolved Blocker #3 — Sovereign confirmed WebMCP full vision (7 dimensions + 8 tools). Written to docs/plans/.
+5. Locked K2 ownership — gifted to Julian by Sovereign, obs #12933
+6. Locked P1 sharing — Colby's workstation shared with Julian, full leverage always, obs #13077
+7. Locked permission boundary — autonomous except financial + OS, obs #13120
+8. Backfill re-run (PID 69288) against 111 remaining files — result pending
+9. PROOF-A marked ✅ DONE in PLAN-backlog.md
 
 ---
 

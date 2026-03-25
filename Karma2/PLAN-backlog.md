@@ -14,25 +14,12 @@
 
 ---
 
-## Backlog-2: PROOF-A — Codex as ArchonPrime Service
+## Backlog-2: PROOF-A — Codex as ArchonPrime Service ✅ DONE (Session 139, 2026-03-25)
 
-Task 1 ✅ DONE: `npx codex exec --sandbox read-only --skip-git-repo-check "prompt"` verified on K2.
+All 4 tasks complete. KCC bus monitor detects `to=codex` messages, triggers `kcc_codex_trigger.ps1` (SSH to K2, `npx codex exec`), posts `[ARCHONPRIME]` response to bus. End-to-end verified (coord_1774415061543_dl8i → coord_1774415364242_djnf).
 
-**Task 2:** Write `Scripts/kcc_codex_trigger.ps1`
-- Accepts `-Prompt` parameter
-- Runs: `npx codex exec --sandbox read-only --skip-git-repo-check "$Prompt"`
-- Captures stdout, returns output string
-- Verify: run with simple prompt, get text back
-
-**Task 3:** Wire KCC bus event detection → Codex trigger
-- Detect: bus messages with `to="codex"` OR content containing "analyze" OR "ArchonPrime"
-- KCC calls kcc_codex_trigger.ps1 and posts Codex response to bus
-- Post result: `from=codex, to=all, type=inform, content="[ARCHONPRIME] <output>"`
-
-**Task 4:** End-to-end gate test
-- Colby posts one bus message → KCC detects → triggers Codex → response on bus within 60s
-
-**GSD plan:** `.gsd/phase-proof-a-PLAN.md`
+Scripts: `Scripts/kcc_codex_trigger.ps1`, `Scripts/kcc_bus_monitor.ps1`
+GSD plan: `.gsd/phase-proof-a-PLAN.md` (all tasks marked done)
 
 ---
 
