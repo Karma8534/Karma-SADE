@@ -121,3 +121,21 @@ The MCP registry has connectors for all three. Pattern = coordination bus webhoo
 **None of this needs to be invented.** The integrations are shipped. The wiring is documentation work, not engineering work. Activate after A+B+C stabilize.
 
 Not a build task yet. Preserved here so it doesn't drift.
+
+---
+
+## Backlog-6: karma-observer.py — Karma's Autonomous Learning Loop
+
+**What:** Karma currently has no autonomous loop. She is idle between conversations. Kiki has kiki_rules.jsonl. CC_regent polls cc_scratchpad.md. Karma has nothing equivalent.
+
+**Spec (from Karma, 2026-03-25):**
+1. `Scripts/karma_observer.py` — polling loop on K2 (like kiki). Reads ledger for episodes tagged `[karma-correction]`, extracts behavioral rules, writes to `karma_behavioral_rules.jsonl`
+2. `karma_behavioral_rules.jsonl` — machine-readable rule state: `{"rule": "...", "confidence": 0.95, "source_episode": "...", "applied": true}`
+3. **hub-bridge injection** — `hub-bridge/app/server.js` reads `karma_behavioral_rules.jsonl` before each `/v1/chat` call, injects as `--- KARMA BEHAVIORAL RULES ---` block in `buildSystemText()`
+4. **systemd timer** on K2 — runs karma_observer.py on a poll interval (10-15 min)
+
+**Why:** Persistent memory ≠ autonomous learning. Without this, every correction requires Colby to manually canonicalize it. With this, Karma extracts her own patterns from the ledger and integrates them without prompting.
+
+**Gate:** First rule self-extracted and visible in a live /v1/chat context injection.
+
+**Sovereign approval required** before build.
