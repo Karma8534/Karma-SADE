@@ -27,4 +27,4 @@
 - governor audit log shows promotion event with `"attempts": 1` (or higher if vault briefly unreachable)
 - No silent failures — every promotion attempt is logged
 </verify>
-<done>[ ] P0-B verified — retry telemetry visible in governor audit log</done>
+<done>[x] P0-B verified via mock test. 3-attempt loop fires correctly: attempt 1+2 log falkor_write_retry, attempt 3 success logs falkor_write_recovery. apply_to_spine returns ok=True. All-fail path logs PITFALL_falkor_write_exhausted. No silent failures.</done>
