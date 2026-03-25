@@ -1219,7 +1219,7 @@ function buildVaultRecord({ type, content, tags, source, confidence, verifiedAtI
   // Resolve text content for classification
   let rawText = content && typeof content === "object" ? (content.value || JSON.stringify(content)) : String(content ?? "");
 
-  // Pinned detection: [PINNED] prefix → strip prefix, set flag, boost tags
+  // Pinned detection: [PINNED] prefix → strip prefix, set flag, add tag
   let isPinned = false;
   if (rawText.startsWith("[PINNED]")) {
     isPinned = true;
@@ -1230,17 +1230,27 @@ function buildVaultRecord({ type, content, tags, source, confidence, verifiedAtI
   const kind = classifyMemoryKind(rawText);
   const salience = computeSalience(rawText, kind, isPinned);
 
+  // Add kind as searchable tag (schema forbids extra top-level fields)
+  const kindTag = `kind:${kind.toLowerCase()}`;
+  if (!tagArr.includes(kindTag)) tagArr.push(kindTag);
+  if (salience >= 0.70 && !tagArr.includes("salience:high")) tagArr.push("salience:high");
+
+  // Build content — preserve object content as-is; inject metadata into string content
+  let builtContent;
+  if (content && typeof content === "object") {
+    builtContent = { ...content, _kind: kind, _salience: salience, _pinned: isPinned };
+  } else {
+    builtContent = { value: rawText, _kind: kind, _salience: salience, _pinned: isPinned };
+  }
+
   return {
     type: t,
-    content: content && typeof content === "object" ? content : { value: rawText },
+    content: builtContent,
     tags: tagArr,
     source: { kind: "tool", ref: (source || HUB_SOURCE).toString() },
     created_at: ts,
     updated_at: ts,
     confidence: Number.isFinite(confidence) ? confidence : 0.9,
-    kind,
-    salience,
-    is_pinned: isPinned,
     verification: {
       protocol_version: "fp.v1",
       verified_at: verifiedAtIso || ts,
