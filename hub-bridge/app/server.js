@@ -1918,10 +1918,12 @@ async function executeToolCall(toolName, toolInput, writeId = null, ariaSessionI
       const ARIA_KEY = process.env.ARIA_SERVICE_KEY || "";
       let command;
       if (language === "python") {
-        const escaped = code.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
-        command = `python3 -c "${escaped}" 2>&1 | head -c 8192`;
+        // Use -u for unbuffered output; base64-encode code to avoid all shell escaping issues
+        const b64 = Buffer.from(code).toString("base64");
+        command = `python3 -u -c "import base64,sys; exec(base64.b64decode('${b64}').decode())"`;
       } else {
-        command = `bash -c ${JSON.stringify(code)} 2>&1 | head -c 8192`;
+        const b64 = Buffer.from(code).toString("base64");
+        command = `bash -c "$(echo '${b64}' | base64 -d)"`;
       }
       try {
         console.log(`[TOOL-API] code_exec (${language})`);
