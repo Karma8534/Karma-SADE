@@ -5,55 +5,40 @@
 
 ---
 
-## Task 1: Check claude-mem network binding options (C1 setup) <done>Session 138</done>
+## Task 1: Check claude-mem network binding options (C1 setup) <done>
 
-**Action:** Check if claude-mem supports --host binding:
-```bash
-claude-mem --help 2>&1 | grep -i host
-# Also check: claude-mem serve --help
-# Also check config file location
-```
-
-<verify>Know whether claude-mem supports --host. Know the current binding (localhost only vs. 0.0.0.0).</verify>
+**Verified:** `CLAUDE_MEM_WORKER_HOST` in `~/.claude-mem/settings.json` controls binding. Currently `127.0.0.1`. Can be changed to `0.0.0.0`. MCP server caches config at session start — requires Claude Code restart to take effect.
 
 ---
 
-## Task 2: Expose claude-mem to vault-neo (C1) <done>Session 138</done>
+## Task 2: Expose claude-mem to vault-neo (C1) <done>
 
-**If --host supported:**
-```bash
-# Restart claude-mem bound to Tailscale IP
-claude-mem serve --host 100.124.194.102 --port 37777
-```
-Update KarmaClaudeMem (or equivalent startup) to use the new binding.
+**Approach taken:** Added `/memory/health`, `/memory/search`, `/memory/save` endpoints to `cc_server_p1.py` (port 7891). These proxy to claude-mem worker at `127.0.0.1:37777`.
 
-**If not supported (fallback):**
-Add hub-bridge proxy: `POST /memory/search` → `http://100.124.194.102:37777/search`
+**Why port 7891 instead of 37777:** Port 37777 blocked by Windows Firewall (no interactive allow popup for headless proxy process). Port 7891 had existing firewall rule from interactive cc_server_p1 startup.
 
-<verify>From vault-neo: `curl http://100.124.194.102:37777/health` → responds.</verify>
+**VERIFIED:** `ssh vault-neo "curl -s http://100.124.194.102:7891/memory/health"` → `{"ok": true, "service": "cc-server-p1", "claudemem_url": "http://127.0.0.1:37777"}`
+
+**Updated verify criterion for Task 3:** hub-bridge should proxy to `http://100.124.194.102:7891/memory/*` (not 37777).
 
 ---
 
-## Task 3: Add /memory endpoints to hub-bridge (C3) <done>Session 139 — partial</done>
+## Task 3: Add /memory endpoints to hub-bridge (C3)
 
 **Action:** Add to hub-bridge server.js:
-- `POST /memory/search` → proxy to P1:7891/memory/search via Tailscale ✅ routing works, 503 due to zombie socket
-- `POST /memory/save` → proxy to P1:7891/memory/save via Tailscale ✅ routing works
-- `GET /memory/context` → cc_identity_spine.json from K2 via ARIA_URL/api/exec ✅ VERIFIED returns resume_block
+- `POST /memory/search` → claude-mem search (proxy to `http://100.124.194.102:7891/memory/search` via Tailscale)
+- `POST /memory/save` → claude-mem save (proxy to `http://100.124.194.102:7891/memory/save`)
+- `GET /memory/context` → cc_identity_spine.json + cc_cognitive_checkpoint.json from K2
 
-Auth: same Bearer token. Deployed hub-bridge v2.12.0.
-
-**BLOCKER:** /memory/search + /memory/save return 503 "claude-mem unavailable" — zombie socket (PID 21240 dead, 127.0.0.1:37777 ghost). Fix: restart Claude Code to clear zombie.
+Auth: same Bearer token. Deploy via karma-hub-deploy skill.
 
 <verify>
-After CC restart, run:
 ```bash
 curl -X POST https://hub.arknexus.net/memory/search \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"query": "zombie processes cc_server"}'
 # → returns observations from Julian's session history
 ```
-/memory/context is already verified (returns CC resume_block from spine v38).
 </verify>
 
 ---
@@ -88,7 +73,7 @@ curl -X POST https://hub.arknexus.net/memory/search \
 ## C-GATE Check
 
 All tasks complete when:
-- [ ] vault-neo can reach claude-mem (C1)
+- [x] vault-neo can reach claude-mem (C1) — via P1:7891/memory/* endpoints
 - [ ] Chrome Inspector shows WebMCP tools on hub pages (C2)
 - [ ] `/memory/search` returns Julian's history from hub.arknexus.net (C3)
 - [ ] Hub UI sessions survive browser restart, context restored (C4)
