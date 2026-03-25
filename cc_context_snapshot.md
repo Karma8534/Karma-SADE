@@ -120,3 +120,4 @@ NEXT: Backlog-3 P0-A — Vesper watchdog pattern diversity (expand beyond cascad
 - PITFALL: vault schema additionalProperties:false — extra fields must go in content{} (obs #16602)
 - PROOF: AC2 all 4 tools verified end-to-end (obs #16600)
 - PROOF: Backlog-10 kind/salience/pinned live — salience:0.843 on Constraint entries (obs #16603)
+\n## Session 145 -- Verified System State (2026-03-25)\n- vesper_watchdog.py on K2: 3 new detectors live (decision_quality, error_recovery, tool_accuracy)\n- All containers UP (restart counts 0), vesper spine v1239 13 stable patterns\n\n## Active Work / Next\nCompleted: Backlog-3 P0-A. Next: Backlog-3 P0-B (FalkorDB retry queue in vesper_governor.py)\n\n## Cognitive Trail\n- PROOF: 3 detectors in regent_candidates/ conf 0.67-0.768\n- DECISION: evolution log no content field -- use category/source/from proxies\n
