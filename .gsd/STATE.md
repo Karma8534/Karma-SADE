@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-25 Session 144 (continued)
-**Active: Task COMPLETE — Backlog-4 AC2 baseline tools DONE**
+**Last updated:** 2026-03-25 Session 144 WRAP
+**Active: Task 1/4 — Backlog-3 P0-A: read vesper_watchdog.py pattern detection logic**
 **Session:** Session 144 COMPLETE. AC2 fully authorized and built. 4 baseline tools deployed and e2e verified: read_project_file (cc_server_p1.py GET /file), write_project_file (cc_server_p1.py POST /file), code_exec (K2 aria /api/exec + base64 + blocklist), browse (fetch + HTML-to-text 16KB). Security: pip-audit run on karma-server, 3 CVEs patched (setuptools, filelock, requests). CLAUDE.md: Dependency Management section + GSD step 7 positional format. resurrect SKILL.md: mid-session cognitive snapshot protocol. Next: evaluate SpillwaveSolutions/agent-memory primitives (pending user request), then P0-A Vesper watchdog pattern diversity.
 **Canonical source:** This file. Read at session start.
 
