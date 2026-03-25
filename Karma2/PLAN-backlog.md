@@ -124,9 +124,9 @@ Not a build task yet. Preserved here so it doesn't drift.
 
 ---
 
-## Backlog-6: karma-observer.py — Karma's Autonomous Learning Loop
+## Backlog-9: karma-observer.py — Karma's Autonomous Learning Loop
 
-**What:** Karma currently has no autonomous loop. She is idle between conversations. Kiki has kiki_rules.jsonl. CC_regent polls cc_scratchpad.md. Karma has nothing equivalent.
+**What:** Karma is request-scoped — she only exists during /v1/chat requests. Between requests, no Karma process runs. Her tools (aria_local_call, k2_scratchpad_write, etc.) are available DURING requests only, not between them. karma-observer.py is a SEPARATE daemon, not Karma using her own tools. Kiki has kiki_rules.jsonl. CC_regent polls cc_scratchpad.md. Karma has nothing equivalent.
 
 **Spec (from Karma, 2026-03-25):**
 1. `Scripts/karma_observer.py` — polling loop on K2 (like kiki). Reads ledger for episodes tagged `[karma-correction]`, extracts behavioral rules, writes to `karma_behavioral_rules.jsonl`
