@@ -97,6 +97,8 @@ See sub-plans:
 | Anthropic docs scrape (K-2) | ✅ | 130 |
 | Heartbeat filter (K-3 mechanism) | ✅ | 131 |
 | PROOF-A Task 1 (codex exec verified) | ✅ | 133 |
+| PROOF-A Tasks 2-4 (ArchonPrime pipeline) | ✅ | 134, 139 |
+| Karma system prompt hardening (3 rules) | ✅ | 139 |
 | harvest (.md files, 551 processed) | ✅ | 133 |
 | Vesper convergence fixes (5 of 5) | ✅ | 107 |
 | Spine v38, 8 stable patterns | ✅ | 132 |
