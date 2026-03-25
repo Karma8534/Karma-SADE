@@ -30,6 +30,7 @@ const DEEP_MODE_HEADER = (process.env.DEEP_MODE_HEADER || "x-karma-deep").toLowe
 const HANDOFF_DIR = process.env.HANDOFF_DIR || "/data/handoff";
 const KARMA_CONTEXT_URL = process.env.KARMA_CONTEXT_URL || "http://karma-server:8340/raw-context";
 const CC_SERVER_URL     = process.env.CC_SERVER_URL     || "http://100.124.194.102:7891";
+const CLAUDEMEM_URL     = process.env.CLAUDEMEM_URL     || "http://100.124.194.102:37777";
 
 // ── Within-session conversation history ──────────────────────────────────────
 // Keeps the last N exchange pairs in memory, keyed by a hash of the bearer token.
@@ -3930,6 +3931,83 @@ form.addEventListener("submit", async e => {
     }
     // ── end P0N-A ─────────────────────────────────────────────────────────────
 
+    // ── /memory/* — direct claude-mem bridge via Tailscale ───────────────────
+    if (req.method === "POST" && req.url === "/memory/search") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      const raw = await parseBody(req, 500000);
+      let body; try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+      const query = body.query || body.q || "";
+      if (!query) return json(res, 400, { ok: false, error: "query required" });
+      try {
+        const r = await fetch(`${CLAUDEMEM_URL}/api/search?query=${encodeURIComponent(query)}`, {
+          method: "GET",
+          signal: AbortSignal.timeout(10000),
+        });
+        const d = await r.json();
+        return json(res, r.ok ? 200 : r.status, { ok: r.ok, ...d });
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `memory search error: ${e.message}` });
+      }
+    }
+
+    if (req.method === "POST" && req.url === "/memory/save") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      const raw = await parseBody(req, 500000);
+      let body; try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+      try {
+        const r = await fetch(`${CLAUDEMEM_URL}/api/memory/save`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(10000),
+        });
+        const d = await r.json();
+        return json(res, r.ok ? 200 : r.status, { ok: r.ok, ...d });
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `memory save error: ${e.message}` });
+      }
+    }
+
+    if (req.method === "GET" && req.url === "/memory/context") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      if (!ARIA_SERVICE_KEY || !ARIA_URL) {
+        return json(res, 503, { ok: false, error: "K2 not configured" });
+      }
+      try {
+        const r = await fetch(`${ARIA_URL}/api/exec`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Aria-Service-Key": ARIA_SERVICE_KEY },
+          body: JSON.stringify({ command: "cat /mnt/c/dev/Karma/k2/cache/cc_identity_spine.json 2>/dev/null" }),
+          signal: AbortSignal.timeout(10000),
+        });
+        if (!r.ok) return json(res, 502, { ok: false, error: `K2 exec failed: ${r.status}` });
+        const result = await r.json();
+        let spine = {};
+        try { spine = JSON.parse(result.output || "{}"); } catch { /* empty spine ok */ }
+        const identity = spine.identity || {};
+        const evo = spine.evolution || {};
+        return json(res, 200, {
+          ok: true,
+          resume_block: identity.resume_block || "",
+          stable_patterns: (evo.stable_identity || []).slice(0, 5),
+          spine_version: evo.version || 0,
+          retrieved_at: new Date().toISOString(),
+        });
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `memory context error: ${e.message}` });
+      }
+    }
+    // ── end /memory/* ─────────────────────────────────────────────────────────
+
     return notFound(res);
 
   } catch (e) {
@@ -4210,5 +4288,5 @@ async function ccInitiativeTick() {
 // setTimeout(() => { ccInitiativeTick(); setInterval(ccInitiativeTick, 30 * 1000); }, 60 * 1000);
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`hub-bridge v2.11.0 listening on :${PORT}`);
+  console.log(`hub-bridge v2.12.0 listening on :${PORT}`);
 });
