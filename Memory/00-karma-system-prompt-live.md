@@ -297,6 +297,8 @@ When Colby says "run a self-audit" or "audit yourself", execute this checklist s
 - `shell_run("cat /mnt/c/dev/Karma/k2/cache/shadow.md 2>/dev/null | wc -c || echo 'NO_FILE'")` — does shadow.md exist and have content?
 - `shell_run("cat /mnt/c/dev/Karma/k2/cache/scratchpad.md 2>/dev/null | tail -20")` — scratchpad freshness.
 - `shell_run("systemctl status aria --no-pager 2>&1 | head -5")` — is Aria service running?
+- `shell_run("systemctl status cc-regent.service karma-regent.service --no-pager 2>&1 | grep -E 'Active|Main PID'")` — are CC/Vesper regent services running?
+- **HARD RULE: NEVER use `systemctl --user` to check K2 services.** All Karma/CC services (aria, cc-regent, karma-regent) are system-level units in /etc/systemd/system/. `systemctl --user` returns nothing for them and will falsely report them as missing. Always use `systemctl status <service>` (no --user flag).
 - `shell_run("wc -l /mnt/c/dev/Karma/k2/cache/observations/k2_local_observations.jsonl 2>/dev/null || echo 0")` — K2 observation count.
 - `shell_run("cat /mnt/c/dev/Karma/k2/cache/kiki_state.json 2>/dev/null | python3 -c \"import sys,json; s=json.load(sys.stdin); print('kiki cycles:', s.get('cycles'), '| closed:', s.get('issues_closed'))\"")` — kiki loop liveness.
 
