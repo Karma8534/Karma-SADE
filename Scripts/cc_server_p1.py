@@ -6,7 +6,7 @@ Uses local Ollama for inference — Anthropic-independent, no MCP startup overhe
 Returns: {response, ok}
 Auth: Bearer token checked against HUB_CHAT_TOKEN env var.
 """
-import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, socket
+import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.parse, socket
 from http.server import HTTPServer, BaseHTTPRequestHandler
 sys.path.insert(0, os.path.dirname(__file__))
 try:
@@ -26,8 +26,13 @@ CLAUDEMEM_URL  = "http://127.0.0.1:37777"  # claude-mem worker (loopback)
 
 def claudemem_proxy(path, method="GET", body=None, timeout=10):
     """Proxy a request to the local claude-mem worker at 127.0.0.1:37777."""
-    url = f"{CLAUDEMEM_URL}{path}"
-    data = json.dumps(body).encode() if body is not None else None
+    if method == "GET" and body:
+        # /api/search is GET-only — convert body dict to query string
+        url = f"{CLAUDEMEM_URL}{path}?{urllib.parse.urlencode(body)}"
+        data = None
+    else:
+        url = f"{CLAUDEMEM_URL}{path}"
+        data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(url, data=data, method=method)
     if data:
         req.add_header("Content-Type", "application/json")
@@ -124,7 +129,7 @@ class CCHandler(BaseHTTPRequestHandler):
 
         # ── /memory/search — proxy to claude-mem ──────────────────────────
         if self.path == "/memory/search":
-            code, payload = claudemem_proxy("/api/search", "POST", body, timeout=5)
+            code, payload = claudemem_proxy("/api/search", "GET", body, timeout=5)
             self._json(code, payload)
             return
 
