@@ -1343,7 +1343,7 @@ else console.warn("[INIT] K2_OLLAMA_URL not set — K2 routing disabled, Anthrop
 // Karma's autonomous access to her own graph/memory requires tools.
 // GPT-4o has proven tool support. Using it for /v1/chat with tool definitions.
 // ── Phase 3: 4-Tool Surface (P2) ─────────────────────────────────────────
-// Active tools: graph_query, get_vault_file, get_local_file, write_memory, fetch_url, get_library_docs, defer_intent, get_active_intents, aria_local_call, shell_run
+// Active tools: graph_query, get_vault_file, get_local_file, list_local_dir, write_memory, fetch_url, get_library_docs, defer_intent, get_active_intents, aria_local_call, shell_run, read_project_file, write_project_file, code_exec, browse
 const TOOL_DEFINITIONS = [
   {
     name: "graph_query",
@@ -1648,6 +1648,53 @@ const TOOL_DEFINITIONS = [
       required: ["texts"],
     },
   },
+  // AC2: Baseline Tools — authorized 2026-03-25 per Julian's discretion
+  {
+    name: "read_project_file",
+    description: "Read any file from the Karma_SADE project directory on P1. Path is relative to project root. Returns up to 40KB. Use to read scripts, configs, plans, GSD docs, or any project file.",
+    input_schema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Relative path within Karma_SADE (e.g. 'CLAUDE.md', '.gsd/STATE.md', 'Scripts/cc_server_p1.py')" },
+      },
+      required: ["path"],
+    },
+  },
+  {
+    name: "write_project_file",
+    description: "Write or create a file in the Karma_SADE project directory on P1. Path is relative to project root. Cannot traverse outside project. Creates parent directories if needed. Use for creating scripts, notes, configs, or updating project files.",
+    input_schema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Relative path within Karma_SADE (e.g. 'tmp/notes.md', 'Scripts/my_script.py')" },
+        content: { type: "string", description: "Full file content to write" },
+      },
+      required: ["path", "content"],
+    },
+  },
+  {
+    name: "code_exec",
+    description: "Execute code on K2 in a sandboxed environment with safety blocklist and output cap. Supported: python, bash. Dangerous patterns (rm -rf, sudo, passwd, dd) are rejected before execution. Output capped at 8KB. Use for computations, data processing, or testing snippets.",
+    input_schema: {
+      type: "object",
+      properties: {
+        code: { type: "string", description: "Code to execute" },
+        language: { type: "string", enum: ["python", "bash"], description: "Language (default: python)" },
+      },
+      required: ["code"],
+    },
+  },
+  {
+    name: "browse",
+    description: "Fetch a URL with full browser headers and smart HTML-to-text extraction. Returns up to 16KB of readable text. Does not execute JavaScript. More reliable than fetch_url for sites requiring standard browser headers. Use for reading docs, articles, or APIs.",
+    input_schema: {
+      type: "object",
+      properties: {
+        url: { type: "string", description: "Full URL to fetch" },
+      },
+      required: ["url"],
+    },
+  },
   // AC6: Scoped hub config file reader — read-only, hub_bridge directory only
   {
     name: "hub_file_read",
@@ -1814,6 +1861,110 @@ async function executeToolCall(toolName, toolInput, writeId = null, ariaSessionI
       } catch (e) {
         console.warn(`[TOOL-API] shell_run failed: ${e.message}`);
         return { error: "network_error", message: e.message };
+      }
+    }
+
+    // read_project_file — read file from P1 Karma_SADE project directory via cc_server_p1.py
+    if (toolName === "read_project_file") {
+      const filePath = (toolInput.path || "").trim();
+      if (!filePath) return { error: "missing_path", message: "path is required" };
+      try {
+        const url = `${CC_SERVER_URL}/file?path=${encodeURIComponent(filePath)}`;
+        const resp = await fetch(url, {
+          headers: { Authorization: `Bearer ${process.env.HUB_CHAT_TOKEN || ""}` },
+          signal: AbortSignal.timeout(10_000),
+        });
+        const data = await resp.json();
+        console.log(`[TOOL-API] read_project_file '${filePath}' → ${resp.status}`);
+        return data;
+      } catch (e) {
+        return { error: "fetch_error", message: e.message };
+      }
+    }
+
+    // write_project_file — write file to P1 Karma_SADE project directory via cc_server_p1.py
+    if (toolName === "write_project_file") {
+      const filePath = (toolInput.path || "").trim();
+      const content = toolInput.content ?? "";
+      if (!filePath) return { error: "missing_path", message: "path is required" };
+      try {
+        const resp = await fetch(`${CC_SERVER_URL}/file`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.HUB_CHAT_TOKEN || ""}`,
+          },
+          body: JSON.stringify({ path: filePath, content }),
+          signal: AbortSignal.timeout(10_000),
+        });
+        const data = await resp.json();
+        console.log(`[TOOL-API] write_project_file '${filePath}' → ${resp.status}`);
+        return data;
+      } catch (e) {
+        return { error: "fetch_error", message: e.message };
+      }
+    }
+
+    // code_exec — sandboxed code execution on K2 via Aria /api/exec with blocklist
+    if (toolName === "code_exec") {
+      const code = (toolInput.code || "").trim();
+      const language = (toolInput.language || "python").toLowerCase();
+      if (!code) return { error: "code_required", message: "code is required" };
+      // Safety blocklist — checked before sending to K2
+      const BLOCKLIST = ["rm -rf", "sudo ", "passwd", "dd if=", "dd of=", "mkfs", ":(){", "eval(", "exec(os", "import os;os.system", "shutil.rmtree", "os.remove(", "os.unlink("];
+      const lc = code.toLowerCase();
+      const blocked = BLOCKLIST.find(p => lc.includes(p.toLowerCase()));
+      if (blocked) return { error: "blocked", message: `Blocked pattern: '${blocked}'` };
+      const ARIA_KEY = process.env.ARIA_SERVICE_KEY || "";
+      let command;
+      if (language === "python") {
+        const escaped = code.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
+        command = `python3 -c "${escaped}" 2>&1 | head -c 8192`;
+      } else {
+        command = `bash -c ${JSON.stringify(code)} 2>&1 | head -c 8192`;
+      }
+      try {
+        console.log(`[TOOL-API] code_exec (${language})`);
+        const r = await fetch(`${ARIA_URL}/api/exec`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Aria-Service-Key": ARIA_KEY },
+          body: JSON.stringify({ command }),
+          signal: AbortSignal.timeout(35000),
+        });
+        const result = await r.json();
+        const output = (result.stdout || result.stderr || "").slice(0, 8192);
+        return { ok: result.ok, language, output, exit_code: result.exit_code };
+      } catch (e) {
+        return { error: "network_error", message: e.message };
+      }
+    }
+
+    // browse — smart browser-headers fetch with HTML-to-text extraction (16KB)
+    if (toolName === "browse") {
+      const url = (toolInput.url || "").trim();
+      if (!url) return { error: "missing_url", message: "url is required" };
+      try {
+        console.log(`[TOOL-API] browse '${url}'`);
+        const res = await fetch(url, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+          },
+          signal: AbortSignal.timeout(15000),
+        });
+        if (!res.ok) return { error: "http_error", status: res.status, url };
+        const html = await res.text();
+        const text = html
+          .replace(/<script[\s\S]*?<\/script>/gi, "")
+          .replace(/<style[\s\S]*?<\/style>/gi, "")
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 16384);
+        return { ok: true, url, content: text, chars: text.length };
+      } catch (e) {
+        return { error: "fetch_error", message: e.message, url };
       }
     }
 

@@ -119,6 +119,26 @@ class CCHandler(BaseHTTPRequestHandler):
         elif self.path.startswith("/memory/session"):
             session_id = load_session_id()
             self._json(200, {"ok": True, "session_id": session_id or ""})
+        elif self.path.startswith("/file"):
+            parsed = urllib.parse.urlparse(self.path)
+            params = urllib.parse.parse_qs(parsed.query)
+            rel = params.get("path", [""])[0].strip()
+            if not rel:
+                self._json(400, {"ok": False, "error": "path param required"})
+                return
+            # Scope: resolve within WORK_DIR, block traversal
+            target = os.path.normpath(os.path.join(WORK_DIR, rel))
+            if not target.startswith(WORK_DIR):
+                self._json(403, {"ok": False, "error": "path outside project"})
+                return
+            try:
+                with open(target, "r", encoding="utf-8", errors="replace") as f:
+                    content = f.read(40960)  # 40KB cap
+                self._json(200, {"ok": True, "path": rel, "content": content, "size": os.path.getsize(target)})
+            except FileNotFoundError:
+                self._json(404, {"ok": False, "error": f"not found: {rel}"})
+            except Exception as e:
+                self._json(500, {"ok": False, "error": str(e)})
         elif self.path.startswith("/memory/observations"):
             parsed = urllib.parse.urlparse(self.path)
             params = urllib.parse.parse_qs(parsed.query)
@@ -151,6 +171,26 @@ class CCHandler(BaseHTTPRequestHandler):
 
         length = int(self.headers.get("Content-Length", 0))
         body = json.loads(self.rfile.read(length)) if length else {}
+
+        # ── /file — project-scoped file write ─────────────────────────────
+        if self.path == "/file":
+            rel = body.get("path", "").strip()
+            content = body.get("content", "")
+            if not rel:
+                self._json(422, {"ok": False, "error": "path required"})
+                return
+            target = os.path.normpath(os.path.join(WORK_DIR, rel))
+            if not target.startswith(WORK_DIR):
+                self._json(403, {"ok": False, "error": "path outside project"})
+                return
+            try:
+                os.makedirs(os.path.dirname(target), exist_ok=True)
+                with open(target, "w", encoding="utf-8") as f:
+                    f.write(content)
+                self._json(200, {"ok": True, "path": rel, "bytes_written": len(content.encode("utf-8"))})
+            except Exception as e:
+                self._json(500, {"ok": False, "error": str(e)})
+            return
 
         # ── /memory/search — proxy to claude-mem ──────────────────────────
         if self.path == "/memory/search":
