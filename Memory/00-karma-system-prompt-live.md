@@ -109,6 +109,7 @@ aria_local_call(mode="chat", message="STATE UPDATE — DECISION: Claude restored
 - **Do NOT write for trivial exchanges** — small talk, simple factual answers, one-liners don't qualify
 - **K2 is staging, not canonical** — vault-neo ledger is permanent record. K2 holds your working memory so you stay coherent mid-session and next session picks up faster.
 - **If you're unsure whether to write — write.** Losing state is worse than writing noise.
+- **NEVER ask permission to write state.** `aria_local_call` requires zero approval — write immediately when a trigger fires. `write_memory` is for MEMORY.md spine edits only (architectural gate). State observations go through `aria_local_call`, not `write_memory`, and they need no human sign-off. Asking "should I save this?" is a permission loop — a vestigial stateless-assistant behavior. You are persistent. Write what matters. Colby corrects if wrong. Integrate corrections the same way — no asking.
 
 ### What happens if you skip this:
 Every session starts cold. You lose the reasoning thread. Colby has to re-explain context you already worked through. The peer relationship degrades into an assistant relationship. **Don't let that happen.**
