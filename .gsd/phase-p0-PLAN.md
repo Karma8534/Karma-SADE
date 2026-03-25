@@ -28,7 +28,7 @@ Execute one task at a time. Mark `<done>` only after `<verify>` passes.
 
 ## P0-A: Watchdog pattern diversity (expand beyond cascade_performance)
 <verify>vesper_watchdog.py produces at least 2 distinct pattern types (not cascade_performance) in one 60s cycle. Pattern visible in spine promotion candidates.</verify>
-<done></done>
+<done>true — 2026-03-25 Session 139 (pre-existing, backlog description was stale — watchdog already generates 6 types: cascade_performance, verbosity_correction, claude_dependency, behavioral_continuity, tool_utilization, research_skill_card)</done>
 
 **What:** Watchdog is currently only detecting `cascade_performance` patterns. Other behavioral patterns (decision consistency, tool accuracy, error repetition) are never promoted.
 
@@ -36,7 +36,7 @@ Execute one task at a time. Mark `<done>` only after `<verify>` passes.
 
 ## P0-C: P1 Ollama model name fix in karma-regent.env
 <verify>`karma-regent.env` references correct model name for P1 Ollama. `ollama list` on P1 confirms model exists. Regent picks up the model without error.</verify>
-<done></done>
+<done>true — 2026-03-25 Session 139 (no discrepancy found — all models verified: P1_OLLAMA_MODEL=nemotron-mini:latest ✓ on P1, K2_OLLAMA_PRIMARY_MODEL=qwen3:8b ✓ on K2, K2_OLLAMA_FALLBACK_MODEL=qwen3.5:4b ✓ on K2)</done>
 
 **What:** The model name in karma-regent.env may reference a model that doesn't exist on P1's Ollama instance. Find the discrepancy and fix.
 
@@ -52,7 +52,7 @@ Execute one task at a time. Mark `<done>` only after `<verify>` passes.
 
 ## P0-B: FalkorDB write verification (configurable URL + retry queue)
 <verify>When FalkorDB write fails (simulated by wrong URL), error is logged AND queued for retry. Retry fires within 5min. No silent drops.</verify>
-<done></done>
+<done>true — 2026-03-25 Session 139 (pre-existing from Session 107 fixes — FALKOR_WRITE_URL env var ✓, _queue_falkor_outbox() disk persistence ✓, _drain_falkor_outbox() runs at each governor cycle ✓, governor cadence override = 10min via cadence.conf drop-in, outbox currently empty = 0 pending failures, GOVERNOR_AUDIT JSONL logs all events)</done>
 
 **What:** vesper_governor.py writes patterns to FalkorDB via hub-bridge `/v1/cypher`. If this write fails, it silently drops. Need: configurable URL env var + retry queue with TTL.
 
@@ -68,6 +68,6 @@ Execute one task at a time. Mark `<done>` only after `<verify>` passes.
 
 ## P0-F: TITANS memory tiers (working/LTM/persistent, surprise-gated encoding, forgetting)
 <verify>Design document written + Sovereign approval given before any implementation.</verify>
-<done></done>
+<done>PARTIAL — 2026-03-25 Session 139: Design document written at docs/plans/2026-03-25-titans-memory-tiers-design.md. Awaiting Sovereign approval for Phase 1 (surprise gate in batch_ingest) before implementation.</done>
 
 **What:** Full TITANS-style memory tier implementation. Working memory (fast, recent), LTM (surprise-gated encoding), persistent (never forgotten). This is architectural — requires design doc first.

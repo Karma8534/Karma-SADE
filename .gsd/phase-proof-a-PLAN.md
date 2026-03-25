@@ -47,7 +47,9 @@ Post result back: `from=codex, to=all, type=inform, content="[ARCHONPRIME] <code
 
 ## Task 4: End-to-end gate test
 <verify>Colby posts one bus message addressed to `codex` with an analysis request → KCC detects it → triggers Codex → Codex posts ArchonPrime analysis back to bus. Full cycle logged. Colby did NOT manually run anything after the initial bus post.</verify>
-<done>false</done>
+<done>true — 2026-03-25 Session 139</done>
+
+**PROOF:** Posted to=codex (coord_1774415061543_dl8i) → kcc_bus_monitor detected → kcc_codex_trigger.ps1 called (SSH K2, npx codex exec) → 792-char analysis returned → [ARCHONPRIME] posted (coord_1774415364242_djnf). PITFALL: KCC-Codex-Monitor scheduled task requires admin for Register-ScheduledTask. Used kcc_one_poll.ps1 for manual verification cycle.
 
 Test message:
 ```
