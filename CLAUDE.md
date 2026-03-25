@@ -147,6 +147,12 @@ Every session follows this exact frame. No deviations, no "good enough":
 **Do without asking:** Code changes, file edits, running tests, git commit/push, reading docs, debugging, creating test files
 **Ask before doing:** Breaking changes to API contracts, new paid dependencies or services, infrastructure changes (Docker, server config), deleting files, modifying CLAUDE.md or rules files, any action that costs money
 
+## Dependency Management
+1. Never run `pip install` or `npm install` without explicit user approval
+2. Before suggesting a new dependency, list its major sub-dependencies
+3. Prefer generating utility code over adding a dependency when the functionality is under 200 lines
+4. Always pin exact versions — never use `>=`, `~=`, `^`, or `*`
+
 ## Honesty & Analysis Contract (Session 13+ Commitment)
 
 **Brutal Honesty â€” No Exceptions:**
@@ -270,7 +276,7 @@ If any step missing: session doesn't end cleanly.
 4. Execute one task at a time (never batch)
 5. Verify each task passes its `<verify>` criteria before marking done
 6. Use PowerShell for git ops (avoids Windows Git Bash lock file issue)
-7. Update `.gsd/STATE.md` with progress after each task
+7. Update `.gsd/STATE.md` with progress after each task — format: `Active: Task N/M — [next task description]` so positional state survives context compaction
 
 ### After completing:
 8. Write `.gsd/phase-{name}-SUMMARY.md` â€” what happened, what was learned
