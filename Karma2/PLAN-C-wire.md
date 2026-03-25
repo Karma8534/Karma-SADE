@@ -138,9 +138,9 @@ const restored = await LanguageModel.create(
 ## C-GATE
 
 All complete when:
-- [ ] vault-neo can reach claude-mem (C1)
-- [ ] Chrome Inspector shows WebMCP tools on hub pages (C2)
-- [ ] `/memory/search` returns Julian's history from hub.arknexus.net (C3)
-- [ ] Hub UI sessions survive browser restart, context restored (C4)
+- [x] vault-neo can reach claude-mem (C1)
+- [x] Chrome Inspector shows WebMCP tools on hub pages (C2)
+- [x] `/memory/search` returns Julian's history from hub.arknexus.net (C3)
+- [x] Hub UI sessions survive browser restart, context restored (C4)
 
 When C-GATE passes → family is wired. Review backlog for what's next.
