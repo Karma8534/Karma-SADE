@@ -1934,7 +1934,7 @@ async function executeToolCall(toolName, toolInput, writeId = null, ariaSessionI
           signal: AbortSignal.timeout(35000),
         });
         const result = await r.json();
-        const output = (result.stdout || result.stderr || "").slice(0, 8192);
+        const output = (result.output || result.stdout || result.stderr || "").slice(0, 8192);
         return { ok: result.ok, language, output, exit_code: result.exit_code };
       } catch (e) {
         return { error: "network_error", message: e.message };
