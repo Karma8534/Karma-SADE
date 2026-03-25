@@ -6,7 +6,7 @@ Uses local Ollama for inference — Anthropic-independent, no MCP startup overhe
 Returns: {response, ok}
 Auth: Bearer token checked against HUB_CHAT_TOKEN env var.
 """
-import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.parse, socket
+import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.parse, socket, sqlite3
 from http.server import HTTPServer, BaseHTTPRequestHandler
 sys.path.insert(0, os.path.dirname(__file__))
 try:
@@ -23,6 +23,7 @@ SESSION_FILE  = pathlib.Path.home() / ".cc_server_session_id"
 CLAUDE_CMD     = r"C:\Users\raest\AppData\Roaming\npm\claude.cmd"
 API_TIMEOUT    = 120  # seconds — CC subprocess can be slow on complex tasks
 CLAUDEMEM_URL  = "http://127.0.0.1:37777"  # claude-mem worker (loopback)
+CLAUDEMEM_DB   = pathlib.Path.home() / ".claude-mem" / "claude-mem.db"
 
 def claudemem_proxy(path, method="GET", body=None, timeout=10):
     """Proxy a request to the local claude-mem worker at 127.0.0.1:37777."""
@@ -115,6 +116,30 @@ class CCHandler(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, "service": "cc-server-p1", "gmail": GMAIL_AVAILABLE})
         elif self.path == "/memory/health":
             self._json(200, {"ok": True, "service": "cc-server-p1", "claudemem_url": CLAUDEMEM_URL})
+        elif self.path.startswith("/memory/session"):
+            session_id = load_session_id()
+            self._json(200, {"ok": True, "session_id": session_id or ""})
+        elif self.path.startswith("/memory/observations"):
+            parsed = urllib.parse.urlparse(self.path)
+            params = urllib.parse.parse_qs(parsed.query)
+            raw_ids = params.get("ids", [""])[0]
+            ids = [int(x.strip()) for x in raw_ids.split(",") if x.strip().isdigit()]
+            if not ids:
+                self._json(400, {"ok": False, "error": "ids param required (comma-separated ints)"})
+                return
+            try:
+                conn = sqlite3.connect(f"file:{CLAUDEMEM_DB}?mode=ro", uri=True, timeout=5)
+                conn.row_factory = sqlite3.Row
+                placeholders = ",".join("?" * len(ids))
+                rows = conn.execute(
+                    f"SELECT id,memory_session_id,project,type,title,subtitle,narrative,text,created_at FROM observations WHERE id IN ({placeholders})",
+                    ids
+                ).fetchall()
+                conn.close()
+                items = [dict(r) for r in rows]
+                self._json(200, {"ok": True, "items": items})
+            except Exception as e:
+                self._json(500, {"ok": False, "error": str(e)})
         else:
             self.send_response(404)
             self.end_headers()

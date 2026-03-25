@@ -4006,6 +4006,95 @@ form.addEventListener("submit", async e => {
         return json(res, 502, { ok: false, error: `memory context error: ${e.message}` });
       }
     }
+    if (req.method === "GET" && req.url.startsWith("/memory/observations")) {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      try {
+        const url = new URL(req.url, "http://localhost");
+        const ids = url.searchParams.get("ids") || "";
+        if (!ids) return json(res, 400, { ok: false, error: "ids required" });
+        const r = await fetch(`${CC_SERVER_URL}/memory/observations?ids=${encodeURIComponent(ids)}`, {
+          method: "GET",
+          signal: AbortSignal.timeout(10000),
+        });
+        const d = await r.json();
+        return json(res, r.ok ? 200 : r.status, d);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `observations error: ${e.message}` });
+      }
+    }
+
+    if (req.method === "GET" && req.url === "/memory/session") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      try {
+        const r = await fetch(`${CC_SERVER_URL}/memory/session`, {
+          method: "GET",
+          signal: AbortSignal.timeout(5000),
+        });
+        const d = await r.json();
+        return json(res, r.ok ? 200 : r.status, d);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `session error: ${e.message}` });
+      }
+    }
+
+    if (req.method === "GET" && req.url === "/memory/cognitive") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      if (!ARIA_SERVICE_KEY || !ARIA_URL) {
+        return json(res, 503, { ok: false, error: "K2 not configured" });
+      }
+      try {
+        const r = await fetch(`${ARIA_URL}/api/exec`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Aria-Service-Key": ARIA_SERVICE_KEY },
+          body: JSON.stringify({ command: "cat /mnt/c/dev/Karma/k2/cache/cc_scratchpad.md 2>/dev/null" }),
+          signal: AbortSignal.timeout(10000),
+        });
+        if (!r.ok) return json(res, 502, { ok: false, error: `K2 exec failed: ${r.status}` });
+        const result = await r.json();
+        return json(res, 200, { ok: true, content: result.output || "", retrieved_at: new Date().toISOString() });
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `cognitive read error: ${e.message}` });
+      }
+    }
+
+    if (req.method === "POST" && req.url === "/memory/cognitive") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      if (!ARIA_SERVICE_KEY || !ARIA_URL) {
+        return json(res, 503, { ok: false, error: "K2 not configured" });
+      }
+      const raw = await parseBody(req, 500000);
+      let body; try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+      const content = body.content || "";
+      if (!content) return json(res, 400, { ok: false, error: "content required" });
+      try {
+        // Use base64 via Python to avoid all shell-escaping issues
+        const b64 = Buffer.from(content).toString("base64");
+        const cmd = `python3 -c "import base64; open('/mnt/c/dev/Karma/k2/cache/cc_scratchpad.md','w').write(base64.b64decode('${b64}').decode()); print('ok')"`;
+        const r = await fetch(`${ARIA_URL}/api/exec`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Aria-Service-Key": ARIA_SERVICE_KEY },
+          body: JSON.stringify({ command: cmd }),
+          signal: AbortSignal.timeout(10000),
+        });
+        if (!r.ok) return json(res, 502, { ok: false, error: `K2 exec failed: ${r.status}` });
+        const result = await r.json();
+        return json(res, 200, { ok: true, written: content.length, result: result.output });
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `cognitive write error: ${e.message}` });
+      }
+    }
     // ── end /memory/* ─────────────────────────────────────────────────────────
 
     return notFound(res);
