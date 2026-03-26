@@ -54,7 +54,7 @@ hub.arknexus.net = PUBLIC FACE (routes to brain or voice as needed)
 - P1 cleaned: only qwen3.5:4b + nomic-embed-text installed, model loaded 100% GPU 32K ctx
 - J-PreBase1.md: full ground truth audit written
 - K2 services: aria + cc-regent + karma-kiki + karma-regent + julian-cortex all running
-- Autoresearch primitives: karma_quality_score (0.1 baseline), experiment_instructions.md, spine git snapshots
+- Autoresearch primitives: L_karma=0.2 (v2.2 spec), experiment_instructions.md v2.2, spine git snapshots
 - Vesper pipeline patched: eval logs quality score, governor git-snapshots spine before/after promotion
 - ingest_recent.sh: automated synthesis (ledger → qwen3.5:4b → cortex + vault), session-end + 4h cron
 
