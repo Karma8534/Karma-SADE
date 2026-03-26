@@ -1,8 +1,8 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-25 Session 145 WRAP
-**Active: Task 1/3 — Backlog-3 P0-B: read vesper_governor.py _apply_to_spine() FalkorDB write logic**
-**Session:** Session 145 COMPLETE. Backlog-3 P0-A done: 3 new pattern detectors added to vesper_watchdog.py on K2 (decision_quality conf=0.67, error_recovery conf=0.70, tool_accuracy conf=0.768). All 3 verified in regent_candidates/. Vesper spine v1239 has 13 diverse stable patterns (PITFALL + research_skill_card + ambient_observation). AC3 criterion met. DECISION: evolution log has no content field — category/source/from proxies used. Next: P0-B FalkorDB retry queue in vesper_governor.py.
+**Last updated:** 2026-03-25 Session 146
+**Active: Backlog-3 P0-F — TITANS memory tiers (writing GSD docs)**
+**Session:** Session 146 IN PROGRESS. P0-A DONE. P0-B DONE. P0-C DONE (session 146, P1_OLLAMA_MODEL=qwen3.5:9b). P0-D DONE (already implemented in karma_regent.py lines 957-990, watermark file at regent_control/dedup_watermark.json). P0-E moot (no active crash, journal empty, regent stable). Next: P0-F TITANS memory tiers.
 **Canonical source:** This file. Read at session start.
 
 ---
