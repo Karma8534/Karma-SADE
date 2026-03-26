@@ -90,6 +90,6 @@ hub.arknexus.net = PUBLIC FACE (routes to brain or voice as needed)
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Phase 2, Task 2-1: Rewrite resurrect skill — replace 20-file reads with one cortex call (`curl http://192.168.0.226:7892/context`). Invoke ORF before building.
-3. Phase 1, Task 1-4: Research ingestion — feed docs/wip/ summaries into cortex via ingest_recent.sh pattern
+2. Fix Anthropic API 400 "credit balance too low" — check billing at console.anthropic.com, update key at vault-neo if needed, rebuild hub-bridge, verify /v1/chat returns assistant_text
+3. Verify foundation end-to-end: cortex recall ($0), Anthropic complex (tools), Karma uses tools before saying "I don't know"
 **S144 DONE:** cortex LIVE (K2:7892 + P1:7893, 22+ blocks), cognitive split LIVE (recall→cortex $0, complex→Haiku), synthesis injection LIVE, automated synthesis LIVE (cron + hook, verified 72 entries→1334 char synthesis), L_karma v2.2, ORF, resurrect v2, wrap-session v2, P1 fallback (16 blocks synced from K2), failover verified (K2 down→Anthropic). System prompt: tool-use-first mandatory directive added, model claim fixed to Haiku 4.5. Phase 1-4 SOLID. Tools enabled ALL modes (deep gate removed). P1 cortex reboot survival (Startup VBS). CRITICAL: Anthropic API credits exhausted — Haiku path returns 400. Cortex $0 path is ONLY working chat path.
