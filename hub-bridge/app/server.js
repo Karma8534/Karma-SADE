@@ -279,6 +279,30 @@ function loadDirectionMd() {
   } catch (_) {}
 }
 
+// Synthesis cache - most recent [SYNTHESIS] entry from vault via FAISS.
+// Refreshed every 5min. Injected into buildSystemText for session continuity.
+let _synthesisCacheText = "";
+async function loadSynthesisCache() {
+  try {
+    const r = await fetch("http://anr-vault-search:8081/v1/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: "synthesis session decisions insights pitfalls", limit: 1 }),
+    });
+    if (r.ok) {
+      const d = await r.json();
+      const top = (d.results || [])[0];
+      if (top && top.content_preview) {
+        _synthesisCacheText = top.content_preview;
+        console.log("[SYNTHESIS] cache refreshed:", _synthesisCacheText.length, "chars");
+      }
+    }
+  } catch (e) {
+    console.error("[SYNTHESIS] cache refresh failed:", e.message);
+  }
+}
+
+
 // K2 memory graph cache — fetched once per request cycle, cached 5 min.
 // Aria on K2 exposes GET /api/memory/graph?query=... — returns seed_facts, related_facts, entities.
 let _k2MemGraphCache = null;
@@ -457,6 +481,22 @@ const LOCAL_FILE_SERVER_URL = process.env.LOCAL_FILE_SERVER_URL || "";
 const LOCAL_FILE_TOKEN = process.env.LOCAL_FILE_TOKEN || "";
 
 const ARIA_URL = process.env.ARIA_URL || "http://100.75.109.92:7890";
+
+// Julian cortex endpoints (K2 primary, P1 fallback)
+const K2_CORTEX_URL = process.env.K2_CORTEX_URL || "http://100.75.109.92:7892";
+const P1_CORTEX_URL = process.env.P1_CORTEX_URL || "http://100.124.194.102:7893";
+
+// Fire-and-forget cortex ingest (non-blocking)
+function cortexIngest(label, text) {
+  const body = JSON.stringify({ label, text: (text || "").slice(0, 500) });
+  const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
+  fetch(K2_CORTEX_URL + "/ingest", opts).catch(() => {
+    // K2 down, try P1 fallback
+    fetch(P1_CORTEX_URL + "/ingest", opts).catch(e =>
+      console.error("[CORTEX] ingest failed (both K2+P1):", e.message)
+    );
+  });
+}
 const ARIA_SERVICE_KEY = process.env.ARIA_SERVICE_KEY || "";
 
 // Auto-handoff config
@@ -992,6 +1032,11 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
   // Memory spine — always (all tiers) — critical for Karma's continuity
   if (memoryMd) {
     text += `\n\n--- KARMA MEMORY SPINE (recent) ---\n${memoryMd}\n---`;
+
+  // Recent session synthesis - always injected for continuity
+  if (_synthesisCacheText) {
+    text += "\n\n--- RECENT SESSION SYNTHESIS ---\n" + _synthesisCacheText + "\n---";
+  }
   }
 
   // K2 memory graph — Tier 3 only (Aria's local peer memory)
@@ -2531,9 +2576,7 @@ async function callWithK2Fallback(model, messages, maxTokens, deep_mode, writeId
     }
   }
   // Anthropic fallback (existing logic unchanged)
-  return deep_mode
-    ? callLLMWithTools(model, messages, maxTokens, writeId, ariaSessionId)
-    : callLLM(model, messages, maxTokens);
+  return callLLMWithTools(model, messages, maxTokens, writeId, ariaSessionId); // tools ALL modes S144
 }
 
 // --- Credit burn alarm (P0-G) ---
@@ -2889,6 +2932,49 @@ const server = http.createServer(async (req, res) => {
       // Context tier routing — classify message complexity
       const tier = classifyMessageTier(userMessage, deep_mode);
 
+      // --- PHASE 3-2: Cognitive split — cortex-first for recall questions ---
+      // Orchestrator routes: K2 cortex ($0) → P1 cortex ($0) → Anthropic cloud ($cost)
+      const RECALL_PATTERN = /^(what|when|who|where|how|which|do you|did|have we|tell me about|remind me|what happened|session \d|recall|remember)/i;
+      const isRecall = !deep_mode && userMessage.length < 300 && RECALL_PATTERN.test(userMessage.trim());
+      if (isRecall) {
+        const cortexUrls = [
+          { url: K2_CORTEX_URL, label: "K2" },
+          { url: P1_CORTEX_URL, label: "P1" },
+        ];
+        for (const cortex of cortexUrls) {
+          try {
+            const cortexResp = await fetch(cortex.url + "/query", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ query: userMessage }),
+              signal: AbortSignal.timeout(30000),
+            });
+            if (cortexResp.ok) {
+              const cortexData = await cortexResp.json();
+              const cortexAnswer = (cortexData.answer || "").trim();
+              if (cortexAnswer.length > 30 && !cortexAnswer.startsWith("[CORTEX ERROR")) {
+                console.log(`[COGNITIVE_SPLIT] recall routed to ${cortex.label} cortex ($0):`, userMessage.slice(0, 60));
+                cortexIngest("recall-" + Date.now(), "[Q] " + userMessage.slice(0, 100) + " [A] " + cortexAnswer.slice(0, 300));
+                return json(res, 200, {
+                  ok: true,
+                  assistant_text: cortexAnswer,
+                  model: `qwen3.5:4b (${cortex.label} cortex)`,
+                  deep_mode: false,
+                  cognitive_split: cortex.label.toLowerCase(),
+                  usd_estimate: 0.0,
+                  spend: { month_utc: month, cap_usd: cap, usd_spent: used_before },
+                });
+              }
+              console.log(`[COGNITIVE_SPLIT] ${cortex.label} cortex answer too short/error, trying next`);
+            }
+          } catch (e) {
+            console.log(`[COGNITIVE_SPLIT] ${cortex.label} cortex failed:`, e.message);
+          }
+        }
+        console.log("[COGNITIVE_SPLIT] all cortex nodes failed, falling back to Anthropic cloud");
+      }
+      // --- END PHASE 3-2 ---
+
       // Fetch checkpoint — Tier 3 only (reused for statePrelude + karma_brief)
       let ckLatestData = null;
       if (tier >= 3) {
@@ -3154,6 +3240,12 @@ const server = http.createServer(async (req, res) => {
           debug_ingest: ingestVerdict,
         });
       }
+
+      // Fire-and-forget: feed chat turn to Julian cortex (K2 primary, P1 fallback)
+      cortexIngest(
+        "chat-" + (turn_id || Date.now()),
+        "[" + (userMessage || "").slice(0, 100) + "] -> [" + (assistantText || "").slice(0, 300) + "]"
+      );
 
       return json(res, 200, {
         ok: true,
@@ -4328,6 +4420,7 @@ console.log(`[INIT] GLM rate limiter: ${glmLimiter._rpm} RPM, ingest slot timeou
 loadSessionBrief();
 setInterval(loadSessionBrief, 5 * 60 * 1000);
 loadMemoryMd();
+loadSynthesisCache(); setInterval(loadSynthesisCache, 5 * 60 * 1000);
 setInterval(loadMemoryMd, 5 * 60 * 1000);
 loadDirectionMd();
 setInterval(loadDirectionMd, 5 * 60 * 1000);

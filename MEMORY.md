@@ -47,7 +47,9 @@ CC ── Claude Code on P1 — execution layer
 - **Phase 2 COMPLETE:** resurrect cortex call (2-1), mid-session offload (2-2), wrap-session cortex dump (2-3)
 - **Task 1-4 DONE:** 11 docs/wip/ files ingested as research — cortex 34→46 blocks
 - **Task 3-3 DONE:** bus_to_cortex.py deployed on K2 cron (every 2min) — 30 bus msgs ingested, cortex→76 blocks
-- **Remaining foundation:** 3-2 (cognitive split routing), 4-2/4-3/4-4 (P1 fallback service + orchestrator failover)
+- **Task 3-2 DONE:** Cognitive split verified — recall→K2 cortex ($0), complex→Anthropic ($cost)
+- **Phase 4 COMPLETE:** P1 cortex running (7893), orchestrator failover K2→P1→cloud deployed, sync_k2_to_p1.py synced 106 blocks (P1 now 123 blocks matching K2)
+- **FOUNDATION PHASES 1-4 COMPLETE.** Phases 5-6 deferred-by-rule until Sovereign verifies.
 
 ## Session 144 Progress (carried forward)
 - **julian_cortex.py** deployed on K2:7892 as julian-cortex.service (obs #18486)
