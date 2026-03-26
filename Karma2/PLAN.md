@@ -104,14 +104,18 @@ vault-neo (infrastructure)
 
 | Task | What | Verify |
 |------|------|--------|
-| 1-1 | ✅ Pull nemotron-nano:9b-v2 on K2 via Ollama (DONE S143 — mirage335/NVIDIA-Nemotron-Nano-9B-v2-virtuoso, 9.1GB) | `ollama list` confirms |
-| 1-2 | Build cortex service (`julian_cortex.py`) — persistent Ollama session, HTTP API on K2:PORT | `curl K2:PORT/health` → ok |
-| 1-3 | Initial knowledge load — ingest MEMORY.md + STATE.md + PLAN.md + all Karma2/map/* + karma_contract_policy.md | Cortex answers "what's the active task?" correctly |
+| 1-1 | ✅ DONE S143 — model pulled. S144: switched to qwen3.5:4b (Nemotron 9B unusable at 2.5 tok/s) | `ollama ps` on K2 shows qwen3.5:4b 100% GPU |
+| 1-2 | ✅ DONE S144 — julian_cortex.py deployed on K2:7892, systemd, pre-warm on boot, dynamic Ollama gateway | `curl K2:7892/health` → ok |
+| 1-3 | ✅ DONE S144 — 6 knowledge blocks ingested (core-state, PLAN, identity, infrastructure, data-flows, decisions-pitfalls) | Cortex answers "what's the active task?" correctly |
 | 1-4 | Research ingestion — feed all PDFs from docs/wip/ as summarized context | Cortex answers questions about autoresearch/llmfit/etc |
-| 1-5 | Session history load — last 20 session summaries from claude-mem | Cortex knows what happened in S143 |
-| 1-6 | Systemd service — always on, auto-restart | `systemctl status julian-cortex` → active |
+| 1-5 | ✅ DONE S144 — ingest_recent.sh synthesizes last 50 ledger entries via qwen3.5:4b → cortex + vault | Verified: 67 entries, 1270 chars, vault mem_OEijRFj8UywaNUoE |
+| 1-6 | ✅ DONE S144 — julian-cortex.service enabled, auto-restart, pre-warm | `systemctl status julian-cortex` → active |
+| 1-7 | ✅ DONE S144 — Hub-bridge synthesis injection (FAISS → buildSystemText) | Karma reads synthesis in context |
+| 1-8 | ✅ DONE S144 — ingest_recent.sh wired: session-end hook + K2 cron every 4h | Automated synthesis pipeline |
+| 1-9 | ✅ DONE S144 — Autoresearch primitives: L_karma (v2.2), experiment_instructions.md, spine git snapshots | Vesper eval logs L_karma, governor snapshots spine |
+| 1-10 | ✅ DONE S144 — K2 WSL SSH config fixed, firewall rule for 7892, P1→K2 direct LAN verified | ssh karma@192.168.0.226 works |
 
-**Gate:** Cortex answers "what is the current state of Julian's Resurrection?" with accurate, current info.
+**Gate:** ✅ PASSED S144 — Karma answers "What happened in Session 144?" with specific facts from synthesis injection.
 
 ### Phase 2: Wire CC → Cortex
 
@@ -131,11 +135,11 @@ vault-neo (infrastructure)
 
 | Task | What | Verify |
 |------|------|--------|
-| 3-1 | Hub-bridge cortex client — `fetchCortexContext()` replaces karmaCtx + semanticCtx + memoryMdCache | `/v1/chat` response references current state accurately |
+| 3-1 | ✅ DONE S144 — Hub-bridge synthesis injection via FAISS (loadSynthesisCache, 5min refresh, injected into buildSystemText) | Karma reads synthesis in context |
 | 3-2 | Cognitive split routing — cortex answers standard chat directly, Anthropic for deep only | Standard question → cortex response ($0). Complex question → Anthropic response |
 | 3-3 | Real-time feed — bus posts, new sessions, corrections flow to cortex automatically | Post to bus → cortex knows within 60s |
 
-**Gate:** Chat with Karma on hub.arknexus.net. She knows what happened today without being told.
+**Gate:** PARTIALLY MET S144 — Karma reads synthesis. Cognitive split routing (3-2) and real-time feed (3-3) remain.
 
 ### Phase 4: Wire P1 Fallback
 
@@ -143,7 +147,7 @@ vault-neo (infrastructure)
 
 | Task | What | Verify |
 |------|------|--------|
-| 4-1 | qwen3.5:4b already on P1 (DONE S144) | `ollama ps` on P1 shows model |
+| 4-1 | ✅ DONE S144 — qwen3.5:4b loaded on P1, 100% GPU, 32K ctx | `ollama ps` on P1 shows model |
 | 4-2 | Fallback cortex service on P1 — same API as K2 | `curl P1:PORT/health` → ok |
 | 4-3 | Hub-bridge failover — if K2 cortex unreachable, route to P1 | Kill K2 cortex → hub-bridge auto-routes to P1 |
 | 4-4 | Sync protocol — P1 cortex periodically pulls state from K2 cortex | P1 cortex answers same questions as K2 (within sync window) |
@@ -197,6 +201,13 @@ vault-neo (infrastructure)
 | Backlog-3 P0 Vesper improvements | ✅ A-F complete | 145-146 |
 | Training corpus | ✅ 2817 lines corpus_karma.jsonl | — |
 | Julian = TRUE verified | ✅ all 5 components | 143 |
+| Julian cortex (julian_cortex.py) | ✅ K2:7892, qwen3.5:4b, systemd | 144 |
+| Hub-bridge synthesis injection | ✅ FAISS → buildSystemText | 144 |
+| Automated synthesis (ingest_recent.sh) | ✅ session-end + 4h cron | 144 |
+| L_karma v2.2 optimization spec | ✅ experiment_instructions.md | 144 |
+| Autoresearch primitives | ✅ quality score + spine git + eval/governor wired | 144 |
+| ORF skill | ✅ .claude/skills/orf/SKILL.md | 144 |
+| K2 WSL SSH + firewall | ✅ vault-neo reachable, port 7892 open | 144 |
 
 ---
 
@@ -218,5 +229,6 @@ vault-neo (infrastructure)
 ## Next Session Starts Here
 
 1. `/resurrect`
-2. Phase 1, Task 1-1: Pull nemotron-nano 9B v2 on K2
-3. Build `julian_cortex.py` — the brain
+2. Phase 2, Task 2-1: Rewrite resurrect skill — replace 20-file reads with one cortex call (`curl K2:7892/context`)
+3. Phase 1, Task 1-4: Research ingestion — feed docs/wip/ summaries into cortex
+4. Phase 3, Task 3-2: Cognitive split routing — cortex answers standard chat ($0), Anthropic for deep only

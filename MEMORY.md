@@ -90,7 +90,6 @@ hub.arknexus.net = PUBLIC FACE (routes to brain or voice as needed)
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Build `/mnt/c/dev/Karma/k2/aria/ingest_recent.sh` — 30-line bash: tail ledger → qwen3.5:4b synthesis → POST to cortex /ingest AND vault /v1/ambient (tags:synthesis). Invoke ORF before building.
-3. Wire: session-end.sh (nohup ssh karma@192.168.0.226) + K2 cron (0 */4 * * *)
-4. Verify: cortex blocks > 6 AND Karma answers from new synthesis
-**DONE S144:** cortex on K2:7892, hub-bridge synthesis injection LIVE, manual synthesis mem_yK-TJCC9XOYrW4d_ verified, ORF skill created, K2 SSH fixed, firewall opened, model=qwen3.5:4b.
+2. Phase 2, Task 2-1: Rewrite resurrect skill — replace 20-file reads with one cortex call (`curl http://192.168.0.226:7892/context`). Invoke ORF before building.
+3. Phase 1, Task 1-4: Research ingestion — feed docs/wip/ summaries into cortex via ingest_recent.sh pattern
+**S144 DONE:** cortex LIVE (K2:7892, qwen3.5:4b), synthesis injection LIVE (hub-bridge), automated synthesis LIVE (ingest_recent.sh + cron + session-end hook), L_karma v2.2 spec deployed, ORF skill created, all blockers resolved.
