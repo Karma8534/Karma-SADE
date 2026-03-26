@@ -62,4 +62,3 @@ ENDJSON
 nohup ssh karma@192.168.0.226 '/mnt/c/dev/Karma/k2/aria/ingest_recent.sh' > /dev/null 2>&1 &
 
 exit 0
-test-marker-1772557955

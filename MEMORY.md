@@ -92,4 +92,4 @@ hub.arknexus.net = PUBLIC FACE (routes to brain or voice as needed)
 1. `/resurrect`
 2. Phase 2, Task 2-1: Rewrite resurrect skill — replace 20-file reads with one cortex call (`curl http://192.168.0.226:7892/context`). Invoke ORF before building.
 3. Phase 1, Task 1-4: Research ingestion — feed docs/wip/ summaries into cortex via ingest_recent.sh pattern
-**S144 DONE:** cortex LIVE (K2:7892 + P1:7893), synthesis injection LIVE, automated synthesis LIVE (cron + hook), L_karma v2.2, ORF skill, resurrect v2 (cortex-first), wrap-session v2 (cortex dump), P1 fallback cortex, sync script, research ingested (11 blocks K2), all Phase 1+2 complete. Phase 3-2 (cognitive split) + 4-3 (failover) deferred.
+**S144 DONE:** cortex LIVE (K2:7892 + P1:7893, 22+ blocks), cognitive split LIVE (recall→cortex $0, complex→Haiku), synthesis injection LIVE, automated synthesis LIVE (cron + hook, verified 72 entries→1334 char synthesis), L_karma v2.2, ORF, resurrect v2, wrap-session v2, P1 fallback (16 blocks synced from K2), failover verified (K2 down→Anthropic). System prompt: tool-use-first mandatory directive added, model claim fixed to Haiku 4.5. Phase 1-4 SOLID.
