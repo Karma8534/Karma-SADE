@@ -47,7 +47,12 @@ hub.arknexus.net = PUBLIC FACE (routes to brain or voice as needed)
 - **julian_cortex.py** deployed on K2:7892 as julian-cortex.service (obs #18486)
 - Nemotron 9B v2 verified: loads, responds, inference works
 - PITFALL: Ollama in WSL2 is NOT at localhost — use Windows gateway IP (172.22.240.1:11434)
-- Port proxy 7892 added but Windows Firewall blocks LAN access (non-blocking — hub-bridge uses Tailscale)
+- Model selection: qwen3.5:4b optimal (58 tok/s, 32K ctx, canirun.ai 88/100). Nemotron 9B v2 removed (2.5 tok/s unusable)
+- PLAN.md updated: all 128K refs → 32K, model table corrected to qwen3.5:4b
+- S1 SECURITY FIX: K2 cron API keys moved from plaintext to file-based reads (.secrets/)
+- K2 cleaned: only qwen3.5:4b + nomic-embed-text installed
+- P1 cleaned: only qwen3.5:4b + nomic-embed-text installed, model loaded 100% GPU 32K ctx
+- J-PreBase1.md: full ground truth audit written
 - K2 services: aria + cc-regent + karma-kiki + karma-regent + julian-cortex all running
 
 ## Critical Pitfalls (NEVER REPEAT — obs #18439-#18444)

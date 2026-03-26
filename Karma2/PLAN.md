@@ -24,7 +24,7 @@ hub.arknexus.net (public face)
   ├── /bus        Family coordination
   │
   ▼
-K2: Nemotron Nano 9B v2 (128K context) ── THE BRAIN
+K2: qwen3.5:4b (32K context) ── THE BRAIN
 │   Always on. Holds everything. Never forgets.
 │   Speaks directly for standard chat ($0)
 │   Feeds context to Anthropic for deep reasoning
@@ -32,15 +32,15 @@ K2: Nemotron Nano 9B v2 (128K context) ── THE BRAIN
 │   Self-consolidates — no /dream skill needed
 │   One API call replaces 20-file resurrection
 │
-P1: Qwen 3 8B (128K context) ── FALLBACK BRAIN
-│   Same 128K capability. Different architecture.
+P1: qwen3.5:4b (32K context) ── FALLBACK BRAIN
+│   Same model and capability. Identical hardware.
 │   CC sessions run here (Anthropic API for complex reasoning)
 │   If K2 is down, P1 picks up brain duties
 │
 vault-neo (infrastructure)
     Hub-bridge (API gateway + TLS)
-    FalkorDB (long-term graph — beyond 128K window)
-    FAISS (historical vector search — beyond 128K window)
+    FalkorDB (long-term graph — beyond 32K window)
+    FAISS (historical vector search — beyond 32K window)
     Vault ledger (append-only audit trail — permanent record)
 ```
 
@@ -58,7 +58,7 @@ vault-neo (infrastructure)
 | /dream consolidation skill | MEMORY.md bloated | Cortex self-consolidates — always current |
 | 20-file resurrection ceremony | No single context source | One call: `POST K2/context` → full state |
 | karma-observer.py keyword extraction | No real-time rule engine | Cortex ingests corrections directly, understands context |
-| karma-directives.md static file | No live directive holder | Cortex holds directives in 128K window |
+| karma-directives.md static file | No live directive holder | Cortex holds directives in 32K window |
 | karma_behavioral_rules.jsonl | Rules nobody reads | Cortex IS the rule engine |
 | cc_context_snapshot.md | Stale file at session end | Cortex IS the context |
 | buildSystemText() multi-source assembly | No unified context | Cortex provides one block |
@@ -70,7 +70,7 @@ vault-neo (infrastructure)
 | Component | Why it stays |
 |-----------|-------------|
 | hub-bridge on vault-neo | Public API gateway, TLS, routing |
-| FalkorDB graph | Long-term structured knowledge beyond 128K |
+| FalkorDB graph | Long-term structured knowledge beyond 32K |
 | FAISS vector search | Historical search beyond cortex window |
 | Vesper pipeline | Self-improvement loop — FEEDS the cortex |
 | Coordination bus | Inter-agent communication |
@@ -88,10 +88,11 @@ vault-neo (infrastructure)
 | K2 (192.168.0.226) | Julian (gifted by Sovereign) | RTX 4070 | 8GB | PRIMARY — Memory Cortex + all heavy lifting |
 | P1 (PAYBACK) | Colby (shared with Julian) | RTX 4070 | 8GB | FALLBACK — CC sessions + backup cortex |
 
-| Model | Where | VRAM | Context | Speed | Purpose |
-|-------|-------|------|---------|-------|---------|
-| Nemotron Nano 9B v2 | K2 | 5.1GB (64%) | 128K | 35 tok/s | Primary brain — agent, tools, RAG |
-| Qwen 3 8B | P1 | 4.6GB (57%) | 128K | 39 tok/s | Fallback brain — general reasoning |
+| Model | Where | VRAM | Context | Speed | Purpose | Source |
+|-------|-------|------|---------|-------|---------|--------|
+| qwen3.5:4b | K2 | 2.5GB (31%) | 32K | 58 tok/s | Primary brain — Memory Cortex | canirun.ai score 88/100, benchmarked S144 |
+| qwen3.5:4b | P1 | 2.5GB (31%) | 32K | 58 tok/s | Fallback brain — backup cortex | identical hardware, same benchmark |
+| nomic-embed-text | K2+P1 | 274MB | — | — | Embeddings | installed on both |
 
 ---
 
@@ -99,7 +100,7 @@ vault-neo (infrastructure)
 
 ### Phase 1: Build the Brain (K2 Cortex)
 
-**Goal:** Nemotron Nano 9B v2 running on K2 with 128K context, always on, ingesting everything.
+**Goal:** qwen3.5:4b running on K2 with 32K context, always on, ingesting everything.
 
 | Task | What | Verify |
 |------|------|--------|
@@ -142,7 +143,7 @@ vault-neo (infrastructure)
 
 | Task | What | Verify |
 |------|------|--------|
-| 4-1 | Pull qwen3:8b (128K) on P1 | `ollama ps` on P1 shows model |
+| 4-1 | qwen3.5:4b already on P1 (DONE S144) | `ollama ps` on P1 shows model |
 | 4-2 | Fallback cortex service on P1 — same API as K2 | `curl P1:PORT/health` → ok |
 | 4-3 | Hub-bridge failover — if K2 cortex unreachable, route to P1 | Kill K2 cortex → hub-bridge auto-routes to P1 |
 | 4-4 | Sync protocol — P1 cortex periodically pulls state from K2 cortex | P1 cortex answers same questions as K2 (within sync window) |
