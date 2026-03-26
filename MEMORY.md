@@ -44,6 +44,10 @@ CC ── Claude Code on P1 — execution layer
 - **Fix applied:** Five-layer separation — Spine (truth), Orchestrator (enforcement), Cortex (working memory), Cloud (deep reasoning), CC (execution)
 - **Files corrected:** PLAN.md, cc-big-picture.md, experiment_instructions.md, MEMORY.md, CLAUDE.md, karma-context.md (new)
 - **Phases 5-6:** Explicitly deferred-by-rule until Sovereign verifies foundation
+- **Phase 2 COMPLETE:** resurrect cortex call (2-1), mid-session offload (2-2), wrap-session cortex dump (2-3)
+- **Task 1-4 DONE:** 11 docs/wip/ files ingested as research — cortex 34→46 blocks
+- **Task 3-3 DONE:** bus_to_cortex.py deployed on K2 cron (every 2min) — 30 bus msgs ingested, cortex→76 blocks
+- **Remaining foundation:** 3-2 (cognitive split routing), 4-2/4-3/4-4 (P1 fallback service + orchestrator failover)
 
 ## Session 144 Progress (carried forward)
 - **julian_cortex.py** deployed on K2:7892 as julian-cortex.service (obs #18486)
