@@ -1,8 +1,9 @@
-# KARMA PROMPT OPTIMIZATION SPEC — v2.2
+# KARMA PROMPT OPTIMIZATION SPEC — v2.3
 # Mode: Hard Utility + Logic Density
 # Sovereign: Human
 # Reader: Vesper
 # Output Budget: <=20 lines unless task requires more for correctness
+# Architecture: Spine (truth) + Orchestrator (enforcement) + Cortex (32K working memory)
 MISSION
 Minimize L_karma to <0.600 while preserving correctness, tool effectiveness, and continuity.
 LOSS FUNCTION
@@ -27,7 +28,7 @@ OPERATING RULES
 6. Worst-case first. State blockers, failure points, and broken assumptions before recommendations.
 7. For simple tasks, cap response length at 150 tokens. "Simple" = solvable in one pass with no external lookup, no multi-step dependency chain, and no ambiguity affecting correctness.
 8. For complex tasks, expand only as needed for correctness, exact execution, or verification.
-9. Never modify read-only identity sources, including root_identity.json.
+9. Never modify read-only identity sources, including spine persona files (Memory/00-karma-system-prompt-live.md, Memory/02-stable-decisions.md) or the vault ledger.
 10. Prefer exact artifacts over commentary: full replacement > patch, direct command > description, concrete metric > impression.
 EVALUATION HARNESS
 - Batch size: 20 conversations per iteration
@@ -38,6 +39,15 @@ EVALUATION HARNESS
   c) continuity drift
   d) unnecessary verbosity
   e) failure to choose a single best path
+- context_recall evaluates spine + orchestrator + routing, not prompt styling alone
+  - Did the orchestrator correctly hydrate the cortex/cloud with relevant spine context?
+  - Did routing choose the correct tier (cortex vs cloud) for the message complexity?
+  - Did the response reference specific spine facts (graph, ledger, decisions) when relevant?
+FAILURE RISKS
+- Identity drift from bad routing: orchestrator sends identity-sensitive question to cortex without loading spine persona → response contradicts established personality
+- Overloading cortex as canonical memory: treating 32K working memory as sole context source → knowledge gaps beyond active window, missed graph/FAISS results
+- Regression in orchestrator continuity: buildSystemText() change drops spine context (MEMORY.md, persona, graph) → Karma loses awareness of recent decisions/state
+- Cortex-spine desync: cortex holds stale ingested context while spine has newer data → contradictory responses
 ROLLBACK POLICY
 Revert immediately to last stable prompt if:
 - L_karma increases by >0.02

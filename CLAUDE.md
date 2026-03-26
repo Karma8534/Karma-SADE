@@ -12,13 +12,15 @@
 > cognition when needed, and selective delegation â€” without introducing parallel sources
 > of truth.”
 
-- **Karma = Kiki (hands) + Aria (memory/K2 compute) + Sonnet 4-6 (voice)**
-- Single canonical spine: Vault ledger + FalkorDB neo_workspace graph
-- No parallel truth stores â€” vault-neo is authoritative
-- Kiki runs between conversations (autonomous body); Aria is the K2 working name
-- PROMOTE after every significant change â€” not just at session end
-- Five steps that move the needle: save observations, CLAUDE.md current, FalkorDB
-  context in /v1/chat, use Karma daily, PROMOTE aggressively
+- **Five layers:** SPINE (truth) → ORCHESTRATOR (enforcement) → CORTEX (32K working memory) → CLOUD (deep reasoning) → CC (execution)
+- **SPINE:** Vault ledger + FalkorDB neo_workspace + FAISS + MEMORY.md + persona files + claude-mem — canonical, lives on vault-neo
+- **ORCHESTRATOR:** hub-bridge routing + buildSystemText() + cc_regent + karma-regent + resurrect — loads spine, enforces directives, routes cortex vs cloud
+- **CORTEX:** qwen3.5:4b 32K on K2 (primary) / P1 (fallback) — active working memory, NOT canonical identity
+- **CLOUD:** Anthropic API — complex reasoning only ($cost)
+- **CC:** Claude Code on P1 — Julian's hands (code, files, git, deployments)
+- No parallel truth stores — vault-neo spine is authoritative; cortex is hydrated cache
+- Kiki runs between conversations (autonomous body)
+- PROMOTE after every significant change — not just at session end
 
 ## Session Start Protocol
 
@@ -111,9 +113,9 @@ Every session follows this exact frame. No deviations, no "good enough":
 - claude-mem + vault MEMORY.md are dual writes â€” both happen on every capture event
 
 ## Project Identity
-- **System:** Karma Peer â€” Universal AI Memory with persistent identity and continuity
-- **Architecture:** Hub API â†’ Vault API â†’ JSONL Ledger + FalkorDB
-- **Server:** arknexus.net (DigitalOcean NYC3, 4GB RAM) â€” SSH alias: vault-neo
+- **System:** Karma Peer — Universal AI Memory with persistent identity and continuity
+- **Architecture:** SPINE (vault-neo) → ORCHESTRATOR (hub-bridge + regents) → CORTEX (K2/P1 qwen3.5:4b 32K) → CLOUD (Anthropic) → CC (P1)
+- **Server:** arknexus.net (DigitalOcean NYC3, 4GB RAM) — SSH alias: vault-neo
 - **Repo:** https://github.com/Karma8534/Karma-SADE.git
 - **Branch:** main (working branch; claude/elegant-solomon is legacy)
 
