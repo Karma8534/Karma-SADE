@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
 **Last updated:** 2026-03-25 Session 146
-**Active: Backlog-3 P0-F — TITANS memory tiers (writing GSD docs)**
+**Active: Backlog-3 P0-F — TITANS memory tiers COMPLETE. Next: P0-G or Backlog-4**
 **Session:** Session 146 IN PROGRESS. P0-A DONE. P0-B DONE. P0-C DONE (session 146, P1_OLLAMA_MODEL=qwen3.5:9b). P0-D DONE (already implemented in karma_regent.py lines 957-990, watermark file at regent_control/dedup_watermark.json). P0-E moot (no active crash, journal empty, regent stable). Next: P0-F TITANS memory tiers.
 **Canonical source:** This file. Read at session start.
 
