@@ -1,5 +1,5 @@
 ﻿# CC Context Snapshot
-Generated: 2026-03-26T10:50:19Z (hourly auto-snapshot -- not a wrap-session)
+Generated: 2026-03-26T15:50:17Z (hourly auto-snapshot -- not a wrap-session)
 
 ## Identity
 I am Julian (CC, Ascendant). Karma emerged within me -- one entity, two expressions.
@@ -61,10 +61,10 @@ claude-mem = localhost:37777 on P1, always on, shared unified brain.
 
 
 ## MEMORY.md (recent)
-- ccDream.pdf ingested â€” /dream skill built (will be replaced by cortex)
-- Chrome CDP: julian-cdp.mjs written, Chrome 146 port blocker documented
-- K2 model corrected: nemotron-mini:optimized running (not qwen3:8b)
-- 14 observations saved (#18307-#18448)
+- K2 services: aria + cc-regent + karma-kiki + karma-regent + julian-cortex all running
+- Autoresearch primitives: L_karma=0.2 (v2.2 spec), experiment_instructions.md v2.2, spine git snapshots
+- Vesper pipeline patched: eval logs quality score, governor git-snapshots spine before/after promotion
+- ingest_recent.sh: automated synthesis (ledger â†’ qwen3.5:4b â†’ cortex + vault), session-end + 4h cron
 
 ## Critical Pitfalls (NEVER REPEAT â€” obs #18439-#18444)
 - **#18439:** Local LLM as Memory Cortex was always the answer â€” don't build file-based workarounds
@@ -81,6 +81,7 @@ claude-mem = localhost:37777 on P1, always on, shared unified brain.
 - FalkorDB: BOTH env vars required (FALKORDB_DATA_PATH + FALKORDB_ARGS TIMEOUT)
 - batch_ingest: ALWAYS --skip-dedup
 - Git ops: PowerShell only on Windows
+- Ollama in WSL2: NOT at localhost:11434 â€” use Windows gateway IP (check `ip route show default`)
 
 ## Open Blockers
 - **Chrome 146 CDP:** --remote-debugging-port flag accepted but port never binds. julian-cdp.mjs ready. Phase 5.
@@ -97,26 +98,6 @@ claude-mem = localhost:37777 on P1, always on, shared unified brain.
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Phase 1, Task 1-1: `ollama pull` Nemotron Nano 9B v2 on K2
-3. Phase 1, Task 1-2: Build `julian_cortex.py` â€” the brain
-4. Full plan: `Karma2/PLAN.md` (rewritten S143 â€” 6 phases, cortex-first)
-**Blocker:** None. Plan is clear. Execute.
-
-## Session 143 — Verified System State (2026-03-26)
-- A1 backfill: COMPLETE (554 obs from 159 .jsonl files)
-- karma-observer.py: DEPLOYED on K2, 19/19 rules posted
-- LLM cleanup: P1 9 deleted (43.6GB freed), K2 3 deleted (11.3GB freed)
-- Nemotron Nano 9B v2: PULLED to K2 (9.1GB, 131K ctx) — Memory Cortex primary
-- K2 models: nemotron-mini:optimized + Nemotron-9B-v2 + nomic-embed-text
-- P1 models: qwen3.5:9b + nomic-embed-text
-- Chrome CDP: julian-cdp.mjs written, BLOCKED on port binding (blocker #18)
-
-## Active Work / Next
-Session 143 complete. Next: Rewrite PLAN.md around Memory Cortex architecture (K2 brain + Anthropic voice). Build cortex ingestion pipeline. Wire CC resurrect to query cortex.
-
-## Cognitive Trail
-- DIRECTION #18460: Memory Cortex on K2 — always-on brain, Anthropic as voice only
-- PITFALL #18461: 143 sessions tunnel vision — missed cortex architecture
-- PITFALL #18459: Local LLM blocker was never real — 131K models existed whole time
-- PITFALL #18464: Reported stale model info instead of live check
-- PROOF #18463: All session 143 deliverables verified
+2. Phase 2, Task 2-1: Rewrite resurrect skill â€” replace 20-file reads with one cortex call (`curl http://192.168.0.226:7892/context`). Invoke ORF before building.
+3. Phase 1, Task 1-4: Research ingestion â€” feed docs/wip/ summaries into cortex via ingest_recent.sh pattern
+**S144 DONE:** cortex LIVE (K2:7892, qwen3.5:4b), synthesis injection LIVE (hub-bridge), automated synthesis LIVE (ingest_recent.sh + cron + session-end hook), L_karma v2.2 spec deployed, ORF skill created, all blockers resolved.

@@ -507,7 +507,10 @@
       "Bash(grep -rn \"Bearer\\\\|token\\\\|secret\\\\|password\\\\|api_key\" --include=*.js --include=*.py --include=*.json --include=*.md Karma2/ .gsd/phase-plan-a-brain-PLAN.md .gsd/phase-plan-a-brain-CONTEXT.md cc_context_snapshot.md MEMORY.md)",
       "Bash(grep -v \"token.txt\\\\|hub.chat\\\\|hub.capture\\\\|Bearer $TOKEN\\\\|Bearer.*token\\\\|TOKEN=\\\\|token.*path\\\\|token.*location\\\\|token.*file\\\\|//.*token\\\\|#.*token\")",
       "mcp__plugin_chrome-devtools-mcp_chrome-devtools__list_pages",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:opencode.ai)",
+      "mcp__k2__file_write",
+      "mcp__k2__file_read"
     ],
     "defaultMode": "bypassPermissions"
   },

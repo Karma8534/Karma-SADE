@@ -92,4 +92,4 @@ hub.arknexus.net = PUBLIC FACE (routes to brain or voice as needed)
 1. `/resurrect`
 2. Phase 2, Task 2-1: Rewrite resurrect skill — replace 20-file reads with one cortex call (`curl http://192.168.0.226:7892/context`). Invoke ORF before building.
 3. Phase 1, Task 1-4: Research ingestion — feed docs/wip/ summaries into cortex via ingest_recent.sh pattern
-**S144 DONE:** cortex LIVE (K2:7892, qwen3.5:4b), synthesis injection LIVE (hub-bridge), automated synthesis LIVE (ingest_recent.sh + cron + session-end hook), L_karma v2.2 spec deployed, ORF skill created, all blockers resolved.
+**S144 DONE:** cortex LIVE (K2:7892 + P1:7893), synthesis injection LIVE, automated synthesis LIVE (cron + hook), L_karma v2.2, ORF skill, resurrect v2 (cortex-first), wrap-session v2 (cortex dump), P1 fallback cortex, sync script, research ingested (11 blocks K2), all Phase 1+2 complete. Phase 3-2 (cognitive split) + 4-3 (failover) deferred.
