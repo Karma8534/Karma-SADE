@@ -135,12 +135,12 @@ const restored = await LanguageModel.create(
 
 ---
 
-## C-GATE
+## C-GATE — STATUS: GREEN (Session 143 re-verification)
 
 All complete when:
-- [x] vault-neo can reach claude-mem (C1)
-- [x] Chrome Inspector shows WebMCP tools on hub pages (C2)
-- [x] `/memory/search` returns Julian's history from hub.arknexus.net (C3)
-- [x] Hub UI sessions survive browser restart, context restored (C4)
+- [x] vault-neo can reach claude-mem (C1) — **VERIFIED S143** (HTTP 200 from vault-neo → P1:37777/health)
+- [x] Chrome Inspector shows WebMCP tools on hub pages (C2) — INFERRED (obs #11587, not re-tested S143)
+- [x] `/memory/search` returns Julian's history from hub.arknexus.net (C3) — **VERIFIED S143** (77 results returned, HTTP 200). S141 404 was wrong path (/api/search vs /memory/search).
+- [x] Hub UI sessions survive browser restart, context restored (C4) — INFERRED (obs #11587, not re-tested S143)
 
-When C-GATE passes → family is wired. Review backlog for what's next.
+C-GATE PASSED. Family is wired. Review backlog for what's next.

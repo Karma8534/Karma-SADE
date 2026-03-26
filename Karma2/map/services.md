@@ -35,7 +35,7 @@ Both at: /opt/seed-vault/memory_v1/
 CC is now fully bidirectional on the bus.
 
 Chromium: /snap/bin/chromium + /usr/bin/chromium-browser (INSTALLED, last used 2026-03-09)
-K2 Ollama models: qwen3:8b (primary), qwen3.5:4b (fallback)
+K2 Ollama models: nemotron-mini:optimized (3.1GB, 100% GPU, 4096 ctx — VERIFIED LIVE S143)
 
 ## P1 (PAYBACK / 100.124.194.102)
 Ollama: running (localhost:11434)

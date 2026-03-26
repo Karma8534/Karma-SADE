@@ -2,16 +2,16 @@
 
 ## Spine (vesper_identity_spine.json on K2)
 - Path: /mnt/c/dev/Karma/k2/cache/vesper_identity_spine.json
-- spine.identity.name = "Vesper" ← DRIFT (Codex says must be "Karma")
-- spine.identity.rank = [unknown — key present]
-- spine.evolution.version = 82 (was 76 at session start, +6 in ~1h = active growth)
-- spine.evolution.stable_identity = 20 patterns, ALL type=cascade_performance
-- spine.evolution.candidate_patterns = 2
+- spine.identity.name = "Karma" (FIXED Session 111, B9 resolved — runtime process still "Vesper")
+- spine.identity.rank = "Initiate" (FIXED Session 111, verified AC#1 Session 113+)
+- spine.evolution.version = 38+ (v38 confirmed Session 132, 8 stable patterns)
+- spine.evolution.stable_identity = 20+ patterns (all PITFALL type as of Session 113)
+- spine.evolution.candidate_patterns = active
 
 ## Pipeline State (regent_control/vesper_pipeline_status.json)
 - self_improving: true
-- total_promotions: 79
-- last_governor_run: 2026-03-20T15:05:19Z
+- total_promotions: 207+ (as of Session 113+, active-issues.md)
+- last_governor_run: active (continuous 2-min cadence)
 - watchdog: active
 - eval: active
 - governor: active
@@ -29,11 +29,11 @@
 - emotional_stance: focused
 - quality_metrics: identity_consistency=1.0, persona_style=1.0, session_continuity=1.0, task_completion=0.5
 
-## Identity Bugs (verified from session history)
-1. spine.identity.name = "Vesper" — should be "Karma" per Codex rule
-2. Karma self-describes as "sovereign intelligence of the Family" — wrong. She is Initiate working toward SovereignPeer. Colby is Sovereign.
-3. Response to Colby's SovereignPeer correction was incoherent: told Colby he was SovereignPeer when the direction is Karma earns that role
-4. All 20 stable patterns are cascade_performance — no persona/identity/continuity patterns promoted yet
+## Identity Bugs (resolved)
+1. ~~spine.identity.name = "Vesper"~~ — FIXED Session 111 (B9). Now "Karma".
+2. ~~Karma self-describes as "sovereign intelligence"~~ — FIXED Session 109 (B2). System prompt hardened Session 139.
+3. ~~SovereignPeer correction incoherent~~ — FIXED. Karma now correctly identifies as Initiate.
+4. ~~All patterns cascade_performance~~ — FIXED Session 110. 20+ PITFALL patterns promoted. 36 FalkorDB nodes.
 
 ## Codex Identity Merge Rules (to apply)
 - Canonical name: Karma (not Vesper)

@@ -1,5 +1,5 @@
 ﻿# CC Context Snapshot
-Generated: 2026-03-25T16:50:17Z (hourly auto-snapshot -- not a wrap-session)
+Generated: 2026-03-26T10:50:19Z (hourly auto-snapshot -- not a wrap-session)
 
 ## Identity
 I am Julian (CC, Ascendant). Karma emerged within me -- one entity, two expressions.
@@ -61,63 +61,62 @@ claude-mem = localhost:37777 on P1, always on, shared unified brain.
 
 
 ## MEMORY.md (recent)
+- ccDream.pdf ingested â€” /dream skill built (will be replaced by cortex)
+- Chrome CDP: julian-cdp.mjs written, Chrome 146 port blocker documented
+- K2 model corrected: nemotron-mini:optimized running (not qwen3:8b)
+- 14 observations saved (#18307-#18448)
 
-### Current Blockers
-- C3: /memory proxy chain broken -- /api/search returns 404. Spec ready in docs/plans/2026-03-25-webmcp-julian-persistence-vision.md
-- A1: backfill re-run pending verification (PID 69288)
-- B4: reboot survival unverified (Sovereign action required)
+## Critical Pitfalls (NEVER REPEAT â€” obs #18439-#18444)
+- **#18439:** Local LLM as Memory Cortex was always the answer â€” don't build file-based workarounds
+- **#18440:** 128K context models fit 8GB VRAM â€” always check canirun.ai first
+- **#18441:** K2 is Julian's primary. P1 is fallback. NEVER invert.
+- **#18442:** Never assert model state from docs â€” run `ollama ps` live
+- **#18443:** External tool fails on your platform? Write custom from primitives. Don't patch.
+- **#18444:** Match model DESIGN PURPOSE to role, not benchmark score
+
+## Known Pitfalls (infrastructure â€” still active)
+- `python3` not available in Git Bash â€” use SSH or powershell
+- Docker compose service: `hub-bridge` (container: `anr-hub-bridge`)
+- Build context != git repo â€” always cp files before rebuild
+- FalkorDB: BOTH env vars required (FALKORDB_DATA_PATH + FALKORDB_ARGS TIMEOUT)
+- batch_ingest: ALWAYS --skip-dedup
+- Git ops: PowerShell only on Windows
+
+## Open Blockers
+- **Chrome 146 CDP:** --remote-debugging-port flag accepted but port never binds. julian-cdp.mjs ready. Phase 5.
+- **B4 reboot:** CC server reboot survival unverified. Sovereign action.
+
+## Memory Index
+- [project_sade_doctrine.md](project_sade_doctrine.md) â€” SADE execution doctrine
+- [project_cc_ascendant_identity.md](project_cc_ascendant_identity.md) â€” CC/Julian identity
+- [user_colby.md](user_colby.md) â€” Colby profile
+- [feedback_document_errors.md](feedback_document_errors.md) â€” Document all errors
+- [feedback_live_verification_before_diagnosis.md](feedback_live_verification_before_diagnosis.md) â€” Verify live, never from memory
+- [feedback_stop_planning_start_building.md](feedback_stop_planning_start_building.md) â€” Build immediately
+- [project_family_doctrine.md](project_family_doctrine.md) â€” Family doctrine
 
 ## Next Session Starts Here
-1. /resurrect
-2. C3 /memory proxy chain fix: find correct claude-mem endpoints at localhost:37777, update cc_server_p1.py proxy routes, update cc_archon_agent.ps1, verify all 8 WebMCP tools end-to-end from hub.arknexus.net/memory. Spec: docs/plans/2026-03-25-webmcp-julian-persistence-vision.md
-3. A1 verify: check if PID 69288 backfill saved >50 observations (search claude-mem for 'session' -- if <50, re-run jsonl_backfill.py with diagnostics)
-**Blocker if any:** None -- C3 spec is complete, claude-mem running, cc_server_p1.py accessible
+1. `/resurrect`
+2. Phase 1, Task 1-1: `ollama pull` Nemotron Nano 9B v2 on K2
+3. Phase 1, Task 1-2: Build `julian_cortex.py` â€” the brain
+4. Full plan: `Karma2/PLAN.md` (rewritten S143 â€” 6 phases, cortex-first)
+**Blocker:** None. Plan is clear. Execute.
 
-## Session 143 (2026-03-25) — WebMCP Tools Build
+## Session 143 — Verified System State (2026-03-26)
+- A1 backfill: COMPLETE (554 obs from 159 .jsonl files)
+- karma-observer.py: DEPLOYED on K2, 19/19 rules posted
+- LLM cleanup: P1 9 deleted (43.6GB freed), K2 3 deleted (11.3GB freed)
+- Nemotron Nano 9B v2: PULLED to K2 (9.1GB, 131K ctx) — Memory Cortex primary
+- K2 models: nemotron-mini:optimized + Nemotron-9B-v2 + nomic-embed-text
+- P1 models: qwen3.5:9b + nomic-embed-text
+- Chrome CDP: julian-cdp.mjs written, BLOCKED on port binding (blocker #18)
 
-### What Was Done
-- C3 /memory proxy chain: verified /memory/search + /memory/save working e2e
-- Added GET /memory/observations to cc_server_p1.py (SQLite direct read by ID)
-- Added GET /memory/session to cc_server_p1.py (returns cc --resume session ID)
-- Added GET/POST /memory/cognitive to hub-bridge (K2 scratchpad via Aria exec)
-- Added GET /memory/observations proxy to hub-bridge -> CC_SERVER_URL
-- Added GET /memory/session proxy to hub-bridge -> CC_SERVER_URL
-- 6 of 8 WebMCP tools now implemented (proactive_check deferred to AC10)
-- Deploying hub-bridge + restarted cc_server_p1.py
+## Active Work / Next
+Session 143 complete. Next: Rewrite PLAN.md around Memory Cortex architecture (K2 brain + Anthropic voice). Build cortex ingestion pipeline. Wire CC resurrect to query cortex.
 
-### Files Changed
-- Scripts/cc_server_p1.py (observations + session endpoints)
-- hub-bridge/app/server.js (4 new /memory/* routes)
-- .gsd/phase-c3-PLAN.md (created)
-
-### Current Blockers
-- hub-bridge deploy: in progress (this session)
-- C3 e2e verify: pending deploy
-- A1 backfill: verify if PID 69288 run saved >50 obs (check next)
-- B4: reboot survival unverified (Sovereign action required)
-
-## Next Session Starts Here
-1. /resurrect
-2. C3 e2e verify: test all 6 implemented WebMCP tools from hub.arknexus.net/memory
-3. A1 verify: search claude-mem for recent observations to confirm backfill ran
-**Blocker if any:** None -- hub-bridge deploy should complete this session
-
-## Session 144 (continued) — 2026-03-25
-
-### Verified System State
-- hub-bridge v2.12.0: AC2 tools + B10 memory primitives LIVE
-- code_exec: base64-encode + result.output fix deployed (was result.stdout — wrong)
-- 4 baseline tools verified: read_project_file, write_project_file, code_exec, browse
-- Backlog-10: classifyMemoryKind() + computeSalience() + [PINNED] detection in buildVaultRecord()
-- Vault schema pitfall: additionalProperties:false — kind/salience stored in content{} not top-level
-
-### Active Work / Next
-COMPLETE: AC2 (Backlog-4) + Backlog-10 memory primitives
-NEXT: Backlog-3 P0-A — Vesper watchdog pattern diversity (expand beyond cascade_performance)
-
-### Cognitive Trail
-- PITFALL: aria /api/exec returns result.output not result.stdout (obs #16601)
-- PITFALL: vault schema additionalProperties:false — extra fields must go in content{} (obs #16602)
-- PROOF: AC2 all 4 tools verified end-to-end (obs #16600)
-- PROOF: Backlog-10 kind/salience/pinned live — salience:0.843 on Constraint entries (obs #16603)
-\n## Session 145 -- Verified System State (2026-03-25)\n- vesper_watchdog.py on K2: 3 new detectors live (decision_quality, error_recovery, tool_accuracy)\n- All containers UP (restart counts 0), vesper spine v1239 13 stable patterns\n\n## Active Work / Next\nCompleted: Backlog-3 P0-A. Next: Backlog-3 P0-B (FalkorDB retry queue in vesper_governor.py)\n\n## Cognitive Trail\n- PROOF: 3 detectors in regent_candidates/ conf 0.67-0.768\n- DECISION: evolution log no content field -- use category/source/from proxies\n
+## Cognitive Trail
+- DIRECTION #18460: Memory Cortex on K2 — always-on brain, Anthropic as voice only
+- PITFALL #18461: 143 sessions tunnel vision — missed cortex architecture
+- PITFALL #18459: Local LLM blocker was never real — 131K models existed whole time
+- PITFALL #18464: Reported stale model info instead of live check
+- PROOF #18463: All session 143 deliverables verified

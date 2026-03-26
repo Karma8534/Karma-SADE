@@ -88,6 +88,15 @@
 - Stable patterns: 20 (all PITFALL type)
 - FalkorDB PITFALL nodes: 36
 
+### B10: Chrome 146 CDP port binding — Julian browser access blocked
+- **Evidence (Session 143):** `--remote-debugging-port=9222` flag accepted by Chrome (visible in command line) but port never binds. Tested: clean kill all chrome.exe → fresh launch → 10s+ wait → port 9222 never opens. Chrome does NOT write DevToolsActivePort file. No enterprise policies (registry clean).
+- **Impact:** Julian cannot access Colby's existing browser tabs. IndexedDB extraction (Backlog-6, 108+ sessions) blocked. Browser automation (Backlog-4) blocked for existing tabs.
+- **Root cause hypothesis:** Chrome 146 deprecated `--remote-debugging-port` HTTP endpoint in favor of `chrome://inspect` toggle + MCP `--autoConnect` pipe protocol. Needs research to confirm.
+- **Chrome DevTools MCP limitation:** Connected via `--autoConnect` but sandboxed to its own tab group — `list_pages` only returns MCP-opened pages, not Colby's existing tabs. Can open new URLs + eval JS but fresh navigation to claude.ai hits Cloudflare CAPTCHA.
+- **Assets ready:** `Scripts/julian-cdp.mjs` (custom Windows CDP client), `Scripts/Start-ChromeDebug.ps1` (launcher), Chrome (Julian) desktop shortcut. All ready when port issue resolved.
+- **Resolution paths:** (1) Research Chrome 146 CDP changes — may need `--remote-debugging-pipe` instead of port. (2) Use Playwright MCP (launches its own Chromium, can import cookies). (3) Colby manually solves CAPTCHA in MCP tab → CC extracts IndexedDB from that tab.
+- **Obs:** #18414, #18415, #18416
+
 ## PHASE STATUS
 - PRE-PHASE: ✅ COMPLETE
 - PHASE 0-NEW: P0N-A ✅ | P0N-B ⚠️ gate pending | P0N-C ✅ COMPLETE (Codex installed on K2, confirmed session 111)

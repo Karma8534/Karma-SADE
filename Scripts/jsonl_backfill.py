@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
 A1: JSONL Backfill — ingest Julian's CC session history into claude-mem.
-Processes top-level UUID.jsonl files from the CC projects directory.
-Extracts DECISION/PROOF/PITFALL/DIRECTION/INSIGHT events from assistant messages.
-Saves each event as a claude-mem observation via HTTP API.
+Extracts save_observation tool_use calls from CC session JSONL files.
+Each tool call's input (text + title) is re-saved to claude-mem.
+
+Root cause of v1 failure: regex-matched common English words (verified,
+confirmed, decided) instead of extracting actual structured events.
+Fix: extract the real save_observation tool_use inputs from JSONL.
 """
 
 import json
@@ -14,8 +17,14 @@ import glob
 import time
 import urllib.request
 import urllib.error
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
+
+# Fix Windows console encoding
+if sys.stdout.encoding != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if sys.stderr.encoding != "utf-8":
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 # ── Config ────────────────────────────────────────────────────────────────────
 PROJECTS_DIR = os.path.expanduser(
@@ -27,17 +36,13 @@ WATERMARK_FILE = os.path.join(
 CLAUDE_MEM_URL = "http://localhost:37777"
 PROJECT_NAME   = "Karma_SADE"
 
-# Event detection keywords — same bar as /harvest
-EVENT_KEYWORDS = {
-    "DECISION":  r"\b(DECISION|decided|decision)\b",
-    "PROOF":     r"\b(PROOF|verified|confirmed|proved)\b",
-    "PITFALL":   r"\b(PITFALL|pitfall|trap|gotcha|foot.?gun)\b",
-    "DIRECTION": r"\b(DIRECTION|direction|pivot|reframe|course.?correct)\b",
-    "INSIGHT":   r"\b(INSIGHT|insight|realization|breakthrough)\b",
+# Tool names that represent save_observation calls
+SAVE_OBS_NAMES = {
+    "mcp__plugin_claude-mem_mcp-search__save_observation",
+    "save_observation",
 }
 
-CONTEXT_WINDOW = 400   # chars around the keyword match
-MIN_TEXT_LEN   = 50    # skip very short text blobs
+MIN_TEXT_LEN = 30  # skip trivially short observations
 
 
 # ── Watermark ─────────────────────────────────────────────────────────────────
@@ -56,13 +61,17 @@ def save_watermark(wm):
 
 
 # ── claude-mem ────────────────────────────────────────────────────────────────
-def save_observation(title: str, text: str, dry_run: bool = False) -> bool:
+def save_to_claude_mem(title: str, text: str, dry_run: bool = False) -> bool:
     if dry_run:
         print(f"    [DRY-RUN] Would save: {title[:80]}")
         return True
 
-    safe_text  = re.sub(r"[^\x20-\x7E\r\n]", "", text)[:3000]
-    safe_title = re.sub(r"[^\x20-\x7E]", "", title)[:150]
+    # Sanitize but preserve unicode — only strip control chars
+    safe_text  = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)[:4000]
+    safe_title = re.sub(r"[\x00-\x1f\x7f]", "", title)[:200]
+
+    if len(safe_text.strip()) < MIN_TEXT_LEN:
+        return False
 
     payload = json.dumps({
         "text":    safe_text,
@@ -77,55 +86,22 @@ def save_observation(title: str, text: str, dry_run: bool = False) -> bool:
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=10) as resp:
+        with urllib.request.urlopen(req, timeout=15) as resp:
             result = json.loads(resp.read())
             return bool(result.get("id") or result.get("success"))
     except Exception as e:
-        print(f"    WARN: save_observation failed: {e}", file=sys.stderr)
+        print(f"    WARN: save failed: {e}", file=sys.stderr)
         return False
 
 
 # ── JSONL parsing ─────────────────────────────────────────────────────────────
-def extract_text_from_content(content) -> list[str]:
-    """Extract text strings from a CC message content field."""
-    texts = []
-    if isinstance(content, str):
-        texts.append(content)
-    elif isinstance(content, list):
-        for block in content:
-            if isinstance(block, dict):
-                t = block.get("text") or block.get("thinking") or ""
-                if t and isinstance(t, str):
-                    texts.append(t)
-    return texts
+def extract_tool_use_observations(filepath: str) -> list[dict]:
+    """Extract save_observation tool_use inputs from a CC session JSONL file.
 
-
-def find_events_in_text(text: str) -> list[tuple[str, str, str]]:
-    """Return list of (event_type, title, snippet) for each event match."""
-    events = []
-    if len(text) < MIN_TEXT_LEN:
-        return events
-
-    for event_type, pattern in EVENT_KEYWORDS.items():
-        for m in re.finditer(pattern, text, re.IGNORECASE):
-            start = max(0, m.start() - CONTEXT_WINDOW)
-            end   = min(len(text), m.end() + CONTEXT_WINDOW)
-            snippet = text[start:end].strip()
-
-            # Build a title from the first line after the keyword
-            lines_after = text[m.start():m.start() + 200].strip().split("\n")
-            first_line  = lines_after[0].strip() if lines_after else snippet[:80]
-            title = f"[{event_type}] {first_line[:100]}"
-
-            events.append((event_type, title, snippet))
-
-    return events
-
-
-def process_jsonl_file(filepath: str, dry_run: bool = False) -> int:
-    """Process one JSONL file. Returns number of observations saved."""
-    saved = 0
-    seen_snippets = set()  # dedup within file
+    Returns list of dicts with 'title' and 'text' keys.
+    """
+    observations = []
+    seen_texts = set()
 
     try:
         with open(filepath, "r", encoding="utf-8", errors="replace") as f:
@@ -133,6 +109,11 @@ def process_jsonl_file(filepath: str, dry_run: bool = False) -> int:
                 line = line.strip()
                 if not line:
                     continue
+
+                # Quick filter — skip lines without save_observation
+                if "save_observation" not in line:
+                    continue
+
                 try:
                     obj = json.loads(line)
                 except json.JSONDecodeError:
@@ -147,29 +128,64 @@ def process_jsonl_file(filepath: str, dry_run: bool = False) -> int:
                     continue
 
                 content = msg.get("content", [])
-                texts   = extract_text_from_content(content)
+                if not isinstance(content, list):
+                    continue
 
-                for text in texts:
-                    events = find_events_in_text(text)
-                    for event_type, title, snippet in events:
-                        key = snippet[:100]
-                        if key in seen_snippets:
-                            continue
-                        seen_snippets.add(key)
+                for block in content:
+                    if not isinstance(block, dict):
+                        continue
+                    if block.get("type") != "tool_use":
+                        continue
 
-                        obs_text = (
-                            f"Session: {os.path.basename(filepath)}\n"
-                            f"Event: {event_type}\n\n"
-                            f"{snippet}"
-                        )
-                        if save_observation(title, obs_text, dry_run):
-                            saved += 1
-                            safe_title = title[:70].encode('ascii', 'replace').decode()
-                            print(f"    SAVED [{event_type}]: {safe_title}")
-                            time.sleep(0.05)  # gentle rate limit
+                    name = block.get("name", "")
+                    if name not in SAVE_OBS_NAMES:
+                        continue
+
+                    inp = block.get("input", {})
+                    if not isinstance(inp, dict):
+                        continue
+
+                    text  = inp.get("text", "").strip()
+                    title = inp.get("title", "").strip()
+
+                    if not text or len(text) < MIN_TEXT_LEN:
+                        continue
+
+                    # Dedup within file by text prefix
+                    dedup_key = text[:200]
+                    if dedup_key in seen_texts:
+                        continue
+                    seen_texts.add(dedup_key)
+
+                    # Generate title if missing
+                    if not title:
+                        first_line = text.split("\n")[0][:120]
+                        title = f"Session obs: {first_line}"
+
+                    observations.append({"title": title, "text": text})
 
     except Exception as e:
         print(f"  ERROR reading {filepath}: {e}", file=sys.stderr)
+
+    return observations
+
+
+def process_jsonl_file(filepath: str, dry_run: bool = False) -> int:
+    """Process one JSONL file. Returns number of observations saved."""
+    observations = extract_tool_use_observations(filepath)
+    saved = 0
+
+    for obs in observations:
+        fname = os.path.basename(filepath)[:8]
+        # Prefix title with session UUID fragment for traceability
+        title = obs["title"]
+        text  = f"Source: {os.path.basename(filepath)}\n\n{obs['text']}"
+
+        if save_to_claude_mem(title, text, dry_run):
+            saved += 1
+            safe_title = title[:70].encode('ascii', 'replace').decode()
+            print(f"    SAVED: {safe_title}")
+            time.sleep(0.02)  # gentle rate limit
 
     return saved
 
@@ -186,7 +202,6 @@ def main():
     watermark = load_watermark()
 
     if single:
-        # Process one specific file
         files = [single]
     else:
         # Glob top-level UUID.jsonl files only (not subagents)
@@ -194,9 +209,10 @@ def main():
         files   = [f for f in glob.glob(pattern)
                    if "subagents" not in f.replace("\\", "/")]
 
-    print(f"Files to process: {len(files)} | Dry-run: {dry_run}")
+    print(f"Files to process: {len(files)} | Dry-run: {dry_run} | Force: {force_all}")
 
     total_saved = 0
+    total_found = 0
     skipped     = 0
 
     for filepath in sorted(files):
@@ -206,17 +222,39 @@ def main():
             skipped += 1
             continue
 
-        print(f"\nProcessing: {fname}")
+        # Quick check: does this file have save_observation calls?
+        try:
+            with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+                content_sample = f.read()
+            if "save_observation" not in content_sample:
+                # No observations in this file — mark done and skip
+                if not dry_run:
+                    watermark[fname] = datetime.now(timezone.utc).isoformat()
+                    save_watermark(watermark)
+                continue
+        except Exception:
+            continue
+
+        observations = extract_tool_use_observations(filepath)
+        total_found += len(observations)
+
+        if not observations:
+            if not dry_run:
+                watermark[fname] = datetime.now(timezone.utc).isoformat()
+                save_watermark(watermark)
+            continue
+
+        print(f"\nProcessing: {fname} ({len(observations)} observations)")
         n = process_jsonl_file(filepath, dry_run)
         total_saved += n
-        print(f"  -> {n} observations saved")
+        print(f"  -> {n}/{len(observations)} saved")
 
         if not dry_run:
-            watermark[fname] = datetime.utcnow().isoformat() + "Z"
+            watermark[fname] = datetime.now(timezone.utc).isoformat()
             save_watermark(watermark)
 
     print(f"\n{'='*50}")
-    print(f"Total saved: {total_saved} | Skipped (already done): {skipped}")
+    print(f"Total found: {total_found} | Saved: {total_saved} | Skipped (watermarked): {skipped}")
     print(f"Watermark: {WATERMARK_FILE}")
 
 

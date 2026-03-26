@@ -1,8 +1,8 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-25 Session 146
-**Active: Backlog-3 P0-F — TITANS memory tiers COMPLETE. Next: P0-G or Backlog-4**
-**Session:** Session 146 IN PROGRESS. P0-A DONE. P0-B DONE. P0-C DONE (session 146, P1_OLLAMA_MODEL=qwen3.5:9b). P0-D DONE (already implemented in karma_regent.py lines 957-990, watermark file at regent_control/dedup_watermark.json). P0-E moot (no active crash, journal empty, regent stable). Next: P0-F TITANS memory tiers.
+**Last updated:** 2026-03-26 Session 143
+**Active: Phase 1 Task 1-2 — Build julian_cortex.py (Memory Cortex service on K2)**
+**Session:** PLAN.md rewritten S143 — cortex-first architecture. Task 1-1 DONE (Nemotron 9B v2 pulled to K2, 9.1GB). P1 cleaned (9 models deleted, 43.6GB freed). K2 cleaned (3 models deleted). karma-observer deployed. A1 backfill complete (554 obs). Next: build julian_cortex.py.
 **Canonical source:** This file. Read at session start.
 
 ---

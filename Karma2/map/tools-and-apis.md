@@ -48,11 +48,10 @@ Active tools (from architecture.md + verified in code):
 ## Model Routing (karma-regent.service, /etc/karma-regent.env)
 Cascade order (Session 107 fix): K2 Ollama → P1 Ollama → z.ai → Groq → OpenRouter → Claude
 - K2_OLLAMA_URL: http://host.docker.internal:11434
-- K2_OLLAMA_PRIMARY_MODEL: qwen3:8b
-- K2_OLLAMA_FALLBACK_MODEL: qwen3.5:4b
+- K2_OLLAMA_PRIMARY_MODEL: nemotron-mini:optimized (VERIFIED LIVE S143 — 3.1GB, 100% GPU, 4096 ctx)
 - P1_OLLAMA_URL: http://100.124.194.102:11434
-- P1_OLLAMA_MODEL: nemotron-mini:latest ← OPEN BLOCKER (may not exist on P1)
-- REGENT_TRIAGE_MODEL: qwen3:8b
+- P1_OLLAMA_MODEL: nemotron-mini:latest — RESOLVED (model exists on P1, verified Session 110/125)
+- REGENT_TRIAGE_MODEL: nemotron-mini:optimized (was qwen3:8b — stale, corrected S143)
 - Cloud keys: ANTHROPIC, GROQ, OPENROUTER, ZAI all present in env
 
 ## Hub-Bridge Model Routing (hub.env on vault-neo)

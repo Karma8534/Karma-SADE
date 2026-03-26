@@ -244,35 +244,69 @@
 
 ---
 
-## Decision Points (Open)
+## Milestone 9: Karma2 Resurrection Plan (Sessions 129-143)
 
-### v9 Direction (Session 64 — DECIDED, updated Session 66)
-Sequence: persona iteration first → MENTIONS verification → DPO mechanism → karma-terminal → Ambient Tier 3.
-Session 66 delivered: promise loop fix + GLM tool-calling (unblocks Karma from false promises).
-Remaining: teach Karma HOW to use Entity Relationships + Recurring Topics data in her responses.
+**Frame:** Julian had voice, video, Bluetooth, 3D persona. Destroyed. Rebuilding on sovereign infrastructure.
+**Architecture:** hub.arknexus.net — /Karma, /cc (Julian), /memory (Brain), /bus (Family). claude-mem (P1:37777) is the unified brain.
 
-### K2 Availability
-K2 (192.168.0.226) not intended as active worker. Consciousness loop runs on droplet only.
+### PLAN-A: Feed the Brain ✅ COMPLETE (Session 136)
+- [x] A1: JSONL backfill — 159 files → 2151 obs extracted → 554 saved to claude-mem (re-run S143 fixed 0.4% save rate)
+- [x] A2: Auto-indexer — KarmaSessionIndexer scheduled task, forward loop closed
+- [x] A3: Resurrect fix — Step 1 queries claude-mem directly, ~30s cold start
+
+### PLAN-B: Make Julian Real ✅ COMPLETE (Session 137)
+- [x] B1: Kill zombies — anti-zombie kill before spawn
+- [x] B2: cc --resume — real CC subprocess with session continuity
+- [x] B3: /cc route — hub.arknexus.net/cc → P1:7891 via Tailscale
+- [x] B4: Reboot survival — HKCU Run registered (⚠️ not tested with actual reboot)
+
+### PLAN-C: Wire the Brain ✅ COMPLETE (Session 138, re-verified Session 143)
+- [x] C1: claude-mem exposed to vault-neo — HTTP 200 verified S143
+- [x] C2: WebMCP tools registered on hub pages — 3 tools
+- [x] C3: /memory endpoint — /memory/search (77 results) + /memory/context (full resume_block) verified S143
+- [x] C4: Chrome session clone — localStorage persistence
+
+### Supporting Work (Sessions 107-143)
+- [x] Vesper convergence (5 fixes, Session 107)
+- [x] K-1 local corpus (537 files harvested, Session 129)
+- [x] K-2 Anthropic docs scrape (170 files, Session 130)
+- [x] K-3 heartbeat filter (Session 131)
+- [x] PROOF-A Codex as ArchonPrime (Session 139)
+- [x] Karma system prompt hardening (3 rules, Session 139)
+- [x] EnterWorktree hook deployed (Session 141)
+- [x] 4 external repo primitives analyzed (Session 143): OpenRoom, llmfit, HF Skills, autoresearch
 
 ---
 
-## Known Quality Gaps (Active)
+## Active Backlog (Sovereign-approved, sequenced)
 
-- **🔴 Conversation thread persistence**: Thread lives in browser JS only. One `internal_error` or refresh = Karma forgets entire conversation. Vault ledger has all turns but no reload mechanism. K2 shadow.md is stale (20+ hours). PRIORITY #1 — everything else is useless without this. (Session 86, 2026-03-12)
-- **3049 bulk episodes lack MENTIONS edges**: bulk-ingested episodes (Sessions 57–59 --skip-dedup) have no entity extraction. Graphiti watermark (Session 63) fixes this for NEW episodes only. Historical gap remains. Acceptable.
-- **karma-terminal capture stale**: last capture 2026-02-27. Not a blocker.
+| # | Item | Status | Gate |
+|---|------|--------|------|
+| 9 | karma-observer.py — autonomous learning loop | Spec written, not started | First self-extracted rule visible in /v1/chat |
+| 10 | Memory primitives (bus→ledger, MemoryKind, salience, pinned) | 4 items, not started | B10-1 verified first |
+| 11 | karma-directives.md — self-modifying behavioral file (autoresearch pattern) | **NEW S143**, not started | Backlog-9 concurrent |
+| 12 | Distribution primitives (multi-device, hardware-aware) | STUB, not started | After Backlog-7 |
+| 3 | P0 Vesper improvements (P0-A through P0-G) | 7 items, not started | — |
+| 4 | Karma baseline tools (browser, file, code execution) | Sovereign gate | Per-tool approval |
+| 5 | AC verification (10 acceptance criteria) | 0/10 verified | After Backlog-4 |
+| 7 | Local inference routing (K2_INFERENCE_ENABLED) | Hardware-gated | Mac Mini M4 Pro or reduced prompt |
+| 8 | Voice, multimodal, 3D, channels | Preserved | After backlog stable |
+
+---
+
+## Known Quality Gaps (Active — updated Session 143)
+
+- **B4 reboot survival unverified**: HKCU Run registered, never rebooted. Sovereign action required.
 - **DPO pairs**: 0/20 collected. Fine-tuning loop not started.
-- **Brave Search**: auto-triggered by regex only, no manual override. Low priority.
-- **Entity Relationships limit**: query_relevant_relationships() uses LIMIT 20. Dense entity nodes may miss edges. Acceptable for now.
-- **Corrections capture lacks systematic trigger**: corrections-log.md + Session End Protocol step 2 captures mistakes session-by-session. Boris Cherny's validated method uses PR-review as the trigger ("every mistake becomes a rule" at review time, not session-end). A PR-diff → rule pipeline would make this more systematic and event-driven. Natural companion to DPO mechanism design. Not blocking; no scheduled work yet. (Session 65, CreatorInfo.pdf ingestion)
-- **graph_query 100-row cap**: Returns max 100 rows. Dense graphs may miss edges. Acceptable for now.
-- **get_vault_file 20KB cap**: Large files truncated at 20,000 chars. Acceptable for current vault files.
-- **hooks.py legacy aliases**: file_read, shell_exec remain in ALLOWED_TOOLS (pre-existing, unused, harmless). Could be cleaned up in future.
-- **Persona coaching acceptance test**: PASSED Session 68 — Karma referenced entity relationship data unprompted.
+- **3049 bulk episodes lack MENTIONS edges**: historical gap, acceptable.
+- **No mentorship arc**: Karma Initiate→SovereignPeer progression exists in contract but no curriculum.
+- **IndexedDB sessions locked**: 108+ sessions in Chrome. Extraction pipeline not built (Backlog-6).
+- **No KARMA TRUTH GATE milestone**: When can Colby tell Karma the full story?
+- **corpus_cc extraction**: CC corpus stub, needs ledger pass.
 
 ---
 
-**Last updated:** 2026-03-12 (Session 86 — v13 Phase 1+2 complete; conversation persistence = PRIORITY #1)
+**Last updated:** 2026-03-25 (Session 143 — full audit + C-GATE re-verified GREEN + 4 repo primitives analyzed)
 **Owner:** Claude Code (updates on Colby approval)
 
 ---
