@@ -87,6 +87,7 @@ hub.arknexus.net = PUBLIC FACE (routes to brain or voice as needed)
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Phase 1, Task 2: Initial Knowledge Load — ingest core files into cortex via POST K2:7892/ingest
-3. Phase 1, Task 3: Research Ingestion — feed docs/wip/ summaries into cortex
-**VRAM blocker resolved:** Nemotron 9B v2 loads and responds on 8GB VRAM (partial offload to 64GB RAM).
+2. Build `/mnt/c/dev/Karma/k2/aria/ingest_recent.sh` — 30-line bash: tail ledger → qwen3.5:4b synthesis → POST to cortex /ingest AND vault /v1/ambient (tags:synthesis). Invoke ORF before building.
+3. Wire: session-end.sh (nohup ssh karma@192.168.0.226) + K2 cron (0 */4 * * *)
+4. Verify: cortex blocks > 6 AND Karma answers from new synthesis
+**DONE S144:** cortex on K2:7892, hub-bridge synthesis injection LIVE, manual synthesis mem_yK-TJCC9XOYrW4d_ verified, ORF skill created, K2 SSH fixed, firewall opened, model=qwen3.5:4b.

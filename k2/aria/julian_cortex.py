@@ -342,6 +342,26 @@ def main():
     log.info("Knowledge: %d blocks, Conversation: %d messages",
              len(_knowledge_blocks), len(_conversation))
 
+    # Pre-warm model so first query doesn't timeout
+    def _prewarm():
+        try:
+            log.info("Pre-warming model %s ...", MODEL)
+            resp = http_requests.post(
+                f"{OLLAMA_URL}/api/chat",
+                json={"model": MODEL, "messages": [{"role": "user", "content": "ready"}],
+                      "stream": False, "options": {"num_ctx": 4096}},
+                timeout=120,
+            )
+            if resp.ok:
+                log.info("Model pre-warmed successfully")
+            else:
+                log.warning("Pre-warm returned %d", resp.status_code)
+        except Exception as e:
+            log.warning("Pre-warm failed (model may load on first query): %s", e)
+
+    prewarm_thread = threading.Thread(target=_prewarm, daemon=True)
+    prewarm_thread.start()
+
     # Run Flask
     app.run(host="0.0.0.0", port=PORT, debug=False, use_reloader=False)
 
