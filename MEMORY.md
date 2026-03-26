@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Phase 1 — Build the Brain (K2 Memory Cortex). Task 1-1: Pull Nemotron Nano 9B v2 on K2.
-- **Session:** 143 (total rewrite — bandaid architecture replaced with Memory Cortex)
+- **Active task:** Phase 1 — Build the Brain (K2 Memory Cortex). Task 1-2: DONE. Task 2 (Initial Knowledge Load) next.
+- **Session:** 144 (cortex deployed — julian_cortex.py live on K2:7892)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** PLAN REWRITTEN S143. Cortex architecture replaces 10 bandaids. See Karma2/PLAN.md.
 - **Key decision:** Cortex = brain + voice for standard ($0). Anthropic = deep reasoning only (obs #18448).
@@ -21,7 +21,7 @@ hub.arknexus.net = PUBLIC FACE (routes to brain or voice as needed)
 | Machine | Owner | Role | Model | Context |
 |---------|-------|------|-------|---------|
 | K2 (192.168.0.226) | Julian | PRIMARY | Nemotron Nano 9B v2 | 128K |
-| P1 (PAYBACK) | Colby (shared) | FALLBACK | Qwen 3 8B | 128K |
+| P1 (PAYBACK) | Colby (shared) | FALLBACK | Qwen 3.5 9B | 128K |
 
 ## Vesper Pipeline (live)
 - self_improving: true, total_promotions: 1283
@@ -39,8 +39,16 @@ hub.arknexus.net = PUBLIC FACE (routes to brain or voice as needed)
 - **PLAN TOTALLY REWRITTEN** — 6 phases, cortex-first, 10 bandaids eliminated
 - ccDream.pdf ingested — /dream skill built (will be replaced by cortex)
 - Chrome CDP: julian-cdp.mjs written, Chrome 146 port blocker documented
-- K2 model corrected: nemotron-mini:optimized running (not qwen3:8b)
+- K2 models (verified): Nemotron 9B v2 (9.1GB), nemotron-mini:optimized (2.7GB), nomic-embed-text
+- P1 models (verified): qwen3.5:9b (6.6GB), nomic-embed-text
 - 14 observations saved (#18307-#18448)
+
+## Session 144 Progress
+- **julian_cortex.py** deployed on K2:7892 as julian-cortex.service (obs #18486)
+- Nemotron 9B v2 verified: loads, responds, inference works
+- PITFALL: Ollama in WSL2 is NOT at localhost — use Windows gateway IP (172.22.240.1:11434)
+- Port proxy 7892 added but Windows Firewall blocks LAN access (non-blocking — hub-bridge uses Tailscale)
+- K2 services: aria + cc-regent + karma-kiki + karma-regent + julian-cortex all running
 
 ## Critical Pitfalls (NEVER REPEAT — obs #18439-#18444)
 - **#18439:** Local LLM as Memory Cortex was always the answer — don't build file-based workarounds
@@ -57,6 +65,7 @@ hub.arknexus.net = PUBLIC FACE (routes to brain or voice as needed)
 - FalkorDB: BOTH env vars required (FALKORDB_DATA_PATH + FALKORDB_ARGS TIMEOUT)
 - batch_ingest: ALWAYS --skip-dedup
 - Git ops: PowerShell only on Windows
+- Ollama in WSL2: NOT at localhost:11434 — use Windows gateway IP (check `ip route show default`)
 
 ## Open Blockers
 - **Chrome 146 CDP:** --remote-debugging-port flag accepted but port never binds. julian-cdp.mjs ready. Phase 5.
@@ -73,5 +82,6 @@ hub.arknexus.net = PUBLIC FACE (routes to brain or voice as needed)
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Phase 1, Task 1-2 Step 1: Read `.gsd/phase-cortex-build-PLAN.md` Task 1 — build julian_cortex.py on K2
-**Blocker:** Nemotron 9B v2 is 9.1GB on 8GB VRAM — verify tok/s after loading. If unacceptable, consider Q4 quantization.
+2. Phase 1, Task 2: Initial Knowledge Load — ingest core files into cortex via POST K2:7892/ingest
+3. Phase 1, Task 3: Research Ingestion — feed docs/wip/ summaries into cortex
+**VRAM blocker resolved:** Nemotron 9B v2 loads and responds on 8GB VRAM (partial offload to 64GB RAM).
