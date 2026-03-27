@@ -55,6 +55,8 @@ CC ── Claude Code on P1 — execution layer
 - **Tier-1 identity compressed:** 39346→1233 chars (97% token savings on simple turns)
 - **Pricing fixed:** hardcoded table for gpt-5.4-mini, gpt-5.4, claude models (was returning 1e9 sentinel)
 - **callGPTWithTools fixed:** max_completion_tokens for GPT-5.x (was max_tokens → 400 error)
+- **PITFALL:** server.js env object had hardcoded MODEL_DEEP="gpt-4o-mini" fallback — overrode MODEL_ESCALATION silently. Fixed by adding MODEL_ESCALATION + MODEL_VERIFIER to env object.
+- **Identity verified across all tiers:** Karma correctly says "Karma, Initiate, Colby" on cortex ($0), gpt-5.4-mini ($0.005), and gpt-5.4 ($0.03)
 
 ## Session 144 Progress (carried forward)
 - **julian_cortex.py** deployed on K2:7892 as julian-cortex.service (obs #18486)

@@ -1369,8 +1369,10 @@ function atomicWriteHandoff(dir, filename, content) {
 
 const env = {
   MONTHLY_USD_CAP: Number(process.env.MONTHLY_USD_CAP || "0"),
-  MODEL_DEFAULT: process.env.MODEL_DEFAULT || "glm-4.7-flash",
-  MODEL_DEEP: process.env.MODEL_DEEP || "gpt-4o-mini",
+  MODEL_DEFAULT: process.env.MODEL_DEFAULT || "gpt-5.4-mini",
+  MODEL_ESCALATION: process.env.MODEL_ESCALATION || "gpt-5.4",
+  MODEL_DEEP: process.env.MODEL_ESCALATION || process.env.MODEL_DEEP || "gpt-5.4",
+  MODEL_VERIFIER: process.env.MODEL_VERIFIER || "claude-sonnet-4-6",
   PRICE_GPT_4O_MINI_INPUT_PER_1M:  process.env.PRICE_GPT_4O_MINI_INPUT_PER_1M  || "0.15",
   PRICE_GPT_4O_MINI_OUTPUT_PER_1M: process.env.PRICE_GPT_4O_MINI_OUTPUT_PER_1M || "0.60",
   PRICE_CLAUDE_INPUT_PER_1M:  process.env.PRICE_CLAUDE_INPUT_PER_1M  || "3.0",
