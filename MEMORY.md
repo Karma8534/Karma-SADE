@@ -98,6 +98,13 @@ CC ── Claude Code on P1 — execution layer
 - **S145:** Cortex (32K) is working memory, NOT canonical identity. Identity lives in the spine.
 - **S145:** 32K cannot hold 207K+ ledger, 4789+ graph nodes, 193K+ FAISS entries. Graph/FAISS/ledger stay.
 
+## Known Pitfalls (S147 — new)
+- **P062 (#19103):** `datetime.utcnow()` is a recurring K2 bug — found in 3 scripts across 2 sessions. Pre-deploy scan: `grep -r "utcnow" /mnt/c/dev/Karma/k2/`
+- **P063 (#19104):** K2 scripts silently diverge from local repo `Scripts/`. Always diff before commit. K2 = source of truth; Scripts/ = mirror.
+- **P064 (#19105):** `ACTIONABLE_FROM` divergence unresolved — P3-B (colby-only) in local repo vs expanded set on K2. **OPEN SOVEREIGN DECISION REQUIRED.**
+- **P065 (#19107):** LLM model names hardcoded in K2 cron scripts. All model refs must use `os.environ.get()`. Grep check: `grep -n '"claude-\|"gpt-' k2/scripts/*.py`
+- **P066 (#19108):** Hard-exit on missing cloud API key even when local cortex path can serve. Never `sys.exit()` on missing cloud credential when a local path exists.
+
 ## Known Pitfalls (infrastructure — still active)
 - `python3` not available in Git Bash — use SSH or powershell
 - Docker compose service: `hub-bridge` (container: `anr-hub-bridge`)
