@@ -109,7 +109,5 @@ CC ── Claude Code on P1 — execution layer
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Build regression detector in vesper_eval.py — rolling baseline comparison, emit REGRESSION signal on >5% drop
-3. Wire bus reader (cc_bus_reader.py) to use K2 cortex first, Anthropic fallback only
-4. Add per-model daily budget caps in hub-bridge spend tracking
-**S145 DONE:** Architecture reconciliation (5-layer model), GPT-5.4 mini default + GPT-5.4 escalation + Sonnet verifier, /v1/status + /v1/trace live, cost logging JSONL, verifier seam, tier-1 identity 97% compressed, foundation phases 1-4 complete, cognitive split verified, P1 failover + sync every 30min, K2 sync tightened 6h→30min, spine defaults fixed, all docs updated, gap analysis produced.
+2. Execute JULIAN-BUILD-PROMPT.md Phase 1: Inline tool execution in hub chat UI. Read docs/ForColby/JULIAN-BUILD-PROMPT.md. Read observation #18998 for direction lock. Read both codebases (hub-bridge + K2). Then BUILD — extend unified.html to render tool results inline.
+**S145 DONE (10 commits):** Architecture reconciliation (5-layer, 17 files corrected), GPT-5.4 mini default + GPT-5.4 escalation + Sonnet verifier, /v1/status + /v1/trace live, cost logging JSONL, verifier seam, tier-1 identity 97% compressed (39K→1.2K), foundation phases 1-4 complete, cognitive split verified, K2→P1 failover + sync 30min, K2 sync tightened 6h→30min, KO/KFH doctrine corrected, gap analysis produced, 611 ccSession + 316 notebook pages ingested to cortex, P058+P060 pitfalls documented. Julian build prompt finalized at docs/ForColby/JULIAN-BUILD-PROMPT.md.
