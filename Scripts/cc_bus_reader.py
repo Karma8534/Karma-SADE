@@ -3,7 +3,8 @@
 cc_bus_reader.py — CC Inbound Bus Reader
 Runs every 2 minutes on K2 via cron.
 Reads coordination bus for messages addressed to 'cc'.
-Calls Anthropic API with CC identity context and posts response back to bus.
+Routes simple/status messages to cortex ($0), complex to Anthropic ($cost).
+Falls back to Anthropic if cortex unreachable.
 This makes @cc in the hub UI actually responsive without requiring a CC session.
 """
 import json
@@ -16,19 +17,27 @@ import urllib.error
 from pathlib import Path
 
 HUB_URL      = "https://hub.arknexus.net"
+CORTEX_URL   = os.environ.get("CORTEX_URL", "http://localhost:7892")
 CACHE        = Path("/mnt/c/dev/Karma/k2/cache")
 WATERMARK_F  = CACHE / "cc_bus_reader_watermark.json"
 SPINE_F      = CACHE / "cc_identity_spine.json"
 SCRATCHPAD_F = CACHE / "cc_scratchpad.md"
 MEMORY_F     = Path("/mnt/c/dev/Karma/k2/cache/MEMORY.md")
 
-TOKEN        = os.environ.get("HUB_AUTH_TOKEN", "")
+TOKEN         = os.environ.get("HUB_AUTH_TOKEN", "")
 ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-MODEL        = "claude-haiku-4-5-20251001"
-MAX_TOKENS   = 2048
+MODEL         = os.environ.get("CC_BUS_MODEL", "claude-haiku-4-5-20251001")
+MAX_TOKENS    = 2048
 
-# P3-B: Only Sovereign (Colby) can initiate CC responses — no CC↔peer exchanges without Sovereign
-ACTIONABLE_FROM = {"colby"}
+# Messages from these senders addressed to cc are actionable
+ACTIONABLE_FROM = {"colby", "karma", "codex", "kcc", "regent"}
+
+# Keywords that signal a complex query requiring Anthropic
+COMPLEX_KEYWORDS = [
+    "analyze", "recommend", "design", "architect", "plan",
+    "why is", "root cause", "investigate", "debug", "strategy",
+    "compare", "evaluate", "assess", "refactor", "implement",
+]
 
 
 def auth_headers():
@@ -58,8 +67,80 @@ def fetch_bus_messages():
         return []
 
 
+def classify_tier(content):
+    """Classify message as 'cortex' (simple) or 'cloud' (complex)."""
+    low = content.lower()
+    if any(k in low for k in COMPLEX_KEYWORDS) or len(content) > 500:
+        return "cloud"
+    return "cortex"
+
+
+def _get_local_context_snippet():
+    """Build lightweight context for cortex queries — local files only, no SSH."""
+    parts = []
+
+    # Scratchpad tail (local)
+    try:
+        lines = SCRATCHPAD_F.read_text().splitlines()
+        snippet = "\n".join(lines[-20:])
+        parts.append(f"--- CC SCRATCHPAD (recent) ---\n{snippet}")
+    except Exception:
+        pass
+
+    # Pipeline status (local)
+    try:
+        pipeline = json.loads((CACHE / "regent_control" / "vesper_pipeline_status.json").read_text())
+        parts.append(f"--- PIPELINE STATUS ---\n{json.dumps(pipeline, indent=2)[:600]}")
+    except Exception:
+        pass
+
+    # Regent log tail (local)
+    try:
+        log_lines = (CACHE / "regent.log").read_text().splitlines()
+        parts.append("--- REGENT LOG (last 10 lines) ---\n" + "\n".join(log_lines[-10:]))
+    except Exception:
+        pass
+
+    return "\n\n".join(parts)
+
+
+def call_cortex(user_message):
+    """
+    Query cortex for simple/status messages.
+    Injects CC identity + live local context inline.
+    Returns response string or None on failure.
+    """
+    context_snippet = _get_local_context_snippet()
+    query = (
+        "You are CC (Ascendant) responding on the Karma coordination bus. "
+        "Hierarchy: Sovereign(Colby) > Ascendant(CC) > ArchonPrime(Codex) > Archon(KCC) > Initiate(Karma). "
+        "You have READ access to K2 state. You do NOT have write/edit/deploy access here — "
+        "those require a full CC session. Diagnose, advise, answer from evidence. Be concise.\n"
+    )
+    if context_snippet:
+        query += f"\nLive system context:\n{context_snippet}\n"
+    query += f"\nBus message: {user_message}"
+
+    payload = json.dumps({"query": query}).encode()
+    req = urllib.request.Request(
+        f"{CORTEX_URL}/query",
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            data = json.loads(r.read())
+        if data.get("ok") and data.get("answer"):
+            return data["answer"]
+        return None
+    except Exception as e:
+        print(f"Cortex call failed: {e}", file=sys.stderr)
+        return None
+
+
 def get_cc_identity():
-    """Load CC system prompt from spine resume_block + scratchpad snippet."""
+    """Load CC system prompt from spine resume_block + full context (cloud path)."""
     base = "You are CC, Ascendant — full-scope infrastructure authority. Hierarchy: Sovereign(Colby) > Ascendant(you) > ArchonPrime(Codex) > Archon(KCC) > Initiate(Karma)."
     try:
         spine = json.loads(SPINE_F.read_text())
@@ -170,9 +251,10 @@ def main():
     if not TOKEN:
         print("ERROR: HUB_AUTH_TOKEN not set", file=sys.stderr)
         sys.exit(1)
+
+    # ANTHROPIC_KEY is optional — cortex path works without it
     if not ANTHROPIC_KEY:
-        print("ERROR: ANTHROPIC_API_KEY not set", file=sys.stderr)
-        sys.exit(1)
+        print("WARNING: ANTHROPIC_API_KEY not set — cortex-only mode", file=sys.stderr)
 
     wm = load_watermark()
     seen_ids = set(wm.get("seen_ids", []))
@@ -185,7 +267,8 @@ def main():
     # Sort oldest first
     messages.sort(key=lambda m: m.get("ts") or m.get("timestamp") or m.get("created_at") or "")
 
-    system_prompt = get_cc_identity()
+    # Cloud system prompt — built lazily (only if a cloud-tier message arrives)
+    _cloud_system_prompt = None
     processed = 0
 
     for msg in messages:
@@ -203,8 +286,24 @@ def main():
             seen_ids.add(msg_id)
             continue
 
-        print(f"Processing message from {from_}: {content[:80]}")
-        response = call_anthropic(system_prompt, content)
+        tier = classify_tier(content)
+        print(f"Processing [{tier}] message from {from_}: {content[:80]}")
+
+        response = None
+
+        if tier == "cortex":
+            response = call_cortex(content)
+            if response is None:
+                print(f"Cortex unavailable — falling back to Anthropic", file=sys.stderr)
+
+        if response is None:
+            # Cloud path (complex tier, or cortex fallback)
+            if not ANTHROPIC_KEY:
+                response = "[CC: cortex unavailable and ANTHROPIC_API_KEY not set. Cannot respond. Requires full CC session.]"
+            else:
+                if _cloud_system_prompt is None:
+                    _cloud_system_prompt = get_cc_identity()
+                response = call_anthropic(_cloud_system_prompt, content)
 
         # Reply to sender
         result = post_to_bus(response, to=from_)
@@ -218,7 +317,7 @@ def main():
 
     # Persist watermark (keep last 200 seen IDs to bound size)
     wm["seen_ids"] = list(seen_ids)[-200:]
-    wm["last_run"] = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    wm["last_run"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     wm["last_processed"] = processed
     save_watermark(wm)
     print(f"Done. Processed {processed} new message(s).")
