@@ -322,6 +322,10 @@ P056 [allowed-tools-bypass-incomplete]:
 Rule: `allowedTools: ["*"]` in settings.local.json does NOT eliminate all approval prompts. Some tools still prompt. Verify end-to-end before declaring "all permissions granted". Investigate per-MCP-tool permissions as separate layer. Post-sprint fix.
 Why: Session 136 — wildcard set but manual approvals still required mid-session. Root cause unknown. Interrupts autonomous execution.
 
+P058 [stale-context-generation]:
+Rule: Before writing ANY file content referencing hierarchy, roles, identity, or architecture: (1) re-read canonical source (karma_contract_policy.md, obs #6620, PLAN.md), (2) copy exact text from source — never paraphrase from context window, (3) after writing, re-read output LINE BY LINE and diff against source. Grep verification is supplementary, never primary.
+Why: Session 145 — CC wrote "Codex = Supervisor on K2" and "KCC = Worker on K2" and "KCC = your peer" in 3 prompt files. All wrong. Correct: Codex=KO (tool/resource), KCC=KFH (directable). Generated from stale context instead of canonical source. Grep for "haiku" caught string staleness but missed semantic staleness. Sovereign caught it after 3 "verification passes."
+
 B003 [vague-memory-item2]:
 Rule: MEMORY.md "Next Session Starts Here" item 2 MUST be a specific first action (verb + file + purpose). "X OR Y" = choice = CASE C-AMBIGUOUS trigger at next resurrect = brainstorming = questions.
 Why: wrap-session wrote "Continue Karma2 audit OR start K-1" — OR made both options ambiguous, no GSD plan for either → CASE C triggered → brainstorming asked Sovereign for direction. Session 128.

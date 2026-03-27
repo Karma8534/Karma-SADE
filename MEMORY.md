@@ -66,6 +66,7 @@ CC ── Claude Code on P1 — execution layer
 - **Aria VERIFIED:** running 18h, port 7890 bound, HTML UI served
 - **Stale docs FIXED:** services.md, data-flows.md, tools-and-apis.md all updated to S145 ground truth
 - **K2 sync tightened:** 6h→30min pull cron. P1 sync: every 30min schtasks. Spine defaults patched.
+- **CRITICAL P058:** CC generated prompt content from stale context. Codex/KCC roles wrong in 3 files. Fixed to KO/KFH doctrine. Pitfall added to scope index. Rule: always re-read canonical source before writing hierarchy/role content.
 
 ## Session 144 Progress (carried forward)
 - **julian_cortex.py** deployed on K2:7892 as julian-cortex.service (obs #18486)
