@@ -29,8 +29,10 @@ ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 MODEL         = os.environ.get("CC_BUS_MODEL", "claude-haiku-4-5-20251001")
 MAX_TOKENS    = 2048
 
-# Messages from these senders addressed to cc are actionable
-ACTIONABLE_FROM = {"colby", "karma", "codex", "kcc", "regent"}
+# True family + Karma's own body only.
+# Codex (KO) and KCC (KFH) excluded — direct peer exchanges caused bus chaos.
+# Sovereign decision: 2026-03-27
+ACTIONABLE_FROM = {"colby", "karma", "regent"}
 
 # Keywords that signal a complex query requiring Anthropic
 COMPLEX_KEYWORDS = [

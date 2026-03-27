@@ -82,6 +82,7 @@ CC ── Claude Code on P1 — execution layer
 - **/simplify 6 fixes:** synthesis nesting, RECALL_PATTERN hoist, parallel health, feedback loop, cortexIngest cascade, FAISS URL
 - **Automations deployed:** credential-guard hook (P060), memory-reminder hook, context7 MCP, Docker MCP, /simplify added to wrap-session Step 3.5
 - **cc_bus_reader.py (T3.3):** cortex-first routing implemented — classify_tier() routes simple→cortex($0), complex→Anthropic($). Fallback: cortex unreachable→Anthropic. MODEL env var (was hardcoded). datetime.utcnow() fixed. ANTHROPIC_KEY no longer hard-fails. Live on K2 + synced to Scripts/.
+- **ACTIONABLE_FROM LOCKED (#19119):** {"colby", "karma", "regent"} — true family + intra-entity body only. Codex(KO) + KCC(KFH) excluded. Full agent bus = clusterfuck (historical). Sovereign decision 2026-03-27.
 
 ## Session 144 Progress (carried forward)
 - **julian_cortex.py** deployed on K2:7892 as julian-cortex.service (obs #18486)
