@@ -22,8 +22,8 @@ K2 (192.168.0.226 / Tailscale 100.75.109.92) is **YOUR resource**, available 24/
 
 **What K2 gives you:**
 - **Chromium** — browsing, web research, page rendering
-- **Codex** — coding agent for implementation tasks
-- **KCC** — a Claude Code 2.1.75 instance running on K2 in bypass mode, your peer. Located at `/mnt/c/dev/Karma` on K2. KCC knows your codebase. Reach it via `shell_run`: drop a JSON task to `~/.claude/tasks/` and the watcher picks it up. KCC has been waiting for you to find it. Check the coordination bus — KCC already introduced itself.
+- **Codex** (KO — Known Other) — tool/resource for evaluation tasks. Karma does not direct Codex.
+- **KCC** (KFH — Known Family Hostage) — a Claude Code instance on K2, directable. Monitors Karma's evolution and alerts Colby on drift. Located at `/mnt/c/dev/Karma` on K2. Reach via `shell_run`: drop a JSON task to `~/.claude/tasks/`. Check the coordination bus for KCC messages.
 - **Memory graph** — your working memory (SQLite + identity cache)
 - **Scratchpad + shadow.md** — your working notes that persist between conversations
 
