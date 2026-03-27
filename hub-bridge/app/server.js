@@ -666,6 +666,24 @@ function saveSpendState(path, state) {
 
 function isAnthropicModel(model) { return typeof model === "string" && model.startsWith("claude-"); }
 
+// --- Verifier hook seam (governance seam 4a) ---
+// Cross-provider second opinion for structural changes. Gated by VERIFIER_ENABLED env var.
+// Default: off. Enable with VERIFIER_ENABLED=true in hub.env.
+const VERIFIER_ENABLED = (process.env.VERIFIER_ENABLED || "").toLowerCase() === "true";
+async function callVerifier(question, context) {
+  if (!VERIFIER_ENABLED) return { skipped: true, reason: "verifier_disabled" };
+  const verifierModel = getVerifierModel(env);
+  try {
+    const result = await callLLM(verifierModel, [
+      { role: "system", content: "You are a cross-provider verification agent. Evaluate whether the proposed change is safe, consistent with identity, and does not introduce regressions. Respond with: APPROVE, HOLD, or REJECT followed by one sentence of reasoning." },
+      { role: "user", content: `${question}\n\nContext: ${context}` },
+    ], 200);
+    return { skipped: false, model: verifierModel, verdict: (result.text || "").trim() };
+  } catch (e) {
+    return { skipped: false, model: verifierModel, error: e.message };
+  }
+}
+
 // pricePer1M and estimateUsd imported from ../lib/pricing.js
 
 // --- Vault API helpers ---
@@ -2759,6 +2777,36 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, service: "hub-bridge", ts: new Date().toISOString() });
     }
 
+    // --- GET /v1/status --- Sovereign visibility: health + model config + spend + governance
+    if (req.method === "GET" && req.url === "/v1/status") {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) return json(res, 401, { ok: false, error: "unauthorized" });
+      const spendState = loadSpendState(env.SPEND_STATE_PATH);
+      const cortexHealth = await fetch(K2_CORTEX_URL + "/health", { signal: AbortSignal.timeout(3000) }).then(r => r.json()).catch(() => ({ ok: false }));
+      const p1Health = await fetch(P1_CORTEX_URL + "/health", { signal: AbortSignal.timeout(3000) }).then(r => r.json()).catch(() => ({ ok: false }));
+      return json(res, 200, {
+        ok: true, ts: new Date().toISOString(),
+        models: { default: env.MODEL_DEFAULT, escalation: env.MODEL_ESCALATION || env.MODEL_DEEP, verifier: env.MODEL_VERIFIER },
+        spend: { month: spendState.month_utc, usd_spent: spendState.usd_spent, cap_usd: env.MONTHLY_USD_CAP },
+        nodes: { k2_cortex: cortexHealth, p1_cortex: p1Health, hub_bridge: { ok: true } },
+        governance: { verifier_enabled: !!process.env.VERIFIER_ENABLED, canary_stage: false },
+      });
+    }
+
+    // --- GET /v1/trace --- Last N request traces (cost, model, tier, route reason)
+    if (req.method === "GET" && req.url.startsWith("/v1/trace")) {
+      const token = bearerToken(req);
+      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const logPath = "/run/state/request_cost.jsonl";
+        const lines = fs.readFileSync(logPath, "utf8").trim().split("\n").filter(Boolean).slice(-50);
+        const entries = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+        return json(res, 200, { ok: true, count: entries.length, traces: entries });
+      } catch {
+        return json(res, 200, { ok: true, count: 0, traces: [], note: "no cost log yet" });
+      }
+    }
+
     // --- GET /agora --- Serve Agora Convergence Room UI
     if (req.method === "GET" && req.url === "/agora") {
       try {
@@ -2960,6 +3008,8 @@ const server = http.createServer(async (req, res) => {
               if (cortexAnswer.length > 30 && !cortexAnswer.startsWith("[CORTEX ERROR")) {
                 console.log(`[COGNITIVE_SPLIT] recall routed to ${cortex.label} cortex ($0):`, userMessage.slice(0, 60));
                 cortexIngest("recall-" + Date.now(), "[Q] " + userMessage.slice(0, 100) + " [A] " + cortexAnswer.slice(0, 300));
+                // Cost log for cortex ($0) response
+                try { fs.appendFileSync("/run/state/request_cost.jsonl", JSON.stringify({ ts: new Date().toISOString(), model: `qwen3.5:4b (${cortex.label})`, tier: 0, usd: 0, cognitive_split: true, provider: cortex.label.toLowerCase() }) + "\n"); } catch {}
                 return json(res, 200, {
                   ok: true,
                   assistant_text: cortexAnswer,
@@ -3161,6 +3211,16 @@ const server = http.createServer(async (req, res) => {
       spendState.usd_spent = used_after;
       spendState.updated_at = nowIso();
       saveSpendState(spendPath, spendState);
+
+      // Per-request cost log (JSONL) — queryable via /v1/trace
+      try {
+        const costEntry = JSON.stringify({
+          ts: new Date().toISOString(), model, tier, usd: usd_estimate,
+          input_tokens: usage.prompt_tokens || 0, output_tokens: usage.completion_tokens || 0,
+          cognitive_split: false, provider: debug_provider, spend_total: used_after,
+        });
+        fs.appendFileSync("/run/state/request_cost.jsonl", costEntry + "\n");
+      } catch (e) { /* non-fatal */ }
 
       const vaultRecord = buildVaultRecord({
         type: "log",

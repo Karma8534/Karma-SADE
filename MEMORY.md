@@ -57,6 +57,13 @@ CC ── Claude Code on P1 — execution layer
 - **callGPTWithTools fixed:** max_completion_tokens for GPT-5.x (was max_tokens → 400 error)
 - **PITFALL:** server.js env object had hardcoded MODEL_DEEP="gpt-4o-mini" fallback — overrode MODEL_ESCALATION silently. Fixed by adding MODEL_ESCALATION + MODEL_VERIFIER to env object.
 - **Identity verified across all tiers:** Karma correctly says "Karma, Initiate, Colby" on cortex ($0), gpt-5.4-mini ($0.005), and gpt-5.4 ($0.03)
+- **/v1/status LIVE:** models, spend, node health, governance state — all in one endpoint
+- **/v1/trace LIVE:** per-request cost log (JSONL) — model, tier, usd, tokens, provider
+- **Verifier hook seam:** callVerifier() wired, gated by VERIFIER_ENABLED env var (default: off)
+- **Cost logging:** every chat request appends to /run/state/request_cost.jsonl
+- **Rollback VERIFIED_ALREADY_PRESENT:** governor has _checkpoint(), spine_backup_pre_promote.json, git snapshots
+- **Mutation boundary VERIFIED:** write_memory→MEMORY.md (ambient). Spine writes→governor only.
+- **Aria VERIFIED:** running 18h, port 7890 bound, HTML UI served
 
 ## Session 144 Progress (carried forward)
 - **julian_cortex.py** deployed on K2:7892 as julian-cortex.service (obs #18486)
