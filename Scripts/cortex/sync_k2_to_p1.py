@@ -38,12 +38,13 @@ def fetch_p1_labels():
         print("ERROR: P1 cortex unreachable", file=sys.stderr)
         return None
 
-    # Read P1 state file directly (local)
+    # Read P1 state file directly (local) — MUST use utf-8 encoding (P053: Windows cp1252 breaks on non-ASCII)
     try:
-        with open(r"C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\state\state.json") as f:
+        with open(r"C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\state\state.json", encoding="utf-8") as f:
             p1_state = json.load(f)
         return {label for label, _ in p1_state.get("knowledge_blocks", [])}
-    except Exception:
+    except Exception as e:
+        print(f"WARNING: Could not read P1 state file: {e}", file=sys.stderr)
         return set()
 
 
