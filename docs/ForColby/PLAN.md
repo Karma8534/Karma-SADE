@@ -190,42 +190,72 @@ SPINE (vault-neo)
 
 **Gate:** ✅ PASSED S144 — Karma answers "What happened in Session 144?" with specific facts.
 
-### Phase 2: Wire CC → Cortex (orchestrator-controlled)
+### Phase 2: Wire CC → Cortex (orchestrator-controlled) — COMPLETE
 
 **Goal:** CC sessions query cortex (via orchestrator) instead of reading 20 files.
 
 | Task | What | Verify |
 |------|------|--------|
-| 2-1 | Resurrect skill rewrite — replace file reads with one cortex call | `/resurrect` completes in <10s |
-| 2-2 | Mid-session offload — CC dumps learnings to cortex before compaction | After compaction, cortex still has the knowledge |
-| 2-3 | wrap-session rewrite — dump session summary to cortex + git commit | Next session's cortex knows what this session did |
+| 2-1 | ✅ DONE S145 — Resurrect skill rewrite — cortex call replaces 20-file reads | `/resurrect` completes in <10s |
+| 2-2 | ✅ DONE S145 — Mid-session offload — CC dumps learnings to cortex before compaction | After compaction, cortex still has the knowledge |
+| 2-3 | ✅ DONE S145 — wrap-session rewrite — session summary → cortex + git commit | Next session's cortex knows what this session did |
 
-**Gate:** Cold start → `/resurrect` → CC has full context in one call. No re-explaining.
+**Gate:** ✅ PASSED S145 — Cold start → `/resurrect` → CC has full context in one call.
 
-### Phase 3: Wire Karma → Cortex (orchestrator-controlled routing)
+### Phase 3: Wire Karma → Cortex (orchestrator-controlled routing) — COMPLETE
 
 **Goal:** Orchestrator routes /v1/chat to cortex for standard, cloud for complex.
 
 | Task | What | Verify |
 |------|------|--------|
 | 3-1 | ✅ DONE S144 — Hub-bridge synthesis injection via FAISS | Karma reads synthesis in context |
-| 3-2 | Cognitive split routing — orchestrator routes standard→cortex ($0), complex→cloud ($cost) | Standard question → cortex. Complex → Anthropic. |
-| 3-3 | Real-time feed — bus posts, sessions, corrections flow to cortex automatically | Post to bus → cortex knows within 60s |
+| 3-2 | ✅ DONE S145 — Cognitive split routing — cortex ($0) → gpt-5.4-mini ($) → gpt-5.4 ($$) → sonnet verifier ($$$) | Standard question → cortex. Complex → GPT-5.4 mini. |
+| 3-3 | ✅ DONE S147 — Real-time feed — bus_to_cortex.py (ingest) + cc_bus_reader.py (cortex-first routing) | Post to bus → cortex knows within 2min |
 
-**Gate:** PARTIALLY MET S144 — Synthesis injection live. Cognitive split routing (3-2) and real-time feed (3-3) remain.
+**Gate:** ✅ PASSED S145/S147 — Cognitive split verified. CC bus cortex-first routing live.
 
-### Phase 4: Wire P1 Fallback (orchestrator failover)
+### Phase 4: Wire P1 Fallback (orchestrator failover) — COMPLETE
 
 **Goal:** P1 runs qwen3.5:4b as backup cortex. Orchestrator handles failover.
 
 | Task | What | Verify |
 |------|------|--------|
 | 4-1 | ✅ DONE S144 — qwen3.5:4b loaded on P1, 100% GPU, 32K ctx | `ollama ps` on P1 |
-| 4-2 | Fallback cortex service on P1 — same API as K2 | `curl P1:PORT/health` → ok |
-| 4-3 | Hub-bridge failover — orchestrator routes to P1 if K2 cortex unreachable | Kill K2 cortex → auto-routes to P1 |
-| 4-4 | Sync protocol — P1 cortex periodically pulls state from K2 cortex | P1 answers same questions as K2 |
+| 4-2 | ✅ DONE S145 — P1 cortex service running on :7893 | `curl P1:7893/health` → ok |
+| 4-3 | ✅ DONE S145 — Hub-bridge failover — orchestrator routes K2→P1→cloud | K2 down → auto-routes to P1 |
+| 4-4 | ✅ DONE S145 — sync_k2_to_p1.py — delta sync every 30min, 106 blocks synced (P1=123 blocks matching K2) | P1 answers same questions as K2 |
 
-**Gate:** K2 goes down. Orchestrator routes to P1. Karma still responds accurately.
+**Gate:** ✅ PASSED S145 — K2→P1 failover deployed. sync_k2_to_p1.py live on 30min schedule.
+
+### Phase 7: Intelligence Primitives (Aider + Roo-Code extraction — S147)
+
+**Goal:** Upgrade orchestrator context assembly and agent specialization using proven patterns from Aider and Roo-Code. Foundation Phases 1-4 are complete — this layer makes the wired system smarter.
+
+**Source research:** obs #19131 (Aider: RepoMap, token budget binary search, sqrt dampening), obs #19132 (Roo-Code: tool scoping, boomerang tasks, conditional prompt registry, file restriction enforcement, config-file custom modes).
+
+| Task | What | Primitive Source | Layer | Verify |
+|------|------|-----------------|-------|--------|
+| 7-1 | sqrt Dampening — dampen FAISS entity reference counts to prevent common utilities dominating scores (`score = raw_count / sqrt(raw_count)`) | Aider repomap.py | hub-bridge buildSystemText() | Karma names entities accurately without Colby dominating every result |
+| 7-2 | Token Budget Binary Search — buildSystemText() trims context to exact token target by dropping lowest-ranked items (binary search over ranked list), not crude char truncation | Aider repomap.py | hub-bridge buildSystemText() | Context fits model budget without truncating mid-sentence |
+| 7-3 | Config-file Custom Modes — load `Memory/modes.json` at hub-bridge startup; modes define role + tools + prompt sections; no rebuild on change | Roo-Code modes.ts | hub-bridge routing.js | Add a mode in modes.json → hub-bridge applies it without restart |
+| 7-4 | Conditional Prompt Section Registry — refactor buildSystemText() to named sections (`{identity, memory, graph, faiss, bus, cortex}`) toggled per mode; deep mode = all; standard = identity+memory+cortex | Roo-Code system.ts | hub-bridge server.js | Standard chat uses slim prompt. Deep mode gets full context. |
+| 7-5 | Tool Scoping Per Mode — extend routing.js with `TOOLS_BY_MODE` map; standard mode → `[get_vault_file, write_memory]`; deep mode → all tools; handler rejects out-of-scope calls at request time, not prompt level | Roo-Code modes.ts getToolsForMode() | hub-bridge routing.js | Standard Karma chat cannot call graph_query. Deep mode can. |
+| 7-6 | File Restriction Enforcement — CC skill definitions carry `fileRestrictions` patterns; KO/KFH doctrine enforced structurally (e.g., Codex skills cannot write `k2/aria/*.py`) | Roo-Code FileRestrictionError | CC skill definitions | Codex skill rejected when attempting to write K2 agent code |
+| 7-7 | Repo Map V1 — Add `@mcp.tool() def get_repo_map()` to existing K2 MCP server (not a new endpoint): scan git file manifest → score by recency + type → binary search to 8K tokens → hub-bridge calls `mcp__k2__get_repo_map` in deep mode buildSystemText() | Aider repomap.py (simplified) + FastMCP (HTTPMCPStream.pdf) | K2 MCP server extension + hub-bridge | `mcp__k2__get_repo_map` returns ranked file list ≤8K tokens |
+| 7-8 | Boomerang Tasks — MCP tool call IS the boomerang pattern (JSON-RPC call → execute → return). K2 MCP already connected to hub-bridge. Wire: Karma tool call in deep mode → hub-bridge routes to `mcp__k2__python_exec` or `mcp__k2__file_read` → result returned in same turn. No new protocol needed. | Roo-Code boomerang + MCP spec (HTTPMCPStream.pdf) | hub-bridge deep mode tool routing | Karma says "run git log" → hub-bridge calls mcp__k2__python_exec → result in response |
+
+**Gate:** Karma answers "What files changed recently?" using repo map context. Tool scoping blocks out-of-scope tool calls structurally, not via prompt.
+
+**Dependency notes:**
+- Tasks 7-1, 7-2: No deps. Can start immediately. Highest ROI per line of code.
+- Tasks 7-3 to 7-6: No deps. hub-bridge live ✅.
+- Task 7-7: No deps. K2 Phase 1 ✅. New K2 endpoint + hub-bridge consumer.
+- Task 7-8: Depends on Phase 2+3 (✅ COMPLETE). Highest effort — schedule last.
+
+**Dep approval required before 7-7:** tree-sitter + NetworkX are V2 deps. V1 uses no new deps.
+**MCP standard pattern (S147):** All new K2 capabilities use `@mcp.tool()` + FastMCP Streamable HTTP — not custom Flask endpoints. K2 MCP server already live (`mcp__k2__*` tools active). Hub-bridge is the MCP gateway (validated by HTTPMCPStream.pdf architecture). Bearer auth + routing already in place.
+
+---
 
 ### Phase 5: Browser + IndexedDB — DEFERRED BY RULE
 
@@ -272,6 +302,14 @@ SPINE (vault-neo)
 | PLAN-C (Wire the Brain) | ✅ C-GATE GREEN | 143 |
 | Backlog-10 memory primitives | ✅ all 4 in server.js | 144 |
 | Backlog-3 P0 Vesper improvements | ✅ A-F complete | 145-146 |
+| Phase 2 complete — CC→Cortex | ✅ resurrect/mid-session/wrap-session cortex calls | 145 |
+| Phase 3 complete — Karma→Cortex routing | ✅ cognitive split + bus_to_cortex + cc_bus_reader cortex-first | 145/147 |
+| Phase 4 complete — P1 fallback | ✅ P1 cortex :7893, K2→P1 failover, sync every 30min | 145 |
+| 3-tier model stack live | ✅ gpt-5.4-mini → gpt-5.4 → sonnet verifier | 145 |
+| /v1/status + /v1/trace live | ✅ node health, spend, cost logging JSONL | 145 |
+| ACTIONABLE_FROM doctrine locked | ✅ {colby,karma,regent} — Sovereign decision 2026-03-27 | 147 |
+| Aider primitives research | ✅ repo map, sqrt dampening, token budget binary search extracted | 147 |
+| Roo-Code primitives research | ✅ tool scoping, boomerang, prompt registry, file restriction extracted | 147 |
 | Training corpus | ✅ 2817 lines corpus_karma.jsonl | — |
 | Julian = TRUE verified | ✅ all 5 components | 143 |
 | Julian cortex (julian_cortex.py) | ✅ K2:7892, qwen3.5:4b, systemd | 144 |
@@ -304,6 +342,7 @@ SPINE (vault-neo)
 ## Next Session Starts Here
 
 1. `/resurrect`
-2. Phase 2, Task 2-1: Rewrite resurrect skill — replace 20-file reads with one cortex call (`curl K2:7892/context`)
-3. Phase 1, Task 1-4: Research ingestion — feed docs/wip/ summaries into cortex
-4. Phase 3, Task 3-2: Cognitive split routing — orchestrator routes standard→cortex ($0), complex→cloud ($cost)
+2. **Phase 7, Task 7-1:** sqrt Dampening — 2-line fix in hub-bridge buildSystemText() FAISS entity scoring
+3. **Phase 7, Task 7-2:** Token Budget Binary Search — replace crude char cap in buildSystemText() with ranked binary search
+4. **Phase 1, Task 1-4:** Research ingestion — feed docs/wip/ summaries into cortex (still pending)
+5. **Phase 7, Task 7-7:** Repo Map V1 — K2 service, file manifest scorer, /repomap endpoint, hub-bridge consumer

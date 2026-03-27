@@ -1,8 +1,8 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-26 Session 143
-**Active: Phase 1 Task 1-2 — Build julian_cortex.py (Memory Cortex service on K2)**
-**Session:** PLAN.md rewritten S143 — cortex-first architecture. Task 1-1 DONE (Nemotron 9B v2 pulled to K2, 9.1GB). P1 cleaned (9 models deleted, 43.6GB freed). K2 cleaned (3 models deleted). karma-observer deployed. A1 backfill complete (554 obs). Next: build julian_cortex.py.
+**Last updated:** 2026-03-27 Session 148
+**Active: Phase 7 Task 7-1 — sqrt Dampening in hub-bridge buildSystemText() FAISS scoring**
+**Session:** S148 — ORF x3 on Aider+Roo-Code primitives. Phase 7 (8 tasks) added to PLAN.md. Phases 2/3/4 state corrections applied. MCP Python SDK + FastMCP evaluated: Task 7-7 (add to existing K2 MCP server), Task 7-8 (MCP call IS boomerang). ACTIONABLE_FROM locked {colby,karma,regent}. P062-P066 pitfalls documented (P062: datetime.utcnow() recurrence; P063: K2/Scripts/ drift; P064: ACTIONABLE_FROM resolved; P065: hardcoded model names; P066: hard-exit on missing cloud key).
 **Canonical source:** This file. Read at session start.
 
 ---

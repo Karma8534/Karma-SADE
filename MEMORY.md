@@ -129,7 +129,16 @@ CC ── Claude Code on P1 — execution layer
 - [feedback_stop_planning_start_building.md](feedback_stop_planning_start_building.md) — Build immediately
 - [project_family_doctrine.md](project_family_doctrine.md) — Family doctrine
 
+## Session 148 — Intelligence Primitives Plan (2026-03-27)
+- **ORF x3 completed:** Aider (sqrt dampening, token budget binary search, repo map) + Roo-Code (tool scoping, boomerang, prompt registry, file restriction, config modes) primitives evaluated and merged into PLAN.md
+- **Phase 7 added:** 8 tasks — 7-1 through 7-8. See docs/ForColby/PLAN.md.
+- **PLAN.md state corrected:** Phases 2, 3, 4 all marked COMPLETE (were stale-pending since S145)
+- **MCP insight:** Task 7-7 → add to existing K2 MCP server (not new endpoint). Task 7-8 → MCP call IS boomerang pattern, already half-built. (obs #19149)
+- **FastMCP pattern locked:** All new K2 capabilities = `@mcp.tool()` in existing server. Never a new port.
+- **P062-P066 pitfalls documented:** datetime.utcnow() recurrence, K2/Scripts/ drift, ACTIONABLE_FROM (resolved), hardcoded model names, hard-exit on missing cloud key
+- **ACTIONABLE_FROM LOCKED:** {colby, karma, regent} — Sovereign decision 2026-03-27 (obs #19119)
+- **Cortex:** 426 blocks after session dump
+
 ## Next Session Starts Here
 1. `/resurrect`
-2. Execute JULIAN-BUILD-PROMPT.md Phase 1: Inline tool execution in hub chat UI. Read docs/ForColby/JULIAN-BUILD-PROMPT.md. Read observation #18998 for direction lock. Read both codebases (hub-bridge + K2). Then BUILD — extend unified.html to render tool results inline.
-**S145 DONE (10 commits):** Architecture reconciliation (5-layer, 17 files corrected), GPT-5.4 mini default + GPT-5.4 escalation + Sonnet verifier, /v1/status + /v1/trace live, cost logging JSONL, verifier seam, tier-1 identity 97% compressed (39K→1.2K), foundation phases 1-4 complete, cognitive split verified, K2→P1 failover + sync 30min, K2 sync tightened 6h→30min, KO/KFH doctrine corrected, gap analysis produced, 611 ccSession + 316 notebook pages ingested to cortex, P058+P060 pitfalls documented. Julian build prompt finalized at docs/ForColby/JULIAN-BUILD-PROMPT.md.
+2. Phase 7, Task 7-1: sqrt dampening — edit `hub-bridge/app/server.js` buildSystemText() FAISS entity scoring: `score = raw_count / Math.sqrt(raw_count)`
