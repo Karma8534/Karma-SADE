@@ -1,15 +1,15 @@
-# Services — Ground Truth (2026-03-23, updated session 127)
+# Services — Ground Truth (2026-03-27, updated Session 145)
 
 ## vault-neo (arknexus.net, DigitalOcean NYC3)
 | Container | Status | Image | Role |
 |-----------|--------|-------|------|
-| anr-hub-bridge | Up (rebuilt session 127) | hub_bridge-hub-bridge | API gateway, model routing, tools. /v1/cypher LIVE. |
-| karma-server | Up 7d HEALTHY | compose-karma-server | FalkorDB queries, batch_ingest, consciousness loop |
-| anr-vault-search | Up 8d HEALTHY | compose-search | FAISS semantic search |
-| anr-vault-db | Up 2wk HEALTHY | postgres:16-alpine | Vault API database |
-| anr-vault-api | Up 2wk HEALTHY | compose-api | Ledger write endpoint |
-| anr-vault-caddy | Up 3wk | compose-caddy | Reverse proxy / TLS |
-| falkordb | Up 3wk | falkordb/falkordb | Graph DB (neo_workspace) |
+| anr-hub-bridge | Up (rebuilt S145) | hub_bridge-hub-bridge | API gateway, orchestrator, model routing, tools, /v1/status, /v1/trace |
+| karma-server | Up HEALTHY | compose-karma-server | FalkorDB queries, batch_ingest, consciousness loop |
+| anr-vault-search | Up HEALTHY | compose-search | FAISS semantic search (193K+ entries) |
+| anr-vault-db | Up HEALTHY | postgres:16-alpine | Vault API database |
+| anr-vault-api | Up HEALTHY | compose-api | Ledger write endpoint (209K+ entries) |
+| anr-vault-caddy | Up | compose-caddy | Reverse proxy / TLS |
+| falkordb | Up | falkordb/falkordb | Graph DB (neo_workspace, 4789+ nodes) |
 
 Compose files: compose.yml (vault stack) | compose.hub.yml (hub-bridge stack)
 Both at: /opt/seed-vault/memory_v1/
@@ -17,32 +17,45 @@ Both at: /opt/seed-vault/memory_v1/
 ## K2 (192.168.0.226 / Tailscale 100.75.109.92)
 | Service | Status | File |
 |---------|--------|------|
-| aria.service | RUNNING (PID 423990, fixed session 127 — zombie+drop-in fix) | /mnt/c/dev/Karma/k2/aria/aria.py |
-| karma-regent.service | RUNNING via systemd (enabled, /etc/systemd/system/karma-regent.service, PID 243460) | /mnt/c/dev/Karma/k2/aria/karma_regent.py |
+| julian-cortex.service | RUNNING (qwen3.5:4b 32K, port 7892, 711+ blocks) | /mnt/c/dev/Karma/k2/aria/julian_cortex.py |
+| aria.service | RUNNING (port 7890, Flask, tools/exec) | /mnt/c/dev/Karma/k2/aria/aria.py |
+| karma-regent.service | RUNNING (Vesper pipeline, 1284 promotions, spine v1242) | /mnt/c/dev/Karma/k2/aria/karma_regent.py |
+| karma-kiki.service | RUNNING (autonomous task agent) | /mnt/c/dev/Karma/k2/scripts/karma_kiki.py |
+| cc-regent.service | RUNNING (CC continuity subagent) | K2 systemd |
 
-### K2 Cron Agents (always running — NOT session-dependent)
+### K2 Cron Agents
 | Script | Cadence | Role |
 |--------|---------|------|
-| cc_hourly_report.py | Every 1h | Posts CC/Karma system status to Agora bus (from: cc, to: all) |
-| cc_anchor_agent.py | Every 3h | Verifies CC identity rails in cc_scratchpad.md; posts DRIFT ALERT if degraded |
+| bus_to_cortex.py | Every 2min | Bus messages → cortex ingestion ($0) |
+| cc_bus_reader.py | Every 2min | Reads bus for `to: cc` messages, calls Anthropic, posts response |
+| cc_hourly_report.py | Every 1h | Posts CC/Karma status to bus |
+| cc_anchor_agent.py | Every 3h | Verifies CC identity rails |
 | kiki_pulse.py | Every 2h | Kiki governance heartbeat |
-| promote_shadow.py | Every 30min | Shadow pattern promotion pipeline |
-| sync-from-vault.sh pull | Every 6h | Pulls identity/invariants/direction/corrections from vault-neo to K2 |
-| sync-from-vault.sh push | Every 1h | Pushes k2_local_observations.jsonl to hub /v1/ambient |
+| promote_shadow.py | Every 30min | Shadow pattern promotion |
+| sync-from-vault.sh pull | Every 30min | Pulls identity/invariants/direction from vault-neo (tightened S145 from 6h) |
+| sync-from-vault.sh push | Every 1h | Pushes k2_local_observations.jsonl to /v1/ambient |
+| ingest_recent.sh | Every 4h | Synthesizes recent ledger entries → cortex + vault |
 
-| cc_bus_reader.py | Every 2min | Reads bus for `to: cc` messages, calls Anthropic API with CC identity, posts response back — **@cc is now reactive** |
-
-CC is now fully bidirectional on the bus.
-
-Chromium: /snap/bin/chromium + /usr/bin/chromium-browser (INSTALLED, last used 2026-03-09)
-K2 Ollama models: nemotron-mini:optimized (3.1GB, 100% GPU, 4096 ctx — VERIFIED LIVE S143)
+K2 Ollama models: qwen3.5:4b (2.5GB, 100% GPU, 32K ctx), nomic-embed-text
 
 ## P1 (PAYBACK / 100.124.194.102)
-Ollama: running (localhost:11434)
-P1_OLLAMA_MODEL=nemotron-mini:latest — RESOLVED (model exists, verified session 125)
-P1_OLLAMA_URL: http://100.124.194.102:11434
+| Service | Status |
+|---------|--------|
+| Ollama | RUNNING (localhost:11434) — qwen3.5:4b (32K, fallback cortex) |
+| julian_cortex_p1.py | RUNNING (port 7893, 123+ blocks, fallback) |
+| CC server (cc_server_p1.py) | RUNNING (port 7891, HKCU Run key) |
+| KarmaCortexSync (schtasks) | Every 30min — syncs K2→P1 cortex blocks |
+
+P1 Ollama models: qwen3.5:4b (2.5GB, 100% GPU, 32K ctx), nomic-embed-text
+
+## Model Routing (hub-bridge, Decision #35 S145)
+| Tier | Model | Cost | When |
+|------|-------|------|------|
+| 0 (cortex) | qwen3.5:4b (K2→P1 failover) | $0 | Recall pattern matched |
+| 1-2 (default) | gpt-5.4-mini | $0.75/$4.50 per 1M | Standard chat |
+| 3 (escalation) | gpt-5.4 | $2.50/$15.00 per 1M | Deep mode / complex |
+| Verifier | claude-sonnet-4-6 | $3.00/$15.00 per 1M | Structural changes (gated, default off) |
 
 ## Coordination Bus
-Endpoint: http://localhost:18090/v1/coordination (vault-neo internal) | https://hub.arknexus.net/v1/coordination
+Endpoint: hub.arknexus.net/v1/coordination
 Active agents: regent, kcc, cc, codex, colby
-Dispatch: NOT connected — no bus presence, no channel

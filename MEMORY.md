@@ -64,6 +64,8 @@ CC ── Claude Code on P1 — execution layer
 - **Rollback VERIFIED_ALREADY_PRESENT:** governor has _checkpoint(), spine_backup_pre_promote.json, git snapshots
 - **Mutation boundary VERIFIED:** write_memory→MEMORY.md (ambient). Spine writes→governor only.
 - **Aria VERIFIED:** running 18h, port 7890 bound, HTML UI served
+- **Stale docs FIXED:** services.md, data-flows.md, tools-and-apis.md all updated to S145 ground truth
+- **K2 sync tightened:** 6h→30min pull cron. P1 sync: every 30min schtasks. Spine defaults patched.
 
 ## Session 144 Progress (carried forward)
 - **julian_cortex.py** deployed on K2:7892 as julian-cortex.service (obs #18486)
