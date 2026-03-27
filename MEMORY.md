@@ -50,7 +50,11 @@ CC ── Claude Code on P1 — execution layer
 - **Task 3-2 DONE:** Cognitive split verified — recall→K2 cortex ($0), complex→Anthropic ($cost)
 - **Phase 4 COMPLETE:** P1 cortex running (7893), orchestrator failover K2→P1→cloud deployed, sync_k2_to_p1.py synced 106 blocks (P1 now 123 blocks matching K2)
 - **FOUNDATION PHASES 1-4 COMPLETE.** Phases 5-6 deferred-by-rule until Sovereign verifies.
-- **Gap analysis produced:** docs/architecture/bridge_evolution_gap_analysis.md — 22 matches, 15 missing, 7 contradictions vs target architecture. 9-phase implementation order defined.
+- **Gap analysis produced:** docs/architecture/bridge_evolution_gap_analysis.md — 9-phase implementation order
+- **3-tier model stack LIVE:** gpt-5.4-mini (default $0.75/$4.50) → gpt-5.4 (escalation $2.50/$15.00) → claude-sonnet-4-6 (verifier $3.00/$15.00)
+- **Tier-1 identity compressed:** 39346→1233 chars (97% token savings on simple turns)
+- **Pricing fixed:** hardcoded table for gpt-5.4-mini, gpt-5.4, claude models (was returning 1e9 sentinel)
+- **callGPTWithTools fixed:** max_completion_tokens for GPT-5.x (was max_tokens → 400 error)
 
 ## Session 144 Progress (carried forward)
 - **julian_cortex.py** deployed on K2:7892 as julian-cortex.service (obs #18486)

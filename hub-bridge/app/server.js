@@ -5,7 +5,7 @@ import { URL } from "url";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { pricePer1M, estimateUsd, validatePricingEnv } from "./lib/pricing.js";
-import { chooseModel, validateModelEnv, GlmRateLimiter, GLM_INGEST_SLOT_TIMEOUT_MS } from "./lib/routing.js";
+import { chooseModel, getVerifierModel, validateModelEnv, GlmRateLimiter, GLM_INGEST_SLOT_TIMEOUT_MS } from "./lib/routing.js";
 import { processFeedback, prunePendingWrites } from "./lib/feedback.js";
 import { resolveLibraryUrl } from "./lib/library_docs.js";
 import { generateIntentId, getSurfaceIntents, buildActiveIntentsText } from "./lib/deferred_intent.js";
@@ -2455,8 +2455,8 @@ async function callGPTWithTools(messages, maxTokens, model, writeId = null, aria
     let iterations = 0;
     const MAX_ITERATIONS = 12;
 
-    // Use passed-in model; fall back to MODEL_DEFAULT via chooseModel (Decision #2 — GLM primary)
-    const actualModel = model || chooseModel(false, env);
+    // Use passed-in model; fall back to MODEL_DEFAULT (Decision #35)
+    const actualModel = model || env.MODEL_DEFAULT || "gpt-5.4-mini";
     const isZaiModel = actualModel.startsWith("glm-");
     const providerName = (isZaiModel && zai) ? "zai" : "openai";
     console.log(`[TOOL-USE] Using model: ${actualModel} (requested: ${model})`);
@@ -2465,10 +2465,12 @@ async function callGPTWithTools(messages, maxTokens, model, writeId = null, aria
       iterations++;
       // Tool-use always via OpenAI (GLM models routed to callLLM for chat backbone)
       const client = (isZaiModel && zai) ? zai : openai;
+      // GPT-5.4+ models require max_completion_tokens instead of max_tokens
+      const tokenParam = actualModel.startsWith("gpt-5") ? { max_completion_tokens: maxTokens } : { max_tokens: maxTokens };
       const resp = await client.chat.completions.create({
         model: actualModel,
         messages: allMessages,
-        max_tokens: maxTokens,
+        ...tokenParam,
         tools: gptTools,
         tool_choice: "auto",
       });
@@ -2900,7 +2902,9 @@ const server = http.createServer(async (req, res) => {
 
       const deepHeader = (req.headers[DEEP_MODE_HEADER] || "").toString().toLowerCase();
       const deep_mode = ["1", "true", "yes", "on"].includes(deepHeader);
-      const model = deep_mode ? env.MODEL_DEEP : env.MODEL_DEFAULT;
+      // Decision #35: 3-tier model routing. Tier set after classifyMessageTier().
+      // deep_mode forces tier 3 (escalation). Otherwise tier from classifier.
+      // Model chosen AFTER tier is known (line below moved to post-classification).
 
       const month = currentMonthUTC();
       const spendPath = env.SPEND_STATE_PATH;
@@ -2918,9 +2922,8 @@ const server = http.createServer(async (req, res) => {
         return json(res, 402, { ok: false, error: "monthly_budget_exceeded", month_utc: month, cap_usd: cap, usd_spent: used_before });
       }
 
-      // GLM rate limit check — applies only to GLM (non-deep) path.
-      // NEVER silently failover to paid tier. Immediate 429 to caller.
-      if (!deep_mode && model.startsWith("glm-")) {
+      // GLM rate limit check — applies only when MODEL_DEFAULT is a GLM model.
+      if (!deep_mode && (env.MODEL_DEFAULT || "").startsWith("glm-")) {
         const rl = glmLimiter.checkAndConsume();
         if (!rl.allowed) {
           const retry_after = Math.ceil(rl.retryAfterMs / 1000);
@@ -3096,8 +3099,9 @@ const server = http.createServer(async (req, res) => {
         { role: "user", content: userContent },
       ];
 
-      // Claude primary routing: Haiku (standard) or Sonnet (deep), tools always available.
-      // Haiku primary. K2 Ollama blocked by system prompt size (33K chars too large for 8B local). Session 98.
+      // Decision #35: 3-tier model routing. Cortex handled above (cognitive split).
+      // tier 1-2 → gpt-5.4-mini (cheap). tier 3 → gpt-5.4 (frontier). Sonnet for verification.
+      const model = chooseModel(tier, env);
       const req_write_id = "wr_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
       const llmResult = await callLLMWithTools(model, messages, max_output_tokens, req_write_id, ariaSessionId);
       const assistantText = llmResult.text || "(empty_assistant_text)";

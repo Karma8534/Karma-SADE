@@ -1,13 +1,13 @@
-﻿/**
- * Pricing authority ΓÇö single source of truth for LLM cost estimation.
+/**
+ * Pricing authority — single source of truth for LLM cost estimation.
  *
- * Decision #2: GLM-4.7-Flash primary (free via Z.ai), gpt-4o-mini paid fallback.
- *
- * Rules:
- *   - GLM models: always $0 (Z.ai free tier, hardcoded ΓÇö no env var needed)
- *   - gpt-4o-mini: reads PRICE_GPT_4O_MINI_INPUT/OUTPUT_PER_1M from env
- *   - Anthropic: reads PRICE_CLAUDE_INPUT/OUTPUT_PER_1M from env
- *   - Unknown model: returns 1e9 (sentinel ΓÇö triggers cap enforcement defensively)
+ * Decision #35 (2026-03-26): 3-tier cost-optimal model stack.
+ *   - gpt-5.4-mini: $0.75/$4.50 per 1M (default)
+ *   - gpt-5.4: $2.50/$15.00 per 1M (escalation)
+ *   - claude-sonnet-4-6: $3.00/$15.00 per 1M (verifier)
+ *   - claude-haiku-4-5: $1.00/$5.00 per 1M (legacy)
+ *   - GLM models: $0 (Z.ai free tier)
+ *   - Unknown model: returns 1e9 (sentinel — triggers cap enforcement defensively)
  */
 
 function isGlmModel(model) {
@@ -18,26 +18,29 @@ function isAnthropicModel(model) {
   return typeof model === "string" && model.startsWith("claude-");
 }
 
+function isGpt5Model(model) {
+  return typeof model === "string" && model.startsWith("gpt-5");
+}
+
 /**
  * Validate that required pricing env vars are present.
- * Throws with a clear error message naming the missing vars.
  * @param {Record<string,string>} env
  */
 export function validatePricingEnv(env) {
-  const required = [
-    "PRICE_GPT_4O_MINI_INPUT_PER_1M",
-    "PRICE_GPT_4O_MINI_OUTPUT_PER_1M",
-  ];
-  const missing = required.filter(
-    (k) => !env[k] || isNaN(Number(env[k]))
-  );
-  if (missing.length > 0) {
-    throw new Error(
-      `[PRICING] Missing or non-numeric required env vars: ${missing.join(", ")}. ` +
-      "Set these in hub.env before starting the hub-bridge."
-    );
-  }
+  // No hard requirement on env vars — pricing is now hardcoded for known models.
+  // Env vars override if present.
 }
+
+// Hardcoded pricing (per 1M tokens) — updated 2026-03-26
+const PRICING = {
+  "gpt-5.4-mini":  { input: 0.75,  output: 4.50  },
+  "gpt-5.4":       { input: 2.50,  output: 15.00 },
+  "gpt-4o-mini":   { input: 0.15,  output: 0.60  },
+  // Anthropic pricing from env (allows override), defaults here
+  "claude-sonnet-4-6":          { input: 3.00, output: 15.00 },
+  "claude-haiku-4-5-20251001":  { input: 1.00, output: 5.00  },
+  "claude-3-5-haiku-20241022":  { input: 1.00, output: 5.00  },
+};
 
 /**
  * Return price per 1M tokens for a given model and direction.
@@ -47,24 +50,28 @@ export function validatePricingEnv(env) {
  * @returns {number}
  */
 export function pricePer1M(model, dir, env) {
-  // GLM models: Z.ai free tier ΓÇö always $0
+  // GLM models: Z.ai free tier
   if (isGlmModel(model)) return 0;
 
-  // Anthropic models
+  // Check hardcoded pricing table first
+  const entry = PRICING[model];
+  if (entry) {
+    return dir === "input" ? entry.input : entry.output;
+  }
+
+  // Anthropic fallback (unknown claude- model)
   if (isAnthropicModel(model)) {
     return dir === "input"
-      ? Number(env.PRICE_CLAUDE_INPUT_PER_1M)
-      : Number(env.PRICE_CLAUDE_OUTPUT_PER_1M);
+      ? Number(env.PRICE_CLAUDE_INPUT_PER_1M || "3.00")
+      : Number(env.PRICE_CLAUDE_OUTPUT_PER_1M || "15.00");
   }
 
-  // gpt-4o-mini (MODEL_DEEP)
-  if (model === "gpt-4o-mini") {
-    return dir === "input"
-      ? Number(env.PRICE_GPT_4O_MINI_INPUT_PER_1M)
-      : Number(env.PRICE_GPT_4O_MINI_OUTPUT_PER_1M);
+  // GPT-5.x fallback (unknown gpt-5 variant)
+  if (isGpt5Model(model)) {
+    return dir === "input" ? 2.50 : 15.00;
   }
 
-  // Unknown model ΓÇö sentinel value triggers cap enforcement defensively
+  // Unknown model — sentinel value triggers cap enforcement defensively
   return 1e9;
 }
 

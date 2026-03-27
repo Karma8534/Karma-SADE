@@ -1,15 +1,14 @@
 /**
  * Routing authority — single source of truth for model selection.
  *
- * Decision #3 (2026-03-10): Claude Haiku 3.5 primary for both standard and deep mode.
- * Decision #29 (2026-03-10): Migrated to claude-haiku-4-5-20251001 — haiku-20241022 RETIRED 2026-02-19.
- * (Replaced Decision #2: GLM-4.7-Flash / gpt-4o-mini)
+ * Decision #35 (2026-03-26, Session 145): 3-tier cost-optimal model stack.
+ *   - MODEL_DEFAULT (tier 1-2): gpt-5.4-mini ($0.75/$4.50 per 1M) — fast, cheap, tool-capable
+ *   - MODEL_ESCALATION (tier 3): gpt-5.4 ($2.50/$15.00 per 1M) — frontier reasoning
+ *   - MODEL_VERIFIER: claude-sonnet-4-6 — cross-provider second-opinion for structural changes
+ *   - Local cortex (tier 0): qwen3.5:4b on K2/P1 — recall, classification, $0
  *
- * Rules:
- *   - deep_mode=false (no x-karma-deep header): MODEL_DEFAULT (claude-haiku-4-5-20251001)
- *   - deep_mode=true  (x-karma-deep: true):     MODEL_DEEP   (claude-haiku-4-5-20251001)
- *   - Tool-use requests: same routing — routes through Anthropic SDK
- *   - GlmRateLimiter kept for compatibility but not invoked for claude- models
+ * Routing chain: cortex ($0) → gpt-5.4-mini ($) → gpt-5.4 ($$) → sonnet verifier ($$$)
+ * Strongest model is NOT default. Escalate only when complexity threshold crossed.
  */
 
 // ── GLM Rate Limiter ─────────────────────────────────────────────────────────
@@ -91,17 +90,37 @@ export const glmLimiter = new GlmRateLimiter({
 
 // ── Model routing ────────────────────────────────────────────────────────────
 
-/** Allowed values for MODEL_DEFAULT. */
-export const ALLOWED_DEFAULT_MODELS = ["claude-sonnet-4-6", "claude-haiku-4-5-20251001", "claude-3-5-haiku-20241022", "glm-4.7-flash"];
+/** Allowed values for MODEL_DEFAULT (tier 1-2: fast, cheap). */
+export const ALLOWED_DEFAULT_MODELS = [
+  "gpt-5.4-mini",
+  "claude-sonnet-4-6",
+  "claude-haiku-4-5-20251001",
+  "claude-3-5-haiku-20241022",
+  "glm-4.7-flash",
+];
 
-/** Allowed values for MODEL_DEEP. */
-export const ALLOWED_DEEP_MODELS = ["claude-haiku-4-5-20251001", "claude-3-5-haiku-20241022", "gpt-4o-mini", "claude-sonnet-4-6"];
+/** Allowed values for MODEL_ESCALATION (tier 3: frontier reasoning). */
+export const ALLOWED_ESCALATION_MODELS = [
+  "gpt-5.4",
+  "claude-sonnet-4-6",
+  "claude-haiku-4-5-20251001",
+  "gpt-4o-mini",
+];
 
-const DEFAULT_MODEL_DEFAULT = "claude-haiku-4-5-20251001";
-const DEFAULT_MODEL_DEEP    = "claude-haiku-4-5-20251001";
+/** Allowed values for MODEL_VERIFIER (cross-provider second opinion). */
+export const ALLOWED_VERIFIER_MODELS = [
+  "claude-sonnet-4-6",
+  "claude-haiku-4-5-20251001",
+  "gpt-5.4-mini",
+  "gpt-5.4",
+];
+
+const DEFAULT_MODEL_DEFAULT    = "gpt-5.4-mini";
+const DEFAULT_MODEL_ESCALATION = "gpt-5.4";
+const DEFAULT_MODEL_VERIFIER   = "claude-sonnet-4-6";
 
 /**
- * Validate model env vars at startup. Throws if either model is not in its allowed set.
+ * Validate model env vars at startup. Throws if any model is not in its allowed set.
  * @param {Record<string,string>} env
  */
 export function validateModelEnv(env) {
@@ -113,26 +132,47 @@ export function validateModelEnv(env) {
     );
   }
 
-  const deepModel = env.MODEL_DEEP || DEFAULT_MODEL_DEEP;
-  if (!ALLOWED_DEEP_MODELS.includes(deepModel)) {
+  const escalationModel = env.MODEL_ESCALATION || env.MODEL_DEEP || DEFAULT_MODEL_ESCALATION;
+  if (!ALLOWED_ESCALATION_MODELS.includes(escalationModel)) {
     throw new Error(
-      `[CONFIG] MODEL_DEEP="${deepModel}" not in allowed list: [${ALLOWED_DEEP_MODELS.join(", ")}]. ` +
-      "Fix MODEL_DEEP in hub.env. Refusing to start."
+      `[CONFIG] MODEL_ESCALATION="${escalationModel}" not in allowed list: [${ALLOWED_ESCALATION_MODELS.join(", ")}]. ` +
+      "Fix MODEL_ESCALATION in hub.env. Refusing to start."
+    );
+  }
+
+  const verifierModel = env.MODEL_VERIFIER || DEFAULT_MODEL_VERIFIER;
+  if (!ALLOWED_VERIFIER_MODELS.includes(verifierModel)) {
+    throw new Error(
+      `[CONFIG] MODEL_VERIFIER="${verifierModel}" not in allowed list: [${ALLOWED_VERIFIER_MODELS.join(", ")}]. ` +
+      "Fix MODEL_VERIFIER in hub.env. Refusing to start."
     );
   }
 }
 
 /**
- * Choose the model for a request.
- * Both chat and tool-use routes go through this function — no bypass.
+ * Choose the model for a request based on tier.
+ * Tier 0 = cortex (handled before this function).
+ * Tier 1-2 = default (gpt-5.4-mini). Tier 3 = escalation (gpt-5.4).
  *
- * @param {boolean} deepMode  — true if x-karma-deep header was set
+ * @param {number} tier - 1, 2, or 3
  * @param {Record<string,string>} env
  * @returns {string} model name
  */
-export function chooseModel(deepMode, env) {
-  if (deepMode) {
-    return env.MODEL_DEEP || DEFAULT_MODEL_DEEP;
+export function chooseModel(tier, env) {
+  if (tier >= 3) {
+    return env.MODEL_ESCALATION || env.MODEL_DEEP || DEFAULT_MODEL_ESCALATION;
   }
   return env.MODEL_DEFAULT || DEFAULT_MODEL_DEFAULT;
 }
+
+/**
+ * Get the verifier model for cross-provider second opinion.
+ * @param {Record<string,string>} env
+ * @returns {string} model name
+ */
+export function getVerifierModel(env) {
+  return env.MODEL_VERIFIER || DEFAULT_MODEL_VERIFIER;
+}
+
+// Legacy compatibility: chooseModel used to take (deepMode, env).
+// Now takes (tier, env). deep_mode=true → tier=3.
