@@ -68,7 +68,8 @@ CC ── Claude Code on P1 — execution layer
 - **K2 sync tightened:** 6h→30min pull cron. P1 sync: every 30min schtasks. Spine defaults patched.
 - **CRITICAL P058:** CC generated prompt content from stale context. Codex/KCC roles wrong in 3 files. Fixed to KO/KFH doctrine. Pitfall added to scope index.
 - **BUG FIX:** sync_k2_to_p1.py — encoding="utf-8" fix (P053). Delta-only sync working.
-- **/simplify 6 fixes:** synthesis nesting bug, RECALL_PATTERN hoisted, parallel health fetches, cortex feedback loop removed, cortexIngest HTTP error cascade, FAISS_SEARCH_URL reuse.
+- **/simplify 6 fixes:** synthesis nesting, RECALL_PATTERN hoist, parallel health, feedback loop, cortexIngest cascade, FAISS URL
+- **Automations deployed:** credential-guard hook (P060), memory-reminder hook, context7 MCP, Docker MCP, /simplify added to wrap-session Step 3.5
 
 ## Session 144 Progress (carried forward)
 - **julian_cortex.py** deployed on K2:7892 as julian-cortex.service (obs #18486)

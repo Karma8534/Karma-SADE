@@ -26,6 +26,26 @@
             "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-worktree.py\""
           }
         ]
+      },
+      {
+        "matcher": "Read|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/credential-guard.py\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/memory-reminder.py\""
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
