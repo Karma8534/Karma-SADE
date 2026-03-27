@@ -102,7 +102,7 @@
 | CD1 | Hub-bridge is BOTH persona surface AND orchestrator AND partial evaluator. Target says these are separate roles. | server.js, architecture.md | Accept as implementation reality. Hub-bridge IS the orchestrator. Logical separation (functions, not services) is sufficient for current scale. |
 | CD2 | services.md lists K2 Ollama model as "nemotron-mini:optimized" but PLAN.md and MEMORY.md say qwen3.5:4b | services.md vs PLAN.md | services.md is stale. qwen3.5:4b is ground truth (verified this session). |
 | CD3 | data-flows.md shows hub-bridge routing to "claude-haiku-4-5-20251001 with TOOL_DEFINITIONS" but cognitive split now routes recall to cortex | data-flows.md vs server.js | data-flows.md is stale. Cognitive split is live. |
-| CD4 | tools-and-apis.md says MODEL_DEEP is "claude-haiku-4-5-20251001 (both slots same)" but target wants GPT-5.4 mini default | tools-and-apis.md vs target | Model selection is a Sovereign decision. Current: Haiku. Target: GPT-5.4 mini. See §2.8. |
+| CD4 | ~~tools-and-apis.md says MODEL_DEEP is "claude-haiku-4-5-20251001"~~ | RESOLVED S145 | GPT-5.4 mini default, GPT-5.4 escalation, Sonnet verifier deployed and verified. |
 | CD5 | karma_contract_execution.md routing cascade: "K2 Ollama → P1 Ollama → z.ai → Groq → Claude" but hub-bridge /v1/chat routes to Anthropic directly (cognitive split notwithstanding) | execution.md vs server.js | Two routing paths exist: (1) karma-regent uses cascade, (2) hub-bridge /v1/chat uses Anthropic direct. Target wants hub-bridge to also use cost-optimal cascade. |
 | CD6 | K2 vesper_identity_spine.json is treated as canonical but target says vault-neo is the ONLY canon | identity-state.md, policy.md | Policy says "vault-neo wins on conflict" but operationally K2 spine is the live version. Sync lag = drift window. |
 | CD7 | STATE.md says "Nemotron 9B v2 pulled" (line 5) while PLAN.md says qwen3.5:4b | STATE.md vs PLAN.md | STATE.md is stale (last updated Session 143). PLAN.md is current (updated this session). |
@@ -158,7 +158,7 @@
 
 | Priority | Blocker | Impact | Fix |
 |----------|---------|--------|-----|
-| P0 | **Anthropic API credits exhausted** | Cloud path returns 400. Persona-quality conversation blocked. Only cortex $0 recall works. | Sovereign action: add billing at console.anthropic.com OR switch to GPT-5.4 mini per target. |
+| ~~P0~~ | ~~**Anthropic API credits exhausted**~~ | RESOLVED S145. Credits restored. GPT-5.4 mini deployed as default. | No action needed. |
 | P1 | **No rollback mechanism** | Bad promotion is permanent. Must manually revert spine JSON. | Build governor checkpoint + automated rollback on regression. |
 | P2 | **K2→vault-neo sync lag (6h)** | K2 crash = up to 6h of spine state lost. | Reduce sync to 30min or event-driven (on every promotion). |
 | P3 | **No canary before promotion** | Promoted patterns affect all users immediately. | Add canary runner: K2 tests reasoning-side, P1 tests action-side. |
@@ -501,7 +501,7 @@ CANONICAL → ROLLED BACK (on regression detection)
 
 2. **Execute Phases 1-3 as a single sprint.** They are interdependent and together deliver: vault authority hardening, observability (status/trace), and cost-optimal routing. This is the foundation the target architecture requires.
 
-3. **Defer model provider decision to Phase 3.** The target specifies GPT-5.4 mini but the current system is all-Anthropic. This is a meaningful migration. Sovereign should decide: (a) stay Anthropic with Haiku default + Sonnet escalation, (b) switch to OpenAI with GPT-5.4 mini default + GPT-5.4 escalation + Claude verifier, or (c) hybrid. Each has trade-offs in cost, quality, and migration effort.
+3. **Model provider decision MADE (S145).** GPT-5.4 mini default + GPT-5.4 escalation + Claude Sonnet verifier. Deployed and verified. Hybrid: OpenAI for chat, Anthropic for verification.
 
 4. **The current system is closer to target than it appears.** The five-layer model (corrected this session), the Vesper pipeline, the cognitive split, the cortex, the coordination bus, the governance gates — these are all real infrastructure that maps to the target. The gaps are mostly in observability (no dashboard, no trace), formalized promotion (no canary, no rollback), and cost discipline (no per-model budgets, no compression).
 

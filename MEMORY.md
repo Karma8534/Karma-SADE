@@ -16,7 +16,7 @@
 SPINE ── vault ledger + FalkorDB + FAISS + MEMORY.md + persona + claude-mem (vault-neo)
 ORCHESTRATOR ── hub-bridge routing + buildSystemText + cc_regent + karma-regent + resurrect
 CORTEX ── qwen3.5:4b 32K on K2 (primary) / P1 (fallback) — working memory, NOT identity
-CLOUD ── Anthropic API — deep reasoning ($cost) — BLOCKED: credits exhausted
+CLOUD ── GPT-5.4 mini (default) / GPT-5.4 (escalation) / Sonnet (verifier)
 CC ── Claude Code on P1 — execution layer
 ```
 
@@ -92,7 +92,7 @@ CC ── Claude Code on P1 — execution layer
 - Ollama in WSL2: NOT at localhost:11434 — use Windows gateway IP
 
 ## Open Blockers
-- **Anthropic API credits exhausted** — Haiku path returns 400. Cortex $0 path is only working chat path.
+- **Anthropic API credits RESOLVED** — Sovereign confirmed S145. Cloud path operational. Default: GPT-5.4 mini. Escalation: GPT-5.4. Verifier: Sonnet.
 - **Chrome 146 CDP:** Phase 5 (deferred-by-rule).
 - **B4 reboot:** CC server reboot survival unverified. Sovereign action.
 
@@ -107,7 +107,7 @@ CC ── Claude Code on P1 — execution layer
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Phase 2, Task 2-1: Rewrite resurrect skill — replace 20-file reads with one cortex call (`curl K2:7892/context`)
-3. Fix Anthropic API 400 "credit balance too low" — check billing, update key if needed
-4. Phase 3, Task 3-2: Cognitive split routing — orchestrator routes standard→cortex ($0), complex→cloud ($cost)
-**S144 DONE:** cortex LIVE (K2:7892 + P1:7893, 22+ blocks), cognitive split LIVE (recall→cortex $0, complex→Haiku), synthesis injection LIVE, automated synthesis LIVE, L_karma v2.2, ORF, resurrect v2, wrap-session v2, P1 fallback (16 blocks synced from K2), failover verified. Tools enabled ALL modes. P1 cortex reboot survival (Startup VBS). CRITICAL: Anthropic API credits exhausted — cortex $0 path is ONLY working chat path.
+2. Build regression detector in vesper_eval.py — rolling baseline comparison, emit REGRESSION signal on >5% drop
+3. Wire bus reader (cc_bus_reader.py) to use K2 cortex first, Anthropic fallback only
+4. Add per-model daily budget caps in hub-bridge spend tracking
+**S145 DONE:** Architecture reconciliation (5-layer model), GPT-5.4 mini default + GPT-5.4 escalation + Sonnet verifier, /v1/status + /v1/trace live, cost logging JSONL, verifier seam, tier-1 identity 97% compressed, foundation phases 1-4 complete, cognitive split verified, P1 failover + sync every 30min, K2 sync tightened 6h→30min, spine defaults fixed, all docs updated, gap analysis produced.

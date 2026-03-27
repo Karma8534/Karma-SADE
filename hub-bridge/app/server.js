@@ -4467,10 +4467,8 @@ form.addEventListener("submit", async e => {
 // Structured single-line error + process.exit(1) so Docker restart logs are clear.
 try {
   validateModelEnv(env);
-  // Price validation only applies when MODEL_DEEP is a paid model (not GLM).
-  if (!((env.MODEL_DEEP || "gpt-4o-mini").startsWith("glm-"))) {
-    validatePricingEnv(env);
-  }
+  // Price validation — hardcoded pricing table covers all known models.
+  validatePricingEnv(env);
 } catch (e) {
   console.error(`[CONFIG ERROR] ${e.message}`);
   process.exit(1);
