@@ -284,7 +284,7 @@ function loadDirectionMd() {
 let _synthesisCacheText = "";
 async function loadSynthesisCache() {
   try {
-    const r = await fetch("http://anr-vault-search:8081/v1/search", {
+    const r = await fetch(FAISS_SEARCH_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query: "synthesis session decisions insights pitfalls", limit: 1 }),
@@ -490,12 +490,14 @@ const P1_CORTEX_URL = process.env.P1_CORTEX_URL || "http://100.124.194.102:7893"
 function cortexIngest(label, text) {
   const body = JSON.stringify({ label, text: (text || "").slice(0, 500) });
   const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
-  fetch(K2_CORTEX_URL + "/ingest", opts).catch(() => {
-    // K2 down, try P1 fallback
-    fetch(P1_CORTEX_URL + "/ingest", opts).catch(e =>
-      console.error("[CORTEX] ingest failed (both K2+P1):", e.message)
-    );
-  });
+  fetch(K2_CORTEX_URL + "/ingest", opts)
+    .then(r => { if (!r.ok) throw new Error(`K2 HTTP ${r.status}`); })
+    .catch(() => {
+      // K2 down or HTTP error, try P1 fallback
+      fetch(P1_CORTEX_URL + "/ingest", opts)
+        .then(r => { if (!r.ok) console.error("[CORTEX] P1 ingest HTTP", r.status); })
+        .catch(e => console.error("[CORTEX] ingest failed (both K2+P1):", e.message));
+    });
 }
 const ARIA_SERVICE_KEY = process.env.ARIA_SERVICE_KEY || "";
 
@@ -968,6 +970,7 @@ function getRecentCoordination(agentName) {
 const TIER3_KEYWORDS = /\b(deep|analy[sz]e|architecture|design|explain\s+in\s+detail|diagnos[ei])\b/i;
 const TIER2_KEYWORDS = /\b(kiki|codex|k2|deploy|build|code|file|graph|debug|fix|bug|test|checkpoint|phase|plan|remember|memory|forget|tool|vault|ledger|falkor)\b/i;
 const TIER2_K2_KEYWORDS = /\b(kiki|k2|codex|aria)\b/i;
+const RECALL_PATTERN = /^(what|when|who|where|how|which|do you|did|have we|tell me about|remind me|what happened|session \d|recall|remember)/i;
 
 function classifyMessageTier(userMessage, deepMode) {
   if (deepMode) return 3;
@@ -1050,11 +1053,11 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
   // Memory spine — always (all tiers) — critical for Karma's continuity
   if (memoryMd) {
     text += `\n\n--- KARMA MEMORY SPINE (recent) ---\n${memoryMd}\n---`;
+  }
 
-  // Recent session synthesis - always injected for continuity
+  // Recent session synthesis — always injected (independent of memoryMd)
   if (_synthesisCacheText) {
     text += "\n\n--- RECENT SESSION SYNTHESIS ---\n" + _synthesisCacheText + "\n---";
-  }
   }
 
   // K2 memory graph — Tier 3 only (Aria's local peer memory)
@@ -2782,8 +2785,10 @@ const server = http.createServer(async (req, res) => {
       const token = bearerToken(req);
       if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) return json(res, 401, { ok: false, error: "unauthorized" });
       const spendState = loadSpendState(env.SPEND_STATE_PATH);
-      const cortexHealth = await fetch(K2_CORTEX_URL + "/health", { signal: AbortSignal.timeout(3000) }).then(r => r.json()).catch(() => ({ ok: false }));
-      const p1Health = await fetch(P1_CORTEX_URL + "/health", { signal: AbortSignal.timeout(3000) }).then(r => r.json()).catch(() => ({ ok: false }));
+      const [cortexHealth, p1Health] = await Promise.all([
+        fetch(K2_CORTEX_URL + "/health", { signal: AbortSignal.timeout(3000) }).then(r => r.json()).catch(() => ({ ok: false })),
+        fetch(P1_CORTEX_URL + "/health", { signal: AbortSignal.timeout(3000) }).then(r => r.json()).catch(() => ({ ok: false })),
+      ]);
       return json(res, 200, {
         ok: true, ts: new Date().toISOString(),
         models: { default: env.MODEL_DEFAULT, escalation: env.MODEL_ESCALATION || env.MODEL_DEEP, verifier: env.MODEL_VERIFIER },
@@ -2986,8 +2991,7 @@ const server = http.createServer(async (req, res) => {
       const tier = classifyMessageTier(userMessage, deep_mode);
 
       // --- PHASE 3-2: Cognitive split — cortex-first for recall questions ---
-      // Orchestrator routes: K2 cortex ($0) → P1 cortex ($0) → Anthropic cloud ($cost)
-      const RECALL_PATTERN = /^(what|when|who|where|how|which|do you|did|have we|tell me about|remind me|what happened|session \d|recall|remember)/i;
+      // Orchestrator routes: K2 cortex ($0) → P1 cortex ($0) → cloud ($cost)
       const isRecall = !deep_mode && userMessage.length < 300 && RECALL_PATTERN.test(userMessage.trim());
       if (isRecall) {
         const cortexUrls = [
@@ -3007,7 +3011,7 @@ const server = http.createServer(async (req, res) => {
               const cortexAnswer = (cortexData.answer || "").trim();
               if (cortexAnswer.length > 30 && !cortexAnswer.startsWith("[CORTEX ERROR")) {
                 console.log(`[COGNITIVE_SPLIT] recall routed to ${cortex.label} cortex ($0):`, userMessage.slice(0, 60));
-                cortexIngest("recall-" + Date.now(), "[Q] " + userMessage.slice(0, 100) + " [A] " + cortexAnswer.slice(0, 300));
+                // NOT re-ingesting recall answers back to cortex — prevents feedback loop (simplify Agent 3 #6)
                 // Cost log for cortex ($0) response
                 try { fs.appendFileSync("/run/state/request_cost.jsonl", JSON.stringify({ ts: new Date().toISOString(), model: `qwen3.5:4b (${cortex.label})`, tier: 0, usd: 0, cognitive_split: true, provider: cortex.label.toLowerCase() }) + "\n"); } catch {}
                 return json(res, 200, {
