@@ -62,6 +62,17 @@ CC ── Claude Code on P1 — execution layer
 - **Verifier hook seam:** callVerifier() wired, gated by VERIFIER_ENABLED env var (default: off)
 - **Cost logging:** every chat request appends to /run/state/request_cost.jsonl
 - **Rollback VERIFIED_ALREADY_PRESENT:** governor has _checkpoint(), spine_backup_pre_promote.json, git snapshots
+
+## Session 147 — Forensic Reconciliation (2026-03-27)
+- **S147 directive:** Fix all wrongs identified in forensic pass of 17 ForColby files
+- **routing.js:** MODEL_DEEP zombie removed from chooseModel() + validateModelEnv() (#M9)
+- **server.js:109:** Distillation model hardcode fixed → process.env.MODEL_DEFAULT (#M1)
+- **bus_to_cortex.py:** datetime.utcnow() → datetime.now(timezone.utc) (#M5)
+- **PLAN.md:** Cloud layer corrected — GPT-5.4 mini/GPT-5.4/Sonnet (was "Anthropic API") (#T1.4/5)
+- **cc-big-picture.md + MEMORY.md:** 1283→1284 promotions, v38+→v1242 spine version (#M8, #T1.1-3)
+- **Already fixed (confirmed):** synthesis nesting, recall feedback loop, cortexIngest cascade
+- **vesper_eval.py (K2):** _check_regression() added — rolling 20-entry baseline, >5% drop → REGRESSION signal to audit + bus (#T2.5)
+- **hub-bridge deployed:** v2.12.0, restart count 0
 - **Mutation boundary VERIFIED:** write_memory→MEMORY.md (ambient). Spine writes→governor only.
 - **Aria VERIFIED:** running 18h, port 7890 bound, HTML UI served
 - **Stale docs FIXED:** services.md, data-flows.md, tools-and-apis.md all updated to S145 ground truth

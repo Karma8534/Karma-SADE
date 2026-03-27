@@ -8,6 +8,7 @@ on numeric-only evidence dicts.
 """
 import json
 import os
+import urllib.request
 from pathlib import Path
 
 import regent_benchmarks as benchmarks
@@ -84,6 +85,77 @@ def _model_score(candidate: dict, suites: dict) -> tuple:
         return {}, source
 
 
+
+
+def _check_regression(cycle_metrics, window=20, threshold=0.05):
+    """Rolling baseline comparison. Emits REGRESSION signal on >5% drop in key metrics."""
+    if not cycle_metrics:
+        return
+    key = ["identity_consistency", "persona_style"]
+    curr = {}
+    for m in key:
+        vals = [e.get(m, 0.0) for e in cycle_metrics if m in e]
+        if vals:
+            curr[m] = sum(vals) / len(vals)
+    if not curr:
+        return
+    past = [e for e in pipeline.read_jsonl(pipeline.EVAL_AUDIT)
+            if e.get("gate_metrics") and e.get("type") != "REGRESSION"]
+    baseline = past[-window:] if len(past) >= window else past
+    if len(baseline) < 3:
+        print(f"[eval] regression check: only {len(baseline)} baseline entries, skipping")
+        return
+    base = {}
+    for m in key:
+        vals = [e["gate_metrics"].get(m, 0.0) for e in baseline if m in e.get("gate_metrics", {})]
+        if vals:
+            base[m] = sum(vals) / len(vals)
+    drops = {}
+    for m in key:
+        if m in base and m in curr and base[m] > 0:
+            drop_frac = (base[m] - curr[m]) / base[m]
+            if drop_frac > threshold:
+                drops[m] = {
+                    "baseline": round(base[m], 4),
+                    "current": round(curr[m], 4),
+                    "drop_pct": round(100 * drop_frac, 2),
+                }
+    if not drops:
+        print(f"[eval] regression check: no drops above {threshold*100:.0f}% threshold")
+        return
+    msg = "REGRESSION: " + ", ".join(
+        f"{m}: {v['drop_pct']}% drop ({v['baseline']:.3f}->{v['current']:.3f})"
+        for m, v in drops.items()
+    )
+    print(f"[eval] {msg}")
+    pipeline.append_jsonl(pipeline.EVAL_AUDIT, {
+        "ts": pipeline.iso_utc(),
+        "type": "REGRESSION",
+        "regressions": drops,
+        "baseline_window": len(baseline),
+        "cycle_count": len(cycle_metrics),
+        "message": msg,
+    })
+    token = os.environ.get("HUB_AUTH_TOKEN", "")
+    if token:
+        try:
+            payload = json.dumps({
+                "from": "vesper-eval", "to": "all",
+                "type": "alert", "urgency": "important",
+                "content": msg,
+            }).encode()
+            req = urllib.request.Request(
+                "https://hub.arknexus.net/v1/coordination/post",
+                data=payload,
+                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                method="POST",
+            )
+            urllib.request.urlopen(req, timeout=10)
+            print("[eval] REGRESSION posted to coordination bus")
+        except Exception as e:
+            print(f"[eval] bus post failed: {e}")
+
+
 def run_eval():
     pipeline.ensure_pipeline_dirs()
     suites = benchmarks.ensure_default_suites(pipeline.EVAL_ROOT)
@@ -94,6 +166,7 @@ def run_eval():
         return 0, 0
 
     approved = rejected = 0
+    cycle_metrics = []  # regression baseline feed
 
     for path in candidates:
         candidate = pipeline.read_json(path, {})
@@ -176,6 +249,7 @@ def run_eval():
                         for k in ("identity_consistency", "persona_style",
                                   "session_continuity", "task_completion")}
 
+        cycle_metrics.append(gate_metrics)  # regression detection
         decision = governance.resolve_governor_decision(gate_metrics, candidate_type=ctype)
 
         eval_doc = {
@@ -243,6 +317,20 @@ def run_eval():
             print(f"[eval] REJECTED {ctype}: {', '.join(failures)}")
 
     print(f"[eval] done: {approved} approved, {rejected} rejected")
+    _check_regression(cycle_metrics)
+
+    # Autoresearch primitive: log composite quality score each eval cycle
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["python3", "/mnt/c/dev/Karma/k2/aria/karma_quality_score.py"],
+            capture_output=True, text=True, timeout=10
+        )
+        if result.returncode == 0:
+            print(f"[eval] {result.stdout.strip().splitlines()[0]}")
+    except Exception as e:
+        print(f"[eval] quality score failed: {e}")
+
     return approved, rejected
 
 
