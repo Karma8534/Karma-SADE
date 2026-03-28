@@ -1,0 +1,15 @@
+{
+  "_comment": "Task 7-6: File restriction patterns. KO/KFH doctrine enforcement.",
+  "restrictions": [
+    {
+      "pattern": "Memory/00-karma-system-prompt-live.md",
+      "reason": "System prompt is Sovereign-only",
+      "allow": ["colby"]
+    },
+    {
+      "pattern": "CLAUDE.md",
+      "reason": "CLAUDE.md requires explicit user approval (per CLAUDE.md Critical Rules)",
+      "allow": ["colby"]
+    }
+  ]
+}

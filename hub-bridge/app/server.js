@@ -279,6 +279,34 @@ function loadDirectionMd() {
   } catch (_) {}
 }
 
+// ── Modes config — hot-reloaded every 5min ──
+const MODES_JSON_PATH = "/karma/repo/Memory/modes.json";
+let _modesConfig = {
+  nexus: { token_budget: 16000, sections: "*", tools: "*" },
+};
+function loadModesConfig() {
+  try {
+    const raw = fs.readFileSync(MODES_JSON_PATH, "utf8");
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") {
+      delete parsed._comment;
+      _modesConfig = { ..._modesConfig, ...parsed };
+      console.log("[MODES] loaded", Object.keys(_modesConfig).filter(k => k !== "_comment").join(", "));
+    }
+  } catch (e) { console.warn("[MODES] load failed (using defaults):", e.message); }
+}
+function tierToMode(_tier) { return "nexus"; } // One mode. All tools. Always.
+function getModeConfig(modeName) { return _modesConfig[modeName] || _modesConfig["nexus"]; }
+
+// ── Tool scoping ──
+function getToolsForMode(modeName) {
+  const mode = getModeConfig(modeName);
+  if (!mode || mode.tools === "*") return TOOL_DEFINITIONS;
+  if (!mode.tools || mode.tools.length === 0) return [];
+  const allowed = new Set(mode.tools);
+  return TOOL_DEFINITIONS.filter(t => allowed.has(t.name));
+}
+
 // Synthesis cache - most recent [SYNTHESIS] entry from vault via FAISS.
 // Refreshed every 5min. Injected into buildSystemText for session continuity.
 let _synthesisCacheText = "";
@@ -485,6 +513,8 @@ const ARIA_URL = process.env.ARIA_URL || "http://100.75.109.92:7890";
 // Julian cortex endpoints (K2 primary, P1 fallback)
 const K2_CORTEX_URL = process.env.K2_CORTEX_URL || "http://100.75.109.92:7892";
 const P1_CORTEX_URL = process.env.P1_CORTEX_URL || "http://100.124.194.102:7893";
+const CORTEX_REFUSAL = /\b(I cannot|I can't|I don't have|I do not have|unable to|not able to|no access|cannot access)\b/i;
+const CHARS_PER_TOKEN_ESTIMATE = 4;
 
 // Fire-and-forget cortex ingest (non-blocking)
 function cortexIngest(label, text) {
@@ -890,27 +920,80 @@ try {
  * Query the FAISS semantic search service for relevant ledger entries.
  * Returns a formatted string of top-K results, or null on failure.
  */
+// Stopwords excluded from entity frequency extraction (common English words)
+const FAISS_STOPWORDS = new Set([
+  "the","a","an","is","was","are","were","be","been","being","have","has","had",
+  "do","does","did","will","would","shall","should","may","might","must","can","could",
+  "i","you","he","she","it","we","they","me","him","her","us","them","my","your","his",
+  "its","our","their","this","that","these","those","and","but","or","nor","not","no",
+  "so","if","then","than","too","very","just","about","up","out","on","off","over","under",
+  "again","further","once","here","there","when","where","why","how","all","each","every",
+  "both","few","more","most","other","some","such","only","own","same","of","in","to","for",
+  "with","at","by","from","as","into","through","during","before","after","above","below",
+  "between","because","until","while","what","which","who","whom","new","also","like","get",
+  "got","one","two","said","know","see","use","used","using","many","way","time","make",
+]);
+
 async function fetchSemanticContext(userMessage, topK = FAISS_SEARCH_K) {
   if (!FAISS_ENABLED || !userMessage) return null;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 4000);
   try {
+    // Over-fetch 3x to have enough candidates for sqrt dampening re-rank
+    const fetchLimit = topK * 3;
     const r = await fetch(FAISS_SEARCH_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: userMessage.slice(0, 500), limit: topK }),
+      body: JSON.stringify({ query: userMessage.slice(0, 500), limit: fetchLimit }),
       signal: controller.signal,
     });
     clearTimeout(timer);
     if (!r.ok) return null;
     const body = await r.json();
     if (!body.results || body.results.length === 0) return null;
-    const lines = body.results.map((res) => {
+
+    // --- sqrt dampening (Aider pattern) ---
+    // 1. Extract significant tokens from each result's content_preview
+    const tokenize = (text) => {
+      if (!text) return [];
+      return text.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/)
+        .filter(w => w.length > 2 && !FAISS_STOPWORDS.has(w));
+    };
+
+    // 2. Tokenize once per result, count global frequency
+    const globalFreq = new Map();
+    const tokensPerResult = new Map();
+    for (const res of body.results) {
+      const tokens = tokenize(res.content_preview);
+      tokensPerResult.set(res, tokens);
+      for (const tok of new Set(tokens)) { // unique per result for freq counting
+        globalFreq.set(tok, (globalFreq.get(tok) || 0) + 1);
+      }
+    }
+
+    // 3. Compute dampened score using cached tokens
+    const scored = body.results.map((res) => {
+      const sim = res.similarity_score || 0;
+      const tokens = tokensPerResult.get(res);
+      if (tokens.length === 0) return { res, dampened: sim };
+      const dampenSum = tokens.reduce((sum, tok) => {
+        const freq = globalFreq.get(tok) || 1;
+        return sum + (1 / Math.sqrt(freq));
+      }, 0);
+      const avgDampen = dampenSum / tokens.length;
+      return { res, dampened: sim * avgDampen };
+    });
+
+    // 4. Re-rank by dampened score, take top-K
+    scored.sort((a, b) => b.dampened - a.dampened);
+    const topResults = scored.slice(0, topK);
+
+    const lines = topResults.map(({ res, dampened }) => {
       const ts = res.timestamp ? res.timestamp.slice(0, 10) : "?";
-      const score = res.similarity_score ? `(rel: ${res.similarity_score})` : "";
+      const score = `(rel: ${dampened.toFixed(3)})`;
       return `[${ts}] ${score} ${res.content_preview}`;
     });
-    return `--- SEMANTIC MEMORY (relevant to current question, ${body.total_indexed} total indexed) ---\n` +
+    return `--- SEMANTIC MEMORY (relevant to current question, ${body.total_indexed} total indexed, sqrt-dampened) ---\n` +
       lines.join("\n") +
       "\n---";
   } catch {
@@ -988,95 +1071,66 @@ function getIdentityForTier(tier) {
   return KARMA_IDENTITY_PROMPT;
 }
 
-function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticCtx = null, memoryMd = null, activeIntentsText = null, k2MemCtx = null, k2WorkingMemCtx = null, coordinationCtx = null, tier = 3) {
-  // === STATIC BLOCK (cacheable — changes only on restart/5min refresh) ===
-  // Identity block — loaded from file at startup. Describes Karma's actual architecture,
-  // capability boundaries, data model corrections, and API surface.
-  // File is volume-mounted; future updates: git pull + container restart (no rebuild needed).
-  const tierIdentity = getIdentityForTier(tier);
-  const identityBlock = tierIdentity
-    ? tierIdentity + "\n\n---\n\n"
-    : "";
+// ── Prompt Section Registry (Task 7-4) + Token Budget Trimming (Task 7-2) ──
+// Section presentation order (stable across modes)
+const SECTION_ORDER = ["identity", "direction", "self_knowledge", "intents", "karma_ctx", "semantic", "web", "karma_brief", "distillation", "session", "memory", "synthesis", "k2_memory", "k2_working", "coordination"];
+// Sections in the static (cacheable) block — rest go in volatile
+const STATIC_SECTIONS = new Set(["identity", "direction", "self_knowledge"]);
 
-  // Direction — Karma's current architectural direction, constraints, and stage.
-  // Loaded from direction.md at startup, refreshed every 5min.
-  // Direction — Tier 3 only (large architectural context not needed for casual chat)
-  const directionBlock = (tier >= 3 && _directionMdCache)
-    ? `\n--- KARMA DIRECTION (current architecture & stage) ---\n${_directionMdCache}\n---\n\n`
-    : "";
+function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticCtx = null, memoryMd = null, activeIntentsText = null, k2MemCtx = null, k2WorkingMemCtx = null, coordinationCtx = null, tier = 3, modeName = null) {
+  const mode = getModeConfig(modeName || tierToMode(tier));
+  const allowedSections = mode.sections === "*" ? null : new Set(mode.sections);
 
-  // Self-knowledge prefix — Karma can accurately self-report her own infrastructure.
   const selfModel = process.env.MODEL_DEFAULT || "claude-sonnet-4-6";
-  const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/60min, web_search=auto_on_intent]\n\n`;
+  const tierIdentity = getIdentityForTier(tier);
+  const ckId = ckLatest?.checkpoint_id || ckLatest?.latest_checkpoint_fact?.content?.value?.checkpoint_id || "latest";
 
-  // Static portion: identity + direction + self-knowledge (stable across requests)
-  const staticText = identityBlock + directionBlock + selfKnowledge;
+  // Build all potential sections: { name, text, priority }
+  // Priority: higher = kept under budget pressure. Identity=100 (always kept), low-value=20.
+  const allSections = [
+    { name: "identity",      priority: 100, text: tierIdentity ? tierIdentity + "\n\n---\n\n" : "" },
+    { name: "direction",     priority: 40,  text: _directionMdCache ? `\n--- KARMA DIRECTION (current architecture & stage) ---\n${_directionMdCache}\n---\n\n` : "" },
+    { name: "self_knowledge", priority: 90, text: `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/60min, web_search=auto_on_intent]\n\n` },
+    { name: "intents",       priority: 70,  text: activeIntentsText ? activeIntentsText + "\n\n" : "" },
+    { name: "karma_ctx",     priority: 85,  text: karmaCtx
+        ? `You are Karma — Colby's thinking partner with persistent memory backed by a knowledge graph.\n\n${karmaCtx}\n\nMemory rules:\n- Use the context above. NEVER say "I don't know" about things in your memory.\n- Address the user as Colby — never by any alias.\n- Be concise, direct, warm. Reference specific knowledge when relevant.\n- Honest about uncertainty on things not in memory.`
+        : "You are Karma — Colby's thinking partner. No memory context available right now — answer from conversation only." },
+    { name: "semantic",      priority: 60,  text: semanticCtx ? `\n\n${semanticCtx}` : "" },
+    { name: "web",           priority: 55,  text: webResults ? `\n\n--- WEB SEARCH RESULTS ---\n${webResults}\n---\nUse these results to inform your response. Cite the source URL inline when drawing from a specific result.` : "" },
+    { name: "karma_brief",   priority: 35,  text: ckLatest?.karma_brief ? `\n\n--- KARMA SELF-KNOWLEDGE (${ckId}) ---\n${ckLatest.karma_brief}\n---` : "" },
+    { name: "distillation",  priority: 30,  text: ckLatest?.distillation_brief ? `\n\n--- KARMA GRAPH SYNTHESIS ---\n${ckLatest.distillation_brief}\n---` : "" },
+    { name: "session",       priority: 50,  text: _sessionBriefCache ? `\n\n--- CURRENT SESSION CONTEXT ---\n${_sessionBriefCache}\n---` : "" },
+    { name: "memory",        priority: 80,  text: memoryMd ? `\n\n--- KARMA MEMORY SPINE (recent) ---\n${memoryMd}\n---` : "" },
+    { name: "synthesis",     priority: 45,  text: _synthesisCacheText ? "\n\n--- RECENT SESSION SYNTHESIS ---\n" + _synthesisCacheText + "\n---" : "" },
+    { name: "k2_memory",     priority: 25,  text: k2MemCtx ? `\n\n--- ARIA K2 MEMORY GRAPH ---\n${k2MemCtx}\n---` : "" },
+    { name: "k2_working",    priority: 50,  text: k2WorkingMemCtx ? `\n\n--- K2 WORKING MEMORY + KIKI STATE ---\n${k2WorkingMemCtx}\n---` : "" },
+    { name: "coordination",  priority: 55,  text: coordinationCtx || "" },
+  ];
 
-  // === VOLATILE BLOCK (changes every request — never cached) ===
-  // Active Intents — behavioral rules matched to this request. Injected before karmaCtx.
-  const intentBlock = activeIntentsText ? activeIntentsText + "\n\n" : "";
+  // Filter: mode sections + non-empty
+  const filtered = allSections.filter(s => s.text.length > 0 && (!allowedSections || allowedSections.has(s.name)));
 
-  const base = karmaCtx
-    ? `You are Karma — Colby's thinking partner with persistent memory backed by a knowledge graph.\n\n${karmaCtx}\n\nMemory rules:\n- Use the context above. NEVER say "I don't know" about things in your memory.\n- Address the user as Colby — never by any alias.\n- Be concise, direct, warm. Reference specific knowledge when relevant.\n- Honest about uncertainty on things not in memory.`
-    : "You are Karma — Colby's thinking partner. No memory context available right now — answer from conversation only.";
-
-  let text = intentBlock + base;
-
-  // Semantic memory — Tier 2+ (top-K ledger entries from FAISS)
-  if (tier >= 2 && semanticCtx) {
-    text += `\n\n${semanticCtx}`;
+  // Token budget trimming (Task 7-2): sort by priority, accumulate until budget hit
+  const charBudget = (mode.token_budget || 16000) * CHARS_PER_TOKEN_ESTIMATE;
+  const byPriority = [...filtered].sort((a, b) => b.priority - a.priority);
+  let totalChars = 0;
+  const includedNames = new Set();
+  for (const s of byPriority) {
+    if (totalChars + s.text.length <= charBudget) {
+      includedNames.add(s.name);
+      totalChars += s.text.length;
+    }
   }
 
-  // Live web search results — Tier 2+ (only fires if search intent detected)
-  if (tier >= 2 && webResults) {
-    text += `\n\n--- WEB SEARCH RESULTS ---\n${webResults}\n---\nUse these results to inform your response. Cite the source URL inline when drawing from a specific result.`;
-  }
+  // Reassemble in presentation order (not priority order)
+  const included = filtered.filter(s => includedNames.has(s.name));
+  included.sort((a, b) => SECTION_ORDER.indexOf(a.name) - SECTION_ORDER.indexOf(b.name));
 
-  // Autonomous continuity: karma_brief — Tier 3 only
-  if (tier >= 3 && ckLatest && ckLatest.karma_brief) {
-    const ckId = ckLatest.checkpoint_id || ckLatest.latest_checkpoint_fact?.content?.value?.checkpoint_id || 'latest';
-    text += `\n\n--- KARMA SELF-KNOWLEDGE (${ckId}) ---\n${ckLatest.karma_brief}\n---`;
-  }
+  // Split static (cacheable) / volatile (per-request)
+  const staticText = included.filter(s => STATIC_SECTIONS.has(s.name)).map(s => s.text).join("");
+  const volatileText = included.filter(s => !STATIC_SECTIONS.has(s.name)).map(s => s.text).join("");
 
-  // Graph distillation — Tier 3 only
-  if (tier >= 3 && ckLatest && ckLatest.distillation_brief) {
-    text += `\n\n--- KARMA GRAPH SYNTHESIS ---\n${ckLatest.distillation_brief}\n---`;
-  }
-
-  // karmaCtx already injected in base above — do not duplicate it here.
-
-  // Session brief — Tier 2+
-  if (tier >= 2 && _sessionBriefCache) {
-    text += `\n\n--- CURRENT SESSION CONTEXT ---\n${_sessionBriefCache}\n---`;
-  }
-
-  // Memory spine — always (all tiers) — critical for Karma's continuity
-  if (memoryMd) {
-    text += `\n\n--- KARMA MEMORY SPINE (recent) ---\n${memoryMd}\n---`;
-  }
-
-  // Recent session synthesis — always injected (independent of memoryMd)
-  if (_synthesisCacheText) {
-    text += "\n\n--- RECENT SESSION SYNTHESIS ---\n" + _synthesisCacheText + "\n---";
-  }
-
-  // K2 memory graph — Tier 3 only (Aria's local peer memory)
-  if (tier >= 3 && k2MemCtx) {
-    text += `\n\n--- ARIA K2 MEMORY GRAPH ---\n${k2MemCtx}\n---`;
-  }
-
-  // K2 working memory — Tier 2+ (conditionally fetched based on keywords)
-  if (tier >= 2 && k2WorkingMemCtx) {
-    text += `\n\n--- K2 WORKING MEMORY + KIKI STATE ---\n${k2WorkingMemCtx}\n---`;
-  }
-
-  // Coordination bus — Tier 2+ (recent agent-to-agent messages)
-  if (tier >= 2 && coordinationCtx) {
-    text += coordinationCtx;
-  }
-
-  // Return split: static (cacheable prefix) + volatile (per-request context)
-  return { static: staticText, volatile: text };
+  return { static: staticText, volatile: volatileText };
 }
 
 /**
@@ -1691,6 +1745,17 @@ const TOOL_DEFINITIONS = [
         mode: { type: "string", enum: ["append", "replace"], description: "Write mode (default: append)" },
       },
       required: ["content"],
+    },
+  },
+  {
+    name: "k2_get_repo_map",
+    description: "Get a scored file map of the Karma SADE repo on vault-neo. Files ranked by recency + type weight. Returns up to 8K tokens. Use in deep mode to understand repo structure before code generation.",
+    input_schema: {
+      type: "object",
+      properties: {
+        repo_path: { type: "string", description: "Repo root path (default: /home/neo/karma-sade)" },
+        max_tokens: { type: "integer", description: "Max tokens for output (default: 8000)" },
+      },
     },
   },
   {
@@ -2368,7 +2433,8 @@ async function executeToolCall(toolName, toolInput, writeId = null, ariaSessionI
   }
 }
 
-async function callLLMWithTools(model, messages, maxTokens, writeId = null, ariaSessionId = null) {
+async function callLLMWithTools(model, messages, maxTokens, writeId = null, ariaSessionId = null, _scopedTools = null, _toolLog = null) {
+  const toolLog = _toolLog || [];
   if (!isAnthropicModel(model)) return callGPTWithTools(messages, maxTokens, model, writeId, ariaSessionId);
 
   const systemParts = messages.filter(m => m.role === "system").map(m => m.content);
@@ -2416,9 +2482,10 @@ async function callLLMWithTools(model, messages, maxTokens, writeId = null, aria
     // Cache-aware tool definitions: mark the last tool with cache_control
     // so tool schema prefix is cached (stable across all requests).
     // TTL: 1h (tool definitions never change at runtime — maximize cache lifetime)
-    const cachedTools = TOOL_DEFINITIONS.length > 0
-      ? TOOL_DEFINITIONS.map((t, i) => i === TOOL_DEFINITIONS.length - 1 ? { ...t, cache_control: { type: "ephemeral", ttl: "1h" } } : t)
-      : TOOL_DEFINITIONS;
+    const scopedTools = _scopedTools || TOOL_DEFINITIONS;
+    const cachedTools = scopedTools.length > 0
+      ? scopedTools.map((t, i) => i === scopedTools.length - 1 ? { ...t, cache_control: { type: "ephemeral", ttl: "1h" } } : t)
+      : scopedTools;
 
     let resp;
     try {
@@ -2446,6 +2513,7 @@ async function callLLMWithTools(model, messages, maxTokens, writeId = null, aria
         usage: { prompt_tokens: inputTokens, completion_tokens: resp.usage?.output_tokens || 0, total_tokens: inputTokens + (resp.usage?.output_tokens || 0), cache_read: cacheRead, cache_create: cacheCreate },
         finish_reason: resp.stop_reason || null,
         provider: "anthropic",
+        tool_log: toolLog.length ? toolLog : undefined,
       };
     }
 
@@ -2453,6 +2521,7 @@ async function callLLMWithTools(model, messages, maxTokens, writeId = null, aria
     const toolResults = [];
     for (const toolUse of toolUseBlocks) {
       const toolResult = await executeToolCall(toolUse.name, toolUse.input, writeId, ariaSessionId);
+      toolLog.push({ tool: toolUse.name, input: toolUse.input, output: JSON.stringify(toolResult).slice(0, 2000) });
       toolResults.push({ type: "tool_result", tool_use_id: toolUse.id, content: JSON.stringify(toolResult) });
     }
     allMessages.push({ role: "user", content: toolResults });
@@ -2463,10 +2532,12 @@ async function callLLMWithTools(model, messages, maxTokens, writeId = null, aria
 
 // ── OpenAI GPT tool-calling (production tool-use for Karma) ────────────────────
 // OpenAI tool format differs from Anthropic. GPT-4o has reliable tool support.
-async function callGPTWithTools(messages, maxTokens, model, writeId = null, ariaSessionId = null) {
+async function callGPTWithTools(messages, maxTokens, model, writeId = null, ariaSessionId = null, _scopedTools = null, _toolLog = null) {
+  const toolLog = _toolLog || [];
   try {
     // Transform Anthropic schema (input_schema) to OpenAI schema (parameters)
-    const gptTools = TOOL_DEFINITIONS.map(t => ({
+    const scopedTools = _scopedTools || TOOL_DEFINITIONS;
+    const gptTools = scopedTools.map(t => ({
       type: "function",
       function: {
         name: t.name,
@@ -2509,6 +2580,7 @@ async function callGPTWithTools(messages, maxTokens, model, writeId = null, aria
         usage: resp.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
         finish_reason: finishReason,
         provider: providerName,
+        tool_log: toolLog.length ? toolLog : undefined,
       };
     }
 
@@ -2519,6 +2591,7 @@ async function callGPTWithTools(messages, maxTokens, model, writeId = null, aria
       const parsedArgs = call.function.arguments ? JSON.parse(call.function.arguments) : {};
       console.log(`[TOOL-USE] Executing tool: ${call.function.name} with args:`, JSON.stringify(parsedArgs));
       const result = await executeToolCall(call.function.name, parsedArgs, writeId, ariaSessionId);
+      toolLog.push({ tool: call.function.name, input: parsedArgs, output: JSON.stringify(result).slice(0, 2000) });
       if (result.error) {
         console.log(`[TOOL-USE] Tool ERROR: ${call.function.name} → ${result.error}`);
       } else {
@@ -3009,7 +3082,7 @@ const server = http.createServer(async (req, res) => {
             if (cortexResp.ok) {
               const cortexData = await cortexResp.json();
               const cortexAnswer = (cortexData.answer || "").trim();
-              if (cortexAnswer.length > 30 && !cortexAnswer.startsWith("[CORTEX ERROR")) {
+              if (cortexAnswer.length > 30 && !cortexAnswer.startsWith("[CORTEX ERROR") && !CORTEX_REFUSAL.test(cortexAnswer.slice(0, 200))) {
                 console.log(`[COGNITIVE_SPLIT] recall routed to ${cortex.label} cortex ($0):`, userMessage.slice(0, 60));
                 // NOT re-ingesting recall answers back to cortex — prevents feedback loop (simplify Agent 3 #6)
                 // Cost log for cortex ($0) response
@@ -3159,11 +3232,14 @@ const server = http.createServer(async (req, res) => {
       // tier 1-2 → gpt-5.4-mini (cheap). tier 3 → gpt-5.4 (frontier). Sonnet for verification.
       const model = chooseModel(tier, env);
       const req_write_id = "wr_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
-      const llmResult = await callLLMWithTools(model, messages, max_output_tokens, req_write_id, ariaSessionId);
+      const modeName = tierToMode(tier);
+      const scopedTools = getToolsForMode(modeName);
+      const llmResult = await callLLMWithTools(model, messages, max_output_tokens, req_write_id, ariaSessionId, scopedTools, []);
       const assistantText = llmResult.text || "(empty_assistant_text)";
       const usage         = llmResult.usage;
       const debug_provider   = llmResult.provider;
       const debug_stop_reason = llmResult.finish_reason;
+      const tool_log      = llmResult.tool_log || undefined;
 
       // Persist this exchange to session history (skip empty responses)
       if (assistantText !== "(empty_assistant_text)") {
@@ -3339,6 +3415,7 @@ const server = http.createServer(async (req, res) => {
         debug_karma_ctx: karmaCtx ? "ok" : "unavailable",
         debug_search,
         debug_ingest: ingestVerdict,
+        tool_log,
       });
     }
 
@@ -4492,6 +4569,8 @@ loadSynthesisCache(); setInterval(loadSynthesisCache, 5 * 60 * 1000);
 setInterval(loadMemoryMd, 5 * 60 * 1000);
 loadDirectionMd();
 setInterval(loadDirectionMd, 5 * 60 * 1000);
+loadModesConfig();
+setInterval(loadModesConfig, 5 * 60 * 1000);
 loadCoordinationFromDisk(); // restore coordination messages across rebuilds
 loadSessionsFromDisk();     // restore conversation history across rebuilds
 setInterval(evictExpiredCoordination, 60 * 60 * 1000); // coordination bus hourly sweep

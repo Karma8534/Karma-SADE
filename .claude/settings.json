@@ -28,6 +28,15 @@
         ]
       },
       {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/file-restriction-guard.py\""
+          }
+        ]
+      },
+      {
         "matcher": "Read|Bash",
         "hooks": [
           {

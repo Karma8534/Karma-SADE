@@ -1,0 +1,9 @@
+{
+  "_comment": "Karma mode definitions. One mode. All tools. Always.",
+  "nexus": {
+    "description": "The Nexus — full tools, full context, always",
+    "token_budget": 16000,
+    "sections": "*",
+    "tools": "*"
+  }
+}

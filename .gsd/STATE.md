@@ -627,6 +627,20 @@ Karma lost an entire conversation mid-session (2026-03-12 ~12:03 PM) after an `i
 
 **Active Blockers:** 16 (corpus_cc.jsonl tabled), 17 (P0-G dead code tabled), 18 (PROOF-A Task 4 pending)
 
+## Known Issues — Resolve After Nexus Stable (Session 149)
+
+| # | Issue | Severity | Context |
+|---|-------|----------|---------|
+| KI-1 | `buildSystemText` has 11 positional params — refactor to single `opts` object | Medium | Touches every call site (3+). Defer to avoid breakage during Nexus stabilization. |
+| KI-2 | `appendToolEvidence()` does not call `saveMessages()` — tool evidence lost on refresh | Low | Tool evidence is ephemeral by design (reconstructed from `tool_log` on next response). If persistence desired, add save call + serialization format for tool blocks. |
+| KI-3 | Section names in buildSystemText are unvalidated strings | Low | Typo in any of the 15 section names silently drops that section. Fix: validate names at startup against `SECTION_ORDER` array, or use constants. n=15 makes this low risk. |
+| KI-4 | `tierToMode()` is a vestigial function (always returns "nexus") | Low | Kept as the mode entry point. If modes are never re-added, delete and inline "nexus" at call sites. |
+| KI-5 | `getIdentityForTier(tier)` still branches on tier values | Low | With single nexus mode, tier distinctions in identity selection are dead. Simplify to always return `KARMA_IDENTITY_PROMPT`. |
+| KI-6 | `chooseModel(tier, env)` may have dead tier-based branches | Low | Verify whether model selection still varies by tier. If not, simplify. |
+| KI-7 | `appendToolEvidence` uses fragile DOM sibling navigation in inline onclick | Low | `this.previousElementSibling.textContent=...` breaks if DOM structure changes. Refactor to use data attributes + event delegation. |
+| KI-8 | Cascade dots in unified.html reference models (5.4-mini, 5.4, Sonnet) but MODEL_DEFAULT is now Haiku | Low | Cascade should reflect actual live routing chain. Update dots after model stack stabilizes. |
+
 ## Next Session Starts Here
 1. /resurrect
-2. PROOF-A Task 4: Post bus message `to=codex` → verify KCC detects → [ARCHONPRIME] response on bus within 60s (see .gsd/phase-proof-a-PLAN.md Task 4)
+2. Nexus end-to-end verification from browser (Colby tests live)
+3. PROOF-A Task 4: Post bus message `to=codex` → verify KCC detects → [ARCHONPRIME] response on bus within 60s

@@ -126,6 +126,36 @@
   .msg.user   .msg-body { background: #0a0a14; border: 1px solid #1f1f38; color: #9ca3af; }
   .msg.system .msg-body { background: #0a0a10; border: 1px solid #1a1a28; color: #6b7280; font-size: 11px; }
 
+  /* Tool evidence (Tool evidence) */
+  .msg.tool-evidence .msg-body {
+    background: #0c0c18; border: 1px solid #1a1a3a; border-left: 3px solid #f59e0b;
+    color: #9ca3af; font-size: 11px; font-family: 'JetBrains Mono', monospace;
+  }
+  .tool-name { color: #f59e0b; font-weight: 600; }
+  .tool-input { color: #6b7280; }
+  .tool-output { color: #a78bfa; max-height: 120px; overflow-y: auto; }
+  .tool-toggle { cursor: pointer; color: #4b5563; font-size: 10px; }
+  .tool-toggle:hover { color: #9ca3af; }
+
+  /* Markdown rendering */
+  .msg-body code { background: #1a1a2e; padding: 1px 4px; border-radius: 3px; font-size: 11px; color: #a78bfa; }
+  .msg-body pre { background: #0c0c18; border: 1px solid #1a1a3a; border-radius: 4px; padding: 8px; margin: 6px 0; overflow-x: auto; }
+  .msg-body pre code { background: none; padding: 0; color: #c4b5fd; }
+  .msg-body strong { color: #e2e8f0; }
+  .msg-body em { color: #cbd5e1; font-style: italic; }
+
+  /* Copy button on each message */
+  .msg-copy { position: absolute; top: 4px; right: 4px; background: none; border: none; cursor: pointer; opacity: 0; transition: opacity 0.15s; font-size: 11px; color: #4b5563; padding: 2px 5px; }
+  .msg:hover .msg-copy { opacity: 0.6; }
+  .msg-copy:hover { opacity: 1 !important; color: #a78bfa; }
+  .msg-copy.copied { color: #22c55e; }
+  .msg { position: relative; }
+
+  /* Scroll arrows */
+  .scroll-arrows { position: fixed; right: 16px; bottom: 80px; display: flex; flex-direction: column; gap: 6px; z-index: 100; }
+  .scroll-arrow { background: #1a1a2e; border: 1px solid #2d1f50; color: #6d28d9; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.15s; }
+  .scroll-arrow:hover { background: #2d1f50; color: #a78bfa; }
+
   .msg-body.pending { color: #3b3b60; font-style: italic; animation: pulse 1.6s ease-in-out infinite; }
 
   /* Feedback */
@@ -235,13 +265,16 @@
     <span class="cascade-arrow">&#8594;</span>
     <div class="cascade-node"><div class="cn-dot" id="cn-p1"></div><span>P1</span></div>
     <span class="cascade-arrow">&#8594;</span>
-    <div class="cascade-node"><div class="cn-dot" id="cn-zai"></div><span>z.ai</span></div>
+    <div class="cascade-node"><div class="cn-dot" id="cn-mini"></div><span>5.4-mini</span></div>
     <span class="cascade-arrow">&#8594;</span>
-    <div class="cascade-node"><div class="cn-dot" id="cn-groq"></div><span>Groq</span></div>
+    <div class="cascade-node"><div class="cn-dot" id="cn-gpt54"></div><span>5.4</span></div>
     <span class="cascade-arrow">&#8594;</span>
-    <div class="cascade-node"><div class="cn-dot" id="cn-or"></div><span>OpenRouter</span></div>
-    <span class="cascade-arrow">&#8594;</span>
-    <div class="cascade-node"><div class="cn-dot alive" id="cn-claude"></div><span>Claude</span></div>
+    <div class="cascade-node"><div class="cn-dot" id="cn-sonnet"></div><span>Sonnet</span></div>
+  </div>
+
+  <div class="scroll-arrows">
+    <button class="scroll-arrow" onclick="document.getElementById('chat-feed').scrollTo({top:0,behavior:'smooth'})" title="Scroll to top">&#9650;</button>
+    <button class="scroll-arrow" onclick="document.getElementById('chat-feed').scrollTo({top:document.getElementById('chat-feed').scrollHeight,behavior:'smooth'})" title="Scroll to bottom">&#9660;</button>
   </div>
 
   <div id="main-layout">
@@ -448,6 +481,12 @@
       if (res.status === 401) { proc.classList.remove('visible'); appendMsg('system', 'Token rejected.'); return; }
       const data = await res.json();
       proc.classList.remove('visible');
+      // Render tool evidence inline BEFORE the response
+      if (data.tool_log && data.tool_log.length) {
+        for (const entry of data.tool_log) {
+          appendToolEvidence(entry.tool, entry.input, entry.output);
+        }
+      }
       const content = data.assistant_text || data.response || data.content || data.error || '(no response)';
       const writeId = data.write_id ?? null;
       const turnId  = data.canonical?.turn_id ?? null;
@@ -542,14 +581,44 @@
       : '';
 
     el.innerHTML =
+      '<button class="msg-copy" title="Copy">&#x1F4CB;</button>' +
       '<div class="msg-meta">' + metaLeft + fbHtml + '</div>' +
-      '<div class="msg-body">' + escHtml(content) + '</div>';
+      '<div class="msg-body">' + (role === 'user' ? escHtml(content) : renderMd(content)) + '</div>';
+
+    // Copy button
+    el.querySelector('.msg-copy').onclick = function() {
+      navigator.clipboard.writeText(content).then(() => {
+        this.textContent = '\u2713'; this.classList.add('copied');
+        setTimeout(() => { this.innerHTML = '&#x1F4CB;'; this.classList.remove('copied'); }, 1500);
+      });
+    };
 
     if (hasFeedback) wireFeedback(el, writeId, turnId);
 
     const feed = document.getElementById('chat-feed');
     feed.insertBefore(el, document.getElementById('processing'));
     saveMessages();
+    return el;
+  }
+
+  function appendToolEvidence(toolName, input, output) {
+    const el = document.createElement('div');
+    el.className = 'msg tool-evidence';
+    const inputStr = typeof input === 'string' ? input : JSON.stringify(input || {});
+    const outputStr = typeof output === 'string' ? output : JSON.stringify(output || {});
+    const shortInput = inputStr.length > 120 ? inputStr.slice(0, 120) + '...' : inputStr;
+    const shortOutput = outputStr.length > 200 ? outputStr.slice(0, 200) + '...' : outputStr;
+    el.innerHTML =
+      '<div class="msg-meta"><span class="msg-sender" style="color:#f59e0b">TOOL</span></div>' +
+      '<div class="msg-body">' +
+        '<span class="tool-name">' + escHtml(toolName) + '</span> ' +
+        '<span class="tool-input">' + escHtml(shortInput) + '</span>' +
+        '<div class="tool-output">' + escHtml(shortOutput) + '</div>' +
+        (outputStr.length > 200 ? '<span class="tool-toggle" onclick="this.previousElementSibling.textContent=this.parentElement.dataset.fullOutput;this.remove()">[show full]</span>' : '') +
+      '</div>';
+    if (outputStr.length > 200) el.querySelector('.msg-body').dataset.fullOutput = outputStr;
+    const feed = document.getElementById('chat-feed');
+    feed.insertBefore(el, document.getElementById('processing'));
     return el;
   }
 
@@ -659,6 +728,30 @@
   function hideEmpty() { const e = document.getElementById('empty-state'); if (e) e.style.display = 'none'; }
   function scrollBottom() { const f = document.getElementById('chat-feed'); setTimeout(() => { f.scrollTop = f.scrollHeight; }, 10); }
   function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  // Lightweight markdown renderer — no external deps
+  function renderMd(raw) {
+    let s = escHtml(raw);
+    // Code blocks (```...```)
+    s = s.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+    // Inline code (`...`)
+    s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // Bold (**...**)
+    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Italic (*...*)
+    s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    // Headers (### ... ## ... # ...)
+    s = s.replace(/^### (.+)$/gm, '<strong style="font-size:13px">$1</strong>');
+    s = s.replace(/^## (.+)$/gm, '<strong style="font-size:14px">$1</strong>');
+    s = s.replace(/^# (.+)$/gm, '<strong style="font-size:15px">$1</strong>');
+    // Unordered lists (- ...)
+    s = s.replace(/^- (.+)$/gm, '&bull; $1');
+    // Numbered lists (1. ...)
+    s = s.replace(/^(\d+)\. (.+)$/gm, '$1. $2');
+    // Horizontal rule (---)
+    s = s.replace(/^---$/gm, '<hr style="border-color:#2a2a4a;margin:8px 0">');
+    return s;
+  }
   function formatTs(iso) { try { return new Date(iso).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' }); } catch(_) { return String(iso||''); } }
   function timeSince(iso) {
     const d = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);

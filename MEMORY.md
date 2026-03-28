@@ -1,10 +1,10 @@
-<!-- Last dream: 2026-03-26 Session 145 — Architecture Reconciliation -->
+<!-- Last dream: 2026-03-27 Session 149 — Nexus Build + Phase 7 Complete -->
 
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Phase 2, Task 2-1 — Rewrite resurrect skill to use cortex call
-- **Session:** 145 (architecture reconciliation — Sovereign directive)
+- **Active task:** Nexus — inline evidence, tool access, cascade fix, Karma tool-use enforcement
+- **Session:** 149 (Nexus build + Phase 7 complete + Karma behavioral fixes)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)
@@ -137,8 +137,23 @@ CC ── Claude Code on P1 — execution layer
 - **FastMCP pattern locked:** All new K2 capabilities = `@mcp.tool()` in existing server. Never a new port.
 - **P062-P066 pitfalls documented:** datetime.utcnow() recurrence, K2/Scripts/ drift, ACTIONABLE_FROM (resolved), hardcoded model names, hard-exit on missing cloud key
 - **ACTIONABLE_FROM LOCKED:** {colby, karma, regent} — Sovereign decision 2026-03-27 (obs #19119)
-- **Cortex:** 426 blocks after session dump
+- **Cortex:** 126 blocks after session dump (rotated older blocks)
+
+## Session 149 (2026-03-27) — Nexus Build + Phase 7 Complete
+- Phase 7 all 8 tasks deployed: sqrt dampening, token budget, named sections, modes, tool scoping, file restrictions, repo map, boomerang
+- Nexus 9-gate live verification passed (browser + API)
+- K2 cortex fixed: think:False + MAX_KNOWLEDGE_CHARS 24K (was 100K, 90s→2.7s)
+- MODEL_DEFAULT reverted to claude-haiku-4-5-20251001 (gpt-5.4-mini refuses tools — P068)
+- Single nexus mode: collapsed 3 modes → 1. All tools always.
+- 7 tool-use-first rules added to Karma system prompt
+- UI: inline tool evidence, markdown rendering, copy button, scroll arrows, cascade dots updated
+- 11 research docs ingested to cortex (Task 1-4 done)
+- Cortex refusal fallthrough: CORTEX_REFUSAL regex detects "I cannot" and falls to cloud
+- 8 known issues documented in STATE.md for post-stabilization
+- P067: cortex /health passes while /query hangs
+- P068: gpt-5.4-mini ignores tool-use instructions
+- Simplify review: 6 code quality fixes applied (hoisted constants, unified serialization, removed dead defaults)
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Phase 7, Task 7-1: sqrt dampening — edit `hub-bridge/app/server.js` buildSystemText() FAISS entity scoring: `score = raw_count / Math.sqrt(raw_count)`
+2. Nexus end-to-end browser verification by Colby — test inline tool evidence, markdown, copy, scroll in live UI
