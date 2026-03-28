@@ -156,7 +156,8 @@ def run_cc_stream(message, effort=None, model=None):
                         save_session_id(new_sid)
             except json.JSONDecodeError:
                 continue
-        _current_proc.wait()
+        if _current_proc:
+            _current_proc.wait()
     except Exception:
         if _current_proc and _current_proc.poll() is None:
             _current_proc.kill()

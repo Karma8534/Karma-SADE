@@ -197,8 +197,9 @@ CC ── Claude Code on P1 — execution layer
 - **P069-P070 pitfalls** documented in cc-scope-index + claude-mem
 - **P064 expanded**: pitfalls = mistakes/errors/problems/issues/blockers/gaps
 
-### Active Blocker
-- Deploying to vault-neo + restarting P1 cc_server — in progress
+### Additional Fixes
+- **Cancel bugfix**: `_current_proc.wait()` crashed with NoneType after cancel killed process. Added null check.
+- **Verified end-to-end**: Streaming (SSE through proxy), tool evidence (Read tool), cancel — all working via hub.arknexus.net
 
 ## Next Session Starts Here
 1. `/resurrect`
