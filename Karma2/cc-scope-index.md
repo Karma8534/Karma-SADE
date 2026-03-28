@@ -120,8 +120,16 @@ Rule: K2 inference ALWAYS uses regent_inference.py cascade (Ollama -> z.ai -> Gr
 Why: S150 K2 harness copied P1's claude CLI pattern. Auth expired -> "claude exit 1: Not logged in". The cascade was already built and working. CC forgot its own code existed.
 
 P064 [sovereign-standing-order]:
-Rule: When Colby says "this is a pitfall" — immediately: (1) save_observation with PITFALL title to claude-mem, (2) add P0XX entry to cc-scope-index.md, (3) bus post. This is a standing Sovereign order.
-Why: Colby's directive S150: "From now on when I say this is a pitfall, follow pitfall procedure."
+Rule: When Colby says "this is a pitfall" — immediately: (1) save_observation with PITFALL title to claude-mem, (2) add P0XX entry to cc-scope-index.md, (3) bus post. Pitfalls = mistakes, errors, problems, issues, blockers, OR gaps — anything that cost time, caused drift, or could recur. This is a standing Sovereign order.
+Why: Colby's directive S150: "From now on when I say this is a pitfall, follow pitfall procedure." Scope clarified S150+: not just production failures — any identified problem triggers the procedure so it NEVER happens again.
+
+P069 [stream-json-requires-verbose]:
+Rule: `claude -p --output-format stream-json` MUST include `--verbose`. Without it, subprocess exits with error on stderr and zero stdout — silent failure.
+Why: S150 Step 0 verification. nexus.md v1.0 omitted --verbose everywhere. cc_server_p1.py would have produced empty responses on every streaming call.
+
+P070 [sovereign-skill-invocation-skipped]:
+Rule: When Colby explicitly names skills to use ("use X, Y, and Z"), invoke ALL named skills before acting. No rationalization. Sovereign names tools = invoke tools.
+Why: S150 nexus rewrite — Colby said "use debugging, brainstorming, and ORF", CC skipped all three reasoning "this is a reconciliation not a bug." Textbook rationalization red flag from CLAUDE.md. Process was wrong even though output was acceptable.
 
 ## DECISION Archive (from claude-mem + sessions)
 

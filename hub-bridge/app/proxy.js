@@ -106,6 +106,89 @@ async function routeToHarness(message, sessionId) {
   return { ok: false, error: `Harness failed: ${errors.join("; ")}` };
 }
 
+// ── Harness streaming (SSE passthrough) ─────────────────────────────────────
+async function routeToHarnessStream(message, sessionId, effort, model, clientRes) {
+  const payload = JSON.stringify({ message, session_id: sessionId, effort, model });
+  const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` };
+  const nodes = [
+    { label: "P1", url: HARNESS_P1, getHealthy: () => _p1Healthy, setHealthy: v => { _p1Healthy = v; }, setChecked: () => { _p1CheckedAt = Date.now(); } },
+    { label: "K2", url: HARNESS_K2, getHealthy: () => _k2Healthy, setHealthy: v => { _k2Healthy = v; }, setChecked: () => { _k2CheckedAt = Date.now(); } },
+  ];
+
+  for (const node of nodes) {
+    const h = await checkHealth(node.url, node.getHealthy(), 0);
+    node.setHealthy(h); node.setChecked();
+    if (!h) continue;
+
+    try {
+      const r = await fetch(`${node.url}/cc/stream`, {
+        method: "POST", headers, body: payload,
+        signal: AbortSignal.timeout(HARNESS_TIMEOUT),
+      });
+      if (!r.ok || !r.body) continue;
+      console.log(`[HARNESS-STREAM] ${node.label} connected`);
+
+      clientRes.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+        "Access-Control-Allow-Origin": "*",
+      });
+
+      const reader = r.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        clientRes.write(chunk);
+        // Extract assistant text for vault logging
+        try {
+          for (const ln of chunk.split("\n")) {
+            if (!ln.startsWith("data: ")) continue;
+            const obj = JSON.parse(ln.slice(6));
+            if (obj.type === "assistant") {
+              for (const b of (obj.message?.content || [])) {
+                if (b.type === "text" && b.text) fullText = b.text;
+              }
+            }
+          }
+        } catch {}
+      }
+      clientRes.end();
+
+      // Fire-and-forget: vault + chatlog + cortex
+      const chatContent = `[CHAT-STREAM] user: ${message.slice(0, 200)}\nassistant: ${fullText.slice(0, 500)}`;
+      vaultPost("/v1/memory", VAULT_BEARER, buildVaultRecord({
+        type: "log", content: chatContent,
+        tags: ["chat", "sovereign-harness", "hub", "stream"], source: "sovereign-proxy",
+      })).catch(() => {});
+      try {
+        fs.appendFileSync("/run/state/nexus-chat.jsonl", JSON.stringify({
+          ts: new Date().toISOString(), user: message.slice(0, 500),
+          assistant: fullText.slice(0, 1000), session_id: sessionId,
+        }) + "\n");
+      } catch {}
+      fetch("http://100.75.109.92:7892/ingest", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label: `nexus-chat-${Date.now()}`, text: chatContent }),
+        signal: AbortSignal.timeout(5000),
+      }).catch(() => {});
+
+      return; // Success
+    } catch (e) { console.error(`[HARNESS-STREAM] ${node.label} error:`, e.message); }
+  }
+
+  // All nodes failed
+  if (!clientRes.headersSent) {
+    clientRes.writeHead(502, { "Content-Type": "text/event-stream", "Access-Control-Allow-Origin": "*" });
+  }
+  clientRes.write(`data: ${JSON.stringify({ type: "error", error: "All harness nodes failed" })}\n\n`);
+  clientRes.end();
+}
+
 // ── Coordination Bus ─────────────────────────────────────────────────────────
 const COORD_FILE = "/run/state/coordination.jsonl";
 const COORD_TTL_MS = 24 * 60 * 60 * 1000;
@@ -278,6 +361,12 @@ const server = http.createServer(async (req, res) => {
       if (!message) return json(res, 400, { ok: false, error: "message required" });
       const sessionId = body.session_id || "";
 
+      // ── Streaming path (SSE) ──────────────────────────────────────────
+      if (body.stream === true) {
+        return routeToHarnessStream(message, sessionId, body.effort, body.model, res);
+      }
+
+      // ── Batch path (JSON, backward compat) ────────────────────────────
       const result = await routeToHarness(message, sessionId);
 
       // Write to vault ledger (fire-and-forget)

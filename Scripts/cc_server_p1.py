@@ -7,7 +7,7 @@ Returns: {response, ok}
 Auth: Bearer token checked against HUB_CHAT_TOKEN env var.
 """
 import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.parse, socket, sqlite3
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import HTTPServer, ThreadingHTTPServer, BaseHTTPRequestHandler
 sys.path.insert(0, os.path.dirname(__file__))
 try:
     from cc_gmail import send_to_colby, check_inbox
@@ -116,6 +116,53 @@ def run_cc(message, effort=None, model=None):
                 continue
     # Fallback: return raw stdout if no JSON found
     return stdout
+
+def run_cc_stream(message, effort=None, model=None):
+    """Yield filtered stream-json lines from CC subprocess as SSE-ready strings.
+    Requires --verbose with -p mode (P069). Filters out system/hook events."""
+    session_id = load_session_id()
+    cmd = [NODE_EXE, CLAUDE_CLI_JS, "-p", message,
+           "--output-format", "stream-json", "--verbose",
+           "--append-system-prompt", KARMA_PERSONA]
+    if session_id:
+        cmd += ["--resume", session_id]
+    if effort:
+        cmd += ["--effort", effort]
+    if model:
+        cmd += ["--model", model]
+    global _current_proc
+    _current_proc = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        text=True, cwd=WORK_DIR,
+    )
+    try:
+        for line in iter(_current_proc.stdout.readline, ''):
+            line = line.strip()
+            if not line:
+                continue
+            # Parse and filter — only forward assistant/user/result/error to browser
+            try:
+                obj = json.loads(line)
+                t = obj.get("type", "")
+                if t == "system":
+                    continue  # Skip hooks, init — don't expose to browser
+                if t == "rate_limit_event":
+                    continue  # Skip rate limit noise
+                yield line
+                # Capture session_id from result
+                if t == "result":
+                    new_sid = obj.get("session_id", "")
+                    if new_sid:
+                        save_session_id(new_sid)
+            except json.JSONDecodeError:
+                continue
+        _current_proc.wait()
+    except Exception:
+        if _current_proc and _current_proc.poll() is None:
+            _current_proc.kill()
+        raise
+    finally:
+        _current_proc = None
 
 class CCHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
@@ -257,7 +304,7 @@ class CCHandler(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, "messages": msgs})
             return
 
-        if self.path != "/cc":
+        if self.path not in ("/cc", "/cc/stream"):
             self.send_response(404)
             self.end_headers()
             return
@@ -270,9 +317,33 @@ class CCHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"ok": False, "error": "message required"}).encode())
             return
 
-        # Call real CC subprocess with --resume for session continuity
         effort = body.get("effort")  # low/medium/high/max
         model = body.get("model")    # model override
+
+        # ── /cc/stream — SSE streaming endpoint ──────────────────────────
+        if self.path == "/cc/stream":
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("Connection", "keep-alive")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            try:
+                for line in run_cc_stream(message, effort=effort, model=model):
+                    self.wfile.write(f"data: {line}\n\n".encode())
+                    self.wfile.flush()
+            except BrokenPipeError:
+                pass  # Client disconnected (cancel)
+            except Exception as e:
+                err = json.dumps({"type": "error", "error": str(e)})
+                try:
+                    self.wfile.write(f"data: {err}\n\n".encode())
+                    self.wfile.flush()
+                except Exception:
+                    pass
+            return
+
+        # ── /cc — batch JSON endpoint (backward compat) ──────────────────
         try:
             response_text = run_cc(message, effort=effort, model=model)
             self._json(200, {"ok": True, "response": response_text})
@@ -286,5 +357,5 @@ if __name__ == "__main__":
     print(f"[cc-server] Auth: {'ENABLED' if TOKEN else 'DISABLED (set HUB_CHAT_TOKEN)'}")
     print(f"[cc-server] Inference: CC subprocess (claude -p --resume) — real CC with session continuity")
     print(f"[cc-server] Session file: {SESSION_FILE}")
-    server = HTTPServer(("0.0.0.0", PORT), CCHandler)
+    server = ThreadingHTTPServer(("0.0.0.0", PORT), CCHandler)
     server.serve_forever()

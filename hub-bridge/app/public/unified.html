@@ -205,6 +205,8 @@
   }
   #send-btn:hover { background: #7c3aed; }
   #send-btn:disabled { opacity: 0.35; cursor: default; }
+  #send-btn.stop-mode { background: #dc2626; letter-spacing: 2px; }
+  #send-btn.stop-mode:hover { background: #ef4444; }
 
   /* ── Route hint + footer ──────────────────────────────────────────────── */
   #route-hint { font-size: 10px; color: #3a2a5a; padding: 0 20px 4px; flex-shrink: 0; }
@@ -320,6 +322,10 @@
   let seenBusIds     = new Set();
   let pendingBus     = new Map();
   let lastActivityTs = null;
+  let isStreaming    = false;
+  let currentStreamMsgEl = null;
+  let currentStreamText  = '';
+  let streamToolMap  = new Map();
 
   localStorage.setItem(CONV_KEY, conversationId);
 
@@ -351,10 +357,12 @@
   function showApp() {
     document.getElementById('gate').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
-    document.getElementById('send-btn').addEventListener('click', sendMessage);
+    document.getElementById('send-btn').addEventListener('click', () => { if (isStreaming) cancelGeneration(); else sendMessage(); });
     document.getElementById('msg-input').addEventListener('keydown', e => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+      if (e.key === 'Escape' && isStreaming) { e.preventDefault(); cancelGeneration(); }
     });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && isStreaming) cancelGeneration(); });
     document.getElementById('agora-btn').addEventListener('click', toggleAgora);
     document.getElementById('cascade-btn').addEventListener('click', toggleCascade);
     document.getElementById('clear-btn').addEventListener('click', clearConversation);
@@ -467,36 +475,150 @@
     document.getElementById('msg-input').focus();
   }
 
-  // ── Karma: /v1/chat ─────────────────────────────────────────────────────
+  // ── Karma: /v1/chat (streaming) ─────────────────────────────────────────
   async function sendToKarma(text) {
     const proc = document.getElementById('processing');
+    proc.textContent = 'Karma is thinking...';
     proc.classList.add('visible');
+    setStreamingState(true);
+    currentStreamMsgEl = null;
+    currentStreamText = '';
+    streamToolMap.clear();
     scrollBottom();
+
     try {
       const res = await fetch(CHAT_URL, {
         method: 'POST',
         headers: { ...auth(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, conversation_id: conversationId, session_id: conversationId, stream: false })
+        body: JSON.stringify({ message: text, conversation_id: conversationId, session_id: conversationId, stream: true })
       });
-      if (res.status === 401) { proc.classList.remove('visible'); appendMsg('system', 'Token rejected.'); return; }
-      const data = await res.json();
-      proc.classList.remove('visible');
-      // Render tool evidence inline BEFORE the response
-      if (data.tool_log && data.tool_log.length) {
-        for (const entry of data.tool_log) {
-          appendToolEvidence(entry.tool, entry.input, entry.output);
+      if (res.status === 401) { proc.classList.remove('visible'); setStreamingState(false); appendMsg('system', 'Token rejected.'); return; }
+
+      // Non-streaming fallback (server returns JSON instead of SSE)
+      const ct = res.headers.get('content-type') || '';
+      if (!ct.includes('text/event-stream')) {
+        const data = await res.json();
+        proc.classList.remove('visible'); setStreamingState(false);
+        if (data.tool_log?.length) for (const e of data.tool_log) appendToolEvidence(e.tool, e.input, e.output);
+        const content = data.assistant_text || data.response || data.content || data.error || '(no response)';
+        appendMsg('karma', content, data.write_id ?? null, data.canonical?.turn_id ?? null);
+        lastActivityTs = new Date().toISOString(); updateHeartbeat();
+        return;
+      }
+
+      // SSE streaming path
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop();
+        for (const part of parts) {
+          for (const line of part.split('\n')) {
+            if (line.startsWith('data: ')) {
+              try { handleStreamEvent(JSON.parse(line.slice(6))); } catch {}
+            }
+          }
         }
       }
-      const content = data.assistant_text || data.response || data.content || data.error || '(no response)';
-      const writeId = data.write_id ?? null;
-      const turnId  = data.canonical?.turn_id ?? null;
-      appendMsg('karma', content, writeId, turnId);
+      // Flush remaining buffer
+      if (buffer.trim()) {
+        for (const line of buffer.split('\n')) {
+          if (line.startsWith('data: ')) {
+            try { handleStreamEvent(JSON.parse(line.slice(6))); } catch {}
+          }
+        }
+      }
+    } catch (err) {
+      if (isStreaming) appendMsg('system', 'Error: ' + err.message);
+    } finally {
+      proc.classList.remove('visible');
+      setStreamingState(false);
+      saveMessages();
       lastActivityTs = new Date().toISOString();
       updateHeartbeat();
-    } catch (err) {
-      proc.classList.remove('visible');
-      appendMsg('system', 'Error: ' + err.message);
     }
+  }
+
+  function handleStreamEvent(obj) {
+    const type = obj.type;
+    if (type === 'assistant') {
+      const content = obj.message?.content || [];
+      for (const block of content) {
+        if (block.type === 'thinking') {
+          document.getElementById('processing').textContent = 'Karma is reasoning...';
+        } else if (block.type === 'tool_use') {
+          if (!streamToolMap.has(block.id)) {
+            const el = appendToolEvidence(block.name, block.input, '(running...)');
+            streamToolMap.set(block.id, el);
+            document.getElementById('processing').textContent = 'Running ' + block.name + '...';
+            document.getElementById('processing').classList.add('visible');
+          }
+        } else if (block.type === 'text') {
+          document.getElementById('processing').classList.remove('visible');
+          if (!currentStreamMsgEl) {
+            currentStreamMsgEl = appendMsg('karma', block.text || '');
+            currentStreamText = block.text || '';
+          } else {
+            currentStreamText = block.text || currentStreamText;
+            const bodyEl = currentStreamMsgEl.querySelector('.msg-body');
+            if (bodyEl) bodyEl.innerHTML = renderMd(currentStreamText);
+          }
+          scrollBottom();
+        }
+      }
+      return;
+    }
+    if (type === 'user') {
+      const content = obj.message?.content || [];
+      for (const block of content) {
+        if (block.type === 'tool_result') {
+          const toolEl = streamToolMap.get(block.tool_use_id);
+          if (toolEl) {
+            const outputEl = toolEl.querySelector('.tool-output');
+            const result = obj.tool_use_result || {};
+            const outputText = block.content || result.stdout || '';
+            const truncated = outputText.length > 500 ? outputText.slice(0, 500) + '...' : outputText;
+            if (outputEl) outputEl.textContent = truncated;
+          }
+          document.getElementById('processing').textContent = 'Karma is thinking...';
+        }
+      }
+      return;
+    }
+    if (type === 'result') {
+      // Stream complete — could extract cost/duration here if needed
+      return;
+    }
+    if (type === 'error') {
+      appendMsg('system', 'Error: ' + (obj.error || 'unknown'));
+      return;
+    }
+  }
+
+  function setStreamingState(active) {
+    isStreaming = active;
+    const btn = document.getElementById('send-btn');
+    if (active) {
+      btn.textContent = 'STOP';
+      btn.classList.add('stop-mode');
+      btn.disabled = false;
+    } else {
+      btn.textContent = 'SEND';
+      btn.classList.remove('stop-mode');
+      btn.disabled = false;
+    }
+  }
+
+  async function cancelGeneration() {
+    try { await fetch('/v1/cancel', { headers: auth() }); } catch {}
+    appendMsg('system', 'Cancelled');
+    document.getElementById('processing').classList.remove('visible');
+    setStreamingState(false);
   }
 
   // ── Bus: regent / cc / codex ────────────────────────────────────────────

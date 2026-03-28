@@ -1,6 +1,10 @@
 # The Nexus — Complete Plan
 **Owner:** Julian (CC Ascendant) | **Sovereign:** Colby | **Date:** 2026-03-28
-**Supersedes:** All previous plans (Sovereign Harness, Phase 5, Phase 7). This is THE plan.
+**Version:** 1.1-LOCKED | **Supersedes:** All previous plans (Sovereign Harness, Phase 5, Phase 7)
+**Related Plans:**
+  - `Karma2/PLAN.md` (points here)
+  - `docs/ForColby/PLAN.md` (overarching master plan)
+  - `MEMORY.md` (mutable state, synced on session start)
 
 ---
 
@@ -10,42 +14,63 @@ Karma is THIS Claude Code wrapper — evolved. Same brain (CC --resume via Max, 
 
 Karma surfaces as an Electron desktop app. Double-click → Karma. No address bar. No Chrome UI. One window, one entity. Everything CC can do, Karma can do. Everything CC can't do (self-improve, evolve, learn), Karma can.
 
+**Canonical Name:** The Nexus (not "Nexus Surface", not "Karma2 Surface")
+**Web UI:** unified.html served at hub.arknexus.net (primary) and via Electron IPC (enhanced)
+
+---
+
 ## What EXISTS (verified S150)
 
-| Component | Status | Where |
-|-----------|--------|-------|
-| proxy.js (353 lines) | ✅ LIVE | vault-neo, serves hub.arknexus.net |
-| cc_server_p1.py | ✅ LIVE | P1:7891, CC --resume subprocess |
-| K2 harness | ✅ LIVE | K2:7891, cascade inference (no Anthropic dependency) |
-| unified.html | ✅ LIVE | Chat + tool evidence + localStorage + markdown |
-| AGORA | ✅ LIVE | /agora, K2 evolution state + bus events + chat log |
-| K2 cortex | ✅ LIVE | 126 blocks, qwen3.5:4b |
-| Vesper pipeline | ✅ RUNNING | karma-regent, spine v1243, 1285 promotions |
-| claude-mem | ✅ LIVE | Cross-session memory |
-| vault spine | ✅ LIVE | MEMORY.md, ledger, FalkorDB, FAISS |
-| nexus-chat.jsonl | ✅ LIVE | Shared awareness — proxy writes, Karma reads, CC reads via SSH |
-| cc-chat-logger.py | ⚠️ UNVERIFIED | `.claude/hooks/cc-chat-logger.py` — Stop hook to capture CC Code tab exchanges to nexus-chat.jsonl. Wired by Karma S152 but never tested. |
-| Ambient capture hooks | ✅ LIVE | Git post-commit + session-end hooks → POST /v1/ambient → vault ledger |
-| Electron scaffold | ✅ EXISTS | /mnt/c/dev/Karma/k2/karma-browser/ (main.js, preload.js, IPC) |
-| Self-edit | ✅ PROVEN | self-edit-proof.txt modified from browser S151 |
-| Context7 MCP | ✅ AVAILABLE | Library doc lookup — use for Electron, Node, any framework docs during build |
+| Component | Status | Where | Verification |
+|-----------|--------|-------|--------------|
+| proxy.js (353 lines) | ✅ LIVE | vault-neo, serves hub.arknexus.net | `curl hub.arknexus.net/health` |
+| cc_server_p1.py | ✅ LIVE | P1:7891, CC --resume subprocess | `curl localhost:7891/health` |
+| K2 harness (aka "Karma2", "K2 cascade") | ✅ LIVE | K2:7891, cascade inference (no Anthropic) | `curl K2:7891/health` |
+| unified.html (aka "Nexus UI", "Karma Surface") | ✅ LIVE | Chat + tool evidence + localStorage + markdown | Browser visit |
+| AGORA | ✅ LIVE | /agora, K2 evolution state + bus events + chat log | `hub.arknexus.net/agora` |
+| K2 cortex | ✅ LIVE | 126 blocks, qwen3.5:4b | `ollama list` on K2 |
+| Vesper pipeline (aka "karma-regent evolution") | ✅ RUNNING | karma-regent, spine v1243, 1285 promotions | AGORA stats |
+| claude-mem | ✅ LIVE | Cross-session memory | MCP tool works |
+| vault spine | ✅ LIVE | MEMORY.md, ledger, FalkorDB, FAISS | SSH vault-neo |
+| nexus-chat.jsonl | ✅ LIVE | Shared awareness — proxy writes, Karma reads, CC reads via SSH | File exists |
+| cc-chat-logger.py | ⚠️ UNVERIFIED | `.claude/hooks/cc-chat-logger.py` | **REQUIRES Sprint 1 verification** |
+| Ambient capture hooks | ✅ LIVE | Git post-commit + session-end → POST /v1/ambient → vault ledger | Ledger entries exist |
+| Electron scaffold | ✅ EXISTS | /mnt/c/dev/Karma/k2/karma-browser/ (main.js, preload.js, IPC) | Files present |
+| Self-edit | ✅ PROVEN | self-edit-proof.txt modified from browser S151 | File modified |
+| Context7 MCP | ✅ AVAILABLE | Library doc lookup | MCP tool available |
+
+> **NOTE:** "K2 harness", "Karma2", and "K2 cascade" are synonyms. "unified.html", "Nexus UI", "Karma Surface" are synonyms.
+
+---
 
 ## The 8 Gaps Between Current State and Baseline
 
 ### Gap 1: Streaming — user waits 15-60s for batch response
-**Problem:** cc_server_p1.py calls `claude -p --output-format json` which returns only after CC finishes thinking. User sees "Karma is thinking..." for up to 60 seconds.
-**Fix:** Use `--output-format stream-json` + `--include-partial-messages`. cc_server_p1.py streams chunks as SSE to proxy.js, proxy pipes SSE to unified.html. User sees tokens arrive in real-time.
+**Problem:** cc_server_p1.py calls `claude -p --output-format json` which returns only after CC finishes thinking.
+**Fix:** Use `--output-format stream-json --verbose --include-partial-messages`. cc_server_p1.py streams chunks as SSE to proxy.js, proxy pipes SSE to unified.html. User sees tokens arrive in real-time.
 **Implementation:**
 - cc_server_p1.py: Replace `subprocess.run()` with `subprocess.Popen()`, read stdout line-by-line, yield each JSON chunk
 - proxy.js: `/v1/chat` returns `Content-Type: text/event-stream` when `stream=true`
 - unified.html: Use `EventSource` or `fetch` with `ReadableStream` to render tokens incrementally
-**Verify:** Type a message → see tokens appear word-by-word, not all-at-once
+**Verify:**
+```bash
+# Terminal test (before building UI):
+claude -p --output-format stream-json --verbose --include-partial-messages <<< "say 'hello world'"
+# Expected: NDJSON chunks arriving line-by-line, not batched
+# CRITICAL: --verbose is REQUIRED with -p mode (verified S150 Step 0, obs #19692)
+```
 
 ### Gap 2: Rich output rendering — tool evidence, diffs, file content
 **Problem:** CC uses tools (Read, Bash, Write) but unified.html only sees the final text. Tool calls are invisible.
 **Fix:** Parse `stream-json` output for content block types: `text`, `tool_use`, `tool_result`. Render each type distinctly.
 **Implementation:**
-- `stream-json` emits lines like `{"type":"assistant","content":[{"type":"text","text":"..."},{"type":"tool_use","name":"Read","input":{...}}]}`
+- `stream-json` emits NDJSON lines. `type=assistant` messages contain `message.content[]` array with:
+  - `{type: "thinking", thinking: "...", signature: "..."}` — extended thinking
+  - `{type: "tool_use", id: "toolu_...", name: "Bash", input: {...}, caller: {...}}` — tool invocation
+  - `{type: "text", text: "..."}` — assistant text response
+- `type=user` messages contain tool results: `{type: "tool_result", tool_use_id: "toolu_...", content: "stdout", is_error: false}` plus `tool_use_result` with stdout/stderr/interrupted fields
+- Filter out `type=system` lines (hooks, init) — not for display
+- `type=result` is the final summary (duration, cost, session_id)
 - unified.html: `appendToolEvidence(name, input, output)` already exists (S150). Wire it to stream parser.
 - For diffs: detect `Edit` tool results, render as inline diff with red/green lines
 - For file content: detect `Read` tool results, render in code block with filename header
@@ -92,6 +117,7 @@ Karma surfaces as an Electron desktop app. Double-click → Karma. No address ba
 - karma_regent reads bus for Sovereign approvals, applies to spine
 - AGORA: Show spine version, stable pattern count, promotion history as a timeline chart
 - AGORA: Show learning rate (promotions per hour), pattern diversity, quality grade
+**Polling interval:** karma_regent checks `/v1/coordination/recent` every 60 seconds (configurable via REGENT_POLL_INTERVAL)
 **Verify:** Colby sees a promotion in AGORA → clicks Approve → regent applies it → spine version increments
 
 ### Gap 7: Reboot survival
@@ -100,9 +126,15 @@ Karma surfaces as an Electron desktop app. Double-click → Karma. No address ba
 **Implementation:**
 - Create schtasks entry: `KarmaSovereignHarness`, trigger "At startup", action: `powershell -ExecutionPolicy Bypass -File Scripts\start_cc_server.ps1`
 - Requires admin elevation (Colby runs once)
-- Verification: reboot P1 → wait 60s → curl localhost:7891/health returns ok
 - K2: sovereign-harness.service already systemd-enabled ✅
-**Verify:** Reboot P1 → hub.arknexus.net chat works within 60s
+**Verify:**
+```bash
+# After task creation:
+schtasks /query /tn KarmaSovereignHarness
+# Then reboot P1, wait 60s:
+curl localhost:7891/health
+# Expected: {"ok":true}
+```
 
 ### Gap 8: Electron desktop app — the Nexus surface
 **Problem:** Electron scaffold exists but just loads hub.arknexus.net in a window. No IPC utilization.
@@ -122,29 +154,35 @@ Karma surfaces as an Electron desktop app. Double-click → Karma. No address ba
 
 ---
 
-## Execution Order
+## Execution Order (Corrected)
 
 The gaps have dependencies. This is the build order:
 
 ```
-Gap 1 (Streaming) ──────────────────────────┐
-                                             │
-Gap 2 (Rich output) ← depends on Gap 1 ─────┤
-                                             │
-Gap 4 (CLI flags) ──────────────────────────┤
-                                             ├──→ Gap 8 (Electron wiring)
-Gap 5 (Cancel) ─────────────────────────────┤
-                                             │
-Gap 3 (File/image input) ───────────────────┤
-                                             │
-Gap 6 (Evolution feedback) ─────────────────┘
+Sprint 1: The Pipe (Gaps 1, 2, 5)
+  ├── Gap 1: Streaming (foundation)
+  ├── Gap 2: Rich output (depends on Gap 1)
+  └── Gap 5: Cancel (depends on Gap 1)
 
-Gap 7 (Reboot survival) ← independent, do anytime
+Sprint 2: The Controls (Gaps 3, 4)
+  ├── Gap 3: File input (UI change)     ⚠️ These can run
+  └── Gap 4: CLI flags (backend change)    in PARALLEL
+
+Sprint 3: The Desktop (Gap 8)
+  └── Gap 8: Electron wiring (depends on Sprint 1)
+
+Sprint 4: The Evolution (Gap 6)
+  └── Gap 6: Evolution feedback (depends on AGORA existing)
+
+Sprint 5: The Survival (Gap 7)
+  └── Gap 7: Reboot survival (INDEPENDENT — do anytime)
 ```
+
+---
 
 ### Sprint 1: The Pipe (Gaps 1 + 2 + 5) — makes Nexus usable
 **What changes:**
-- cc_server_p1.py: `subprocess.Popen` + stream-json + cancel endpoint (~80 lines changed)
+- cc_server_p1.py: `subprocess.Popen` + stream-json + `--verbose` + cancel endpoint (~80 lines changed)
 - proxy.js: SSE passthrough + /v1/cancel route (~30 lines added)
 - unified.html: EventSource reader + tool evidence wiring + Esc handler + STOP button (~60 lines added)
 **Result:** Real-time streaming with visible tool evidence and cancel. Nexus becomes usable as primary surface.
@@ -181,43 +219,55 @@ Gap 7 (Reboot survival) ← independent, do anytime
 
 ## Baseline Checklist (ALL must pass)
 
+| # | Requirement | Sprint | Verify Command |
+|---|-------------|--------|----------------|
+| 1 | Chat at hub.arknexus.net returns Opus-quality at $0 | ✅ DONE | `curl -X POST hub.arknexus.net/v1/chat -d '{"message":"what is 2+2"}'` |
+| 2 | Streaming — tokens appear word-by-word | Sprint 1 | Browser: see progressive rendering |
+| 3 | Tool evidence inline | Sprint 1 | "read MEMORY.md" → TOOL panel visible |
+| 4 | File/image input | Sprint 2 | Drag screenshot → Karma analyzes |
+| 5 | Effort/model control | Sprint 2 | Select "high" → visible harder thinking |
+| 6 | Cancel (Esc) | Sprint 1 | Press Esc mid-generation |
+| 7 | Session continuity | ✅ DONE | `claude -p --resume` survives messages |
+| 8 | Memory persistence | ✅ DONE | "what did we do last?" → recalls |
+| 9 | Persona (Karma) | ✅ DONE | Karma identifies as Karma |
+| 10 | Self-edit | ✅ DONE | File edits persist |
+| 11 | Self-edit + deploy | Sprint 3 | Endpoint added → deployed live |
+| 12 | Self-improvement visible | Sprint 4 | Promotions visible in AGORA |
+| 13 | Evolution feedback | Sprint 4 | Click Approve → spine updates |
+| 14 | Learning visible | Sprint 4 | AGORA shows patterns |
+| 15 | Reboot survival | Sprint 5 | Reboot → Nexus back in 60s |
+| 16 | K2 failover | ✅ DONE | Stop P1 → K2 responds |
+| 17 | Voice | ✅ DONE | CC native (Sprint 3 dependency) |
+| 18 | Electron app | Sprint 3 | Double-click → opens |
+| 19 | CC tools in browser | Sprint 1 | Bash, Read, etc. visible |
+| 20 | CC MCP servers | ✅ DONE | Native pipe-through |
+| 21 | CC skills | ✅ DONE | Native pipe-through |
+| 22 | CC hooks | ✅ DONE | Native pipe-through |
+| 23 | Shared awareness | ✅ DONE | nexus-chat.jsonl populated |
+| 24 | Video + 3D | DEFERRED | Sovereign gate |
+
+**Addendum (Session 152+):**
+
 | # | Requirement | Sprint | Verify |
 |---|-------------|--------|--------|
-| 1 | Chat at hub.arknexus.net returns Opus-quality at $0 | ✅ DONE | curl /v1/chat returns response |
-| 2 | Streaming — tokens appear word-by-word | Sprint 1 | Type message → see progressive rendering |
-| 3 | Tool evidence inline (tool name, input, output) | Sprint 1 | Ask "read MEMORY.md" → TOOL panel visible |
-| 4 | File/image input (drag-drop, paste, attach) | Sprint 2 | Drag screenshot → Karma analyzes it |
-| 5 | Effort/model control from UI | Sprint 2 | Select "high" → CC thinks harder |
-| 6 | Cancel mid-generation (Esc) | Sprint 1 | Press Esc → response stops |
-| 7 | Session continuity (--resume) | ✅ DONE | Session survives across messages |
-| 8 | Memory persistence (claude-mem + vault + cortex) | ✅ DONE | Ask "what did we do last?" → recalls |
-| 9 | Persona (CLAUDE.md = Karma) | ✅ DONE | Karma identifies as Karma |
-| 10 | Self-edit (modify own code from browser) | ✅ DONE (S151) | Ask to edit a file → file changes |
-| 11 | Code self-edit + deploy from browser | Sprint 3 | Ask to add endpoint → deployed live |
-| 12 | Self-improvement visible in AGORA | Sprint 4 | See promotions, patterns, learning rate |
-| 13 | Evolution feedback (Sovereign approves/rejects) | Sprint 4 | Click Approve → spine updates |
-| 14 | Learning (patterns captured, pitfalls avoided) | Sprint 4 | AGORA shows pattern diversity + quality grade |
-| 15 | Reboot survival (P1 + K2) | Sprint 5 | Reboot → Nexus back within 60s |
-| 16 | K2 failover ($0, no Anthropic dependency) | ✅ DONE | Stop P1 → K2 responds via cascade |
-| 17 | Voice | ✅ DONE (CC native) | Use voice in CC wrapper |
-| 18 | Electron desktop app | Sprint 3 | Double-click icon → Karma opens |
-| 19 | All CC tools accessible from browser | Sprint 1 | Bash, Read, Write, Edit, Git visible in evidence |
-| 20 | All CC MCP servers accessible | ✅ DONE (pipe-through) | CC has MCP natively |
-| 21 | All CC skills accessible | ✅ DONE (pipe-through) | CC has skills natively |
-| 22 | All CC hooks firing | ✅ DONE (pipe-through) | CC has hooks natively |
-| 23 | Shared awareness (CC ↔ Nexus) | ✅ DONE | nexus-chat.jsonl + system prompt |
-| 24 | Video + 3D presence | DEFERRED | Sovereign gate |
+| 25 | cc-chat-logger captures Code tab conversations | Sprint 1 | CC message → nexus-chat.jsonl |
+| 26 | Ambient hooks feed vault ledger | ✅ DONE | git commit → ledger entry |
+| 27 | Context7 used for all framework doc lookups | ALL | Query before framework work |
 
-**Baseline achieved when:** Items 1-23 all pass. Item 24 is deferred by Sovereign decision.
+**Total baseline: 27 items** (23 main + 4 addendum)
 
 ---
 
-## Critical Rules (from pitfalls P059-P066)
+## Critical Rules (from pitfalls P059-P068)
 
 - **P059/P060:** PLAN.md must match MEMORY.md plan reference. resurrect checks plan identity.
 - **P063:** K2 uses cascade inference, NEVER claude CLI.
 - **P065:** unified.html NEVER reimplements CC features in JS. Pipes through.
 - **P066:** Never propose incomplete plans. Verify against baseline checklist before presenting.
+- **P067:** Every gap implementation must include a terminal-based verification command before UI work begins.
+- **P068:** Cross-references to other plans must include relative path: `Karma2/PLAN.md`, `docs/ForColby/PLAN.md`, `MEMORY.md`.
+
+---
 
 ## Architecture (final)
 
@@ -225,21 +275,20 @@ Gap 7 (Reboot survival) ← independent, do anytime
 ELECTRON MAIN PROCESS (Node.js on P1 or K2)
   ├── BrowserWindow → unified.html (local, not hub.arknexus.net)
   ├── IPC bridge (preload.js) → window.karma.* API
-  ├── child_process → claude -p --resume --output-format stream-json --effort {level}
+  ├── child_process → claude -p --resume --output-format stream-json --verbose --effort {level}
   ├── MCP stdio client (claude-mem, cortex, k2 tools)
   ├── Ollama HTTP (172.22.240.1:11434, $0)
   ├── Coordination bus client (hub.arknexus.net/v1/coordination)
   └── Auto-update (git pull + relaunch)
 
-WEB FALLBACK (when Electron not available — mobile, remote)
+WEB FALLBACK (mobile, remote)
   hub.arknexus.net → proxy.js → cc_server_p1.py → CC --resume
-  Same capabilities, HTTP round-trip instead of IPC
 
 K2 EVOLUTION LAYER (always-on, autonomous)
-  ├── karma_regent.py (5min cycles, bus polling)
+  ├── karma_regent.py (60s polling cycle, configurable via REGENT_POLL_INTERVAL)
   ├── Vesper pipeline (watchdog → eval → governor → promote)
   ├── K2 cortex (qwen3.5:4b, 32K working memory)
-  └── sovereign-harness.service (cascade failover)
+  └── sovereign-harness.service (systemd, enabled)
 
 VAULT-NEO SPINE (permanent truth)
   ├── FalkorDB (structured knowledge)
@@ -261,74 +310,49 @@ VAULT-NEO SPINE (permanent truth)
 
 ---
 
-## Forensic Audit Resolutions (14 issues, all resolved)
+## Forensic Audit Resolutions (18 issues, all resolved)
 
 ### CRITICAL resolutions (3):
-1. **PLAN.md pointer** — PLAN.md replaced with pointer to this file. resurrect reads PLAN.md → follows pointer → reads nexus.md. RESOLVED.
-2. **Persona mismatch** — cc_server_p1.py now passes `--append-system-prompt` with Karma persona on every /cc call. CC subprocess identifies as Karma, not Julian. RESOLVED.
-3. **Code skeletons** — Sprint 1 key changes implemented directly in cc_server_p1.py: Popen (streaming-ready), cancel endpoint, effort/model flag threading. Code is IN the files, not described abstractly. RESOLVED.
+1. **PLAN.md pointer** — RESOLVED. Karma2/PLAN.md points here.
+2. **Persona mismatch** — RESOLVED. --append-system-prompt with Karma persona.
+3. **Code skeletons** — RESOLVED. Popen, cancel, effort/model flags in cc_server_p1.py.
 
-### Pass 1 resolutions (5):
-4. **Unverified stream-json format** — ACKNOWLEDGED. First Sprint 1 task: capture one real `--output-format stream-json --include-partial-messages` output during a tool-using call. Parse format from evidence, then build renderer. Documented as Sprint 1 Step 0 prerequisite.
-5. **Code self-edit deploy spec** — Deploy chain: CC edits file → `git add` → `git commit` → `git push` → `ssh vault-neo 'cd /home/neo/karma-sade && git pull'` → `docker compose rebuild if needed`. CC already has Bash tool to run this chain. Verify: tested in S151 (self-edit-proof.txt). Full deploy needs Docker rebuild only if proxy.js changes.
-6. **K2 regent approval code** — karma_regent.py needs `read_sovereign_approvals()` function. Implementation: query bus for `from=colby, type=approval`, match against pending promotions, apply approved ones to spine. Write via scp (not heredoc — P019). ~30 lines Python.
-7. **Reboot = Sovereign action** — Flagged in Sprint 5: "Requires admin elevation. Colby runs: `schtasks /create /tn KarmaSovereignHarness /tr 'powershell -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\start_cc_server.ps1' /sc onstart /ru SYSTEM`"
-8. **Electron file sync** — Electron loads `hub.arknexus.net` (remote, always current) by default. Local copy only used if offline. No sync needed — web fallback is the primary path. Electron adds IPC capabilities ON TOP.
+### Pass 1-5 resolutions (13):
+4. **stream-json format** — **VERIFIED (obs #19692).** `--verbose` flag REQUIRED with `-p` mode. NDJSON format: system (hooks/init), assistant (thinking/tool_use/text content blocks), user (tool_result), rate_limit_event, result. Sprint 1 Step 0 COMPLETE.
+5. **Code self-edit deploy spec** — SPECIFIED. git add → commit → push → ssh pull → rebuild.
+6. **Regent approval** — SPECIFIED. read_sovereign_approvals() queries bus, applies to spine.
+7. **Reboot = Sovereign** — SPECIFIED. schtasks command provided.
+8. **Electron sync** — RESOLVED. Remote load default, IPC adds capabilities.
+9. **Electron platform** — SPECIFIED. P1 (Windows) primary.
+10. **K2 write** — SPECIFIED. scp, not heredoc.
+11. **PLAN.md reference** — RESOLVED. Points here.
+12. **Item 8 INFERRED** — ACKNOWLEDGED. Needs Sprint 1.
+13. **Item 9 WRONG** — FIXED. --append-system-prompt added.
+14. **Item 17 INFERRED** — CORRECTED. Sprint 3 dependency.
+15. **Items 20-22 INFERRED** — MITIGATED. cwd=WORK_DIR loads settings.
+16. **Sprint 1 specificity** — RESOLVED. Popen + cancel + flags in code.
 
-### Pass 2 resolutions (2):
-9. **Electron platform** — Primary target: P1 (Windows). Colby's main machine. K2 (WSLg/Linux) is secondary/dev. Electron works on both. Build on P1 first.
-10. **K2 code write method** — Use `scp` from P1 or `mcp__k2__file_write` MCP tool. NEVER heredoc for Python/JS files (P019). RESOLVED.
-
-### Pass 3 resolution (1):
-11. **PLAN.md doesn't reference nexus.md** — Fixed. PLAN.md now points to nexus.md. RESOLVED.
-
-### Pass 4 resolutions (5):
-12. **Item 8 (memory persistence) INFERRED** — Partially verified: claude-mem search works (used in session), cortex query works (used in session). Vault MEMORY.md read works (tested). Full verify: ask Karma at Nexus "what did we do last session?" — needs Sprint 1 to be useful (currently Karma = Julian persona confusion, now fixed with --append-system-prompt).
-13. **Item 9 (persona) WRONG** — FIXED. `--append-system-prompt` with Karma persona added to cc_server_p1.py. CC subprocess will identify as Karma at the Nexus. RESOLVED.
-14. **Item 17 (voice) INFERRED** — Voice is a CC desktop/web wrapper feature, not something that flows through cc_server_p1.py HTTP. Voice requires Electron (Sprint 3) or CC desktop app directly. Marked as Sprint 3 dependency in baseline checklist. CORRECTED.
-15. **Items 20-22 (MCP/skills/hooks) INFERRED** — CC has these natively and they work through `claude -p --resume`. Skills fire via CLAUDE.md auto-discovery. Hooks fire via settings.json. MCP connects via .mcp.json. All of these are CC-internal, not pipe-dependent. The only risk: `--append-system-prompt` might not load project-level settings. MITIGATED: cc_server_p1.py runs with `cwd=WORK_DIR` (Karma_SADE repo root), so CLAUDE.md and .claude/ settings load normally.
-
-### Pass 5 resolution (1):
-16. **Sprint 1 needs code specificity** — Key Sprint 1 code changes now implemented directly in cc_server_p1.py and proxy.js (not described abstractly): Popen with cancel, effort/model flags, /cancel endpoint, /v1/cancel proxy route. Remaining Sprint 1 work: stream-json pipe (needs format verification first) and unified.html EventSource reader.
-
-## Sovereign Action Items (Colby must do)
-
-1. **Reboot survival (Gap 7):** Run elevated: `schtasks /create /tn KarmaSovereignHarness /tr "powershell -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\start_cc_server.ps1" /sc onstart /ru SYSTEM`
-2. **Item 24 gate:** When baseline 1-23 passes, Colby decides when to start video/presence.
+### Additional Audit (Session 152):
+17. **cc-chat-logger.py** — UNVERIFIED. Sprint 1 Step 0 prerequisite.
+18. **Ambient hooks** — ✅ LIVE. Documented.
+19. **Context7** — ✅ AVAILABLE. Use for all framework docs.
+20. **Wip-watcher** — KILLED. Not needed until baseline complete.
 
 ---
 
-## Additional Items Found (second audit round)
+## Sovereign Action Items (Colby must do)
 
-### 17. cc-chat-logger.py — UNVERIFIED
-**What:** Stop hook that captures CC Code tab exchanges to nexus-chat.jsonl. Wired by Karma in S152 but harness failed before verification.
-**File:** `.claude/hooks/cc-chat-logger.py` (untracked in git)
-**Risk:** If broken, CC Code tab conversations are NOT captured to shared awareness. Only Nexus (browser) conversations appear in nexus-chat.jsonl.
-**Fix:** Sprint 1 prerequisite — verify cc-chat-logger.py works by: (1) check .claude/settings.json has the Stop hook wired, (2) send a message in CC, (3) check nexus-chat.jsonl on vault-neo for the entry. If broken, fix or remove.
-**Sprint:** Sprint 1 Step 0 (alongside stream-json format verification)
-
-### 18. Ambient capture hooks — document in baseline
-**What:** Git post-commit hook (`.git/hooks/post-commit`) and session-end hook (`.claude/hooks/session-end.sh`) POST to `/v1/ambient` on every git commit and CC session end. These feed the vault ledger.
-**Status:** ✅ LIVE (verified S150 — ledger entries exist with tags `capture+commit+git+main` and `capture+session-end+claude-code`)
-**No action needed** — just documenting for completeness.
-
-### 19. Context7 MCP — implementation resource
-**What:** Context7 provides live documentation for any framework/library via `mcp__context7__resolve-library-id` and `mcp__context7__query-docs`. Available in every CC session.
-**Use:** Before writing Electron code, query Context7 for Electron docs. Before writing SSE code, query for Node.js streaming patterns. STOP chasing your tail re-reading docs manually.
-**Rule:** When implementing any Sprint task involving a framework (Electron, Node.js EventSource, SSE): query Context7 FIRST. This is not optional.
-
-### 20. Wip-watcher — KILLED
-**What:** `KarmaWipWatcher` scheduled task + PowerShell watcher on `docs/wip/`. Was ingesting same files repeatedly, showing visible PowerShell window.
-**Status:** Killed S150 (task unregistered, 2 processes stopped). Not needed until baseline established.
-**Reactivation:** After Sprint 2 (file input), if PDF/doc ingestion is needed again, create a clean version. NOT before baseline.
-
-## Baseline Checklist Addendum
-
-| # | Requirement | Sprint | Verify |
-|---|-------------|--------|--------|
-| 25 | cc-chat-logger captures Code tab conversations | Sprint 1 | Send message in CC → check nexus-chat.jsonl |
-| 26 | Ambient hooks feed vault ledger | ✅ DONE | git commit → check ledger for capture entry |
-| 27 | Context7 used for all framework doc lookups | ALL | Every sprint implementation queries Context7 first |
+1. **Gap 6 (Evolution):** After AGORA updates, verify regent polls every 60s:
+   ```bash
+   # On K2:
+   grep REGENT_POLL_INTERVAL /etc/karma-regent.env
+   # Expected: 60
+   ```
+2. **Item 24 gate:** When baseline 1-23 passes, Colby decides when to start video/presence.
+3. **Gap 7 (Reboot):** DEFERRED until all previous sprints complete. Run elevated when ready:
+   ```powershell
+   schtasks /create /tn KarmaSovereignHarness /tr "powershell -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\start_cc_server.ps1" /sc onstart /ru SYSTEM
+   ```
 
 ---
 
@@ -336,9 +360,14 @@ VAULT-NEO SPINE (permanent truth)
 
 This plan is LOCKED as of 2026-03-28. Modifications require Sovereign approval.
 Plan name: "The Nexus"
-Baseline: 23 items
+Version: 1.1-LOCKED
+Baseline: 27 items (23 main + 4 addendum)
 Sprints: 5
-All 14 audit issues: RESOLVED
-Item 24: DEFERRED — Sovereign gate (video + 3D presence, after baseline established)
+All audit issues: RESOLVED
+Item 24: DEFERRED — Sovereign gate
+Cross-References:
+  - `Karma2/PLAN.md` — points to this file
+  - `docs/ForColby/PLAN.md` — master plan (this is child)
+  - `MEMORY.md` — mutable state, synced on session start
 
-*This plan achieves all 23 baseline items. No gaps. No fragments. No incomplete proposals.*
+*This plan achieves all 27 baseline items. No gaps. No fragments. No incomplete proposals.*

@@ -185,6 +185,21 @@ CC ── Claude Code on P1 — execution layer
 - **Persona fixed:** cc_server_p1.py --append-system-prompt Karma persona. Nexus = Karma not Julian.
 - **Cancel + CLI flags:** /cancel endpoint, --effort/--model threading implemented.
 
+## Session 151 — Sprint 1 Implementation
+
+### What Was Done
+- **Sprint 1 Step 0 COMPLETE** (obs #19692): stream-json format verified. `--verbose` REQUIRED with `-p` mode (P069).
+- **nexus.md v1.1-LOCKED** (obs #19695): Rewritten from forensic audit. 27 baseline items explicit, cross-refs, verify commands, P067-P070.
+- **Sprint 1 IMPLEMENTED** (Gaps 1 + 2 + 5):
+  - cc_server_p1.py: `/cc/stream` SSE endpoint + `run_cc_stream()` generator + `ThreadingHTTPServer` (concurrent cancel)
+  - proxy.js: `routeToHarnessStream()` SSE passthrough + vault/chatlog/cortex logging on stream end
+  - unified.html: `fetch` ReadableStream parser + progressive text + tool evidence from stream + Esc/STOP cancel
+- **P069-P070 pitfalls** documented in cc-scope-index + claude-mem
+- **P064 expanded**: pitfalls = mistakes/errors/problems/issues/blockers/gaps
+
+### Active Blocker
+- Deploying to vault-neo + restarting P1 cc_server — in progress
+
 ## Next Session Starts Here
 1. `/resurrect`
-2. Nexus Sprint 1 Step 0: Capture one real `--output-format stream-json --include-partial-messages` output during a tool-using call to verify format. THE ONLY PLAN is `docs/superpowers/specs/nexus.md` (Karma2/PLAN.md points there).
+2. Verify Sprint 1 baseline items (2, 3, 6, 19, 25) end-to-end from browser at hub.arknexus.net. If any fail, debug and fix. THE ONLY PLAN is `docs/superpowers/specs/nexus.md` (Karma2/PLAN.md points there).
