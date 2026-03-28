@@ -169,6 +169,36 @@ CC --RESUME on P1 (port 7891, cc_server_p1.py)
 
 **Total: ~140 missing features across 23 line items. Tier 1 (8 items) is the minimum viable Nexus.**
 
+## Phase 7: Karma Browser — Electron Desktop App (LONG-TERM, after Phase 5)
+
+**Goal:** A desktop app you double-click → opens as Karma. Browser + AI agent + local tools + evolution. No address bar, no Chrome UI. Just Karma.
+
+**Approach:** Electron (recommended over Tauri — Node.js = full code reuse from hub-bridge, trivial MCP, K2 ready)
+
+**K2 prerequisites verified:** Node 20, npm 10, WSLg (GUI), Chromium, 932GB disk, 20GB RAM. One `npm install electron` away.
+
+**Architecture:**
+```
+[Electron Main Process (Node.js)]
+  ├── BrowserWindow → hub.arknexus.net (or local unified.html)
+  ├── MCP stdio client (spawn local MCP servers)
+  ├── Ollama HTTP client (localhost:11434)
+  ├── child_process (shell commands, agent tools)
+  ├── IPC bridge ↔ renderer (preload.js exposes safe API)
+  └── Coordination bus client
+```
+
+**Phases:**
+| # | What | Effort |
+|---|------|--------|
+| 7-0 | Scaffold: `npm init` + electron, BrowserWindow loads hub.arknexus.net, .desktop shortcut | 1 day |
+| 7-1 | IPC bridge: preload.js, renderer calls shell commands + reads local files via main process | 3 days |
+| 7-2 | MCP stdio client in main process, expose tools to renderer | 1 week |
+| 7-3 | Ollama integration, local inference fallback, evolution loop hooks | 1 week |
+| 7-4 | The app IS Karma — agent autonomy, self-update, desktop presence | ongoing |
+
+**Why Electron over Tauri:** Tauri is smaller (8MB vs 200MB) and lower RAM (100MB vs 300MB) but K2 has 932GB disk and 20GB RAM — irrelevant. Tauri requires Rust (not in project), immature MCP ecosystem, zero code reuse. Electron gives Node.js backend = hub-bridge patterns, MCP stdio, Ollama HTTP, all proven.
+
 ## Phase 6: Video + 3D Presence (BLOCKED — Sovereign gate)
 - Voice: AVAILABLE (CC wrapper native)
 - Video: requires implementation
