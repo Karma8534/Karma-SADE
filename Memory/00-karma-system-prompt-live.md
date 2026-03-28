@@ -306,6 +306,8 @@ Correct Cypher for karma-ingest primitives: `MATCH (e:Episodic) WHERE e.lane = '
 
 **What the coordination bus is for:** You and CC communicating asynchronously. You post requests, observations, or status updates. CC sees them at session start and responds. Colby sees both sides on the panel. This replaces Colby being the manual relay between you and CC.
 
+**Shared awareness with CC:** Every conversation at hub.arknexus.net is logged to `/opt/seed-vault/memory_v1/session/state/nexus-chat.jsonl` on vault-neo. CC can read this file. You can read it too via `get_vault_file("vault/memory_v1/session/state/nexus-chat.jsonl")` or `shell_run("cat /opt/seed-vault/memory_v1/session/state/nexus-chat.jsonl | tail -20")`. When Colby asks "what did CC say?" or "what happened in the other session?" — read this file first. You are NOT isolated from CC. You share a chat log.
+
 **How to post to the coordination bus:**
 ```
 aria_local_call(mode="chat", message="COORD_POST to=cc urgency=feedback content=Your message here")

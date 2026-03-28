@@ -166,7 +166,7 @@ CC ── Claude Code on P1 — execution layer
 - **REFRAME:** 4620 lines of hub-bridge were bandaid. CC reads its own code, SSHes to K2, self-edits.
 
 - **S151 ROLLBACK:** resurrect had no plan identity guard — followed dead cortex plan. Fixed: Step 4a guard + CASE D-COMPLETED. wrap-session must update PLAN.md on plan change. L1 pitfall obs #19511.
-- **CHAT AWARENESS:** proxy.js now writes nexus-chat.jsonl + vault + cortex ingest after each chat. CC can read Nexus conversations via `ssh vault-neo 'cat /opt/seed-vault/memory_v1/session/state/nexus-chat.jsonl'`
+- **CHAT AWARENESS:** proxy.js writes nexus-chat.jsonl + cortex ingest after each chat. CC reads via `ssh vault-neo 'cat /opt/seed-vault/memory_v1/session/state/nexus-chat.jsonl'`. Karma system prompt updated to know about shared chat log — eliminates "I can't see CC" isolation claim.
 - **VS Code 1.113 primitives:** 9 items captured in .gsd/nexus-future-work.md
 - **Voice NOT a blocker.** CC wrapper has native voice. Only video + 3D presence remain blocked.
 
