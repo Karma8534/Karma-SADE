@@ -23,9 +23,12 @@ Karma surfaces as an Electron desktop app. Double-click → Karma. No address ba
 | Vesper pipeline | ✅ RUNNING | karma-regent, spine v1243, 1285 promotions |
 | claude-mem | ✅ LIVE | Cross-session memory |
 | vault spine | ✅ LIVE | MEMORY.md, ledger, FalkorDB, FAISS |
-| nexus-chat.jsonl | ✅ LIVE | Shared awareness between CC + Nexus |
+| nexus-chat.jsonl | ✅ LIVE | Shared awareness — proxy writes, Karma reads, CC reads via SSH |
+| cc-chat-logger.py | ⚠️ UNVERIFIED | `.claude/hooks/cc-chat-logger.py` — Stop hook to capture CC Code tab exchanges to nexus-chat.jsonl. Wired by Karma S152 but never tested. |
+| Ambient capture hooks | ✅ LIVE | Git post-commit + session-end hooks → POST /v1/ambient → vault ledger |
 | Electron scaffold | ✅ EXISTS | /mnt/c/dev/Karma/k2/karma-browser/ (main.js, preload.js, IPC) |
 | Self-edit | ✅ PROVEN | self-edit-proof.txt modified from browser S151 |
+| Context7 MCP | ✅ AVAILABLE | Library doc lookup — use for Electron, Node, any framework docs during build |
 
 ## The 8 Gaps Between Current State and Baseline
 
@@ -292,6 +295,40 @@ VAULT-NEO SPINE (permanent truth)
 
 1. **Reboot survival (Gap 7):** Run elevated: `schtasks /create /tn KarmaSovereignHarness /tr "powershell -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\start_cc_server.ps1" /sc onstart /ru SYSTEM`
 2. **Item 24 gate:** When baseline 1-23 passes, Colby decides when to start video/presence.
+
+---
+
+## Additional Items Found (second audit round)
+
+### 17. cc-chat-logger.py — UNVERIFIED
+**What:** Stop hook that captures CC Code tab exchanges to nexus-chat.jsonl. Wired by Karma in S152 but harness failed before verification.
+**File:** `.claude/hooks/cc-chat-logger.py` (untracked in git)
+**Risk:** If broken, CC Code tab conversations are NOT captured to shared awareness. Only Nexus (browser) conversations appear in nexus-chat.jsonl.
+**Fix:** Sprint 1 prerequisite — verify cc-chat-logger.py works by: (1) check .claude/settings.json has the Stop hook wired, (2) send a message in CC, (3) check nexus-chat.jsonl on vault-neo for the entry. If broken, fix or remove.
+**Sprint:** Sprint 1 Step 0 (alongside stream-json format verification)
+
+### 18. Ambient capture hooks — document in baseline
+**What:** Git post-commit hook (`.git/hooks/post-commit`) and session-end hook (`.claude/hooks/session-end.sh`) POST to `/v1/ambient` on every git commit and CC session end. These feed the vault ledger.
+**Status:** ✅ LIVE (verified S150 — ledger entries exist with tags `capture+commit+git+main` and `capture+session-end+claude-code`)
+**No action needed** — just documenting for completeness.
+
+### 19. Context7 MCP — implementation resource
+**What:** Context7 provides live documentation for any framework/library via `mcp__context7__resolve-library-id` and `mcp__context7__query-docs`. Available in every CC session.
+**Use:** Before writing Electron code, query Context7 for Electron docs. Before writing SSE code, query for Node.js streaming patterns. STOP chasing your tail re-reading docs manually.
+**Rule:** When implementing any Sprint task involving a framework (Electron, Node.js EventSource, SSE): query Context7 FIRST. This is not optional.
+
+### 20. Wip-watcher — KILLED
+**What:** `KarmaWipWatcher` scheduled task + PowerShell watcher on `docs/wip/`. Was ingesting same files repeatedly, showing visible PowerShell window.
+**Status:** Killed S150 (task unregistered, 2 processes stopped). Not needed until baseline established.
+**Reactivation:** After Sprint 2 (file input), if PDF/doc ingestion is needed again, create a clean version. NOT before baseline.
+
+## Baseline Checklist Addendum
+
+| # | Requirement | Sprint | Verify |
+|---|-------------|--------|--------|
+| 25 | cc-chat-logger captures Code tab conversations | Sprint 1 | Send message in CC → check nexus-chat.jsonl |
+| 26 | Ambient hooks feed vault ledger | ✅ DONE | git commit → check ledger for capture entry |
+| 27 | Context7 used for all framework doc lookups | ALL | Every sprint implementation queries Context7 first |
 
 ---
 
