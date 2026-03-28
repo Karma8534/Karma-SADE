@@ -189,6 +189,39 @@ const server = http.createServer(async (req, res) => {
       return res.end(html);
     }
 
+    // ── /agora — Evolution Dashboard ───────────────────────────────────
+    if (req.method === "GET" && (req.url === "/agora" || req.url === "/agora/")) {
+      try {
+        const html = fs.readFileSync(path.join(PUBLIC_DIR, "agora.html"), "utf-8");
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        return res.end(html);
+      } catch { return json(res, 500, { ok: false, error: "agora.html not found" }); }
+    }
+
+    // ── /agora/events — evolution events API ─────────────────────────
+    if (req.method === "GET" && req.url.startsWith("/agora/events")) {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      evictCoord();
+      // Filter coordination bus for evolution-relevant events
+      const evolutionKeywords = ["promote", "evolution", "self-edit", "vesper", "pattern", "spine", "learn", "growth", "pitfall", "decision", "proof", "direction", "insight", "self-improve"];
+      let entries = [..._coordCache.values()].filter(e => {
+        const content = (e.content || "").toLowerCase();
+        return evolutionKeywords.some(k => content.includes(k)) || e.from === "regent" || e.from === "cc-watchdog";
+      });
+      entries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      entries = entries.slice(0, 50);
+      // Also read chat log for self-edit evidence
+      let chatEdits = [];
+      try {
+        const logPath = "/run/state/nexus-chat.jsonl";
+        if (fs.existsSync(logPath)) {
+          const lines = fs.readFileSync(logPath, "utf-8").trim().split("\n").filter(Boolean);
+          chatEdits = lines.slice(-20).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+        }
+      } catch {}
+      return json(res, 200, { ok: true, evolution_events: entries, recent_chats: chatEdits });
+    }
+
     // ── Health ─────────────────────────────────────────────────────────
     if (req.method === "GET" && req.url === "/health") {
       return json(res, 200, { ok: true, service: "sovereign-proxy", ts: new Date().toISOString() });

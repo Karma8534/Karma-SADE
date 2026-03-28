@@ -1,998 +1,126 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Karma - SovereignPeer</title>
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AGORA — Evolution Dashboard</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: #080810;
-    color: #e2e8f0;
-    font-family: 'Courier New', monospace;
-    font-size: 13px;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Token gate */
-  #gate {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    gap: 14px;
-  }
-  #gate .gate-mark {
-    font-size: 11px;
-    letter-spacing: 6px;
-    color: #6d28d9;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-  #gate h1 {
-    font-size: 28px;
-    color: #a78bfa;
-    letter-spacing: 8px;
-    font-weight: 300;
-  }
-  #gate .gate-sub {
-    color: #4b5563;
-    font-size: 11px;
-    letter-spacing: 2px;
-  }
-  #gate input {
-    background: #0e0e1a;
-    border: 1px solid #2d2040;
-    color: #e2e8f0;
-    padding: 9px 14px;
-    width: 420px;
-    font-family: monospace;
-    font-size: 13px;
-    outline: none;
-    margin-top: 12px;
-  }
-  #gate input:focus { border-color: #6d28d9; }
-  #gate input::placeholder { color: #2d2040; }
-  #gate button {
-    background: #6d28d9;
-    color: #e2e8f0;
-    border: none;
-    padding: 9px 28px;
-    cursor: pointer;
-    font-family: monospace;
-    font-size: 13px;
-    font-weight: bold;
-    letter-spacing: 2px;
-    transition: background 0.15s;
-  }
-  #gate button:hover { background: #7c3aed; }
-  #gate .err { color: #ef4444; font-size: 12px; display: none; }
-
-  /* Main layout */
-  #app { display: none; flex-direction: column; height: 100vh; }
-
-  /* Header */
-  #header {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 10px 20px;
-    background: #080810;
-    border-bottom: 1px solid #1a1030;
-    flex-shrink: 0;
-  }
-  #header .vesper-badge {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-  #header .vesper-title {
-    color: #a78bfa;
-    font-size: 18px;
-    letter-spacing: 6px;
-    font-weight: 300;
-  }
-  #header .vesper-sub {
-    color: #4b5563;
-    font-size: 10px;
-    letter-spacing: 3px;
-  }
-  #header .spacer { flex: 1; }
-
-  /* Status bar */
-  #status-bar {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-    padding: 0 20px;
-  }
-  .stat-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: #4b5563;
-  }
-  .stat-item .stat-label { color: #4b5563; }
-  .stat-item .stat-val { color: #8b5cf6; }
-  .stat-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #374151;
-    flex-shrink: 0;
-  }
-  .stat-dot.alive { background: #7c3aed; box-shadow: 0 0 6px #7c3aed; }
-  .stat-dot.warn  { background: #f59e0b; }
-  .stat-dot.dead  { background: #374151; }
-
-  /* Two-column main layout */
-  #main-layout { display: flex; flex: 1; overflow: hidden; min-height: 0; }
-
-  /* Chat feed (left column) */
-  #chat-feed {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    scrollbar-width: thin;
-    scrollbar-color: #1a1030 transparent;
-  }
-  #chat-feed::-webkit-scrollbar { width: 4px; }
-  #chat-feed::-webkit-scrollbar-track { background: transparent; }
-  #chat-feed::-webkit-scrollbar-thumb { background: #1a1030; border-radius: 2px; }
-
-  /* Status panel (right column) */
-  #status-panel {
-    width: 240px;
-    border-left: 1px solid #1a1a2e;
-    overflow-y: auto;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    background: #050508;
-    flex-shrink: 0;
-    scrollbar-width: thin;
-    scrollbar-color: #1a1030 transparent;
-  }
-  #status-panel::-webkit-scrollbar { width: 3px; }
-  #status-panel::-webkit-scrollbar-track { background: transparent; }
-  #status-panel::-webkit-scrollbar-thumb { background: #1a1030; border-radius: 2px; }
-
-  .status-entry {
-    font-size: 10px;
-    color: #4a4a6a;
-    font-family: monospace;
-    border-bottom: 1px solid #0a0a14;
-    padding-bottom: 4px;
-    margin-bottom: 2px;
-    word-break: break-word;
-    line-height: 1.3;
-  }
-  .status-entry .s-ts {
-    color: #2a2a4a;
-    display: block;
-    margin-bottom: 1px;
-    font-size: 9px;
-  }
-  #status-panel-header {
-    font-size: 9px;
-    color: #2a2a4a;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-    padding-bottom: 4px;
-    border-bottom: 1px solid #1a1a2e;
-    flex-shrink: 0;
-  }
-
-  .msg {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    max-width: 780px;
-  }
-  .msg.regent { align-self: flex-start; }
-  .msg.user   { align-self: flex-end; }
-
-  .msg-meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 10px;
-  }
-  .msg.regent .msg-meta { color: #5b21b6; }
-  .msg.user   .msg-meta { color: #374151; justify-content: flex-end; }
-
-  .msg-sender {
-    letter-spacing: 2px;
-    font-weight: bold;
-  }
-  .msg.regent .msg-sender { color: #8b5cf6; }
-  .msg.user   .msg-sender { color: #4b5563; }
-
-  .msg-ts { color: #374151; }
-
-  .msg-body {
-    padding: 10px 14px;
-    line-height: 1.6;
-    font-size: 13px;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  .msg.regent .msg-body {
-    background: #0e0a1a;
-    border: 1px solid #2d1f50;
-    border-left: 3px solid #6d28d9;
-    color: #e2e8f0;
-  }
-  .msg.user .msg-body {
-    background: #0a0a14;
-    border: 1px solid #1f1f38;
-    color: #9ca3af;
-  }
-
-  /* Processing indicator */
-  #processing {
-    display: none;
-    align-self: flex-start;
-    padding: 8px 14px;
-    color: #5b21b6;
-    font-size: 12px;
-    letter-spacing: 1px;
-  }
-  #processing.visible { display: block; }
-  @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
-  #processing { animation: pulse 1.4s ease-in-out infinite; }
-
-  /* Input area */
-  #input-area {
-    padding: 12px 20px 14px;
-    background: #080810;
-    border-top: 1px solid #1a1030;
-    flex-shrink: 0;
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-  }
-  #msg-input {
-    flex: 1;
-    background: #0e0e1a;
-    border: 1px solid #2d2040;
-    color: #e2e8f0;
-    padding: 9px 12px;
-    font-family: monospace;
-    font-size: 13px;
-    resize: none;
-    min-height: 40px;
-    max-height: 140px;
-    outline: none;
-    line-height: 1.5;
-  }
-  #msg-input:focus { border-color: #6d28d9; }
-  #msg-input::placeholder { color: #2d2040; }
-  #send-btn {
-    background: #6d28d9;
-    color: #e2e8f0;
-    border: none;
-    padding: 9px 20px;
-    cursor: pointer;
-    font-family: monospace;
-    font-size: 12px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    transition: background 0.15s;
-    flex-shrink: 0;
-  }
-  #send-btn:hover { background: #7c3aed; }
-  #send-btn:disabled { opacity: 0.35; cursor: default; }
-
-  /* Footer */
-  #footer {
-    padding: 6px 20px;
-    background: #080810;
-    border-top: 1px solid #0f0a1a;
-    text-align: center;
-    font-size: 10px;
-    letter-spacing: 4px;
-    color: #2d1f50;
-    flex-shrink: 0;
-  }
-
-  /* Empty state */
-  #empty-state {
-    color: #2a2a4a;
-    font-size: 12px;
-    text-align: center;
-    margin-top: 40px;
-    letter-spacing: 2px;
-  }
-
-  /* --- Agora compatibility layer (keeps existing IDs/behavior) --- */
-  #header .brand {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-  #header .title {
-    color: #a78bfa;
-    font-size: 18px;
-    letter-spacing: 6px;
-    font-weight: 300;
-  }
-  #header .subtitle {
-    color: #4b5563;
-    font-size: 10px;
-    letter-spacing: 3px;
-  }
-  #header .status-wrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #4b5563;
-    font-size: 11px;
-    margin-left: auto;
-  }
-  #header .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #7c3aed;
-    box-shadow: 0 0 6px #7c3aed;
-  }
-  #persona-bar {
-    display: flex;
-    gap: 14px;
-    padding: 6px 20px;
-    background: #080810;
-    border-bottom: 1px solid #1a1030;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  .persona {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: #4b5563;
-  }
-  .persona-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .p-green  { background: #7c3aed; box-shadow: 0 0 6px #7c3aed; }
-  .p-amber  { background: #f59e0b; }
-  .p-grey   { background: #374151; }
-
-  #cc-brief,
-  #session-brief {
-    border-bottom: 1px solid #1a1030;
-    background: #080810;
-    flex-shrink: 0;
-  }
-  #cc-brief-header,
-  #session-brief-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 6px 20px;
-    user-select: none;
-    cursor: pointer;
-  }
-  #cc-brief-header .lbl,
-  #session-brief-header .lbl {
-    font-size: 11px;
-    letter-spacing: 2px;
-    font-weight: bold;
-    color: #8b5cf6;
-  }
-  #cc-brief-header .sub,
-  #session-brief-header .sub {
-    color: #4b5563;
-    font-size: 11px;
-  }
-  #cc-brief-header .chevron,
-  #session-brief-header .chevron {
-    margin-left: auto;
-    color: #4b5563;
-    font-size: 10px;
-    transition: transform 0.2s;
-  }
-  #cc-brief-header .chevron.open,
-  #session-brief-header .chevron.open { transform: rotate(180deg); }
-
-  #cc-brief-body,
-  #session-brief-body {
-    padding: 0 20px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  #cc-brief-controls,
-  #session-brief-controls {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  #cc-brief-input,
-  #session-brief-filter,
-  #msg-input,
-  #to-select {
-    background: #0e0e1a;
-    border: 1px solid #2d2040;
-    color: #e2e8f0;
-    font-family: monospace;
-    font-size: 12px;
-    outline: none;
-  }
-  #cc-brief-input:focus,
-  #session-brief-filter:focus,
-  #msg-input:focus,
-  #to-select:focus { border-color: #6d28d9; }
-
-  #cc-brief-input {
-    width: 100%;
-    resize: vertical;
-    min-height: 64px;
-    max-height: 180px;
-    padding: 8px 10px;
-    line-height: 1.45;
-  }
-  #session-brief-filter { padding: 4px 8px; }
-  #cc-brief-btn,
-  #cc-brief-clear-btn,
-  #session-brief-btn,
-  #cc-brief-copy,
-  #session-brief-copy,
-  #input-bar button {
-    background: #6d28d9;
-    color: #e2e8f0;
-    border: none;
-    padding: 6px 14px;
-    cursor: pointer;
-    font-family: monospace;
-    font-size: 12px;
-    font-weight: bold;
-    letter-spacing: 1px;
-  }
-  #cc-brief-btn:hover,
-  #cc-brief-clear-btn:hover,
-  #session-brief-btn:hover,
-  #cc-brief-copy:hover,
-  #session-brief-copy:hover,
-  #input-bar button:hover { background: #7c3aed; }
-
-  #cc-brief-output,
-  #session-brief-output {
-    background: #0e0a1a;
-    border: 1px solid #2d1f50;
-    padding: 8px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  #cc-brief-result,
-  #session-brief-result {
-    color: #e2e8f0;
-    font-size: 12px;
-    line-height: 1.6;
-    white-space: pre-wrap;
-  }
-  #cc-brief-status,
-  #session-brief-status,
-  #session-brief-count { color: #4b5563; font-size: 11px; }
-
-  #feed {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    scrollbar-width: thin;
-    scrollbar-color: #1a1030 transparent;
-  }
-  #feed::-webkit-scrollbar { width: 4px; }
-  #feed::-webkit-scrollbar-track { background: transparent; }
-  #feed::-webkit-scrollbar-thumb { background: #1a1030; border-radius: 2px; }
-
-  .entry {
-    display: flex;
-    gap: 10px;
-    padding: 6px 10px;
-    border-left: 3px solid #6d28d9;
-    border: 1px solid #2d1f50;
-    background: #0e0a1a;
-    line-height: 1.5;
-  }
-  .entry:hover { background: #141022; }
-  .entry.blocking { border-left-color: #ef4444; }
-  .entry .meta { color: #4b5563; }
-  .entry .ts { color: #374151; }
-  .entry .content { color: #e2e8f0; white-space: pre-wrap; }
-  .badge {
-    padding: 1px 6px;
-    font-size: 10px;
-    border: 1px solid #2d1f50;
-    border-radius: 999px;
-  }
-  .badge-blocking { color: #fecaca; background: rgba(127,29,29,.35); }
-  .badge-informational { color: #ddd6fe; background: rgba(91,33,182,.28); }
-
-  #input-bar {
-    padding: 12px 20px 14px;
-    background: #080810;
-    border-top: 1px solid #1a1030;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-shrink: 0;
-  }
-  #to-select { padding: 7px 8px; min-width: 110px; }
-  #msg-input {
-    flex: 1;
-    padding: 9px 12px;
-    font-size: 13px;
-    min-height: 40px;
-  }
-
-  @media (max-width: 900px) {
-    #header { padding: 10px 14px; }
-    #header .title { font-size: 16px; letter-spacing: 4px; }
-    #header .subtitle { letter-spacing: 2px; }
-    #persona-bar,
-    #cc-brief-header,
-    #session-brief-header,
-    #cc-brief-body,
-    #session-brief-body,
-    #feed,
-    #input-bar { padding-left: 12px; padding-right: 12px; }
-    #input-bar { flex-wrap: wrap; }
-    #to-select { min-width: 100%; }
-  }
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d1117;color:#e6edf3;font-family:-apple-system,sans-serif;padding:16px;max-width:960px;margin:0 auto}
+h1{color:#7c3aed;font-size:18px;letter-spacing:4px;margin-bottom:4px}
+.subtitle{color:#6b7280;font-size:12px;margin-bottom:20px}
+.section{margin-bottom:24px}
+.section-title{color:#9ca3af;font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;border-bottom:1px solid #1f2937;padding-bottom:4px}
+.event{background:#161b22;border-left:3px solid #374151;border-radius:0 6px 6px 0;padding:8px 12px;margin-bottom:6px;font-size:13px;line-height:1.5}
+.event .ts{color:#6b7280;font-size:11px}
+.event .from{font-weight:600;margin-right:6px}
+.event .content{color:#c9d1d9;white-space:pre-wrap;word-break:break-word}
+.event.promote{border-left-color:#10b981}
+.event.self-edit{border-left-color:#f59e0b}
+.event.pitfall{border-left-color:#ef4444}
+.event.decision{border-left-color:#3b82f6}
+.event.heartbeat{border-left-color:#374151;opacity:0.6}
+.event.proof{border-left-color:#8b5cf6}
+.event.chat{border-left-color:#6366f1}
+.chat-user{color:#9ca3af;font-size:12px}
+.chat-assistant{color:#e6edf3;font-size:13px;margin-top:2px}
+.status{display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.status-item{background:#161b22;border-radius:6px;padding:8px 14px;font-size:12px}
+.status-item .label{color:#6b7280}
+.status-item .val{color:#e6edf3;font-weight:600}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px}
+.dot.green{background:#10b981}.dot.yellow{background:#f59e0b}.dot.red{background:#ef4444}.dot.gray{background:#374151}
+.refresh-btn{background:#1f2937;border:1px solid #374151;color:#9ca3af;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:11px;float:right}
+.refresh-btn:hover{background:#374151;color:#e6edf3}
+a{color:#7c3aed;text-decoration:none}
+a:hover{text-decoration:underline}
+#error{color:#ef4444;font-size:12px;margin-bottom:8px;display:none}
 </style>
-</head>
-<body>
-
-<!-- Token gate -->
-<div id="gate">
-  <div class="gate-mark">Ascendant</div>
-  <h1>KARMA</h1>
-  <div class="gate-sub">Access token required</div>
-  <input id="token-input" type="password" placeholder="hub chat token" />
-  <button onclick="submitToken()">ENTER</button>
-  <span class="err" id="gate-err">invalid token</span>
+</head><body>
+<h1>AGORA</h1>
+<div class="subtitle">Evolution Dashboard — Sovereign Guidance Surface &middot; <a href="/">Back to Nexus</a></div>
+<div id="error"></div>
+<div class="status" id="status-bar"></div>
+<div class="section">
+  <div class="section-title">EVOLUTION EVENTS <button class="refresh-btn" onclick="load()">REFRESH</button></div>
+  <div id="events">Loading...</div>
 </div>
-
-<!-- Main app -->
-<div id="app">
-  <div id="header">
-    <div class="brand">
-      <span class="title">KARMA</span>
-      <span class="subtitle">SovereignPeer Â· Ascendant Â· Always Present</span>
-    </div>
-    <div class="status-wrap">
-      <span class="dot" id="status-dot"></span>
-      <span class="status" id="status-text">connecting...</span>
-    </div>
-  </div>
-  <div id="persona-bar"></div>
-
-  <!-- CC Brief compress panel -->
-  <div id="cc-brief">
-    <div id="cc-brief-header" onclick="toggleBrief()">
-      <span class="lbl">CC BRIEF</span>
-      <span class="sub">compress agent output for CC</span>
-      <span class="chevron" id="cc-brief-chevron">â–¼</span>
-    </div>
-    <div id="cc-brief-body">
-      <textarea id="cc-brief-input" rows="4" placeholder="paste Karma / Codex / Kiki output here..."></textarea>
-      <div id="cc-brief-controls">
-        <button id="cc-brief-btn" onclick="compressForCC()">compress</button>
-        <button id="cc-brief-clear-btn" onclick="clearBrief()">clear</button>
-        <span id="cc-brief-status"></span>
-      </div>
-      <div id="cc-brief-output" style="display:none">
-        <div id="cc-brief-result"></div>
-        <button id="cc-brief-copy" onclick="copyBrief()">copy to clipboard</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Session Brief panel -->
-  <div id="session-brief">
-    <div id="session-brief-header" onclick="toggleSessionBrief()">
-      <span class="lbl">SESSION BRIEF</span>
-      <span class="sub">compress bus feed â†’ paste into CC to start session</span>
-      <span class="chevron" id="session-brief-chevron">â–¼</span>
-    </div>
-    <div id="session-brief-body">
-      <div id="session-brief-controls">
-        <select id="session-brief-filter">
-          <option value="all">all agents</option>
-          <option value="karma">karma only</option>
-          <option value="codex">codex only</option>
-          <option value="kiki">kiki / cc</option>
-        </select>
-        <span id="session-brief-count">0 messages</span>
-        <button id="session-brief-btn" onclick="buildSessionBrief()">build for CC</button>
-        <span id="session-brief-status"></span>
-      </div>
-      <div id="session-brief-output" style="display:none">
-        <div id="session-brief-result"></div>
-        <button id="session-brief-copy" onclick="copySessionBrief()">copy to clipboard</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="feed"></div>
-  <div id="input-bar">
-    <select id="to-select">
-      <option value="all">â†’ all</option>
-      <option value="karma">â†’ karma</option>
-      <option value="cc">â†’ cc</option>
-      <option value="kcc">â†’ kcc</option>
-      <option value="codex">â†’ codex</option>
-    </select>
-    <input id="msg-input" type="text" placeholder="post to bus..." />
-    <button onclick="postMessage()">send</button>
-  </div>
+<div class="section">
+  <div class="section-title">RECENT NEXUS CONVERSATIONS</div>
+  <div id="chats">Loading...</div>
 </div>
-
 <script>
-const BASE = window.location.origin;
-const POLL_MS = 4000;
-const AGENT_CLASSES = { karma:'agent-karma', cc:'agent-cc', kcc:'agent-kcc', codex:'agent-codex', colby:'agent-colby' };
-let token = '';
-let seenIds = new Set();
-let autoScroll = true;
+const TOKEN = localStorage.getItem('hubToken') || '';
+const ERR = document.getElementById('error');
 
-window.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('agora_token');
-  if (saved) { token = saved; launch(); }
-  document.getElementById('token-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') submitToken();
-  });
-});
-
-async function submitToken() {
-  const val = document.getElementById('token-input').value.trim();
-  if (!val) return;
-  try {
-    const r = await fetch(`${BASE}/v1/coordination/recent?limit=1`, {
-      headers: { Authorization: `Bearer ${val}` }
-    });
-    if (!r.ok) throw new Error('unauthorized');
-    token = val;
-    localStorage.setItem('agora_token', token);
-    launch();
-  } catch {
-    document.getElementById('gate-err').style.display = 'block';
-  }
+function classify(content) {
+  const c = (content || '').toLowerCase();
+  if (c.includes('promot')) return 'promote';
+  if (c.includes('self-edit') || c.includes('self_edit') || c.includes('modified')) return 'self-edit';
+  if (c.includes('pitfall') || c.includes('error') || c.includes('fail')) return 'pitfall';
+  if (c.includes('decision') || c.includes('locked')) return 'decision';
+  if (c.includes('proof') || c.includes('verified') || c.includes('pass')) return 'proof';
+  if (c.includes('heartbeat')) return 'heartbeat';
+  return '';
 }
 
-function launch() {
-  document.getElementById('gate').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
-  poll();
-  setInterval(poll, POLL_MS);
-  const feed = document.getElementById('feed');
-  feed.addEventListener('scroll', () => {
-    autoScroll = feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 20;
-  });
-  const msgInput = document.getElementById('msg-input');
-  const toSelect = document.getElementById('to-select');
-  const MENTION_MAP = { karma:'karma', cc:'cc', asher:'cc', kcc:'kcc', codex:'codex', kiki:'karma', colby:'colby' };
-  msgInput.addEventListener('keydown', e => { if (e.key === 'Enter') postMessage(); });
-  msgInput.addEventListener('input', () => {
-    const val = msgInput.value;
-    const m = val.match(/^@(\w+)/);
-    if (m) {
-      const agent = MENTION_MAP[m[1].toLowerCase()];
-      if (agent) toSelect.value = agent;
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function ago(iso) {
+  const ms = Date.now() - new Date(iso).getTime();
+  if (ms < 60000) return Math.floor(ms/1000) + 's ago';
+  if (ms < 3600000) return Math.floor(ms/60000) + 'm ago';
+  if (ms < 86400000) return Math.floor(ms/3600000) + 'h ago';
+  return Math.floor(ms/86400000) + 'd ago';
+}
+
+async function load() {
+  try {
+    ERR.style.display = 'none';
+    const r = await fetch('/agora/events', { headers: { Authorization: 'Bearer ' + TOKEN } });
+    if (!r.ok) { ERR.textContent = 'Auth failed. Go to Nexus first to login.'; ERR.style.display = 'block'; return; }
+    const d = await r.json();
+
+    const evts = d.evolution_events || [];
+    const promos = evts.filter(e => classify(e.content) === 'promote').length;
+    const edits = evts.filter(e => classify(e.content) === 'self-edit').length;
+    const pitfalls = evts.filter(e => classify(e.content) === 'pitfall').length;
+    document.getElementById('status-bar').innerHTML =
+      '<div class="status-item"><span class="label">Events:</span> <span class="val">' + evts.length + '</span></div>' +
+      '<div class="status-item"><span class="dot green"></span><span class="label">Promotions:</span> <span class="val">' + promos + '</span></div>' +
+      '<div class="status-item"><span class="dot yellow"></span><span class="label">Self-edits:</span> <span class="val">' + edits + '</span></div>' +
+      '<div class="status-item"><span class="dot red"></span><span class="label">Pitfalls:</span> <span class="val">' + pitfalls + '</span></div>' +
+      '<div class="status-item"><span class="label">Chats:</span> <span class="val">' + (d.recent_chats||[]).length + '</span></div>';
+
+    const eventsEl = document.getElementById('events');
+    if (!evts.length) { eventsEl.innerHTML = '<div style="color:#6b7280;font-size:13px">No evolution events in bus cache (24h window)</div>'; }
+    else {
+      eventsEl.innerHTML = evts.map(function(e) {
+        var cls = classify(e.content);
+        var fromColor = e.from==='regent'?'#10b981':e.from==='cc'?'#3b82f6':e.from==='cc-watchdog'?'#f59e0b':'#9ca3af';
+        return '<div class="event ' + cls + '">' +
+          '<span class="ts">' + ago(e.created_at) + '</span> ' +
+          '<span class="from" style="color:' + fromColor + '">' + esc(e.from) + '</span>' +
+          '<span style="color:#6b7280">&rarr; ' + esc(e.to) + '</span>' +
+          '<div class="content">' + esc(e.content).slice(0, 500) + '</div>' +
+          '</div>';
+      }).join('');
     }
-  });
-}
 
-const PERSONAS = [
-  { name: 'karma', color: '#a78bfa' },
-  { name: 'cc',    color: '#34d399' },
-  { name: 'kcc',   color: '#67e8f9' },
-  { name: 'codex', color: '#fb923c' },
-  { name: 'kiki',  color: '#f472b6' },
-  { name: 'asher', color: '#a3e635' },
-  { name: 'colby', color: '#f9fafb' },
-];
-const lastSeen = {}; // agent -> ms timestamp
-
-function updatePersonaBar() {
-  const bar = document.getElementById('persona-bar');
-  const now = Date.now();
-  bar.innerHTML = PERSONAS.map(p => {
-    const ms = lastSeen[p.name];
-    const ago = ms ? (now - ms) : Infinity;
-    const dotClass = ago < 5 * 60000 ? 'p-green' : ago < 15 * 60000 ? 'p-amber' : 'p-grey';
-    const label = ms ? (ago < 60000 ? 'now' : `${Math.floor(ago/60000)}m`) : 'â€”';
-    return `<span class="persona"><span class="persona-dot ${dotClass}"></span><span style="color:${p.color}">${p.name}</span><span style="color:#4b5563">${label}</span></span>`;
-  }).join('');
-}
-
-async function poll() {
-  try {
-    const r = await fetch(`${BASE}/v1/coordination/recent?limit=50`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!r.ok) throw new Error(r.status);
-    const data = await r.json();
-    const entries = (data.entries || []).sort(
-      (a, b) => new Date(a.created_at) - new Date(b.created_at)
-    );
-    for (const e of entries) {
-      const t = new Date(e.created_at).getTime();
-      if (e.from && t > (lastSeen[e.from] || 0)) lastSeen[e.from] = t;
-      if (seenIds.has(e.id)) continue;
-      seenIds.add(e.id);
-      busEntries.push(e);
-      renderEntry(e, true);
+    var chatsEl = document.getElementById('chats');
+    var chats = (d.recent_chats || []).reverse();
+    if (!chats.length) { chatsEl.innerHTML = '<div style="color:#6b7280;font-size:13px">No recent Nexus conversations</div>'; }
+    else {
+      chatsEl.innerHTML = chats.map(function(c) {
+        return '<div class="event chat">' +
+          '<span class="ts">' + ago(c.ts) + '</span>' +
+          '<div class="chat-user">Colby: ' + esc(c.user).slice(0, 200) + '</div>' +
+          '<div class="chat-assistant">Karma: ' + esc(c.assistant).slice(0, 300) + '</div>' +
+          '</div>';
+      }).join('');
     }
-    updatePersonaBar();
-    setStatus('live', `${seenIds.size} messages`);
-  } catch (err) {
-    setStatus('error', `error: ${err.message}`);
+  } catch (e) {
+    ERR.textContent = 'Load failed: ' + e.message;
+    ERR.style.display = 'block';
   }
 }
 
-function agentClass(name) {
-  return AGENT_CLASSES[name?.toLowerCase()] || 'agent-other';
-}
-
-function formatTs(iso) {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleTimeString('en-US', { hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit' });
-  } catch { return '??:??:??'; }
-}
-
-function renderEntry(e, isNew) {
-  const feed = document.getElementById('feed');
-  const div = document.createElement('div');
-  div.className = 'entry';
-  div.dataset.id = e.id;
-
-  if (e.urgency === 'blocking') div.classList.add('blocking');
-  const addressedToColby = (e.to === 'colby' || e.to === 'all') && e.from !== 'colby';
-  if (isNew && addressedToColby) div.classList.add('pulse');
-
-  const fromClass = agentClass(e.from);
-  const toClass = agentClass(e.to);
-  const badgeClass = e.urgency === 'blocking' ? 'badge-blocking' : 'badge-informational';
-
-  let contentText = e.content || '';
-  try {
-    const parsed = JSON.parse(contentText);
-    contentText = JSON.stringify(parsed, null, 0).replace(/,/g, ', ');
-  } catch {}
-
-  const TRUNC = 220;
-  const long = contentText.length > TRUNC;
-  const short = long ? contentText.slice(0, TRUNC) : contentText;
-
-  div.innerHTML = `
-    <span class="ts">${formatTs(e.created_at)}</span>
-    <span class="route">
-      <span class="${fromClass}">${escHtml(e.from)}</span>
-      <span style="color:#4b5563">\u2192</span>
-      <span class="${toClass}">${escHtml(e.to)}</span>
-    </span>
-    <span class="badge ${badgeClass}">${escHtml(e.urgency)}</span>
-    <span class="content">
-      <span class="msg-short">${escHtml(short)}${long ? ' <button class="more-btn" onclick="var p=this.closest(\'.entry\');p.querySelector(\'.msg-full\').style.display=\'inline\';p.querySelector(\'.msg-short\').style.display=\'none\'">\u2026more</button>' : ''}</span>
-      ${long ? `<span class="msg-full" style="display:none">${escHtml(contentText)} <button class="more-btn" onclick="var p=this.closest('.entry');p.querySelector('.msg-full').style.display='none';p.querySelector('.msg-short').style.display='inline'">less</button></span>` : ''}
-    </span>
-  `;
-
-  feed.appendChild(div);
-  if (autoScroll) feed.scrollTop = feed.scrollHeight;
-}
-
-async function postMessage() {
-  const input = document.getElementById('msg-input');
-  const msg = input.value.trim();
-  if (!msg) return;
-  const to = document.getElementById('to-select').value;
-  try {
-    const r = await fetch(`${BASE}/v1/coordination/post`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: 'colby', to, urgency: 'informational', type: 'inform', content: msg })
-    });
-    if (!r.ok) throw new Error(await r.text());
-    input.value = '';
-    setTimeout(poll, 300);
-  } catch (err) {
-    alert(`post failed: ${err.message}`);
-  }
-}
-
-function setStatus(state, text) {
-  const dot = document.getElementById('status-dot');
-  const txt = document.getElementById('status-text');
-  dot.style.background = state === 'live' ? '#34d399' : '#ef4444';
-  txt.textContent = text;
-}
-
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// â”€â”€ Session Brief panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Stores raw bus entries as they arrive for use in session brief
-const busEntries = [];
-let sessionBriefOpen = false;
-
-function toggleSessionBrief() {
-  sessionBriefOpen = !sessionBriefOpen;
-  const body = document.getElementById('session-brief-body');
-  body.style.display = sessionBriefOpen ? 'flex' : 'none';
-  document.getElementById('session-brief-chevron').classList.toggle('open', sessionBriefOpen);
-  if (sessionBriefOpen) updateSessionBriefCount();
-}
-
-function updateSessionBriefCount() {
-  const filter = document.getElementById('session-brief-filter').value;
-  const filtered = getFilteredEntries(filter);
-  document.getElementById('session-brief-count').textContent = `${filtered.length} messages`;
-}
-
-function getFilteredEntries(filter) {
-  const AGENT_GROUPS = {
-    'karma': ['karma'],
-    'codex': ['codex'],
-    'kiki': ['kiki', 'cc'],
-    'all': null
-  };
-  const allowed = AGENT_GROUPS[filter];
-  return busEntries.filter(e => {
-    if (e.urgency === 'informational' && e.from === 'cc' && filter !== 'kiki') return false;
-    if (allowed && !allowed.includes(e.from?.toLowerCase())) return false;
-    return true;
-  }).slice(-20); // last 20 relevant entries
-}
-
-async function buildSessionBrief() {
-  const filter = document.getElementById('session-brief-filter').value;
-  const entries = getFilteredEntries(filter);
-  if (!entries.length) {
-    document.getElementById('session-brief-status').textContent = 'no messages to compress';
-    return;
-  }
-  const btn = document.getElementById('session-brief-btn');
-  const status = document.getElementById('session-brief-status');
-  const output = document.getElementById('session-brief-output');
-  const result = document.getElementById('session-brief-result');
-  btn.disabled = true;
-  status.textContent = `compressing ${entries.length} messages...`;
-  output.style.display = 'none';
-
-  const raw = entries.map(e =>
-    `[${e.from}â†’${e.to} ${(e.created_at||'').slice(11,16)}] ${e.content||''}`
-  ).join('\n');
-
-  const prompt =
-    'BUILD CC SESSION BRIEF. You are compressing coordination bus messages for CC (Claude Code, Ascendant). ' +
-    'Extract: 1) current system state in one line, 2) what changed since last session, ' +
-    '3) one blocker or open question, 4) recommended first action. ' +
-    'Max 5 lines total. No narration. Facts only.\n\nBUS MESSAGES:\n' + raw;
-  try {
-    const r = await fetch(`${BASE}/v1/chat`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: prompt, session_id: 'session-brief-' + Date.now() })
-    });
-    if (!r.ok) throw new Error(await r.text());
-    const data = await r.json();
-    const text = data.response || data.text || data.assistant_text || data.content || JSON.stringify(data);
-    result.textContent = text;
-    output.style.display = 'flex';
-    status.textContent = '';
-    navigator.clipboard.writeText(text).catch(() => {});
-  } catch (err) {
-    status.textContent = `error: ${err.message}`;
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-function copySessionBrief() {
-  const text = document.getElementById('session-brief-result').textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.getElementById('session-brief-copy');
-    btn.textContent = 'copied!';
-    setTimeout(() => { btn.textContent = 'copy to clipboard'; }, 1500);
-  });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('session-brief-filter').addEventListener('change', updateSessionBriefCount);
-});
-
-// â”€â”€ CC Brief compress panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-let briefOpen = true;
-
-function toggleBrief() {
-  briefOpen = !briefOpen;
-  document.getElementById('cc-brief-body').style.display = briefOpen ? 'flex' : 'none';
-  document.getElementById('cc-brief-chevron').classList.toggle('open', briefOpen);
-}
-
-async function compressForCC() {
-  const input = document.getElementById('cc-brief-input').value.trim();
-  if (!input) return;
-  const btn = document.getElementById('cc-brief-btn');
-  const status = document.getElementById('cc-brief-status');
-  const output = document.getElementById('cc-brief-output');
-  const result = document.getElementById('cc-brief-result');
-  btn.disabled = true;
-  status.textContent = 'compressing...';
-  output.style.display = 'none';
-  const prompt =
-    'COMPRESS FOR CC (Claude Code, Ascendant). ' +
-    'Extract only: 1) what decision or action is needed, 2) what is verified vs inferred, ' +
-    '3) recommended path forward. Max 4 lines. No narration, no repetition. Start with the decision.\n\n' +
-    'AGENT OUTPUT:\n' + input;
-  try {
-    const r = await fetch(`${BASE}/v1/chat`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: prompt, session_id: 'cc-brief-' + Date.now() })
-    });
-    if (!r.ok) throw new Error(await r.text());
-    const data = await r.json();
-    const text = data.response || data.text || data.assistant_text || data.content || JSON.stringify(data);
-    result.textContent = text;
-    output.style.display = 'flex';
-    status.textContent = '';
-    // auto-copy
-    navigator.clipboard.writeText(text).catch(() => {});
-  } catch (err) {
-    status.textContent = `error: ${err.message}`;
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-function copyBrief() {
-  const text = document.getElementById('cc-brief-result').textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.getElementById('cc-brief-copy');
-    btn.textContent = 'copied!';
-    setTimeout(() => { btn.textContent = 'copy to clipboard'; }, 1500);
-  });
-}
-
-function clearBrief() {
-  const input = document.getElementById('cc-brief-input');
-  const status = document.getElementById('cc-brief-status');
-  const output = document.getElementById('cc-brief-output');
-  const result = document.getElementById('cc-brief-result');
-  input.value = '';
-  result.textContent = '';
-  output.style.display = 'none';
-  status.textContent = 'cleared';
-  setTimeout(() => {
-    if (status.textContent === 'cleared') status.textContent = '';
-  }, 1500);
-}
+load();
+setInterval(load, 30000);
 </script>
-</body>
-</html>
-
+</body></html>

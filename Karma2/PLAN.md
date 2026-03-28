@@ -126,9 +126,56 @@ CC --RESUME on P1 (port 7891, cc_server_p1.py)
 - **Only video and 3D presence remain blocked** — everything else is buildable now.
 - **Old cortex phase plan is ARCHIVED.** This harness plan is the only plan.
 
+## Phase 5: UI Parity — unified.html matches CC wrapper capabilities
+
+**The gap:** unified.html has ~25 features. CC wrapper has ~165. The CC --resume backend already HAS all capabilities. unified.html just doesn't EXPOSE them.
+
+**Priority tiers (by user impact):**
+
+### Tier 1 — Essential (makes Nexus usable as primary surface)
+| # | Feature | What | Effort |
+|---|---------|------|--------|
+| 5-1 | AGORA evolution dashboard | Pipe Vesper promotions, self-edits, learning events to /agora inline | MEDIUM |
+| 5-2 | Slash commands | `/compact`, `/clear`, `/effort`, `/model`, `/rename` — parse `/` prefix, dispatch | MEDIUM |
+| 5-3 | Esc to stop | Cancel mid-generation | SMALL |
+| 5-4 | @-mention files | `@filename` in prompt → attach file content | SMALL |
+| 5-5 | Image input | Drag-drop / paste images into chat | MEDIUM |
+| 5-6 | Effort level control | Low/medium/high/max reasoning via UI toggle or `/effort` | SMALL |
+| 5-7 | Streaming responses | SSE streaming from CC subprocess for real-time output | MEDIUM |
+| 5-8 | Cascade dot updates | Dots currently static/gray — update live from /v1/status health data | SMALL |
+
+### Tier 2 — Power features (makes Nexus better than CC wrapper)
+| # | Feature | What | Effort |
+|---|---------|------|--------|
+| 5-9 | Session picker | Browse/search past conversations | LARGE |
+| 5-10 | Compact / context mgmt | Manual + auto compaction, context budget display | MEDIUM |
+| 5-11 | File attachment (`+` button) | Attach files/PDFs to prompts | MEDIUM |
+| 5-12 | Plan mode toggle | Read-only analysis mode | MEDIUM |
+| 5-13 | Model selector | Switch models via dropdown | SMALL |
+| 5-14 | Settings panel | View/edit key config inline | MEDIUM |
+| 5-15 | Keyboard shortcuts | Esc, Ctrl+O (thinking), Shift+Tab (mode) | SMALL |
+
+### Tier 3 — Full parity (everything CC has)
+| # | Feature | What | Effort |
+|---|---------|------|--------|
+| 5-16 | Subagent delegation UI | Dispatch + track parallel agents | LARGE |
+| 5-17 | Diff viewer | Show file changes inline with accept/reject | LARGE |
+| 5-18 | Git operations UI | Commit, push, PR creation from browser | LARGE |
+| 5-19 | Scheduled tasks | Run tasks on recurring schedule | LARGE |
+| 5-20 | Chrome automation controls | Browser control from Nexus | LARGE |
+| 5-21 | MCP server management | Add/remove/status MCP servers | MEDIUM |
+| 5-22 | Plugin management | Install/enable/disable plugins | LARGE |
+| 5-23 | Rewind / checkpoints | Restore conversation to prior state | LARGE |
+
+**Total: ~140 missing features across 23 line items. Tier 1 (8 items) is the minimum viable Nexus.**
+
+## Phase 6: Video + 3D Presence (BLOCKED — Sovereign gate)
+- Voice: AVAILABLE (CC wrapper native)
+- Video: requires implementation
+- 3D Presence/OS overlay: requires implementation
+
 ## Future Work (builds ON this plan)
 - See `.gsd/nexus-future-work.md` for VS Code 1.113 extracted primitives
-- Phase 6 (video + presence) — only actual remaining blocker
 - Nexus expansion (thinking effort controls, subagent delegation, MCP manifest, customizations editor)
 
 ## Spec locations

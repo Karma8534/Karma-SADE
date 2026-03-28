@@ -166,7 +166,10 @@ CC ── Claude Code on P1 — execution layer
 - **REFRAME:** 4620 lines of hub-bridge were bandaid. CC reads its own code, SSHes to K2, self-edits.
 
 - **S151 ROLLBACK:** resurrect had no plan identity guard — followed dead cortex plan. Fixed: Step 4a guard + CASE D-COMPLETED. wrap-session must update PLAN.md on plan change. L1 pitfall obs #19511.
-- **CHAT AWARENESS:** proxy.js writes nexus-chat.jsonl + cortex ingest after each chat. CC reads via `ssh vault-neo 'cat /opt/seed-vault/memory_v1/session/state/nexus-chat.jsonl'`. Karma system prompt updated to know about shared chat log — eliminates "I can't see CC" isolation claim.
+- **CHAT AWARENESS:** proxy.js writes nexus-chat.jsonl + cortex ingest. Karma system prompt knows about shared chat log.
+- **AGORA LIVE:** /agora serves evolution dashboard — events, promotions, self-edits, pitfalls, recent chats. Auto-refresh 30s.
+- **Phase 5 added:** 23 line items for UI parity with CC wrapper. Sovereign directive: THIS wrapper is baseline, Karma gets ALL of it.
+- **CC wrapper feature inventory:** ~165 features identified, ~25 in unified.html, ~140 missing. Phase 5 Tier 1 (8 items) = minimum viable.
 - **VS Code 1.113 primitives:** 9 items captured in .gsd/nexus-future-work.md
 - **Voice NOT a blocker.** CC wrapper has native voice. Only video + 3D presence remain blocked.
 
