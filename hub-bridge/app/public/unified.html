@@ -487,10 +487,12 @@
     scrollBottom();
 
     try {
+      _streamAbortController = new AbortController();
       const res = await fetch(CHAT_URL, {
         method: 'POST',
         headers: { ...auth(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, conversation_id: conversationId, session_id: conversationId, stream: true })
+        body: JSON.stringify({ message: text, conversation_id: conversationId, session_id: conversationId, stream: true }),
+        signal: _streamAbortController.signal,
       });
       if (res.status === 401) { proc.classList.remove('visible'); setStreamingState(false); appendMsg('system', 'Token rejected.'); return; }
 
@@ -534,8 +536,9 @@
         }
       }
     } catch (err) {
-      if (isStreaming) appendMsg('system', 'Error: ' + err.message);
+      if (err.name !== 'AbortError' && isStreaming) appendMsg('system', 'Error: ' + err.message);
     } finally {
+      _streamAbortController = null;
       proc.classList.remove('visible');
       setStreamingState(false);
       saveMessages();
@@ -544,8 +547,20 @@
     }
   }
 
+  let _streamAbortController = null;
+
   function handleStreamEvent(obj) {
     const type = obj.type;
+    if (type === 'result') {
+      // Stream complete — force close
+      if (_streamAbortController) { try { _streamAbortController.abort(); } catch {} }
+      document.getElementById('processing').classList.remove('visible');
+      setStreamingState(false);
+      saveMessages();
+      lastActivityTs = new Date().toISOString();
+      updateHeartbeat();
+      return;
+    }
     if (type === 'assistant') {
       const content = obj.message?.content || [];
       for (const block of content) {
@@ -615,10 +630,12 @@
   }
 
   async function cancelGeneration() {
+    if (_streamAbortController) { try { _streamAbortController.abort(); } catch {} }
     try { await fetch('/v1/cancel', { headers: auth() }); } catch {}
     appendMsg('system', 'Cancelled');
     document.getElementById('processing').classList.remove('visible');
     setStreamingState(false);
+    _streamAbortController = null;
   }
 
   // ── Bus: regent / cc / codex ────────────────────────────────────────────
