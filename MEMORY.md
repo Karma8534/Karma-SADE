@@ -165,6 +165,11 @@ CC ── Claude Code on P1 — execution layer
 - **Design spec:** docs/superpowers/specs/2026-03-28-sovereign-harness-design.md
 - **REFRAME:** 4620 lines of hub-bridge were bandaid. CC reads its own code, SSHes to K2, self-edits.
 
+- **S151 ROLLBACK:** resurrect had no plan identity guard — followed dead cortex plan. Fixed: Step 4a guard + CASE D-COMPLETED. wrap-session must update PLAN.md on plan change. L1 pitfall obs #19511.
+- **CHAT AWARENESS:** proxy.js now writes nexus-chat.jsonl + vault + cortex ingest after each chat. CC can read Nexus conversations via `ssh vault-neo 'cat /opt/seed-vault/memory_v1/session/state/nexus-chat.jsonl'`
+- **VS Code 1.113 primitives:** 9 items captured in .gsd/nexus-future-work.md
+- **Voice NOT a blocker.** CC wrapper has native voice. Only video + 3D presence remain blocked.
+
 ## Next Session Starts Here
 1. `/resurrect`
 2. Sovereign Harness Phase 2/3/4 remaining tasks — see Karma2/PLAN.md "Done when" checklist. THE ONLY PLAN is Karma2/PLAN.md (Sovereign Harness). Old plan archived. NEVER follow archived plan.
