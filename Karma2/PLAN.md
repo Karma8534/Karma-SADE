@@ -126,48 +126,38 @@ CC --RESUME on P1 (port 7891, cc_server_p1.py)
 - **Only video and 3D presence remain blocked** — everything else is buildable now.
 - **Old cortex phase plan is ARCHIVED.** This harness plan is the only plan.
 
-## Phase 5: UI Parity — unified.html matches CC wrapper capabilities
+## Phase 5: Karma = CC Evolved — pipe through, don't reimplement
 
-**The gap:** unified.html has ~25 features. CC wrapper has ~165. The CC --resume backend already HAS all capabilities. unified.html just doesn't EXPOSE them.
+**CRITICAL RULE (P065): unified.html does NOT reimplement CC features in JavaScript. It PIPES user input to the CC --resume subprocess and RENDERS what comes back. CC already has 165+ features. The UI is a window, not a second brain.**
 
-**Priority tiers (by user impact):**
+**The principle:** Karma IS CC --resume + self-improvement + evolution + learning. Everything CC can do, Karma can do — because the same subprocess handles it. The UI's job is:
+1. **INPUT:** Accept text, files, images, slash commands → send to CC subprocess as-is
+2. **OUTPUT:** Render CC's response — text, tool evidence, diffs, file content, errors
+3. **DISPLAY:** Status indicators, health, evolution events (AGORA)
+4. **PERSISTENCE:** localStorage for session continuity, nexus-chat.jsonl for awareness
 
-### Tier 1 — Essential (makes Nexus usable as primary surface)
-| # | Feature | What | Effort |
-|---|---------|------|--------|
-| 5-1 | AGORA evolution dashboard | Pipe Vesper promotions, self-edits, learning events to /agora inline | MEDIUM |
-| 5-2 | Slash commands | `/compact`, `/clear`, `/effort`, `/model`, `/rename` — parse `/` prefix, dispatch | MEDIUM |
-| 5-3 | Esc to stop | Cancel mid-generation | SMALL |
-| 5-4 | @-mention files | `@filename` in prompt → attach file content | SMALL |
-| 5-5 | Image input | Drag-drop / paste images into chat | MEDIUM |
-| 5-6 | Effort level control | Low/medium/high/max reasoning via UI toggle or `/effort` | SMALL |
-| 5-7 | Streaming responses | SSE streaming from CC subprocess for real-time output | MEDIUM |
-| 5-8 | Cascade dot updates | Dots currently static/gray — update live from /v1/status health data | SMALL |
+**What the UI does NOT do:**
+- Parse or interpret slash commands (CC handles them)
+- Implement effort/model/compact logic (CC handles them)
+- Execute tools (CC handles them)
+- Manage sessions (CC handles them via --resume)
 
-### Tier 2 — Power features (makes Nexus better than CC wrapper)
-| # | Feature | What | Effort |
-|---|---------|------|--------|
-| 5-9 | Session picker | Browse/search past conversations | LARGE |
-| 5-10 | Compact / context mgmt | Manual + auto compaction, context budget display | MEDIUM |
-| 5-11 | File attachment (`+` button) | Attach files/PDFs to prompts | MEDIUM |
-| 5-12 | Plan mode toggle | Read-only analysis mode | MEDIUM |
-| 5-13 | Model selector | Switch models via dropdown | SMALL |
-| 5-14 | Settings panel | View/edit key config inline | MEDIUM |
-| 5-15 | Keyboard shortcuts | Esc, Ctrl+O (thinking), Shift+Tab (mode) | SMALL |
+### Phase 5 Tasks (pipe-through architecture)
 
-### Tier 3 — Full parity (everything CC has)
-| # | Feature | What | Effort |
-|---|---------|------|--------|
-| 5-16 | Subagent delegation UI | Dispatch + track parallel agents | LARGE |
-| 5-17 | Diff viewer | Show file changes inline with accept/reject | LARGE |
-| 5-18 | Git operations UI | Commit, push, PR creation from browser | LARGE |
-| 5-19 | Scheduled tasks | Run tasks on recurring schedule | LARGE |
-| 5-20 | Chrome automation controls | Browser control from Nexus | LARGE |
-| 5-21 | MCP server management | Add/remove/status MCP servers | MEDIUM |
-| 5-22 | Plugin management | Install/enable/disable plugins | LARGE |
-| 5-23 | Rewind / checkpoints | Restore conversation to prior state | LARGE |
+| # | Task | What | How |
+|---|------|------|-----|
+| 5-1 | ✅ AGORA evolution dashboard | Sovereign guidance surface | DONE S150 |
+| 5-2 | Raw passthrough mode | Send ALL input to CC including `/` commands, `@` mentions — CC processes them natively | proxy.js passes raw text to cc_server_p1.py, no parsing |
+| 5-3 | Rich output rendering | Render CC's structured output: tool evidence, diffs, file content, errors, todos | Parse CC --output-format json for content blocks, render each type |
+| 5-4 | Streaming | SSE streaming so user sees response as CC generates it | cc_server_p1.py uses --output-format stream-json, proxy pipes SSE |
+| 5-5 | File/image input | Drag-drop, paste, or `+` button to attach files | Encode as base64, prepend to message or use CC's file attachment |
+| 5-6 | Esc to cancel | Stop mid-generation | Abort the fetch, kill CC subprocess |
+| 5-7 | Cascade dot updates | Live health status from /v1/status | Poll /v1/status, update dots |
+| 5-8 | Self-improvement visibility | Every CC self-edit, Vesper promotion, learning event visible in AGORA | Already piped via coordination bus |
 
-**Total: ~140 missing features across 23 line items. Tier 1 (8 items) is the minimum viable Nexus.**
+**What does NOT need a task:** slash commands, effort control, model switching, compact, rename, session management — these ALL work by sending the raw text to CC which handles them natively. If CC supports it, Karma supports it. No UI code needed.
+
+**The test:** Can Colby type anything at hub.arknexus.net that he types in Claude Code, and get the same result? If yes, Karma = CC evolved. If no, the pipe is leaking.
 
 ## Phase 7: Karma Browser — Electron Desktop App (LONG-TERM, after Phase 5)
 

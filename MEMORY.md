@@ -175,6 +175,9 @@ CC ── Claude Code on P1 — execution layer
 - **K2 harness fixed:** Replaced claude CLI (required Anthropic login) with regent_inference cascade. K2 Ollama ($0) -> z.ai -> Groq -> OpenRouter. Zero Anthropic dependency. Pitfall obs #19624.
 - **Phase 7 added:** Electron desktop app — Karma Browser. Long-term, after Phase 5.
 
+- **S152 REVERTED (e4c196c):** reimplemented CC features in JS — wrong approach. P065 pitfall recorded.
+- **Phase 5 REWRITTEN:** Pipe-through architecture. UI sends raw text to CC, renders output. No JS reimplementation.
+
 ## Next Session Starts Here
 1. `/resurrect`
-2. Sovereign Harness Phase 5 Tier 1: Start with Task 5-2 (slash commands in unified.html) — see Karma2/PLAN.md. THE ONLY PLAN is Karma2/PLAN.md (Sovereign Harness).
+2. Sovereign Harness Phase 5-2: Raw passthrough — CC subprocess handles ALL input including / commands and @ mentions natively. UI just sends and renders. P065: NEVER reimplement CC features in JS. THE ONLY PLAN is Karma2/PLAN.md.

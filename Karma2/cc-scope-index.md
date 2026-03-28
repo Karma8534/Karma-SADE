@@ -111,6 +111,18 @@ P026 [aria-crash-zombie-pid]:
 Rule: When aria.service won't start or crash-loops: (1) `ss -tlnp | grep 7890` — find and kill zombie PID. (2) Verify drop-in `/etc/systemd/system/aria.service.d/10-aria-env.conf` contains `Environment=HOME=/home/karma`. (3) daemon-reload → start.
 Why: Root cause identical in Sessions 127 and 131 — zombie PID held port 7890 after unclean shutdown, plus missing drop-in caused flask import failure. These two checks resolve 90% of aria start failures.
 
+P065 [never-reimplement-cc-in-ui]:
+Rule: unified.html NEVER reimplements CC features in JavaScript. Slash commands, effort, model, compact, session management — ALL pipe through to CC subprocess as raw text. CC handles them. UI renders results. NO client-side logic for things CC already does.
+Why: S152 built fake /compact, /effort, /model as JS functions in unified.html — same bandaid pattern as the 4620 lines of server.js we just deleted. Reverted. Karma IS CC. The UI is a window, not a brain.
+
+P063 [k2-uses-cascade-not-claude-cli]:
+Rule: K2 inference ALWAYS uses regent_inference.py cascade (Ollama -> z.ai -> Groq -> OpenRouter). NEVER use claude CLI on K2. claude CLI requires Anthropic login and creates a dependency.
+Why: S150 K2 harness copied P1's claude CLI pattern. Auth expired -> "claude exit 1: Not logged in". The cascade was already built and working. CC forgot its own code existed.
+
+P064 [sovereign-standing-order]:
+Rule: When Colby says "this is a pitfall" — immediately: (1) save_observation with PITFALL title to claude-mem, (2) add P0XX entry to cc-scope-index.md, (3) bus post. This is a standing Sovereign order.
+Why: Colby's directive S150: "From now on when I say this is a pitfall, follow pitfall procedure."
+
 ## DECISION Archive (from claude-mem + sessions)
 
 D001 [entity-relationships]:
