@@ -38,7 +38,11 @@ a:hover{text-decoration:underline}
 <div id="error"></div>
 <div class="status" id="status-bar"></div>
 <div class="section">
-  <div class="section-title">EVOLUTION EVENTS <button class="refresh-btn" onclick="load()">REFRESH</button></div>
+  <div class="section-title">K2 EVOLUTION STATE (LIVE) <button class="refresh-btn" onclick="load()">REFRESH</button></div>
+  <div id="k2-state">Loading...</div>
+</div>
+<div class="section">
+  <div class="section-title">EVOLUTION EVENTS</div>
   <div id="events">Loading...</div>
 </div>
 <div class="section">
@@ -76,10 +80,28 @@ async function load() {
     if (!r.ok) { ERR.textContent = 'Auth failed. Go to Nexus first to login.'; ERR.style.display = 'block'; return; }
     const d = await r.json();
 
-    const evts = d.evolution_events || [];
-    const promos = evts.filter(e => classify(e.content) === 'promote').length;
-    const edits = evts.filter(e => classify(e.content) === 'self-edit').length;
-    const pitfalls = evts.filter(e => classify(e.content) === 'pitfall').length;
+    // K2 Evolution State (live from cortex + governor)
+    var k2El = document.getElementById('k2-state');
+    var k2 = d.k2_evolution;
+    if (k2 && !k2.error) {
+      var cx = k2.cortex || {};
+      k2El.innerHTML =
+        '<div class="event promote" style="border-left-color:#10b981">' +
+        '<div style="font-size:14px;font-weight:600;color:#10b981">Vesper Pipeline</div>' +
+        '<div class="content">' +
+        'Cortex: ' + (cx.knowledge_blocks || '?') + ' blocks, ' + (cx.conversation_msgs || '?') + ' msgs, model: ' + (cx.model || '?') + ', uptime: ' + Math.floor((cx.uptime_s||0)/3600) + 'h\n' +
+        'Governor: ' + esc(k2.governor_summary || 'querying...') +
+        '</div></div>';
+    } else if (k2 && k2.error) {
+      k2El.innerHTML = '<div class="event pitfall">K2 unreachable: ' + esc(k2.error) + '</div>';
+    } else {
+      k2El.innerHTML = '<div style="color:#6b7280;font-size:13px">K2 evolution state unavailable</div>';
+    }
+
+    var evts = d.evolution_events || [];
+    var promos = evts.filter(function(e) { return classify(e.content) === 'promote'; }).length;
+    var edits = evts.filter(function(e) { return classify(e.content) === 'self-edit'; }).length;
+    var pitfalls = evts.filter(function(e) { return classify(e.content) === 'pitfall'; }).length;
     document.getElementById('status-bar').innerHTML =
       '<div class="status-item"><span class="label">Events:</span> <span class="val">' + evts.length + '</span></div>' +
       '<div class="status-item"><span class="dot green"></span><span class="label">Promotions:</span> <span class="val">' + promos + '</span></div>' +

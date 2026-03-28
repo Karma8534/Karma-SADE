@@ -202,15 +202,35 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "GET" && req.url.startsWith("/agora/events")) {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
       evictCoord();
-      // Filter coordination bus for evolution-relevant events
-      const evolutionKeywords = ["promote", "evolution", "self-edit", "vesper", "pattern", "spine", "learn", "growth", "pitfall", "decision", "proof", "direction", "insight", "self-improve"];
+      // Filter bus: evolution events only, exclude heartbeats
+      const evolutionKeywords = ["promote", "evolution", "self-edit", "vesper", "pattern", "spine", "learn", "growth", "pitfall", "decision", "proof", "direction", "insight", "self-improve", "SESSION WRAP", "SESSION START", "SOVEREIGN"];
       let entries = [..._coordCache.values()].filter(e => {
         const content = (e.content || "").toLowerCase();
-        return evolutionKeywords.some(k => content.includes(k)) || e.from === "regent" || e.from === "cc-watchdog";
+        if (content.includes("heartbeat")) return false; // exclude noise
+        if (content.includes("watchdog ack")) return false; // exclude ack loops
+        return evolutionKeywords.some(k => content.toLowerCase().includes(k.toLowerCase())) || e.from === "cc";
       });
       entries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      entries = entries.slice(0, 50);
-      // Also read chat log for self-edit evidence
+      entries = entries.slice(0, 30);
+
+      // Fetch LIVE evolution state from K2 (spine + governor audit)
+      let k2Evolution = null;
+      try {
+        const spineResp = await fetch("http://100.75.109.92:7892/health", { signal: AbortSignal.timeout(3000) });
+        if (spineResp.ok) {
+          const spineData = await spineResp.json();
+          // Also fetch spine via K2 harness shell
+          const govResp = await fetch("http://100.75.109.92:7891/cc", {
+            method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` },
+            body: JSON.stringify({ message: "Read /mnt/c/dev/Karma/k2/cache/vesper_governor_audit.jsonl last 5 lines and /mnt/c/dev/Karma/k2/cache/vesper_identity_spine.json version+stable_patterns count. Return as JSON only." }),
+            signal: AbortSignal.timeout(60000),
+          });
+          if (govResp.ok) { const gd = await govResp.json(); k2Evolution = { cortex: spineData, governor_summary: gd.response }; }
+          else { k2Evolution = { cortex: spineData, governor_summary: "K2 harness query failed" }; }
+        }
+      } catch (e) { k2Evolution = { error: e.message }; }
+
+      // Chat log
       let chatEdits = [];
       try {
         const logPath = "/run/state/nexus-chat.jsonl";
@@ -219,7 +239,7 @@ const server = http.createServer(async (req, res) => {
           chatEdits = lines.slice(-20).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
         }
       } catch {}
-      return json(res, 200, { ok: true, evolution_events: entries, recent_chats: chatEdits });
+      return json(res, 200, { ok: true, evolution_events: entries, recent_chats: chatEdits, k2_evolution: k2Evolution });
     }
 
     // ── Health ─────────────────────────────────────────────────────────

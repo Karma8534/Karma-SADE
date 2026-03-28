@@ -177,6 +177,9 @@ CC ── Claude Code on P1 — execution layer
 
 - **S152 REVERTED (e4c196c):** reimplemented CC features in JS — wrong approach. P065 pitfall recorded.
 - **Phase 5 REWRITTEN:** Pipe-through architecture. UI sends raw text to CC, renders output. No JS reimplementation.
+- **AGORA FIXED:** Now shows real K2 evolution state (spine, governor, cortex), heartbeats filtered.
+- **Electron scaffolded on K2:** /mnt/c/dev/Karma/k2/karma-browser/ — main.js + preload.js + IPC bridge. Launches successfully.
+- **Wip-watcher killed:** KarmaWipWatcher task + 2 processes stopped.
 
 ## Next Session Starts Here
 1. `/resurrect`
