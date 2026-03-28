@@ -175,6 +175,13 @@ CC ── Claude Code on P1 — execution layer
 - **K2 harness fixed:** Replaced claude CLI (required Anthropic login) with regent_inference cascade. K2 Ollama ($0) -> z.ai -> Groq -> OpenRouter. Zero Anthropic dependency. Pitfall obs #19624.
 - **Phase 7 added:** Electron desktop app — Karma Browser. Long-term, after Phase 5.
 
+## Session 152 (2026-03-28) — Phase 5-2 Slash Commands
+- **Task 5-2 IMPLEMENTED:** Slash commands in unified.html — `/clear`, `/effort`, `/model`, `/rename`, `/compact`, `/help`
+- **Effort param threading:** unified.html → proxy.js → cc_server_p1.py → claude CLI `--effort` flag
+- **Visual feedback:** effort level in route-hint bar, conversation rename updates title
+- `/compact` shows session ID (manual only — CLI limitation)
+- Pending: deploy to vault-neo
+
 ## Next Session Starts Here
 1. `/resurrect`
-2. Sovereign Harness Phase 5 Tier 1: Start with Task 5-2 (slash commands in unified.html) — see Karma2/PLAN.md. THE ONLY PLAN is Karma2/PLAN.md (Sovereign Harness).
+2. Sovereign Harness Phase 5 Tier 1: Deploy Task 5-2 to vault-neo, then start Task 5-3 (Esc to stop). THE ONLY PLAN is Karma2/PLAN.md (Sovereign Harness).

@@ -296,7 +296,7 @@
   </div>
 
   <div id="input-area">
-    <textarea id="msg-input" rows="1" placeholder="Message Karma... (@cc @codex @regent → routes to AGORA)"></textarea>
+    <textarea id="msg-input" rows="1" placeholder="Message Karma... (/help for commands, @cc @regent → AGORA)"></textarea>
     <button id="send-btn">SEND</button>
   </div>
 
@@ -314,6 +314,8 @@
   const MSG_KEY      = 'karmaMessages';
   const BRAIN_KEY    = 'unifiedBrain';
   const BRAIN_TTL    = 60 * 60 * 1000; // 1 hour
+  const EFFORT_KEY   = 'karmaEffort';
+  const CONV_LABEL_KEY = 'karmaConvLabel';
 
   let hubToken       = null;
   let conversationId = localStorage.getItem(CONV_KEY) || crypto.randomUUID();
@@ -362,6 +364,9 @@
     loadSavedMessages();
     loadBrainContext();
     registerWebMCPTools();
+    updateEffortHint();
+    const savedLabel = localStorage.getItem(CONV_LABEL_KEY);
+    if (savedLabel) document.title = 'Karma — ' + savedLabel;
     pollBus();
     setInterval(pollBus, POLL_MS);
     setInterval(updateHeartbeat, 15000);
@@ -438,6 +443,91 @@
     document.getElementById('cascade-btn').classList.toggle('active');
   }
 
+  // ── Slash Commands ──────────────────────────────────────────────────────
+  const SLASH_COMMANDS = {
+    '/clear':   { desc: 'Clear conversation history' },
+    '/effort':  { desc: 'Set reasoning effort: /effort low|medium|high|max' },
+    '/model':   { desc: 'Show current model info' },
+    '/rename':  { desc: 'Rename conversation: /rename <name>' },
+    '/compact': { desc: 'Show session ID for manual compact' },
+    '/help':    { desc: 'Show available commands' },
+  };
+
+  function handleSlashCommand(raw) {
+    if (!raw.startsWith('/')) return false;
+    const parts = raw.split(/\s+/);
+    const cmd = parts[0].toLowerCase();
+    const arg = parts.slice(1).join(' ').trim();
+
+    switch (cmd) {
+      case '/clear':
+        clearConversation();
+        appendMsg('system', 'Conversation cleared.');
+        scrollBottom();
+        return true;
+
+      case '/help':
+        const lines = Object.entries(SLASH_COMMANDS).map(([k, v]) => `${k}  —  ${v.desc}`).join('\n');
+        appendMsg('system', 'Available commands:\n' + lines);
+        scrollBottom();
+        return true;
+
+      case '/model':
+        appendMsg('system', 'Model: cc-sovereign (CC --resume via Max subscription)\nCost: $0/request\nBackend: P1 primary, K2 failover');
+        scrollBottom();
+        return true;
+
+      case '/effort': {
+        const valid = ['low', 'medium', 'high', 'max'];
+        const level = (arg || '').toLowerCase();
+        if (!valid.includes(level)) {
+          appendMsg('system', 'Usage: /effort low|medium|high|max\nCurrent: ' + (localStorage.getItem(EFFORT_KEY) || 'default'));
+          scrollBottom();
+          return true;
+        }
+        localStorage.setItem(EFFORT_KEY, level);
+        appendMsg('system', 'Effort set to: ' + level.toUpperCase());
+        updateEffortHint();
+        scrollBottom();
+        return true;
+      }
+
+      case '/rename': {
+        if (!arg) { appendMsg('system', 'Usage: /rename <name>'); scrollBottom(); return true; }
+        localStorage.setItem(CONV_LABEL_KEY, arg);
+        document.title = 'Karma — ' + arg;
+        appendMsg('system', 'Conversation renamed: ' + arg);
+        scrollBottom();
+        return true;
+      }
+
+      case '/compact':
+        appendMsg('system', 'Session ID: ' + conversationId + '\nCompact is not available in browser mode.\nUse CC CLI: claude --resume ' + conversationId + ' then /compact');
+        scrollBottom();
+        return true;
+
+      default:
+        if (raw.startsWith('/')) {
+          appendMsg('system', 'Unknown command: ' + cmd + '\nType /help for available commands.');
+          scrollBottom();
+          return true;
+        }
+        return false;
+    }
+  }
+
+  function updateEffortHint() {
+    const level = localStorage.getItem(EFFORT_KEY);
+    let el = document.getElementById('effort-hint');
+    if (!level) { if (el) el.remove(); return; }
+    if (!el) {
+      el = document.createElement('span');
+      el.id = 'effort-hint';
+      document.getElementById('route-hint').appendChild(el);
+    }
+    el.innerHTML = 'effort &#8594; <span class="rh-target">' + level.toUpperCase() + '</span>';
+  }
+
   // ── Routing ─────────────────────────────────────────────────────────────
   function parseTarget(text) {
     const m = text.match(/^@(\w+)\s*/i);
@@ -451,9 +541,13 @@
     const input = document.getElementById('msg-input');
     const raw   = input.value.trim();
     if (!raw) return;
-    const { target, text } = parseTarget(raw);
     input.value = '';
     input.style.height = 'auto';
+    // Slash commands — intercept before routing
+    if (raw.startsWith('/')) {
+      if (handleSlashCommand(raw)) return;
+    }
+    const { target, text } = parseTarget(raw);
     document.getElementById('send-btn').disabled = true;
     appendMsg('user', raw);
     hideEmpty();
@@ -476,7 +570,7 @@
       const res = await fetch(CHAT_URL, {
         method: 'POST',
         headers: { ...auth(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, conversation_id: conversationId, session_id: conversationId, stream: false })
+        body: JSON.stringify({ message: text, conversation_id: conversationId, session_id: conversationId, stream: false, effort: localStorage.getItem(EFFORT_KEY) || null })
       });
       if (res.status === 401) { proc.classList.remove('visible'); appendMsg('system', 'Token rejected.'); return; }
       const data = await res.json();

@@ -65,13 +65,15 @@ def save_session_id(session_id):
     except Exception as e:
         print(f"[cc-server] WARNING: could not save session ID: {e}")
 
-def run_cc(message):
+def run_cc(message, effort=None):
     """Call real CC subprocess with --resume for session continuity."""
     session_id = load_session_id()
     # Use node.exe + cli.js directly — bypasses .cmd wrapper (avoids WinError 2 / subprocess issues on Windows)
     cmd = [NODE_EXE, CLAUDE_CLI_JS, "-p", message, "--output-format", "json"]
     if session_id:
         cmd += ["--resume", session_id]
+    if effort and effort in ("low", "medium", "high", "max"):
+        cmd += ["--effort", effort]
     result = subprocess.run(
         cmd,
         capture_output=True, text=True,
@@ -245,8 +247,9 @@ class CCHandler(BaseHTTPRequestHandler):
             return
 
         # Call real CC subprocess with --resume for session continuity
+        effort = body.get("effort")
         try:
-            response_text = run_cc(message)
+            response_text = run_cc(message, effort=effort)
             self._json(200, {"ok": True, "response": response_text})
         except subprocess.TimeoutExpired:
             self._json(504, {"ok": False, "error": f"CC subprocess timed out after {API_TIMEOUT}s"})

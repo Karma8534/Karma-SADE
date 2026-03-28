@@ -76,8 +76,10 @@ async function checkHealth(url, cache, checkedAt) {
   } catch { return false; }
 }
 
-async function routeToHarness(message, sessionId) {
-  const payload = JSON.stringify({ message, session_id: sessionId });
+async function routeToHarness(message, sessionId, effort) {
+  const payloadObj = { message, session_id: sessionId };
+  if (effort) payloadObj.effort = effort;
+  const payload = JSON.stringify(payloadObj);
   const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` };
   const errors = [];
   // Try P1 first
@@ -247,8 +249,9 @@ const server = http.createServer(async (req, res) => {
       const message = body.message || body.content || "";
       if (!message) return json(res, 400, { ok: false, error: "message required" });
       const sessionId = body.session_id || "";
+      const effort = body.effort || null;
 
-      const result = await routeToHarness(message, sessionId);
+      const result = await routeToHarness(message, sessionId, effort);
 
       // Write to vault ledger (fire-and-forget)
       const assistantText = result.response || result.assistant_text || "";
