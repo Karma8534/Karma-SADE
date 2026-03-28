@@ -167,4 +167,4 @@ CC ── Claude Code on P1 — execution layer
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Sovereign Harness Phase 4-1: Self-edit proof from browser — ask Karma at hub.arknexus.net to edit CLAUDE.md, verify change in next response
+2. Sovereign Harness Phase 2/3/4 remaining tasks — see Karma2/PLAN.md "Done when" checklist. THE ONLY PLAN is Karma2/PLAN.md (Sovereign Harness). Old plan archived. NEVER follow archived plan.

@@ -329,3 +329,15 @@ Why: Session 145 — CC wrote "Codex = Supervisor on K2" and "KCC = Worker on K2
 B003 [vague-memory-item2]:
 Rule: MEMORY.md "Next Session Starts Here" item 2 MUST be a specific first action (verb + file + purpose). "X OR Y" = choice = CASE C-AMBIGUOUS trigger at next resurrect = brainstorming = questions.
 Why: wrap-session wrote "Continue Karma2 audit OR start K-1" — OR made both options ambiguous, no GSD plan for either → CASE C triggered → brainstorming asked Sovereign for direction. Session 128.
+
+P059 [dead-plan-in-planmd] CRITICAL L1:
+Rule: PLAN.md must contain EXACTLY ONE plan — the active one. When a new plan supersedes the old, the old MUST be archived to a separate file (PLAN-ARCHIVED-*.md) and PLAN.md replaced with the new plan. At resurrect, if MEMORY.md mentions a plan name not found in PLAN.md → STOP, plan file is stale.
+Why: Session 151 — PLAN.md contained old cortex Phases 1-7 while Sovereign Harness was the live plan (shipped S150). CC followed the dead plan: deployed P1 cortex fallback, edited julian_cortex_p1.py, created Task Scheduler — all wrong work. Sovereign had to intervene 3 times. (obs #19488, #19489, #19490)
+
+P060 [sovereign-says-the-plan]:
+Rule: When Sovereign says "continue the plan" or "the plan" — it means THEIR plan from the current conversation context, not whatever is in PLAN.md. Verify by checking if PLAN.md matches what Sovereign is describing. If mismatch → PLAN.md is stale → fix it first.
+Why: Session 151 — Sovereign said "continue the plan" meaning Sovereign Harness. CC read PLAN.md (old cortex phases) and executed that instead. Three corrections required.
+
+P061 [wrap-must-archive-superseded-plan]:
+Rule: wrap-session MUST check: if a new plan was adopted this session, old PLAN.md content must be archived and replaced. Session cannot end with a superseded plan in PLAN.md. Gate: grep PLAN.md for the plan name from MEMORY.md — must match.
+Why: Session 150 shipped Sovereign Harness but wrap-session did not replace PLAN.md. Next session (151) followed the dead plan.
