@@ -177,4 +177,4 @@ CC ── Claude Code on P1 — execution layer
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Sovereign Harness Phase 2/3/4 remaining tasks — see Karma2/PLAN.md "Done when" checklist. THE ONLY PLAN is Karma2/PLAN.md (Sovereign Harness). Old plan archived. NEVER follow archived plan.
+2. Sovereign Harness Phase 5 Tier 1: Start with Task 5-2 (slash commands in unified.html) — see Karma2/PLAN.md. THE ONLY PLAN is Karma2/PLAN.md (Sovereign Harness).
