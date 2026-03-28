@@ -172,6 +172,8 @@ CC ── Claude Code on P1 — execution layer
 - **CC wrapper feature inventory:** ~165 features identified, ~25 in unified.html, ~140 missing. Phase 5 Tier 1 (8 items) = minimum viable.
 - **VS Code 1.113 primitives:** 9 items captured in .gsd/nexus-future-work.md
 - **Voice NOT a blocker.** CC wrapper has native voice. Only video + 3D presence remain blocked.
+- **K2 harness fixed:** Replaced claude CLI (required Anthropic login) with regent_inference cascade. K2 Ollama ($0) -> z.ai -> Groq -> OpenRouter. Zero Anthropic dependency. Pitfall obs #19624.
+- **Phase 7 added:** Electron desktop app — Karma Browser. Long-term, after Phase 5.
 
 ## Next Session Starts Here
 1. `/resurrect`

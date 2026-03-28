@@ -339,5 +339,9 @@ Rule: When Sovereign says "continue the plan" or "the plan" — it means THEIR p
 Why: Session 151 — Sovereign said "continue the plan" meaning Sovereign Harness. CC read PLAN.md (old cortex phases) and executed that instead. Three corrections required.
 
 P061 [wrap-must-archive-superseded-plan]:
-Rule: wrap-session MUST check: if a new plan was adopted this session, old PLAN.md content must be archived and replaced. Session cannot end with a superseded plan in PLAN.md. Gate: grep PLAN.md for the plan name from MEMORY.md — must match.
+Rule: wrap-session MUST check: if a new plan was adopted this session, old PLAN.md content must be archived and replaced. Session cannot end with a superseded plan in PLAN.md. Gate: grep PLAN.md for the plan name from MEMORY.md -- must match.
 Why: Session 150 shipped Sovereign Harness but wrap-session did not replace PLAN.md. Next session (151) followed the dead plan.
+
+P062 [code-tab-prompt-overflow]:
+Rule: "Prompt is too long" in Code tab = context overflow. Fix: /compact or /clear then /resurrect. Root cause is usually context7 loading library docs (can add 50K+ tokens) or long tool output history. Never load context7 in Code tab unless the session is fresh. Opus 4.6 1M context still has per-request limits in the old wrapper.
+Why: Session 152 -- Code tab showed "Prompt is too long" after context7 loaded docs. Old wrapper does not compress/compact automatically. Even 1M context models hit limits when wrapper injects accumulated tool outputs without pruning.
