@@ -1,7 +1,7 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-28 Session 150 (extended — S151 rollback + K2 cascade fix + AGORA + Phase 5/7 planned)
-**Active: Sovereign Harness Phase 5 Tier 1 — UI parity. See Karma2/PLAN.md**
+**Last updated:** 2026-03-28 Session 150 (19hr marathon — harness shipped, nexus plan locked)
+**Active: Nexus Sprint 1 Step 0 — verify stream-json format. Plan: docs/superpowers/specs/nexus.md**
 **THE ONLY PLAN:** Karma2/PLAN.md (Sovereign Harness). Old cortex-phase plan ARCHIVED.
 **Session:** S150 — SOVEREIGN HARNESS SHIPPED. proxy.js (353 lines) replaces server.js (4820 lines) on vault-neo. CC --resume on P1 (primary) + K2 (failover) via Max subscription = $0. Full chain verified from browser. 12-gate Nexus verification (9 PASS, 2 PARTIAL, 1 RECONCILED). Cortex recency weighting patched. feedback.js + library_docs.js corruption fixed. cc_server_p1.py NODE_EXE bypass for Windows background PATH. K2 sovereign-harness.service deployed with WSL2 port forward.
 **Canonical source:** This file. Read at session start.

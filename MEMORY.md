@@ -154,7 +154,7 @@ CC ── Claude Code on P1 — execution layer
 - P068: gpt-5.4-mini ignores tool-use instructions
 - Simplify review: 6 code quality fixes applied (hoisted constants, unified serialization, removed dead defaults)
 
-## Session 150 (2026-03-28) — Sovereign Harness SHIPPED
+## Session 150 (2026-03-28) — 19hr Marathon: Sovereign Harness + Nexus Plan Locked
 - **SOVEREIGN HARNESS LIVE:** proxy.js (353 lines) replaces server.js (4820 lines) on vault-neo
 - CC --resume on P1 (primary) + K2 (failover) via Max subscription = $0/request
 - Full chain verified: hub.arknexus.net -> proxy -> P1:7891 -> CC --resume -> Julian responds
