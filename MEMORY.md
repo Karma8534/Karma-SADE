@@ -1,4 +1,4 @@
-<!-- Last dream: 2026-03-27 Session 149 — Nexus Build + Phase 7 Complete -->
+<!-- Last dream: 2026-03-28 Session 150 — Sovereign Harness Shipped -->
 
 # Karma SADE — Active Memory
 
@@ -154,15 +154,17 @@ CC ── Claude Code on P1 — execution layer
 - P068: gpt-5.4-mini ignores tool-use instructions
 - Simplify review: 6 code quality fixes applied (hoisted constants, unified serialization, removed dead defaults)
 
-## Session 150 (2026-03-28) — Sovereign Harness OPERATIONAL
-- **ROOT CAUSE FIXED:** cc_server_p1.py WinError 2 — was using list-based subprocess([claude.cmd,...]) without shell. Fixed: [NODE_EXE, CLAUDE_CLI_JS] direct node.exe invocation bypasses .cmd wrapper entirely.
-- **NODE_EXE:** C:\Program Files\nodejs\node.exe ✅ exists
-- **CLAUDE_CLI_JS:** C:\Users\raest\AppData\Roaming\npm\node_modules\@anthropic-ai\claude-code\cli.js ✅ exists
-- **PROOF:** hub.arknexus.net/v1/chat → sovereign-proxy → P1:7891/cc → node cli.js → {"ok":true,"assistant_text":"ONLINE"} (obs #19412)
-- **PITFALL:** Tailscale health check timeout was 3s — too tight for transient spikes. Fixed to 8s in proxy.js.
-- **PITFALL:** Multiple stale Python processes accumulate on port 7891. Always `Get-Process python* | Stop-Process -Force` before restart.
-- **proxy.js deployed** to vault-neo with 8s health check timeout
+## Session 150 (2026-03-28) — Sovereign Harness SHIPPED
+- **SOVEREIGN HARNESS LIVE:** proxy.js (353 lines) replaces server.js (4820 lines) on vault-neo
+- CC --resume on P1 (primary) + K2 (failover) via Max subscription = $0/request
+- Full chain verified: hub.arknexus.net -> proxy -> P1:7891 -> CC --resume -> Julian responds
+- 12-gate Nexus verification: 9 PASS, 2 PARTIAL, 1 RECONCILED
+- **Fixes:** feedback.js + library_docs.js quote corruption, cortex recency weighting, NODE_EXE bypass
+- **K2 failover:** sovereign-harness.service systemd + WSL2 netsh portproxy
+- **Cost:** $34/mo API -> $0 (Max subscription)
+- **Design spec:** docs/superpowers/specs/2026-03-28-sovereign-harness-design.md
+- **REFRAME:** 4620 lines of hub-bridge were bandaid. CC reads its own code, SSHes to K2, self-edits.
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Browser smoke test at hub.arknexus.net — verify Karma responds via sovereign harness in real browser session
+2. Sovereign Harness Phase 4-1: Self-edit proof from browser — ask Karma at hub.arknexus.net to edit CLAUDE.md, verify change in next response

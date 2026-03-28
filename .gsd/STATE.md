@@ -1,8 +1,8 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-27 Session 148
-**Active: Phase 7 Task 7-1 — sqrt Dampening in hub-bridge buildSystemText() FAISS scoring**
-**Session:** S148 — ORF x3 on Aider+Roo-Code primitives. Phase 7 (8 tasks) added to PLAN.md. Phases 2/3/4 state corrections applied. MCP Python SDK + FastMCP evaluated: Task 7-7 (add to existing K2 MCP server), Task 7-8 (MCP call IS boomerang). ACTIONABLE_FROM locked {colby,karma,regent}. P062-P066 pitfalls documented (P062: datetime.utcnow() recurrence; P063: K2/Scripts/ drift; P064: ACTIONABLE_FROM resolved; P065: hardcoded model names; P066: hard-exit on missing cloud key).
+**Last updated:** 2026-03-28 Session 150
+**Active: Sovereign Harness Phase 4-1 — Self-edit proof from browser**
+**Session:** S150 — SOVEREIGN HARNESS SHIPPED. proxy.js (353 lines) replaces server.js (4820 lines) on vault-neo. CC --resume on P1 (primary) + K2 (failover) via Max subscription = $0. Full chain verified from browser. 12-gate Nexus verification (9 PASS, 2 PARTIAL, 1 RECONCILED). Cortex recency weighting patched. feedback.js + library_docs.js corruption fixed. cc_server_p1.py NODE_EXE bypass for Windows background PATH. K2 sovereign-harness.service deployed with WSL2 port forward.
 **Canonical source:** This file. Read at session start.
 
 ---
