@@ -77,31 +77,33 @@ async function checkHealth(url, cache, checkedAt) {
 }
 
 async function routeToHarness(message, sessionId) {
+  const payload = JSON.stringify({ message, session_id: sessionId });
+  const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` };
+  const errors = [];
   // Try P1 first
   _p1Healthy = await checkHealth(HARNESS_P1, _p1Healthy, _p1CheckedAt);
   _p1CheckedAt = Date.now();
   if (_p1Healthy) {
-    const r = await fetch(`${HARNESS_P1}/cc`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` },
-      body: JSON.stringify({ message, session_id: sessionId }),
-      signal: AbortSignal.timeout(HARNESS_TIMEOUT),
-    });
-    if (r.ok) return await r.json();
-  }
+    try {
+      const r = await fetch(`${HARNESS_P1}/cc`, { method: "POST", headers, body: payload, signal: AbortSignal.timeout(HARNESS_TIMEOUT) });
+      const data = await r.json();
+      if (r.ok && data.ok !== false) { console.log("[HARNESS] P1 responded OK"); return data; }
+      errors.push(`P1 ${r.status}: ${data.error || "non-ok"}`);
+    } catch (e) { errors.push(`P1: ${e.message}`); }
+  } else { errors.push("P1 health failed"); }
   // Failover to K2
   _k2Healthy = await checkHealth(HARNESS_K2, _k2Healthy, _k2CheckedAt);
   _k2CheckedAt = Date.now();
   if (_k2Healthy) {
-    const r = await fetch(`${HARNESS_K2}/cc`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` },
-      body: JSON.stringify({ message, session_id: sessionId }),
-      signal: AbortSignal.timeout(HARNESS_TIMEOUT),
-    });
-    if (r.ok) return await r.json();
-  }
-  return { ok: false, error: "Both harness nodes offline (P1 + K2). No paid API fallback." };
+    try {
+      const r = await fetch(`${HARNESS_K2}/cc`, { method: "POST", headers, body: payload, signal: AbortSignal.timeout(HARNESS_TIMEOUT) });
+      const data = await r.json();
+      if (r.ok && data.ok !== false) { console.log("[HARNESS] K2 responded OK"); return data; }
+      errors.push(`K2 ${r.status}: ${data.error || "non-ok"}`);
+    } catch (e) { errors.push(`K2: ${e.message}`); }
+  } else { errors.push("K2 health failed"); }
+  console.error("[HARNESS] All nodes failed:", errors.join("; "));
+  return { ok: false, error: `Harness failed: ${errors.join("; ")}` };
 }
 
 // ── Coordination Bus ─────────────────────────────────────────────────────────
