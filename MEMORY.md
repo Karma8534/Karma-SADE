@@ -154,6 +154,15 @@ CC ── Claude Code on P1 — execution layer
 - P068: gpt-5.4-mini ignores tool-use instructions
 - Simplify review: 6 code quality fixes applied (hoisted constants, unified serialization, removed dead defaults)
 
+## Session 150 (2026-03-28) — Sovereign Harness OPERATIONAL
+- **ROOT CAUSE FIXED:** cc_server_p1.py WinError 2 — was using list-based subprocess([claude.cmd,...]) without shell. Fixed: [NODE_EXE, CLAUDE_CLI_JS] direct node.exe invocation bypasses .cmd wrapper entirely.
+- **NODE_EXE:** C:\Program Files\nodejs\node.exe ✅ exists
+- **CLAUDE_CLI_JS:** C:\Users\raest\AppData\Roaming\npm\node_modules\@anthropic-ai\claude-code\cli.js ✅ exists
+- **PROOF:** hub.arknexus.net/v1/chat → sovereign-proxy → P1:7891/cc → node cli.js → {"ok":true,"assistant_text":"ONLINE"} (obs #19412)
+- **PITFALL:** Tailscale health check timeout was 3s — too tight for transient spikes. Fixed to 8s in proxy.js.
+- **PITFALL:** Multiple stale Python processes accumulate on port 7891. Always `Get-Process python* | Stop-Process -Force` before restart.
+- **proxy.js deployed** to vault-neo with 8s health check timeout
+
 ## Next Session Starts Here
 1. `/resurrect`
-2. Nexus end-to-end browser verification by Colby — test inline tool evidence, markdown, copy, scroll in live UI
+2. Browser smoke test at hub.arknexus.net — verify Karma responds via sovereign harness in real browser session

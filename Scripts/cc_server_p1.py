@@ -20,7 +20,9 @@ TOKEN         = os.environ.get("HUB_CHAT_TOKEN", "")
 WORK_DIR      = r"C:\Users\raest\Documents\Karma_SADE"
 SNAPSHOT_FILE = os.path.join(WORK_DIR, "cc_context_snapshot.md")
 SESSION_FILE  = pathlib.Path.home() / ".cc_server_session_id"
-CLAUDE_CMD     = r"C:\Users\raest\AppData\Roaming\npm\claude.cmd"
+# Bypass .cmd wrapper — call node + cli.js directly (avoids PATH issues in background processes)
+NODE_EXE       = r"C:\Program Files\nodejs\node.exe"
+CLAUDE_CLI_JS  = r"C:\Users\raest\AppData\Roaming\npm\node_modules\@anthropic-ai\claude-code\cli.js"
 API_TIMEOUT    = 120  # seconds — CC subprocess can be slow on complex tasks
 CLAUDEMEM_URL  = "http://127.0.0.1:37777"  # claude-mem worker (loopback)
 CLAUDEMEM_DB   = pathlib.Path.home() / ".claude-mem" / "claude-mem.db"
@@ -66,14 +68,15 @@ def save_session_id(session_id):
 def run_cc(message):
     """Call real CC subprocess with --resume for session continuity."""
     session_id = load_session_id()
-    cmd = [CLAUDE_CMD, "-p", message, "--output-format", "json"]
+    # Use node.exe + cli.js directly — bypasses .cmd wrapper (avoids WinError 2 / subprocess issues on Windows)
+    cmd = [NODE_EXE, CLAUDE_CLI_JS, "-p", message, "--output-format", "json"]
     if session_id:
         cmd += ["--resume", session_id]
     result = subprocess.run(
         cmd,
         capture_output=True, text=True,
         cwd=WORK_DIR,
-        timeout=API_TIMEOUT
+        timeout=API_TIMEOUT,
     )
     if result.returncode != 0:
         # stderr may contain useful info
