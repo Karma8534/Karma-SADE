@@ -181,6 +181,10 @@ CC ── Claude Code on P1 — execution layer
 - **Electron scaffolded on K2:** /mnt/c/dev/Karma/k2/karma-browser/ — main.js + preload.js + IPC bridge. Launches successfully.
 - **Wip-watcher killed:** KarmaWipWatcher task + 2 processes stopped.
 
+- **NEXUS PLAN LOCKED:** `docs/superpowers/specs/nexus.md` — 23 baseline items, 5 sprints, 14 audit issues resolved.
+- **Persona fixed:** cc_server_p1.py --append-system-prompt Karma persona. Nexus = Karma not Julian.
+- **Cancel + CLI flags:** /cancel endpoint, --effort/--model threading implemented.
+
 ## Next Session Starts Here
 1. `/resurrect`
-2. Sovereign Harness Phase 5-2: Raw passthrough — CC subprocess handles ALL input including / commands and @ mentions natively. UI just sends and renders. P065: NEVER reimplement CC features in JS. THE ONLY PLAN is Karma2/PLAN.md.
+2. Nexus Sprint 1 Step 0: Capture one real `--output-format stream-json --include-partial-messages` output during a tool-using call to verify format. THE ONLY PLAN is `docs/superpowers/specs/nexus.md` (Karma2/PLAN.md points there).

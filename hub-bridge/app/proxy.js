@@ -247,6 +247,16 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, service: "sovereign-proxy", ts: new Date().toISOString() });
     }
 
+    // ── /v1/cancel — abort current CC subprocess ───────────────────────
+    if (req.method === "GET" && req.url === "/v1/cancel") {
+      // Cancel on whichever node is active
+      const targets = [HARNESS_P1, HARNESS_K2];
+      for (const t of targets) {
+        try { await fetch(`${t}/cancel`, { signal: AbortSignal.timeout(3000) }); } catch {}
+      }
+      return json(res, 200, { ok: true, cancelled: true });
+    }
+
     // ── /v1/status — system status ────────────────────────────────────
     if (req.method === "GET" && req.url === "/v1/status") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
