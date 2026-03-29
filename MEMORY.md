@@ -221,6 +221,11 @@ CC ── Claude Code on P1 — execution layer
 - **P1 auto-start**: Run registry key HKCU\...\Run\KarmaCC → start_cc_server.ps1 (restart loop)
 - **K2 auto-start**: sovereign-harness.service enabled+active
 
+### VS3 Hardening
+- **File validation**: MAX_FILE_SIZE=10MB, ALLOWED_EXTENSIONS whitelist, base64 decode guard (E301-E303)
+- **Concurrency**: _proc_lock prevents simultaneous CC subprocesses, returns 429 if busy
+- **AGORA fix**: ACK/approval events no longer show feedback buttons
+
 ### FINAL STATE: ALL SPRINTS COMPLETE
 - **26/27 PASS** (item 24 DEFERRED by Sovereign gate)
 - Regression sweep: all live tests pass

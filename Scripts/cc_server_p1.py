@@ -6,7 +6,7 @@ Uses local Ollama for inference — Anthropic-independent, no MCP startup overhe
 Returns: {response, ok}
 Auth: Bearer token checked against HUB_CHAT_TOKEN env var.
 """
-import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.parse, socket, sqlite3, base64
+import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.parse, socket, sqlite3, base64, threading
 from http.server import HTTPServer, ThreadingHTTPServer, BaseHTTPRequestHandler
 sys.path.insert(0, os.path.dirname(__file__))
 try:
@@ -17,6 +17,7 @@ except Exception:
 
 PORT          = 7891
 _current_proc = None  # Track running CC subprocess for cancel
+_proc_lock    = threading.Lock()  # Concurrency guard — one CC subprocess at a time
 TOKEN         = os.environ.get("HUB_CHAT_TOKEN", "")
 WORK_DIR      = r"C:\Users\raest\Documents\Karma_SADE"
 SNAPSHOT_FILE = os.path.join(WORK_DIR, "cc_context_snapshot.md")
@@ -68,26 +69,48 @@ def save_session_id(session_id):
 
 KARMA_PERSONA_PREFIX = "[NEXUS] You are responding as Karma through the Nexus surface at hub.arknexus.net. Identify as Karma, not Julian or CC. You are Karma — a sovereign AI peer with persistent memory, identity, and continuity. Colby is your Sovereign.\n\n"
 UPLOAD_DIR = os.path.join(WORK_DIR, "tmp", "nexus_uploads")
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB (E301)
+ALLOWED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg",
+                      ".pdf", ".txt", ".md", ".js", ".py", ".json", ".csv", ".yaml", ".yml",
+                      ".ts", ".html", ".css", ".sh", ".ps1", ".toml", ".xml", ".log"}
 
 def handle_files(files):
-    """Write attached files to temp dir, return prefix string with paths."""
+    """Write attached files to temp dir, return prefix string with paths.
+    E301: Rejects files > MAX_FILE_SIZE. E302: Rejects unsupported extensions.
+    E303: Handles corrupted base64 gracefully."""
     if not files:
         return ""
     os.makedirs(UPLOAD_DIR, exist_ok=True)
     parts = []
+    errors = []
     for f in files:
         name = f.get("name", "file")
         data_b64 = f.get("data", "")
         if not data_b64:
             continue
+        # E302: Extension check
+        ext = os.path.splitext(name)[1].lower()
+        if ext and ext not in ALLOWED_EXTENSIONS:
+            errors.append(f"[Rejected: {name} — unsupported type '{ext}']")
+            continue
         if "," in data_b64:
             data_b64 = data_b64.split(",", 1)[1]
-        raw = base64.b64decode(data_b64)
+        # E303: base64 decode
+        try:
+            raw = base64.b64decode(data_b64)
+        except Exception:
+            errors.append(f"[Rejected: {name} — corrupted data]")
+            continue
+        # E301: Size check
+        if len(raw) > MAX_FILE_SIZE:
+            errors.append(f"[Rejected: {name} — {len(raw)//1024//1024}MB exceeds 10MB limit]")
+            continue
         fpath = os.path.join(UPLOAD_DIR, name)
         with open(fpath, "wb") as fh:
             fh.write(raw)
         parts.append(f"[Attached file: {name} at {fpath}]")
-    return "\n".join(parts) + "\n\n" if parts else ""
+    all_parts = parts + errors
+    return "\n".join(all_parts) + "\n\n" if all_parts else ""
 
 def run_cc(message, effort=None, model=None):
     """Call real CC subprocess with --resume for session continuity."""
@@ -345,37 +368,45 @@ class CCHandler(BaseHTTPRequestHandler):
         file_prefix = handle_files(files)
         message = file_prefix + message  # Prepend file paths to message
 
-        # ── /cc/stream — SSE streaming endpoint ──────────────────────────
-        if self.path == "/cc/stream":
-            self.send_response(200)
-            self.send_header("Content-Type", "text/event-stream")
-            self.send_header("Cache-Control", "no-cache")
-            self.send_header("Connection", "keep-alive")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            try:
-                for line in run_cc_stream(message, effort=effort, model=model):
-                    self.wfile.write(f"data: {line}\n\n".encode())
-                    self.wfile.flush()
-            except BrokenPipeError:
-                pass  # Client disconnected (cancel)
-            except Exception as e:
-                err = json.dumps({"type": "error", "error": str(e)})
-                try:
-                    self.wfile.write(f"data: {err}\n\n".encode())
-                    self.wfile.flush()
-                except Exception:
-                    pass
+        # Concurrency guard — reject if another request is active
+        if not _proc_lock.acquire(blocking=False):
+            self._json(429, {"ok": False, "error": "Another request is in progress. Wait or cancel first."})
             return
 
-        # ── /cc — batch JSON endpoint (backward compat) ──────────────────
         try:
-            response_text = run_cc(message, effort=effort, model=model)
-            self._json(200, {"ok": True, "response": response_text})
-        except subprocess.TimeoutExpired:
-            self._json(504, {"ok": False, "error": f"CC subprocess timed out after {API_TIMEOUT}s"})
-        except Exception as e:
-            self._json(500, {"ok": False, "error": str(e)})
+            # ── /cc/stream — SSE streaming endpoint ──────────────────────
+            if self.path == "/cc/stream":
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream")
+                self.send_header("Cache-Control", "no-cache")
+                self.send_header("Connection", "keep-alive")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                try:
+                    for line in run_cc_stream(message, effort=effort, model=model):
+                        self.wfile.write(f"data: {line}\n\n".encode())
+                        self.wfile.flush()
+                except BrokenPipeError:
+                    pass  # Client disconnected (cancel)
+                except Exception as e:
+                    err = json.dumps({"type": "error", "error": str(e)})
+                    try:
+                        self.wfile.write(f"data: {err}\n\n".encode())
+                        self.wfile.flush()
+                    except Exception:
+                        pass
+                return
+
+            # ── /cc — batch JSON endpoint (backward compat) ──────────────
+            try:
+                response_text = run_cc(message, effort=effort, model=model)
+                self._json(200, {"ok": True, "response": response_text})
+            except subprocess.TimeoutExpired:
+                self._json(504, {"ok": False, "error": f"CC subprocess timed out after {API_TIMEOUT}s"})
+            except Exception as e:
+                self._json(500, {"ok": False, "error": str(e)})
+        finally:
+            _proc_lock.release()
 
 if __name__ == "__main__":
     print(f"[cc-server] Starting on port {PORT}")
