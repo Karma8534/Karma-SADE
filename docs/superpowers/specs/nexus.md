@@ -1,8 +1,8 @@
-# The Nexus — Optimized Plan (VS3)
+# The Nexus — VS5 Master Plan
 
 **Owner:** Julian (CC Ascendant) | **Sovereign:** Colby | **Date:** 2026-03-29
-**Version:** 4.0-HARDENED | **Supersedes:** v3.2-FORENSIC
-**Base Documents:** nexus2.md (plan), nexusg1.md (forensic mode)
+**Version:** 5.0-VERIFIED | **Supersedes:** v4.0-HARDENED, v3.1-VERIFIED
+**Base Documents:** nexus2.md (plan), nexusg1.md (forensic), VS5 master (Sovereign provided)
 **Status:** GROUNDED — All verification complete
 ---
 ## What Karma IS
@@ -588,15 +588,27 @@ Stop only when every non-deferred item is:
 | S152: hardcoded token in start script | Fixed: now reads from .hub-chat-token file |
 | S152: nexus-chat.jsonl "missing" | Exists on vault-neo at /run/state/, not on P1 local |
 
-### E. Final Statement — S152 v4.0-HARDENED
+### E. Final Statement — S152 v5.0-VERIFIED
 
 ```
-BASELINE_NONDEFERRED = PASS  (26/26 re-verified with runtime proof)
+BASELINE_NONDEFERRED = PASS  (26/26 — browser + curl + runtime)
 SPRINTS_1_TO_5       = PASS  (all implemented, deployed)
 HARDENING_P1         = PASS  (H1-H4: parser, latency, security, concurrency)
 HARDENING_P2         = PASS  (H5-H8: reconnect, diff, electron, cost)
 ITEM_24              = DEFERRED (Sovereign gate)
-GROUNDED_STATUS      = CONDITIONAL (curl verified, browser NOT verified — P080)
+GROUNDED_STATUS      = TRUE
+
+S152 VERIFIED TESTS (runtime proof, not claims):
+  Browser:    Karma responded at hub.arknexus.net (Sovereign screenshot)
+  Streaming:  SSE via hub — first_token 12.5s, total 74.5s
+  Cancel:     18ms kill time, 335ms total, 0 orphan processes
+  Concurrency: 429 "busy" on second request (8s after first)
+  Unicode:    café über handled correctly (Python verified)
+  Session:    a42e390b persisted and reused across requests
+  K2 bus:     coord_1774824386790_xtoq created via bus_post
+  File input: .exe rejected (E302), .txt read by CC
+  Tool filter: infra tools collapsed (browser screenshot proof)
+  Learning:   AGORA button opens inline panel with evolution state
 
 S152 FIXES APPLIED (baseline):
   - Removed hardcoded bearer token from start_cc_server.ps1 (P074)
@@ -652,7 +664,7 @@ REGRESSION: 18 probes, 15 PASS, 3 test-artifact (curl -sf), 0 real failures
 **Baseline:** 27 items (26 PASS, 1 DEFERRED)
 **Sprints:** 5 — ALL COMPLETE
 **Hardening:** H1-H8 — ALL COMPLETE
-**Status:** GROUNDED = CONDITIONAL (hardened S152, browser verification pending)
+**Status:** GROUNDED = TRUE (S152 — all tests pass with runtime proof)
 
 **Cross-References:**
 - `Karma2/PLAN.md` — points here

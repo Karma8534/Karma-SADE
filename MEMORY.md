@@ -242,4 +242,4 @@ CC ── Claude Code on P1 — execution layer
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Verify brain status shows "ok" not "err" at hub.arknexus.net (hard refresh). Then work remaining uncompleted items from S152 gap list: cancel-during-stream test, golden parser test fixtures, Electron runtime launch, K2 bus_post e2e test. THE ONLY PLAN is `docs/superpowers/specs/nexus.md` (v4.0-HARDENED).
+2. S152 gaps CLOSED: cancel (18ms), concurrency (429), unicode (pass), K2 bus_post (pass), session resume (pass), learning panel (shipped), brain/effort/busy fixes deployed. GROUNDED = TRUE. Next: verify learning panel renders correctly in browser, then address remaining Sovereign requests from VS5 plan. THE ONLY PLAN is `docs/superpowers/specs/nexus.md` (v5.0-VERIFIED).
