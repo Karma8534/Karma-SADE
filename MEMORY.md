@@ -217,6 +217,15 @@ CC ── Claude Code on P1 — execution layer
 - **Sovereign feedback**: Approve/Reject/Redirect buttons on every evolution event → POST to bus as from:colby to:regent type:approval
 - **Learning visibility**: Pattern diversity count, quality grade (A-D), promotion timeline
 
+### Sprint 5 (item 15)
+- **P1 auto-start**: Run registry key HKCU\...\Run\KarmaCC → start_cc_server.ps1 (restart loop)
+- **K2 auto-start**: sovereign-harness.service enabled+active
+
+### FINAL STATE: ALL SPRINTS COMPLETE
+- **26/27 PASS** (item 24 DEFERRED by Sovereign gate)
+- Regression sweep: all live tests pass
+- Commits: 078ddf5 → 3b3ca16 (Sprint 1-5)
+
 ## Next Session Starts Here
 1. `/resurrect`
-2. Verify Sprint 1 baseline items (2, 3, 6, 19, 25) end-to-end from browser at hub.arknexus.net. If any fail, debug and fix. THE ONLY PLAN is `docs/superpowers/specs/nexus.md` (Karma2/PLAN.md points there).
+2. ALL 5 SPRINTS COMPLETE. 26/27 baseline PASS. Item 24 DEFERRED. Next: operational monitoring, Sprint iteration on quality improvements. THE ONLY PLAN is `docs/superpowers/specs/nexus.md`.
