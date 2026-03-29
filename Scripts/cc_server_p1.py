@@ -60,6 +60,17 @@ API_TIMEOUT    = 120  # seconds — CC subprocess can be slow on complex tasks
 CLAUDEMEM_URL  = "http://127.0.0.1:37777"  # claude-mem worker (loopback)
 CLAUDEMEM_DB   = pathlib.Path.home() / ".claude-mem" / "claude-mem.db"
 
+def _auto_save_memory(user_msg, assistant_msg):
+    """Gate 6: Auto-save chat turns to claude-mem. Fire-and-forget, never blocks."""
+    try:
+        text = f"[Nexus chat] user: {user_msg[:200]}\nassistant: {assistant_msg[:500]}"
+        body = json.dumps({"text": text, "title": f"Nexus chat turn", "project": "Karma_SADE"}).encode()
+        req = urllib.request.Request(f"{CLAUDEMEM_URL}/api/memory/save", data=body, method="POST",
+                                     headers={"Content-Type": "application/json"})
+        urllib.request.urlopen(req, timeout=3)
+    except Exception:
+        pass  # Never block chat on memory save failure
+
 def claudemem_proxy(path, method="GET", body=None, timeout=10):
     """Proxy a request to the local claude-mem worker at 127.0.0.1:37777."""
     if method == "GET" and body:
@@ -482,6 +493,8 @@ class CCHandler(BaseHTTPRequestHandler):
             try:
                 response_text = run_cc(message, effort=effort, model=model)
                 self._json(200, {"ok": True, "response": response_text})
+                # Gate 6: Auto-save chat turn to claude-mem (fire-and-forget)
+                _auto_save_memory(message, response_text)
             except subprocess.TimeoutExpired:
                 self._json(504, {"ok": False, "error": f"CC subprocess timed out after {API_TIMEOUT}s"})
             except Exception as e:

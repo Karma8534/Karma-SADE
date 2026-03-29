@@ -81,9 +81,10 @@ async function routeToHarness(message, sessionId) {
   const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` };
   const errors = [];
   let busyCount = 0;
+  // Gate 8: K2 first, P1 failover (Sovereign directive)
   for (const node of [
-    { label: "P1", url: HARNESS_P1, getHealthy: () => _p1Healthy, setHealthy: v => { _p1Healthy = v; }, setChecked: () => { _p1CheckedAt = Date.now(); } },
     { label: "K2", url: HARNESS_K2, getHealthy: () => _k2Healthy, setHealthy: v => { _k2Healthy = v; }, setChecked: () => { _k2CheckedAt = Date.now(); } },
+    { label: "P1", url: HARNESS_P1, getHealthy: () => _p1Healthy, setHealthy: v => { _p1Healthy = v; }, setChecked: () => { _p1CheckedAt = Date.now(); } },
   ]) {
     const h = await checkHealth(node.url, node.getHealthy(), 0);
     node.setHealthy(h); node.setChecked();
@@ -109,9 +110,10 @@ async function routeToHarness(message, sessionId) {
 async function routeToHarnessStream(message, sessionId, effort, model, clientRes, files) {
   const payload = JSON.stringify({ message, session_id: sessionId, effort, model, files });
   const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` };
+  // Gate 8: K2 first, P1 failover (Sovereign directive)
   const nodes = [
-    { label: "P1", url: HARNESS_P1, getHealthy: () => _p1Healthy, setHealthy: v => { _p1Healthy = v; }, setChecked: () => { _p1CheckedAt = Date.now(); } },
     { label: "K2", url: HARNESS_K2, getHealthy: () => _k2Healthy, setHealthy: v => { _k2Healthy = v; }, setChecked: () => { _k2CheckedAt = Date.now(); } },
+    { label: "P1", url: HARNESS_P1, getHealthy: () => _p1Healthy, setHealthy: v => { _p1Healthy = v; }, setChecked: () => { _p1CheckedAt = Date.now(); } },
   ];
 
   for (const node of nodes) {
