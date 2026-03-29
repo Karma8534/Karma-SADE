@@ -64,6 +64,15 @@ API_TIMEOUT    = 120  # seconds — CC subprocess can be slow on complex tasks
 CLAUDEMEM_URL  = "http://127.0.0.1:37777"  # claude-mem worker (loopback)
 CLAUDEMEM_DB   = pathlib.Path.home() / ".claude-mem" / "claude-mem.db"
 
+# Module-level read-only SQLite connection — reused across requests (no per-request open/close)
+_ro_db_conn = None
+def _get_ro_conn():
+    global _ro_db_conn
+    if _ro_db_conn is None:
+        _ro_db_conn = sqlite3.connect(f"file:{CLAUDEMEM_DB}?mode=ro", uri=True, timeout=5, check_same_thread=False)
+        _ro_db_conn.row_factory = sqlite3.Row
+    return _ro_db_conn
+
 def _auto_save_memory(user_msg, assistant_msg):
     """Auto-save chat turns to claude-mem. Runs in background thread, never blocks handler."""
     def _save():
@@ -160,19 +169,26 @@ def handle_files(files):
     all_parts = parts + errors
     return "\n".join(all_parts) + "\n\n" if all_parts else ""
 
-def run_cc(message, effort=None, model=None):
-    """Call real CC subprocess with session continuity."""
+def _build_cc_cmd(message, effort=None, model=None, stream=False):
+    """Build the CC subprocess command list. Shared by run_cc and run_cc_stream."""
     session_id = load_session_id()
     full_message = KARMA_PERSONA_PREFIX + message
-    # Use node.exe + cli.js directly — bypasses .cmd wrapper (avoids WinError 2 / subprocess issues on Windows)
-    cmd = [NODE_EXE, CLAUDE_CLI_JS, "-p", full_message, "--output-format", "json"]
-    # Only --resume if we have a verified session ID from a previous successful response
+    if stream:
+        cmd = [NODE_EXE, CLAUDE_CLI_JS, "-p", full_message,
+               "--output-format", "stream-json", "--verbose"]
+    else:
+        cmd = [NODE_EXE, CLAUDE_CLI_JS, "-p", full_message, "--output-format", "json"]
     if session_id:
         cmd += ["--resume", session_id]
     if effort:
         cmd += ["--effort", effort]
     if model:
         cmd += ["--model", model]
+    return cmd
+
+def run_cc(message, effort=None, model=None):
+    """Call real CC subprocess with session continuity."""
+    cmd = _build_cc_cmd(message, effort=effort, model=model, stream=False)
     global _current_proc
     _current_proc = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -213,16 +229,7 @@ def run_cc(message, effort=None, model=None):
 def run_cc_stream(message, effort=None, model=None):
     """Yield filtered stream-json lines from CC subprocess as SSE-ready strings.
     Requires --verbose with -p mode (P069). Filters out system/hook events."""
-    session_id = load_session_id()
-    full_message = KARMA_PERSONA_PREFIX + message
-    cmd = [NODE_EXE, CLAUDE_CLI_JS, "-p", full_message,
-           "--output-format", "stream-json", "--verbose"]
-    if session_id:
-        cmd += ["--resume", session_id]
-    if effort:
-        cmd += ["--effort", effort]
-    if model:
-        cmd += ["--model", model]
+    cmd = _build_cc_cmd(message, effort=effort, model=model, stream=True)
     global _current_proc
     _current_proc = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -345,15 +352,13 @@ class CCHandler(BaseHTTPRequestHandler):
         elif self.path == "/v1/learnings":
             # Gate 6: What Karma has ACTUALLY learned — from claude-mem observations
             try:
-                conn = sqlite3.connect(f"file:{CLAUDEMEM_DB}?mode=ro", uri=True, timeout=5)
-                conn.row_factory = sqlite3.Row
+                conn = _get_ro_conn()
                 rows = conn.execute(
                     "SELECT id, title, narrative, type, created_at FROM observations "
                     "WHERE project='Karma_SADE' AND (title LIKE '%PITFALL%' OR title LIKE '%DECISION%' "
                     "OR title LIKE '%PROOF%' OR title LIKE '%DIRECTION%' OR title LIKE '%INSIGHT%') "
                     "ORDER BY created_at DESC LIMIT 30"
                 ).fetchall()
-                conn.close()
                 learnings = []
                 for r in rows:
                     title = r["title"] or ""
@@ -393,14 +398,12 @@ class CCHandler(BaseHTTPRequestHandler):
                 self._json(400, {"ok": False, "error": "ids param required (comma-separated ints)"})
                 return
             try:
-                conn = sqlite3.connect(f"file:{CLAUDEMEM_DB}?mode=ro", uri=True, timeout=5)
-                conn.row_factory = sqlite3.Row
+                conn = _get_ro_conn()
                 placeholders = ",".join("?" * len(ids))
                 rows = conn.execute(
                     f"SELECT id,memory_session_id,project,type,title,subtitle,narrative,text,created_at FROM observations WHERE id IN ({placeholders})",
                     ids
                 ).fetchall()
-                conn.close()
                 items = [dict(r) for r in rows]
                 self._json(200, {"ok": True, "items": items})
             except Exception as e:

@@ -303,7 +303,7 @@
       <option value="max">max</option>
     </select>
     <button class="hdr-btn" id="cascade-btn">CASCADE</button>
-    <button class="hdr-btn" id="agora-btn">AGORA</button>
+    <button class="hdr-btn" id="agora-btn">LEARNED</button>
     <button class="hdr-btn" id="clear-btn">CLEAR</button>
   </div>
 
@@ -573,8 +573,17 @@
     loadLearningPanel();
   }
 
+  let _learningsCache = null;
+  let _learningsCacheTs = 0;
+  const LEARNINGS_CACHE_TTL = 60000; // 60s
+
   async function loadLearningPanel() {
     const el = document.getElementById('learning-content');
+    // Skip fetch if cached result is < 60s old
+    if (_learningsCache && (Date.now() - _learningsCacheTs < LEARNINGS_CACHE_TTL)) {
+      el.innerHTML = _learningsCache;
+      return;
+    }
     el.innerHTML = '<div style="color:#6b7280">Loading what Karma has learned...</div>';
     try {
       const r = await fetch('/v1/learnings', { headers: auth() });
@@ -601,6 +610,8 @@
       }
 
       html += '<div style="margin-top:12px;text-align:center"><a href="/agora" target="_blank" style="color:#a78bfa;font-size:11px">Full evolution dashboard &rarr;</a></div>';
+      _learningsCache = html;
+      _learningsCacheTs = Date.now();
       el.innerHTML = html;
     } catch (e) {
       el.innerHTML = '<div style="color:#ef4444">Failed to load: ' + escHtml(e.message) + '</div>';
@@ -853,14 +864,6 @@
       }
       return;
     }
-    if (type === 'result') {
-      // Stream complete — could extract cost/duration here if needed
-      return;
-    }
-    if (type === 'error') {
-      appendMsg('system', 'Error: ' + (obj.error || 'unknown'));
-      return;
-    }
   }
 
   function setStreamingState(active) {
@@ -984,7 +987,6 @@
 
     const feed = document.getElementById('chat-feed');
     feed.insertBefore(el, document.getElementById('processing'));
-    saveMessages();
     return el;
   }
 

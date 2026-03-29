@@ -181,22 +181,7 @@ async function routeToHarnessStream(message, sessionId, effort, model, clientRes
       // Fire-and-forget: vault + chatlog + cortex
       // H8: Log actual cost and model for accounting
       if (streamCostUsd > 0) console.log(`[COST] stream request: $${streamCostUsd.toFixed(4)} via ${streamModel} (Max sub — no actual charge)`);
-      const chatContent = `[CHAT-STREAM] user: ${message.slice(0, 200)}\nassistant: ${fullText.slice(0, 500)} [cost:$${streamCostUsd.toFixed(4)},model:${streamModel}]`;
-      vaultPost("/v1/memory", VAULT_BEARER, buildVaultRecord({
-        type: "log", content: chatContent,
-        tags: ["chat", "sovereign-harness", "hub", "stream"], source: "sovereign-proxy",
-      })).catch(() => {});
-      try {
-        fs.appendFileSync("/run/state/nexus-chat.jsonl", JSON.stringify({
-          ts: new Date().toISOString(), user: message.slice(0, 500),
-          assistant: fullText.slice(0, 1000), session_id: sessionId,
-        }) + "\n");
-      } catch {}
-      fetch("http://100.75.109.92:7892/ingest", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label: `nexus-chat-${Date.now()}`, text: chatContent }),
-        signal: AbortSignal.timeout(5000),
-      }).catch(() => {});
+      postResponseSideEffects({ message, assistantText: fullText, sessionId, costUsd: streamCostUsd, model: streamModel, tagSuffix: "-STREAM" });
 
       return; // Success
     } catch (e) { console.error(`[HARNESS-STREAM] ${node.label} error:`, e.message); }
@@ -267,6 +252,29 @@ function buildVaultRecord({ type, content, tags, source, confidence }) {
     created_at: new Date().toISOString(),
   };
 }
+// Shared fire-and-forget: vault write + chatlog append + cortex ingest
+function postResponseSideEffects({ message, assistantText, sessionId, costUsd, model, tagSuffix }) {
+  const costStr = (costUsd !== undefined && costUsd !== null) ? costUsd.toFixed(4) : "0.0000";
+  const modelStr = model || "cc-sovereign";
+  const suffix = tagSuffix || "";
+  const chatContent = `[CHAT${suffix}] user: ${message.slice(0, 200)}\nassistant: ${assistantText.slice(0, 500)} [cost:$${costStr},model:${modelStr}]`;
+  vaultPost("/v1/memory", VAULT_BEARER, buildVaultRecord({
+    type: "log", content: chatContent,
+    tags: ["chat", "sovereign-harness", "hub", ...(suffix ? [suffix.replace("-", "").toLowerCase()] : [])], source: "sovereign-proxy",
+  })).catch(e => console.error("[VAULT] write failed:", e.message));
+  try {
+    fs.appendFileSync("/run/state/nexus-chat.jsonl", JSON.stringify({
+      ts: new Date().toISOString(), user: message.slice(0, 500),
+      assistant: assistantText.slice(0, 1000), session_id: sessionId,
+    }) + "\n");
+  } catch (e) { console.warn("[CHATLOG] append failed:", e.message); }
+  fetch("http://100.75.109.92:7892/ingest", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ label: `nexus-chat-${Date.now()}`, text: chatContent }),
+    signal: AbortSignal.timeout(5000),
+  }).catch(e => console.warn("[CORTEX] ingest failed:", e.message));
+}
+
 async function vaultPost(vaultPath, bearer, payload) {
   // Use internal URL from inside Docker (external URL fails DNS resolution in container)
   const url = new URL(vaultPath, VAULT_INTERNAL_URL).toString();
@@ -404,31 +412,9 @@ const server = http.createServer(async (req, res) => {
       // ── Batch path (JSON, backward compat) ────────────────────────────
       const result = await routeToHarness(message, sessionId);
 
-      // Write to vault ledger (fire-and-forget)
+      // Fire-and-forget: vault + chatlog + cortex (shared with stream path)
       const assistantText = result.response || result.assistant_text || "";
-      const chatContent = `[CHAT] user: ${message.slice(0, 200)}\nassistant: ${assistantText.slice(0, 500)}`;
-      const vaultRecord = buildVaultRecord({
-        type: "log", content: chatContent,
-        tags: ["chat", "sovereign-harness", "hub"], source: "sovereign-proxy",
-      });
-      vaultPost("/v1/memory", VAULT_BEARER, vaultRecord).catch(e => console.error("[VAULT] write failed:", e.message));
-
-      // Write to shared chat log (readable by CC sessions for awareness)
-      const chatLogEntry = JSON.stringify({
-        ts: new Date().toISOString(),
-        user: message.slice(0, 500),
-        assistant: assistantText.slice(0, 1000),
-        session_id: sessionId,
-      }) + "\n";
-      try { fs.appendFileSync("/run/state/nexus-chat.jsonl", chatLogEntry); } catch (e) { console.warn("[CHATLOG] append failed:", e.message); }
-
-      // Ingest to K2 cortex (fire-and-forget, direct LAN)
-      fetch("http://100.75.109.92:7892/ingest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label: `nexus-chat-${Date.now()}`, text: chatContent }),
-        signal: AbortSignal.timeout(5000),
-      }).catch(e => console.warn("[CORTEX] ingest failed:", e.message));
+      postResponseSideEffects({ message, assistantText, sessionId, costUsd: 0, model: "cc-sovereign" });
 
       // Normalize response for unified.html compatibility
       return json(res, result.ok === false ? 502 : 200, {

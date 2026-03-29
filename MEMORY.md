@@ -241,7 +241,7 @@ CC ── Claude Code on P1 — execution layer
 - **Gate 6 fixed:** Auto-memory + /v1/learnings endpoint (claude-mem observations → natural language panel)
 - **Gate 8 fixed:** Routing flipped to K2-first, P1-failover (Sovereign directive)
 - **Learning panel rebuilt:** Shows real learnings from claude-mem (PITFALL/DECISION/PROOF), not system metrics
-- **Simplify fixes:** health cache bug (checkedAt=0 defeated 30s cache), blocking _auto_save_memory → threaded, rate bucket leak, deduplicated node list + busy message constant
+- **Simplify (all 8 findings fixed, 0 skipped):** health cache bug, threaded memory save, rate bucket leak, node dedup, SQLite connection reuse, learning panel 60s cache, dead code removal, saveMessages() hot-path fix, button label LEARNED, cmd builder extract, postResponseSideEffects shared function, batch cost parity
 - **Commits:** df98b62 → 250febb + gate fixes
 
 ## Next Session Starts Here
