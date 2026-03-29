@@ -1,9 +1,9 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-29 Session 151 (ALL 5 Nexus Sprints shipped — 26/26 baseline PASS)
-**Active: VS3 hardening iteration — parser hardening, security hardening, latency gates. Plan: docs/superpowers/specs/nexus.md (VS3 3.1-VERIFIED)**
-**THE ONLY PLAN:** Karma2/PLAN.md → docs/superpowers/specs/nexus.md (VS3). All Sprints COMPLETE.
-**Session:** S151 — NEXUS BASELINE ACHIEVED. Sprint 1 (streaming+tools+cancel), Sprint 2 (files+effort+persona), Sprint 3 (Electron P1), Sprint 4 (AGORA feedback+metrics), Sprint 5 (reboot survival). VS3 hardening: file validation E301-E303, concurrency lock, AGORA ACK fix. Pitfalls P069-P073. nexus.md upgraded to VS3 (3.1-VERIFIED). 10 commits.
+**Last updated:** 2026-03-29 Session 152 (Forensic audit + H1-H8 hardening + P079 CLI fix)
+**Active: Browser verification of Nexus. Plan: docs/superpowers/specs/nexus.md (v4.0-HARDENED)**
+**THE ONLY PLAN:** Karma2/PLAN.md → docs/superpowers/specs/nexus.md. Hardening COMPLETE (code), browser verification PENDING.
+**Session:** S152 — CRITICAL: P079 --session-id CLI break fixed (Karma was completely down). H1-H8 hardening: parser, latency, security, concurrency, reconnect, diff, electron, cost. P080-P085 pitfalls: false claims while system down. GROUNDED = CONDITIONAL (curl passes, browser not verified). Commit df98b62.
 **Canonical source:** This file. Read at session start.
 
 ---

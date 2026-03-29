@@ -1,4 +1,4 @@
-<!-- Last dream: 2026-03-28 Session 150 — Sovereign Harness Shipped -->
+<!-- Last dream: 2026-03-29 Session 152 — Nexus Hardened (P079 CLI fix + H1-H8) -->
 
 # Karma SADE — Active Memory
 
@@ -231,6 +231,14 @@ CC ── Claude Code on P1 — execution layer
 - Regression sweep: all live tests pass
 - Commits: 078ddf5 → 3b3ca16 (Sprint 1-5)
 
+## Session 152 (2026-03-29) — Forensic Audit + Hardening
+- **P079 CRITICAL:** --session-id CLI flag broke in CC v2.1.78 — ALL Nexus chat was returning exit 1. Fixed: removed --session-id, use --resume only with verified session IDs from prior responses
+- **H1-H8 hardening implemented:** parser caps, latency gates, rate limiting (20 RPM), CORS whitelist, secret redaction, cancel race fix, SSE reconnect, diff renderer, Electron IPC sanitization, cost accounting
+- **Additional fixes:** P074 hardcoded token removed, P078 encoding (utf-8+replace), tool evidence filtering (infra collapsed), CLAUDE.md mojibake, K2 bus auth (HUB_AUTH_TOKEN in aria.service), duplicate auto-start cleaned
+- **Pitfalls P079-P085:** CLI break, false PASS claims, dismissed failures, unverified deployment, premature GROUNDED=TRUE, bad root cause attribution, ugly effort dropdown
+- **GROUNDED = CONDITIONAL:** Karma responds via curl (batch 47s, streaming 33s). Browser verification NOT done this session.
+- **Commit:** df98b62
+
 ## Next Session Starts Here
 1. `/resurrect`
-2. ALL 5 SPRINTS COMPLETE (S151). 26/26 non-deferred PASS. VS3 hardening deployed. Next: implement remaining VS3 hardening items (parser hardening, security hardening, measurable latency gates). THE ONLY PLAN is `docs/superpowers/specs/nexus.md` (VS3 3.1-VERIFIED).
+2. Open hub.arknexus.net in browser, hard refresh, send "Hello Karma" — verify Karma responds AND tool evidence filtering works (infra tools collapsed, user tools full panel). This is the FIRST task — do not proceed to anything else until browser verification passes. THE ONLY PLAN is `docs/superpowers/specs/nexus.md` (v4.0-HARDENED).
