@@ -107,8 +107,8 @@ async function routeToHarness(message, sessionId) {
 }
 
 // ── Harness streaming (SSE passthrough) ─────────────────────────────────────
-async function routeToHarnessStream(message, sessionId, effort, model, clientRes) {
-  const payload = JSON.stringify({ message, session_id: sessionId, effort, model });
+async function routeToHarnessStream(message, sessionId, effort, model, clientRes, files) {
+  const payload = JSON.stringify({ message, session_id: sessionId, effort, model, files });
   const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` };
   const nodes = [
     { label: "P1", url: HARNESS_P1, getHealthy: () => _p1Healthy, setHealthy: v => { _p1Healthy = v; }, setChecked: () => { _p1CheckedAt = Date.now(); } },
@@ -363,7 +363,7 @@ const server = http.createServer(async (req, res) => {
 
       // ── Streaming path (SSE) ──────────────────────────────────────────
       if (body.stream === true) {
-        return routeToHarnessStream(message, sessionId, body.effort, body.model, res);
+        return routeToHarnessStream(message, sessionId, body.effort, body.model, res, body.files);
       }
 
       // ── Batch path (JSON, backward compat) ────────────────────────────

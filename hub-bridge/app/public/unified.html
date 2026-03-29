@@ -208,6 +208,31 @@
   #send-btn.stop-mode { background: #dc2626; letter-spacing: 2px; }
   #send-btn.stop-mode:hover { background: #ef4444; }
 
+  /* ── Sprint 2: Controls ────────────────────────────────────────────── */
+  .hdr-select {
+    background: #0e0e1a; border: 1px solid #2d2040; color: #9ca3af;
+    padding: 3px 6px; font-family: monospace; font-size: 10px; outline: none;
+  }
+  .hdr-select:focus { border-color: #6d28d9; }
+  #attach-preview {
+    display: none; padding: 4px 20px; background: #0a0a14;
+    border-top: 1px solid #1a1030; font-size: 11px; color: #6b7280; flex-shrink: 0;
+  }
+  #attach-preview.has-files { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .attach-chip {
+    background: #1a1030; border: 1px solid #2d2040; padding: 2px 8px;
+    border-radius: 3px; display: flex; align-items: center; gap: 4px;
+  }
+  .attach-remove { cursor: pointer; color: #ef4444; font-size: 14px; }
+  #attach-btn {
+    background: none; border: 1px solid #2d2040; color: #4b5563;
+    width: 36px; height: 36px; cursor: pointer; font-size: 18px;
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    font-family: monospace;
+  }
+  #attach-btn:hover { border-color: #6d28d9; color: #a78bfa; }
+  .drag-active { outline: 2px dashed #6d28d9 !important; }
+
   /* ── Route hint + footer ──────────────────────────────────────────────── */
   #route-hint { font-size: 10px; color: #3a2a5a; padding: 0 20px 4px; flex-shrink: 0; }
   #route-hint span { margin-right: 14px; letter-spacing: 1px; }
@@ -257,6 +282,13 @@
         <span class="stat-val" id="brain-val">—</span>
       </div>
     </div>
+    <select class="hdr-select" id="effort-select" title="Effort level">
+      <option value="">effort</option>
+      <option value="low">low</option>
+      <option value="medium">medium</option>
+      <option value="high">high</option>
+      <option value="max">max</option>
+    </select>
     <button class="hdr-btn" id="cascade-btn">CASCADE</button>
     <button class="hdr-btn" id="agora-btn">AGORA</button>
     <button class="hdr-btn" id="clear-btn">CLEAR</button>
@@ -297,7 +329,10 @@
     <span>@codex &#8594; <span class="rh-target">CODEX</span></span>
   </div>
 
+  <div id="attach-preview"></div>
   <div id="input-area">
+    <button id="attach-btn" title="Attach file">+</button>
+    <input type="file" id="file-input" multiple hidden />
     <textarea id="msg-input" rows="1" placeholder="Message Karma... (@cc @codex @regent → routes to AGORA)"></textarea>
     <button id="send-btn">SEND</button>
   </div>
@@ -367,6 +402,7 @@
     document.getElementById('cascade-btn').addEventListener('click', toggleCascade);
     document.getElementById('clear-btn').addEventListener('click', clearConversation);
     autoGrow(document.getElementById('msg-input'));
+    setupFileHandlers();
     loadSavedMessages();
     loadBrainContext();
     registerWebMCPTools();
@@ -433,6 +469,59 @@
     });
   }
 
+  let pendingFiles = [];
+
+  function getEffort() { return document.getElementById('effort-select')?.value || undefined; }
+
+  function setupFileHandlers() {
+    const chatFeed = document.getElementById('chat-feed');
+    const msgInput = document.getElementById('msg-input');
+    const fileInput = document.getElementById('file-input');
+    const attachBtn = document.getElementById('attach-btn');
+
+    chatFeed.addEventListener('dragover', e => { e.preventDefault(); chatFeed.classList.add('drag-active'); });
+    chatFeed.addEventListener('dragleave', () => chatFeed.classList.remove('drag-active'));
+    chatFeed.addEventListener('drop', e => { e.preventDefault(); chatFeed.classList.remove('drag-active'); addFiles(e.dataTransfer.files); });
+
+    msgInput.addEventListener('paste', e => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) addFiles([file]);
+          return;
+        }
+      }
+    });
+
+    attachBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => { addFiles(fileInput.files); fileInput.value = ''; });
+  }
+
+  function addFiles(fileList) {
+    for (const file of fileList) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        pendingFiles.push({ name: file.name, type: file.type, data: reader.result });
+        updateAttachPreview();
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function updateAttachPreview() {
+    const preview = document.getElementById('attach-preview');
+    if (!pendingFiles.length) { preview.className = ''; preview.innerHTML = ''; return; }
+    preview.className = 'has-files';
+    preview.innerHTML = pendingFiles.map((f, i) =>
+      '<span class="attach-chip">' + escHtml(f.name) + ' <span class="attach-remove" onclick="removeFile(' + i + ')">x</span></span>'
+    ).join('');
+  }
+
+  function removeFile(idx) { pendingFiles.splice(idx, 1); updateAttachPreview(); }
+
   function autoGrow(el) {
     el.addEventListener('input', () => { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 140) + 'px'; });
   }
@@ -491,9 +580,14 @@
       const res = await fetch(CHAT_URL, {
         method: 'POST',
         headers: { ...auth(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, conversation_id: conversationId, session_id: conversationId, stream: true }),
+        body: JSON.stringify({
+          message: text, conversation_id: conversationId, session_id: conversationId, stream: true,
+          effort: getEffort() || undefined,
+          files: pendingFiles.length ? pendingFiles : undefined,
+        }),
         signal: _streamAbortController.signal,
       });
+      pendingFiles = []; updateAttachPreview();
       if (res.status === 401) { proc.classList.remove('visible'); setStreamingState(false); appendMsg('system', 'Token rejected.'); return; }
 
       // Non-streaming fallback (server returns JSON instead of SSE)

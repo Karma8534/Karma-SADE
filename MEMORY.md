@@ -199,7 +199,13 @@ CC ── Claude Code on P1 — execution layer
 
 ### Additional Fixes
 - **Cancel bugfix**: `_current_proc.wait()` crashed with NoneType after cancel killed process. Added null check.
-- **Verified end-to-end**: Streaming (SSE through proxy), tool evidence (Read tool), cancel — all working via hub.arknexus.net
+- **Stream close bugfix**: AbortController abort on result event — STOP button no longer stuck.
+- **Verified end-to-end**: Streaming, tool evidence, cancel — all working via hub.arknexus.net
+
+### Sprint 2 (items 4, 5, 9)
+- **Persona fix (P071)**: KARMA_PERSONA_PREFIX embedded in message text, replaces --append-system-prompt (overridden by CLAUDE.md)
+- **Effort selector**: Dropdown in header bar, flows through proxy → cc_server → --effort flag
+- **File/image input**: Drag-drop on chat, paste images, attach button. Base64 → temp file → path in prompt. CC Read tool handles images.
 
 ## Next Session Starts Here
 1. `/resurrect`
