@@ -214,7 +214,7 @@ CC ── Claude Code on P1 — execution layer
 
 ### Sprint 4 (items 12-14)
 - **AGORA metrics**: Spine blocks, promotions, promo rate/h, pattern types, quality grade, total events
-- **Sovereign feedback**: Approve/Reject/Redirect buttons on every evolution event → POST to bus as from:colby to:regent type:approval
+- **Sovereign feedback**: Approve/Reject/Redirect buttons on ACTIONABLE events only (promote/self-edit/pitfall/decision/proof). ACK, SOVEREIGN APPROVE, and colby-from events have no buttons.
 - **Learning visibility**: Pattern diversity count, quality grade (A-D), promotion timeline
 
 ### Sprint 5 (item 15)
