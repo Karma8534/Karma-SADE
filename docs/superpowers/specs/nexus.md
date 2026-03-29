@@ -596,7 +596,7 @@ SPRINTS_1_TO_5       = PASS  (all implemented, deployed)
 HARDENING_P1         = PASS  (H1-H4: parser, latency, security, concurrency)
 HARDENING_P2         = PASS  (H5-H8: reconnect, diff, electron, cost)
 ITEM_24              = DEFERRED (Sovereign gate)
-GROUNDED_STATUS      = TRUE
+GROUNDED_STATUS      = CONDITIONAL (curl verified, browser NOT verified — P080)
 
 S152 FIXES APPLIED (baseline):
   - Removed hardcoded bearer token from start_cc_server.ps1 (P074)
@@ -652,7 +652,7 @@ REGRESSION: 18 probes, 15 PASS, 3 test-artifact (curl -sf), 0 real failures
 **Baseline:** 27 items (26 PASS, 1 DEFERRED)
 **Sprints:** 5 — ALL COMPLETE
 **Hardening:** H1-H8 — ALL COMPLETE
-**Status:** GROUNDED = TRUE (hardened S152)
+**Status:** GROUNDED = CONDITIONAL (hardened S152, browser verification pending)
 
 **Cross-References:**
 - `Karma2/PLAN.md` — points here
