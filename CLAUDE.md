@@ -312,7 +312,7 @@ If any step missing: session doesn't end cleanly.
 Never guess. Prefer observable proofs: exact command â†’ expected output â†’ actual output.
 When runtime behavior changes unexpectedly, collect evidence before proposing a fix.
 
-## Anti-Drift Protocol (DeepAgents harness primitives â€" session 111+)
+## Anti-Drift Protocol (DeepAgents harness primitives — session 111+)
 
 **PLAN phase before any fix:** Before patching any file, state in text: "Source of truth for [X] is [file/endpoint], verified by reading [evidence]. Acceptance criterion: run [cmd], expect [output]." No code changes until written.
 
@@ -320,7 +320,7 @@ When runtime behavior changes unexpectedly, collect evidence before proposing a 
 
 **TodoWrite is the canonical state machine:** Read TodoWrite before every action. Update immediately after every sub-step. Acceptance criterion failure marks task back to `in_progress`.
 
-**Context offloading:** Write investigation findings to `cc_scratchpad.md` at the moment of discovery â€" not batched at session end. Findings that stay only in context are lost on compaction.
+**Context offloading:** Write investigation findings to `cc_scratchpad.md` at the moment of discovery — not batched at session end. Findings that stay only in context are lost on compaction.
 
 ## Deployment Procedure
 

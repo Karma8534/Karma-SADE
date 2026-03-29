@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Nexus — inline evidence, tool access, cascade fix, Karma tool-use enforcement
-- **Session:** 151 (ALL 5 Nexus Sprints shipped — 26/26 baseline PASS)
+- **Active task:** Nexus hardening — P079 CLI fix shipped, H1-H8 hardening deployed, Karma responding
+- **Session:** 152 (Forensic audit + hardening. P079: --session-id CLI break fixed. P080-P085: false claims logged)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)

@@ -6,8 +6,9 @@ Uses local Ollama for inference — Anthropic-independent, no MCP startup overhe
 Returns: {response, ok}
 Auth: Bearer token checked against HUB_CHAT_TOKEN env var.
 """
-import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.parse, socket, sqlite3, base64, threading
+import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.parse, socket, sqlite3, base64, threading, time
 from http.server import HTTPServer, ThreadingHTTPServer, BaseHTTPRequestHandler
+from collections import defaultdict
 sys.path.insert(0, os.path.dirname(__file__))
 try:
     from cc_gmail import send_to_colby, check_inbox
@@ -19,9 +20,39 @@ PORT          = 7891
 _current_proc = None  # Track running CC subprocess for cancel
 _proc_lock    = threading.Lock()  # Concurrency guard — one CC subprocess at a time
 TOKEN         = os.environ.get("HUB_CHAT_TOKEN", "")
+
+# H3: Rate limiting — per-IP sliding window
+_rate_buckets = defaultdict(list)  # ip -> [timestamps]
+RATE_LIMIT_RPM = 20  # requests per minute per IP
+RATE_LIMIT_WINDOW = 60  # seconds
+
+def _check_rate_limit(ip):
+    """Returns True if request is allowed, False if rate-limited."""
+    now = time.time()
+    bucket = _rate_buckets[ip]
+    # Evict entries older than window
+    _rate_buckets[ip] = [t for t in bucket if now - t < RATE_LIMIT_WINDOW]
+    if len(_rate_buckets[ip]) >= RATE_LIMIT_RPM:
+        return False
+    _rate_buckets[ip].append(now)
+    return True
+
+# H2: Latency measurement
+_last_latency = {"first_token_ms": None, "cancel_ms": None, "total_ms": None}
+
+# H3: Secret redaction for logs
+def _redact(s):
+    """Redact bearer tokens and API keys from log output."""
+    if not s:
+        return s
+    import re
+    s = re.sub(r'Bearer\s+[a-zA-Z0-9_\-\.]{8,}', 'Bearer [REDACTED]', s)
+    s = re.sub(r'(?:api[_-]?key|token|secret|password)\s*[=:]\s*["\']?[a-zA-Z0-9_\-\.]{8,}', '[REDACTED]', s, flags=re.IGNORECASE)
+    return s
 WORK_DIR      = r"C:\Users\raest\Documents\Karma_SADE"
 SNAPSHOT_FILE = os.path.join(WORK_DIR, "cc_context_snapshot.md")
-SESSION_FILE  = pathlib.Path.home() / ".cc_server_session_id"
+SESSION_FILE  = pathlib.Path.home() / ".cc_nexus_session_id"  # Dedicated Nexus session — never shared with interactive CC
+NEXUS_SESSION_ID = "e69b50c6-fbb9-4a21-8c47-e44fce2143db"  # Fixed UUID — pinned so Nexus never collides with interactive sessions
 # Bypass .cmd wrapper — call node + cli.js directly (avoids PATH issues in background processes)
 NODE_EXE       = r"C:\Program Files\nodejs\node.exe"
 CLAUDE_CLI_JS  = r"C:\Users\raest\AppData\Roaming\npm\node_modules\@anthropic-ai\claude-code\cli.js"
@@ -113,11 +144,12 @@ def handle_files(files):
     return "\n".join(all_parts) + "\n\n" if all_parts else ""
 
 def run_cc(message, effort=None, model=None):
-    """Call real CC subprocess with --resume for session continuity."""
+    """Call real CC subprocess with session continuity."""
     session_id = load_session_id()
     full_message = KARMA_PERSONA_PREFIX + message
     # Use node.exe + cli.js directly — bypasses .cmd wrapper (avoids WinError 2 / subprocess issues on Windows)
     cmd = [NODE_EXE, CLAUDE_CLI_JS, "-p", full_message, "--output-format", "json"]
+    # Only --resume if we have a verified session ID from a previous successful response
     if session_id:
         cmd += ["--resume", session_id]
     if effort:
@@ -127,7 +159,7 @@ def run_cc(message, effort=None, model=None):
     global _current_proc
     _current_proc = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        text=True, cwd=WORK_DIR,
+        text=True, cwd=WORK_DIR, encoding='utf-8', errors='replace',
     )
     try:
         stdout, stderr = _current_proc.communicate(timeout=API_TIMEOUT)
@@ -177,7 +209,7 @@ def run_cc_stream(message, effort=None, model=None):
     global _current_proc
     _current_proc = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        text=True, cwd=WORK_DIR,
+        text=True, cwd=WORK_DIR, encoding='utf-8', errors='replace',
     )
     try:
         for line in iter(_current_proc.stdout.readline, ''):
@@ -201,7 +233,14 @@ def run_cc_stream(message, effort=None, model=None):
             except json.JSONDecodeError:
                 continue
         if _current_proc:
-            _current_proc.wait()
+            try:
+                _current_proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                _current_proc.kill()
+                try:
+                    _current_proc.wait(timeout=3)
+                except subprocess.TimeoutExpired:
+                    pass
     except Exception:
         if _current_proc and _current_proc.poll() is None:
             _current_proc.kill()
@@ -211,7 +250,24 @@ def run_cc_stream(message, effort=None, model=None):
 
 class CCHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
-        print(f"[cc-server] {format % args}")
+        print(f"[cc-server] {_redact(format % args)}")  # H3: redact secrets from logs
+
+    def _cors(self):
+        """H3: CORS headers — allow hub.arknexus.net and localhost origins only."""
+        origin = self.headers.get("Origin", "")
+        allowed = ("https://hub.arknexus.net", "http://localhost", "http://127.0.0.1")
+        if any(origin.startswith(a) for a in allowed) or not origin:
+            self.send_header("Access-Control-Allow-Origin", origin or "*")
+        else:
+            self.send_header("Access-Control-Allow-Origin", "https://hub.arknexus.net")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+    def do_OPTIONS(self):
+        """H3: CORS preflight."""
+        self.send_response(204)
+        self._cors()
+        self.end_headers()
 
     def _json(self, code, payload):
         self.send_response(code)
@@ -226,15 +282,24 @@ class CCHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/cancel":
             global _current_proc
-            if _current_proc and _current_proc.poll() is None:
-                _current_proc.kill()
+            t_cancel_start = time.time()
+            proc = _current_proc  # H4: snapshot ref to avoid race
+            if proc and proc.poll() is None:
+                try:
+                    proc.kill()
+                    proc.wait(timeout=3)  # H4: wait for actual exit
+                except Exception:
+                    pass
                 _current_proc = None
-                self._json(200, {"ok": True, "cancelled": True})
+                cancel_ms = int((time.time() - t_cancel_start) * 1000)
+                _last_latency["cancel_ms"] = cancel_ms  # H2: measure cancel time
+                self._json(200, {"ok": True, "cancelled": True, "cancel_ms": cancel_ms})
             else:
                 self._json(200, {"ok": True, "cancelled": False, "reason": "no active request"})
             return
         if self.path == "/health":
-            self._json(200, {"ok": True, "service": "cc-server-p1", "gmail": GMAIL_AVAILABLE})
+            self._json(200, {"ok": True, "service": "cc-server-p1", "gmail": GMAIL_AVAILABLE,
+                             "latency": _last_latency})  # H2: expose latency measurements
         elif self.path == "/memory/health":
             self._json(200, {"ok": True, "service": "cc-server-p1", "claudemem_url": CLAUDEMEM_URL})
         elif self.path.startswith("/memory/session"):
@@ -290,7 +355,17 @@ class CCHandler(BaseHTTPRequestHandler):
             self._json(401, {"ok": False, "error": "Unauthorized"})
             return
 
+        # H3: Rate limiting
+        client_ip = self.client_address[0]
+        if not _check_rate_limit(client_ip):
+            self._json(429, {"ok": False, "error": f"Rate limited: max {RATE_LIMIT_RPM} req/min"})
+            return
+
         length = int(self.headers.get("Content-Length", 0))
+        # H3: Body size limit — 30MB max (handles base64 file attachments)
+        if length > 30 * 1024 * 1024:
+            self._json(413, {"ok": False, "error": "Request body too large (max 30MB)"})
+            return
         body = json.loads(self.rfile.read(length)) if length else {}
 
         # ── /file — project-scoped file write ─────────────────────────────
@@ -380,12 +455,18 @@ class CCHandler(BaseHTTPRequestHandler):
                 self.send_header("Content-Type", "text/event-stream")
                 self.send_header("Cache-Control", "no-cache")
                 self.send_header("Connection", "keep-alive")
-                self.send_header("Access-Control-Allow-Origin", "*")
+                self._cors()  # H3: CORS on stream
                 self.end_headers()
                 try:
+                    t_start = time.time()
+                    first_token_sent = False
                     for line in run_cc_stream(message, effort=effort, model=model):
+                        if not first_token_sent:
+                            _last_latency["first_token_ms"] = int((time.time() - t_start) * 1000)
+                            first_token_sent = True
                         self.wfile.write(f"data: {line}\n\n".encode())
                         self.wfile.flush()
+                    _last_latency["total_ms"] = int((time.time() - t_start) * 1000)
                 except BrokenPipeError:
                     pass  # Client disconnected (cancel)
                 except Exception as e:

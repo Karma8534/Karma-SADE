@@ -137,6 +137,19 @@
   .tool-toggle { cursor: pointer; color: #4b5563; font-size: 10px; }
   .tool-toggle:hover { color: #9ca3af; }
 
+  /* Collapsed infrastructure tool line */
+  .msg.infra-tool .msg-body {
+    background: #08080f; border: 1px solid #12121f; border-left: 2px solid #374151;
+    color: #4b5563; font-size: 10px; font-family: 'JetBrains Mono', monospace;
+    padding: 4px 8px; cursor: pointer; opacity: 0.6;
+  }
+  .msg.infra-tool .msg-body:hover { opacity: 1; }
+  .msg.infra-tool .infra-detail { display: none; color: #6b7280; margin-top: 4px; font-size: 10px; }
+  .msg.infra-tool.expanded .infra-detail { display: block; }
+  .msg.infra-tool .infra-name { color: #6b7280; }
+  .msg.infra-tool .infra-status { color: #ef4444; }
+  .msg.infra-tool .infra-status.ok { color: #374151; }
+
   /* Markdown rendering */
   .msg-body code { background: #1a1a2e; padding: 1px 4px; border-radius: 3px; font-size: 11px; color: #a78bfa; }
   .msg-body pre { background: #0c0c18; border: 1px solid #1a1a3a; border-radius: 4px; padding: 8px; margin: 6px 0; overflow-x: auto; }
@@ -648,7 +661,43 @@
         }
       }
     } catch (err) {
-      if (err.name !== 'AbortError' && isStreaming) appendMsg('system', 'Error: ' + err.message);
+      // H5: On network error (not user abort), offer reconnect
+      if (err.name === 'AbortError') {
+        // User cancelled — no retry
+      } else if (isStreaming && (err.message.includes('network') || err.message.includes('Failed to fetch') || err.name === 'TypeError')) {
+        appendMsg('system', 'Connection lost. Retrying in 3s...');
+        await new Promise(r => setTimeout(r, 3000));
+        // H5: Single retry — do not loop indefinitely
+        try {
+          const retryRes = await fetch(CHAT_URL, {
+            method: 'POST',
+            headers: { ...auth(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text, conversation_id: conversationId, session_id: conversationId, stream: true }),
+          });
+          if (retryRes.ok && retryRes.headers.get('content-type')?.includes('text/event-stream')) {
+            const rdr = retryRes.body.getReader();
+            const dec = new TextDecoder();
+            let buf = '';
+            while (true) {
+              const { done, value } = await rdr.read();
+              if (done) break;
+              buf += dec.decode(value, { stream: true });
+              const ps = buf.split('\n\n');
+              buf = ps.pop();
+              for (const p of ps) for (const ln of p.split('\n')) {
+                if (ln.startsWith('data: ')) { try { handleStreamEvent(JSON.parse(ln.slice(6))); } catch {} }
+              }
+            }
+            appendMsg('system', 'Reconnected successfully.');
+          } else {
+            appendMsg('system', 'Reconnect failed (status ' + retryRes.status + '). Try again.');
+          }
+        } catch (retryErr) {
+          appendMsg('system', 'Reconnect failed: ' + retryErr.message);
+        }
+      } else if (isStreaming) {
+        appendMsg('system', 'Error: ' + err.message);
+      }
     } finally {
       _streamAbortController = null;
       proc.classList.remove('visible');
@@ -661,8 +710,33 @@
 
   let _streamAbortController = null;
 
+  // H1: Parser hardening — safe limits
+  const PARSER_MAX_TEXT_LEN = 100000;    // 100KB text block cap — prevents UI freeze
+  const PARSER_MAX_TOOL_OUTPUT = 50000;  // 50KB tool output cap
+  const PARSER_KNOWN_TYPES = new Set(['result', 'assistant', 'user', 'error', 'system']);
+  const PARSER_KNOWN_BLOCKS = new Set(['text', 'thinking', 'tool_use', 'tool_result']);
+
+  function safeText(s, max) {
+    if (typeof s !== 'string') s = String(s || '');
+    return s.length > max ? s.slice(0, max) + '\n[truncated at ' + max + ' chars]' : s;
+  }
+
   function handleStreamEvent(obj) {
+    if (!obj || typeof obj !== 'object') return; // H1: reject non-objects
     const type = obj.type;
+
+    // H1: Unknown top-level event types — log and skip silently
+    if (type && !PARSER_KNOWN_TYPES.has(type)) {
+      console.warn('[parser] Unknown event type:', type);
+      return;
+    }
+
+    if (type === 'error') {
+      // H1: Explicit error events from server
+      const errMsg = obj.error || obj.message || 'Unknown server error';
+      appendMsg('system', 'Error: ' + safeText(errMsg, 500));
+      return;
+    }
     if (type === 'result') {
       // Stream complete — force close
       if (_streamAbortController) { try { _streamAbortController.abort(); } catch {} }
@@ -675,23 +749,36 @@
     }
     if (type === 'assistant') {
       const content = obj.message?.content || [];
+      if (!Array.isArray(content)) return; // H1: reject non-array content
       for (const block of content) {
+        if (!block || typeof block !== 'object') continue; // H1: skip malformed blocks
+        // H1: Unknown block types — log, do not crash
+        if (block.type && !PARSER_KNOWN_BLOCKS.has(block.type)) {
+          console.warn('[parser] Unknown block type:', block.type);
+          appendInfraToolLine('unknown:' + block.type, block, '(unrecognized block)');
+          continue;
+        }
         if (block.type === 'thinking') {
           document.getElementById('processing').textContent = 'Karma is reasoning...';
         } else if (block.type === 'tool_use') {
           if (!streamToolMap.has(block.id)) {
-            const el = appendToolEvidence(block.name, block.input, '(running...)');
+            const el = isUserTool(block.name)
+              ? appendToolEvidence(block.name, block.input, '(running...)')
+              : appendInfraToolLine(block.name, block.input, '(running...)');
             streamToolMap.set(block.id, el);
-            document.getElementById('processing').textContent = 'Running ' + block.name + '...';
-            document.getElementById('processing').classList.add('visible');
+            if (isUserTool(block.name)) {
+              document.getElementById('processing').textContent = 'Running ' + block.name + '...';
+              document.getElementById('processing').classList.add('visible');
+            }
           }
         } else if (block.type === 'text') {
           document.getElementById('processing').classList.remove('visible');
+          const text = safeText(block.text, PARSER_MAX_TEXT_LEN); // H1: cap text length
           if (!currentStreamMsgEl) {
-            currentStreamMsgEl = appendMsg('karma', block.text || '');
-            currentStreamText = block.text || '';
+            currentStreamMsgEl = appendMsg('karma', text);
+            currentStreamText = text;
           } else {
-            currentStreamText = block.text || currentStreamText;
+            currentStreamText = text || currentStreamText;
             const bodyEl = currentStreamMsgEl.querySelector('.msg-body');
             if (bodyEl) bodyEl.innerHTML = renderMd(currentStreamText);
           }
@@ -702,13 +789,16 @@
     }
     if (type === 'user') {
       const content = obj.message?.content || [];
+      if (!Array.isArray(content)) return; // H1: reject non-array
       for (const block of content) {
+        if (!block || typeof block !== 'object') continue; // H1: skip malformed
         if (block.type === 'tool_result') {
           const toolEl = streamToolMap.get(block.tool_use_id);
           if (toolEl) {
             const outputEl = toolEl.querySelector('.tool-output');
             const result = obj.tool_use_result || {};
-            const outputText = block.content || result.stdout || '';
+            const rawOutput = block.content || result.stdout || '';
+            const outputText = safeText(rawOutput, PARSER_MAX_TOOL_OUTPUT); // H1: cap output
             const truncated = outputText.length > 500 ? outputText.slice(0, 500) + '...' : outputText;
             if (outputEl) outputEl.textContent = truncated;
           }
@@ -852,18 +942,87 @@
     return el;
   }
 
+  // User-facing tools get full evidence panels; everything else collapses
+  const USER_TOOLS = new Set([
+    'Read', 'Write', 'Edit', 'Bash', 'Grep', 'Glob', 'WebSearch', 'WebFetch',
+    'NotebookEdit', 'Agent', 'AskUserQuestion', 'EnterPlanMode', 'ExitPlanMode'
+  ]);
+
+  function isUserTool(name) {
+    if (USER_TOOLS.has(name)) return true;
+    // Also match short names from CC tools (e.g. "Read" from stream)
+    const short = (name || '').split('__').pop();
+    return USER_TOOLS.has(short);
+  }
+
+  function appendInfraToolLine(toolName, input, output) {
+    const el = document.createElement('div');
+    el.className = 'msg infra-tool';
+    const inputStr = typeof input === 'string' ? input : JSON.stringify(input || {});
+    const outputStr = typeof output === 'string' ? output : JSON.stringify(output || {});
+    const shortName = toolName.length > 40 ? '...' + toolName.slice(-35) : toolName;
+    const shortInput = inputStr.length > 80 ? inputStr.slice(0, 80) + '...' : inputStr;
+    const isError = outputStr.includes('error') || outputStr.includes('failed') || outputStr.includes('not set');
+    el.innerHTML =
+      '<div class="msg-body" onclick="this.parentElement.classList.toggle(\'expanded\')">' +
+        '<span class="infra-name">' + escHtml(shortName) + '</span> ' +
+        '<span class="infra-status' + (isError ? '' : ' ok') + '">' + (isError ? '⚠' : '✓') + '</span>' +
+        '<div class="infra-detail">' +
+          '<div><b>Input:</b> ' + escHtml(inputStr.slice(0, 300)) + '</div>' +
+          '<div class="tool-output"><b>Output:</b> ' + escHtml(outputStr.slice(0, 500)) + '</div>' +
+        '</div>' +
+      '</div>';
+    const feed = document.getElementById('chat-feed');
+    feed.insertBefore(el, document.getElementById('processing'));
+    return el;
+  }
+
+  // H6: Diff renderer for Edit tool results
+  function renderDiff(oldStr, newStr) {
+    if (!oldStr || !newStr) return null;
+    const oldLines = String(oldStr).split('\n');
+    const newLines = String(newStr).split('\n');
+    let html = '';
+    const maxLines = Math.max(oldLines.length, newLines.length);
+    if (maxLines > 200) return null; // H1: too large for inline diff
+    for (let i = 0; i < maxLines; i++) {
+      const ol = oldLines[i], nl = newLines[i];
+      if (ol === nl) {
+        html += '<div style="color:#6b7280"> ' + escHtml(nl || '') + '</div>';
+      } else if (ol !== undefined && nl !== undefined) {
+        html += '<div style="color:#ef4444;background:#1a0505">-' + escHtml(ol) + '</div>';
+        html += '<div style="color:#22c55e;background:#051a05">+' + escHtml(nl) + '</div>';
+      } else if (ol !== undefined) {
+        html += '<div style="color:#ef4444;background:#1a0505">-' + escHtml(ol) + '</div>';
+      } else {
+        html += '<div style="color:#22c55e;background:#051a05">+' + escHtml(nl) + '</div>';
+      }
+    }
+    return html;
+  }
+
   function appendToolEvidence(toolName, input, output) {
     const el = document.createElement('div');
     el.className = 'msg tool-evidence';
+    const inputObj = (typeof input === 'object' && input) ? input : {};
     const inputStr = typeof input === 'string' ? input : JSON.stringify(input || {});
     const outputStr = typeof output === 'string' ? output : JSON.stringify(output || {});
     const shortInput = inputStr.length > 120 ? inputStr.slice(0, 120) + '...' : inputStr;
     const shortOutput = outputStr.length > 200 ? outputStr.slice(0, 200) + '...' : outputStr;
+
+    // H6: If this is an Edit tool, try to render inline diff
+    let diffHtml = '';
+    if (toolName === 'Edit' && inputObj.old_string && inputObj.new_string) {
+      const d = renderDiff(inputObj.old_string, inputObj.new_string);
+      if (d) diffHtml = '<div class="tool-diff" style="font-size:10px;font-family:monospace;margin-top:4px;max-height:200px;overflow-y:auto;border:1px solid #1a1a3a;padding:4px;border-radius:3px">' + d + '</div>';
+    }
+
     el.innerHTML =
       '<div class="msg-meta"><span class="msg-sender" style="color:#f59e0b">TOOL</span></div>' +
       '<div class="msg-body">' +
         '<span class="tool-name">' + escHtml(toolName) + '</span> ' +
         '<span class="tool-input">' + escHtml(shortInput) + '</span>' +
+        diffHtml +
         '<div class="tool-output">' + escHtml(shortOutput) + '</div>' +
         (outputStr.length > 200 ? '<span class="tool-toggle" onclick="this.previousElementSibling.textContent=this.parentElement.dataset.fullOutput;this.remove()">[show full]</span>' : '') +
       '</div>';

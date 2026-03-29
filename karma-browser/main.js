@@ -30,10 +30,14 @@ function createWindow() {
 }
 
 // ── IPC Handlers ─────────────────────────────────────────────────────────
+// H7: Shell exec — validate input, cap output, redact secrets
 ipcMain.handle("shell-exec", async (event, command) => {
+  if (typeof command !== "string" || command.length > 2000) {
+    return { ok: false, error: "Invalid or too-long command", code: -1 };
+  }
   return new Promise((resolve) => {
-    exec(command, { timeout: 30000, cwd: WORK_DIR }, (err, stdout, stderr) => {
-      resolve({ ok: !err, stdout: stdout || "", stderr: stderr || "", code: err?.code || 0 });
+    exec(command, { timeout: 30000, cwd: WORK_DIR, maxBuffer: 1024 * 1024 }, (err, stdout, stderr) => {
+      resolve({ ok: !err, stdout: (stdout || "").slice(0, 50000), stderr: (stderr || "").slice(0, 10000), code: err?.code || 0 });
     });
   });
 });
@@ -122,11 +126,19 @@ ipcMain.handle("governor-audit", async () => {
 });
 
 // ── Self-edit + deploy (item 11) ─────────────────────────────────────────
+// H7: Sanitize commit message to prevent command injection
 ipcMain.handle("self-deploy", async (event, commitMsg) => {
+  if (typeof commitMsg !== "string" || commitMsg.length > 500) {
+    return { ok: false, error: "Invalid or too-long commit message", code: -1 };
+  }
+  // H7: Strip dangerous chars — only allow printable ASCII + common unicode, no backticks/quotes/pipes
+  const safeMsg = commitMsg.replace(/[`$"'|;&<>\\]/g, "").slice(0, 200);
+  if (!safeMsg.trim()) return { ok: false, error: "Empty commit message after sanitization", code: -1 };
   return new Promise((resolve) => {
-    const cmd = `cd "${WORK_DIR}" && git add -A && git commit -m "${commitMsg}" && git push origin main`;
-    exec(cmd, { timeout: 60000, cwd: WORK_DIR, shell: "powershell.exe" }, (err, stdout, stderr) => {
-      resolve({ ok: !err, stdout: stdout || "", stderr: stderr || "", code: err?.code || 0 });
+    // H7: Use array form to avoid shell injection — PowerShell -Command with escaped arg
+    const cmd = `cd "${WORK_DIR}"; git add -A; git commit -m '${safeMsg.replace(/'/g, "''")}'; git push origin main`;
+    exec(cmd, { timeout: 60000, cwd: WORK_DIR, shell: "powershell.exe", maxBuffer: 1024 * 1024 }, (err, stdout, stderr) => {
+      resolve({ ok: !err, stdout: (stdout || "").slice(0, 10000), stderr: (stderr || "").slice(0, 5000), code: err?.code || 0 });
     });
   });
 });

@@ -138,6 +138,8 @@ async function routeToHarnessStream(message, sessionId, effort, model, clientRes
       const reader = r.body.getReader();
       const decoder = new TextDecoder();
       let fullText = "";
+      let streamCostUsd = 0;  // H8: track actual cost from CC result event
+      let streamModel = "";   // H8: track actual model used
 
       while (true) {
         const { done, value } = await reader.read();
@@ -153,6 +155,15 @@ async function routeToHarnessStream(message, sessionId, effort, model, clientRes
               for (const b of (obj.message?.content || [])) {
                 if (b.type === "text" && b.text) fullText = b.text;
               }
+              if (obj.message?.model) streamModel = obj.message.model;  // H8
+            }
+            // H8: Extract actual cost from result event
+            if (obj.type === "result" && obj.total_cost_usd !== undefined) {
+              streamCostUsd = obj.total_cost_usd;
+              if (obj.modelUsage) {
+                const models = Object.keys(obj.modelUsage);
+                if (models.length) streamModel = models[0];
+              }
             }
           }
         } catch {}
@@ -160,7 +171,9 @@ async function routeToHarnessStream(message, sessionId, effort, model, clientRes
       clientRes.end();
 
       // Fire-and-forget: vault + chatlog + cortex
-      const chatContent = `[CHAT-STREAM] user: ${message.slice(0, 200)}\nassistant: ${fullText.slice(0, 500)}`;
+      // H8: Log actual cost and model for accounting
+      if (streamCostUsd > 0) console.log(`[COST] stream request: $${streamCostUsd.toFixed(4)} via ${streamModel} (Max sub — no actual charge)`);
+      const chatContent = `[CHAT-STREAM] user: ${message.slice(0, 200)}\nassistant: ${fullText.slice(0, 500)} [cost:$${streamCostUsd.toFixed(4)},model:${streamModel}]`;
       vaultPost("/v1/memory", VAULT_BEARER, buildVaultRecord({
         type: "log", content: chatContent,
         tags: ["chat", "sovereign-harness", "hub", "stream"], source: "sovereign-proxy",
@@ -348,7 +361,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, {
         ok: true, service: "sovereign-proxy", ts: new Date().toISOString(),
         harness: { p1: { url: HARNESS_P1, healthy: _p1Healthy }, k2: { url: HARNESS_K2, healthy: _k2Healthy } },
-        cost: { model: "cc-sovereign (Max subscription)", usd_per_request: 0 },
+        cost: { model: "cc-sovereign (Max subscription)", usd_per_request: 0, note: "H8: CC --resume runs on Max subscription. API cost shown in stream result events is accounting only, not billed. Actual charge: $0/request. Monthly sub: $100-200." },
       });
     }
 
