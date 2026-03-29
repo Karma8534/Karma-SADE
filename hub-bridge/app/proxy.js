@@ -80,30 +80,29 @@ async function routeToHarness(message, sessionId) {
   const payload = JSON.stringify({ message, session_id: sessionId });
   const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` };
   const errors = [];
-  // Try P1 first
-  _p1Healthy = await checkHealth(HARNESS_P1, _p1Healthy, _p1CheckedAt);
-  _p1CheckedAt = Date.now();
-  if (_p1Healthy) {
+  let busyCount = 0;
+  for (const node of [
+    { label: "P1", url: HARNESS_P1, getHealthy: () => _p1Healthy, setHealthy: v => { _p1Healthy = v; }, setChecked: () => { _p1CheckedAt = Date.now(); } },
+    { label: "K2", url: HARNESS_K2, getHealthy: () => _k2Healthy, setHealthy: v => { _k2Healthy = v; }, setChecked: () => { _k2CheckedAt = Date.now(); } },
+  ]) {
+    const h = await checkHealth(node.url, node.getHealthy(), 0);
+    node.setHealthy(h); node.setChecked();
+    if (!h) { errors.push(`${node.label} health failed`); continue; }
     try {
-      const r = await fetch(`${HARNESS_P1}/cc`, { method: "POST", headers, body: payload, signal: AbortSignal.timeout(HARNESS_TIMEOUT) });
+      const r = await fetch(`${node.url}/cc`, { method: "POST", headers, body: payload, signal: AbortSignal.timeout(HARNESS_TIMEOUT) });
+      if (r.status === 429) { busyCount++; errors.push(`${node.label} busy (another request in progress)`); continue; }
       const data = await r.json();
-      if (r.ok && data.ok !== false) { console.log("[HARNESS] P1 responded OK"); return data; }
-      errors.push(`P1 ${r.status}: ${data.error || "non-ok"}`);
-    } catch (e) { errors.push(`P1: ${e.message}`); }
-  } else { errors.push("P1 health failed"); }
-  // Failover to K2
-  _k2Healthy = await checkHealth(HARNESS_K2, _k2Healthy, _k2CheckedAt);
-  _k2CheckedAt = Date.now();
-  if (_k2Healthy) {
-    try {
-      const r = await fetch(`${HARNESS_K2}/cc`, { method: "POST", headers, body: payload, signal: AbortSignal.timeout(HARNESS_TIMEOUT) });
-      const data = await r.json();
-      if (r.ok && data.ok !== false) { console.log("[HARNESS] K2 responded OK"); return data; }
-      errors.push(`K2 ${r.status}: ${data.error || "non-ok"}`);
-    } catch (e) { errors.push(`K2: ${e.message}`); }
-  } else { errors.push("K2 health failed"); }
+      if (r.ok && data.ok !== false) { console.log(`[HARNESS] ${node.label} responded OK`); return data; }
+      errors.push(`${node.label} ${r.status}: ${data.error || "non-ok"}`);
+    } catch (e) { errors.push(`${node.label}: ${e.message}`); }
+  }
+  // If all nodes were busy, return specific busy message (not generic "failed")
+  if (busyCount > 0) {
+    console.warn("[HARNESS] All nodes busy:", errors.join("; "));
+    return { ok: false, error: "Karma is busy with another request. Please wait a moment and try again." };
+  }
   console.error("[HARNESS] All nodes failed:", errors.join("; "));
-  return { ok: false, error: `Harness failed: ${errors.join("; ")}` };
+  return { ok: false, error: `All harness nodes failed: ${errors.join("; ")}` };
 }
 
 // ── Harness streaming (SSE passthrough) ─────────────────────────────────────
@@ -125,6 +124,10 @@ async function routeToHarnessStream(message, sessionId, effort, model, clientRes
         method: "POST", headers, body: payload,
         signal: AbortSignal.timeout(HARNESS_TIMEOUT),
       });
+      if (r.status === 429) {
+        console.warn(`[HARNESS-STREAM] ${node.label} busy (429)`);
+        continue;
+      }
       if (!r.ok || !r.body) continue;
       console.log(`[HARNESS-STREAM] ${node.label} connected`);
 
@@ -194,11 +197,12 @@ async function routeToHarnessStream(message, sessionId, effort, model, clientRes
     } catch (e) { console.error(`[HARNESS-STREAM] ${node.label} error:`, e.message); }
   }
 
-  // All nodes failed
+  // All nodes failed or busy
   if (!clientRes.headersSent) {
     clientRes.writeHead(502, { "Content-Type": "text/event-stream", "Access-Control-Allow-Origin": "*" });
   }
-  clientRes.write(`data: ${JSON.stringify({ type: "error", error: "All harness nodes failed" })}\n\n`);
+  const errMsg = "Karma is busy with another request. Please wait a moment and try again.";
+  clientRes.write(`data: ${JSON.stringify({ type: "error", error: errMsg })}\n\n`);
   clientRes.end();
 }
 

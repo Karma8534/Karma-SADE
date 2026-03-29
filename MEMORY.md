@@ -236,9 +236,10 @@ CC ── Claude Code on P1 — execution layer
 - **H1-H8 hardening implemented:** parser caps, latency gates, rate limiting (20 RPM), CORS whitelist, secret redaction, cancel race fix, SSE reconnect, diff renderer, Electron IPC sanitization, cost accounting
 - **Additional fixes:** P074 hardcoded token removed, P078 encoding (utf-8+replace), tool evidence filtering (infra collapsed), CLAUDE.md mojibake, K2 bus auth (HUB_AUTH_TOKEN in aria.service), duplicate auto-start cleaned
 - **Pitfalls P079-P085:** CLI break, false PASS claims, dismissed failures, unverified deployment, premature GROUNDED=TRUE, bad root cause attribution, ugly effort dropdown
-- **GROUNDED = CONDITIONAL:** Karma responds via curl (batch 47s, streaming 33s). Browser verification NOT done this session.
-- **Commit:** df98b62
+- **Browser verified:** Karma responded at hub.arknexus.net (screenshot proof). Tool filtering works (collapsed infra tools).
+- **Post-browser fixes:** brain err → "ok" (route to /v1/status), effort dropdown relabeled (auto/quick/normal/deep/max), harness 429 → "Karma is busy" instead of "All harness nodes failed"
+- **Commits:** df98b62, d9f484c, 6d1381d + post-browser fix commit
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Open hub.arknexus.net in browser, hard refresh, send "Hello Karma" — verify Karma responds AND tool evidence filtering works (infra tools collapsed, user tools full panel). This is the FIRST task — do not proceed to anything else until browser verification passes. THE ONLY PLAN is `docs/superpowers/specs/nexus.md` (v4.0-HARDENED).
+2. Verify brain status shows "ok" not "err" at hub.arknexus.net (hard refresh). Then work remaining uncompleted items from S152 gap list: cancel-during-stream test, golden parser test fixtures, Electron runtime launch, K2 bus_post e2e test. THE ONLY PLAN is `docs/superpowers/specs/nexus.md` (v4.0-HARDENED).

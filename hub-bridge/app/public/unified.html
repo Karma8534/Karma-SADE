@@ -295,11 +295,11 @@
         <span class="stat-val" id="brain-val">—</span>
       </div>
     </div>
-    <select class="hdr-select" id="effort-select" title="Effort level">
-      <option value="">effort</option>
-      <option value="low">low</option>
-      <option value="medium">medium</option>
-      <option value="high">high</option>
+    <select class="hdr-select" id="effort-select" title="Thinking effort level">
+      <option value="">auto</option>
+      <option value="low">quick</option>
+      <option value="medium">normal</option>
+      <option value="high">deep</option>
       <option value="max">max</option>
     </select>
     <button class="hdr-btn" id="cascade-btn">CASCADE</button>
@@ -432,22 +432,24 @@
     const fresh = cached && (Date.now() - cached.ts < BRAIN_TTL);
     if (fresh) {
       dot.className = 'stat-dot online';
-      val.textContent = 'restored';
+      val.textContent = 'ok';
       return cached.context;
     }
     try {
       dot.className = 'stat-dot';
-      val.textContent = 'loading';
-      const r = await fetch('/memory/context', { headers: auth() });
+      val.textContent = '...';
+      // Brain context: try cc_server health via proxy status endpoint
+      const r = await fetch('/v1/status', { headers: auth() });
       if (!r.ok) throw new Error(r.status);
-      const context = await r.json();
+      const data = await r.json();
+      const context = { harness: data.harness, cost: data.cost };
       localStorage.setItem(BRAIN_KEY, JSON.stringify({ context, ts: Date.now() }));
       dot.className = 'stat-dot online';
-      val.textContent = 'live';
+      val.textContent = 'ok';
       return context;
     } catch (e) {
       dot.className = 'stat-dot offline';
-      val.textContent = 'err';
+      val.textContent = 'off';
       return null;
     }
   }
