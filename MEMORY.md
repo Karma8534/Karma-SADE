@@ -238,8 +238,9 @@ CC ── Claude Code on P1 — execution layer
 - **Pitfalls P079-P085:** CLI break, false PASS claims, dismissed failures, unverified deployment, premature GROUNDED=TRUE, bad root cause attribution, ugly effort dropdown
 - **Browser verified:** Karma responded at hub.arknexus.net (screenshot proof). Tool filtering works (collapsed infra tools).
 - **Post-browser fixes:** brain err → "ok" (use /health no-auth), effort dropdown relabeled (auto/quick/normal/deep/max), harness 429 → "Karma is busy" instead of "All harness nodes failed", AGORA button now opens inline learning panel with natural language evolution summary
-- **Gate 6 fixed:** Auto-memory — _auto_save_memory() saves every chat turn to claude-mem automatically
+- **Gate 6 fixed:** Auto-memory + /v1/learnings endpoint (claude-mem observations → natural language panel)
 - **Gate 8 fixed:** Routing flipped to K2-first, P1-failover (Sovereign directive)
+- **Learning panel rebuilt:** Shows real learnings from claude-mem (PITFALL/DECISION/PROOF), not system metrics
 - **Commits:** df98b62 → 250febb + gate fixes
 
 ## Next Session Starts Here

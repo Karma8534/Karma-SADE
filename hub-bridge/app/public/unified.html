@@ -575,57 +575,35 @@
 
   async function loadLearningPanel() {
     const el = document.getElementById('learning-content');
-    el.innerHTML = '<div style="color:#6b7280">Loading evolution state...</div>';
+    el.innerHTML = '<div style="color:#6b7280">Loading what Karma has learned...</div>';
     try {
-      const r = await fetch('/agora/events', { headers: auth() });
+      const r = await fetch('/v1/learnings', { headers: auth() });
       if (!r.ok) throw new Error('Status ' + r.status);
       const data = await r.json();
-      const events = data.evolution_events || [];
-      const k2 = data.k2_evolution || {};
-      const chats = data.recent_chats || [];
+      const items = data.learnings || [];
       let html = '';
 
-      // Spine / Evolution summary from K2
-      if (k2.cortex) {
-        const c = k2.cortex;
-        html += '<div style="border-bottom:1px solid #1a1a3a;padding-bottom:8px;margin-bottom:8px">';
-        html += '<div style="color:#a78bfa;font-weight:600;margin-bottom:4px">Evolution State</div>';
-        html += '<div>Knowledge blocks: <b>' + (c.knowledge_blocks || '?') + '</b></div>';
-        html += '<div>Conversations processed: <b>' + (c.conversation_msgs || '?') + '</b></div>';
-        html += '<div>Model: <b>' + (c.model || '?') + '</b></div>';
-        html += '</div>';
-      }
-      if (k2.governor_summary) {
-        html += '<div style="border-bottom:1px solid #1a1a3a;padding-bottom:8px;margin-bottom:8px">';
-        html += '<div style="color:#22c55e;font-weight:600;margin-bottom:4px">Self-Improvement Summary</div>';
-        const gs = typeof k2.governor_summary === 'string' ? k2.governor_summary : JSON.stringify(k2.governor_summary);
-        html += '<div style="white-space:pre-wrap;font-size:11px">' + escHtml(gs.slice(0, 1500)) + '</div>';
-        html += '</div>';
-      }
-
-      // Recent evolution events in natural language
-      if (events.length) {
-        html += '<div style="color:#f59e0b;font-weight:600;margin-bottom:4px">Recent Evolution Events</div>';
-        for (const ev of events.slice(0, 10)) {
-          const cls = ev.classification || 'info';
-          const colors = { promote: '#22c55e', pitfall: '#ef4444', decision: '#3b82f6', proof: '#a78bfa', 'self-edit': '#f59e0b' };
-          const color = colors[cls] || '#6b7280';
-          const content = (ev.content || '').slice(0, 200);
-          const time = ev.created_at ? new Date(ev.created_at).toLocaleString() : '';
-          html += '<div style="border-left:3px solid ' + color + ';padding:4px 8px;margin-bottom:6px;font-size:11px">';
-          html += '<div style="color:' + color + ';font-weight:600">' + escHtml(cls.toUpperCase()) + ' <span style="color:#4b5563;font-weight:normal">' + escHtml(time) + '</span></div>';
-          html += '<div>' + escHtml(content) + '</div>';
+      if (items.length) {
+        const icons = { mistake: '\u26a0\ufe0f', decided: '\u26a1', proved: '\u2713', direction: '\u2192', insight: '\ud83d\udca1', learned: '\ud83d\udca1' };
+        const verbs = { mistake: 'learned (the hard way)', decided: 'decided', proved: 'proved', direction: 'set direction', insight: 'realized', learned: 'learned' };
+        html += '<div style="margin-bottom:8px;font-size:11px;color:#4b5563">' + items.length + ' learnings from cross-session memory</div>';
+        for (const l of items) {
+          const icon = icons[l.type] || '\ud83d\udca1';
+          const verb = verbs[l.type] || 'learned';
+          html += '<div style="padding:6px 0;border-bottom:1px solid #0f0f1a">';
+          html += '<div style="font-size:12px"><span>' + icon + '</span> <b style="color:#e2e8f0">Karma ' + verb + ':</b> <span style="color:#c4b5fd">' + escHtml(l.learning) + '</span></div>';
+          if (l.detail) html += '<div style="font-size:11px;color:#6b7280;margin-top:2px;padding-left:20px">' + escHtml(l.detail) + '</div>';
+          if (l.date) html += '<div style="font-size:10px;color:#374151;padding-left:20px">' + escHtml(l.date) + '</div>';
           html += '</div>';
         }
       } else {
-        html += '<div style="color:#4b5563;font-style:italic">No evolution events since last proxy restart. The Vesper pipeline runs continuously on K2 — events appear here when patterns are promoted, pitfalls logged, or decisions locked.</div>';
+        html += '<div style="color:#4b5563;font-style:italic;font-size:12px">No learnings yet. As Karma makes mistakes, decisions, and discoveries, they appear here.</div>';
       }
 
-      // Link to full AGORA
-      html += '<div style="margin-top:12px;text-align:center"><a href="/agora" target="_blank" style="color:#a78bfa;font-size:11px">Open full AGORA dashboard &rarr;</a></div>';
+      html += '<div style="margin-top:12px;text-align:center"><a href="/agora" target="_blank" style="color:#a78bfa;font-size:11px">Full evolution dashboard &rarr;</a></div>';
       el.innerHTML = html;
     } catch (e) {
-      el.innerHTML = '<div style="color:#ef4444">Failed to load: ' + escHtml(e.message) + '</div><div style="margin-top:8px"><a href="/agora" target="_blank" style="color:#a78bfa">Open AGORA directly &rarr;</a></div>';
+      el.innerHTML = '<div style="color:#ef4444">Failed to load: ' + escHtml(e.message) + '</div>';
     }
   }
 

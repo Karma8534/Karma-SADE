@@ -344,6 +344,19 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, evolution_events: entries, recent_chats: chatEdits, k2_evolution: k2Evolution });
     }
 
+    // ── /v1/learnings — what Karma has actually learned (from claude-mem)
+    if (req.method === "GET" && req.url === "/v1/learnings") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        // Fetch from P1 cc_server (has direct claude-mem access)
+        const r = await fetch(`${HARNESS_P1}/v1/learnings`, { signal: AbortSignal.timeout(10000) });
+        const data = await r.json();
+        return json(res, r.ok ? 200 : 502, data);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `Learnings unavailable: ${e.message}` });
+      }
+    }
+
     // ── Health ─────────────────────────────────────────────────────────
     if (req.method === "GET" && req.url === "/health") {
       return json(res, 200, { ok: true, service: "sovereign-proxy", ts: new Date().toISOString() });

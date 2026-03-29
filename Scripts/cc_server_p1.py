@@ -336,6 +336,48 @@ class CCHandler(BaseHTTPRequestHandler):
                 self._json(404, {"ok": False, "error": f"not found: {rel}"})
             except Exception as e:
                 self._json(500, {"ok": False, "error": str(e)})
+        elif self.path == "/v1/learnings":
+            # Gate 6: What Karma has ACTUALLY learned — from claude-mem observations
+            try:
+                conn = sqlite3.connect(f"file:{CLAUDEMEM_DB}?mode=ro", uri=True, timeout=5)
+                conn.row_factory = sqlite3.Row
+                rows = conn.execute(
+                    "SELECT id, title, narrative, type, created_at FROM observations "
+                    "WHERE project='Karma_SADE' AND (title LIKE '%PITFALL%' OR title LIKE '%DECISION%' "
+                    "OR title LIKE '%PROOF%' OR title LIKE '%DIRECTION%' OR title LIKE '%INSIGHT%') "
+                    "ORDER BY created_at DESC LIMIT 30"
+                ).fetchall()
+                conn.close()
+                learnings = []
+                for r in rows:
+                    title = r["title"] or ""
+                    narrative = r["narrative"] or ""
+                    # Extract the type prefix
+                    ltype = "learned"
+                    tl = title.lower()
+                    if "pitfall" in tl: ltype = "mistake"
+                    elif "decision" in tl: ltype = "decided"
+                    elif "proof" in tl: ltype = "proved"
+                    elif "direction" in tl: ltype = "direction"
+                    elif "insight" in tl: ltype = "insight"
+                    # Clean title — remove "PITFALL P079" prefix to get the learning
+                    clean = title
+                    for prefix in ["PITFALL", "DECISION", "PROOF", "DIRECTION", "INSIGHT"]:
+                        clean = clean.replace(prefix, "").strip()
+                    clean = clean.lstrip("P0123456789 ").strip()
+                    # First sentence of narrative for detail
+                    detail = (narrative.split(".")[0] + ".") if narrative else ""
+                    learnings.append({
+                        "type": ltype,
+                        "learning": clean[:200],
+                        "detail": detail[:300],
+                        "date": r["created_at"][:10] if r["created_at"] else "",
+                        "id": r["id"],
+                    })
+                self._json(200, {"ok": True, "count": len(learnings), "learnings": learnings})
+            except Exception as e:
+                self._json(500, {"ok": False, "error": str(e)})
+            return
         elif self.path.startswith("/memory/observations"):
             parsed = urllib.parse.urlparse(self.path)
             params = urllib.parse.parse_qs(parsed.query)
