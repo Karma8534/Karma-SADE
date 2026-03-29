@@ -242,8 +242,10 @@ CC ── Claude Code on P1 — execution layer
 - **Gate 8 fixed:** Routing flipped to K2-first, P1-failover (Sovereign directive)
 - **Learning panel rebuilt:** Shows real learnings from claude-mem (PITFALL/DECISION/PROOF), not system metrics
 - **Simplify (all 8 findings fixed, 0 skipped):** health cache bug, threaded memory save, rate bucket leak, node dedup, SQLite connection reuse, learning panel 60s cache, dead code removal, saveMessages() hot-path fix, button label LEARNED, cmd builder extract, postResponseSideEffects shared function, batch cost parity
-- **Commits:** df98b62 → 250febb + gate fixes
+- **Desktop shortcut created (P086):** Karma.lnk on Desktop → launch-karma.bat → electron
+- **Pitfalls P079-P088:** CLI break, false claims x6, no shortcut, skipped simplify items
+- **Commits:** df98b62 → f3d1604 (11 commits this session)
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. S152 gaps CLOSED: cancel (18ms), concurrency (429), unicode (pass), K2 bus_post (pass), session resume (pass), learning panel (shipped), brain/effort/busy fixes deployed. GROUNDED = TRUE. Next: verify learning panel renders correctly in browser, then address remaining Sovereign requests from VS5 plan. THE ONLY PLAN is `docs/superpowers/specs/nexus.md` (v5.0-VERIFIED).
+2. Open hub.arknexus.net, hard refresh, click LEARNED button — verify panel shows real learnings from claude-mem (not system metrics). Then address VS5 remaining gates: Gate 1 (/v1/trace missing), Gate 2 (stale file refs), Gate 5 (browser preview inline), Gate 7 (trace endpoint), Gate 9 (elasticity). THE ONLY PLAN is `docs/superpowers/specs/nexus.md` (v5.0-VERIFIED).

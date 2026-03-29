@@ -1,9 +1,9 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-29 Session 152 (Forensic audit + H1-H8 hardening + P079 CLI fix)
-**Active: Browser verification of Nexus. Plan: docs/superpowers/specs/nexus.md (v4.0-HARDENED)**
-**THE ONLY PLAN:** Karma2/PLAN.md → docs/superpowers/specs/nexus.md. Hardening COMPLETE (code), browser verification PENDING.
-**Session:** S152 — CRITICAL: P079 --session-id CLI break fixed (Karma was completely down). H1-H8 hardening: parser, latency, security, concurrency, reconnect, diff, electron, cost. P080-P085 pitfalls: false claims while system down. GROUNDED = CONDITIONAL (curl passes, browser not verified). Commit df98b62.
+**Last updated:** 2026-03-29 Session 152 (FINAL — Nexus v5.0-VERIFIED, 11 commits, GROUNDED=TRUE)
+**Active: VS5 remaining gates (1,2,5,7,9). Plan: docs/superpowers/specs/nexus.md (v5.0-VERIFIED)**
+**THE ONLY PLAN:** Karma2/PLAN.md → docs/superpowers/specs/nexus.md. Baseline + H1-H8 verified. Learning panel shipped.
+**Session:** S152 — P079 CLI fix (Karma was down). H1-H8 hardening. Gates 6+8. Learning panel (claude-mem). /simplify 8/8 (P088). Desktop shortcut (P086). Brain/effort/busy fixes. 11 commits df98b62→f3d1604. Pitfalls P079-P088.
 **Canonical source:** This file. Read at session start.
 
 ---
