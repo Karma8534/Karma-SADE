@@ -331,7 +331,14 @@
       <div id="processing">Karma is thinking...</div>
     </div>
 
-    <!-- Agora panel removed — bus traffic at /agora only -->
+    <!-- Learning Panel — shows what Karma has learned/self-improved -->
+    <div id="learning-panel" style="display:none;position:fixed;top:60px;right:20px;width:420px;max-height:70vh;overflow-y:auto;background:#0a0a14;border:1px solid #2d2d5e;border-radius:8px;padding:16px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,0.6)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 style="margin:0;color:#a78bfa;font-size:14px">What Karma Has Learned</h3>
+        <button onclick="document.getElementById('learning-panel').style.display='none'" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:16px">&times;</button>
+      </div>
+      <div id="learning-content" style="font-size:12px;color:#9ca3af;line-height:1.6">Loading...</div>
+    </div>
 
   </div>
 
@@ -438,8 +445,8 @@
     try {
       dot.className = 'stat-dot';
       val.textContent = '...';
-      // Brain context: try cc_server health via proxy status endpoint
-      const r = await fetch('/v1/status', { headers: auth() });
+      // Brain context: use /health (no auth needed) to verify proxy is alive
+      const r = await fetch('/health');
       if (!r.ok) throw new Error(r.status);
       const data = await r.json();
       const context = { harness: data.harness, cost: data.cost };
@@ -560,7 +567,66 @@
   }
 
   function toggleAgora() {
-    window.open('/agora', '_blank');
+    const panel = document.getElementById('learning-panel');
+    if (panel.style.display !== 'none') { panel.style.display = 'none'; return; }
+    panel.style.display = 'block';
+    loadLearningPanel();
+  }
+
+  async function loadLearningPanel() {
+    const el = document.getElementById('learning-content');
+    el.innerHTML = '<div style="color:#6b7280">Loading evolution state...</div>';
+    try {
+      const r = await fetch('/agora/events', { headers: auth() });
+      if (!r.ok) throw new Error('Status ' + r.status);
+      const data = await r.json();
+      const events = data.evolution_events || [];
+      const k2 = data.k2_evolution || {};
+      const chats = data.recent_chats || [];
+      let html = '';
+
+      // Spine / Evolution summary from K2
+      if (k2.cortex) {
+        const c = k2.cortex;
+        html += '<div style="border-bottom:1px solid #1a1a3a;padding-bottom:8px;margin-bottom:8px">';
+        html += '<div style="color:#a78bfa;font-weight:600;margin-bottom:4px">Evolution State</div>';
+        html += '<div>Knowledge blocks: <b>' + (c.knowledge_blocks || '?') + '</b></div>';
+        html += '<div>Conversations processed: <b>' + (c.conversation_msgs || '?') + '</b></div>';
+        html += '<div>Model: <b>' + (c.model || '?') + '</b></div>';
+        html += '</div>';
+      }
+      if (k2.governor_summary) {
+        html += '<div style="border-bottom:1px solid #1a1a3a;padding-bottom:8px;margin-bottom:8px">';
+        html += '<div style="color:#22c55e;font-weight:600;margin-bottom:4px">Self-Improvement Summary</div>';
+        const gs = typeof k2.governor_summary === 'string' ? k2.governor_summary : JSON.stringify(k2.governor_summary);
+        html += '<div style="white-space:pre-wrap;font-size:11px">' + escHtml(gs.slice(0, 1500)) + '</div>';
+        html += '</div>';
+      }
+
+      // Recent evolution events in natural language
+      if (events.length) {
+        html += '<div style="color:#f59e0b;font-weight:600;margin-bottom:4px">Recent Evolution Events</div>';
+        for (const ev of events.slice(0, 10)) {
+          const cls = ev.classification || 'info';
+          const colors = { promote: '#22c55e', pitfall: '#ef4444', decision: '#3b82f6', proof: '#a78bfa', 'self-edit': '#f59e0b' };
+          const color = colors[cls] || '#6b7280';
+          const content = (ev.content || '').slice(0, 200);
+          const time = ev.created_at ? new Date(ev.created_at).toLocaleString() : '';
+          html += '<div style="border-left:3px solid ' + color + ';padding:4px 8px;margin-bottom:6px;font-size:11px">';
+          html += '<div style="color:' + color + ';font-weight:600">' + escHtml(cls.toUpperCase()) + ' <span style="color:#4b5563;font-weight:normal">' + escHtml(time) + '</span></div>';
+          html += '<div>' + escHtml(content) + '</div>';
+          html += '</div>';
+        }
+      } else {
+        html += '<div style="color:#4b5563;font-style:italic">No evolution events since last proxy restart. The Vesper pipeline runs continuously on K2 — events appear here when patterns are promoted, pitfalls logged, or decisions locked.</div>';
+      }
+
+      // Link to full AGORA
+      html += '<div style="margin-top:12px;text-align:center"><a href="/agora" target="_blank" style="color:#a78bfa;font-size:11px">Open full AGORA dashboard &rarr;</a></div>';
+      el.innerHTML = html;
+    } catch (e) {
+      el.innerHTML = '<div style="color:#ef4444">Failed to load: ' + escHtml(e.message) + '</div><div style="margin-top:8px"><a href="/agora" target="_blank" style="color:#a78bfa">Open AGORA directly &rarr;</a></div>';
+    }
   }
 
   function toggleCascade() {

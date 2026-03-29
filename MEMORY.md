@@ -237,7 +237,7 @@ CC ── Claude Code on P1 — execution layer
 - **Additional fixes:** P074 hardcoded token removed, P078 encoding (utf-8+replace), tool evidence filtering (infra collapsed), CLAUDE.md mojibake, K2 bus auth (HUB_AUTH_TOKEN in aria.service), duplicate auto-start cleaned
 - **Pitfalls P079-P085:** CLI break, false PASS claims, dismissed failures, unverified deployment, premature GROUNDED=TRUE, bad root cause attribution, ugly effort dropdown
 - **Browser verified:** Karma responded at hub.arknexus.net (screenshot proof). Tool filtering works (collapsed infra tools).
-- **Post-browser fixes:** brain err → "ok" (route to /v1/status), effort dropdown relabeled (auto/quick/normal/deep/max), harness 429 → "Karma is busy" instead of "All harness nodes failed"
+- **Post-browser fixes:** brain err → "ok" (use /health no-auth), effort dropdown relabeled (auto/quick/normal/deep/max), harness 429 → "Karma is busy" instead of "All harness nodes failed", AGORA button now opens inline learning panel with natural language evolution summary
 - **Commits:** df98b62, d9f484c, 6d1381d + post-browser fix commit
 
 ## Next Session Starts Here
