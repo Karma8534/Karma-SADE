@@ -31,8 +31,12 @@ def _check_rate_limit(ip):
     now = time.time()
     bucket = _rate_buckets[ip]
     # Evict entries older than window
-    _rate_buckets[ip] = [t for t in bucket if now - t < RATE_LIMIT_WINDOW]
-    if len(_rate_buckets[ip]) >= RATE_LIMIT_RPM:
+    fresh = [t for t in bucket if now - t < RATE_LIMIT_WINDOW]
+    if not fresh and ip in _rate_buckets:
+        del _rate_buckets[ip]  # Clean up stale IPs
+    else:
+        _rate_buckets[ip] = fresh
+    if len(_rate_buckets.get(ip, [])) >= RATE_LIMIT_RPM:
         return False
     _rate_buckets[ip].append(now)
     return True
@@ -61,15 +65,17 @@ CLAUDEMEM_URL  = "http://127.0.0.1:37777"  # claude-mem worker (loopback)
 CLAUDEMEM_DB   = pathlib.Path.home() / ".claude-mem" / "claude-mem.db"
 
 def _auto_save_memory(user_msg, assistant_msg):
-    """Gate 6: Auto-save chat turns to claude-mem. Fire-and-forget, never blocks."""
-    try:
-        text = f"[Nexus chat] user: {user_msg[:200]}\nassistant: {assistant_msg[:500]}"
-        body = json.dumps({"text": text, "title": f"Nexus chat turn", "project": "Karma_SADE"}).encode()
-        req = urllib.request.Request(f"{CLAUDEMEM_URL}/api/memory/save", data=body, method="POST",
-                                     headers={"Content-Type": "application/json"})
-        urllib.request.urlopen(req, timeout=3)
-    except Exception:
-        pass  # Never block chat on memory save failure
+    """Auto-save chat turns to claude-mem. Runs in background thread, never blocks handler."""
+    def _save():
+        try:
+            claudemem_proxy("/api/memory/save", "POST", {
+                "text": f"[Nexus chat] user: {user_msg[:200]}\nassistant: {assistant_msg[:500]}",
+                "title": "Nexus chat turn",
+                "project": "Karma_SADE",
+            }, timeout=3)
+        except Exception:
+            pass
+    threading.Thread(target=_save, daemon=True).start()
 
 def claudemem_proxy(path, method="GET", body=None, timeout=10):
     """Proxy a request to the local claude-mem worker at 127.0.0.1:37777."""

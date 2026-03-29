@@ -76,17 +76,24 @@ async function checkHealth(url, cache, checkedAt) {
   } catch { return false; }
 }
 
+// Shared constants
+const BUSY_MSG = "Karma is busy with another request. Please wait a moment and try again.";
+
+// K2-first node list (Gate 8) with proper cache timestamps
+function harnessNodes() {
+  return [
+    { label: "K2", url: HARNESS_K2, getHealthy: () => _k2Healthy, setHealthy: v => { _k2Healthy = v; }, getCheckedAt: () => _k2CheckedAt, setChecked: () => { _k2CheckedAt = Date.now(); } },
+    { label: "P1", url: HARNESS_P1, getHealthy: () => _p1Healthy, setHealthy: v => { _p1Healthy = v; }, getCheckedAt: () => _p1CheckedAt, setChecked: () => { _p1CheckedAt = Date.now(); } },
+  ];
+}
+
 async function routeToHarness(message, sessionId) {
   const payload = JSON.stringify({ message, session_id: sessionId });
   const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` };
   const errors = [];
   let busyCount = 0;
-  // Gate 8: K2 first, P1 failover (Sovereign directive)
-  for (const node of [
-    { label: "K2", url: HARNESS_K2, getHealthy: () => _k2Healthy, setHealthy: v => { _k2Healthy = v; }, setChecked: () => { _k2CheckedAt = Date.now(); } },
-    { label: "P1", url: HARNESS_P1, getHealthy: () => _p1Healthy, setHealthy: v => { _p1Healthy = v; }, setChecked: () => { _p1CheckedAt = Date.now(); } },
-  ]) {
-    const h = await checkHealth(node.url, node.getHealthy(), 0);
+  for (const node of harnessNodes()) {
+    const h = await checkHealth(node.url, node.getHealthy(), node.getCheckedAt());
     node.setHealthy(h); node.setChecked();
     if (!h) { errors.push(`${node.label} health failed`); continue; }
     try {
@@ -100,7 +107,7 @@ async function routeToHarness(message, sessionId) {
   // If all nodes were busy, return specific busy message (not generic "failed")
   if (busyCount > 0) {
     console.warn("[HARNESS] All nodes busy:", errors.join("; "));
-    return { ok: false, error: "Karma is busy with another request. Please wait a moment and try again." };
+    return { ok: false, error: BUSY_MSG };
   }
   console.error("[HARNESS] All nodes failed:", errors.join("; "));
   return { ok: false, error: `All harness nodes failed: ${errors.join("; ")}` };
@@ -110,14 +117,10 @@ async function routeToHarness(message, sessionId) {
 async function routeToHarnessStream(message, sessionId, effort, model, clientRes, files) {
   const payload = JSON.stringify({ message, session_id: sessionId, effort, model, files });
   const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` };
-  // Gate 8: K2 first, P1 failover (Sovereign directive)
-  const nodes = [
-    { label: "K2", url: HARNESS_K2, getHealthy: () => _k2Healthy, setHealthy: v => { _k2Healthy = v; }, setChecked: () => { _k2CheckedAt = Date.now(); } },
-    { label: "P1", url: HARNESS_P1, getHealthy: () => _p1Healthy, setHealthy: v => { _p1Healthy = v; }, setChecked: () => { _p1CheckedAt = Date.now(); } },
-  ];
+  const nodes = harnessNodes();
 
   for (const node of nodes) {
-    const h = await checkHealth(node.url, node.getHealthy(), 0);
+    const h = await checkHealth(node.url, node.getHealthy(), node.getCheckedAt());
     node.setHealthy(h); node.setChecked();
     if (!h) continue;
 
@@ -203,7 +206,7 @@ async function routeToHarnessStream(message, sessionId, effort, model, clientRes
   if (!clientRes.headersSent) {
     clientRes.writeHead(502, { "Content-Type": "text/event-stream", "Access-Control-Allow-Origin": "*" });
   }
-  const errMsg = "Karma is busy with another request. Please wait a moment and try again.";
+  const errMsg = BUSY_MSG;
   clientRes.write(`data: ${JSON.stringify({ type: "error", error: errMsg })}\n\n`);
   clientRes.end();
 }
