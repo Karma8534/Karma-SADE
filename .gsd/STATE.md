@@ -1,9 +1,9 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-28 Session 150 (19hr marathon — harness shipped, nexus plan locked)
-**Active: Nexus Sprint 1 Step 0 — verify stream-json format. Plan: docs/superpowers/specs/nexus.md**
-**THE ONLY PLAN:** Karma2/PLAN.md (Sovereign Harness). Old cortex-phase plan ARCHIVED.
-**Session:** S150 — SOVEREIGN HARNESS SHIPPED. proxy.js (353 lines) replaces server.js (4820 lines) on vault-neo. CC --resume on P1 (primary) + K2 (failover) via Max subscription = $0. Full chain verified from browser. 12-gate Nexus verification (9 PASS, 2 PARTIAL, 1 RECONCILED). Cortex recency weighting patched. feedback.js + library_docs.js corruption fixed. cc_server_p1.py NODE_EXE bypass for Windows background PATH. K2 sovereign-harness.service deployed with WSL2 port forward.
+**Last updated:** 2026-03-29 Session 151 (ALL 5 Nexus Sprints shipped — 26/26 baseline PASS)
+**Active: VS3 hardening iteration — parser hardening, security hardening, latency gates. Plan: docs/superpowers/specs/nexus.md (VS3 3.1-VERIFIED)**
+**THE ONLY PLAN:** Karma2/PLAN.md → docs/superpowers/specs/nexus.md (VS3). All Sprints COMPLETE.
+**Session:** S151 — NEXUS BASELINE ACHIEVED. Sprint 1 (streaming+tools+cancel), Sprint 2 (files+effort+persona), Sprint 3 (Electron P1), Sprint 4 (AGORA feedback+metrics), Sprint 5 (reboot survival). VS3 hardening: file validation E301-E303, concurrency lock, AGORA ACK fix. Pitfalls P069-P073. nexus.md upgraded to VS3 (3.1-VERIFIED). 10 commits.
 **Canonical source:** This file. Read at session start.
 
 ---

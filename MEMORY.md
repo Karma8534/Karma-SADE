@@ -4,7 +4,7 @@
 
 ## Current State
 - **Active task:** Nexus — inline evidence, tool access, cascade fix, Karma tool-use enforcement
-- **Session:** 149 (Nexus build + Phase 7 complete + Karma behavioral fixes)
+- **Session:** 151 (ALL 5 Nexus Sprints shipped — 26/26 baseline PASS)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)
@@ -233,4 +233,4 @@ CC ── Claude Code on P1 — execution layer
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. ALL 5 SPRINTS COMPLETE. 26/27 baseline PASS. Item 24 DEFERRED. Next: operational monitoring, Sprint iteration on quality improvements. THE ONLY PLAN is `docs/superpowers/specs/nexus.md`.
+2. ALL 5 SPRINTS COMPLETE (S151). 26/26 non-deferred PASS. VS3 hardening deployed. Next: implement remaining VS3 hardening items (parser hardening, security hardening, measurable latency gates). THE ONLY PLAN is `docs/superpowers/specs/nexus.md` (VS3 3.1-VERIFIED).
