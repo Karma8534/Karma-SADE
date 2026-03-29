@@ -31,6 +31,17 @@ h1{color:#7c3aed;font-size:18px;letter-spacing:4px;margin-bottom:4px}
 a{color:#7c3aed;text-decoration:none}
 a:hover{text-decoration:underline}
 #error{color:#ef4444;font-size:12px;margin-bottom:8px;display:none}
+.ev-actions{display:flex;gap:6px;margin-top:6px}
+.ev-btn{background:#1f2937;border:1px solid #374151;color:#9ca3af;padding:2px 10px;border-radius:3px;cursor:pointer;font-size:10px;letter-spacing:1px}
+.ev-btn:hover{background:#374151;color:#e6edf3}
+.ev-btn.approve{border-color:#10b981;color:#10b981}.ev-btn.approve:hover{background:#10b981;color:#fff}
+.ev-btn.reject{border-color:#ef4444;color:#ef4444}.ev-btn.reject:hover{background:#ef4444;color:#fff}
+.ev-btn.redirect{border-color:#f59e0b;color:#f59e0b}.ev-btn.redirect:hover{background:#f59e0b;color:#fff}
+.ev-btn.done{opacity:0.4;cursor:default;pointer-events:none}
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:16px}
+.metric-card{background:#161b22;border-radius:6px;padding:10px 14px;text-align:center}
+.metric-card .metric-val{font-size:20px;font-weight:700;color:#7c3aed}
+.metric-card .metric-label{font-size:10px;color:#6b7280;letter-spacing:1px;text-transform:uppercase;margin-top:2px}
 </style>
 </head><body>
 <h1>AGORA</h1>
@@ -42,7 +53,11 @@ a:hover{text-decoration:underline}
   <div id="k2-state">Loading...</div>
 </div>
 <div class="section">
-  <div class="section-title">EVOLUTION EVENTS</div>
+  <div class="section-title">LEARNING METRICS</div>
+  <div class="metrics-grid" id="metrics">Loading...</div>
+</div>
+<div class="section">
+  <div class="section-title">EVOLUTION EVENTS — Sovereign Feedback</div>
   <div id="events">Loading...</div>
 </div>
 <div class="section">
@@ -109,17 +124,41 @@ async function load() {
       '<div class="status-item"><span class="dot red"></span><span class="label">Pitfalls:</span> <span class="val">' + pitfalls + '</span></div>' +
       '<div class="status-item"><span class="label">Chats:</span> <span class="val">' + (d.recent_chats||[]).length + '</span></div>';
 
+    // ── Learning Metrics ──────────────────────────────────────────────
+    var metricsEl = document.getElementById('metrics');
+    var promoEvents = evts.filter(function(e) { return classify(e.content) === 'promote'; });
+    var uniqueTypes = new Set(evts.map(function(e) { return classify(e.content); }));
+    uniqueTypes.delete(''); uniqueTypes.delete('heartbeat');
+    var hoursSpan = evts.length > 1 ? Math.max(1, (new Date(evts[0].created_at) - new Date(evts[evts.length-1].created_at)) / 3600000) : 1;
+    var promoRate = (promoEvents.length / hoursSpan).toFixed(1);
+    var qualityGrade = pitfalls === 0 ? 'A' : (promos > pitfalls * 2) ? 'B' : (promos > pitfalls) ? 'C' : 'D';
+    var spineVer = (k2 && k2.cortex) ? (k2.cortex.knowledge_blocks || '?') : '?';
+    metricsEl.innerHTML =
+      '<div class="metric-card"><div class="metric-val">' + spineVer + '</div><div class="metric-label">Spine Blocks</div></div>' +
+      '<div class="metric-card"><div class="metric-val">' + promos + '</div><div class="metric-label">Promotions</div></div>' +
+      '<div class="metric-card"><div class="metric-val">' + promoRate + '/h</div><div class="metric-label">Promo Rate</div></div>' +
+      '<div class="metric-card"><div class="metric-val">' + uniqueTypes.size + '</div><div class="metric-label">Pattern Types</div></div>' +
+      '<div class="metric-card"><div class="metric-val">' + qualityGrade + '</div><div class="metric-label">Quality Grade</div></div>' +
+      '<div class="metric-card"><div class="metric-val">' + evts.length + '</div><div class="metric-label">Total Events</div></div>';
+
+    // ── Evolution Events with Sovereign Feedback Buttons ─────────────
     const eventsEl = document.getElementById('events');
     if (!evts.length) { eventsEl.innerHTML = '<div style="color:#6b7280;font-size:13px">No evolution events in bus cache (24h window)</div>'; }
     else {
       eventsEl.innerHTML = evts.map(function(e) {
         var cls = classify(e.content);
         var fromColor = e.from==='regent'?'#10b981':e.from==='cc'?'#3b82f6':e.from==='cc-watchdog'?'#f59e0b':'#9ca3af';
+        var actions = '<div class="ev-actions">' +
+          '<button class="ev-btn approve" onclick="sovereignAction(\'' + e.id + '\',\'approve\',this)">APPROVE</button>' +
+          '<button class="ev-btn reject" onclick="sovereignAction(\'' + e.id + '\',\'reject\',this)">REJECT</button>' +
+          '<button class="ev-btn redirect" onclick="sovereignAction(\'' + e.id + '\',\'redirect\',this)">REDIRECT</button>' +
+          '</div>';
         return '<div class="event ' + cls + '">' +
           '<span class="ts">' + ago(e.created_at) + '</span> ' +
           '<span class="from" style="color:' + fromColor + '">' + esc(e.from) + '</span>' +
           '<span style="color:#6b7280">&rarr; ' + esc(e.to) + '</span>' +
           '<div class="content">' + esc(e.content).slice(0, 500) + '</div>' +
+          actions +
           '</div>';
       }).join('');
     }
@@ -139,6 +178,26 @@ async function load() {
   } catch (e) {
     ERR.textContent = 'Load failed: ' + e.message;
     ERR.style.display = 'block';
+  }
+}
+
+async function sovereignAction(eventId, action, btnEl) {
+  var row = btnEl.parentElement;
+  row.querySelectorAll('.ev-btn').forEach(function(b) { b.classList.add('done'); });
+  btnEl.textContent = action.toUpperCase() + 'D';
+  try {
+    await fetch('/v1/coordination/post', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: 'colby', to: 'regent', type: 'approval',
+        urgency: action === 'reject' ? 'blocking' : 'informational',
+        content: '[SOVEREIGN ' + action.toUpperCase() + '] Event ' + eventId + ' — ' + action + 'd by Sovereign.'
+      })
+    });
+  } catch (e) {
+    btnEl.textContent = 'ERR';
+    btnEl.style.color = '#ef4444';
   }
 }
 

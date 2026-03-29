@@ -405,6 +405,7 @@
     setupFileHandlers();
     loadSavedMessages();
     loadBrainContext();
+    detectElectron();
     registerWebMCPTools();
     pollBus();
     setInterval(pollBus, POLL_MS);
@@ -436,6 +437,23 @@
       val.textContent = 'err';
       return null;
     }
+  }
+
+  // ── Electron detection — unlock enhanced features ──────────────────
+  function detectElectron() {
+    if (!window.karma?.isElectron) return;
+    console.log('[NEXUS] Electron detected — enhanced mode active');
+    const badge = document.createElement('span');
+    badge.className = 'stat-item';
+    badge.innerHTML = '<span class="stat-dot alive"></span><span class="stat-label">desktop</span>';
+    document.getElementById('status-bar').appendChild(badge);
+    // Fetch spine version for header display
+    window.karma.spineRead().then(r => {
+      if (r.ok) {
+        const ver = r.spine?.knowledge_blocks || r.spine?.version || '?';
+        badge.querySelector('.stat-label').textContent = 'desktop v' + ver;
+      }
+    }).catch(() => {});
   }
 
   function registerWebMCPTools() {

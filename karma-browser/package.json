@@ -1,0 +1,15 @@
+{
+  "name": "karma-browser",
+  "version": "0.2.0",
+  "description": "Karma — Sovereign AI Desktop App (P1 Windows)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "author": "Julian (CC Ascendant)",
+  "license": "PRIVATE",
+  "devDependencies": {
+    "electron": "^41.1.0"
+  }
+}

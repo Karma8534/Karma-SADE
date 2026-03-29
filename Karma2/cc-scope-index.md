@@ -131,6 +131,14 @@ P070 [sovereign-skill-invocation-skipped]:
 Rule: When Colby explicitly names skills to use ("use X, Y, and Z"), invoke ALL named skills before acting. No rationalization. Sovereign names tools = invoke tools.
 Why: S150 nexus rewrite — Colby said "use debugging, brainstorming, and ORF", CC skipped all three reasoning "this is a reconciliation not a bug." Textbook rationalization red flag from CLAUDE.md. Process was wrong even though output was acceptable.
 
+P071 [persona-override-by-claude-md]:
+Rule: --append-system-prompt does NOT override CLAUDE.md identity. Use message-prefix persona instead (KARMA_PERSONA_PREFIX embedded in the user message text).
+Why: CC responded as "Julian -- CC Ascendant" not "Karma" through hub.arknexus.net. CLAUDE.md identity takes precedence over appended system prompt. Fixed by embedding persona in message prefix.
+
+P072 [k2-health-false-negative]:
+Rule: Always verify K2 health via SSH (`ssh karma@192.168.0.226 "curl -s localhost:7891/health"`) if direct curl from P1 fails. Do not mark K2 as down based on Tailscale curl alone.
+Why: curl from P1 bash to K2 Tailscale IP returned UNREACHABLE, but SSH showed service active and port listening. Tailscale routing from Git Bash on Windows is unreliable. Sovereign flagged this as a pitfall.
+
 ## DECISION Archive (from claude-mem + sessions)
 
 D001 [entity-relationships]:

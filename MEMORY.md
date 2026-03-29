@@ -207,6 +207,16 @@ CC ── Claude Code on P1 — execution layer
 - **Effort selector**: Dropdown in header bar, flows through proxy → cc_server → --effort flag
 - **File/image input**: Drag-drop on chat, paste images, attach button. Base64 → temp file → path in prompt. CC Read tool handles images.
 
+### Sprint 3 (items 11, 17, 18)
+- **Electron app**: karma-browser/ on P1 with main.js, preload.js, IPC bridge. Launches via `npx electron .`
+- **Self-deploy IPC**: git add/commit/push from Electron via powershell.exe
+- **unified.html**: detectElectron() adds desktop badge when window.karma.isElectron present
+
+### Sprint 4 (items 12-14)
+- **AGORA metrics**: Spine blocks, promotions, promo rate/h, pattern types, quality grade, total events
+- **Sovereign feedback**: Approve/Reject/Redirect buttons on every evolution event → POST to bus as from:colby to:regent type:approval
+- **Learning visibility**: Pattern diversity count, quality grade (A-D), promotion timeline
+
 ## Next Session Starts Here
 1. `/resurrect`
 2. Verify Sprint 1 baseline items (2, 3, 6, 19, 25) end-to-end from browser at hub.arknexus.net. If any fail, debug and fix. THE ONLY PLAN is `docs/superpowers/specs/nexus.md` (Karma2/PLAN.md points there).
