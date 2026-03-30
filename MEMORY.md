@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Nexus UI fixes deployed — P097 tool panel suppression, cascade topology, [object Object] bug fixed
-- **Session:** 153 (Nexus end-to-end fix: tool panels suppressed, cascade updated to K2→P1→CC, dead GPT nodes removed)
+- **Active task:** Nexus UI complete — P097 fixes deployed, AGORA no-token UX fixed, all Karma open items resolved
+- **Session:** 153 (Nexus end-to-end: tool panels suppressed, cascade K2→P1→CC, AGORA login-gate fixed, MEMORY.md current)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)

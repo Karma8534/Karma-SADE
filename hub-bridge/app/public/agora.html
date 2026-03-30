@@ -88,11 +88,24 @@ function ago(iso) {
   return Math.floor(ms/86400000) + 'd ago';
 }
 
+function clearLoading(msg) {
+  ['k2-state','metrics','events','chats'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<div style="color:#6b7280;font-size:13px">' + msg + '</div>';
+  });
+}
+
 async function load() {
+  if (!TOKEN) {
+    clearLoading('—');
+    ERR.textContent = 'Login required — visit hub.arknexus.net first to set your token.';
+    ERR.style.display = 'block';
+    return;
+  }
   try {
     ERR.style.display = 'none';
     const r = await fetch('/agora/events', { headers: { Authorization: 'Bearer ' + TOKEN } });
-    if (!r.ok) { ERR.textContent = 'Auth failed. Go to Nexus first to login.'; ERR.style.display = 'block'; return; }
+    if (!r.ok) { clearLoading('—'); ERR.textContent = 'Auth failed. Go to Nexus first to login.'; ERR.style.display = 'block'; return; }
     const d = await r.json();
 
     // K2 Evolution State (live from cortex + governor)
