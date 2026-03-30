@@ -732,35 +732,43 @@
       if (err.name === 'AbortError') {
         // User cancelled — no retry
       } else if (isStreaming && (err.message.includes('network') || err.message.includes('Failed to fetch') || err.name === 'TypeError')) {
-        appendMsg('system', 'Connection lost. Retrying in 3s...');
-        await new Promise(r => setTimeout(r, 3000));
-        // H5: Single retry — do not loop indefinitely
-        try {
-          const retryRes = await fetch(CHAT_URL, {
-            method: 'POST',
-            headers: { ...auth(), 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: text, conversation_id: conversationId, session_id: conversationId, stream: true }),
-          });
-          if (retryRes.ok && retryRes.headers.get('content-type')?.includes('text/event-stream')) {
-            const rdr = retryRes.body.getReader();
-            const dec = new TextDecoder();
-            let buf = '';
-            while (true) {
-              const { done, value } = await rdr.read();
-              if (done) break;
-              buf += dec.decode(value, { stream: true });
-              const ps = buf.split('\n\n');
-              buf = ps.pop();
-              for (const p of ps) for (const ln of p.split('\n')) {
-                if (ln.startsWith('data: ')) { try { handleStreamEvent(JSON.parse(ln.slice(6))); } catch {} }
+        // Exponential backoff retry — handles container restart window
+        const delays = [3000, 6000, 12000, 30000, 60000];
+        let reconnected = false;
+        for (let attempt = 0; attempt < delays.length; attempt++) {
+          const wait = delays[attempt];
+          appendMsg('system', `Connection lost. Retrying in ${wait/1000}s... (${attempt+1}/${delays.length})`);
+          await new Promise(r => setTimeout(r, wait));
+          try {
+            const retryRes = await fetch(CHAT_URL, {
+              method: 'POST',
+              headers: { ...auth(), 'Content-Type': 'application/json' },
+              body: JSON.stringify({ message: text, conversation_id: conversationId, session_id: conversationId, stream: true }),
+            });
+            if (retryRes.ok && retryRes.headers.get('content-type')?.includes('text/event-stream')) {
+              const rdr = retryRes.body.getReader();
+              const dec = new TextDecoder();
+              let buf = '';
+              while (true) {
+                const { done, value } = await rdr.read();
+                if (done) break;
+                buf += dec.decode(value, { stream: true });
+                const ps = buf.split('\n\n');
+                buf = ps.pop();
+                for (const p of ps) for (const ln of p.split('\n')) {
+                  if (ln.startsWith('data: ')) { try { handleStreamEvent(JSON.parse(ln.slice(6))); } catch {} }
+                }
               }
+              reconnected = true;
+              break;
             }
-            appendMsg('system', 'Reconnected successfully.');
-          } else {
-            appendMsg('system', 'Reconnect failed (status ' + retryRes.status + '). Try again.');
+            // 502/503 during container restart — keep retrying silently
+          } catch (_retryErr) {
+            // Network still down — keep retrying
           }
-        } catch (retryErr) {
-          appendMsg('system', 'Reconnect failed: ' + retryErr.message);
+        }
+        if (!reconnected) {
+          appendMsg('system', 'Karma is unreachable. Please refresh the page.');
         }
       } else if (isStreaming) {
         appendMsg('system', 'Error: ' + err.message);
