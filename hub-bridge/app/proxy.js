@@ -105,7 +105,7 @@ async function routeToHarness(message, sessionId) {
       const r = await fetch(`${node.url}/cc`, { method: "POST", headers, body: payload, signal: AbortSignal.timeout(HARNESS_TIMEOUT) });
       if (r.status === 429) { busyCount++; errors.push(`${node.label} busy (another request in progress)`); continue; }
       const data = await r.json();
-      if (r.ok && data.ok !== false) { console.log(`[HARNESS] ${node.label} responded OK`); return data; }
+      if (r.ok && data.ok !== false) { console.log(`[HARNESS] ${node.label} responded OK`); data._harness = node.label; return data; }
       errors.push(`${node.label} ${r.status}: ${data.error || "non-ok"}`);
     } catch (e) { errors.push(`${node.label}: ${e.message}`); }
   }
@@ -119,8 +119,8 @@ async function routeToHarness(message, sessionId) {
 }
 
 // ── Harness streaming (SSE passthrough) ─────────────────────────────────────
-async function routeToHarnessStream(message, sessionId, effort, model, clientRes, files) {
-  const payload = JSON.stringify({ message, session_id: sessionId, effort, model, files });
+async function routeToHarnessStream(message, sessionId, effort, model, clientRes, files, budget) {
+  const payload = JSON.stringify({ message, session_id: sessionId, effort, model, files, budget });
   const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` };
   const nodes = harnessNodes();
 
@@ -420,7 +420,7 @@ const server = http.createServer(async (req, res) => {
 
       // ── Streaming path (SSE) ──────────────────────────────────────────
       if (body.stream === true) {
-        return routeToHarnessStream(message, sessionId, body.effort, body.model, res, body.files);
+        return routeToHarnessStream(message, sessionId, body.effort, body.model, res, body.files, body.budget);
       }
 
       // ── Batch path (JSON, backward compat) ────────────────────────────

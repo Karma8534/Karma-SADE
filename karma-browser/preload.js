@@ -9,5 +9,7 @@ contextBridge.exposeInMainWorld("karma", {
   spineRead: () => ipcRenderer.invoke("spine-read"),
   governorAudit: () => ipcRenderer.invoke("governor-audit"),
   selfDeploy: (commitMsg) => ipcRenderer.invoke("self-deploy", commitMsg),
+  autoUpdate: () => ipcRenderer.invoke("auto-update"),
+  relaunch: () => ipcRenderer.invoke("relaunch"),
   isElectron: true,
 });

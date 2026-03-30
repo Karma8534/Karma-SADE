@@ -58,7 +58,7 @@ CC ── Claude Code on P1 — execution layer
 - **PITFALL:** server.js env object had hardcoded MODEL_DEEP="gpt-4o-mini" fallback — overrode MODEL_ESCALATION silently. Fixed by adding MODEL_ESCALATION + MODEL_VERIFIER to env object.
 - **Identity verified across all tiers:** Karma correctly says "Karma, Initiate, Colby" on cortex ($0), gpt-5.4-mini ($0.005), and gpt-5.4 ($0.03)
 - **/v1/status LIVE:** models, spend, node health, governance state — all in one endpoint
-- **/v1/trace LIVE:** per-request cost log (JSONL) — model, tier, usd, tokens, provider
+- **/v1/trace LIVE (S153):** in-memory ring buffer (50 entries) — per-request path, harness, model, usd, timestamp
 - **Verifier hook seam:** callVerifier() wired, gated by VERIFIER_ENABLED env var (default: off)
 - **Cost logging:** every chat request appends to /run/state/request_cost.jsonl
 - **Rollback VERIFIED_ALREADY_PRESENT:** governor has _checkpoint(), spine_backup_pre_promote.json, git snapshots

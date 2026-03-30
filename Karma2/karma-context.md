@@ -41,7 +41,7 @@ User message → hub-bridge classifyMessageTier()
 
 ## Sovereign Visibility (deployed S145)
 - **/v1/status** — models, spend ($31.60/$60), node health, governance state
-- **/v1/trace** — per-request cost log (model, tier, usd, tokens, provider)
+- **/v1/trace (S153)** — per-request routing log (in-memory, last 50: harness, model, usd, path, timestamp)
 - **CASCADE** — hub UI compact node health display
 - **AGORA** — shared bus event surface at /agora
 

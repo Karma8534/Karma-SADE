@@ -169,7 +169,7 @@ def handle_files(files):
     all_parts = parts + errors
     return "\n".join(all_parts) + "\n\n" if all_parts else ""
 
-def _build_cc_cmd(message, effort=None, model=None, stream=False):
+def _build_cc_cmd(message, effort=None, model=None, budget=None, stream=False):
     """Build the CC subprocess command list. Shared by run_cc and run_cc_stream."""
     session_id = load_session_id()
     full_message = KARMA_PERSONA_PREFIX + message
@@ -184,11 +184,13 @@ def _build_cc_cmd(message, effort=None, model=None, stream=False):
         cmd += ["--effort", effort]
     if model:
         cmd += ["--model", model]
+    if budget:
+        cmd += ["--max-budget-usd", str(budget)]
     return cmd
 
-def run_cc(message, effort=None, model=None):
+def run_cc(message, effort=None, model=None, budget=None):
     """Call real CC subprocess with session continuity."""
-    cmd = _build_cc_cmd(message, effort=effort, model=model, stream=False)
+    cmd = _build_cc_cmd(message, effort=effort, model=model, budget=budget, stream=False)
     global _current_proc
     _current_proc = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -226,10 +228,10 @@ def run_cc(message, effort=None, model=None):
     # Fallback: return raw stdout if no JSON found
     return stdout
 
-def run_cc_stream(message, effort=None, model=None):
+def run_cc_stream(message, effort=None, model=None, budget=None):
     """Yield filtered stream-json lines from CC subprocess as SSE-ready strings.
     Requires --verbose with -p mode (P069). Filters out system/hook events."""
-    cmd = _build_cc_cmd(message, effort=effort, model=model, stream=True)
+    cmd = _build_cc_cmd(message, effort=effort, model=model, budget=budget, stream=True)
     global _current_proc
     _current_proc = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -501,6 +503,7 @@ class CCHandler(BaseHTTPRequestHandler):
 
         effort = body.get("effort")  # low/medium/high/max
         model = body.get("model")    # model override
+        budget = body.get("budget")  # max budget USD (Gap 4: --max-budget-usd)
         files = body.get("files", [])
         file_prefix = handle_files(files)
         message = file_prefix + message  # Prepend file paths to message
@@ -522,7 +525,7 @@ class CCHandler(BaseHTTPRequestHandler):
                 try:
                     t_start = time.time()
                     first_token_sent = False
-                    for line in run_cc_stream(message, effort=effort, model=model):
+                    for line in run_cc_stream(message, effort=effort, model=model, budget=budget):
                         if not first_token_sent:
                             _last_latency["first_token_ms"] = int((time.time() - t_start) * 1000)
                             first_token_sent = True
@@ -542,7 +545,7 @@ class CCHandler(BaseHTTPRequestHandler):
 
             # ── /cc — batch JSON endpoint (backward compat) ──────────────
             try:
-                response_text = run_cc(message, effort=effort, model=model)
+                response_text = run_cc(message, effort=effort, model=model, budget=budget)
                 self._json(200, {"ok": True, "response": response_text})
                 # Gate 6: Auto-save chat turn to claude-mem (fire-and-forget)
                 _auto_save_memory(message, response_text)

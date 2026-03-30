@@ -143,6 +143,24 @@ ipcMain.handle("self-deploy", async (event, commitMsg) => {
   });
 });
 
+// ── Auto-update: git pull + relaunch (Gap 8) ────────────────────────────
+ipcMain.handle("auto-update", async () => {
+  return new Promise((resolve) => {
+    const cmd = `cd "${WORK_DIR}"; git pull origin main 2>&1`;
+    exec(cmd, { timeout: 30000, cwd: WORK_DIR, shell: "powershell.exe", maxBuffer: 1024 * 1024 }, (err, stdout, stderr) => {
+      if (err) return resolve({ ok: false, stdout: (stdout || "").slice(0, 5000), stderr: (stderr || "").slice(0, 5000), code: err?.code || 1 });
+      // E801: Log result, offer relaunch
+      const updated = !(stdout || "").includes("Already up to date");
+      resolve({ ok: true, updated, stdout: (stdout || "").slice(0, 5000) });
+    });
+  });
+});
+
+ipcMain.handle("relaunch", () => {
+  app.relaunch();
+  app.exit(0);
+});
+
 // ── App lifecycle ────────────────────────────────────────────────────────
 app.whenReady().then(createWindow);
 app.on("window-all-closed", () => app.quit());
