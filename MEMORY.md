@@ -1,10 +1,10 @@
-<!-- Last dream: 2026-03-29 Session 152 — Nexus Hardened (P079 CLI fix + H1-H8) -->
+<!-- Last dream: 2026-03-29 Session 153 — Nexus UI: P097 tool panel suppression, cascade topology fix -->
 
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Nexus hardening — P079 CLI fix shipped, H1-H8 hardening deployed, Karma responding
-- **Session:** 152 (Forensic audit + hardening. P079: --session-id CLI break fixed. P080-P085: false claims logged)
+- **Active task:** Nexus UI fixes deployed — P097 tool panel suppression, cascade topology, [object Object] bug fixed
+- **Session:** 153 (Nexus end-to-end fix: tool panels suppressed, cascade updated to K2→P1→CC, dead GPT nodes removed)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)

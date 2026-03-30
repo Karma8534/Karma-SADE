@@ -312,11 +312,8 @@
     <span class="cascade-arrow">&#8594;</span>
     <div class="cascade-node"><div class="cn-dot" id="cn-p1"></div><span>P1</span></div>
     <span class="cascade-arrow">&#8594;</span>
-    <div class="cascade-node"><div class="cn-dot" id="cn-mini"></div><span>5.4-mini</span></div>
-    <span class="cascade-arrow">&#8594;</span>
-    <div class="cascade-node"><div class="cn-dot" id="cn-gpt54"></div><span>5.4</span></div>
-    <span class="cascade-arrow">&#8594;</span>
-    <div class="cascade-node"><div class="cn-dot" id="cn-sonnet"></div><span>Sonnet</span></div>
+    <div class="cascade-node"><div class="cn-dot" id="cn-cc"></div><span>CC (Max $0)</span></div>
+    <span id="cascade-status" style="margin-left:12px;color:#4b5563;font-size:10px"></span>
   </div>
 
   <div class="scroll-arrows">
@@ -603,8 +600,28 @@
   }
 
   function toggleCascade() {
-    document.getElementById('cascade-panel').classList.toggle('open');
+    const panel = document.getElementById('cascade-panel');
+    panel.classList.toggle('open');
     document.getElementById('cascade-btn').classList.toggle('active');
+    if (panel.classList.contains('open')) fetchCascadeStatus();
+  }
+
+  async function fetchCascadeStatus() {
+    const statusEl = document.getElementById('cascade-status');
+    try {
+      const r = await fetch('/v1/status', { headers: auth() });
+      if (!r.ok) { statusEl.textContent = 'status unavailable'; return; }
+      const d = await r.json();
+      const k2ok = d.harness?.k2?.healthy;
+      const p1ok = d.harness?.p1?.healthy;
+      document.getElementById('cn-k2').className = 'cn-dot' + (k2ok ? ' alive' : '');
+      document.getElementById('cn-p1').className = 'cn-dot' + (p1ok ? ' alive' : '');
+      document.getElementById('cn-cc').className = 'cn-dot' + (k2ok || p1ok ? ' alive' : '');
+      const active = k2ok ? 'K2' : p1ok ? 'P1' : 'none';
+      statusEl.textContent = 'active: ' + active + ' · ' + d.cost?.note?.slice(0, 40) || '';
+    } catch (e) {
+      statusEl.textContent = 'status error: ' + e.message;
+    }
   }
 
   // ── Routing ─────────────────────────────────────────────────────────────
@@ -803,14 +820,11 @@
           document.getElementById('processing').textContent = 'Karma is reasoning...';
         } else if (block.type === 'tool_use') {
           if (!streamToolMap.has(block.id)) {
-            const el = isUserTool(block.name)
-              ? appendToolEvidence(block.name, block.input, '(running...)')
-              : appendInfraToolLine(block.name, block.input, '(running...)');
-            streamToolMap.set(block.id, el);
-            if (isUserTool(block.name)) {
-              document.getElementById('processing').textContent = 'Running ' + block.name + '...';
-              document.getElementById('processing').classList.add('visible');
-            }
+            // P097: no tool panels in chat — processing indicator is sufficient
+            streamToolMap.set(block.id, null);
+            const proc = document.getElementById('processing');
+            proc.textContent = 'Running ' + friendlyTool(block.name) + '...';
+            proc.classList.add('visible');
           }
         } else if (block.type === 'text') {
           document.getElementById('processing').classList.remove('visible');
@@ -834,15 +848,8 @@
       for (const block of content) {
         if (!block || typeof block !== 'object') continue; // H1: skip malformed
         if (block.type === 'tool_result') {
-          const toolEl = streamToolMap.get(block.tool_use_id);
-          if (toolEl) {
-            const outputEl = toolEl.querySelector('.tool-output');
-            const result = obj.tool_use_result || {};
-            const rawOutput = block.content || result.stdout || '';
-            const outputText = safeText(rawOutput, PARSER_MAX_TOOL_OUTPUT); // H1: cap output
-            const truncated = outputText.length > 500 ? outputText.slice(0, 500) + '...' : outputText;
-            if (outputEl) outputEl.textContent = truncated;
-          }
+          // P097: tool panels suppressed — just restore thinking indicator
+          // P097 fix also eliminates [object Object] bug (block.content is array, not string)
           document.getElementById('processing').textContent = 'Karma is thinking...';
         }
       }
@@ -974,17 +981,19 @@
     return el;
   }
 
-  // User-facing tools get full evidence panels; everything else collapses
-  const USER_TOOLS = new Set([
-    'Read', 'Write', 'Edit', 'Bash', 'Grep', 'Glob', 'WebSearch', 'WebFetch',
-    'NotebookEdit', 'Agent', 'AskUserQuestion', 'EnterPlanMode', 'ExitPlanMode'
-  ]);
-
-  function isUserTool(name) {
-    if (USER_TOOLS.has(name)) return true;
-    // Also match short names from CC tools (e.g. "Read" from stream)
-    const short = (name || '').split('__').pop();
-    return USER_TOOLS.has(short);
+  // Friendly display name for processing indicator (P097: no panels, just text)
+  function friendlyTool(name) {
+    if (!name) return 'tool';
+    const clean = name.replace(/^mcp__[\w-]+__[\w-]+__/, '').replace(/^mcp__[\w-]+__/, '');
+    const map = {
+      Bash: 'bash', Read: 'file read', Write: 'file write', Edit: 'file edit',
+      Grep: 'grep', Glob: 'glob', WebSearch: 'web search', WebFetch: 'web fetch',
+      Agent: 'agent', TodoWrite: 'tasks', ToolSearch: 'tool lookup',
+      scratchpad_read: 'memory read', scratchpad_write: 'memory write',
+      kiki_status: 'kiki check', bus_post: 'bus post', python_exec: 'python',
+      file_read: 'file read', file_write: 'file write', file_list: 'file list',
+    };
+    return map[name] || map[clean] || clean;
   }
 
   function appendInfraToolLine(toolName, input, output) {
