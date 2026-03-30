@@ -287,7 +287,7 @@ function postResponseSideEffects({ message, assistantText, sessionId, costUsd, m
   }).catch(e => console.warn("[CORTEX] ingest failed:", e.message));
   // Phase 3 brain wire: write every chat turn to claude-mem via cc_server
   fetch(`${HARNESS_P1}/memory/save`, {
-    method: "POST", headers: { "Content-Type": "application/json" },
+    method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` },
     body: JSON.stringify({ text: chatContent, title: `Nexus chat${suffix}`, project: "Karma_SADE" }),
     signal: AbortSignal.timeout(5000),
   }).catch(e => console.warn("[CLAUDE-MEM] save failed:", e.message));
