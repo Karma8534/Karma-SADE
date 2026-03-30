@@ -259,7 +259,11 @@ CC ── Claude Code on P1 — execution layer
 - **Wrap gate audit:** ALL 200 (health, status, trace, learnings, agora, P1)
 - **P090 FIXED:** K2 false-positive (ok:true + error text) now detected, falls through to P1
 - **P091 IDENTIFIED:** Dead code/env/secrets from old server.js still in container — cleanup in progress
-- **Forensic run:** Full Sovereign Harness plan-to-reality diff executing. Streaming tool evidence VERIFIED_RUNTIME.
+- **Forensic run:** Full Sovereign Harness plan-to-reality diff. Streaming tool evidence VERIFIED_RUNTIME.
+- **P092 FIXED:** 3 dead endpoints in unified.html (/memory/context, /memory/search, /v1/feedback). Dead Web MCP tools removed. /v1/feedback now routes to coordination bus.
+- **Dockerfile zero deps:** Container has ONLY proxy.js + public/. No npm packages. No old server.js. No old lib/.
+- **hub.env clean:** 4 plaintext secrets removed. ~25 dead vars removed. Only comments remain.
+- **compose.hub.yml clean:** Dead env vars, unused API key mounts, dead volumes all removed.
 
 ## Next Session Starts Here
 1. `/resurrect`

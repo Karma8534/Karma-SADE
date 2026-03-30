@@ -407,6 +407,18 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    // ── /v1/feedback — thumbs up/down → coordination bus (P092 fix) ────
+    if (req.method === "POST" && req.url === "/v1/feedback") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      const body = JSON.parse(await parseBody(req, 10000));
+      const signal = body.signal || "unknown";
+      const entry = { id: coordId(), from: "sovereign", to: "karma", type: "feedback", urgency: "informational",
+        status: "pending", parent_id: null, response_id: null, content: `[FEEDBACK ${signal}] ${body.note || ""}`.trim(),
+        context: body.turn_id || body.write_id || null, created_at: new Date().toISOString() };
+      _coordCache.set(entry.id, entry); appendCoordDisk(entry);
+      return json(res, 200, { ok: true, id: entry.id });
+    }
+
     // ── /v1/trace — per-request cost/routing log (G1/G7) ──────────────
     if (req.method === "GET" && req.url === "/v1/trace") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });

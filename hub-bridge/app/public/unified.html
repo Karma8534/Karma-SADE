@@ -480,30 +480,14 @@
 
   function registerWebMCPTools() {
     if (!navigator.modelContext?.registerTool) return;
-    navigator.modelContext.registerTool({
-      name: 'search_memory',
-      description: "Search Julian and Karma's shared memory for past decisions, patterns, and context",
-      inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] },
-      execute: async ({ query }) => {
-        const res = await fetch('/memory/search', { method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify({ query }) });
-        return { content: [{ type: 'text', text: await res.text() }] };
-      }
-    });
+    // P092: removed search_memory and get_context — dead endpoints (/memory/search, /memory/context)
+    // CC handles memory natively via claude-mem MCP. Browser doesn't need these.
     navigator.modelContext.registerTool({
       name: 'post_to_bus',
       description: 'Post a message to the Family coordination bus',
       inputSchema: { type: 'object', properties: { content: { type: 'string' }, to: { type: 'string' } }, required: ['content'] },
       execute: async ({ content, to }) => {
         const res = await fetch('/v1/coordination/post', { method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify({ content, to: to || 'all', from: 'webmcp', type: 'inform', urgency: 'informational' }) });
-        return { content: [{ type: 'text', text: await res.text() }] };
-      }
-    });
-    navigator.modelContext.registerTool({
-      name: 'get_context',
-      description: 'Get current session state, active task, and cognitive trail from the memory spine',
-      inputSchema: { type: 'object', properties: {} },
-      execute: async () => {
-        const res = await fetch('/memory/context', { headers: auth() });
         return { content: [{ type: 'text', text: await res.text() }] };
       }
     });

@@ -143,6 +143,14 @@ P089 [truth-table-not-proof]:
 Rule: NEVER declare a gate, endpoint, or feature PASS based on a truth table, document, or previous session's claim. EVERY PASS requires a live test in THIS session. Truth tables are CLAIMS requiring verification, not PROOFS. When MEMORY.md item 2 lists specific open gates, those override any document saying "all PASS."
 Why: S153 — CC read nexus.md truth table (26/26 PASS), declared "plan complete" to Sovereign. /v1/trace returned 404. 6 documents falsely claimed it was live. VS5 gates 1,2,5,7,9 were explicitly listed in MEMORY.md and dismissed without testing. Honesty contract violation. Sovereign escalation.
 
+P090 [k2-false-positive-routing]:
+Rule: After getting a response from K2 harness, check response text for known error patterns ("all inference tiers failed", "[K2 harness:", "CORTEX ERROR"). If found, treat as failure and fall through to P1. Never accept ok:true at face value.
+Why: S153 forensic run — K2 cascade returned ok:true with error message as response text. proxy.js accepted it as success, never tried P1. Users saw K2 error messages instead of Karma's actual responses. Chat was broken for any message when K2 inference was down.
+
+P091 [dead-code-in-production]:
+Rule: After any architecture change that replaces a service, audit Dockerfile, env files, and compose for dead code. Removed: npm deps (openai, anthropic, pdf-parse), old server.js.bak, old lib/*.js, ~30 dead env vars, 4 plaintext API keys (ZAI, K2_PASSWORD, LOCAL_FILE_TOKEN, ARIA_SERVICE_KEY).
+Why: S153 forensic run — Sovereign Harness replaced 4620-line server.js with 567-line proxy.js, but Dockerfile still installed 3 npm packages proxy.js never uses, COPYd dead files, and hub.env contained plaintext secrets visible via docker inspect. Attack surface and confusion for 45+ sessions.
+
 ## DECISION Archive (from claude-mem + sessions)
 
 D001 [entity-relationships]:
