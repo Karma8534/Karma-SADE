@@ -557,6 +557,8 @@
   let _learningsCache = null;
   let _learningsCacheTs = 0;
   const LEARNINGS_CACHE_TTL = 60000; // 60s
+  let _cascadeTs = 0;
+  const CASCADE_CACHE_TTL = 30000; // 30s
 
   async function loadLearningPanel() {
     const el = document.getElementById('learning-content');
@@ -599,6 +601,10 @@
     }
   }
 
+  function setDot(id, alive) {
+    document.getElementById(id).className = 'cn-dot' + (alive ? ' alive' : '');
+  }
+
   function toggleCascade() {
     const panel = document.getElementById('cascade-panel');
     panel.classList.toggle('open');
@@ -607,6 +613,7 @@
   }
 
   async function fetchCascadeStatus() {
+    if (Date.now() - _cascadeTs < CASCADE_CACHE_TTL) return;
     const statusEl = document.getElementById('cascade-status');
     try {
       const r = await fetch('/v1/status', { headers: auth() });
@@ -614,11 +621,13 @@
       const d = await r.json();
       const k2ok = d.harness?.k2?.healthy;
       const p1ok = d.harness?.p1?.healthy;
-      document.getElementById('cn-k2').className = 'cn-dot' + (k2ok ? ' alive' : '');
-      document.getElementById('cn-p1').className = 'cn-dot' + (p1ok ? ' alive' : '');
-      document.getElementById('cn-cc').className = 'cn-dot' + (k2ok || p1ok ? ' alive' : '');
+      setDot('cn-k2', k2ok);
+      setDot('cn-p1', p1ok);
+      setDot('cn-cc', k2ok || p1ok);
       const active = k2ok ? 'K2' : p1ok ? 'P1' : 'none';
-      statusEl.textContent = 'active: ' + active + ' · ' + d.cost?.note?.slice(0, 40) || '';
+      const note = d.cost?.note?.slice(0, 40) ?? '';
+      statusEl.textContent = 'active: ' + active + (note ? ' · ' + note : '');
+      _cascadeTs = Date.now();
     } catch (e) {
       statusEl.textContent = 'status error: ' + e.message;
     }
@@ -820,7 +829,6 @@
           document.getElementById('processing').textContent = 'Karma is reasoning...';
         } else if (block.type === 'tool_use') {
           if (!streamToolMap.has(block.id)) {
-            // P097: no tool panels in chat — processing indicator is sufficient
             streamToolMap.set(block.id, null);
             const proc = document.getElementById('processing');
             proc.textContent = 'Running ' + friendlyTool(block.name) + '...';
@@ -848,8 +856,6 @@
       for (const block of content) {
         if (!block || typeof block !== 'object') continue; // H1: skip malformed
         if (block.type === 'tool_result') {
-          // P097: tool panels suppressed — just restore thinking indicator
-          // P097 fix also eliminates [object Object] bug (block.content is array, not string)
           document.getElementById('processing').textContent = 'Karma is thinking...';
         }
       }
@@ -876,6 +882,7 @@
     try { await fetch('/v1/cancel', { headers: auth() }); } catch {}
     appendMsg('system', 'Cancelled');
     document.getElementById('processing').classList.remove('visible');
+    streamToolMap.clear();
     setStreamingState(false);
     _streamAbortController = null;
   }
@@ -981,10 +988,9 @@
     return el;
   }
 
-  // Friendly display name for processing indicator (P097: no panels, just text)
   function friendlyTool(name) {
     if (!name) return 'tool';
-    const clean = name.replace(/^mcp__[\w-]+__[\w-]+__/, '').replace(/^mcp__[\w-]+__/, '');
+    const clean = name.replace(/^(?:mcp__[\w-]+__)+/, '');
     const map = {
       Bash: 'bash', Read: 'file read', Write: 'file write', Edit: 'file edit',
       Grep: 'grep', Glob: 'glob', WebSearch: 'web search', WebFetch: 'web fetch',
