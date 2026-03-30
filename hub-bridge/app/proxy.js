@@ -105,7 +105,11 @@ async function routeToHarness(message, sessionId) {
       const r = await fetch(`${node.url}/cc`, { method: "POST", headers, body: payload, signal: AbortSignal.timeout(HARNESS_TIMEOUT) });
       if (r.status === 429) { busyCount++; errors.push(`${node.label} busy (another request in progress)`); continue; }
       const data = await r.json();
-      if (r.ok && data.ok !== false) { console.log(`[HARNESS] ${node.label} responded OK`); data._harness = node.label; return data; }
+      // Detect K2 cascade false-positive: ok=true but response is an error message (P090)
+      const respText = data.response || data.assistant_text || "";
+      const isFalsePositive = respText.includes("all inference tiers failed") || respText.includes("[K2 harness:") || respText.includes("CORTEX ERROR");
+      if (r.ok && data.ok !== false && !isFalsePositive) { console.log(`[HARNESS] ${node.label} responded OK`); data._harness = node.label; return data; }
+      if (isFalsePositive) { errors.push(`${node.label} false-positive: ${respText.slice(0, 80)}`); continue; }
       errors.push(`${node.label} ${r.status}: ${data.error || "non-ok"}`);
     } catch (e) { errors.push(`${node.label}: ${e.message}`); }
   }

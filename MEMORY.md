@@ -257,7 +257,9 @@ CC ── Claude Code on P1 — execution layer
 - **Skills hardened:** resurrect Step 4c + wrap-session Step 1.5 — mandatory live endpoint audit
 - **P089 scope index + memory:** cc-scope-index, claude-mem #20146, bus, persistent feedback memory
 - **Wrap gate audit:** ALL 200 (health, status, trace, learnings, agora, P1)
-- **3 commits:** 5c2f2dd (trace+P089), 9ff2d12 (budget+autoupdate+trace fix+G2), wrap commit
+- **P090 FIXED:** K2 false-positive (ok:true + error text) now detected, falls through to P1
+- **P091 IDENTIFIED:** Dead code/env/secrets from old server.js still in container — cleanup in progress
+- **Forensic run:** Full Sovereign Harness plan-to-reality diff executing. Streaming tool evidence VERIFIED_RUNTIME.
 
 ## Next Session Starts Here
 1. `/resurrect`
