@@ -1,9 +1,9 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-29 Session 152 (FINAL — Nexus v5.0-VERIFIED, 11 commits, GROUNDED=TRUE)
-**Active: VS5 remaining gates (1,2,5,7,9). Plan: docs/superpowers/specs/nexus.md (v5.0-VERIFIED)**
-**THE ONLY PLAN:** Karma2/PLAN.md → docs/superpowers/specs/nexus.md. Baseline + H1-H8 verified. Learning panel shipped.
-**Session:** S152 — P079 CLI fix (Karma was down). H1-H8 hardening. Gates 6+8. Learning panel (claude-mem). /simplify 8/8 (P088). Desktop shortcut (P086). Brain/effort/busy fixes. 11 commits df98b62→f3d1604. Pitfalls P079-P088.
+**Last updated:** 2026-03-29 Session 153 (VS5 gates closed, full plan verified, forensic skills hardened)
+**Active: Gap 7 (reboot survival) is the only remaining gap. Plan: docs/superpowers/specs/nexus.md (v5.0-VERIFIED)**
+**THE ONLY PLAN:** Karma2/PLAN.md → docs/superpowers/specs/nexus.md. All gaps implemented except G7. All endpoints 200.
+**Session:** S153 — P089 forensic verification. /v1/trace shipped. G4 budget control. G8 auto-update. Trace harness fix. G2 doc cleanup. Skills hardened (resurrect 4c + wrap 1.5). 3 commits. Pitfall P089.
 **Canonical source:** This file. Read at session start.
 
 ---

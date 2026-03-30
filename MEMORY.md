@@ -246,13 +246,19 @@ CC ── Claude Code on P1 — execution layer
 - **Pitfalls P079-P088:** CLI break, false claims x6, no shortcut, skipped simplify items
 - **Commits:** df98b62 → f3d1604 (11 commits this session)
 
-## Session 153 — VS5 Gate Forensics + /v1/trace Shipped
-- **P089:** CC declared "plan complete" from truth table without live testing. /v1/trace was 404. Sovereign escalation.
-- **Forensic audit:** G5 (inline panel) PASS — already done S152. G9 (elasticity) PASS — health cache + failover verified.
-- **Built /v1/trace:** ~20 lines in proxy.js. In-memory ring buffer (50 entries). Logs path, harness node, model, cost, timestamp.
-- **Skills hardened:** resurrect Step 4c + wrap-session Step 1.5 — mandatory live endpoint audit, truth tables are claims not proofs.
-- **P089 added:** cc-scope-index, claude-mem #20146, bus, persistent memory.
+## Session 153 — VS5 Gate Forensics + Full Nexus Plan Verified
+- **P089:** CC declared "plan complete" from truth table without testing. /v1/trace was 404. Sovereign escalation. FIXED.
+- **G1/G7 shipped:** /v1/trace endpoint — in-memory ring buffer (50), harness label "K2" confirmed
+- **G4 shipped:** --max-budget-usd threaded proxy→harness→cc_server→CC subprocess
+- **G8 shipped:** Electron auto-update IPC (git pull + relaunch) + preload.js API
+- **G2 fixed:** 4 stale doc references corrected (karma-context.md, tools-and-apis.md, services.md, MEMORY.md)
+- **G5 confirmed:** inline learning panel already working (S152)
+- **G9 confirmed:** elasticity (health cache 30s, K2+P1 failover, concurrency guard, BUSY_MSG)
+- **Skills hardened:** resurrect Step 4c + wrap-session Step 1.5 — mandatory live endpoint audit
+- **P089 scope index + memory:** cc-scope-index, claude-mem #20146, bus, persistent feedback memory
+- **Wrap gate audit:** ALL 200 (health, status, trace, learnings, agora, P1)
+- **3 commits:** 5c2f2dd (trace+P089), 9ff2d12 (budget+autoupdate+trace fix+G2), wrap commit
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Fix stale doc references (G2): karma-context.md, tools-and-apis.md, services.md, MEMORY.md line 61 — all claim /v1/trace was "deployed S145". Correct to "deployed S153". Verify /v1/trace returns data after at least one chat request. Then update nexus.md truth table with forensic evidence. THE ONLY PLAN is `docs/superpowers/specs/nexus.md`.
+2. Implement Gap 7 (reboot survival): create schtasks entry on P1 for cc_server auto-start, verify K2 sovereign-harness.service is enabled. THE ONLY PLAN is `docs/superpowers/specs/nexus.md`.
