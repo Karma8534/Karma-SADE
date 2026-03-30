@@ -264,6 +264,8 @@ CC ── Claude Code on P1 — execution layer
 - **Dockerfile zero deps:** Container has ONLY proxy.js + public/. No npm packages. No old server.js. No old lib/.
 - **hub.env clean:** 4 plaintext secrets removed. ~25 dead vars removed. Only comments remain.
 - **compose.hub.yml clean:** Dead env vars, unused API key mounts, dead volumes all removed.
+- **P093 FIXED:** Karma.lnk desktop shortcut created → launch-karma.bat. Old dead shortcuts deleted.
+- **Dead code purged from git:** server.js (217KB) + 5 lib/*.js files removed from repo.
 
 ## Next Session Starts Here
 1. `/resurrect`
