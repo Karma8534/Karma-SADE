@@ -285,6 +285,12 @@ function postResponseSideEffects({ message, assistantText, sessionId, costUsd, m
     body: JSON.stringify({ label: `nexus-chat-${Date.now()}`, text: chatContent }),
     signal: AbortSignal.timeout(5000),
   }).catch(e => console.warn("[CORTEX] ingest failed:", e.message));
+  // Phase 3 brain wire: write every chat turn to claude-mem via cc_server
+  fetch(`${HARNESS_P1}/memory/save`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: chatContent, title: `Nexus chat${suffix}`, project: "Karma_SADE" }),
+    signal: AbortSignal.timeout(5000),
+  }).catch(e => console.warn("[CLAUDE-MEM] save failed:", e.message));
 }
 
 async function vaultPost(vaultPath, bearer, payload) {

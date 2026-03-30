@@ -133,7 +133,10 @@
   }
   .tool-name { color: #f59e0b; font-weight: 600; }
   .tool-input { color: #6b7280; }
-  .tool-output { color: #a78bfa; max-height: 120px; overflow-y: auto; }
+  .tool-output { color: #a78bfa; max-height: 120px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+  .msg.tool-evidence .msg-body { cursor: pointer; }
+  .msg.tool-evidence.collapsed .tool-output { display: none; }
+  .msg.tool-evidence.collapsed .tool-input::after { content: ' [click to expand]'; color: #374151; font-size: 9px; }
   .tool-toggle { cursor: pointer; color: #4b5563; font-size: 10px; }
   .tool-toggle:hover { color: #9ca3af; }
 
@@ -346,6 +349,7 @@
     <span>@codex &#8594; <span class="rh-target">CODEX</span></span>
   </div>
 
+  <div id="response-bar" style="display:none;padding:2px 16px;font-size:10px;color:#374151;font-family:'JetBrains Mono',monospace;background:#08080f;border-top:1px solid #12121f"></div>
   <div id="attach-preview"></div>
   <div id="input-area">
     <button id="attach-btn" title="Attach file">+</button>
@@ -375,6 +379,7 @@
   let pendingBus     = new Map();
   let lastActivityTs = null;
   let isStreaming    = false;
+  let _sessionCostUsd = 0;
   let currentStreamMsgEl = null;
   let currentStreamText  = '';
   let streamToolMap  = new Map();
@@ -820,6 +825,13 @@
       saveMessages();
       lastActivityTs = new Date().toISOString();
       updateHeartbeat();
+      // Phase 3: response-bar with model + cost
+      const bar = document.getElementById('response-bar');
+      const mdl = (obj.modelUsage ? Object.keys(obj.modelUsage)[0] : '') || 'cc-sovereign';
+      const cost = obj.total_cost_usd !== undefined ? '$' + obj.total_cost_usd.toFixed(4) : '$0';
+      _sessionCostUsd += (obj.total_cost_usd || 0);
+      bar.textContent = mdl + ' · ' + cost + ' this turn · $' + _sessionCostUsd.toFixed(4) + ' session · Max $0 actual';
+      bar.style.display = '';
       return;
     }
     if (type === 'assistant') {
@@ -837,7 +849,12 @@
           document.getElementById('processing').textContent = 'Karma is reasoning...';
         } else if (block.type === 'tool_use') {
           if (!streamToolMap.has(block.id)) {
-            streamToolMap.set(block.id, null);
+            if (isVisibleTool(block.name)) {
+              const el = appendToolEvidence(block.name, block.input, '(running...)');
+              streamToolMap.set(block.id, el);
+            } else {
+              streamToolMap.set(block.id, null);
+            }
             const proc = document.getElementById('processing');
             proc.textContent = 'Running ' + friendlyTool(block.name) + '...';
             proc.classList.add('visible');
@@ -864,6 +881,15 @@
       for (const block of content) {
         if (!block || typeof block !== 'object') continue; // H1: skip malformed
         if (block.type === 'tool_result') {
+          const toolEl = streamToolMap.get(block.tool_use_id);
+          if (toolEl) {
+            const outputEl = toolEl.querySelector('.tool-output');
+            const text = extractToolResultText(block.content);
+            const capped = text.length > 2000 ? text.slice(0, 2000) + '...' : text;
+            if (outputEl) outputEl.textContent = capped;
+            const statusEl = toolEl.querySelector('.infra-status');
+            if (statusEl) { const isErr = text.includes('error') || text.includes('failed'); statusEl.textContent = isErr ? '\u26a0' : '\u2713'; statusEl.className = 'infra-status' + (isErr ? '' : ' ok'); }
+          }
           document.getElementById('processing').textContent = 'Karma is thinking...';
         }
       }
@@ -1010,6 +1036,29 @@
     return map[name] || map[clean] || clean;
   }
 
+  // Phase 1: Selective tool visibility — user-facing tools get inline blocks
+  const VISIBLE_TOOLS = new Set([
+    'Bash', 'shell_run', 'python_exec',
+    'Read', 'k2_file_read', 'get_vault_file', 'file_read',
+    'Write', 'k2_file_write', 'file_write',
+    'Edit',
+    'Glob', 'k2_file_list', 'file_list',
+    'Grep', 'k2_file_search', 'file_search',
+    'graph_query', 'write_memory',
+    'browse_url', 'fetch_url',
+    'WebSearch', 'WebFetch',
+  ]);
+  function isVisibleTool(name) {
+    if (!name) return false;
+    if (VISIBLE_TOOLS.has(name)) return true;
+    return VISIBLE_TOOLS.has(name.replace(/^(?:mcp__[\w-]+__)+/, ''));
+  }
+  function extractToolResultText(content) {
+    if (typeof content === 'string') return content;
+    if (Array.isArray(content)) return content.map(b => (typeof b === 'string') ? b : (b && b.type === 'text' ? b.text || '' : '')).filter(Boolean).join('\n');
+    return String(content || '');
+  }
+
   function appendInfraToolLine(toolName, input, output) {
     const el = document.createElement('div');
     el.className = 'msg infra-tool';
@@ -1058,12 +1107,12 @@
 
   function appendToolEvidence(toolName, input, output) {
     const el = document.createElement('div');
-    el.className = 'msg tool-evidence';
+    el.className = 'msg tool-evidence collapsed';
     const inputObj = (typeof input === 'object' && input) ? input : {};
     const inputStr = typeof input === 'string' ? input : JSON.stringify(input || {});
     const outputStr = typeof output === 'string' ? output : JSON.stringify(output || {});
+    const friendly = friendlyTool(toolName);
     const shortInput = inputStr.length > 120 ? inputStr.slice(0, 120) + '...' : inputStr;
-    const shortOutput = outputStr.length > 200 ? outputStr.slice(0, 200) + '...' : outputStr;
 
     // H6: If this is an Edit tool, try to render inline diff
     let diffHtml = '';
@@ -1073,15 +1122,13 @@
     }
 
     el.innerHTML =
-      '<div class="msg-meta"><span class="msg-sender" style="color:#f59e0b">TOOL</span></div>' +
-      '<div class="msg-body">' +
-        '<span class="tool-name">' + escHtml(toolName) + '</span> ' +
+      '<div class="msg-meta"><span class="msg-sender" style="color:#f59e0b">TOOL</span> <span style="color:#4b5563;font-size:10px">' + escHtml(friendly) + '</span></div>' +
+      '<div class="msg-body" onclick="this.parentElement.classList.toggle(\'collapsed\')">' +
+        '<span class="tool-name">' + escHtml(friendly) + '</span> ' +
         '<span class="tool-input">' + escHtml(shortInput) + '</span>' +
         diffHtml +
-        '<div class="tool-output">' + escHtml(shortOutput) + '</div>' +
-        (outputStr.length > 200 ? '<span class="tool-toggle" onclick="this.previousElementSibling.textContent=this.parentElement.dataset.fullOutput;this.remove()">[show full]</span>' : '') +
+        '<div class="tool-output">' + escHtml(outputStr) + '</div>' +
       '</div>';
-    if (outputStr.length > 200) el.querySelector('.msg-body').dataset.fullOutput = outputStr;
     const feed = document.getElementById('chat-feed');
     feed.insertBefore(el, document.getElementById('processing'));
     return el;
@@ -1147,9 +1194,14 @@
   function saveMessages() {
     const msgs = [];
     document.querySelectorAll('#chat-feed .msg').forEach(el => {
-      const role = [...el.classList].find(c => c !== 'msg') || 'system';
       const body = el.querySelector('.msg-body');
       if (!body || body.classList.contains('pending')) return;
+      if (el.classList.contains('tool-evidence')) {
+        msgs.push({ role: 'tool-evidence', toolName: el.querySelector('.tool-name')?.textContent || '', toolInput: el.querySelector('.tool-input')?.textContent || '', toolOutput: el.querySelector('.tool-output')?.textContent || '' });
+        return;
+      }
+      if (el.classList.contains('infra-tool')) return; // don't save infra noise
+      const role = [...el.classList].find(c => c !== 'msg' && c !== 'collapsed') || 'system';
       msgs.push({ role, text: body.textContent, writeId: el.dataset.writeId || null, turnId: el.dataset.turnId || null });
     });
     try { localStorage.setItem(MSG_KEY, JSON.stringify(msgs.slice(-200))); } catch (_) {}
@@ -1159,7 +1211,10 @@
     try {
       const raw = localStorage.getItem(MSG_KEY);
       if (!raw) return;
-      JSON.parse(raw).forEach(m => appendMsg(m.role, m.text, m.writeId, m.turnId));
+      JSON.parse(raw).forEach(m => {
+        if (m.role === 'tool-evidence') appendToolEvidence(m.toolName, m.toolInput, m.toolOutput);
+        else appendMsg(m.role, m.text, m.writeId, m.turnId);
+      });
       if (document.querySelectorAll('#chat-feed .msg').length) hideEmpty();
     } catch (_) {}
   }

@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** /simplify complete — 8 bugs fixed (operator precedence, XSS, memory leak, stale DOM refs, in-flight guard)
-- **Session:** 153 (/simplify pass: 8 code bugs fixed; pitfalls P098-P104 to be logged)
+- **Active task:** Phases 1-4 shipped — selective tool visibility, brain wire, status bar, persistence, collapsible blocks
+- **Session:** 153 (Nexus Phases 1-4 deployed: VISIBLE_TOOLS whitelist, claude-mem brain wire, response-bar, tool block persistence)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)
