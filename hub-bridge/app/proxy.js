@@ -79,6 +79,11 @@ async function checkHealth(url, cache, checkedAt) {
 // Shared constants
 const BUSY_MSG = "Karma is busy with another request. Please wait a moment and try again.";
 
+// ── Trace log (G1/G7) — per-request cost/routing data ─────────────────────
+const _traceLog = [];
+const TRACE_MAX = 50;
+function traceAppend(entry) { _traceLog.push(entry); if (_traceLog.length > TRACE_MAX) _traceLog.shift(); }
+
 // K2-first node list (Gate 8) with proper cache timestamps
 function harnessNodes() {
   return [
@@ -182,6 +187,9 @@ async function routeToHarnessStream(message, sessionId, effort, model, clientRes
       // H8: Log actual cost and model for accounting
       if (streamCostUsd > 0) console.log(`[COST] stream request: $${streamCostUsd.toFixed(4)} via ${streamModel} (Max sub — no actual charge)`);
       postResponseSideEffects({ message, assistantText: fullText, sessionId, costUsd: streamCostUsd, model: streamModel, tagSuffix: "-STREAM" });
+
+      // Trace log (G1/G7)
+      traceAppend({ ts: new Date().toISOString(), path: "stream", harness: node.label, model: streamModel || "cc-sovereign", usd: streamCostUsd, message_len: message.length, ok: true });
 
       return; // Success
     } catch (e) { console.error(`[HARNESS-STREAM] ${node.label} error:`, e.message); }
@@ -395,6 +403,12 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    // ── /v1/trace — per-request cost/routing log (G1/G7) ──────────────
+    if (req.method === "GET" && req.url === "/v1/trace") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      return json(res, 200, { ok: true, count: _traceLog.length, entries: _traceLog });
+    }
+
     // ── /v1/chat — proxy to sovereign harness ─────────────────────────
     if (req.method === "POST" && req.url === "/v1/chat") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
@@ -415,6 +429,9 @@ const server = http.createServer(async (req, res) => {
       // Fire-and-forget: vault + chatlog + cortex (shared with stream path)
       const assistantText = result.response || result.assistant_text || "";
       postResponseSideEffects({ message, assistantText, sessionId, costUsd: 0, model: "cc-sovereign" });
+
+      // Trace log (G1/G7)
+      traceAppend({ ts: new Date().toISOString(), path: "batch", harness: result._harness || "unknown", model: "cc-sovereign", usd: 0, message_len: message.length, ok: result.ok !== false });
 
       // Normalize response for unified.html compatibility
       return json(res, result.ok === false ? 502 : 200, {

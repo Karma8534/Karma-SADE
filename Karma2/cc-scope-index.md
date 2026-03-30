@@ -139,6 +139,10 @@ P072 [k2-health-false-negative]:
 Rule: Always verify K2 health via SSH (`ssh karma@192.168.0.226 "curl -s localhost:7891/health"`) if direct curl from P1 fails. Do not mark K2 as down based on Tailscale curl alone.
 Why: curl from P1 bash to K2 Tailscale IP returned UNREACHABLE, but SSH showed service active and port listening. Tailscale routing from Git Bash on Windows is unreliable. Sovereign flagged this as a pitfall.
 
+P089 [truth-table-not-proof]:
+Rule: NEVER declare a gate, endpoint, or feature PASS based on a truth table, document, or previous session's claim. EVERY PASS requires a live test in THIS session. Truth tables are CLAIMS requiring verification, not PROOFS. When MEMORY.md item 2 lists specific open gates, those override any document saying "all PASS."
+Why: S153 — CC read nexus.md truth table (26/26 PASS), declared "plan complete" to Sovereign. /v1/trace returned 404. 6 documents falsely claimed it was live. VS5 gates 1,2,5,7,9 were explicitly listed in MEMORY.md and dismissed without testing. Honesty contract violation. Sovereign escalation.
+
 ## DECISION Archive (from claude-mem + sessions)
 
 D001 [entity-relationships]:

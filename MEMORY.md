@@ -246,6 +246,13 @@ CC ── Claude Code on P1 — execution layer
 - **Pitfalls P079-P088:** CLI break, false claims x6, no shortcut, skipped simplify items
 - **Commits:** df98b62 → f3d1604 (11 commits this session)
 
+## Session 153 — VS5 Gate Forensics + /v1/trace Shipped
+- **P089:** CC declared "plan complete" from truth table without live testing. /v1/trace was 404. Sovereign escalation.
+- **Forensic audit:** G5 (inline panel) PASS — already done S152. G9 (elasticity) PASS — health cache + failover verified.
+- **Built /v1/trace:** ~20 lines in proxy.js. In-memory ring buffer (50 entries). Logs path, harness node, model, cost, timestamp.
+- **Skills hardened:** resurrect Step 4c + wrap-session Step 1.5 — mandatory live endpoint audit, truth tables are claims not proofs.
+- **P089 added:** cc-scope-index, claude-mem #20146, bus, persistent memory.
+
 ## Next Session Starts Here
 1. `/resurrect`
-2. Open hub.arknexus.net, hard refresh, click LEARNED button — verify panel shows real learnings from claude-mem (not system metrics). Then address VS5 remaining gates: Gate 1 (/v1/trace missing), Gate 2 (stale file refs), Gate 5 (browser preview inline), Gate 7 (trace endpoint), Gate 9 (elasticity). THE ONLY PLAN is `docs/superpowers/specs/nexus.md` (v5.0-VERIFIED).
+2. Fix stale doc references (G2): karma-context.md, tools-and-apis.md, services.md, MEMORY.md line 61 — all claim /v1/trace was "deployed S145". Correct to "deployed S153". Verify /v1/trace returns data after at least one chat request. Then update nexus.md truth table with forensic evidence. THE ONLY PLAN is `docs/superpowers/specs/nexus.md`.
