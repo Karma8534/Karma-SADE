@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** P113-P115 fixed: nexus.md in CLAUDE.md + data-map.md, bus-check hook, all references updated
-- **Session:** 153 (Phases 1-4, AGORA, plans consolidated, bus-check hook, P094-P115 logged)
+- **Active task:** Memory research merged into nexus.md Phase 7B — MemOS, DRIFT, LycheeMemory, MSA, AllMem
+- **Session:** 153 (Phases 1-4, AGORA, plans consolidated, memory research merged, P094-P115 logged)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)

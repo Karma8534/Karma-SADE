@@ -210,26 +210,76 @@ Sprint 5: The Survival (Gap 7) — NOT DONE
 
 Sprint 6: The Full Clone — NOT SCOPED
   └── Skill browser, file tree, git panel, artifact viewer, subagent visibility
+
+Sprint 7: Memory Operating Discipline (Phase 7B) — NOT DONE
+  ├── 7-5: MemCube schema (spine upgrade)
+  ├── 7-6: Typed memory tiers
+  ├── 7-7: Query-conditioned compression
+  ├── 7-8: Gated recall
+  ├── 7-9: Interleaved multi-source recall
+  ├── 7-10: Local-window priority
+  └── 7-11: Memory migration/fusion
 ```
 
 ---
 
-## Phase 7: Intelligence Primitives (from Aider + Roo-Code research)
+## Phase 7: Intelligence Primitives (Aider + Roo-Code + Memory Research)
 
 **Status:** NOT STARTED. Foundation sprints must complete first.
+**Applies to:** K2 cortex path only. CC --resume manages its own context natively.
+
+### 7A: Context Assembly (from Aider + Roo-Code)
 
 | Task | What | Source | Layer |
 |------|------|--------|-------|
-| 7-1 | sqrt Dampening — dampen FAISS entity scores | Aider repomap.py | buildSystemText |
-| 7-2 | Token Budget Binary Search — trim context to exact token target | Aider repomap.py | buildSystemText |
-| 7-3 | Config-file Custom Modes — load modes.json at startup | Roo-Code modes.ts | routing |
-| 7-4 | Conditional Prompt Section Registry — named sections toggled per mode | Roo-Code system.ts | server.js |
-| 7-5 | Tool Scoping Per Mode — TOOLS_BY_MODE map | Roo-Code modes.ts | routing |
-| 7-6 | File Restriction Enforcement — skill fileRestrictions | Roo-Code FileRestrictionError | skills |
-| 7-7 | Repo Map V1 — K2 MCP tool, file manifest scorer | Aider repomap.py | K2 MCP |
-| 7-8 | Boomerang Tasks — MCP tool call as boomerang pattern | Roo-Code + MCP spec | deep mode |
+| 7-1 | Repo Map V1 — K2 MCP tool, file manifest scorer, 8K token cap | Aider repomap.py | K2 MCP |
+| 7-2 | Config-file Custom Modes — load modes.json at startup | Roo-Code modes.ts | cortex routing |
+| 7-3 | Tool Scoping Per Mode — TOOLS_BY_MODE map per mode | Roo-Code modes.ts | cortex routing |
+| 7-4 | File Restriction Enforcement — skill fileRestrictions | Roo-Code | skills |
 
-**NOTE:** Phase 7 tasks reference buildSystemText() and routing.js which were in the OLD server.js (deleted S153). These primitives need re-scoping for the sovereign harness architecture (proxy.js + CC --resume). CC already has its own context assembly; Phase 7 primitives would apply to the K2 cortex path, not the CC path.
+### 7B: Memory Operating Discipline (from MemOS + DRIFT + LycheeMemory + MSA + AllMem)
+
+**The pipeline:**
+```
+ledger entry
+  → MemCube (add provenance, confidence, decay policy)        [MemOS]
+  → retrieve candidates (FAISS + FalkorDB, interleaved)       [MSA principle]
+  → gate (select relevant subset for this query)              [LycheeMemory]
+  → compress (query-conditioned fact bundle, not raw text)     [DRIFT]
+  → load into cortex working-memory (local-window priority)   [AllMem principle]
+  → CC/cortex reasons over compressed facts
+  → promotion/migration back into ledger                      [Vesper pipeline]
+```
+
+| Task | What | Source | Layer |
+|------|------|--------|-------|
+| 7-5 | **MemCube schema** — upgrade ledger entries with lifecycle metadata: provenance, confidence, verification state, version, lineage, promotion state, decay policy. Each entry becomes a managed memory object, not a flat log line. | MemOS (arXiv:2507.03724) | Spine (vault ledger) |
+| 7-6 | **Typed memory tiers** — classify entries into: raw (unprocessed), distilled (extracted fact), stable (repeated/verified pattern), archived (cold, low-access). Tier determines recall priority and decay. | MemOS | Spine |
+| 7-7 | **Query-conditioned compression** — before feeding retrieved memories to cortex, compress candidates into a fact bundle: distilled facts + citations + confidence + recency + conflict flags. Replace raw text injection with compact evidence packs. | DRIFT (arXiv:2602.10021) | Recall → Cortex pipeline |
+| 7-8 | **Gated recall** — add a relevance gate between retrieval and cortex ingestion. Gate scores each candidate memory against the current query and drops irrelevant blocks. Only top-K pass to the cortex working memory. | LycheeMemory (arXiv:2602.08382) | Recall pipeline |
+| 7-9 | **Interleaved multi-source recall** — recall assembles from multiple categories simultaneously: stable preference + recent session checkpoint + current project invariant + latest contradictory update. Not single-source nearest-neighbor. | MSA (arXiv:2603.23516) principle | Recall pipeline |
+| 7-10 | **Local-window priority** — cortex prioritizes: (1) current turn/thread context, (2) recalled persistent memory, (3) deep archival only on demand. Prevents stale memory from dominating fresh context. | AllMem (arXiv:2602.13680) principle | Cortex ingestion |
+| 7-11 | **Memory migration/fusion** — define promotion rules: raw event → extracted fact, repeated fact → stable preference, repeated workflow → policy/invariant, clustered old sessions → checkpoint summary, conflicts → explicit conflict set. | MemOS | Vesper pipeline |
+
+### What NOT to assimilate (defer until hardware/model upgrade)
+
+- Sparse attention architectures (MSA)
+- Document-wise RoPE changes (MSA)
+- KV-cache compression engines (MemOS activation memory)
+- Test-time training memory layers (AllMem)
+- End-to-end RL memory optimization (LycheeMemory)
+- Embedding-space fact-token projection (DRIFT)
+- Parameter memory editing / continual fine-tuning (MemOS)
+
+### Research Sources
+
+| Paper | arXiv | Key Primitive | Tier |
+|-------|-------|---------------|------|
+| MemOS | 2507.03724 | MemCube lifecycle, typed tiers, migration/fusion | Tier 1 — direct |
+| DRIFT | 2602.10021 | Query-conditioned compression before reasoning | Tier 1 — direct |
+| LycheeMemory | 2602.08382 | Gated recall, working-memory scratchpad | Tier 1 — direct |
+| MSA | 2603.23516 | Interleaved multi-source recall sets | Tier 2 — principle |
+| AllMem | 2602.13680 | Local-window-first priority | Tier 2 — principle |
 
 ---
 
