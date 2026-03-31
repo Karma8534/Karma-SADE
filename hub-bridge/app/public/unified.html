@@ -1048,7 +1048,7 @@
 
   // Phase 1: Two-tier tool visibility — visible blocks + suppressed pills
   const VISIBLE_TOOLS = new Set([
-    'Bash', 'shell_run', 'python_exec',
+    'shell_run', 'python_exec',
     'k2_file_read', 'get_vault_file',
     'k2_file_write', 'k2_file_list', 'k2_file_search',
     'graph_query', 'write_memory',
@@ -1056,6 +1056,7 @@
     'WebSearch', 'WebFetch',
   ]);
   const PILL_LABELS = {
+    Bash: '\u2699\ufe0f running',
     Read: '\ud83d\udd0d reading', Glob: '\ud83d\udd0d searching files', Grep: '\ud83d\udd0d searching code',
     Edit: '\u270f\ufe0f editing', Write: '\ud83d\udcbe writing',
     ToolSearch: '\ud83d\udd0d searching tools', TodoWrite: '\ud83d\udccb updating tasks',
