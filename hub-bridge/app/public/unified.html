@@ -593,14 +593,23 @@
           html += '<div style="padding:6px 0;border-bottom:1px solid #0f0f1a">';
           html += '<div style="font-size:12px"><span>' + icon + '</span> <b style="color:#e2e8f0">Karma ' + verb + ':</b> <span style="color:#c4b5fd">' + escHtml(l.learning) + '</span></div>';
           if (l.detail) html += '<div style="font-size:11px;color:#6b7280;margin-top:2px;padding-left:20px">' + escHtml(l.detail) + '</div>';
-          if (l.date) html += '<div style="font-size:10px;color:#374151;padding-left:20px">' + escHtml(l.date) + '</div>';
+          if (l.date) {
+            let dateStr = l.date;
+            try { const d = new Date(l.date); if (!isNaN(d)) dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); } catch {}
+            html += '<div style="font-size:10px;color:#374151;padding-left:20px">' + escHtml(dateStr) + '</div>';
+          }
           html += '</div>';
         }
       } else {
         html += '<div style="color:#4b5563;font-style:italic;font-size:12px">No learnings yet. As Karma makes mistakes, decisions, and discoveries, they appear here.</div>';
       }
 
-      html += '<div style="margin-top:12px;text-align:center"><a href="/agora" target="_blank" style="color:#a78bfa;font-size:11px">Full evolution dashboard &rarr;</a></div>';
+      html += '<div style="margin-top:16px;border-top:1px solid #1f1f3a;padding-top:12px">';
+      html += '<div style="font-size:11px;color:#6b7280;margin-bottom:6px">Suggest something for Karma to learn:</div>';
+      html += '<div style="display:flex;gap:6px"><input id="suggest-learning-input" type="text" placeholder="e.g. Learn about WebSockets for real-time..." style="flex:1;background:#0d0d1a;border:1px solid #2d2d5e;border-radius:4px;padding:6px 8px;color:#e6edf3;font-size:12px;outline:none" />';
+      html += '<button onclick="submitLearningSuggestion()" style="background:#7c3aed;border:none;color:#fff;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:11px;white-space:nowrap">SUGGEST</button></div></div>';
+      html += '<div id="suggest-status" style="font-size:10px;margin-top:4px;color:#6b7280"></div>';
+      html += '<div style="margin-top:8px;text-align:center"><a href="/agora" target="_blank" style="color:#a78bfa;font-size:11px">Full evolution dashboard &rarr;</a></div>';
       _learningsCache = html;
       _learningsCacheTs = Date.now();
       el.innerHTML = html;
@@ -1306,6 +1315,22 @@
   function hideEmpty() { const e = document.getElementById('empty-state'); if (e) e.style.display = 'none'; }
   function scrollBottom() { const f = document.getElementById('chat-feed'); setTimeout(() => { f.scrollTop = f.scrollHeight; }, 10); }
   function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  async function submitLearningSuggestion() {
+    const input = document.getElementById('suggest-learning-input');
+    const status = document.getElementById('suggest-status');
+    const text = (input?.value || '').trim();
+    if (!text) { if (status) status.textContent = 'Type something first.'; return; }
+    if (status) status.textContent = 'Sending...';
+    try {
+      const r = await fetch('/v1/coordination/post', {
+        method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: 'colby', to: 'regent', type: 'directive', urgency: 'informational', content: 'LEARNING SUGGESTION: ' + text }),
+      });
+      if (r.ok) { if (status) status.textContent = 'Sent to Karma.'; input.value = ''; _learningsCache = null; }
+      else { if (status) status.textContent = 'Failed (' + r.status + ')'; }
+    } catch (e) { if (status) status.textContent = 'Error: ' + e.message; }
+  }
 
   // Lightweight markdown renderer — no external deps
   function renderMd(raw) {
