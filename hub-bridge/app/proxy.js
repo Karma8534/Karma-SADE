@@ -164,13 +164,29 @@ async function routeToHarnessStream(message, sessionId, effort, model, clientRes
   await executeStream(message, sessionId, effort, model, clientRes, files, budget);
 }
 
+const BUSY_RETRY_DELAYS = [5000, 10000, 20000]; // 5s, 10s, 20s — total 35s max wait
+
 async function executeStream(message, sessionId, effort, model, clientRes, files, budget) {
   _streamActive = true;
   const payload = JSON.stringify({ message, session_id: sessionId, effort, model, files, budget });
   const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` };
-  const nodes = harnessNodes();
 
   try {
+  // Retry loop: if all nodes return 429 (CC busy externally), wait and retry
+  for (let attempt = 0; attempt <= BUSY_RETRY_DELAYS.length; attempt++) {
+    if (attempt > 0) {
+      const delay = BUSY_RETRY_DELAYS[attempt - 1];
+      console.log(`[HARNESS-STREAM] All nodes busy, retry ${attempt}/${BUSY_RETRY_DELAYS.length} in ${delay/1000}s`);
+      // Tell client we're retrying (if SSE headers already sent)
+      if (clientRes.headersSent) {
+        try { clientRes.write(`data: ${JSON.stringify({ type: "queued", position: 0, message: `CC is busy. Retrying in ${delay/1000}s... (attempt ${attempt}/${BUSY_RETRY_DELAYS.length})` })}\n\n`); } catch {}
+      }
+      await new Promise(r => setTimeout(r, delay));
+    }
+
+    const nodes = harnessNodes();
+    let allBusy = true;
+
     for (const node of nodes) {
       const h = await checkHealth(node.url, node.getHealthy(), node.getCheckedAt());
       node.setHealthy(h); node.setChecked();
@@ -185,7 +201,8 @@ async function executeStream(message, sessionId, effort, model, clientRes, files
           console.warn(`[HARNESS-STREAM] ${node.label} busy (429)`);
           continue;
         }
-        if (!r.ok || !r.body) continue;
+        if (!r.ok || !r.body) { allBusy = false; continue; }
+        allBusy = false;
         console.log(`[HARNESS-STREAM] ${node.label} connected`);
 
         if (!clientRes.headersSent) {
@@ -235,10 +252,14 @@ async function executeStream(message, sessionId, effort, model, clientRes, files
         traceAppend({ ts: new Date().toISOString(), path: "stream", harness: node.label, model: streamModel || "cc-sovereign", usd: streamCostUsd, message_len: message.length, ok: true });
 
         return; // Success
-      } catch (e) { console.error(`[HARNESS-STREAM] ${node.label} error:`, e.message); }
+      } catch (e) { allBusy = false; console.error(`[HARNESS-STREAM] ${node.label} error:`, e.message); }
     }
 
-    // All nodes failed
+    // If not all-busy (some nodes failed for non-429 reasons), don't retry
+    if (!allBusy) break;
+  }
+
+    // All retries exhausted or non-busy failure
     if (!clientRes.headersSent) {
       clientRes.writeHead(502, { "Content-Type": "text/event-stream", "Access-Control-Allow-Origin": "*" });
     }
