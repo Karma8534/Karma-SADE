@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Nexus build — all blockers cleared. proxy.js stream error detection + K2 fallback deployed. Ready to build.
-- **Session:** 154 (P118-P122: K2 routing fix, stream error detection, bus spam killed, 12 plugins disabled, 142 old sessions archived)
+- **Active task:** Sprint 2 verification — Gap 3 (file input) and Gap 4 (effort selector) both already coded and deployed. Bug found: file-only sends blocked by empty text check — fixed. Deploying fix.
+- **Session:** 154 continued (Sprint 2 verification, file-only send fix)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)

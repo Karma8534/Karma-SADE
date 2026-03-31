@@ -662,12 +662,13 @@
   async function sendMessage() {
     const input = document.getElementById('msg-input');
     const raw   = input.value.trim();
-    if (!raw) return;
-    const { target, text } = parseTarget(raw);
+    if (!raw && !pendingFiles.length) return;
+    const { target, text } = parseTarget(raw || 'Describe the attached file.');
     input.value = '';
     input.style.height = 'auto';
     document.getElementById('send-btn').disabled = true;
-    appendMsg('user', raw);
+    const displayText = raw || pendingFiles.map(f => '\u{1F4CE} ' + f.name).join(', ');
+    appendMsg('user', displayText);
     hideEmpty();
     scrollBottom();
     if (target === 'karma') {
