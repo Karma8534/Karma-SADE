@@ -3,7 +3,7 @@ version: 2.1-cc
 owner: Colby
 status: active
 cycle_interval_seconds: 60
-last_updated_utc: 2026-03-14T12:00:00Z
+last_updated_utc: 2026-03-31T17:30:00Z
 cc_fixes_applied: P4-command-pinned, P5-action-pinned, pending-reply-definition, hub-bridge-canary-isolation
 
 ## 0) Architecture (Explicit)
