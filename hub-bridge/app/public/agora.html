@@ -114,17 +114,20 @@ async function _load() {
     if (!r.ok) { clearLoading('—'); ERR.textContent = 'Auth failed. Go to Nexus first to login.'; ERR.style.display = 'block'; return; }
     const d = await r.json();
 
-    // K2 Evolution State (live from cortex + governor)
+    // K2 Evolution State — from cortex /health + /spine (no CC needed)
     var k2El = document.getElementById('k2-state');
     var k2 = d.k2_evolution;
     if (k2 && !k2.error) {
       var cx = k2.cortex || {};
+      var sp = (k2.spine && k2.spine.spine) || {};
+      var pp = (k2.spine && k2.spine.pipeline) || {};
       k2El.innerHTML =
         '<div class="event promote" style="border-left-color:#10b981">' +
         '<div style="font-size:14px;font-weight:600;color:#10b981">Vesper Pipeline</div>' +
         '<div class="content">' +
         'Cortex: ' + (cx.knowledge_blocks || '?') + ' blocks, ' + (cx.conversation_msgs || '?') + ' msgs, model: ' + (cx.model || '?') + ', uptime: ' + Math.floor((cx.uptime_s||0)/3600) + 'h\n' +
-        'Governor: ' + esc(k2.governor_summary || 'querying...') +
+        'Spine: v' + (sp.version || '?') + ' · ' + (sp.total_promotions || 0) + ' promotions · ' + (sp.stable_patterns || 0) + ' stable · ' + (sp.candidate_patterns || 0) + ' candidates\n' +
+        'Pipeline: watchdog=' + (pp.pipeline_status?.watchdog || '?') + ' eval=' + (pp.pipeline_status?.eval || '?') + ' governor=' + (pp.pipeline_status?.governor || '?') + ' · self_improving=' + (sp.self_improving ?? '?') +
         '</div></div>';
     } else if (k2 && k2.error) {
       k2El.innerHTML = '<div class="event pitfall">K2 unreachable: ' + esc(k2.error) + '</div>';
@@ -132,9 +135,12 @@ async function _load() {
       k2El.innerHTML = '<div style="color:#6b7280;font-size:13px">K2 evolution state unavailable</div>';
     }
 
+    // Metrics: use REAL spine data, not bus keyword counting
     var evts = d.evolution_events || [];
-    var promos = evts.filter(function(e) { return classify(e.content) === 'promote'; }).length;
-    var edits = evts.filter(function(e) { return classify(e.content) === 'self-edit'; }).length;
+    var sp = (k2 && k2.spine && k2.spine.spine) || {};
+    var pp = (k2 && k2.spine && k2.spine.pipeline) || {};
+    var promos = sp.total_promotions || 0;
+    var edits = (k2 && k2.spine) ? (k2.spine.self_edits_recent || 0) : 0;
     var pitfalls = evts.filter(function(e) { return classify(e.content) === 'pitfall'; }).length;
     document.getElementById('status-bar').innerHTML =
       '<div class="status-item"><span class="label">Events:</span> <span class="val">' + evts.length + '</span></div>' +
@@ -143,20 +149,18 @@ async function _load() {
       '<div class="status-item"><span class="dot red"></span><span class="label">Pitfalls:</span> <span class="val">' + pitfalls + '</span></div>' +
       '<div class="status-item"><span class="label">Chats:</span> <span class="val">' + (d.recent_chats||[]).length + '</span></div>';
 
-    // ── Learning Metrics ──────────────────────────────────────────────
+    // ── Learning Metrics (from K2 spine, not bus keyword counting) ───
     var metricsEl = document.getElementById('metrics');
-    var promoEvents = evts.filter(function(e) { return classify(e.content) === 'promote'; });
-    var uniqueTypes = new Set(evts.map(function(e) { return classify(e.content); }));
-    uniqueTypes.delete(''); uniqueTypes.delete('heartbeat');
-    var hoursSpan = evts.length > 1 ? Math.max(1, (new Date(evts[0].created_at) - new Date(evts[evts.length-1].created_at)) / 3600000) : 1;
-    var promoRate = (promoEvents.length / hoursSpan).toFixed(1);
+    var spineVer = sp.version || '?';
+    var stablePatterns = sp.stable_patterns || 0;
+    var candidatePatterns = sp.candidate_patterns || 0;
     var qualityGrade = pitfalls === 0 ? 'A' : (promos > pitfalls * 2) ? 'B' : (promos > pitfalls) ? 'C' : 'D';
-    var spineVer = (k2 && k2.cortex) ? (k2.cortex.knowledge_blocks || '?') : '?';
+    var cortexBlocks = (k2 && k2.cortex) ? (k2.cortex.knowledge_blocks || '?') : '?';
     metricsEl.innerHTML =
-      '<div class="metric-card"><div class="metric-val">' + spineVer + '</div><div class="metric-label">Spine Blocks</div></div>' +
+      '<div class="metric-card"><div class="metric-val">v' + spineVer + '</div><div class="metric-label">Spine Version</div></div>' +
       '<div class="metric-card"><div class="metric-val">' + promos + '</div><div class="metric-label">Promotions</div></div>' +
-      '<div class="metric-card"><div class="metric-val">' + promoRate + '/h</div><div class="metric-label">Promo Rate</div></div>' +
-      '<div class="metric-card"><div class="metric-val">' + uniqueTypes.size + '</div><div class="metric-label">Pattern Types</div></div>' +
+      '<div class="metric-card"><div class="metric-val">' + stablePatterns + '</div><div class="metric-label">Stable Patterns</div></div>' +
+      '<div class="metric-card"><div class="metric-val">' + candidatePatterns + '</div><div class="metric-label">Candidates</div></div>' +
       '<div class="metric-card"><div class="metric-val">' + qualityGrade + '</div><div class="metric-label">Quality Grade</div></div>' +
       '<div class="metric-card"><div class="metric-val">' + evts.length + '</div><div class="metric-label">Total Events</div></div>';
 

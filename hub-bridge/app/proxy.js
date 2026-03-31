@@ -386,21 +386,16 @@ const server = http.createServer(async (req, res) => {
       entries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       entries = entries.slice(0, 30);
 
-      // Fetch LIVE evolution state from K2 (spine + governor audit)
+      // Fetch LIVE evolution state from K2 cortex + spine (no CC needed)
       let k2Evolution = null;
       try {
-        const spineResp = await fetch("http://100.75.109.92:7892/health", { signal: AbortSignal.timeout(3000) });
-        if (spineResp.ok) {
-          const spineData = await spineResp.json();
-          // Also fetch spine via K2 harness shell
-          const govResp = await fetch("http://100.75.109.92:7891/cc", {
-            method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` },
-            body: JSON.stringify({ message: "Read /mnt/c/dev/Karma/k2/cache/vesper_governor_audit.jsonl last 5 lines and /mnt/c/dev/Karma/k2/cache/vesper_identity_spine.json version+stable_patterns count. Return as JSON only." }),
-            signal: AbortSignal.timeout(60000),
-          });
-          if (govResp.ok) { const gd = await govResp.json(); k2Evolution = { cortex: spineData, governor_summary: gd.response }; }
-          else { k2Evolution = { cortex: spineData, governor_summary: "K2 harness query failed" }; }
-        }
+        const [healthResp, spineResp] = await Promise.all([
+          fetch("http://100.75.109.92:7892/health", { signal: AbortSignal.timeout(3000) }),
+          fetch("http://100.75.109.92:7892/spine", { signal: AbortSignal.timeout(3000) }),
+        ]);
+        const cortex = healthResp.ok ? await healthResp.json() : null;
+        const spine = spineResp.ok ? await spineResp.json() : null;
+        k2Evolution = { cortex, spine };
       } catch (e) { k2Evolution = { error: e.message }; }
 
       // Chat log
