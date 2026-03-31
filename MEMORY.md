@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** /simplify pass on queue+pills — P105-P108 fixed (drainQueue error, splice race, cleanToolName, pill toggle)
-- **Session:** 153 (All 4 phases shipped + 2 simplify passes. P094-P108 logged. Queue race + drain error + tool dedup fixed.)
+- **Active task:** Phase 1 browser tests in progress — T1 pass, T3 pass, T2/T4 blocked by CC contention. Tool rendering fixed.
+- **Session:** 153 (Phases 1-4 shipped, 2 simplify passes, P094-P109 logged, smartInputDisplay for tool blocks)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)

@@ -1142,14 +1142,29 @@
     return html;
   }
 
+  function smartInputDisplay(toolName, inputObj) {
+    const clean = cleanToolName(toolName);
+    if ((clean === 'Bash' || clean === 'shell_run') && inputObj.command) return inputObj.command;
+    if ((clean === 'python_exec') && inputObj.code) return inputObj.code;
+    if ((clean === 'Read' || clean === 'k2_file_read' || clean === 'file_read') && inputObj.file_path) return inputObj.file_path;
+    if ((clean === 'Write' || clean === 'k2_file_write' || clean === 'file_write') && inputObj.file_path) return 'write → ' + inputObj.file_path;
+    if ((clean === 'Edit') && inputObj.file_path) return 'edit → ' + inputObj.file_path;
+    if ((clean === 'Grep' || clean === 'k2_file_search') && inputObj.pattern) return inputObj.pattern + (inputObj.path ? ' in ' + inputObj.path : '');
+    if ((clean === 'Glob' || clean === 'k2_file_list') && inputObj.pattern) return inputObj.pattern;
+    if (clean === 'graph_query' && (inputObj.cypher || inputObj.query)) return inputObj.cypher || inputObj.query;
+    if (clean === 'WebSearch' && inputObj.query) return inputObj.query;
+    if (clean === 'WebFetch' && inputObj.url) return inputObj.url;
+    return typeof inputObj === 'string' ? inputObj : JSON.stringify(inputObj || {});
+  }
+
   function appendToolEvidence(toolName, input, output) {
     const el = document.createElement('div');
     el.className = 'msg tool-evidence collapsed';
     const inputObj = (typeof input === 'object' && input) ? input : {};
-    const inputStr = typeof input === 'string' ? input : JSON.stringify(input || {});
     const outputStr = typeof output === 'string' ? output : JSON.stringify(output || {});
     const friendly = friendlyTool(toolName);
-    const shortInput = inputStr.length > 120 ? inputStr.slice(0, 120) + '...' : inputStr;
+    const displayInput = smartInputDisplay(toolName, inputObj);
+    const shortInput = displayInput.length > 200 ? displayInput.slice(0, 200) + '...' : displayInput;
 
     // H6: If this is an Edit tool, try to render inline diff
     let diffHtml = '';
