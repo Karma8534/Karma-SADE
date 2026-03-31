@@ -104,8 +104,7 @@ If any isolation rule fails:
 - raise issue `canary_recursion_guard_failed`
 - disable canary for next 20 cycles (`canary_cooldown_cycles = 20`)
 
-**Implementation status:** hub-bridge `server.js` has canary isolation at `/v1/chat` entry.
-Verify: `curl -I -X POST https://hub.arknexus.net/v1/chat -H "X-Canary: true" ...` must return `X-Canary-Ack: true`.
+**Implementation status:** Canary isolation was in old server.js (deleted S153). proxy.js does not have canary support. Re-implement if needed in sovereign harness.
 
 ## 6) Artifact Bundle Schema (Required)
 Each action cycle entry must include:
