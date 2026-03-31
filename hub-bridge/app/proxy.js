@@ -84,11 +84,11 @@ const _traceLog = [];
 const TRACE_MAX = 50;
 function traceAppend(entry) { _traceLog.push(entry); if (_traceLog.length > TRACE_MAX) _traceLog.shift(); }
 
-// K2-first node list (Gate 8) with proper cache timestamps
+// P1-first routing: P1 = Claude Code CLI ($0 Max sub), K2 = cloud cascade fallback
 function harnessNodes() {
   return [
-    { label: "K2", url: HARNESS_K2, getHealthy: () => _k2Healthy, setHealthy: v => { _k2Healthy = v; }, getCheckedAt: () => _k2CheckedAt, setChecked: () => { _k2CheckedAt = Date.now(); } },
     { label: "P1", url: HARNESS_P1, getHealthy: () => _p1Healthy, setHealthy: v => { _p1Healthy = v; }, getCheckedAt: () => _p1CheckedAt, setChecked: () => { _p1CheckedAt = Date.now(); } },
+    { label: "K2", url: HARNESS_K2, getHealthy: () => _k2Healthy, setHealthy: v => { _k2Healthy = v; }, getCheckedAt: () => _k2CheckedAt, setChecked: () => { _k2CheckedAt = Date.now(); } },
   ];
 }
 
@@ -107,7 +107,7 @@ async function routeToHarness(message, sessionId) {
       const data = await r.json();
       // Detect K2 cascade false-positive: ok=true but response is an error message (P090)
       const respText = data.response || data.assistant_text || "";
-      const isFalsePositive = respText.includes("all inference tiers failed") || respText.includes("[K2 harness:") || respText.includes("CORTEX ERROR");
+      const isFalsePositive = respText.includes("all inference tiers failed") || respText.includes("[K2 harness:") || respText.includes("CORTEX ERROR") || respText.includes("Invalid API key") || respText.includes("Fix external API key");
       if (r.ok && data.ok !== false && !isFalsePositive) { console.log(`[HARNESS] ${node.label} responded OK`); data._harness = node.label; return data; }
       if (isFalsePositive) { errors.push(`${node.label} false-positive: ${respText.slice(0, 80)}`); continue; }
       errors.push(`${node.label} ${r.status}: ${data.error || "non-ok"}`);
@@ -205,25 +205,48 @@ async function executeStream(message, sessionId, effort, model, clientRes, files
         allBusy = false;
         console.log(`[HARNESS-STREAM] ${node.label} connected`);
 
-        if (!clientRes.headersSent) {
-          clientRes.writeHead(200, {
-            "Content-Type": "text/event-stream",
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "Access-Control-Allow-Origin": "*",
-          });
-        }
-
         const reader = r.body.getReader();
         const decoder = new TextDecoder();
         let fullText = "";
         let streamCostUsd = 0;
         let streamModel = "";
+        const ERROR_STRINGS = ["Invalid API key", "Fix external API key", "all inference tiers failed", "CORTEX ERROR", "claude exit"];
+        let bufferedChunks = [];
+        let headersSentForStream = false;
+        let isErrorResponse = false;
 
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
           const chunk = decoder.decode(value, { stream: true });
+
+          // Buffer first chunks to detect error before committing to client
+          if (!headersSentForStream) {
+            bufferedChunks.push(chunk);
+            const allText = bufferedChunks.join("");
+            if (ERROR_STRINGS.some(s => allText.includes(s))) {
+              isErrorResponse = true;
+              console.warn(`[HARNESS-STREAM] ${node.label} returned error in stream, trying next node`);
+              try { reader.cancel(); } catch {}
+              break;
+            }
+            // After accumulating enough or seeing a result/assistant event, commit
+            if (allText.length > 200 || allText.includes('"type":"assistant"') || allText.includes('"type":"result"')) {
+              if (!clientRes.headersSent) {
+                clientRes.writeHead(200, {
+                  "Content-Type": "text/event-stream",
+                  "Cache-Control": "no-cache",
+                  "Connection": "keep-alive",
+                  "Access-Control-Allow-Origin": "*",
+                });
+              }
+              headersSentForStream = true;
+              for (const bc of bufferedChunks) clientRes.write(bc);
+              bufferedChunks = [];
+            }
+            continue;
+          }
+
           clientRes.write(chunk);
           try {
             for (const ln of chunk.split("\n")) {
@@ -245,6 +268,17 @@ async function executeStream(message, sessionId, effort, model, clientRes, files
             }
           } catch {}
         }
+        if (isErrorResponse) continue; // Try next node
+        if (!headersSentForStream && bufferedChunks.length) {
+          // Flush any remaining buffered chunks
+          if (!clientRes.headersSent) {
+            clientRes.writeHead(200, {
+              "Content-Type": "text/event-stream", "Cache-Control": "no-cache",
+              "Connection": "keep-alive", "Access-Control-Allow-Origin": "*",
+            });
+          }
+          for (const bc of bufferedChunks) clientRes.write(bc);
+        }
         clientRes.end();
 
         if (streamCostUsd > 0) console.log(`[COST] stream request: $${streamCostUsd.toFixed(4)} via ${streamModel} (Max sub — no actual charge)`);
@@ -259,12 +293,25 @@ async function executeStream(message, sessionId, effort, model, clientRes, files
     if (!allBusy) break;
   }
 
-    // All retries exhausted or non-busy failure
+    // All stream attempts failed — try non-stream fallback (K2 /cc doesn't support streaming)
     if (!clientRes.headersSent) {
-      clientRes.writeHead(502, { "Content-Type": "text/event-stream", "Access-Control-Allow-Origin": "*" });
+      console.log("[HARNESS-STREAM] All stream nodes failed, trying non-stream fallback");
+      const fallbackData = await routeToHarness(message, sessionId);
+      if (fallbackData && fallbackData.ok !== false) {
+        clientRes.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive", "Access-Control-Allow-Origin": "*" });
+        const text = fallbackData.response || fallbackData.assistant_text || "(no response)";
+        clientRes.write(`data: ${JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text }], model: fallbackData.provider || "k2-cascade" } })}\n\n`);
+        clientRes.write(`data: ${JSON.stringify({ type: "result", total_cost_usd: 0 })}\n\n`);
+        clientRes.end();
+        postResponseSideEffects({ message, assistantText: text, sessionId, costUsd: 0, model: fallbackData.provider || "k2-cascade", tagSuffix: "-FALLBACK" });
+      } else {
+        clientRes.writeHead(502, { "Content-Type": "text/event-stream", "Access-Control-Allow-Origin": "*" });
+        clientRes.write(`data: ${JSON.stringify({ type: "error", error: fallbackData?.error || BUSY_MSG })}\n\n`);
+        clientRes.end();
+      }
+    } else {
+      clientRes.end();
     }
-    clientRes.write(`data: ${JSON.stringify({ type: "error", error: BUSY_MSG })}\n\n`);
-    clientRes.end();
   } finally {
     _streamActive = false;
     drainQueue().catch(e => console.error("[QUEUE] drain error:", e.message));

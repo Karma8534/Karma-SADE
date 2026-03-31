@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Gap 3 file input — --file flag wired in cc_server_p1.py. UI already existed. Needs browser verification.
-- **Session:** 153 (Phases 1-4, AGORA, plans consolidated, memory research, full cleanup, Gap 3 --file flag, P094-P117)
+- **Active task:** Nexus build — all blockers cleared. proxy.js stream error detection + K2 fallback deployed. Ready to build.
+- **Session:** 154 (P118-P122: K2 routing fix, stream error detection, bus spam killed, 12 plugins disabled, 142 old sessions archived)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)
