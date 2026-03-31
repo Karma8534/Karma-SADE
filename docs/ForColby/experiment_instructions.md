@@ -3,7 +3,7 @@
 # Sovereign: Human
 # Reader: Vesper
 # Output Budget: <=20 lines unless task requires more for correctness
-# Architecture: Spine (truth) + Orchestrator (enforcement) + Cortex (32K working memory)
+# Architecture: Spine (truth) + Proxy (door) + CC --resume (brain) + Cortex (32K working memory)
 MISSION
 Minimize L_karma to <0.600 while preserving correctness, tool effectiveness, and continuity.
 LOSS FUNCTION
@@ -39,15 +39,15 @@ EVALUATION HARNESS
   c) continuity drift
   d) unnecessary verbosity
   e) failure to choose a single best path
-- context_recall evaluates spine + orchestrator + routing, not prompt styling alone
-  - Did the orchestrator correctly hydrate the cortex/cloud with relevant spine context?
-  - Did routing choose the correct tier (cortex vs cloud) for the message complexity?
+- context_recall evaluates spine + CC context + brain wire, not prompt styling alone
+  - Did CC --resume have access to relevant spine context (MEMORY.md, claude-mem)?
   - Did the response reference specific spine facts (graph, ledger, decisions) when relevant?
+  - Did the brain wire successfully write the turn to claude-mem?
 FAILURE RISKS
-- Identity drift from bad routing: orchestrator sends identity-sensitive question to cortex without loading spine persona → response contradicts established personality
-- Overloading cortex as canonical memory: treating 32K working memory as sole context source → knowledge gaps beyond active window, missed graph/FAISS results
-- Regression in orchestrator continuity: buildSystemText() change drops spine context (MEMORY.md, persona, graph) → Karma loses awareness of recent decisions/state
+- Identity drift: CC --resume session loses Karma persona after compaction → response contradicts established personality
 - Cortex-spine desync: cortex holds stale ingested context while spine has newer data → contradictory responses
+- Brain wire failure: chat turns not written to claude-mem → unified brain loses hub conversations
+- Tool visibility regression: VISIBLE_TOOLS whitelist stale → user-facing tools suppressed or internal tools exposed
 ROLLBACK POLICY
 Revert immediately to last stable prompt if:
 - L_karma increases by >0.02

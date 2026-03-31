@@ -422,18 +422,6 @@ You may NOT say "done" until:
 
 ---
 
-## Active Reference Files (docs/ForColby/)
-
-| File | Purpose |
-|------|---------|
-| `00-karma-local-prompt.md` | Karma's persona prompt for cortex/local mode |
-| `01-karma-standard-prompt.md` | Karma's persona prompt for standard mode (CC --resume) |
-| `experiment_instructions.md` | L_karma optimization spec for Vesper evaluation harness |
-| `bus_to_cortex.py` | Feeds coordination bus messages to K2 cortex (cron, every 2min) |
-| `sync_k2_to_p1.py` | Syncs K2 cortex knowledge blocks to P1 fallback (cron, every 30min) |
-
----
-
 ## Archived Plans
 
 These files were merged into this document and archived to `docs/ForColby/archive/`:

@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** ARCHON ALERT fixed — SADE marker added to snapshot template. AGORA shows real spine metrics.
-- **Session:** 153 (Phases 1-4 shipped, AGORA wired to K2 /spine, ARCHON drift fixed, P094-P111 logged)
+- **Active task:** Plan consolidation complete. docs/ForColby/ cleaned. nexus.md v3.0.0 is single source of truth.
+- **Session:** 153 (Phases 1-4 shipped, AGORA fixed, plans consolidated, ForColby cleaned, P094-P112 logged)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)
