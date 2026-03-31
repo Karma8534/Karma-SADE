@@ -419,7 +419,7 @@
     document.getElementById('app').style.display = 'flex';
     document.getElementById('send-btn').addEventListener('click', () => { if (isStreaming) cancelGeneration(); else sendMessage(); });
     document.getElementById('msg-input').addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!isStreaming) sendMessage(); }
       if (e.key === 'Escape' && isStreaming) { e.preventDefault(); cancelGeneration(); }
     });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && isStreaming) cancelGeneration(); });
@@ -908,14 +908,19 @@
   function setStreamingState(active) {
     isStreaming = active;
     const btn = document.getElementById('send-btn');
+    const input = document.getElementById('msg-input');
     if (active) {
       btn.textContent = 'STOP';
       btn.classList.add('stop-mode');
       btn.disabled = false;
+      input.disabled = true;
+      input.placeholder = 'Karma is working...';
     } else {
       btn.textContent = 'SEND';
       btn.classList.remove('stop-mode');
       btn.disabled = false;
+      input.disabled = false;
+      input.placeholder = 'Message Karma... (@cc @codex @regent \u2192 routes to AGORA)';
     }
   }
 
