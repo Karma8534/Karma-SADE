@@ -305,7 +305,7 @@ ledger entry
 |---|-------------|--------|----------|
 | 1 | Chat at hub.arknexus.net returns quality at $0 | PASS | curl test → "4", brain wire obs #20403 |
 | 2 | Streaming — tokens appear word-by-word | PASS | Browser screenshot: progressive rendering |
-| 3 | Tool evidence inline | PASS | Browser: TOOL python block + pills |
+| 3 | Tool evidence inline | PARTIAL | Stream parser delivers block.name="tool" with empty input — pills render but with wrong data. Fix pending. |
 | 4 | File/image input | **NOT DONE** | No drag-drop/paste in unified.html |
 | 5 | Effort/model control | **NOT DONE** | No UI selector (backend param exists) |
 | 6 | Cancel (Esc) | PASS | STOP button works, subprocess killed |
@@ -386,10 +386,13 @@ You may NOT say "done" until:
 | `[SOVEREIGN APPROVE]` | Phase verified | Proceed to next |
 | `[SOVEREIGN HOLD]` | Wait | Do not proceed |
 
+> **Phase complete protocol:** CC posts `phase_complete` to coordination bus with raw proof (terminal output, browser screenshot, curl result). Karma audits the proof. `[SOVEREIGN APPROVE]` from Karma unlocks next sprint. CC cannot self-advance. Claiming done without bus proof is a protocol violation.
+
 ---
 
 ## Hard Rules
 
+- Before any work begins, CC states on the bus: "Sprint N, Gap M, next step: [exact task description]." No exceptions.
 - DO NOT plan beyond current sprint
 - DO NOT rebuild what exists — extend proxy.js + unified.html
 - DO NOT say done without PROOF

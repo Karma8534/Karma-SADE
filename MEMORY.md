@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** All files verified and updated. evolve.md timestamp corrected. Root clean, ForColby clean.
-- **Session:** 153 (Phases 1-4, AGORA, plans consolidated, memory research, full cleanup, P094-P116)
+- **Active task:** nexus.md v3.0.1 — 3 Karma-required fixes applied. Queue proof pending. Sprint 2 blocked until queue verified.
+- **Session:** 153 (Phases 1-4, AGORA, plans consolidated, memory research, full cleanup, P094-P117)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)
