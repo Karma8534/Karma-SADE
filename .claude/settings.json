@@ -44,6 +44,15 @@
             "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/credential-guard.py\""
           }
         ]
+      },
+      {
+        "matcher": "Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/map-check-reminder.py\""
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -83,6 +92,11 @@
           {
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/governance-audit.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/cc-chat-logger.py\"",
+            "async": true
           }
         ]
       }
