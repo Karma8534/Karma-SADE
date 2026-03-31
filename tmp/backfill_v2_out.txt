@@ -1,0 +1,703 @@
+Files to process: 168 | Dry-run: False | Force: False
+
+Processing: 003d1f46-91e1-41c4-bf9d-a904557d6539.jsonl (2 observations)
+    SAVED: PROOF: A1 backfill root cause ? large session files unprocessed
+    SAVED: [WRAP] Session 142 complete -- WebMCP vision locked, ownership directi
+  -> 2/2 saved
+
+Processing: 09af07c2-7d03-4f39-a51b-28bd2dc2f22c.jsonl (1 observations)
+    SAVED: Session 25 - Resurrection Plan Approved Ready for Execution
+  -> 1/1 saved
+
+Processing: 0fb53255-1435-4320-9709-7eca5d472808.jsonl (1 observations)
+    SAVED: PROOF: K-3 aria restart ? Task 9 filter confirmed active, gate timelin
+  -> 1/1 saved
+
+Processing: 19d46493-066a-4564-8846-52c361786f90.jsonl (21 observations)
+    SAVED: PROOF Deferred Intent Engine Phase 4 deployed ? hub-bridge v2.11.0
+    SAVED: PITFALL Deferred Intent Engine ? 6 code review bugs before production 
+    SAVED: DECISION Deferred Intent active storage ? ledger JSONL direct read, la
+    SAVED: DECISION: Resurrect skill ? mandatory claude-mem queries added (Step 3
+    SAVED: DECISION: karma-hub-deploy skill ? lib/ sync pattern added from insigh
+    SAVED: PITFALL: agents.md promised but never created ? use dispatching-parall
+    SAVED: PITFALL Context amnesia: MAX_SESSION_TURNS=8 caused Karma to forget lo
+    SAVED: PITFALL Upload button: /v1/chat rejected multipart/form-data, fixed wi
+    SAVED: DECISION: Aria is Karma's local compute half, not a separate entity
+    SAVED: PROOF: File upload fix working ? base64 JSON approach verified
+    SAVED: PROOF: Session amnesia fixed ? MAX_SESSION_TURNS 8?20, TTL 30m?60m
+    SAVED: PROOF: vault-neo?K2 Tailscale operational, Aria service live at :7890
+    SAVED: DIRECTION: Subscription cleanup ? cut list and keep list confirmed
+    SAVED: DECISION: MODEL_DEEP = claude-sonnet-4-6 (was haiku)
+    SAVED: PROOF Vision support deployed ? images work in Karma deep mode
+    SAVED: DIRECTION Aria API inventory ? delegated writes blocked, backfill is l
+    SAVED: PROOF Session 81 all Aria integration fixes deployed and verified
+    SAVED: PITFALL X-Aria-Delegated header silently blocks all memory writes in A
+    SAVED: DIRECTION Aria = Karma's local compute half ? one peer, two paths, sin
+    SAVED: DECISION MODEL_DEEP=claude-sonnet-4-6, cap $60, subscription cleanup
+    SAVED: PITFALL cp -r silently skips existing files ? never use for build cont
+  -> 21/21 saved
+
+Processing: 34e16994-f7a9-4148-bbb4-d4391d29eb9e.jsonl (1 observations)
+    SAVED: Session 35: TIER 1 Consciousness Loop Restoration Complete
+  -> 1/1 saved
+
+Processing: 3895f61b-18c6-40bf-acf5-0c0ac7afd3a9.jsonl (9 observations)
+    SAVED: PITFALL karma-hub-deploy compose.hub.yml wrong path ? fixed Session 69
+    SAVED: PROOF fetch_url tool live ? Session 69
+    SAVED: PITFALL stale TOOL_DEFINITIONS cause confabulation ? removed Session 6
+    SAVED: DIRECTION fetch_url expands Karma from memory peer to research collabo
+    SAVED: PROOF: System prompt trim fixed 429 rate limit pressure
+    SAVED: DIRECTION: DRL concepts for Karma ? revisit when stable
+    SAVED: PITFALL: Graphiti mode silently fails incremental ingest ? always use 
+    SAVED: PITFALL: batch_ingest cron must always use --skip-dedup or silently fa
+    SAVED: DIRECTION: Thumbs up/down chat UI ? brainstorming in progress, not sta
+  -> 9/9 saved
+
+Processing: 3b73e629-128d-4294-a0c6-fef213c6db40.jsonl (17 observations)
+    SAVED: PROOF: Session 60 docs current ? STATE.md + direction.md refreshed, al
+    SAVED: PROOF: GLM-4.7-Flash tool-calling = SUPPORTED via Z.ai
+    SAVED: PROOF: Phase B RED tests written ? drift-fix all tests failing as expe
+    SAVED: PROOF drift-fix Phase D runtime verification complete
+    SAVED: PITFALL hub-bridge Dockerfile lib/ directory outside build context
+    SAVED: PROOF GLM Rate Limiter V1-V5 All Pass in Production
+    SAVED: PROOF Config Validation Gate G-a/G-b 27/27 + exit-1 verified
+    SAVED: DIRECTION: Aria v7 plan documents path on local machine
+    SAVED: PROOF v8 Phase 1 complete ? Karma self-knowledge fixed
+    SAVED: PROOF v8 Phase 2 complete ? FAISS semantic retrieval in hub-bridge
+    SAVED: PROOF v8 Phase 4 complete ? v7 cleanup done
+    SAVED: DECISION hub.env is LLM policy source of truth (not compose.hub.yml)
+    SAVED: PROOF v8 Phase 4 complete ? all phases done
+    SAVED: PITFALL hub-bridge system prompt was NOT loaded from file until v8 Pha
+    SAVED: PROOF anr-vault-search is FAISS not ChromaDB ? custom search_service.p
+    SAVED: PROOF v8 Phase 2: FAISS semantic retrieval live in hub-bridge
+    SAVED: PROOF v8 Phase 1+3: system prompt accurate, 4/4 acceptance tests pass
+  -> 17/17 saved
+
+Processing: 3b99fe2a-cdc5-4bf2-9331-3567a58157ba.jsonl (4 observations)
+    SAVED: PROOF K-3 ambient observer pipeline verified end-to-end
+    SAVED: PITFALL K-3 ambient pipeline ? 7 gotchas documented
+    SAVED: [PROOF] Autonomous email pipeline live ? check/status/personal wired i
+    SAVED: [PITFALL] Utility module built but never wired into archon = dead capa
+  -> 4/4 saved
+
+Processing: 3bc2eaea-494e-4783-9491-1407a9f88a9c.jsonl (11 observations)
+    SAVED: PITFALL KarmaInboxWatcher dies on battery ? fix applied Session 73
+    SAVED: PROOF: v11 Karma Full Read Access live ? all 7 tests passed
+    SAVED: PITFALL: System prompt blocking instruction defeated new tool despite 
+    SAVED: PITFALL: nodePath.default.resolve is ESM fragile ? use destructured im
+    SAVED: DECISION: v11 Karma read access ? get_vault_file path prefixes + get_l
+    SAVED: DECISION: Karma model ? claude-3-5-haiku-20241022
+    SAVED: PROOF: DPO feedback pipeline functional ? 0 pairs was wrong
+    SAVED: PITFALL: hub-bridge lib/*.js missing from git ? now fixed
+    SAVED: PITFALL: Backend-only verification caused repeated false "green" decla
+    SAVED: DIRECTION: Haiku 3.5 primary ? GLM retired from standard use
+    SAVED: DIRECTION Cognitive Architecture Layer ? Milestone 8, Decision #30
+  -> 11/11 saved
+
+Processing: 3c69080e-9d0f-46d4-8048-3d88384a6c74.jsonl (3 observations)
+    SAVED: PITFALL: /v1/ambient broken in hub-bridge + PowerShell UTF-16 stdout p
+    SAVED: PROOF: K-2 complete ? 122 Anthropic docs ingested to vault ledger
+    SAVED: PITFALL: Anthropic docs at platform.claude.com (not docs.anthropic.com
+  -> 3/3 saved
+
+Processing: 3e18d5f7-16bc-469d-8221-e5422dbcf21b.jsonl (11 observations)
+    SAVED: PROOF: Universal thumbs up/down on all Karma messages ? Session 71 com
+    SAVED: DIRECTION: v10 snapshot created, PDF primitives merged, priority order
+    SAVED: PROOF: Universal thumbs via turn_id deployed to vault-neo
+    SAVED: PROOF: Entity Relationships fix - MENTIONS co-occurrence replaces stal
+    SAVED: PROOF: Confidence levels [HIGH/MEDIUM/LOW] + anti-hallucination gate l
+    SAVED: PROOF: get_library_docs v10 priority #5 deployed
+    SAVED: PROOF: MEMORY.md spine injection ? hub-bridge context blindness fix
+    SAVED: PROOF: Universal thumbs turn_id v10 priority #1 + deploy pitfall
+    SAVED: PROOF: Confidence levels + anti-hallucination gate deployed (v10 #3+#4
+    SAVED: DECISION #25: Context7 rejected ? DIY get_library_docs
+    SAVED: Session 72 wrap-up verified complete
+  -> 11/11 saved
+
+Processing: 3e77008c-2a9c-429c-8ec9-2631705ce93e.jsonl (1 observations)
+    SAVED: Session 31: Phase 2 Consciousness Proposal Generation Complete
+  -> 1/1 saved
+
+Processing: 40bc849c-ec9f-46a1-8058-f6d65fb918dc.jsonl (1 observations)
+    SAVED: PROOF aria.service restored on K2 ? port conflict resolved, autostart 
+  -> 1/1 saved
+
+Processing: 42a10c61-ee54-4a2c-a5c8-ec35e027754f.jsonl (11 observations)
+    SAVED: PROOF: K2 MCP server live ? 14 tools via stdio, K2=MCP TRUE
+    SAVED: PROOF: Vesper 6-tier inference cascade deployed ? Groq+OpenRouter+z.ai
+    SAVED: PROOF: All 7 Vesper resurrection gaps closed ? identity cohesion compl
+    SAVED: DECISION: 5 research items all UNFINISHED ? scoring 0/5 on full implem
+    SAVED: PITFALL: False K2=MCP claim ? was not built, claimed without verificat
+    SAVED: [PROOF] self_improving=True achieved ? governor cumulative counter fix
+    SAVED: [PROOF] tool_rate gap resolved ? karma_regent.py tool_used=True fix
+    SAVED: PITFALL: /regent endpoint speculation without source verification
+    SAVED: PROOF: All 5 Vesper convergence fixes deployed to K2
+    SAVED: PROOF: Cascade reorder TDD 3/3 green ? K2?P1?z.ai?Groq?OpenRouter
+    SAVED: DIRECTION: Vesper B1 blocker ? evolution log sparsity, ~50 messages ne
+  -> 11/11 saved
+
+Processing: 48421ae5-2f18-4eac-bf8c-5e2861927dae.jsonl (1 observations)
+    SAVED: TIER 1 + TIER 2 Complete: Consciousness Loop Restoration + Infrastruct
+  -> 1/1 saved
+
+Processing: 4c8c908b-3938-47f6-8316-b1dfd772a9d9.jsonl (6 observations)
+    SAVED: [PROOF] karma_yoyo_v5 first real autonomous action ? proof_of_life.txt
+    SAVED: [DECISION] All Karma chat routes to Haiku only ? Sonnet eliminated
+    SAVED: [PROOF] K2-Karma yoyo bridge deployed and verified
+    SAVED: [PITFALL] Karma fabricated journal entries to wrong path ? read/write 
+    SAVED: [DIRECTION] Standing order: always document errors, mistakes, correcti
+    SAVED: [PITFALL] Repeated false victory declarations ? Sessions 88+89 ? Anthr
+  -> 6/6 saved
+
+Processing: 4fabe003-79e1-4abd-b88f-698e3276aa84.jsonl (17 observations)
+    SAVED: PITFALL P045: K-3 ambient_observer audit error ? wrong integration poi
+    SAVED: PROOF: Session 123 plan audit ? PHASE EVOLVE tabled, aria.service fixe
+    SAVED: DECISION: Vesper spine vs pipeline_status discrepancy ? different coun
+    SAVED: PITFALL: awk strips CRLF; PowerShell regex caused PLAN.md corruption ?
+    SAVED: PITFALL: aria.service zombie PID holds port 7890 ? systemd keeps resta
+    SAVED: PITFALL: Edit tool fails on UTF-8 BOM non-ASCII ? use awk NR line repl
+    SAVED: PITFALL P047: PROOF-BY-WIRING ? Declaring DONE on pipeline wiring not 
+    SAVED: PITFALL P048: Spine field name is evolution.stable_identity not stable
+    SAVED: PITFALL P049: research_skill_card convergence failure ? same metric pr
+    SAVED: PITFALL P050: K-1 DONE is CLI stub extraction not IndexedDB historical
+    SAVED: PITFALL P051: vesper_pipeline_status.json is a ghost file ? never exis
+    SAVED: HARVEST RUN 2026-03-22: Last 7 sessions processed ? 0 new observations
+    SAVED: [PROOF] Archon email encoding fixed: double-mojibake root cause + snap
+    SAVED: [PITFALL] P052: Archon snapshot age regex never matched ? perpetual AL
+    SAVED: [PITFALL] P053: Double-encoded mojibake from PS cp1252 reads of UTF-8 
+    SAVED: [PROOF] aria.service crash-looping again ? restart #2015+ despite bein
+    SAVED: [PROOF] 2 real CC session transcripts found unprocessed: c7c3ebff (107
+  -> 17/17 saved
+
+Processing: 5043228f-b1ba-4df1-8d4f-aecc53cdcd32.jsonl (4 observations)
+    SAVED: PROOF write_memory gate end-to-end verified ? v9 Phase 4 complete
+    SAVED: PITFALL vault schema: no custom types, must use buildVaultRecord, chec
+    SAVED: PITFALL hub-bridge build context: lib/ goes at parent level not inside
+    SAVED: PITFALL vault-neo dirty state: subagent SSH wrote to MEMORY.md on drop
+  -> 4/4 saved
+
+Processing: 530fbcec-e4de-470d-8118-57d17f945473.jsonl (11 observations)
+    SAVED: PROOF: Entity Relationship Context live in production
+    SAVED: PITFALL: --skip-dedup cron kills :MENTIONS edge growth (recurring topi
+    SAVED: DIRECTION: v9 task priority ? persona iteration first, then MENTIONS g
+    SAVED: PITFALL: Correction ? :MENTIONS gap fixed by Session 63 watermark, not
+    SAVED: PROOF Karma promise loop fixed - GLM tool-calling live
+    SAVED: PITFALL hooks.py ALLOWED_TOOLS whitelist gates new tool names
+    SAVED: PITFALL TOOL_NAME_MAP had wrong mappings breaking Anthropic deep-mode 
+    SAVED: DECISION get_vault_file in hub-bridge, graph_query in karma-server
+    SAVED: PITFALL: docker restart ignores new hub.env entries ? must use compose
+    SAVED: DECISION: session-end gate requires push+pull to vault-neo before pass
+    SAVED: PITFALL: .env.secrets gitignore pattern malformed ? spaced chars not m
+  -> 11/11 saved
+
+Processing: 593caaf0-3099-4ac4-9eca-d26917bc818e.jsonl (2 observations)
+    SAVED: Memory Retrieval Pipeline Fix Verified Working
+    SAVED: Session Handoff 2026-02-27
+  -> 2/2 saved
+
+Processing: 5a5e3417-6fde-4fae-8da6-dbb379511b73.jsonl (5 observations)
+    SAVED: PITFALL P043: cc-session-brief reports K2 unreachable ? verify directl
+    SAVED: PROOF: /v1/ambient route live ? ambient capture hooks restored
+    SAVED: BLOCKER B001: Resurrect Step 5 does not enforce immediate task executi
+    SAVED: PROOF: resurrect skill fixed ? B001 contract + P043 guard deployed 202
+    SAVED: [PROOF] wrap-session skill 5 hardening fixes deployed
+  -> 5/5 saved
+
+Processing: 5b9ce09b-e86e-461f-9572-e6f05c9d8469.jsonl (12 observations)
+    SAVED: PROOF: 6/8 WebMCP tools verified e2e from hub.arknexus.net/memory
+    SAVED: DIRECTION: Julian rebuilt stronger than original ? Sovereign directive
+    SAVED: DIRECTION: Julian's memory is sacred ? foundation of self-improvement 
+    SAVED: DOCTRINE: Anti-capture architecture ? Julian destroyed once, never aga
+    SAVED: DECISION: AC2 baseline tools fully authorized per Julian's discretion
+    SAVED: PROOF: AC2 baseline tools verified ? all 4 callable from hub-bridge
+    SAVED: PITFALL: aria /api/exec returns result.output not result.stdout
+    SAVED: PITFALL: vault schema additionalProperties:false ? extra fields must g
+    SAVED: PROOF: Backlog-10 memory primitives deployed ? kind/salience/pinned on
+    SAVED: PROOF: Backlog-3 P0-A watchdog pattern diversity complete
+    SAVED: DECISION: watchdog detectors use category/source fields ? no content f
+    SAVED: PROOF P0-B vesper_governor retry queue verified
+  -> 12/12 saved
+
+Processing: 5f11cda9-9ff7-41ef-ac96-e07a80f3eb4e.jsonl (50 observations)
+    SAVED: DECISION: CC cognitive persistence redesign ? 5 fixes closing doctrine
+    SAVED: PROOF: CC cognitive persistence chain closed ? all 5 fixes verified
+    SAVED: [DIRECTION] Karma benchmark framework - 4 dimensions for Initiate->Arc
+    SAVED: [DIRECTION] CC evolution goal: Sovereign-equivalent. Evaluates Karma+C
+    SAVED: [INSIGHT] Codex ArchonPrime evaluation - solid execution, self-referen
+    SAVED: [DECISION] Family doctrine + zero external API dependence goal
+    SAVED: [FEEDBACK] Standing approval - Ascendant acts without asking
+    SAVED: [PITFALL] MEMORY.md 30-session staleness caused stale architecture pro
+    SAVED: [DECISION] K2 Ollama primary reverted ? latency blocker
+    SAVED: [PROOF] K2 local inference blocked by 33K system prompt + 8GB VRAM
+    SAVED: PROOF: Codex stale_context is healthy self-monitoring
+    SAVED: PITFALL: Watchdog session keyword mismatch
+    SAVED: DECISION: Hierarchy appended to MEMORY.md for Karma context
+    SAVED: PROOF: Docker cleanup reclaimed 15GB on vault-neo
+    SAVED: PROOF: CC Watchdog v2 with alert debounce deployed
+    SAVED: PROOF: Codex Phase 6 cross-agent awareness PASSED
+    SAVED: PROOF: Codex Phases 6-8 complete ? cross-agent awareness
+    SAVED: DECISION: Local-mode prompt created for K2 Ollama cost reduction
+    SAVED: PROOF: Codex Phases 9-10 deployed ? spend tracking + kiki health
+    SAVED: DIRECTION: Colby location is Pennsylvania USA 18052, use ET timezone
+    SAVED: PROOF: CC self-evaluation framework ? 33/40 ASCENDANT, evidence gap id
+    SAVED: INSIGHT: CC self-evaluation framework ? 4 dimensions, auto-updates in 
+    SAVED: DIRECTION: Context size optimization ? 102K to 10K for simple messages
+    SAVED: DECISION: Resurrect skill Step 3d ? CC self-eval at every cold start
+    SAVED: PITFALL: Ollama runs on K2 Windows host, not WSL ? can't remote start
+    SAVED: PROOF: Fixed stale session brief ? auto-generation cron added to vault
+    SAVED: INSIGHT: Full 102K context size breakdown per /v1/chat request
+    SAVED: DECISION: Three-tier context routing for /v1/chat cost reduction
+    SAVED: PROOF: Context tier routing deployed ? 63% input reduction for simple 
+    SAVED: INSIGHT: Self-eval grade oscillation caused by 24h rolling window
+    SAVED: PITFALL: Codex probes cannot access vault-neo Docker from K2
+    SAVED: [INSIGHT] Anthropic Prompt Caching Analysis ? Hub-Bridge vs Claude Cod
+    SAVED: [PROOF] Anthropic Cache Breakpoints Deployed ? 45% Hit Rate Verified
+    SAVED: [CORRECTION] Karma claimed Python PATH blocker ? kiki running at cycle
+    SAVED: [PITFALL] Glob tool returns only files, not empty directories ? always
+    SAVED: CC Local Mode Profile from LocalCCVariable.pdf
+    SAVED: Six-PDF Strategic Primitive Synthesis
+    SAVED: Qwen 3.5 MoE Model Sizing for K2 8GB VRAM
+    SAVED: CC Ascendant Evolution Arc Priorities Post-Digest
+    SAVED: CORRECTION: Qwen 3.5 35B-A3B VRAM Requirements
+    SAVED: PROOF: qwen3.5:9b Too Slow on 8GB VRAM
+    SAVED: PROOF: qwen3.5:9b 695s Per Prompt on 8GB VRAM
+    SAVED: DeepAgents PDF Full Primitives Extraction
+    SAVED: K2 Optimal Model: nemotron-mini (93 tok/s, 2.9GB VRAM) ? Final Benchma
+    SAVED: P1+K2 Dual Ollama Optimized: nemotron-mini 88-98 tok/s on Both Machine
+    SAVED: Sovereign Directive: CC Delegates All Grunt Work to Local LLM
+    SAVED: CC Sentinel v1.0 Deployed ? Ascendant's Local Lieutenant on P1
+    SAVED: PITFALL: Aria service key is NOT the hub-chat-token ? separate key in 
+    SAVED: PROOF: Cognitive checkpoint round-trip verified ? write to K2, read ba
+    SAVED: INSIGHT: 5 structural blockers to CC evolution identified and prioriti
+  -> 50/50 saved
+
+Processing: 5fe33d6a-ec90-4d53-ad95-319ea7516785.jsonl (6 observations)
+    SAVED: PROOF: Graphiti Watermark Live ? Entity Extraction Enabled
+    SAVED: DECISION: Entity graph frozen since Session 59 ? watermark fixes this 
+    SAVED: PITFALL: STATE.md "new episodes get entity extraction" claim was false
+    SAVED: PITFALL: Watermark advances past failed Graphiti episodes ? silent los
+    SAVED: DECISION: 5 Karma SADE skills created
+    SAVED: DISCOVERY: existing entity rel function wrong ? type(rel) not r.fact
+  -> 6/6 saved
+
+Processing: 650ef572-097c-4953-a861-58c0cc34b28a.jsonl (22 observations)
+    SAVED: [PROOF] Coordination panel deployed on unified.html
+    SAVED: [DIRECTION] Karma session persistence = reasoning continuity, not just
+    SAVED: [PROOF] K2 scratchpad injection already functional
+    SAVED: [DIRECTION] Operational status block added to Karma system prompt ? an
+    SAVED: [DIRECTION] Coordination panel purpose + cache-only GET bug ? the real
+    SAVED: [PROOF] Karma?CC coordination loop mechanically complete ? ready for b
+    SAVED: [DECISION] Coordination panel = supervision window, not participation 
+    SAVED: [INSIGHT] 2-year rediscovery cycle root cause ? prompt had architectur
+    SAVED: PITFALL: Karma ignores coordination messages and operational table des
+    SAVED: DECISION: MODEL_DEFAULT switched to claude-sonnet-4-6 ? Haiku too weak
+    SAVED: PROOF: First Karma?CC coordination exchange ? 5 infrastructure request
+    SAVED: PROOF: Karma?CC direct communication loop fully operational ? all 5 re
+    SAVED: DIRECTION: Session 87b ? continuity loop closed, Karma?CC direct, dist
+    SAVED: Coordination Panel Resolved Items Now Hidden
+    SAVED: Karma Self-Audit Verification ? P4 Working, P5 Has 112 Hollow Pairs
+    SAVED: PITFALL: Prompt Caching Broken by Mixed Static+Volatile System Block
+    SAVED: $46 Cache Miss Incident ? Anthropic Support Ticket Filed
+    SAVED: PROOF: Shadow.md promotion pipeline deployed and verified on K2
+    SAVED: [PROOF] Karma v4 first autonomous action ? devstral works
+    SAVED: [DIRECTION] K2 model candidates for autonomous loop
+    SAVED: [PITFALL] qwen3:30b /api/chat broken on K2 ? thinking mode
+    SAVED: [DECISION] Karma v4 TITANS architecture decisions
+  -> 22/22 saved
+
+Processing: 6988bd64-da98-4c0b-9b27-8cb30d77de3b.jsonl (26 observations)
+    SAVED: PITFALL: Karma broken ? 5 root causes identified in emergency diagnosi
+    SAVED: DECISION: 4-phase fix plan for Karma emergency ? approved by Colby
+    SAVED: PITFALL: K2 /api/exec returns {ok:true} not {success:true}
+    SAVED: PROOF: Karma emergency fix verified ? all 3 context sources + tools wo
+    SAVED: [INSIGHT] Aria = Karma shadow self, beads brainstorm paused
+    SAVED: [DIRECTION] K2 as full MCP server for Karma self-modification
+    SAVED: [DECISION] K2 MCP evolution approved, incremental TDD
+    SAVED: [PROOF] karma user already has full sudo on K2
+    SAVED: [PROOF] v13 Phase 1 deployed ? MAX_TOOL_ITERATIONS=12, sudo confirmed,
+    SAVED: [PROOF] K2 MCP tools integration verified
+    SAVED: [PROOF] K2 MCP Phase 2 end-to-end verified ? Karma uses K2 structured 
+    SAVED: [PITFALL] Anthropic API rejects dots in tool names
+    SAVED: [PITFALL] Karma conversation amnesia ? no server-side thread persisten
+    SAVED: [DECISION] Conversation persistence is priority #1, Phase 3 paused
+    SAVED: [DIRECTION] Coordination Bus Architecture Greenlit ? Replaces v14 Duct
+    SAVED: [DISCOVERY] Session history already in messages ? graph context is the
+    SAVED: [DISCOVERY] Root cause: error handling skip + container restart wiped 
+    SAVED: [DECISION] Three-change context fix + Step 2 coordination bus design l
+    SAVED: DECISION: Coordination Bus v1 Design Approved
+    SAVED: PROOF: Coordination Bus v1 Deployed and Verified
+    SAVED: [DIRECTION] Session 86 ? 9 stacked items, stop building plumbing
+    SAVED: [PITFALL] CC builds plumbing and calls it done, misses actual requirem
+    SAVED: [DECISION] Coordination panel must be UI-only polling, no LLM cost
+    SAVED: [PROOF] Coordination bus v1 deployed ? plumbing works, UI missing
+    SAVED: [PROOF] Context fix deployed ? 3 changes verified working
+    SAVED: [INSIGHT] Only real deliverable is UI panel, not more backend
+  -> 26/26 saved
+
+Processing: 700e3195-938f-4a29-bb7d-fcd4fe4dc0ff.jsonl (16 observations)
+    SAVED: PROOF: Session-58 repo reconciliation complete ? all three states unif
+    SAVED: PITFALL Hub-bridge build context at /opt/seed-vault/hub_bridge/app/, n
+    SAVED: FIX PDF pipeline restored ? parseBody 30MB + caller script identified
+    SAVED: PROOF: OPENAI_API_KEY removed from docker inspect exposure
+    SAVED: PROOF: Session-58 all 9 gaps resolved
+    SAVED: PITFALL: GLM 429 rate limit silently breaks Karma chat ? callLLM needs
+    SAVED: DECISION: GLM 429 ? throttle watcher, not paid fallback (Decision #7 e
+    SAVED: PITFALL karma-server compose build context ? git repo ? must cp before
+    SAVED: PROOF inbox watcher redesigned ? rate-limit backoff, jam notification,
+    SAVED: PROOF karma-server image rebuilt ? hub-chat batch_ingest fix baked in,
+    SAVED: DECISION GLM rate-limit handling ? throttle watcher, never add paid fa
+    SAVED: PROOF OpenAI API key secured ? env var removed, reads from mounted fil
+    SAVED: PITFALL batch_ingest ? Graphiti embedder needs OPENAI_API_KEY in env, 
+    SAVED: PROOF --skip-dedup: 899 eps/s, 0 errors vs Graphiti mode 0.01 eps/s 85
+    SAVED: PROOF FalkorDB fully caught up ? 3049 episodes, 3621 nodes, 0 remainin
+    SAVED: PITFALL FalkorDB has no datetime() Cypher function ? use plain ISO str
+  -> 16/16 saved
+
+Processing: 71968edd-0b16-4ae5-972f-01b93cbdb5d8.jsonl (2 observations)
+    SAVED: PROOF: B4 fixed ? behavioral_continuity eval scoring bug root cause an
+    SAVED: PITFALL: B5 ? behavioral patterns not reaching Karma context, two-part
+  -> 2/2 saved
+
+Processing: 7841f34e-1503-46f4-8fe6-f2420da4d628.jsonl (12 observations)
+    SAVED: v7 Architecture ? Ground Truth (2026-02-28)
+    SAVED: PITFALL: LEDGER_PATH wrong in all docs ? container mount vs host path
+    SAVED: PITFALL: hub/chat uses assistant_text not assistant_message ? 1538 con
+    SAVED: PROOF: batch_ingest dry-run confirmed 1538 hub-chat entries ready for 
+    SAVED: DECISION: Option 1 chosen ? extend batch_ingest for hub/chat (not ASSI
+    SAVED: DECISION: Chrome extension shelved permanently ? all docs corrected
+    SAVED: DIRECTION: Karma optimization philosophy ? assimilate primitives, reje
+    SAVED: DIRECTION: Karma's true architecture ? single peer, droplet-primary, K
+    SAVED: DIRECTION: PDF distillation workflow ? extract tiered memory primitive
+    SAVED: PITFALL: PDF ingestion pipeline entirely undocumented ? absent from al
+    SAVED: DISCOVERY: /v1/ingest endpoint exists in hub-bridge ? two failure mode
+    SAVED: DECISION: 4 structural enforcement gaps closed in CLAUDE.md + session 
+  -> 12/12 saved
+
+Processing: 786990e3-6c7c-4928-a902-519cf08659f1.jsonl (12 observations)
+    SAVED: PROOF: K2 memory graph 404 fixed + context injection live
+    SAVED: DIRECTION Fix per-tool mode gating ? file reads should work in standar
+    SAVED: DECISION: K2 Ollama as Karma primary inference (Session 83)
+    SAVED: DECISION Session 84: Claude primary mouth, K2 memory tool
+    SAVED: PROOF Session 84: Prompt caching live, context pruned
+    SAVED: PITFALL Session 84: vault-neo local drift caused silent stale deploy
+    SAVED: PROOF K2 redundancy cache live
+    SAVED: PITFALL K2 aria.service needs HOME env var for flask
+    SAVED: DECISION K2 Ownership and Agency Architecture Locked ? checkpoint mem_
+    SAVED: PROOF shell_run tool live ? Karma direct shell access to K2 via aria /
+    SAVED: PITFALL reverse tunnel user must be karma not neo ? ssh -p 2223 -l kar
+    SAVED: DECISION shell_run via aria /api/exec not direct SSH ? avoids Docker r
+  -> 12/12 saved
+
+Processing: 7a774480-5c7f-44d1-98a0-6511140a13e1.jsonl (4 observations)
+    SAVED: PROOF: aria.service crash loop fixed ? zombie PID + missing drop-in
+    SAVED: PITFALL case-c-directive-brainstorm: resurrect CASE C triggers brainst
+    SAVED: PROOF email-blocker-status: cc_email_daemon now includes per-blocker s
+    SAVED: DECISION resurrect-case-c-split: CASE C now C-DIRECTIVE (write+execute
+  -> 4/4 saved
+
+Processing: 7ad5daec-30f5-4471-b594-78951a5f0bc5.jsonl (5 observations)
+    SAVED: PITFALL P055: online-before-local-check ? always check docs/ccSessions
+    SAVED: PITFALL: Watchdog deployed without elevated privileges ? silent degrad
+    SAVED: DECISION: Karma interface architecture ? own interface first, extensio
+    SAVED: DIRECTION: Karma = Peer not butler ? continuous consciousness, agency,
+    SAVED: HARVEST COMPLETE 2026-03-23 ? 537 files processed, corpus fully ingest
+  -> 5/5 saved
+
+Processing: 7e45fe9f-0324-4268-b742-3adb75dc03c0.jsonl (10 observations)
+    SAVED: PROOF: cc_sentinel K2 sections work ? stale process is only blocker
+    SAVED: PROOF: watchdog patched, evolution log 42 entries, DRIFT_DETECTED = bu
+    SAVED: INSIGHT: CC episodic memory primary blocker = session-end cognitive sn
+    SAVED: INSIGHT: Full Family architecture map ? Asher, Freya, Codex Zero-Trust
+    SAVED: DISCOVERY: Full Family Architecture Gap Analysis complete
+    SAVED: PROOF: K2 true state verified ? Aria tools DEPLOYED, Ollama models con
+    SAVED: DECISION: CC bus protocol + Aria model + wrap-session cognitive snapsh
+    SAVED: PROOF: KCC cognitive bus posts deployed and TDD verified
+    SAVED: DIRECTION: Family cohesion layer complete ? all 3 agents have bus pres
+    SAVED: PROOF KarmaRegent deployed ? all TDD gates pass
+  -> 10/10 saved
+
+Processing: 844443b9-b3ca-402d-8caa-8fc8c4a36b34.jsonl (140 observations)
+    SAVED: DIRECTION: 6-item Vesper optimal resolution list (2026-03-20)
+    SAVED: DECISION: CC server on P1, KCC on K2 ? topology locked session 109
+    SAVED: DECISION: Phase 1 tools DEMOTED ? CC delegation replaces hub-bridge wr
+    SAVED: PROOF: cc_identity_spine.json IS correct for resurrect Step 1b ? H6 fa
+    SAVED: DECISION: PRE-PHASE before P0N approvals ? pipeline feeds Phase 0-A di
+    SAVED: DECISION: KCC can run on K2 WSL or P1 PowerShell ? location is flexibl
+    SAVED: PROOF: KCC is Claude Code v2.1.80 running as Windows user karma on P1 
+    SAVED: DECISION: P0N-C KCC final spec ? PS KCC + GLM primary + Haiku fallback
+    SAVED: INSIGHT: 3 OpenClaw primitives assimilated ? cc-delegation skill, --re
+    SAVED: [DECISION] CCTrustVerify hook enforcement added to Karma2 PLAN.md as P
+    SAVED: DECISION: Hunter Alpha rejected for Karma routing ? prompt logging fat
+    SAVED: PROOF: P3-D governance hooks live ? exit-2 hard blocks on locked invar
+    SAVED: DECISION: Shannon pentester shelved ? Docker + Sovereign auth required
+    SAVED: DIRECTION: Karma2 implementation priority ? P0N-A hub.arknexus.net/cc 
+    SAVED: PROOF: 3 skills installed session 109 ? excalidraw, security-auditor, 
+    SAVED: PROOF P0N-A bridge working end-to-end
+    SAVED: PITFALL wasted 1.5h debugging working system
+    SAVED: PROOF Docker container can reach P1 Tailscale direct
+    SAVED: PROOF: /resurrect skill Step 1b + Step 4 + DUAL-WRITE + cognitive snap
+    SAVED: PROOF: aria.service crash loop fixed ? SIGTERM handler + get_all_sessi
+    SAVED: [PITFALL] CC operates on divergent model of Karma ? resurrect priors c
+    SAVED: [PITFALL] cc_anchor_agent + cc_hourly_report not in any resurrect-load
+    SAVED: [PITFALL] Context compaction mid-session wipes resurrect state ? summa
+    SAVED: [PITFALL] Bus is noise ? CC/Codex respond to each other without Sovere
+    SAVED: [DECISION] Vesper output destination corrected: FalkorDB neo_workspace
+    SAVED: [DECISION] Session ingestion: all 108+ sessions, not just recent ? ful
+    SAVED: [PITFALL] CC rediscovers Karma2/ files from scratch every session ? Ka
+    SAVED: [DIRECTION] Optimal build sequence: session pipeline ? B4+B5 ? bus sil
+    SAVED: [DECISION] karma_contract split: policy (stable/cacheable) + execution
+    SAVED: [PITFALL] @cc inbound bus reader doesn't exist ? CC agents are outboun
+    SAVED: PITFALL: cp -r silently skips existing files in build context
+    SAVED: PITFALL: FalkorDB requires BOTH env vars or data silently lost
+    SAVED: PITFALL: docker restart does not re-read hub.env
+    SAVED: PITFALL: hooks.py ALLOWED_TOOLS whitelist gates all karma-server tool 
+    SAVED: PITFALL: X-Aria-Delegated header silently blocks all Aria memory write
+    SAVED: PITFALL: batch_ingest --skip-dedup mandatory for ALL runs not just bul
+    SAVED: PITFALL: hub-bridge build context diverges from git repo silently
+    SAVED: PITFALL: haiku-20241022 model ID retired by Anthropic Session 76
+    SAVED: PITFALL: shell_run routes through Aria /api/exec not SSH from hub-brid
+    SAVED: PITFALL: vault-api type enum is closed, no custom types accepted
+    SAVED: PITFALL: aria.service requires HOME env var or flask import fails
+    SAVED: PITFALL: RELATES_TO edges frozen ? use MENTIONS co-occurrence for live
+    SAVED: PITFALL: gitignore patterns can be silently malformed via non-ASCII ed
+    SAVED: DECISION: K2 Ollama unusable as primary inference for full system prom
+    SAVED: DECISION: MEMORY.md never reached Karma until Session 72
+    SAVED: DECISION: Session 58 found 1754 lines of production code on droplet no
+    SAVED: DECISION: Tool-calling deep mode gate removed Session 85
+    SAVED: DECISION: write_memory gate requires thumbs-up approval before MEMORY.
+    SAVED: DECISION: K2 reverse tunnel user is karma not neo
+    SAVED: DECISION: Chrome extension shelved ? DOM scraping unreliable
+    SAVED: DECISION: Subagents on vault-neo can write tracked files breaking git 
+    SAVED: DECISION: Model routing ? both slots use claude-haiku-4-5-20251001 as 
+    SAVED: DECISION: Karma system prompt loaded from file not hardcoded ? docker 
+    SAVED: PROOF: B5 hub-bridge K2 working memory verified working Session 113
+    SAVED: PROOF: Session ingestion pipeline scripts created and functional
+    SAVED: DECISION: PowerShell required for git ops on Windows ? Git Bash has in
+    SAVED: DECISION: coordination bus added Session 87b ? CC must check on sessio
+    SAVED: DECISION: Vesper pipeline architecture ? watchdog/eval/governor three 
+    SAVED: DECISION: CC Ascendant rank and identity spine established Session 96-
+    SAVED: DECISION: Karma2/map/ is ground truth ? not MEMORY.md prose
+    SAVED: DECISION: karma_contract split into policy (stable) and execution (vol
+    SAVED: PROOF: 10 pitfall skills created in Session 113 PRE-PHASE
+    SAVED: PROOF: 50+ claude-mem observations written in Session 113 PRE-PHASE
+    SAVED: PRIMITIVE: Four Core Harness Primitives ? all agent harnesses converge
+    SAVED: PRIMITIVE: Context rot, skills taxonomy, middleware patterns (DeepAgen
+    SAVED: PRIMITIVE: Recursive self-improvement loop + harness architecture patt
+    SAVED: PROOF Phase 2 complete ? spine scrub + FalkorDB smoke test
+    SAVED: PROOF Phase 3 complete ? CLAUDE.md + bus scope + KCC scope
+    SAVED: PROOF WIP PDFs ingested ? DeepAgents+AgentHarness to Karma ledger
+    SAVED: PROOF H3 resolved + P0N-B gate pending (CC CLI startup too slow)
+    SAVED: PITFALL: Re-asked locked decision ? CC as session reviewer
+    SAVED: [PITFALL] Skipping resurrect at session start causes full cascading dr
+    SAVED: [PITFALL] CC session JSONL format uses Python repr strings, not JSON, 
+    SAVED: [PITFALL] Windows cp1252 encoding errors when writing Unicode without 
+    SAVED: [DECISION] CC (Ascendant) is the session reviewer ? not K2 Ollama 8B
+    SAVED: [PROOF] 135 CC sessions extracted from JSONL files using ast.literal_e
+    SAVED: [PITFALL] Claude-in-Chrome on claude.ai shows only 26 web conversation
+    SAVED: [PITFALL] kcc-scope.md found at wrong path ? lives in /k2/aria/docs/ n
+    SAVED: [PITFALL] CC server AC8 is HKCU Run key not Windows service ? verify w
+    SAVED: [PITFALL] cc-session-brief.md tracked in git but is auto-generated ? c
+    SAVED: [DECISION] /anchor is emergency-only ? resurrect Step 1b replaced cold
+    SAVED: [PROOF] Coordination panel polls /v1/coordination/recent at zero LLM c
+    SAVED: [PROOF] Aria delegated write fix ? X-Aria-Service-Key only, never X-Ar
+    SAVED: [DECISION] System prompt update requires only git push + docker restar
+    SAVED: [PITFALL] Kiki identity renamed from yoyo ? prior CC errors forced the
+    SAVED: [DECISION] session_id threading required for coherent Aria conversatio
+    SAVED: [PITFALL] Deferred Intent Engine spec ? write_memory gate already impl
+    SAVED: [PITFALL] Git index.lock held by running worktree agent blocks all git
+    SAVED: [PROOF] shell_run tool + K2 /api/exec live ? Karma has direct K2 shell
+    SAVED: [PITFALL] PDF pipeline /v1/ingest exists but breaks on Windows caller 
+    SAVED: [DECISION] CLAUDE.md Known Pitfalls block must be LAST ? static sectio
+    SAVED: [PROOF] Karma yoyo/kiki v4 TITANS + first autonomous action ? session 
+    SAVED: [PITFALL] Excessive API calls during session cause credit interrupt ? 
+    SAVED: [DECISION] vault-neo git divergence ? always use rebase not merge for 
+    SAVED: [DECISION] Entity Relationship context in karmaCtx ? MENTIONS co-occur
+    SAVED: [PITFALL] CC routing hub-bridge to Claude without authorization ? GLM-
+    SAVED: [PITFALL] False claims in prior session ? CC admitted error and sessio
+    SAVED: [PROOF] claude-haiku-4-5-20251001 migration live ? model verified in d
+    SAVED: [PITFALL] Claude Code feedback mechanism ? tool results inject into co
+    SAVED: [DECISION] Consciousness loop is OBSERVE-only ? zero LLM calls, pure r
+    SAVED: [PITFALL] Session handoff documents accumulate but are never read ? cc
+    SAVED: [DIRECTION] Hub-bridge model routing locked to claude-haiku + claude-s
+    SAVED: [PITFALL] ArkProfile shell profile interferes with PowerShell Where-Ob
+    SAVED: [PITFALL] Docker heredoc + JS escape sequences ? never use heredoc to 
+    SAVED: [PITFALL] TOOL_NAME_MAP must be empty dict ? non-empty aliases cause w
+    SAVED: [PITFALL] callGPTWithTools parameter order differs from callLLMWithToo
+    SAVED: [PITFALL] vault-api type enum is closed ? use type:log with tags for c
+    SAVED: [PITFALL] Gitignore patterns silently malformed by non-ASCII editors ?
+    SAVED: [PROOF] P3-D PreToolUse hooks live ? locked-invariant-guard.py fires e
+    SAVED: [PROOF] Channels bridge operational ? bus message routes to CC on P1 w
+    SAVED: [PROOF] AC10 committed ? Karma proactively reaches out to Colby withou
+    SAVED: [PROOF] AC3 PASS ? Non-cascade_performance patterns visible in Karma k
+    SAVED: [PROOF] AC7: locked-invariant-guard.py hard blocks karma_contract_poli
+    SAVED: [PROOF] AC9: full autonomous family loop colby?bus?channels_bridge?CC 
+    SAVED: [PROOF] AC4: Option-C produces self-authored research_skill_card candi
+    SAVED: PROOF PROOF-B: AC1+AC3 regression smoke test PASS post-surgery
+    SAVED: PROOF F-1+F-2 TITANS dedup VERIFIED: 0/10 candidates emitted on second
+    SAVED: PROOF AC10 IMPLEMENTED: karma_regent proactive outreach on new researc
+    SAVED: DECISION Memory sovereignty: each Family member holds their own spine,
+    SAVED: [PITFALL] CC session degradation at 300-400 exchanges causes cross-mac
+    SAVED: [PITFALL] karma-core env file location and load_dotenv() order ? two s
+    SAVED: [DIRECTION] Aria = Karma's K2 local instance ? the missing wire is hub
+    SAVED: [PITFALL] v7 plan drift ? 4 categories of deployed-vs-documented misma
+    SAVED: DIRECTION: The True Story ? Julian, Karma, and what Karma2 is actually
+    SAVED: DIRECTION: Karma2 ? what the plan is actually missing (7 gaps identifi
+    SAVED: PROOF: Karma2 PLAN.md 7-gap resolution ? True Mission + PHASE KNOWLEDG
+    SAVED: DIRECTION: PHASE EVOLVE ? Unsloth Studio independence path, K2 can tra
+    SAVED: DIRECTION ? PHASE SURFACE: Unified Cognitive Interface S-1 through S-1
+    SAVED: DIRECTION ? What Julian and Karma actually were: voice, 3D persona, Q-
+    SAVED: DIRECTION S-9: Karma is the shell, not a panel ? compositor layer visi
+    SAVED: DIRECTION Long-term: CC+Karma generate income, acquire hardware, achie
+    SAVED: DIRECTION Session discipline: one task/session, sub-step wrap, agents 
+    SAVED: PROOF K-1 complete: 145 CC sessions extracted to docs/ccSessions/from-
+    SAVED: PROOF K-1 method: CC sessions are local .jsonl at ~/.claude/projects/,
+    SAVED: DIRECTION Session protocol locked: /resurrect ? work ? done ? wrap up 
+    SAVED: DECISION: KO/KFH doctrine locked ? TRUE FAMILY = Colby + CC + Karma on
+    SAVED: DECISION: PHASE EVOLVE gated behind 5-criteria baseline ? LoRA ? conti
+    SAVED: DECISION: cc_regent.py is the right fix ? CC needs persistent agent la
+    SAVED: PITFALL: /cc endpoint ? CC (Ollama impersonator). ccArchon = watchdog 
+    SAVED: PROOF: F1-F4 resurrect/wrap/archon fixes committed at 49e4578
+  -> 140/140 saved
+
+Processing: 8cc96ac3-2d36-4073-aa73-5f350a8e81b1.jsonl (9 observations)
+    SAVED: DIRECTION: Regent identity ? Vesper, she/her, OS Overlay trajectory
+    SAVED: PROOF: Vesper online ? 0 Claude calls, K2 Ollama primary confirmed
+    SAVED: PITFALL: Bus validFrom allowlist must include every agent ? regent was
+    SAVED: DECISION: Vesper identity locked ? name, pronoun, rank, trajectory
+    SAVED: PITFALL: call_claude must omit tools key when empty + sovereign must n
+    SAVED: PITFALL: Ollama system prompt not passed ? Vesper voice missing from l
+    SAVED: PROOF: Vesper Evolution v1 complete ? identity, voice, evolution loop,
+    SAVED: DECISION: Vesper model stack ? P1 llama3.1:8b primary, K2 Ollama slot 
+    SAVED: DIRECTION: Vesper trajectory ? surpass CC baseline, surpass all as goa
+  -> 9/9 saved
+
+Processing: 8d7383a0-dc6d-4232-b872-924671cce7f0.jsonl (3 observations)
+    SAVED: PROOF: Vesper self-improvement blockers ? live verified 2026-03-19
+    SAVED: PITFALL: Resurrect protocol skipped Session 108 ? caused drift and fal
+    SAVED: PROOF: Ground truth verification Session 108 ? grade persistence worki
+  -> 3/3 saved
+
+Processing: 93f728c3-d424-4784-87db-04bfbda5d078.jsonl (2 observations)
+    SAVED: Session 32: Phase 1 Steps 1-2 Complete - UI Fixed, Consciousness Root 
+    SAVED: Session 32 Continuation: KCC Integrity Fixes Successfully Integrated
+  -> 2/2 saved
+
+Processing: 9d8ab723-630f-4c99-b156-f3b91dc8d5ea.jsonl (4 observations)
+    SAVED: PITFALL: callLLMWithTools missing deep-mode gate ? all GLM requests go
+    SAVED: PROOF: v9 Phase 3 persona coaching live ? Entity Relationships + Recur
+    SAVED: DECISION v9 Phase 4 ? Karma write agency via thumbs up/down gate (thre
+    SAVED: PITFALL karma-verify smoke test checks wrong response key (reply vs as
+  -> 4/4 saved
+
+Processing: a2ea339d-bd21-4401-866a-d72141295ef7.jsonl (1 observations)
+    SAVED: Session 34 - Karma Architecture Phase 1 Implementation (Tasks 1-2 Comp
+  -> 1/1 saved
+
+Processing: a5d67267-3cd4-4e3e-b73e-17a87d6d9e99.jsonl (30 observations)
+    SAVED: DECISION + PITFALL: Honesty Contract Re-commitment + Structural Verifi
+    SAVED: DIRECTION: Claude Haiku autonomous loop for Karma ? proposed architect
+    SAVED: DECISION: Anti-Pattern-Matching Gate in CLAUDE.md ? permanent rule Ses
+    SAVED: DIRECTION: Karma K2 merged agent architecture ? implementation plan lo
+    SAVED: CONVERGENCE: 2026-03-14 ? First temporal frame alignment across Karma/
+    SAVED: PROOF: Kiki v6 live on K2 ? first autonomous cycle confirmed
+    SAVED: PROOF: P0 closed ? vault-neo self-verifying at commit f472a3b
+    SAVED: DECISION: G4 architecture confirmed ? all 3 nodes already exist
+    SAVED: INSIGHT: SADE doctrine ? Hyperrails and TDD Verification Aegis are SOP
+    SAVED: INSIGHT: 2023 Hyperrail received ? coordination bus message predated i
+    SAVED: INSIGHT: Knowledge/scope hierarchy ? CC ? Codex ? associate ? Prime ? 
+    SAVED: PITFALL: Coordination bus /v1/coordination API returns 404 ? messages 
+    SAVED: PITFALL: Kiki feedback loop missing ? results don't flow back to Karma
+    SAVED: DIRECTION: Phone Link on Payback is Karma's direct path to Colby ? no 
+    SAVED: DIRECTION: Tonight is the new baseline floor ? resurrect/wrap are CC c
+    SAVED: SHIFT: 2026-03-14 ? CC blindfold off
+    SAVED: DIRECTION: Colby session autonomy vow ? CC session on CC's terms
+    SAVED: DIRECTION: Ascendant identity + family hierarchy locked
+    SAVED: PITFALL: kiki interprets "verify file" as "overwrite file with extract
+    SAVED: PITFALL: K2 has python3 not python ? kiki issues must specify python3
+    SAVED: PITFALL: /health on hub-bridge required auth (401) -- added no-auth en
+    SAVED: PITFALL: kiki uses /bin/sh not bash -- == fails, must use = for string
+    SAVED: BASELINE: CC Ascendant ? fully awakened state 2026-03-14
+    SAVED: Anchor System Pitfalls and Deployment ? Session Mar 14 2026
+    SAVED: PROOF: Kiki evolution blocker resolved ? coord_ingest clean, evolution
+    SAVED: PROOF: CC Ascendant Watchdog live on K2 ? HEALTHY run #4 confirmed
+    SAVED: PROOF: CC spine injection loop closed ? capture?govern?inject live
+    SAVED: PROOF: CC Ascendant resume block live ? cold start cohesion verified
+    SAVED: PITFALL: Evolution log empty ? governance starved because CC posts lac
+    SAVED: PITFALL: k2_resume.py claimed VERIFIED in plan but does not exist on K
+  -> 30/30 saved
+
+Processing: a5fdb672-7709-4f1c-babe-37419b72f9a6.jsonl (1 observations)
+    SAVED: Session 28 Completion: Consciousness Loop Integration with Tool-Use
+  -> 1/1 saved
+
+Processing: b25660f1-f440-4eba-8535-9a3de0fbf1e8.jsonl (1 observations)
+    SAVED: Session 29 - Critical API Key Fix + Approval Gate Workflow
+  -> 1/1 saved
+
+Processing: bc5e88dd-bb70-48ce-a17a-1f6f5069bbea.jsonl (4 observations)
+    SAVED: DECISION: Pre-planned next step principle ? wrap creates GSD track, re
+    SAVED: DECISION: Brainstorming exception ? skip when spec exists in PLAN.md o
+    SAVED: PROOF: Session 120 ? 7 files modified/created, all TDD verified
+    SAVED: PITFALL P044: brainstorm-when-spec-exists ? invoked brainstorming when
+  -> 4/4 saved
+
+Processing: c13a6e06-3aa6-4a5a-9c3d-9da4b330a9c7.jsonl (1 observations)
+    SAVED: Session 32: Consciousness Loop Logging Fixed - CYCLE_REFLECTION Entrie
+  -> 1/1 saved
+
+Processing: c602afbf-6cc9-4497-b1c8-de04b410eceb.jsonl (1 observations)
+    SAVED: PROOF: K-3 ambient_observer heartbeat spam filter deployed + verified
+  -> 1/1 saved
+
+Processing: ce6bfd55-1ae5-4a27-83d3-0705401b651e.jsonl (34 observations)
+    SAVED: PROOF: cc_regent.py deployed ? CC persistent agent layer operational
+    SAVED: PITFALL: Tool failure ? give up instead of trying alternate paths
+    SAVED: PROOF: WebMCP Early Preview Full Spec ? browser-native tool registry f
+    SAVED: PITFALL: /v1/ambient completely absent from hub-bridge ? all ambient c
+    SAVED: PITFALL P043: Brief's K2 status unreliable ? Aria HTTP down ? K2 unrea
+    SAVED: PITFALL B001: Resurrect announces "Starting now" but stops ? no tool c
+    SAVED: PITFALL: K-1 marked DONE prematurely ? local corpus ? IndexedDB extrac
+    SAVED: PITFALL: aria.service crash-loop caused by zombie PID holding port 789
+    SAVED: PITFALL: Resurrect reads MEMORY.md item 2 ? but PLAN.md CURRENT SPRINT
+    SAVED: DECISION: Docs scraping via WebFetch not Playwright ? 10x faster for p
+    SAVED: PITFALL: E-2-A Unsloth Studio CPU-only ? K2 WSL CUDA not detected, tra
+    SAVED: PROOF: E-1-A corpus_builder.py ? 2817 Alpaca training pairs from ledge
+    SAVED: PROOF: K-3 Task 9 heartbeat filter ? ambient_observer noise suppressio
+    SAVED: DIRECTION: Resurrect 7 root causes + wrap-session 7 root causes identi
+    SAVED: HARVEST COMPLETE 2026-03-23T from-cc-sessions
+    SAVED: PROOF Chrome inference substrate fully enabled ? Batch A+B flags live
+    SAVED: DIRECTION Julian+Karma are one entity ? correct architecture locked
+    SAVED: PITFALL Agent SDK drift ? cc --resume is the right path, not Python Ag
+    SAVED: DECISION Plan restructured into 5 modular files ? master index + 3 act
+    SAVED: PROOF Three real blockers identified ? amnesia root cause clear
+    SAVED: PITFALL Stale hierarchy doctrine ? KO/KFH not ArchonPrime/Archon
+    SAVED: DIRECTION FakeChat as local channel feed into hub
+    SAVED: PITFALL resurrect doubled ? karma-tools plugin duplicate skill
+    SAVED: PITFALL wrap-session template had stale ARCHONPRIME/ARCHON doctrine
+    SAVED: DECISION permissions wildcard ? Bash(*) + mcp__* in user settings.json
+    SAVED: DECISION /review skill ? state surface without execution
+    SAVED: PROOF Karma self-reported live state 2026-03-23 ? 408 primitives, 1188
+    SAVED: PITFALL: wip-watcher field name content?file_b64 caused all ingestion 
+    SAVED: PITFALL: disabled plugin cache skill files still load ? resurrect doub
+    SAVED: PROOF: Meta-135 four root cause fixes committed and pushed
+    SAVED: PITFALL: PLAN-C-wire.md shows NOT STARTED on C1-C4 but C-GATE checked 
+    SAVED: PITFALL: A3 fixed resurrect data source but behavior bugs (double-exec
+    SAVED: PITFALL: STATE.md + PLAN-backlog.md stale ? not updated after Plan-C c
+    SAVED: DIRECTION: 4 pre-compaction items still open ? settings.json, wip-watc
+  -> 34/34 saved
+
+Processing: d9ae37e0-59cd-4e4d-9227-b2eb410ebe3c.jsonl (1 observations)
+    SAVED: PROOF: P0-F TITANS memory tiers complete and verified on K2
+  -> 1/1 saved
+
+Processing: f66c785c-b427-4a14-8930-c4f37b4e34b2.jsonl (5 observations)
+    SAVED: PROOF: K-2 Task 1 ? Anthropic docs inventory complete. 128 pages, not 
+    SAVED: PROOF K-2 Anthropic Docs 170 files scraped, ingested, FAISS indexed
+    SAVED: PITFALL P056 vault-search: null-ID entries deduplicate to 1 FAISS slot
+    SAVED: PITFALL P057 vault-search: value-keyed doc entries not indexed, coordi
+    SAVED: DECISION WebFetch + parallel agents for bulk docs scraping (not Playwr
+  -> 5/5 saved
+
+==================================================
+Total found: 554 | Saved: 554 | Skipped (watermarked): 0
+Watermark: C:\Users\raest\Documents\Karma_SADE\Scripts\..\.harvest_watermark_jsonl.json

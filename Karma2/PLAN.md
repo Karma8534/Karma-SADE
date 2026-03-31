@@ -2,19 +2,11 @@
 
 **The ONLY plan. Everything else is archived.**
 
-The complete Nexus plan lives at: `docs/superpowers/specs/nexus.md`
+The complete Nexus plan lives at: `docs/ForColby/nexus.md`
 
-Read THAT file. Not this one. This file exists only as a pointer so resurrect Step 4a finds it.
+Read THAT file. Not this one. This file exists only as a pointer.
 
 **Plan name:** The Nexus
-**Version:** v5.0-VERIFIED (S152)
-**Baseline:** 27 items — 26 PASS, 1 DEFERRED
-**Sprints:** 5 — ALL COMPLETE (S151)
-**Hardening:** H1-H8 — ALL VERIFIED (S152)
-**Status:** GROUNDED = TRUE (browser + curl + runtime all verified)
-**Item 24 (video/presence):** DEFERRED — Sovereign gate
-
-**P065:** unified.html NEVER reimplements CC features in JS. Pipes through.
-**P066:** Never propose incomplete plans.
-**P079:** --session-id flag broke in CC v2.1.78. Use --resume only with verified session IDs.
-**P080-P085:** See claude-mem. False claims, dismissed failures, unverified deployments.
+**Version:** 3.0.0 (S153 consolidation)
+**Baseline:** 27 items — 16 PASS, 6 NOT DONE, 3 PARTIAL, 1 DEFERRED, 1 UNVERIFIED
+**Path:** `docs/ForColby/nexus.md`

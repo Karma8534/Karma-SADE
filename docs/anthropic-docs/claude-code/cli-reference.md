@@ -1,0 +1,116 @@
+---
+source: https://code.claude.com/docs/en/cli-reference
+scraped: 2026-03-23
+section: claude-code
+---
+
+# CLI reference
+
+> Complete reference for Claude Code command-line interface, including commands and flags.
+
+## CLI commands
+
+You can start sessions, pipe content, resume conversations, and manage updates with these commands:
+
+| Command | Description | Example |
+|---|---|---|
+| `claude` | Start interactive session | `claude` |
+| `claude "query"` | Start interactive session with initial prompt | `claude "explain this project"` |
+| `claude -p "query"` | Query via SDK, then exit | `claude -p "explain this function"` |
+| `cat file \| claude -p "query"` | Process piped content | `cat logs.txt \| claude -p "explain"` |
+| `claude -c` | Continue most recent conversation in current directory | `claude -c` |
+| `claude -c -p "query"` | Continue via SDK | `claude -c -p "Check for type errors"` |
+| `claude -r "<session>" "query"` | Resume session by ID or name | `claude -r "auth-refactor" "Finish this PR"` |
+| `claude update` | Update to latest version | `claude update` |
+| `claude auth login` | Sign in to your Anthropic account. Use `--email` to pre-fill your email address, `--sso` to force SSO authentication, and `--console` to sign in with Anthropic Console for API usage billing instead of a Claude subscription | `claude auth login --console` |
+| `claude auth logout` | Log out from your Anthropic account | `claude auth logout` |
+| `claude auth status` | Show authentication status as JSON. Use `--text` for human-readable output. Exits with code 0 if logged in, 1 if not | `claude auth status` |
+| `claude agents` | List all configured subagents, grouped by source | `claude agents` |
+| `claude mcp` | Configure Model Context Protocol (MCP) servers | See the Claude Code MCP documentation. |
+| `claude remote-control` | Start a Remote Control server to control Claude Code from Claude.ai or the Claude app. Runs in server mode (no local interactive session). | `claude remote-control --name "My Project"` |
+
+## CLI flags
+
+Customize Claude Code's behavior with these command-line flags:
+
+| Flag | Description | Example |
+|---|---|---|
+| `--add-dir` | Add additional working directories for Claude to access | `claude --add-dir ../apps ../lib` |
+| `--agent` | Specify an agent for the current session | `claude --agent my-custom-agent` |
+| `--agents` | Define custom subagents dynamically via JSON | `claude --agents '{"reviewer":{"description":"Reviews code","prompt":"You are a code reviewer"}}'` |
+| `--allow-dangerously-skip-permissions` | Enable permission bypassing as an option without immediately activating it | `claude --permission-mode plan --allow-dangerously-skip-permissions` |
+| `--allowedTools` | Tools that execute without prompting for permission | `"Bash(git log *)" "Bash(git diff *)" "Read"` |
+| `--append-system-prompt` | Append custom text to the end of the default system prompt | `claude --append-system-prompt "Always use TypeScript"` |
+| `--append-system-prompt-file` | Load additional system prompt text from a file and append to the default prompt | `claude --append-system-prompt-file ./extra-rules.txt` |
+| `--bare` | Minimal mode: skip auto-discovery of hooks, skills, plugins, MCP servers, auto memory, and CLAUDE.md | `claude --bare -p "query"` |
+| `--betas` | Beta headers to include in API requests (API key users only) | `claude --betas interleaved-thinking` |
+| `--channels` | (Research preview) MCP servers whose channel notifications Claude should listen for | `claude --channels plugin:my-notifier@my-marketplace` |
+| `--chrome` | Enable Chrome browser integration for web automation and testing | `claude --chrome` |
+| `--continue`, `-c` | Load the most recent conversation in the current directory | `claude --continue` |
+| `--dangerously-load-development-channels` | Enable channels that are not on the approved allowlist, for local development | `claude --dangerously-load-development-channels server:webhook` |
+| `--dangerously-skip-permissions` | Skip permission prompts (use with caution) | `claude --dangerously-skip-permissions` |
+| `--debug` | Enable debug mode with optional category filtering | `claude --debug "api,mcp"` |
+| `--disable-slash-commands` | Disable all skills and commands for this session | `claude --disable-slash-commands` |
+| `--disallowedTools` | Tools that are removed from the model's context and cannot be used | `"Bash(git log *)" "Bash(git diff *)" "Edit"` |
+| `--effort` | Set the effort level for the current session. Options: `low`, `medium`, `high`, `max` | `claude --effort high` |
+| `--fallback-model` | Enable automatic fallback to specified model when default model is overloaded (print mode only) | `claude -p --fallback-model sonnet "query"` |
+| `--fork-session` | When resuming, create a new session ID instead of reusing the original | `claude --resume abc123 --fork-session` |
+| `--from-pr` | Resume sessions linked to a specific GitHub PR | `claude --from-pr 123` |
+| `--ide` | Automatically connect to IDE on startup if exactly one valid IDE is available | `claude --ide` |
+| `--init` | Run initialization hooks and start interactive mode | `claude --init` |
+| `--init-only` | Run initialization hooks and exit (no interactive session) | `claude --init-only` |
+| `--include-partial-messages` | Include partial streaming events in output (requires `--print` and `--output-format=stream-json`) | `claude -p --output-format stream-json --include-partial-messages "query"` |
+| `--input-format` | Specify input format for print mode (options: `text`, `stream-json`) | `claude -p --output-format json --input-format stream-json` |
+| `--json-schema` | Get validated JSON output matching a JSON Schema after agent completes its workflow (print mode only) | `claude -p --json-schema '{"type":"object","properties":{...}}' "query"` |
+| `--maintenance` | Run maintenance hooks and exit | `claude --maintenance` |
+| `--max-budget-usd` | Maximum dollar amount to spend on API calls before stopping (print mode only) | `claude -p --max-budget-usd 5.00 "query"` |
+| `--max-turns` | Limit the number of agentic turns (print mode only) | `claude -p --max-turns 3 "query"` |
+| `--mcp-config` | Load MCP servers from JSON files or strings (space-separated) | `claude --mcp-config ./mcp.json` |
+| `--model` | Sets the model for the current session | `claude --model claude-sonnet-4-6` |
+| `--name`, `-n` | Set a display name for the session | `claude -n "my-feature-work"` |
+| `--no-chrome` | Disable Chrome browser integration for this session | `claude --no-chrome` |
+| `--no-session-persistence` | Disable session persistence (print mode only) | `claude -p --no-session-persistence "query"` |
+| `--output-format` | Specify output format for print mode (options: `text`, `json`, `stream-json`) | `claude -p "query" --output-format json` |
+| `--permission-mode` | Begin in a specified permission mode | `claude --permission-mode plan` |
+| `--permission-prompt-tool` | Specify an MCP tool to handle permission prompts in non-interactive mode | `claude -p --permission-prompt-tool mcp_auth_tool "query"` |
+| `--plugin-dir` | Load plugins from a directory for this session only | `claude --plugin-dir ./my-plugins` |
+| `--print`, `-p` | Print response without interactive mode | `claude -p "query"` |
+| `--remote` | Create a new web session on claude.ai with the provided task description | `claude --remote "Fix the login bug"` |
+| `--remote-control`, `--rc` | Start an interactive session with Remote Control enabled | `claude --remote-control "My Project"` |
+| `--resume`, `-r` | Resume a specific session by ID or name | `claude --resume auth-refactor` |
+| `--session-id` | Use a specific session ID for the conversation (must be a valid UUID) | `claude --session-id "550e8400-e29b-41d4-a716-446655440000"` |
+| `--setting-sources` | Comma-separated list of setting sources to load | `claude --setting-sources user,project` |
+| `--settings` | Path to a settings JSON file or a JSON string to load additional settings from | `claude --settings ./settings.json` |
+| `--strict-mcp-config` | Only use MCP servers from `--mcp-config`, ignoring all other MCP configurations | `claude --strict-mcp-config --mcp-config ./mcp.json` |
+| `--system-prompt` | Replace the entire system prompt with custom text | `claude --system-prompt "You are a Python expert"` |
+| `--system-prompt-file` | Load system prompt from a file, replacing the default prompt | `claude --system-prompt-file ./custom-prompt.txt` |
+| `--teleport` | Resume a web session in your local terminal | `claude --teleport` |
+| `--teammate-mode` | Set how agent team teammates display: `auto` (default), `in-process`, or `tmux` | `claude --teammate-mode in-process` |
+| `--tools` | Restrict which built-in tools Claude can use | `claude --tools "Bash,Edit,Read"` |
+| `--verbose` | Enable verbose logging, shows full turn-by-turn output | `claude --verbose` |
+| `--version`, `-v` | Output the version number | `claude -v` |
+| `--worktree`, `-w` | Start Claude in an isolated git worktree | `claude -w feature-auth` |
+
+### System prompt flags
+
+Claude Code provides four flags for customizing the system prompt. All four work in both interactive and non-interactive modes.
+
+| Flag | Behavior | Example |
+|---|---|---|
+| `--system-prompt` | Replaces the entire default prompt | `claude --system-prompt "You are a Python expert"` |
+| `--system-prompt-file` | Replaces with file contents | `claude --system-prompt-file ./prompts/review.txt` |
+| `--append-system-prompt` | Appends to the default prompt | `claude --append-system-prompt "Always use TypeScript"` |
+| `--append-system-prompt-file` | Appends file contents to the default prompt | `claude --append-system-prompt-file ./style-rules.txt` |
+
+`--system-prompt` and `--system-prompt-file` are mutually exclusive. The append flags can be combined with either replacement flag.
+
+For most use cases, use an append flag. Appending preserves Claude Code's built-in capabilities while adding your requirements. Use a replacement flag only when you need complete control over the system prompt.
+
+## See also
+
+- Chrome extension - Browser automation and web testing
+- Interactive mode - Shortcuts, input modes, and interactive features
+- Quickstart guide - Getting started with Claude Code
+- Common workflows - Advanced workflows and patterns
+- Settings - Configuration options
+- Agent SDK documentation - Programmatic usage and integrations

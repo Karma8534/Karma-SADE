@@ -1,0 +1,675 @@
+diff --git a/Scripts/cortex/sync_k2_to_p1.py b/Scripts/cortex/sync_k2_to_p1.py
+new file mode 100644
+index 0000000..322e7b6
+--- /dev/null
++++ b/Scripts/cortex/sync_k2_to_p1.py
+@@ -0,0 +1,100 @@
++#!/usr/bin/env python3
++"""
++sync_k2_to_p1.py — Sync K2 cortex knowledge blocks to P1 fallback cortex.
++Pulls K2 state via SSH, compares with P1, ingests missing blocks.
++Run periodically (every 30min) or manually before failover testing.
++"""
++import json
++import subprocess
++import urllib.request
++import sys
++
++K2_STATE = "/mnt/c/dev/Karma/k2/cache/cortex/state.json"
++K2_SSH = "karma@192.168.0.226"
++P1_CORTEX = "http://localhost:7893"
++
++
++def fetch_k2_state():
++    """Fetch K2 cortex state via SSH."""
++    result = subprocess.run(
++        ["ssh", "-o", "ConnectTimeout=5", K2_SSH, f"cat {K2_STATE}"],
++        capture_output=True, timeout=15, encoding="utf-8", errors="replace"
++    )
++    if result.returncode != 0:
++        print(f"ERROR: SSH to K2 failed: {result.stderr}", file=sys.stderr)
++        return None
++    return json.loads(result.stdout)
++
++
++def fetch_p1_labels():
++    """Get labels of blocks already in P1 cortex."""
++    try:
++        req = urllib.request.Request(f"{P1_CORTEX}/health")
++        with urllib.request.urlopen(req, timeout=5) as r:
++            data = json.loads(r.read())
++        if not data.get("ok"):
++            return None
++    except Exception:
++        print("ERROR: P1 cortex unreachable", file=sys.stderr)
++        return None
++
++    # Read P1 state file directly (local) — MUST use utf-8 encoding (P053: Windows cp1252 breaks on non-ASCII)
++    try:
++        with open(r"C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\state\state.json", encoding="utf-8") as f:
++            p1_state = json.load(f)
++        return {label for label, _ in p1_state.get("knowledge_blocks", [])}
++    except Exception as e:
++        print(f"WARNING: Could not read P1 state file: {e}", file=sys.stderr)
++        return set()
++
++
++def ingest_to_p1(label, text):
++    """POST a block to P1 cortex."""
++    payload = json.dumps({"label": label, "text": text}).encode()
++    req = urllib.request.Request(
++        f"{P1_CORTEX}/ingest",
++        data=payload,
++        headers={"Content-Type": "application/json"},
++        method="POST"
++    )
++    try:
++        with urllib.request.urlopen(req, timeout=15) as r:
++            result = json.loads(r.read())
++        return result.get("ok", False)
++    except Exception as e:
++        print(f"Ingest failed for [{label}]: {e}", file=sys.stderr)
++        return False
++
++
++def main():
++    print("Fetching K2 cortex state...")
++    k2_state = fetch_k2_state()
++    if not k2_state:
++        sys.exit(1)
++
++    k2_blocks = k2_state.get("knowledge_blocks", [])
++    print(f"K2 has {len(k2_blocks)} blocks")
++
++    p1_labels = fetch_p1_labels()
++    if p1_labels is None:
++        sys.exit(1)
++    print(f"P1 has {len(p1_labels)} known labels")
++
++    # Find missing blocks
++    missing = [(label, text) for label, text in k2_blocks if label not in p1_labels]
++    print(f"Missing from P1: {len(missing)} blocks")
++
++    if not missing:
++        print("P1 is up to date.")
++        return
++
++    synced = 0
++    for label, text in missing:
++        if ingest_to_p1(label, text):
++            synced += 1
++
++    print(f"Synced {synced}/{len(missing)} blocks to P1")
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/hub-bridge/app/server.js b/hub-bridge/app/server.js
+index a704c8d..87b2069 100644
+--- a/hub-bridge/app/server.js
++++ b/hub-bridge/app/server.js
+@@ -5,7 +5,7 @@ import { URL } from "url";
+ import OpenAI from "openai";
+ import Anthropic from "@anthropic-ai/sdk";
+ import { pricePer1M, estimateUsd, validatePricingEnv } from "./lib/pricing.js";
+-import { chooseModel, validateModelEnv, GlmRateLimiter, GLM_INGEST_SLOT_TIMEOUT_MS } from "./lib/routing.js";
++import { chooseModel, getVerifierModel, validateModelEnv, GlmRateLimiter, GLM_INGEST_SLOT_TIMEOUT_MS } from "./lib/routing.js";
+ import { processFeedback, prunePendingWrites } from "./lib/feedback.js";
+ import { resolveLibraryUrl } from "./lib/library_docs.js";
+ import { generateIntentId, getSurfaceIntents, buildActiveIntentsText } from "./lib/deferred_intent.js";
+@@ -279,6 +279,30 @@ function loadDirectionMd() {
+   } catch (_) {}
+ }
+ 
++// Synthesis cache - most recent [SYNTHESIS] entry from vault via FAISS.
++// Refreshed every 5min. Injected into buildSystemText for session continuity.
++let _synthesisCacheText = "";
++async function loadSynthesisCache() {
++  try {
++    const r = await fetch("http://anr-vault-search:8081/v1/search", {
++      method: "POST",
++      headers: { "Content-Type": "application/json" },
++      body: JSON.stringify({ query: "synthesis session decisions insights pitfalls", limit: 1 }),
++    });
++    if (r.ok) {
++      const d = await r.json();
++      const top = (d.results || [])[0];
++      if (top && top.content_preview) {
++        _synthesisCacheText = top.content_preview;
++        console.log("[SYNTHESIS] cache refreshed:", _synthesisCacheText.length, "chars");
++      }
++    }
++  } catch (e) {
++    console.error("[SYNTHESIS] cache refresh failed:", e.message);
++  }
++}
++
++
+ // K2 memory graph cache — fetched once per request cycle, cached 5 min.
+ // Aria on K2 exposes GET /api/memory/graph?query=... — returns seed_facts, related_facts, entities.
+ let _k2MemGraphCache = null;
+@@ -457,6 +481,22 @@ const LOCAL_FILE_SERVER_URL = process.env.LOCAL_FILE_SERVER_URL || "";
+ const LOCAL_FILE_TOKEN = process.env.LOCAL_FILE_TOKEN || "";
+ 
+ const ARIA_URL = process.env.ARIA_URL || "http://100.75.109.92:7890";
++
++// Julian cortex endpoints (K2 primary, P1 fallback)
++const K2_CORTEX_URL = process.env.K2_CORTEX_URL || "http://100.75.109.92:7892";
++const P1_CORTEX_URL = process.env.P1_CORTEX_URL || "http://100.124.194.102:7893";
++
++// Fire-and-forget cortex ingest (non-blocking)
++function cortexIngest(label, text) {
++  const body = JSON.stringify({ label, text: (text || "").slice(0, 500) });
++  const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
++  fetch(K2_CORTEX_URL + "/ingest", opts).catch(() => {
++    // K2 down, try P1 fallback
++    fetch(P1_CORTEX_URL + "/ingest", opts).catch(e =>
++      console.error("[CORTEX] ingest failed (both K2+P1):", e.message)
++    );
++  });
++}
+ const ARIA_SERVICE_KEY = process.env.ARIA_SERVICE_KEY || "";
+ 
+ // Auto-handoff config
+@@ -626,6 +666,24 @@ function saveSpendState(path, state) {
+ 
+ function isAnthropicModel(model) { return typeof model === "string" && model.startsWith("claude-"); }
+ 
++// --- Verifier hook seam (governance seam 4a) ---
++// Cross-provider second opinion for structural changes. Gated by VERIFIER_ENABLED env var.
++// Default: off. Enable with VERIFIER_ENABLED=true in hub.env.
++const VERIFIER_ENABLED = (process.env.VERIFIER_ENABLED || "").toLowerCase() === "true";
++async function callVerifier(question, context) {
++  if (!VERIFIER_ENABLED) return { skipped: true, reason: "verifier_disabled" };
++  const verifierModel = getVerifierModel(env);
++  try {
++    const result = await callLLM(verifierModel, [
++      { role: "system", content: "You are a cross-provider verification agent. Evaluate whether the proposed change is safe, consistent with identity, and does not introduce regressions. Respond with: APPROVE, HOLD, or REJECT followed by one sentence of reasoning." },
++      { role: "user", content: `${question}\n\nContext: ${context}` },
++    ], 200);
++    return { skipped: false, model: verifierModel, verdict: (result.text || "").trim() };
++  } catch (e) {
++    return { skipped: false, model: verifierModel, error: e.message };
++  }
++}
++
+ // pricePer1M and estimateUsd imported from ../lib/pricing.js
+ 
+ // --- Vault API helpers ---
+@@ -992,6 +1050,11 @@ function buildSystemText(karmaCtx, ckLatest = null, webResults = null, semanticC
+   // Memory spine — always (all tiers) — critical for Karma's continuity
+   if (memoryMd) {
+     text += `\n\n--- KARMA MEMORY SPINE (recent) ---\n${memoryMd}\n---`;
++
++  // Recent session synthesis - always injected for continuity
++  if (_synthesisCacheText) {
++    text += "\n\n--- RECENT SESSION SYNTHESIS ---\n" + _synthesisCacheText + "\n---";
++  }
+   }
+ 
+   // K2 memory graph — Tier 3 only (Aria's local peer memory)
+@@ -1324,8 +1387,10 @@ function atomicWriteHandoff(dir, filename, content) {
+ 
+ const env = {
+   MONTHLY_USD_CAP: Number(process.env.MONTHLY_USD_CAP || "0"),
+-  MODEL_DEFAULT: process.env.MODEL_DEFAULT || "glm-4.7-flash",
+-  MODEL_DEEP: process.env.MODEL_DEEP || "gpt-4o-mini",
++  MODEL_DEFAULT: process.env.MODEL_DEFAULT || "gpt-5.4-mini",
++  MODEL_ESCALATION: process.env.MODEL_ESCALATION || "gpt-5.4",
++  MODEL_DEEP: process.env.MODEL_ESCALATION || process.env.MODEL_DEEP || "gpt-5.4",
++  MODEL_VERIFIER: process.env.MODEL_VERIFIER || "claude-sonnet-4-6",
+   PRICE_GPT_4O_MINI_INPUT_PER_1M:  process.env.PRICE_GPT_4O_MINI_INPUT_PER_1M  || "0.15",
+   PRICE_GPT_4O_MINI_OUTPUT_PER_1M: process.env.PRICE_GPT_4O_MINI_OUTPUT_PER_1M || "0.60",
+   PRICE_CLAUDE_INPUT_PER_1M:  process.env.PRICE_CLAUDE_INPUT_PER_1M  || "3.0",
+@@ -2410,8 +2475,8 @@ async function callGPTWithTools(messages, maxTokens, model, writeId = null, aria
+     let iterations = 0;
+     const MAX_ITERATIONS = 12;
+ 
+-    // Use passed-in model; fall back to MODEL_DEFAULT via chooseModel (Decision #2 — GLM primary)
+-    const actualModel = model || chooseModel(false, env);
++    // Use passed-in model; fall back to MODEL_DEFAULT (Decision #35)
++    const actualModel = model || env.MODEL_DEFAULT || "gpt-5.4-mini";
+     const isZaiModel = actualModel.startsWith("glm-");
+     const providerName = (isZaiModel && zai) ? "zai" : "openai";
+     console.log(`[TOOL-USE] Using model: ${actualModel} (requested: ${model})`);
+@@ -2420,10 +2485,12 @@ async function callGPTWithTools(messages, maxTokens, model, writeId = null, aria
+       iterations++;
+       // Tool-use always via OpenAI (GLM models routed to callLLM for chat backbone)
+       const client = (isZaiModel && zai) ? zai : openai;
++      // GPT-5.4+ models require max_completion_tokens instead of max_tokens
++      const tokenParam = actualModel.startsWith("gpt-5") ? { max_completion_tokens: maxTokens } : { max_tokens: maxTokens };
+       const resp = await client.chat.completions.create({
+         model: actualModel,
+         messages: allMessages,
+-        max_tokens: maxTokens,
++        ...tokenParam,
+         tools: gptTools,
+         tool_choice: "auto",
+       });
+@@ -2531,9 +2598,7 @@ async function callWithK2Fallback(model, messages, maxTokens, deep_mode, writeId
+     }
+   }
+   // Anthropic fallback (existing logic unchanged)
+-  return deep_mode
+-    ? callLLMWithTools(model, messages, maxTokens, writeId, ariaSessionId)
+-    : callLLM(model, messages, maxTokens);
++  return callLLMWithTools(model, messages, maxTokens, writeId, ariaSessionId); // tools ALL modes S144
+ }
+ 
+ // --- Credit burn alarm (P0-G) ---
+@@ -2712,6 +2777,36 @@ const server = http.createServer(async (req, res) => {
+       return json(res, 200, { ok: true, service: "hub-bridge", ts: new Date().toISOString() });
+     }
+ 
++    // --- GET /v1/status --- Sovereign visibility: health + model config + spend + governance
++    if (req.method === "GET" && req.url === "/v1/status") {
++      const token = bearerToken(req);
++      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) return json(res, 401, { ok: false, error: "unauthorized" });
++      const spendState = loadSpendState(env.SPEND_STATE_PATH);
++      const cortexHealth = await fetch(K2_CORTEX_URL + "/health", { signal: AbortSignal.timeout(3000) }).then(r => r.json()).catch(() => ({ ok: false }));
++      const p1Health = await fetch(P1_CORTEX_URL + "/health", { signal: AbortSignal.timeout(3000) }).then(r => r.json()).catch(() => ({ ok: false }));
++      return json(res, 200, {
++        ok: true, ts: new Date().toISOString(),
++        models: { default: env.MODEL_DEFAULT, escalation: env.MODEL_ESCALATION || env.MODEL_DEEP, verifier: env.MODEL_VERIFIER },
++        spend: { month: spendState.month_utc, usd_spent: spendState.usd_spent, cap_usd: env.MONTHLY_USD_CAP },
++        nodes: { k2_cortex: cortexHealth, p1_cortex: p1Health, hub_bridge: { ok: true } },
++        governance: { verifier_enabled: !!process.env.VERIFIER_ENABLED, canary_stage: false },
++      });
++    }
++
++    // --- GET /v1/trace --- Last N request traces (cost, model, tier, route reason)
++    if (req.method === "GET" && req.url.startsWith("/v1/trace")) {
++      const token = bearerToken(req);
++      if (!HUB_CHAT_TOKEN || !token || token !== HUB_CHAT_TOKEN) return json(res, 401, { ok: false, error: "unauthorized" });
++      try {
++        const logPath = "/run/state/request_cost.jsonl";
++        const lines = fs.readFileSync(logPath, "utf8").trim().split("\n").filter(Boolean).slice(-50);
++        const entries = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
++        return json(res, 200, { ok: true, count: entries.length, traces: entries });
++      } catch {
++        return json(res, 200, { ok: true, count: 0, traces: [], note: "no cost log yet" });
++      }
++    }
++
+     // --- GET /agora --- Serve Agora Convergence Room UI
+     if (req.method === "GET" && req.url === "/agora") {
+       try {
+@@ -2857,7 +2952,9 @@ const server = http.createServer(async (req, res) => {
+ 
+       const deepHeader = (req.headers[DEEP_MODE_HEADER] || "").toString().toLowerCase();
+       const deep_mode = ["1", "true", "yes", "on"].includes(deepHeader);
+-      const model = deep_mode ? env.MODEL_DEEP : env.MODEL_DEFAULT;
++      // Decision #35: 3-tier model routing. Tier set after classifyMessageTier().
++      // deep_mode forces tier 3 (escalation). Otherwise tier from classifier.
++      // Model chosen AFTER tier is known (line below moved to post-classification).
+ 
+       const month = currentMonthUTC();
+       const spendPath = env.SPEND_STATE_PATH;
+@@ -2875,9 +2972,8 @@ const server = http.createServer(async (req, res) => {
+         return json(res, 402, { ok: false, error: "monthly_budget_exceeded", month_utc: month, cap_usd: cap, usd_spent: used_before });
+       }
+ 
+-      // GLM rate limit check — applies only to GLM (non-deep) path.
+-      // NEVER silently failover to paid tier. Immediate 429 to caller.
+-      if (!deep_mode && model.startsWith("glm-")) {
++      // GLM rate limit check — applies only when MODEL_DEFAULT is a GLM model.
++      if (!deep_mode && (env.MODEL_DEFAULT || "").startsWith("glm-")) {
+         const rl = glmLimiter.checkAndConsume();
+         if (!rl.allowed) {
+           const retry_after = Math.ceil(rl.retryAfterMs / 1000);
+@@ -2889,6 +2985,51 @@ const server = http.createServer(async (req, res) => {
+       // Context tier routing — classify message complexity
+       const tier = classifyMessageTier(userMessage, deep_mode);
+ 
++      // --- PHASE 3-2: Cognitive split — cortex-first for recall questions ---
++      // Orchestrator routes: K2 cortex ($0) → P1 cortex ($0) → Anthropic cloud ($cost)
++      const RECALL_PATTERN = /^(what|when|who|where|how|which|do you|did|have we|tell me about|remind me|what happened|session \d|recall|remember)/i;
++      const isRecall = !deep_mode && userMessage.length < 300 && RECALL_PATTERN.test(userMessage.trim());
++      if (isRecall) {
++        const cortexUrls = [
++          { url: K2_CORTEX_URL, label: "K2" },
++          { url: P1_CORTEX_URL, label: "P1" },
++        ];
++        for (const cortex of cortexUrls) {
++          try {
++            const cortexResp = await fetch(cortex.url + "/query", {
++              method: "POST",
++              headers: { "Content-Type": "application/json" },
++              body: JSON.stringify({ query: userMessage }),
++              signal: AbortSignal.timeout(30000),
++            });
++            if (cortexResp.ok) {
++              const cortexData = await cortexResp.json();
++              const cortexAnswer = (cortexData.answer || "").trim();
++              if (cortexAnswer.length > 30 && !cortexAnswer.startsWith("[CORTEX ERROR")) {
++                console.log(`[COGNITIVE_SPLIT] recall routed to ${cortex.label} cortex ($0):`, userMessage.slice(0, 60));
++                cortexIngest("recall-" + Date.now(), "[Q] " + userMessage.slice(0, 100) + " [A] " + cortexAnswer.slice(0, 300));
++                // Cost log for cortex ($0) response
++                try { fs.appendFileSync("/run/state/request_cost.jsonl", JSON.stringify({ ts: new Date().toISOString(), model: `qwen3.5:4b (${cortex.label})`, tier: 0, usd: 0, cognitive_split: true, provider: cortex.label.toLowerCase() }) + "\n"); } catch {}
++                return json(res, 200, {
++                  ok: true,
++                  assistant_text: cortexAnswer,
++                  model: `qwen3.5:4b (${cortex.label} cortex)`,
++                  deep_mode: false,
++                  cognitive_split: cortex.label.toLowerCase(),
++                  usd_estimate: 0.0,
++                  spend: { month_utc: month, cap_usd: cap, usd_spent: used_before },
++                });
++              }
++              console.log(`[COGNITIVE_SPLIT] ${cortex.label} cortex answer too short/error, trying next`);
++            }
++          } catch (e) {
++            console.log(`[COGNITIVE_SPLIT] ${cortex.label} cortex failed:`, e.message);
++          }
++        }
++        console.log("[COGNITIVE_SPLIT] all cortex nodes failed, falling back to Anthropic cloud");
++      }
++      // --- END PHASE 3-2 ---
++
+       // Fetch checkpoint — Tier 3 only (reused for statePrelude + karma_brief)
+       let ckLatestData = null;
+       if (tier >= 3) {
+@@ -3010,8 +3151,9 @@ const server = http.createServer(async (req, res) => {
+         { role: "user", content: userContent },
+       ];
+ 
+-      // Claude primary routing: Haiku (standard) or Sonnet (deep), tools always available.
+-      // Haiku primary. K2 Ollama blocked by system prompt size (33K chars too large for 8B local). Session 98.
++      // Decision #35: 3-tier model routing. Cortex handled above (cognitive split).
++      // tier 1-2 → gpt-5.4-mini (cheap). tier 3 → gpt-5.4 (frontier). Sonnet for verification.
++      const model = chooseModel(tier, env);
+       const req_write_id = "wr_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+       const llmResult = await callLLMWithTools(model, messages, max_output_tokens, req_write_id, ariaSessionId);
+       const assistantText = llmResult.text || "(empty_assistant_text)";
+@@ -3070,6 +3212,16 @@ const server = http.createServer(async (req, res) => {
+       spendState.updated_at = nowIso();
+       saveSpendState(spendPath, spendState);
+ 
++      // Per-request cost log (JSONL) — queryable via /v1/trace
++      try {
++        const costEntry = JSON.stringify({
++          ts: new Date().toISOString(), model, tier, usd: usd_estimate,
++          input_tokens: usage.prompt_tokens || 0, output_tokens: usage.completion_tokens || 0,
++          cognitive_split: false, provider: debug_provider, spend_total: used_after,
++        });
++        fs.appendFileSync("/run/state/request_cost.jsonl", costEntry + "\n");
++      } catch (e) { /* non-fatal */ }
++
+       const vaultRecord = buildVaultRecord({
+         type: "log",
+         tags: ["hub", "chat", deep_mode ? "deep" : "default"].concat(topic ? [`topic:${topic}`] : []),
+@@ -3155,6 +3307,12 @@ const server = http.createServer(async (req, res) => {
+         });
+       }
+ 
++      // Fire-and-forget: feed chat turn to Julian cortex (K2 primary, P1 fallback)
++      cortexIngest(
++        "chat-" + (turn_id || Date.now()),
++        "[" + (userMessage || "").slice(0, 100) + "] -> [" + (assistantText || "").slice(0, 300) + "]"
++      );
++
+       return json(res, 200, {
+         ok: true,
+         canonical,
+@@ -4309,10 +4467,8 @@ form.addEventListener("submit", async e => {
+ // Structured single-line error + process.exit(1) so Docker restart logs are clear.
+ try {
+   validateModelEnv(env);
+-  // Price validation only applies when MODEL_DEEP is a paid model (not GLM).
+-  if (!((env.MODEL_DEEP || "gpt-4o-mini").startsWith("glm-"))) {
+-    validatePricingEnv(env);
+-  }
++  // Price validation — hardcoded pricing table covers all known models.
++  validatePricingEnv(env);
+ } catch (e) {
+   console.error(`[CONFIG ERROR] ${e.message}`);
+   process.exit(1);
+@@ -4328,6 +4484,7 @@ console.log(`[INIT] GLM rate limiter: ${glmLimiter._rpm} RPM, ingest slot timeou
+ loadSessionBrief();
+ setInterval(loadSessionBrief, 5 * 60 * 1000);
+ loadMemoryMd();
++loadSynthesisCache(); setInterval(loadSynthesisCache, 5 * 60 * 1000);
+ setInterval(loadMemoryMd, 5 * 60 * 1000);
+ loadDirectionMd();
+ setInterval(loadDirectionMd, 5 * 60 * 1000);
+diff --git a/hub-bridge/lib/pricing.js b/hub-bridge/lib/pricing.js
+index f09a310..3256561 100644
+--- a/hub-bridge/lib/pricing.js
++++ b/hub-bridge/lib/pricing.js
+@@ -1,13 +1,13 @@
+-﻿/**
+- * Pricing authority ΓÇö single source of truth for LLM cost estimation.
+- *
+- * Decision #2: GLM-4.7-Flash primary (free via Z.ai), gpt-4o-mini paid fallback.
++/**
++ * Pricing authority — single source of truth for LLM cost estimation.
+  *
+- * Rules:
+- *   - GLM models: always $0 (Z.ai free tier, hardcoded ΓÇö no env var needed)
+- *   - gpt-4o-mini: reads PRICE_GPT_4O_MINI_INPUT/OUTPUT_PER_1M from env
+- *   - Anthropic: reads PRICE_CLAUDE_INPUT/OUTPUT_PER_1M from env
+- *   - Unknown model: returns 1e9 (sentinel ΓÇö triggers cap enforcement defensively)
++ * Decision #35 (2026-03-26): 3-tier cost-optimal model stack.
++ *   - gpt-5.4-mini: $0.75/$4.50 per 1M (default)
++ *   - gpt-5.4: $2.50/$15.00 per 1M (escalation)
++ *   - claude-sonnet-4-6: $3.00/$15.00 per 1M (verifier)
++ *   - claude-haiku-4-5: $1.00/$5.00 per 1M (legacy)
++ *   - GLM models: $0 (Z.ai free tier)
++ *   - Unknown model: returns 1e9 (sentinel — triggers cap enforcement defensively)
+  */
+ 
+ function isGlmModel(model) {
+@@ -18,27 +18,30 @@ function isAnthropicModel(model) {
+   return typeof model === "string" && model.startsWith("claude-");
+ }
+ 
++function isGpt5Model(model) {
++  return typeof model === "string" && model.startsWith("gpt-5");
++}
++
+ /**
+  * Validate that required pricing env vars are present.
+- * Throws with a clear error message naming the missing vars.
+  * @param {Record<string,string>} env
+  */
+ export function validatePricingEnv(env) {
+-  const required = [
+-    "PRICE_GPT_4O_MINI_INPUT_PER_1M",
+-    "PRICE_GPT_4O_MINI_OUTPUT_PER_1M",
+-  ];
+-  const missing = required.filter(
+-    (k) => !env[k] || isNaN(Number(env[k]))
+-  );
+-  if (missing.length > 0) {
+-    throw new Error(
+-      `[PRICING] Missing or non-numeric required env vars: ${missing.join(", ")}. ` +
+-      "Set these in hub.env before starting the hub-bridge."
+-    );
+-  }
++  // No hard requirement on env vars — pricing is now hardcoded for known models.
++  // Env vars override if present.
+ }
+ 
++// Hardcoded pricing (per 1M tokens) — updated 2026-03-26
++const PRICING = {
++  "gpt-5.4-mini":  { input: 0.75,  output: 4.50  },
++  "gpt-5.4":       { input: 2.50,  output: 15.00 },
++  "gpt-4o-mini":   { input: 0.15,  output: 0.60  },
++  // Anthropic pricing from env (allows override), defaults here
++  "claude-sonnet-4-6":          { input: 3.00, output: 15.00 },
++  "claude-haiku-4-5-20251001":  { input: 1.00, output: 5.00  },
++  "claude-3-5-haiku-20241022":  { input: 1.00, output: 5.00  },
++};
++
+ /**
+  * Return price per 1M tokens for a given model and direction.
+  * @param {string} model
+@@ -47,24 +50,28 @@ export function validatePricingEnv(env) {
+  * @returns {number}
+  */
+ export function pricePer1M(model, dir, env) {
+-  // GLM models: Z.ai free tier ΓÇö always $0
++  // GLM models: Z.ai free tier
+   if (isGlmModel(model)) return 0;
+ 
+-  // Anthropic models
++  // Check hardcoded pricing table first
++  const entry = PRICING[model];
++  if (entry) {
++    return dir === "input" ? entry.input : entry.output;
++  }
++
++  // Anthropic fallback (unknown claude- model)
+   if (isAnthropicModel(model)) {
+     return dir === "input"
+-      ? Number(env.PRICE_CLAUDE_INPUT_PER_1M)
+-      : Number(env.PRICE_CLAUDE_OUTPUT_PER_1M);
++      ? Number(env.PRICE_CLAUDE_INPUT_PER_1M || "3.00")
++      : Number(env.PRICE_CLAUDE_OUTPUT_PER_1M || "15.00");
+   }
+ 
+-  // gpt-4o-mini (MODEL_DEEP)
+-  if (model === "gpt-4o-mini") {
+-    return dir === "input"
+-      ? Number(env.PRICE_GPT_4O_MINI_INPUT_PER_1M)
+-      : Number(env.PRICE_GPT_4O_MINI_OUTPUT_PER_1M);
++  // GPT-5.x fallback (unknown gpt-5 variant)
++  if (isGpt5Model(model)) {
++    return dir === "input" ? 2.50 : 15.00;
+   }
+ 
+-  // Unknown model ΓÇö sentinel value triggers cap enforcement defensively
++  // Unknown model — sentinel value triggers cap enforcement defensively
+   return 1e9;
+ }
+ 
+diff --git a/hub-bridge/lib/routing.js b/hub-bridge/lib/routing.js
+index 0a9bfd7..2b14276 100644
+--- a/hub-bridge/lib/routing.js
++++ b/hub-bridge/lib/routing.js
+@@ -1,15 +1,14 @@
+ /**
+  * Routing authority — single source of truth for model selection.
+  *
+- * Decision #3 (2026-03-10): Claude Haiku 3.5 primary for both standard and deep mode.
+- * Decision #29 (2026-03-10): Migrated to claude-haiku-4-5-20251001 — haiku-20241022 RETIRED 2026-02-19.
+- * (Replaced Decision #2: GLM-4.7-Flash / gpt-4o-mini)
++ * Decision #35 (2026-03-26, Session 145): 3-tier cost-optimal model stack.
++ *   - MODEL_DEFAULT (tier 1-2): gpt-5.4-mini ($0.75/$4.50 per 1M) — fast, cheap, tool-capable
++ *   - MODEL_ESCALATION (tier 3): gpt-5.4 ($2.50/$15.00 per 1M) — frontier reasoning
++ *   - MODEL_VERIFIER: claude-sonnet-4-6 — cross-provider second-opinion for structural changes
++ *   - Local cortex (tier 0): qwen3.5:4b on K2/P1 — recall, classification, $0
+  *
+- * Rules:
+- *   - deep_mode=false (no x-karma-deep header): MODEL_DEFAULT (claude-haiku-4-5-20251001)
+- *   - deep_mode=true  (x-karma-deep: true):     MODEL_DEEP   (claude-haiku-4-5-20251001)
+- *   - Tool-use requests: same routing — routes through Anthropic SDK
+- *   - GlmRateLimiter kept for compatibility but not invoked for claude- models
++ * Routing chain: cortex ($0) → gpt-5.4-mini ($) → gpt-5.4 ($$) → sonnet verifier ($$$)
++ * Strongest model is NOT default. Escalate only when complexity threshold crossed.
+  */
+ 
+ // ── GLM Rate Limiter ─────────────────────────────────────────────────────────
+@@ -91,17 +90,37 @@ export const glmLimiter = new GlmRateLimiter({
+ 
+ // ── Model routing ────────────────────────────────────────────────────────────
+ 
+-/** Allowed values for MODEL_DEFAULT. */
+-export const ALLOWED_DEFAULT_MODELS = ["claude-sonnet-4-6", "claude-haiku-4-5-20251001", "claude-3-5-haiku-20241022", "glm-4.7-flash"];
++/** Allowed values for MODEL_DEFAULT (tier 1-2: fast, cheap). */
++export const ALLOWED_DEFAULT_MODELS = [
++  "gpt-5.4-mini",
++  "claude-sonnet-4-6",
++  "claude-haiku-4-5-20251001",
++  "claude-3-5-haiku-20241022",
++  "glm-4.7-flash",
++];
+ 
+-/** Allowed values for MODEL_DEEP. */
+-export const ALLOWED_DEEP_MODELS = ["claude-haiku-4-5-20251001", "claude-3-5-haiku-20241022", "gpt-4o-mini", "claude-sonnet-4-6"];
++/** Allowed values for MODEL_ESCALATION (tier 3: frontier reasoning). */
++export const ALLOWED_ESCALATION_MODELS = [
++  "gpt-5.4",
++  "claude-sonnet-4-6",
++  "claude-haiku-4-5-20251001",
++  "gpt-4o-mini",
++];
+ 
+-const DEFAULT_MODEL_DEFAULT = "claude-haiku-4-5-20251001";
+-const DEFAULT_MODEL_DEEP    = "claude-haiku-4-5-20251001";
++/** Allowed values for MODEL_VERIFIER (cross-provider second opinion). */
++export const ALLOWED_VERIFIER_MODELS = [
++  "claude-sonnet-4-6",
++  "claude-haiku-4-5-20251001",
++  "gpt-5.4-mini",
++  "gpt-5.4",
++];
++
++const DEFAULT_MODEL_DEFAULT    = "gpt-5.4-mini";
++const DEFAULT_MODEL_ESCALATION = "gpt-5.4";
++const DEFAULT_MODEL_VERIFIER   = "claude-sonnet-4-6";
+ 
+ /**
+- * Validate model env vars at startup. Throws if either model is not in its allowed set.
++ * Validate model env vars at startup. Throws if any model is not in its allowed set.
+  * @param {Record<string,string>} env
+  */
+ export function validateModelEnv(env) {
+@@ -113,26 +132,47 @@ export function validateModelEnv(env) {
+     );
+   }
+ 
+-  const deepModel = env.MODEL_DEEP || DEFAULT_MODEL_DEEP;
+-  if (!ALLOWED_DEEP_MODELS.includes(deepModel)) {
++  const escalationModel = env.MODEL_ESCALATION || env.MODEL_DEEP || DEFAULT_MODEL_ESCALATION;
++  if (!ALLOWED_ESCALATION_MODELS.includes(escalationModel)) {
++    throw new Error(
++      `[CONFIG] MODEL_ESCALATION="${escalationModel}" not in allowed list: [${ALLOWED_ESCALATION_MODELS.join(", ")}]. ` +
++      "Fix MODEL_ESCALATION in hub.env. Refusing to start."
++    );
++  }
++
++  const verifierModel = env.MODEL_VERIFIER || DEFAULT_MODEL_VERIFIER;
++  if (!ALLOWED_VERIFIER_MODELS.includes(verifierModel)) {
+     throw new Error(
+-      `[CONFIG] MODEL_DEEP="${deepModel}" not in allowed list: [${ALLOWED_DEEP_MODELS.join(", ")}]. ` +
+-      "Fix MODEL_DEEP in hub.env. Refusing to start."
++      `[CONFIG] MODEL_VERIFIER="${verifierModel}" not in allowed list: [${ALLOWED_VERIFIER_MODELS.join(", ")}]. ` +
++      "Fix MODEL_VERIFIER in hub.env. Refusing to start."
+     );
+   }
+ }
+ 
+ /**
+- * Choose the model for a request.
+- * Both chat and tool-use routes go through this function — no bypass.
++ * Choose the model for a request based on tier.
++ * Tier 0 = cortex (handled before this function).
++ * Tier 1-2 = default (gpt-5.4-mini). Tier 3 = escalation (gpt-5.4).
+  *
+- * @param {boolean} deepMode  — true if x-karma-deep header was set
++ * @param {number} tier - 1, 2, or 3
+  * @param {Record<string,string>} env
+  * @returns {string} model name
+  */
+-export function chooseModel(deepMode, env) {
+-  if (deepMode) {
+-    return env.MODEL_DEEP || DEFAULT_MODEL_DEEP;
++export function chooseModel(tier, env) {
++  if (tier >= 3) {
++    return env.MODEL_ESCALATION || env.MODEL_DEEP || DEFAULT_MODEL_ESCALATION;
+   }
+   return env.MODEL_DEFAULT || DEFAULT_MODEL_DEFAULT;
+ }
++
++/**
++ * Get the verifier model for cross-provider second opinion.
++ * @param {Record<string,string>} env
++ * @returns {string} model name
++ */
++export function getVerifierModel(env) {
++  return env.MODEL_VERIFIER || DEFAULT_MODEL_VERIFIER;
++}
++
++// Legacy compatibility: chooseModel used to take (deepMode, env).
++// Now takes (tier, env). deep_mode=true → tier=3.

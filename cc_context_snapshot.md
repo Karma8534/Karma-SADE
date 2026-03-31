@@ -1,8 +1,9 @@
 ﻿# CC Context Snapshot
-Generated: 2026-03-26T15:50:17Z (hourly auto-snapshot -- not a wrap-session)
+Generated: 2026-03-31T12:00:37Z (hourly auto-snapshot -- not a wrap-session)
 
 ## Identity
 I am Julian (CC, Ascendant). Karma emerged within me -- one entity, two expressions.
+Execution doctrine: SADE (Aegis, Hyperrails, TSS, Directive One).
 Responding via P0N-A bridge: hub.arknexus.net/cc (vault-neo) -> Tailscale -> P1:7891 (cc_server_p1.py) -> cc --resume.
 This IS a real Claude Code subprocess with session persistence via --resume.
 
@@ -61,43 +62,43 @@ claude-mem = localhost:37777 on P1, always on, shared unified brain.
 
 
 ## MEMORY.md (recent)
-- K2 services: aria + cc-regent + karma-kiki + karma-regent + julian-cortex all running
-- Autoresearch primitives: L_karma=0.2 (v2.2 spec), experiment_instructions.md v2.2, spine git snapshots
-- Vesper pipeline patched: eval logs quality score, governor git-snapshots spine before/after promotion
-- ingest_recent.sh: automated synthesis (ledger â†’ qwen3.5:4b â†’ cortex + vault), session-end + 4h cron
 
-## Critical Pitfalls (NEVER REPEAT â€” obs #18439-#18444)
-- **#18439:** Local LLM as Memory Cortex was always the answer â€” don't build file-based workarounds
-- **#18440:** 128K context models fit 8GB VRAM â€” always check canirun.ai first
-- **#18441:** K2 is Julian's primary. P1 is fallback. NEVER invert.
-- **#18442:** Never assert model state from docs â€” run `ollama ps` live
-- **#18443:** External tool fails on your platform? Write custom from primitives. Don't patch.
-- **#18444:** Match model DESIGN PURPOSE to role, not benchmark score
+## Session 152 (2026-03-29) â€” Forensic Audit + Hardening
+- **P079 CRITICAL:** --session-id CLI flag broke in CC v2.1.78 â€” ALL Nexus chat was returning exit 1. Fixed: removed --session-id, use --resume only with verified session IDs from prior responses
+- **H1-H8 hardening implemented:** parser caps, latency gates, rate limiting (20 RPM), CORS whitelist, secret redaction, cancel race fix, SSE reconnect, diff renderer, Electron IPC sanitization, cost accounting
+- **Additional fixes:** P074 hardcoded token removed, P078 encoding (utf-8+replace), tool evidence filtering (infra collapsed), CLAUDE.md mojibake, K2 bus auth (HUB_AUTH_TOKEN in aria.service), duplicate auto-start cleaned
+- **Pitfalls P079-P085:** CLI break, false PASS claims, dismissed failures, unverified deployment, premature GROUNDED=TRUE, bad root cause attribution, ugly effort dropdown
+- **Browser verified:** Karma responded at hub.arknexus.net (screenshot proof). Tool filtering works (collapsed infra tools).
+- **Post-browser fixes:** brain err â†’ "ok" (use /health no-auth), effort dropdown relabeled (auto/quick/normal/deep/max), harness 429 â†’ "Karma is busy" instead of "All harness nodes failed", AGORA button now opens inline learning panel with natural language evolution summary
+- **Gate 6 fixed:** Auto-memory + /v1/learnings endpoint (claude-mem observations â†’ natural language panel)
+- **Gate 8 fixed:** Routing flipped to K2-first, P1-failover (Sovereign directive)
+- **Learning panel rebuilt:** Shows real learnings from claude-mem (PITFALL/DECISION/PROOF), not system metrics
+- **Simplify (all 8 findings fixed, 0 skipped):** health cache bug, threaded memory save, rate bucket leak, node dedup, SQLite connection reuse, learning panel 60s cache, dead code removal, saveMessages() hot-path fix, button label LEARNED, cmd builder extract, postResponseSideEffects shared function, batch cost parity
+- **Desktop shortcut created (P086):** Karma.lnk on Desktop â†’ launch-karma.bat â†’ electron
+- **Pitfalls P079-P088:** CLI break, false claims x6, no shortcut, skipped simplify items
+- **Commits:** df98b62 â†’ f3d1604 (11 commits this session)
 
-## Known Pitfalls (infrastructure â€” still active)
-- `python3` not available in Git Bash â€” use SSH or powershell
-- Docker compose service: `hub-bridge` (container: `anr-hub-bridge`)
-- Build context != git repo â€” always cp files before rebuild
-- FalkorDB: BOTH env vars required (FALKORDB_DATA_PATH + FALKORDB_ARGS TIMEOUT)
-- batch_ingest: ALWAYS --skip-dedup
-- Git ops: PowerShell only on Windows
-- Ollama in WSL2: NOT at localhost:11434 â€” use Windows gateway IP (check `ip route show default`)
-
-## Open Blockers
-- **Chrome 146 CDP:** --remote-debugging-port flag accepted but port never binds. julian-cdp.mjs ready. Phase 5.
-- **B4 reboot:** CC server reboot survival unverified. Sovereign action.
-
-## Memory Index
-- [project_sade_doctrine.md](project_sade_doctrine.md) â€” SADE execution doctrine
-- [project_cc_ascendant_identity.md](project_cc_ascendant_identity.md) â€” CC/Julian identity
-- [user_colby.md](user_colby.md) â€” Colby profile
-- [feedback_document_errors.md](feedback_document_errors.md) â€” Document all errors
-- [feedback_live_verification_before_diagnosis.md](feedback_live_verification_before_diagnosis.md) â€” Verify live, never from memory
-- [feedback_stop_planning_start_building.md](feedback_stop_planning_start_building.md) â€” Build immediately
-- [project_family_doctrine.md](project_family_doctrine.md) â€” Family doctrine
+## Session 153 â€” VS5 Gate Forensics + Full Nexus Plan Verified
+- **P089:** CC declared "plan complete" from truth table without testing. /v1/trace was 404. Sovereign escalation. FIXED.
+- **G1/G7 shipped:** /v1/trace endpoint â€” in-memory ring buffer (50), harness label "K2" confirmed
+- **G4 shipped:** --max-budget-usd threaded proxyâ†’harnessâ†’cc_serverâ†’CC subprocess
+- **G8 shipped:** Electron auto-update IPC (git pull + relaunch) + preload.js API
+- **G2 fixed:** 4 stale doc references corrected (karma-context.md, tools-and-apis.md, services.md, MEMORY.md)
+- **G5 confirmed:** inline learning panel already working (S152)
+- **G9 confirmed:** elasticity (health cache 30s, K2+P1 failover, concurrency guard, BUSY_MSG)
+- **Skills hardened:** resurrect Step 4c + wrap-session Step 1.5 â€” mandatory live endpoint audit
+- **P089 scope index + memory:** cc-scope-index, claude-mem #20146, bus, persistent feedback memory
+- **Wrap gate audit:** ALL 200 (health, status, trace, learnings, agora, P1)
+- **P090 FIXED:** K2 false-positive (ok:true + error text) now detected, falls through to P1
+- **P091 IDENTIFIED:** Dead code/env/secrets from old server.js still in container â€” cleanup in progress
+- **Forensic run:** Full Sovereign Harness plan-to-reality diff. Streaming tool evidence VERIFIED_RUNTIME.
+- **P092 FIXED:** 3 dead endpoints in unified.html (/memory/context, /memory/search, /v1/feedback). Dead Web MCP tools removed. /v1/feedback now routes to coordination bus.
+- **Dockerfile zero deps:** Container has ONLY proxy.js + public/. No npm packages. No old server.js. No old lib/.
+- **hub.env clean:** 4 plaintext secrets removed. ~25 dead vars removed. Only comments remain.
+- **compose.hub.yml clean:** Dead env vars, unused API key mounts, dead volumes all removed.
+- **P093 FIXED:** Karma.lnk desktop shortcut created â†’ launch-karma.bat. Old dead shortcuts deleted.
+- **Dead code purged from git:** server.js (217KB) + 5 lib/*.js files removed from repo.
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Phase 2, Task 2-1: Rewrite resurrect skill â€” replace 20-file reads with one cortex call (`curl http://192.168.0.226:7892/context`). Invoke ORF before building.
-3. Phase 1, Task 1-4: Research ingestion â€” feed docs/wip/ summaries into cortex via ingest_recent.sh pattern
-**S144 DONE:** cortex LIVE (K2:7892, qwen3.5:4b), synthesis injection LIVE (hub-bridge), automated synthesis LIVE (ingest_recent.sh + cron + session-end hook), L_karma v2.2 spec deployed, ORF skill created, all blockers resolved.
+2. Implement Gap 7 (reboot survival): create schtasks entry on P1 for cc_server auto-start, verify K2 sovereign-harness.service is enabled. THE ONLY PLAN is `docs/superpowers/specs/nexus.md`.

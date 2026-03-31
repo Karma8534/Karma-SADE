@@ -181,7 +181,7 @@ CC ── Claude Code on P1 — execution layer
 - **Electron scaffolded on K2:** /mnt/c/dev/Karma/k2/karma-browser/ — main.js + preload.js + IPC bridge. Launches successfully.
 - **Wip-watcher killed:** KarmaWipWatcher task + 2 processes stopped.
 
-- **NEXUS PLAN LOCKED:** `docs/superpowers/specs/nexus.md` — 27 baseline items, 5 sprints, 14+4 audit issues resolved. x6 forensic passes clean.
+- **NEXUS PLAN LOCKED:** `docs/ForColby/nexus.md` — 27 baseline items, 5 sprints, 14+4 audit issues resolved. x6 forensic passes clean.
 - **Persona fixed:** cc_server_p1.py --append-system-prompt Karma persona. Nexus = Karma not Julian.
 - **Cancel + CLI flags:** /cancel endpoint, --effort/--model threading implemented.
 
@@ -269,4 +269,4 @@ CC ── Claude Code on P1 — execution layer
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Implement Gap 7 (reboot survival): create schtasks entry on P1 for cc_server auto-start, verify K2 sovereign-harness.service is enabled. THE ONLY PLAN is `docs/superpowers/specs/nexus.md`.
+2. Implement Gap 7 (reboot survival): create schtasks entry on P1 for cc_server auto-start, verify K2 sovereign-harness.service is enabled. THE ONLY PLAN is `docs/ForColby/nexus.md`.

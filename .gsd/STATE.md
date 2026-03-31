@@ -1,9 +1,9 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-29 Session 153 (VS5 gates closed, full plan verified, forensic skills hardened)
-**Active: Gap 7 (reboot survival) is the only remaining gap. Plan: docs/superpowers/specs/nexus.md (v5.0-VERIFIED)**
-**THE ONLY PLAN:** Karma2/PLAN.md → docs/superpowers/specs/nexus.md. All gaps implemented except G7. All endpoints 200.
-**Session:** S153 — P089 forensic verification. /v1/trace shipped. G4 budget control. G8 auto-update. Trace harness fix. G2 doc cleanup. Skills hardened (resurrect 4c + wrap 1.5). 3 commits. Pitfall P089.
+**Last updated:** 2026-03-31 Session 153 (Plan consolidation — all plans merged into nexus.md)
+**THE ONLY PLAN:** `docs/ForColby/nexus.md` (v3.0.0). All other plan files archived.
+**Status:** 16 of 27 baseline items PASS. 6 NOT DONE. 3 PARTIAL. Sprint 2 is next.
+**Session:** S153 — Phases 1-4 UI shipped, AGORA fixed, plans consolidated, P094-P112 logged.
 **Canonical source:** This file. Read at session start.
 
 ---
