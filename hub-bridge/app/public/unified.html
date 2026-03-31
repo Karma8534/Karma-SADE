@@ -134,6 +134,9 @@
   .tool-name { color: #f59e0b; font-weight: 600; }
   .tool-input { color: #6b7280; }
   .tool-output { color: #a78bfa; max-height: 120px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+  .karma-pill { display: inline-block; padding: 2px 8px; margin: 2px 4px; border-radius: 12px; background: #0f0f1a; border: 1px solid #1a1a2e; color: #4b5563; font-size: 10px; cursor: pointer; }
+  .karma-pill:hover { color: #9ca3af; border-color: #2d2d4a; }
+  .karma-pill .pill-detail { display: block; margin-top: 4px; font-size: 9px; color: #374151; white-space: pre-wrap; word-break: break-all; max-height: 80px; overflow-y: auto; }
   .msg.tool-evidence .msg-body { cursor: pointer; }
   .msg.tool-evidence.collapsed .tool-output { display: none; }
   .msg.tool-evidence.collapsed .tool-input::after { content: ' [click to expand]'; color: #374151; font-size: 9px; }
@@ -793,7 +796,7 @@
   // H1: Parser hardening — safe limits
   const PARSER_MAX_TEXT_LEN = 100000;    // 100KB text block cap — prevents UI freeze
   const PARSER_MAX_TOOL_OUTPUT = 50000;  // 50KB tool output cap
-  const PARSER_KNOWN_TYPES = new Set(['result', 'assistant', 'user', 'error', 'system']);
+  const PARSER_KNOWN_TYPES = new Set(['result', 'assistant', 'user', 'error', 'system', 'queued']);
   const PARSER_KNOWN_BLOCKS = new Set(['text', 'thinking', 'tool_use', 'tool_result']);
 
   function safeText(s, max) {
@@ -811,8 +814,12 @@
       return;
     }
 
+    if (type === 'queued') {
+      document.getElementById('processing').textContent = '\u23f3 Queued (position ' + (obj.position || '?') + ')';
+      document.getElementById('processing').classList.add('visible');
+      return;
+    }
     if (type === 'error') {
-      // H1: Explicit error events from server
       const errMsg = obj.error || obj.message || 'Unknown server error';
       appendMsg('system', 'Error: ' + safeText(errMsg, 500));
       return;
@@ -853,7 +860,8 @@
               const el = appendToolEvidence(block.name, block.input, '(running...)');
               streamToolMap.set(block.id, el);
             } else {
-              streamToolMap.set(block.id, null);
+              const pill = appendPill(block.name, block.input);
+              streamToolMap.set(block.id, pill);
             }
             const proc = document.getElementById('processing');
             proc.textContent = 'Running ' + friendlyTool(block.name) + '...';
@@ -1036,27 +1044,60 @@
     return map[name] || map[clean] || clean;
   }
 
-  // Phase 1: Selective tool visibility — user-facing tools get inline blocks
+  // Phase 1: Two-tier tool visibility — visible blocks + suppressed pills
   const VISIBLE_TOOLS = new Set([
     'Bash', 'shell_run', 'python_exec',
-    'Read', 'k2_file_read', 'get_vault_file', 'file_read',
-    'Write', 'k2_file_write', 'file_write',
-    'Edit',
-    'Glob', 'k2_file_list', 'file_list',
-    'Grep', 'k2_file_search', 'file_search',
+    'k2_file_read', 'get_vault_file',
+    'k2_file_write', 'k2_file_list', 'k2_file_search',
     'graph_query', 'write_memory',
     'browse_url', 'fetch_url',
     'WebSearch', 'WebFetch',
   ]);
+  const PILL_LABELS = {
+    Read: '\ud83d\udd0d reading', Glob: '\ud83d\udd0d searching files', Grep: '\ud83d\udd0d searching code',
+    Edit: '\u270f\ufe0f editing', Write: '\ud83d\udcbe writing',
+    ToolSearch: '\ud83d\udd0d searching tools', TodoWrite: '\ud83d\udccb updating tasks',
+    scratchpad_read: '\ud83d\udcdd checking memory', scratchpad_write: '\ud83d\udcdd saving to memory',
+    Agent: '\ud83e\udd16 delegating', bus_post: '\ud83d\udce8 posting to bus',
+    kiki_status: '\ud83d\udc3e checking kiki',
+  };
+  const PILL_DEFAULT = '\u2699\ufe0f working';
   function isVisibleTool(name) {
     if (!name) return false;
     if (VISIBLE_TOOLS.has(name)) return true;
     return VISIBLE_TOOLS.has(name.replace(/^(?:mcp__[\w-]+__)+/, ''));
   }
+  function getPillLabel(name) {
+    if (!name) return PILL_DEFAULT;
+    if (PILL_LABELS[name]) return PILL_LABELS[name];
+    const clean = name.replace(/^(?:mcp__[\w-]+__)+/, '');
+    return PILL_LABELS[clean] || PILL_DEFAULT;
+  }
   function extractToolResultText(content) {
     if (typeof content === 'string') return content;
     if (Array.isArray(content)) return content.map(b => (typeof b === 'string') ? b : (b && b.type === 'text' ? b.text || '' : '')).filter(Boolean).join('\n');
     return String(content || '');
+  }
+  function appendPill(toolName, input) {
+    const el = document.createElement('span');
+    el.className = 'karma-pill';
+    const label = getPillLabel(toolName);
+    const inputObj = (typeof input === 'object' && input) ? input : {};
+    const detail = inputObj.file_path || inputObj.path || inputObj.pattern || inputObj.command || '';
+    el.textContent = label + (detail ? ' ' + String(detail).split(/[/\\]/).pop().slice(0, 30) : '');
+    el.title = 'Click to expand';
+    el.dataset.toolName = toolName;
+    el.dataset.toolInput = typeof input === 'string' ? input : JSON.stringify(input || {});
+    el.onclick = function() {
+      if (this.classList.contains('expanded')) { this.classList.remove('expanded'); this.querySelector('.pill-detail')?.remove(); return; }
+      this.classList.add('expanded');
+      const d = document.createElement('div'); d.className = 'pill-detail';
+      d.textContent = this.dataset.toolInput.slice(0, 300);
+      this.appendChild(d);
+    };
+    const feed = document.getElementById('chat-feed');
+    feed.insertBefore(el, document.getElementById('processing'));
+    return el;
   }
 
   function appendInfraToolLine(toolName, input, output) {

@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Phases 1-4 shipped — selective tool visibility, brain wire, status bar, persistence, collapsible blocks
-- **Session:** 153 (Nexus Phases 1-4 deployed: VISIBLE_TOOLS whitelist, claude-mem brain wire, response-bar, tool block persistence)
+- **Active task:** Phase 1 complete — request queue, tool pills, visible blocks, brain wire, status bar, persistence
+- **Session:** 153 (Phase 1 blocker resolved: request queue + tool pills + brain wire auth fix. All 4 phases shipped.)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)

@@ -122,90 +122,126 @@ async function routeToHarness(message, sessionId) {
   return { ok: false, error: `All harness nodes failed: ${errors.join("; ")}` };
 }
 
+// ── Request Queue (Phase 1 — no dropped messages) ───────────────────────────
+const _requestQueue = [];
+const QUEUE_MAX = 10;
+let _streamActive = false;
+
+async function drainQueue() {
+  if (_streamActive || !_requestQueue.length) return;
+  const next = _requestQueue.shift();
+  // Notify remaining queued clients of updated position
+  _requestQueue.forEach((q, i) => {
+    try { q.clientRes.write(`data: ${JSON.stringify({ type: "queued", position: i + 1 })}\n\n`); } catch {}
+  });
+  console.log(`[QUEUE] dequeuing request (${_requestQueue.length} remaining)`);
+  await executeStream(next.message, next.sessionId, next.effort, next.model, next.clientRes, next.files, next.budget);
+}
+
 // ── Harness streaming (SSE passthrough) ─────────────────────────────────────
 async function routeToHarnessStream(message, sessionId, effort, model, clientRes, files, budget) {
+  if (_streamActive) {
+    // CC is busy — queue instead of dropping
+    if (_requestQueue.length >= QUEUE_MAX) {
+      if (!clientRes.headersSent) clientRes.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Access-Control-Allow-Origin": "*" });
+      clientRes.write(`data: ${JSON.stringify({ type: "error", error: "Karma is at capacity. Please try again in a moment." })}\n\n`);
+      clientRes.end();
+      return;
+    }
+    const pos = _requestQueue.length + 1;
+    _requestQueue.push({ message, sessionId, effort, model, clientRes, files, budget });
+    if (!clientRes.headersSent) clientRes.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive", "Access-Control-Allow-Origin": "*" });
+    clientRes.write(`data: ${JSON.stringify({ type: "queued", position: pos, message: `Your message is queued (position ${pos}). Karma will respond shortly.` })}\n\n`);
+    console.log(`[QUEUE] request queued at position ${pos}`);
+    return;
+  }
+  await executeStream(message, sessionId, effort, model, clientRes, files, budget);
+}
+
+async function executeStream(message, sessionId, effort, model, clientRes, files, budget) {
+  _streamActive = true;
   const payload = JSON.stringify({ message, session_id: sessionId, effort, model, files, budget });
   const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` };
   const nodes = harnessNodes();
 
-  for (const node of nodes) {
-    const h = await checkHealth(node.url, node.getHealthy(), node.getCheckedAt());
-    node.setHealthy(h); node.setChecked();
-    if (!h) continue;
+  try {
+    for (const node of nodes) {
+      const h = await checkHealth(node.url, node.getHealthy(), node.getCheckedAt());
+      node.setHealthy(h); node.setChecked();
+      if (!h) continue;
 
-    try {
-      const r = await fetch(`${node.url}/cc/stream`, {
-        method: "POST", headers, body: payload,
-        signal: AbortSignal.timeout(HARNESS_TIMEOUT),
-      });
-      if (r.status === 429) {
-        console.warn(`[HARNESS-STREAM] ${node.label} busy (429)`);
-        continue;
-      }
-      if (!r.ok || !r.body) continue;
-      console.log(`[HARNESS-STREAM] ${node.label} connected`);
+      try {
+        const r = await fetch(`${node.url}/cc/stream`, {
+          method: "POST", headers, body: payload,
+          signal: AbortSignal.timeout(HARNESS_TIMEOUT),
+        });
+        if (r.status === 429) {
+          console.warn(`[HARNESS-STREAM] ${node.label} busy (429)`);
+          continue;
+        }
+        if (!r.ok || !r.body) continue;
+        console.log(`[HARNESS-STREAM] ${node.label} connected`);
 
-      clientRes.writeHead(200, {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
-        "Access-Control-Allow-Origin": "*",
-      });
+        if (!clientRes.headersSent) {
+          clientRes.writeHead(200, {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+          });
+        }
 
-      const reader = r.body.getReader();
-      const decoder = new TextDecoder();
-      let fullText = "";
-      let streamCostUsd = 0;  // H8: track actual cost from CC result event
-      let streamModel = "";   // H8: track actual model used
+        const reader = r.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = "";
+        let streamCostUsd = 0;
+        let streamModel = "";
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        clientRes.write(chunk);
-        // Extract assistant text for vault logging
-        try {
-          for (const ln of chunk.split("\n")) {
-            if (!ln.startsWith("data: ")) continue;
-            const obj = JSON.parse(ln.slice(6));
-            if (obj.type === "assistant") {
-              for (const b of (obj.message?.content || [])) {
-                if (b.type === "text" && b.text) fullText = b.text;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          clientRes.write(chunk);
+          try {
+            for (const ln of chunk.split("\n")) {
+              if (!ln.startsWith("data: ")) continue;
+              const obj = JSON.parse(ln.slice(6));
+              if (obj.type === "assistant") {
+                for (const b of (obj.message?.content || [])) {
+                  if (b.type === "text" && b.text) fullText = b.text;
+                }
+                if (obj.message?.model) streamModel = obj.message.model;
               }
-              if (obj.message?.model) streamModel = obj.message.model;  // H8
-            }
-            // H8: Extract actual cost from result event
-            if (obj.type === "result" && obj.total_cost_usd !== undefined) {
-              streamCostUsd = obj.total_cost_usd;
-              if (obj.modelUsage) {
-                const models = Object.keys(obj.modelUsage);
-                if (models.length) streamModel = models[0];
+              if (obj.type === "result" && obj.total_cost_usd !== undefined) {
+                streamCostUsd = obj.total_cost_usd;
+                if (obj.modelUsage) {
+                  const models = Object.keys(obj.modelUsage);
+                  if (models.length) streamModel = models[0];
+                }
               }
             }
-          }
-        } catch {}
-      }
-      clientRes.end();
+          } catch {}
+        }
+        clientRes.end();
 
-      // Fire-and-forget: vault + chatlog + cortex
-      // H8: Log actual cost and model for accounting
-      if (streamCostUsd > 0) console.log(`[COST] stream request: $${streamCostUsd.toFixed(4)} via ${streamModel} (Max sub — no actual charge)`);
-      postResponseSideEffects({ message, assistantText: fullText, sessionId, costUsd: streamCostUsd, model: streamModel, tagSuffix: "-STREAM" });
+        if (streamCostUsd > 0) console.log(`[COST] stream request: $${streamCostUsd.toFixed(4)} via ${streamModel} (Max sub — no actual charge)`);
+        postResponseSideEffects({ message, assistantText: fullText, sessionId, costUsd: streamCostUsd, model: streamModel, tagSuffix: "-STREAM" });
+        traceAppend({ ts: new Date().toISOString(), path: "stream", harness: node.label, model: streamModel || "cc-sovereign", usd: streamCostUsd, message_len: message.length, ok: true });
 
-      // Trace log (G1/G7)
-      traceAppend({ ts: new Date().toISOString(), path: "stream", harness: node.label, model: streamModel || "cc-sovereign", usd: streamCostUsd, message_len: message.length, ok: true });
+        return; // Success
+      } catch (e) { console.error(`[HARNESS-STREAM] ${node.label} error:`, e.message); }
+    }
 
-      return; // Success
-    } catch (e) { console.error(`[HARNESS-STREAM] ${node.label} error:`, e.message); }
+    // All nodes failed
+    if (!clientRes.headersSent) {
+      clientRes.writeHead(502, { "Content-Type": "text/event-stream", "Access-Control-Allow-Origin": "*" });
+    }
+    clientRes.write(`data: ${JSON.stringify({ type: "error", error: BUSY_MSG })}\n\n`);
+    clientRes.end();
+  } finally {
+    _streamActive = false;
+    drainQueue();
   }
-
-  // All nodes failed or busy
-  if (!clientRes.headersSent) {
-    clientRes.writeHead(502, { "Content-Type": "text/event-stream", "Access-Control-Allow-Origin": "*" });
-  }
-  const errMsg = BUSY_MSG;
-  clientRes.write(`data: ${JSON.stringify({ type: "error", error: errMsg })}\n\n`);
-  clientRes.end();
 }
 
 // ── Coordination Bus ─────────────────────────────────────────────────────────
