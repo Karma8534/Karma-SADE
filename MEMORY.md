@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** P116 fixed — BUSY_MSG retry loop (5s/10s/20s). Queue + retry now covers both proxy and CC-level contention.
-- **Session:** 153 (Phases 1-4, AGORA, plans consolidated, memory research, bus-check hook, BUSY retry, P094-P116)
+- **Active task:** Root directory cleaned — 131 stale files archived to archive/root-legacy/. 21 active files remain.
+- **Session:** 153 (Phases 1-4, AGORA, plans consolidated, memory research, root cleanup, P094-P116)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)
