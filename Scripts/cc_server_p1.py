@@ -132,14 +132,15 @@ ALLOWED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg",
                       ".ts", ".html", ".css", ".sh", ".ps1", ".toml", ".xml", ".log"}
 
 def handle_files(files):
-    """Write attached files to temp dir, return prefix string with paths.
+    """Write attached files to temp dir, return (prefix_string, file_paths_list).
     E301: Rejects files > MAX_FILE_SIZE. E302: Rejects unsupported extensions.
     E303: Handles corrupted base64 gracefully."""
     if not files:
-        return ""
+        return "", []
     os.makedirs(UPLOAD_DIR, exist_ok=True)
     parts = []
     errors = []
+    paths = []
     for f in files:
         name = f.get("name", "file")
         data_b64 = f.get("data", "")
@@ -166,10 +167,11 @@ def handle_files(files):
         with open(fpath, "wb") as fh:
             fh.write(raw)
         parts.append(f"[Attached file: {name} at {fpath}]")
+        paths.append(fpath)
     all_parts = parts + errors
-    return "\n".join(all_parts) + "\n\n" if all_parts else ""
+    return ("\n".join(all_parts) + "\n\n" if all_parts else ""), paths
 
-def _build_cc_cmd(message, effort=None, model=None, budget=None, stream=False):
+def _build_cc_cmd(message, effort=None, model=None, budget=None, stream=False, file_paths=None):
     """Build the CC subprocess command list. Shared by run_cc and run_cc_stream."""
     session_id = load_session_id()
     full_message = KARMA_PERSONA_PREFIX + message
@@ -186,11 +188,14 @@ def _build_cc_cmd(message, effort=None, model=None, budget=None, stream=False):
         cmd += ["--model", model]
     if budget:
         cmd += ["--max-budget-usd", str(budget)]
+    if file_paths:
+        for fp in file_paths:
+            cmd += ["--file", fp]
     return cmd
 
-def run_cc(message, effort=None, model=None, budget=None):
+def run_cc(message, effort=None, model=None, budget=None, file_paths=None):
     """Call real CC subprocess with session continuity."""
-    cmd = _build_cc_cmd(message, effort=effort, model=model, budget=budget, stream=False)
+    cmd = _build_cc_cmd(message, effort=effort, model=model, budget=budget, stream=False, file_paths=file_paths)
     global _current_proc
     _current_proc = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -228,10 +233,10 @@ def run_cc(message, effort=None, model=None, budget=None):
     # Fallback: return raw stdout if no JSON found
     return stdout
 
-def run_cc_stream(message, effort=None, model=None, budget=None):
+def run_cc_stream(message, effort=None, model=None, budget=None, file_paths=None):
     """Yield filtered stream-json lines from CC subprocess as SSE-ready strings.
     Requires --verbose with -p mode (P069). Filters out system/hook events."""
-    cmd = _build_cc_cmd(message, effort=effort, model=model, budget=budget, stream=True)
+    cmd = _build_cc_cmd(message, effort=effort, model=model, budget=budget, stream=True, file_paths=file_paths)
     global _current_proc
     _current_proc = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -505,8 +510,8 @@ class CCHandler(BaseHTTPRequestHandler):
         model = body.get("model")    # model override
         budget = body.get("budget")  # max budget USD (Gap 4: --max-budget-usd)
         files = body.get("files", [])
-        file_prefix = handle_files(files)
-        message = file_prefix + message  # Prepend file paths to message
+        file_prefix, file_paths = handle_files(files)
+        message = file_prefix + message  # Prepend file info to message
 
         # Concurrency guard — reject if another request is active
         if not _proc_lock.acquire(blocking=False):
@@ -525,7 +530,7 @@ class CCHandler(BaseHTTPRequestHandler):
                 try:
                     t_start = time.time()
                     first_token_sent = False
-                    for line in run_cc_stream(message, effort=effort, model=model, budget=budget):
+                    for line in run_cc_stream(message, effort=effort, model=model, budget=budget, file_paths=file_paths):
                         if not first_token_sent:
                             _last_latency["first_token_ms"] = int((time.time() - t_start) * 1000)
                             first_token_sent = True
@@ -545,7 +550,7 @@ class CCHandler(BaseHTTPRequestHandler):
 
             # ── /cc — batch JSON endpoint (backward compat) ──────────────
             try:
-                response_text = run_cc(message, effort=effort, model=model, budget=budget)
+                response_text = run_cc(message, effort=effort, model=model, budget=budget, file_paths=file_paths)
                 self._json(200, {"ok": True, "response": response_text})
                 # Gate 6: Auto-save chat turn to claude-mem (fire-and-forget)
                 _auto_save_memory(message, response_text)
