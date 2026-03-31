@@ -154,8 +154,8 @@ async function routeToHarnessStream(message, sessionId, effort, model, clientRes
     const pos = _requestQueue.length + 1;
     const entry = { message, sessionId, effort, model, clientRes, files, budget, alive: true };
     _requestQueue.push(entry);
-    // Evict from queue if client disconnects while waiting
-    clientRes.on("close", () => { entry.alive = false; const idx = _requestQueue.indexOf(entry); if (idx >= 0) { _requestQueue.splice(idx, 1); console.log(`[QUEUE] client disconnected, removed from queue`); } });
+    // Mark dead on disconnect — drainQueue skips dead entries (no splice race)
+    clientRes.on("close", () => { entry.alive = false; console.log("[QUEUE] client disconnected, marked dead"); });
     if (!clientRes.headersSent) clientRes.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive", "Access-Control-Allow-Origin": "*" });
     clientRes.write(`data: ${JSON.stringify({ type: "queued", position: pos, message: `Your message is queued (position ${pos}). Karma will respond shortly.` })}\n\n`);
     console.log(`[QUEUE] request queued at position ${pos}`);
@@ -246,7 +246,7 @@ async function executeStream(message, sessionId, effort, model, clientRes, files
     clientRes.end();
   } finally {
     _streamActive = false;
-    drainQueue();
+    drainQueue().catch(e => console.error("[QUEUE] drain error:", e.message));
   }
 }
 

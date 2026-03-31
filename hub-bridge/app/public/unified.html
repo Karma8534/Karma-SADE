@@ -1030,9 +1030,11 @@
     return el;
   }
 
+  function cleanToolName(name) { return (name || '').replace(/^(?:mcp__[\w-]+__)+/, ''); }
+
   function friendlyTool(name) {
     if (!name) return 'tool';
-    const clean = name.replace(/^(?:mcp__[\w-]+__)+/, '');
+    const clean = cleanToolName(name);
     const map = {
       Bash: 'bash', Read: 'file read', Write: 'file write', Edit: 'file edit',
       Grep: 'grep', Glob: 'glob', WebSearch: 'web search', WebFetch: 'web fetch',
@@ -1064,14 +1066,11 @@
   const PILL_DEFAULT = '\u2699\ufe0f working';
   function isVisibleTool(name) {
     if (!name) return false;
-    if (VISIBLE_TOOLS.has(name)) return true;
-    return VISIBLE_TOOLS.has(name.replace(/^(?:mcp__[\w-]+__)+/, ''));
+    return VISIBLE_TOOLS.has(name) || VISIBLE_TOOLS.has(cleanToolName(name));
   }
   function getPillLabel(name) {
     if (!name) return PILL_DEFAULT;
-    if (PILL_LABELS[name]) return PILL_LABELS[name];
-    const clean = name.replace(/^(?:mcp__[\w-]+__)+/, '');
-    return PILL_LABELS[clean] || PILL_DEFAULT;
+    return PILL_LABELS[name] || PILL_LABELS[cleanToolName(name)] || PILL_DEFAULT;
   }
   function extractToolResultText(content) {
     if (typeof content === 'string') return content;
@@ -1088,13 +1087,10 @@
     el.title = 'Click to expand';
     el.dataset.toolName = toolName;
     el.dataset.toolInput = typeof input === 'string' ? input : JSON.stringify(input || {});
-    el.onclick = function() {
-      if (this.classList.contains('expanded')) { this.classList.remove('expanded'); this.querySelector('.pill-detail')?.remove(); return; }
-      this.classList.add('expanded');
-      const d = document.createElement('div'); d.className = 'pill-detail';
-      d.textContent = this.dataset.toolInput.slice(0, 300);
-      this.appendChild(d);
-    };
+    const detailDiv = document.createElement('div'); detailDiv.className = 'pill-detail'; detailDiv.style.display = 'none';
+    detailDiv.textContent = el.dataset.toolInput.slice(0, 300);
+    el.appendChild(detailDiv);
+    el.onclick = function() { const vis = detailDiv.style.display !== 'none'; detailDiv.style.display = vis ? 'none' : ''; this.classList.toggle('expanded', !vis); };
     const feed = document.getElementById('chat-feed');
     feed.insertBefore(el, document.getElementById('processing'));
     return el;
