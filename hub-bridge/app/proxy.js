@@ -129,10 +129,13 @@ let _streamActive = false;
 
 async function drainQueue() {
   if (_streamActive || !_requestQueue.length) return;
+  // Skip dead clients (disconnected while waiting)
+  while (_requestQueue.length && !_requestQueue[0].alive) { _requestQueue.shift(); console.log("[QUEUE] skipping dead client"); }
+  if (!_requestQueue.length) return;
   const next = _requestQueue.shift();
   // Notify remaining queued clients of updated position
   _requestQueue.forEach((q, i) => {
-    try { q.clientRes.write(`data: ${JSON.stringify({ type: "queued", position: i + 1 })}\n\n`); } catch {}
+    if (q.alive) try { q.clientRes.write(`data: ${JSON.stringify({ type: "queued", position: i + 1 })}\n\n`); } catch {}
   });
   console.log(`[QUEUE] dequeuing request (${_requestQueue.length} remaining)`);
   await executeStream(next.message, next.sessionId, next.effort, next.model, next.clientRes, next.files, next.budget);
@@ -149,7 +152,10 @@ async function routeToHarnessStream(message, sessionId, effort, model, clientRes
       return;
     }
     const pos = _requestQueue.length + 1;
-    _requestQueue.push({ message, sessionId, effort, model, clientRes, files, budget });
+    const entry = { message, sessionId, effort, model, clientRes, files, budget, alive: true };
+    _requestQueue.push(entry);
+    // Evict from queue if client disconnects while waiting
+    clientRes.on("close", () => { entry.alive = false; const idx = _requestQueue.indexOf(entry); if (idx >= 0) { _requestQueue.splice(idx, 1); console.log(`[QUEUE] client disconnected, removed from queue`); } });
     if (!clientRes.headersSent) clientRes.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive", "Access-Control-Allow-Origin": "*" });
     clientRes.write(`data: ${JSON.stringify({ type: "queued", position: pos, message: `Your message is queued (position ${pos}). Karma will respond shortly.` })}\n\n`);
     console.log(`[QUEUE] request queued at position ${pos}`);
