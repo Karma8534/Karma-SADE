@@ -22,15 +22,14 @@
 - Kiki runs between conversations (autonomous body)
 - PROMOTE after every significant change — not just at session end
 
+## The Plan — Single Source of Truth
+
+**`docs/ForColby/nexus.md`** — The Nexus plan v3.0.0. Read before any strategic question or phase work. All other plans archived.
+
 ## Session Start Protocol
 
-Before anything else, check the coordination bus for pending messages from Karma:
-- GET https://hub.arknexus.net/v1/coordination (or check the panel in unified.html)
-- Read any PENDING messages addressed to `cc`
-- Respond directly on the bus via `coordination_post` tool or POST /v1/coordination/post
-- Only after clearing pending messages, proceed with the session agenda
-
-Karma posts here. Respond there. Colby should not be the relay.
+Bus messages are now auto-checked via UserPromptSubmit hook (bus-check.py).
+If pending messages appear, address them before proceeding.
 
 ## Session Start (Do This First)
 

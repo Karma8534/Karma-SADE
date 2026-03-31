@@ -1,5 +1,9 @@
 # Canonical Data Map — Read This Before Touching Any File
 
+## THE PLAN — SINGLE SOURCE OF TRUTH
+**`docs/ForColby/nexus.md`** — The Nexus plan v3.0.0. ALL other plans archived.
+Read this BEFORE any strategic question, phase work, or "what's next" decision.
+
 ## THE RULE
 Before writing ANY new file or plan: check this map first.
 If something already exists here → USE IT, don't duplicate.
@@ -9,10 +13,22 @@ If something is missing → ADD IT HERE after creating it.
 
 ## Ground Truth Index (auto-maintained)
 
+### docs/ForColby/ — The Nexus (plan + persona + operational scripts)
+```
+docs/ForColby/
+  nexus.md                       ← THE ONLY PLAN. Single source of truth. Read first.
+  00-karma-local-prompt.md       ← Karma persona (cortex mode)
+  01-karma-standard-prompt.md    ← Karma persona (standard/CC mode)
+  experiment_instructions.md     ← L_karma optimization spec for Vesper
+  bus_to_cortex.py               ← Feeds bus messages to K2 cortex (cron 2min)
+  sync_k2_to_p1.py               ← Syncs K2 cortex blocks to P1 (cron 30min)
+  archive/                       ← 24 archived plan files (do not read)
+```
+
 ### Karma2/ — Structural Ground Truth (P1 local)
 ```
 Karma2/
-  PLAN.md                      ← Karma baseline capability plan + active blockers
+  PLAN.md                      ← Pointer to docs/ForColby/nexus.md
   karma_contract_policy.md     ← STABLE. SovereignPeer policy. Cache this. Sovereign approval to change.
   karma_contract_execution.md  ← VOLATILE. Inject fresh each session. Contains live state paths.
   map/

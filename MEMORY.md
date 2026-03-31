@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Plan consolidation complete. docs/ForColby/ cleaned. nexus.md v3.0.0 is single source of truth.
-- **Session:** 153 (Phases 1-4 shipped, AGORA fixed, plans consolidated, ForColby cleaned, P094-P112 logged)
+- **Active task:** P113-P115 fixed: nexus.md in CLAUDE.md + data-map.md, bus-check hook, all references updated
+- **Session:** 153 (Phases 1-4, AGORA, plans consolidated, bus-check hook, P094-P115 logged)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)
