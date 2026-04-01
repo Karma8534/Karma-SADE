@@ -95,4 +95,4 @@ echo ""
 echo "========================================="
 echo "  PASS: $PASS  FAIL: $FAIL  SKIP: $SKIP"
 echo "========================================="
-[ "$FAIL" -eq 0 ] && echo "  ALL CLEAR" || echo "  ISSUES FOUND"
+[ "$FAIL" -eq 0 ] && { echo "  ALL CLEAR"; exit 0; } || { echo "  ISSUES FOUND"; exit 1; }

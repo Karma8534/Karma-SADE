@@ -953,7 +953,7 @@
       const mdl = (obj.modelUsage ? Object.keys(obj.modelUsage)[0] : '') || 'cc-sovereign';
       const cost = obj.total_cost_usd !== undefined ? '$' + obj.total_cost_usd.toFixed(4) : '$0';
       _sessionCostUsd += (obj.total_cost_usd || 0);
-      bar.textContent = mdl + ' · ' + cost + ' this turn · $' + _sessionCostUsd.toFixed(4) + ' session · Max $0 actual';
+      bar.textContent = mdl + ' · ' + cost + ' this turn · $' + _sessionCostUsd.toFixed(4) + ' session';
       bar.style.display = '';
       return;
     }
@@ -1412,10 +1412,15 @@
   }
 
   function updateK2Status() {
-    if (!lastActivityTs) return;
-    const diff = Date.now() - new Date(lastActivityTs).getTime();
-    document.getElementById('k2-dot').className  = diff < 10*60*1000 ? 'stat-dot alive' : diff < 3600*1000 ? 'stat-dot warn' : 'stat-dot dead';
-    document.getElementById('k2-val').textContent = diff < 10*60*1000 ? 'active' : diff < 3600*1000 ? 'idle' : 'offline';
+    // S155: check actual K2 cortex health, not just bus activity
+    fetch('https://hub.arknexus.net/v1/spine', { headers: auth() }).then(r => r.json()).then(d => {
+      const alive = d && d.pipeline && d.pipeline.pipeline_status;
+      document.getElementById('k2-dot').className = alive ? 'stat-dot alive' : 'stat-dot dead';
+      document.getElementById('k2-val').textContent = alive ? 'active' : 'offline';
+    }).catch(() => {
+      document.getElementById('k2-dot').className = 'stat-dot dead';
+      document.getElementById('k2-val').textContent = 'unreachable';
+    });
   }
 
   // ── Utilities ────────────────────────────────────────────────────────────
