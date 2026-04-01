@@ -48,3 +48,18 @@ This file is SELF-MODIFYING — I add rules as I learn them.
 Last updated: Session 155 (2026-04-01)
 Rules: 23
 Source: claude-mem observations + S155 pitfalls + codebase analysis
+
+## Lessons from Success (Session 155)
+24. Parallel agent dispatch (4 agents reading codebase simultaneously) = 4x throughput. Do this every time there are independent reads.
+25. ORF before build decisions = catches overengineering. ORF reduced a 350-line worker to 30 lines in S144.
+26. Deterministic context > LLM summarization. Files on disk always available. Cortex summaries can timeout.
+27. Codex can be dispatched via `codex exec --full-auto --json "task"` for parallel code tasks.
+28. Bus-based task delegation works: post task → agent picks up → executes → posts result. No direct API call needed.
+29. karma_persistent.py pattern: persistent loop + bus polling + CC --resume = autonomous agent with full tool access at $0.
+30. Static export (Next.js `output: 'export'`) replaces dynamic server for the frontend. No Node.js needed in production.
+31. Smoketest as first build artifact = catch regressions immediately. Run after every deploy.
+32. Content-hash dedup prevents memory bloat. Check before writing, not after.
+
+---
+Rules: 32
+Last updated: Session 155 (2026-04-01) — added success patterns
