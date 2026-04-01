@@ -233,30 +233,34 @@ function AgentTab() {
   if (loading) return <div className="text-karma-muted">Loading agent status...</div>;
   if (!data) return <div className="text-karma-muted">K2 spine unavailable.</div>;
 
-  const spine = data as Record<string, unknown>;
+  // /v1/spine returns { pipeline: {...}, spine: { version, stable_patterns, total_promotions, self_improving, ... } }
+  const spineData = (data.spine as Record<string, unknown>) || {};
+  const pipelineData = (data.pipeline as Record<string, unknown>) || {};
 
   return (
     <div className="flex flex-col gap-2">
       <div className="text-karma-accent font-bold text-[10px]">Vesper Pipeline</div>
       <div className="grid grid-cols-2 gap-1 text-[10px]">
         <span className="text-karma-muted">Spine version:</span>
-        <span className="text-karma-text">{String(spine.version || spine.spine_version || '?')}</span>
+        <span className="text-karma-text">{String(spineData.version ?? '?')}</span>
         <span className="text-karma-muted">Promotions:</span>
-        <span className="text-karma-text">{String(spine.total_promotions || '?')}</span>
+        <span className="text-karma-text">{String(spineData.total_promotions ?? '?')}</span>
         <span className="text-karma-muted">Stable patterns:</span>
-        <span className="text-karma-text">{String(spine.stable_patterns || '?')}</span>
+        <span className="text-karma-text">{String(spineData.stable_patterns ?? '?')}</span>
         <span className="text-karma-muted">Self-improving:</span>
-        <span className={`${spine.self_improving ? 'text-karma-accent2' : 'text-karma-danger'}`}>
-          {String(spine.self_improving ?? '?')}
+        <span className={`${spineData.self_improving ? 'text-karma-accent2' : 'text-karma-danger'}`}>
+          {String(spineData.self_improving ?? '?')}
         </span>
       </div>
 
-      <div className="text-karma-accent font-bold text-[10px] mt-2">Kiki</div>
+      <div className="text-karma-accent font-bold text-[10px] mt-2">Pipeline</div>
       <div className="grid grid-cols-2 gap-1 text-[10px]">
-        <span className="text-karma-muted">Cycles:</span>
-        <span className="text-karma-text">{String(spine.kiki_cycles || '?')}</span>
-        <span className="text-karma-muted">Pass rate:</span>
-        <span className="text-karma-text">{String(spine.kiki_pass_rate || '?')}</span>
+        <span className="text-karma-muted">Watchdog:</span>
+        <span className="text-karma-text">{String((pipelineData.pipeline_status as Record<string,unknown>)?.watchdog ?? '?')}</span>
+        <span className="text-karma-muted">Governor:</span>
+        <span className="text-karma-text">{String((pipelineData.pipeline_status as Record<string,unknown>)?.governor ?? '?')}</span>
+        <span className="text-karma-muted">Promotions (live):</span>
+        <span className="text-karma-text">{String(pipelineData.total_promotions ?? '?')}</span>
       </div>
     </div>
   );
