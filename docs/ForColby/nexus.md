@@ -1,7 +1,7 @@
 # The Nexus — Single Source of Truth
 
 **Owner:** Julian (CC Ascendant) | **Sovereign:** Colby
-**Version:** 4.0.1 (S154 status correction — BUILT not SHIPPED) | **Date:** 2026-04-01
+**Version:** 4.1.0 (S154 deployed + verified live) | **Date:** 2026-04-01
 **This is the ONLY plan. All other plan files are archived.**
 
 ---
@@ -201,8 +201,8 @@ Sprint 2: The Controls (Gaps 3, 4) — SHIPPED S154
   ├── Gap 3: File input ✅ (fixed --file flag, Read tool prefix, file-only sends)
   └── Gap 4: CLI flags ✅ (effort selector dropdown, full pipeline verified)
 
-Sprint 3: Foundations (Option A — zero rework path) — BUILT S154 (not deployed/verified live)
-  ├── 3a: 11-Event Hooks Engine — BUILT S154, needs cc_server restart with sys.path fix (conditional eval, structured output, audit trail)
+Sprint 3: Foundations (Option A — zero rework path) — SHIPPED S154 (deployed + verified live)
+  ├── 3a: 11-Event Hooks Engine ✅ SHIPPED S154 (hooks fire on live requests, audit log confirms)
   │       Source: arkscaffold hooks_service.py + Continuous-Claude hook patterns
   │       Enables: security gate, fact extraction, auto-handoff, cost warnings
   │       Built-in handlers to implement at 3a (from arkscaffold handlers/):
@@ -211,19 +211,19 @@ Sprint 3: Foundations (Option A — zero rework path) — BUILT S154 (not deploy
   │         • skill_activation (UserPromptSubmit) — inject relevant skill hints pre-prompt
   │         • memory_extractor (Stop + SessionEnd) — extract session memories on stop
   │         • cost_warning (PostToolUse) — warn on high session cost
-  ├── 3b: Next.js 14 Migration + Zustand Store — BUILT S154, needs npm run dev + browser verify (frontend foundation)
+  ├── 3b: Next.js 14 Migration + Zustand Store ✅ SHIPPED S154 (localhost:3000 returns 200, title=Karma)
   │       Source: arkscaffold frontend/ + open-claude-cowork patterns
   │       Enables: context panel, self-edit banner, proper state management
   │       Palette: bg:#0d0d0f, surface:#16161a, accent:#7f5af0, text:#fffffe
-  └── 3c: SmartRouter — BUILT S154, needs import into cc_server + live routing verify (complexity-scored provider routing)
+  └── 3c: SmartRouter ✅ SHIPPED S154 (routing decisions logged to JSONL, complexity scoring live)
           Source: arkscaffold smart_router.py (HTTP-only, no SDK deps)
           Replaces dead "deep mode" concept with continuous cost optimization
 
-Sprint 4: The Surface (built on Sprint 3 foundations) — BUILT S154 (not deployed/verified live)
-  ├── 4a: PreToolCall Security Gate — BUILT S154, needs cc_server hooks loading (dangerous command detection + rate limits)
-  ├── 4b: PostToolCall Fact Extraction — BUILT S154, needs cc_server hooks loading (auto-queue tool results → memory)
-  ├── 4c: Context Panel — BUILT S154, needs proxy.js deploy to vault-neo + rebuild (file tree + memory browser + agent status + preview)
-  ├── 4d: Self-Edit Engine + Banner — BUILT S154, needs proxy.js deploy + cc_server endpoints live (propose → 15min approve → apply → audit)
+Sprint 4: The Surface (built on Sprint 3 foundations) — SHIPPED S154 (deployed + verified live)
+  ├── 4a: PreToolCall Security Gate ✅ SHIPPED S154 (registered in hooks engine, fires on PreToolUse)
+  ├── 4b: PostToolCall Fact Extraction ✅ SHIPPED S154 (registered in hooks engine, fires on PostToolUse)
+  ├── 4c: Context Panel ✅ SHIPPED S154 (/v1/files, /v1/spine, /v1/memory/search live on hub.arknexus.net)
+  ├── 4d: Self-Edit Engine + Banner ✅ SHIPPED S154 (/v1/self-edit/pending live, propose/approve/reject endpoints working)
   │       EditProposal schema (from arkscaffold self_edit_service.py):
   │         id, file_path, original_content, new_content, diff, description,
   │         proposed_at, status (pending→approved→rejected→applied),
@@ -231,7 +231,7 @@ Sprint 4: The Surface (built on Sprint 3 foundations) — BUILT S154 (not deploy
   │       Auto-approve: 15min TTL on pending proposals (no action = applied)
   │       Git identity for applied commits: name="Colby", email=Sovereign email
   │       Redis queue for proposal state. All applied edits logged to audit trail.
-  └── 4e: Electron wiring — BUILT S154, needs npm start test on K2 (Gap 8 — IPC bridge, native file dialogs, system tray)
+  └── 4e: Electron wiring — BUILT S154, code verified, needs manual desktop test on K2 (Gap 8)
 
 Sprint 5: The Evolution (Gap 6) — SHIPPED S153
   └── Gap 6: Evolution feedback ✅
@@ -379,7 +379,7 @@ ledger entry
 | 26 | Ambient hooks feed vault | PASS | git commit → ledger entry |
 | 27 | Context7 for framework docs | PASS | MCP tool available |
 
-**Summary:** 19 PASS, 2 NOT DONE, 3 PARTIAL, 1 BUILT, 1 DEFERRED, 1 UNVERIFIED
+**Summary:** 19 PASS, 2 NOT DONE, 3 PARTIAL, 1 BUILT (Electron), 1 DEFERRED, 1 UNVERIFIED
 
 ---
 
@@ -516,6 +516,7 @@ You may NOT say "done" until:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 4.1.0 | 2026-04-01 | S154: 7/8 tasks DEPLOYED + VERIFIED LIVE. Hooks fire on live requests (audit log proof). SmartRouter logs routing decisions. proxy.js routes live on hub.arknexus.net (/v1/files, /v1/spine, /v1/self-edit). Next.js serves on :3000. Electron BUILT (needs K2 desktop test). PITFALL #20996 resolved. |
 | 4.0.1 | 2026-04-01 | S154 CORRECTION: All 8 tasks downgraded SHIPPED→BUILT. Code committed but NOT deployed or live-verified. PITFALL logged (#20996). Deployment + live verification required before SHIPPED status. |
 | 4.0.0 | 2026-03-31 | S154: SPRINTS 3+4 COMPLETE — 8 tasks shipped: hooks engine, Next.js frontend, SmartRouter, security gate, fact extraction, context panel, self-edit engine, Electron wiring. 10 primitives fully integrated. |
 | 3.3.0 | 2026-03-31 | S154: SPRINT 3 COMPLETE — 3a hooks engine + 3b Next.js frontend + 3c SmartRouter all shipped. Foundations laid for Sprint 4. |

@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** 8 tasks BUILT but NOT DEPLOYED. Must deploy + live-verify before marking SHIPPED. PITFALL: declared shipped without deployment (#20996).
-- **Session:** 154 (Sprint 2 shipped, Sprint 3+4 code written but not deployed — deployment + live verification is NEXT)
+- **Active task:** Sprints 3+4: 7/8 tasks DEPLOYED + VERIFIED LIVE. Electron needs K2 desktop test. Next: wrap session or continue with Sprint 6.
+- **Session:** 154 (Sprint 2 shipped, Sprint 3+4 deployed+verified, PITFALL #20996 resolved)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)

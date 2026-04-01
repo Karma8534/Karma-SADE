@@ -43,6 +43,17 @@ except Exception as e:
     HOOKS_AVAILABLE = False
     print(f"[cc-server] Hooks engine: DISABLED ({e})")
 
+# ── SmartRouter (Sprint 3c) ──────────────────────────────────────────────────
+try:
+    from Scripts.smart_router import SmartRouter
+    _router = SmartRouter()
+    ROUTER_AVAILABLE = True
+    print(f"[cc-server] SmartRouter: {len(_router.providers)} providers")
+except Exception as e:
+    _router = None
+    ROUTER_AVAILABLE = False
+    print(f"[cc-server] SmartRouter: DISABLED ({e})")
+
 PORT          = 7891
 _current_proc = None  # Track running CC subprocess for cancel
 _proc_lock    = threading.Lock()  # Concurrency guard — one CC subprocess at a time
@@ -589,6 +600,12 @@ class CCHandler(BaseHTTPRequestHandler):
         effort = body.get("effort")  # low/medium/high/max
         model = body.get("model")    # model override
         budget = body.get("budget")  # max budget USD (Gap 4: --max-budget-usd)
+
+        # ── SmartRouter decision (Sprint 3c) ─────────────────────────────
+        if ROUTER_AVAILABLE:
+            routing = _router.route(message)
+            print(f"[router] {routing['provider']} (complexity={routing['complexity']}, tier={routing['tier']})")
+            # Future: if routing['tier'] == 0, route to Ollama instead of CC
         files = body.get("files", [])
         file_prefix, file_paths = handle_files(files)
         message = file_prefix + message  # Prepend file info to message
