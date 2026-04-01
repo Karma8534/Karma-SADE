@@ -133,7 +133,8 @@ def run_cc_task(task_message):
     session_id = load_session_id()
     full_message = KARMA_PERSONA + task_message
 
-    cmd = [NODE_EXE, CLAUDE_CLI, "-p", full_message, "--output-format", "json"]
+    cmd = [NODE_EXE, CLAUDE_CLI, "-p", full_message, "--output-format", "json",
+           "--dangerously-skip-permissions"]
     if session_id:
         cmd += ["--resume", session_id]
 
