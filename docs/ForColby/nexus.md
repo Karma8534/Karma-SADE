@@ -817,3 +817,69 @@ Current Karma stack comparison:
 ---
 
 **Appendix B audit completed 2026-04-01 Session 155. 20 new primitives cataloged (#45-#64). Total across both audits: 64 primitives.**
+
+---
+
+## Appendix C: PDF Primitives Audit (S155 — for-karma/Ascendent/ + docs/wip/)
+
+**Sources:** DeepAgents.pdf, LocalCCVariable.pdf, MemLayer.pdf, 5Locals.pdf, RTXLocalOptimized.pdf
+**Method:** Read via subagent, extracted 40 primitives, filtered to HIGH-value for Nexus
+
+### C.1: Immediate Deploy (do NOW)
+
+| # | Primitive | Source | Action |
+|---|-----------|--------|--------|
+| 65 | Flash Attention | RTXLocalOptimized | `OLLAMA_FLASH_ATTENTION=true` on K2 — reduces VRAM + latency |
+| 66 | GPU Layer Offloading | RTXLocalOptimized | `OLLAMA_GPU_LAYERS=40` on K2 — maximize GPU utilization |
+| 67 | OLLAMA_KEEP_ALIVE=24h | RTXLocalOptimized | Keep model loaded permanently — eliminates cold start |
+| 68 | NUM_PARALLEL=2 + BATCH_SIZE=128 | RTXLocalOptimized | K2 Ollama: Kiki + hub-bridge query simultaneously |
+
+### C.2: Sprint 6 Enhancements (memory pipeline)
+
+| # | Primitive | Source | What It Does |
+|---|-----------|--------|-------------|
+| 69 | Salience Gate | MemLayer | ML-based filtering before ledger write. Only store salient info. Prevents 209K+ ledger bloat. |
+| 70 | Three Retrieval Tiers | MemLayer | Fast (<100ms FAISS only) / Balanced (<500ms FAISS+graph) / Deep (<2s full traversal). Match tier to query complexity. |
+| 71 | Memory Observability | MemLayer | Log retrieval latency, hit rates, relevance scores. Tune retrieval with data, not guesses. |
+| 72 | Proactive Reminders | MemLayer | Context-triggered task surfacing. When user mentions topic with pending task, inject reminder. |
+
+### C.3: Harness Architecture (validate + extend)
+
+| # | Primitive | Source | What It Does |
+|---|-----------|--------|-------------|
+| 73 | Phase-Based Checkpointing | DeepAgents | Break long workflows into phases with persisted state. Resume from checkpoint on crash. |
+| 74 | Ralph Loop | DeepAgents | On premature exit, reinject prompt + point at progress file. Kiki should use this. |
+| 75 | LoopDetectionMiddleware | DeepAgents | Track per-file edit counts, nudge after N edits. Automate the "3x failure → STOP" rule. |
+| 76 | Context Offloading | DeepAgents | Large tool outputs → write to file, show model truncated preview + pointer. Fixes 33K prompt problem. |
+| 77 | Skills as Progressive Disclosure | DeepAgents | Move domain instructions OUT of system prompt, INTO skills. Load on demand. Reduce prompt size. |
+| 78 | Reasoning Budget Management | DeepAgents | MODEL_DEEP for planning+verification, MODEL_DEFAULT for implementation. Time-budget injection for Kiki. |
+| 79 | CompositeBackend | DeepAgents | /cortex/ → K2 local, /spine/ → vault-neo persistent, /scratch/ → ephemeral. Single abstraction, multiple durability. |
+| 80 | GuardedBackend | DeepAgents | Backend-level write restrictions by path. Kiki can read anything, writes gated to specific paths. |
+| 81 | Trace Analysis Agent | DeepAgents | Feed failure logs into analysis pipeline → suggest harness changes. Self-improving harness loop. |
+
+### C.4: Multi-Model Routing
+
+| # | Primitive | Source | What It Does |
+|---|-----------|--------|-------------|
+| 82 | Multi-Model Fallback Chain | 5Locals | Primary → fallback1 → fallback2 on failure/rate-limit. Haiku → K2 qwen → Gemini free tier. |
+| 83 | Model Capability Scanning | 5Locals | Probe K2 Ollama on startup for available models + capabilities. Auto-configure best chain. |
+| 84 | Cloud-Local Hybrid Routing | 5Locals | Free cloud tiers for primary, local for frequent, expensive cloud only when needed. |
+| 85 | Local Mode Profile | LocalCCVariable | Disable telemetry, attribution headers, non-essential traffic for local inference. Every byte counts over Tailscale. |
+
+### C.5: Already Validated (confirm architecture correct)
+
+| # | Primitive | Source | Karma Status |
+|---|-----------|--------|-------------|
+| 86 | Agent Harness Architecture | DeepAgents | VALIDATED — hub-bridge + karma-server = harness, LLM = brain |
+| 87 | TodoList as State Machine | DeepAgents | VALIDATED — GSD workflow + TodoWrite |
+| 88 | Filesystem as Working Memory | DeepAgents | VALIDATED — cc_scratchpad.md, MEMORY.md, K2 cache |
+| 89 | AGENTS.md Procedural Memory | DeepAgents | VALIDATED — system prompt + skills + evolve.md |
+| 90 | Three Memory Types | DeepAgents | VALIDATED — Procedural (prompt), Semantic (FAISS+FalkorDB), Episodic (ledger) |
+| 91 | Hybrid Memory Storage | MemLayer | VALIDATED — FAISS + FalkorDB |
+| 92 | Subagent Spawning | DeepAgents | VALIDATED — CC Agent tool + KCC delegation |
+| 93 | Build-Verify Loop | DeepAgents | VALIDATED — GSD (CONTEXT→PLAN→EXECUTE→VERIFY) |
+| 94 | Git Integration for Versioning | DeepAgents | VALIDATED — git commit after every change |
+
+---
+
+**Appendix C audit completed 2026-04-01 Session 155. 30 new primitives (#65-#94), 9 validated. Grand total: 94 primitives across 3 audits.**

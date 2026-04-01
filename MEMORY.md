@@ -273,4 +273,4 @@ CC ── Claude Code on P1 — execution layer
 
 <!-- S155 checkpoint: smoketest 20/20, codex online, family building 2026-04-01T20:50:17Z -->
 S 1 5 5   c o n v e r s a t i o n   c a p t u r e  
- 
+ <!-- S155: ARCHON spam fixed, Ollama optimizations queued, 94 primitives cataloged 2026-04-01T21:14:01Z -->
