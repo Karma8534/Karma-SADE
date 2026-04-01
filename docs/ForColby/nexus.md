@@ -113,25 +113,15 @@ feedback.js, library_docs.js, deferred_intent.js — all deleted. CC replaced al
 **Problem:** Tool calls invisible to user.
 **Status:** SHIPPED. Two-tier rendering: VISIBLE_TOOLS get collapsible blocks (smartInputDisplay for clean command/code text), suppressed tools get pills (PILL_LABELS with emoji + context). appendToolEvidence() for blocks, appendPill() for pills.
 
-### Gap 3: File/Image Input [NOT DONE]
+### Gap 3: File/Image Input [SHIPPED S154]
 
 **Problem:** unified.html only accepts text. CC accepts images, files, PDFs.
-**Impact:** Users cannot share visual context; must copy-paste code manually.
-**Priority:** P1
+**Status:** SHIPPED. Drag-drop zone + paste handler + file button (`+`) in unified.html. Base64 encoding, preview chips, proxy forwarding. cc_server_p1.py decodes files to temp dir, prepends Read tool instruction to message. CC analyzes attached files via Read tool. File-only sends supported (no text required). Note: `--file` CLI flag is for API file resource IDs, NOT local paths — fixed S154.
 
-**Fix:** Add drag-drop zone + paste handler + file button to unified.html. Read as base64, include in request body. cc_server_p1.py writes temp files, passes to CC via --file flag.
-
-**Verify:** Drag screenshot into chat → Karma analyzes it.
-
-### Gap 4: CLI Flag Mapping [PARTIALLY DONE]
+### Gap 4: CLI Flag Mapping [SHIPPED S154]
 
 **Problem:** No UI control for effort level, model selection, budget.
-**Status:** effort and model params are sent from unified.html to proxy.js to cc_server_p1.py. No UI selector yet.
-**Priority:** P1
-
-**Fix:** Add effort selector dropdown in header bar. Map to --effort flag.
-
-**Verify:** Select "high" → response shows deeper thinking.
+**Status:** SHIPPED. Effort selector dropdown in header bar (auto/quick/normal/deep/max). `getEffort()` reads value, sent in request body, proxy.js forwards, cc_server_p1.py passes `--effort` flag to CC CLI. Full pipeline verified S154.
 
 ### Gap 5: Cancel Mechanism [SHIPPED S153]
 
@@ -195,31 +185,61 @@ Sprint 1: The Pipe (Gaps 1, 2, 5) — SHIPPED S153
   ├── Gap 2: Rich output ✅
   └── Gap 5: Cancel ✅
 
-Sprint 2: The Controls (Gaps 3, 4) — NOT DONE
-  ├── Gap 3: File input
-  └── Gap 4: CLI flags (effort/model selector)
+Sprint 2: The Controls (Gaps 3, 4) — SHIPPED S154
+  ├── Gap 3: File input ✅ (fixed --file flag, Read tool prefix, file-only sends)
+  └── Gap 4: CLI flags ✅ (effort selector dropdown, full pipeline verified)
 
-Sprint 3: The Desktop (Gap 8) — NOT DONE
-  └── Gap 8: Electron wiring
+Sprint 3: Foundations (Option A — zero rework path) — NOT DONE
+  ├── 3a: 11-Event Hooks Engine (conditional eval, structured output, audit trail)
+  │       Source: arkscaffold hooks_service.py + Continuous-Claude hook patterns
+  │       Enables: security gate, fact extraction, auto-handoff, cost warnings
+  ├── 3b: Next.js 14 Migration + Zustand Store (frontend foundation)
+  │       Source: arkscaffold frontend/ + open-claude-cowork patterns
+  │       Enables: context panel, self-edit banner, proper state management
+  │       Palette: bg:#0d0d0f, surface:#16161a, accent:#7f5af0, text:#fffffe
+  └── 3c: SmartRouter (complexity-scored provider routing)
+          Source: arkscaffold smart_router.py (HTTP-only, no SDK deps)
+          Replaces dead "deep mode" concept with continuous cost optimization
 
-Sprint 4: The Evolution (Gap 6) — SHIPPED S153
+Sprint 4: The Surface (built on Sprint 3 foundations) — NOT DONE
+  ├── 4a: PreToolCall Security Gate (dangerous command detection + rate limits)
+  ├── 4b: PostToolCall Fact Extraction (auto-queue tool results → memory)
+  ├── 4c: Context Panel (file tree + memory browser + agent status + preview)
+  ├── 4d: Self-Edit Engine + Banner (propose → 15min approve → apply → audit)
+  └── 4e: Electron wiring (Gap 8 — IPC bridge, native file dialogs, system tray)
+
+Sprint 5: The Evolution (Gap 6) — SHIPPED S153
   └── Gap 6: Evolution feedback ✅
 
-Sprint 5: The Survival (Gap 7) — NOT DONE
-  └── Gap 7: Reboot survival
+Sprint 6: Memory Operating Discipline (Phase 7B) — NOT DONE
+  ├── 6a: MemCube schema (spine upgrade)
+  ├── 6b: Typed memory tiers
+  ├── 6c: Query-conditioned compression
+  ├── 6d: Gated recall
+  ├── 6e: Interleaved multi-source recall
+  ├── 6f: Local-window priority
+  └── 6g: Memory migration/fusion
 
-Sprint 6: The Full Clone — NOT SCOPED
-  └── Skill browser, file tree, git panel, artifact viewer, subagent visibility
-
-Sprint 7: Memory Operating Discipline (Phase 7B) — NOT DONE
-  ├── 7-5: MemCube schema (spine upgrade)
-  ├── 7-6: Typed memory tiers
-  ├── 7-7: Query-conditioned compression
-  ├── 7-8: Gated recall
-  ├── 7-9: Interleaved multi-source recall
-  ├── 7-10: Local-window priority
-  └── 7-11: Memory migration/fusion
+Final Phase: Reboot Survival (Gap 7) — DEFERRED
+  └── Gap 7: schtasks entry for cc_server_p1.py
 ```
+
+### Primitives Assimilation Log (S154)
+
+Sources analyzed: parcadei/Continuous-Claude-v3, ComposioHQ/open-claude-cowork,
+anthropics/claude-code, karma-harness-scaffold (local), Karma8534/arkscaffold (white-room).
+
+7 HIGH primitives adopted into sprint plan (Option A — foundations first):
+1. 11-Event Hooks Engine → Sprint 3a
+2. Zustand Store (Next.js migration) → Sprint 3b
+3. SmartRouter → Sprint 3c
+4. PreToolCall Security Gate → Sprint 4a
+5. PostToolCall Fact Extraction → Sprint 4b
+6. Context Panel → Sprint 4c
+7. Self-Edit Engine + Banner → Sprint 4d
+
+Doctrine check: SmartRouter uses HTTP calls to providers, NOT SDKs.
+No external API lock-in. CLI remains the stable interface.
 
 ---
 
