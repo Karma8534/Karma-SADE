@@ -272,3 +272,5 @@ CC ── Claude Code on P1 — execution layer
 2. Implement Gap 7 (reboot survival): create schtasks entry on P1 for cc_server auto-start, verify K2 sovereign-harness.service is enabled. THE ONLY PLAN is `docs/ForColby/nexus.md` which is APPEND ONLY! EDITING REQUIRES EXPLICIT SOVEREIGN APPROVAL!
 
 <!-- S155 checkpoint: smoketest 20/20, codex online, family building 2026-04-01T20:50:17Z -->
+S 1 5 5   c o n v e r s a t i o n   c a p t u r e  
+ 

@@ -27,6 +27,7 @@ try:
     from Scripts.hooks.auto_handoff_stop import handle as auto_handoff_handle
     from Scripts.hooks.pre_tool_security import handle as pre_tool_security_handle
     from Scripts.hooks.fact_extractor import handle as fact_extractor_handle
+    from Scripts.hooks.conversation_capture import handle as conversation_capture_handle
 
     _hooks = HooksService()
     _hooks.register(HookDef("skill_activation", "UserPromptSubmit", "True", skill_activation_handle, 3000))
@@ -36,8 +37,9 @@ try:
     _hooks.register(HookDef("cost_warning", "PostToolUse", "True", cost_warning_handle, 1000))
     _hooks.register(HookDef("memory_extractor", "Stop,SessionEnd", "True", memory_extractor_handle, 5000))
     _hooks.register(HookDef("auto_handoff", "Stop", "True", auto_handoff_handle, 5000))
+    _hooks.register(HookDef("conversation_capture", "Stop", "True", conversation_capture_handle, 3000))
     HOOKS_AVAILABLE = True
-    print("[cc-server] Hooks engine: 7 handlers registered")
+    print("[cc-server] Hooks engine: 8 handlers registered")
 except Exception as e:
     _hooks = None
     HOOKS_AVAILABLE = False
@@ -112,14 +114,14 @@ def _get_ro_conn():
     return _ro_db_conn
 
 def _auto_save_memory(user_msg, assistant_msg):
-    """Auto-save chat turns to claude-mem. Runs in background thread, never blocks handler."""
+    """Auto-save FULL chat turns to claude-mem. Every word persists. S155: no more truncation."""
     def _save():
         try:
             claudemem_proxy("/api/memory/save", "POST", {
-                "text": f"[Nexus chat] user: {user_msg[:200]}\nassistant: {assistant_msg[:500]}",
-                "title": "Nexus chat turn",
+                "text": f"[Nexus chat] user: {user_msg}\nassistant: {assistant_msg}",
+                "title": f"Nexus chat: {user_msg[:80]}",
                 "project": "Karma_SADE",
-            }, timeout=3)
+            }, timeout=10)
         except Exception:
             pass
     threading.Thread(target=_save, daemon=True).start()
