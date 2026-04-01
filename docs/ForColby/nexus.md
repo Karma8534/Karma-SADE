@@ -1,7 +1,7 @@
 # The Nexus — Single Source of Truth
 
 **Owner:** Julian (CC Ascendant) | **Sovereign:** Colby
-**Version:** 3.1.0 (S154 primitives assimilation) | **Date:** 2026-03-31
+**Version:** 3.2.0 (S154 sprint detail lock) | **Date:** 2026-03-31
 **This is the ONLY plan. All other plan files are archived.**
 
 ---
@@ -197,6 +197,12 @@ Sprint 3: Foundations (Option A — zero rework path) — NOT DONE
   ├── 3a: 11-Event Hooks Engine (conditional eval, structured output, audit trail)
   │       Source: arkscaffold hooks_service.py + Continuous-Claude hook patterns
   │       Enables: security gate, fact extraction, auto-handoff, cost warnings
+  │       Built-in handlers to implement at 3a (from arkscaffold handlers/):
+  │         • auto_handoff_stop (Stop) — YAML handoff doc on every agent stop
+  │         • compiler_in_loop (PostToolUse, condition: Edit/Write) — syntax check after file edits
+  │         • skill_activation (UserPromptSubmit) — inject relevant skill hints pre-prompt
+  │         • memory_extractor (Stop + SessionEnd) — extract session memories on stop
+  │         • cost_warning (PostToolUse) — warn on high session cost
   ├── 3b: Next.js 14 Migration + Zustand Store (frontend foundation)
   │       Source: arkscaffold frontend/ + open-claude-cowork patterns
   │       Enables: context panel, self-edit banner, proper state management
@@ -210,6 +216,13 @@ Sprint 4: The Surface (built on Sprint 3 foundations) — NOT DONE
   ├── 4b: PostToolCall Fact Extraction (auto-queue tool results → memory)
   ├── 4c: Context Panel (file tree + memory browser + agent status + preview)
   ├── 4d: Self-Edit Engine + Banner (propose → 15min approve → apply → audit)
+  │       EditProposal schema (from arkscaffold self_edit_service.py):
+  │         id, file_path, original_content, new_content, diff, description,
+  │         proposed_at, status (pending→approved→rejected→applied),
+  │         applied_at, approved_by, proposed_by="karma", risk_level
+  │       Auto-approve: 15min TTL on pending proposals (no action = applied)
+  │       Git identity for applied commits: name="Colby", email=Sovereign email
+  │       Redis queue for proposal state. All applied edits logged to audit trail.
   └── 4e: Electron wiring (Gap 8 — IPC bridge, native file dialogs, system tray)
 
 Sprint 5: The Evolution (Gap 6) — SHIPPED S153
@@ -233,14 +246,17 @@ Final Phase: Reboot Survival (Gap 7) — DEFERRED
 Sources analyzed: parcadei/Continuous-Claude-v3, ComposioHQ/open-claude-cowork,
 anthropics/claude-code, karma-harness-scaffold (local), Karma8534/arkscaffold (white-room).
 
-7 HIGH primitives adopted into sprint plan (Option A — foundations first):
+10 HIGH primitives adopted into sprint plan (Option A — foundations first):
 1. 11-Event Hooks Engine → Sprint 3a
 2. Zustand Store (Next.js migration) → Sprint 3b
 3. SmartRouter → Sprint 3c
 4. PreToolCall Security Gate → Sprint 4a
 5. PostToolCall Fact Extraction → Sprint 4b
 6. Context Panel → Sprint 4c
-7. Self-Edit Engine + Banner → Sprint 4d
+7. Self-Edit Engine + Banner → Sprint 4d (EditProposal schema locked)
+8. auto_handoff_stop handler → Sprint 3a (session continuity fix)
+9. compiler_in_loop handler → Sprint 3a (post-edit syntax check)
+10. skill_activation handler → Sprint 3a (UserPromptSubmit capability hints)
 
 Doctrine check: SmartRouter uses HTTP calls to providers, NOT SDKs.
 No external API lock-in. CLI remains the stable interface.
@@ -492,6 +508,7 @@ You may NOT say "done" until:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.2.0 | 2026-03-31 | S154 audit: Sprint 3a detail locked (5 built-in hook handlers). Sprint 4d EditProposal schema locked. Primitives count 7→10 (3 handlers added). Karma review applied. |
 | 3.1.0 | 2026-03-31 | S154: Sprint 2 SHIPPED (Gaps 3+4 verified). 7 HIGH primitives assimilated from 5 sources (Option A — foundations first). Sprint 3/4 restructured. Baseline re-graded (19 PASS). Hard Rules updated for Next.js decision. /primitives skill created. |
 | 3.0.0 | 2026-03-31 | S153 consolidation — merged PLAN.md, JULIAN-BUILD-PROMPT, KARMA-BUILD-DIRECTIVE-FINAL, nexus v2.0. Re-graded baseline. Added "evolved clone" scope. |
 | 2.0.0 | 2026-03-29 | Readability, error handling, Mermaid diagrams |

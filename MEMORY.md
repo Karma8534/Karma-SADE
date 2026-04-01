@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Sprint 2 SHIPPED. nexus.md v3.1.0 — 4 stale data issues fixed (Karma review). Baseline: 19 PASS, 4 NOT DONE. Sprint 3 next: hooks engine + Next.js migration + SmartRouter (Option A foundations first).
-- **Session:** 154 (gap verification, primitives from 5 sources, /primitives skill, nexus.md v3.1.0, Karma code review applied)
+- **Active task:** nexus.md v3.2.0 locked. Sprint 3a: 5 hook handlers detailed. Sprint 4d: EditProposal schema locked. 10 primitives total. Ready to build Sprint 3.
+- **Session:** 154 (gap verification, primitives from 5 sources, /primitives skill, nexus v3.2.0, consistency check shipped)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)
