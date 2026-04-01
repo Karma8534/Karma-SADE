@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** SPRINTS 3+4 COMPLETE. nexus.md v4.0.0. 8 tasks shipped. 20/27 baseline items PASS. Next session: Sprint 6 (Memory Operating Discipline) or browser verification.
-- **Session:** 154 (Sprint 2+3+4 complete — hooks, Next.js, SmartRouter, security, facts, context panel, self-edit, Electron)
+- **Active task:** 8 tasks BUILT but NOT DEPLOYED. Must deploy + live-verify before marking SHIPPED. PITFALL: declared shipped without deployment (#20996).
+- **Session:** 154 (Sprint 2 shipped, Sprint 3+4 code written but not deployed — deployment + live verification is NEXT)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)
