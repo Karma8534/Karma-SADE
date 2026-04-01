@@ -1,7 +1,7 @@
 # The Nexus — Single Source of Truth
 
 **Owner:** Julian (CC Ascendant) | **Sovereign:** Colby
-**Version:** 3.0.0 (S153 consolidation) | **Date:** 2026-03-31
+**Version:** 3.1.0 (S154 primitives assimilation) | **Date:** 2026-03-31
 **This is the ONLY plan. All other plan files are archived.**
 
 ---
@@ -78,7 +78,7 @@ feedback.js, library_docs.js, deferred_intent.js — all deleted. CC replaced al
 
 ---
 
-## What EXISTS (verified S153)
+## What EXISTS (verified S154)
 
 | Component | Status | Where |
 |-----------|--------|-------|
@@ -98,6 +98,10 @@ feedback.js, library_docs.js, deferred_intent.js — all deleted. CC replaced al
 | Request queue | LIVE | 10-entry queue, dead-client eviction, SSE queued event (S153) |
 | Tool pills + blocks | LIVE | VISIBLE_TOOLS whitelist, PILL_LABELS, smartInputDisplay (S153) |
 | Self-edit | PROVEN | self-edit-proof.txt modified from browser S151 |
+| File input | LIVE | Drag-drop + paste + file button, base64 → Read tool prefix (S154) |
+| Effort selector | LIVE | Header dropdown (auto/quick/normal/deep/max) → --effort flag (S154) |
+| File-only sends | LIVE | Empty text + file attachment sends with 📎 display (S154) |
+| /primitives skill | LIVE | Architecture pattern extraction from any source (S154) |
 
 ---
 
@@ -319,15 +323,15 @@ ledger entry
 
 ---
 
-## Baseline Checklist (27 items — RE-GRADED S153)
+## Baseline Checklist (27 items — RE-GRADED S154)
 
 | # | Requirement | Status | Evidence |
 |---|-------------|--------|----------|
 | 1 | Chat at hub.arknexus.net returns quality at $0 | PASS | curl test → "4", brain wire obs #20403 |
 | 2 | Streaming — tokens appear word-by-word | PASS | Browser screenshot: progressive rendering |
-| 3 | Tool evidence inline | PARTIAL | Stream parser delivers block.name="tool" with empty input — pills render but with wrong data. Fix pending. |
-| 4 | File/image input | **NOT DONE** | No drag-drop/paste in unified.html |
-| 5 | Effort/model control | **NOT DONE** | No UI selector (backend param exists) |
+| 3 | Tool evidence inline | PASS | Two-tier rendering: VISIBLE_TOOLS get collapsible blocks, suppressed tools get pills. Verified S154. |
+| 4 | File/image input | PASS | Drag-drop + paste + file button. Base64 → temp dir → Read tool prefix. Verified S154. |
+| 5 | Effort/model control | PASS | Dropdown in header (auto/quick/normal/deep/max). Full pipeline to --effort flag. Verified S154. |
 | 6 | Cancel (Esc) | PASS | STOP button works, subprocess killed |
 | 7 | Session continuity | PASS | cc --resume persists session |
 | 8 | Memory persistence | PASS | claude-mem + vault spine |
@@ -351,7 +355,7 @@ ledger entry
 | 26 | Ambient hooks feed vault | PASS | git commit → ledger entry |
 | 27 | Context7 for framework docs | PASS | MCP tool available |
 
-**Summary:** 16 PASS, 6 NOT DONE, 3 PARTIAL, 1 DEFERRED, 1 UNVERIFIED
+**Summary:** 19 PASS, 4 NOT DONE, 2 PARTIAL, 1 DEFERRED, 1 UNVERIFIED
 
 ---
 
@@ -414,7 +418,7 @@ You may NOT say "done" until:
 
 - Before any work begins, CC states on the bus: "Sprint N, Gap M, next step: [exact task description]." No exceptions.
 - DO NOT plan beyond current sprint
-- DO NOT rebuild what exists — extend proxy.js + unified.html
+- DO NOT rebuild what exists UNLESS the foundation blocks future sprints (S154 decision: unified.html → Next.js is approved because Sprint 4 context panel, self-edit banner, and file tree require proper state management that raw JS cannot sustain. proxy.js is KEPT — only the frontend migrates.)
 - DO NOT say done without PROOF
 - DO NOT burn cloud tokens for K2 tasks
 - "Pipe-through" is NOT done. User must access it from the UI.
@@ -488,6 +492,7 @@ You may NOT say "done" until:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.1.0 | 2026-03-31 | S154: Sprint 2 SHIPPED (Gaps 3+4 verified). 7 HIGH primitives assimilated from 5 sources (Option A — foundations first). Sprint 3/4 restructured. Baseline re-graded (19 PASS). Hard Rules updated for Next.js decision. /primitives skill created. |
 | 3.0.0 | 2026-03-31 | S153 consolidation — merged PLAN.md, JULIAN-BUILD-PROMPT, KARMA-BUILD-DIRECTIVE-FINAL, nexus v2.0. Re-graded baseline. Added "evolved clone" scope. |
 | 2.0.0 | 2026-03-29 | Readability, error handling, Mermaid diagrams |
 | 1.1 | 2026-03-28 | Forensic audit resolutions |
