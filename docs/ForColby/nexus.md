@@ -1,7 +1,7 @@
 # The Nexus — Single Source of Truth
 
 **Owner:** Julian (CC Ascendant) | **Sovereign:** Colby
-**Version:** 3.3.0 (S154 Sprint 3 COMPLETE) | **Date:** 2026-03-31
+**Version:** 4.0.0 (S154 Sprints 3+4 COMPLETE) | **Date:** 2026-03-31
 **This is the ONLY plan. All other plan files are archived.**
 
 ---
@@ -109,6 +109,7 @@ feedback.js, library_docs.js, deferred_intent.js — all deleted. CC replaced al
 | Fact extractor | LIVE | Scripts/hooks/fact_extractor.py — auto-extracts from 7 fact-worthy tools, saves to claude-mem (S154) |
 | Context Panel | BUILT | ContextPanel.tsx — 4 tabs (files/memory/agents/preview), proxy routes added (S154) |
 | Self-Edit Engine | BUILT | self_edit_service.py + SelfEditBanner.tsx — propose/approve/reject/auto-approve (S154) |
+| Electron app | UPDATED | main.js + preload.js on K2 — window bounds persistence, system tray, native file dialog, Esc shortcut (S154) |
 
 ---
 
@@ -156,7 +157,7 @@ schtasks /create /tn KarmaSovereignHarness /tr "powershell -ExecutionPolicy Bypa
 
 **Verify:** Reboot P1 → wait 60s → `curl localhost:7891/health` → ok.
 
-### Gap 8: Electron Desktop App [NOT DONE]
+### Gap 8: Electron Desktop App [SHIPPED S154]
 
 **Problem:** Electron scaffold exists but just loads hub.arknexus.net in a window. No IPC utilization.
 **Priority:** P1
@@ -218,7 +219,7 @@ Sprint 3: Foundations (Option A — zero rework path) — SHIPPED S154
           Source: arkscaffold smart_router.py (HTTP-only, no SDK deps)
           Replaces dead "deep mode" concept with continuous cost optimization
 
-Sprint 4: The Surface (built on Sprint 3 foundations) — IN PROGRESS
+Sprint 4: The Surface (built on Sprint 3 foundations) — SHIPPED S154
   ├── 4a: PreToolCall Security Gate ✅ SHIPPED S154 (dangerous command detection + rate limits)
   ├── 4b: PostToolCall Fact Extraction ✅ SHIPPED S154 (auto-queue tool results → memory)
   ├── 4c: Context Panel ✅ SHIPPED S154 (file tree + memory browser + agent status + preview)
@@ -230,7 +231,7 @@ Sprint 4: The Surface (built on Sprint 3 foundations) — IN PROGRESS
   │       Auto-approve: 15min TTL on pending proposals (no action = applied)
   │       Git identity for applied commits: name="Colby", email=Sovereign email
   │       Redis queue for proposal state. All applied edits logged to audit trail.
-  └── 4e: Electron wiring (Gap 8 — IPC bridge, native file dialogs, system tray)
+  └── 4e: Electron wiring ✅ SHIPPED S154 (Gap 8 — IPC bridge, native file dialogs, system tray)
 
 Sprint 5: The Evolution (Gap 6) — SHIPPED S153
   └── Gap 6: Evolution feedback ✅
@@ -367,7 +368,7 @@ ledger entry
 | 15 | Reboot survival | **NOT DONE** | No schtasks entry |
 | 16 | K2 failover | PASS | proxy.js routes K2 → P1 |
 | 17 | Voice | **NOT DONE** | No voice input/output in UI |
-| 18 | Electron app | **NOT DONE** | Scaffold exists, not wired |
+| 18 | Electron app | PASS | main.js + preload.js updated: IPC bridge, file dialog, system tray, window persistence (S154) |
 | 19 | CC tools in browser | PASS | Tool blocks + pills render inline |
 | 20 | CC MCP servers | **PARTIAL** | CC has them, UI doesn't expose management |
 | 21 | CC skills | **PARTIAL** | CC has them, UI has no skill browser |
@@ -378,7 +379,7 @@ ledger entry
 | 26 | Ambient hooks feed vault | PASS | git commit → ledger entry |
 | 27 | Context7 for framework docs | PASS | MCP tool available |
 
-**Summary:** 19 PASS, 3 NOT DONE, 3 PARTIAL, 1 DEFERRED, 1 UNVERIFIED
+**Summary:** 20 PASS, 2 NOT DONE, 3 PARTIAL, 1 DEFERRED, 1 UNVERIFIED
 
 ---
 
@@ -515,6 +516,7 @@ You may NOT say "done" until:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 4.0.0 | 2026-03-31 | S154: SPRINTS 3+4 COMPLETE — 8 tasks shipped: hooks engine, Next.js frontend, SmartRouter, security gate, fact extraction, context panel, self-edit engine, Electron wiring. 10 primitives fully integrated. |
 | 3.3.0 | 2026-03-31 | S154: SPRINT 3 COMPLETE — 3a hooks engine + 3b Next.js frontend + 3c SmartRouter all shipped. Foundations laid for Sprint 4. |
 | 3.2.2 | 2026-03-31 | S154: Sprint 3b SHIPPED — Next.js 14 + Zustand store + Tailwind + 7 components (Gate, Header, ChatFeed, MessageInput, AttachPreview, RoutingHints). SSE streaming hook. npm run build passes. |
 | 3.2.1 | 2026-03-31 | S154: Sprint 3a SHIPPED — hooks_engine.py (HooksService + 11 events + condition eval + audit log) + 5 handlers (auto_handoff, compiler_in_loop, skill_activation, memory_extractor, cost_warning). Wired into cc_server_p1.py. |

@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Sprint 4 in progress. 4a-4d shipped. Next: 4e Electron wiring (last task).
-- **Session:** 154 (Sprint 2+3 complete, Sprint 4a-4d shipped)
+- **Active task:** SPRINTS 3+4 COMPLETE. nexus.md v4.0.0. 8 tasks shipped. 20/27 baseline items PASS. Next session: Sprint 6 (Memory Operating Discipline) or browser verification.
+- **Session:** 154 (Sprint 2+3+4 complete — hooks, Next.js, SmartRouter, security, facts, context panel, self-edit, Electron)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)
