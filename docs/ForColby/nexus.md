@@ -1,7 +1,7 @@
 # The Nexus — Single Source of Truth
 
 **Owner:** Julian (CC Ascendant) | **Sovereign:** Colby
-**Version:** 3.2.1 (S154 Sprint 3a shipped) | **Date:** 2026-03-31
+**Version:** 3.2.2 (S154 Sprint 3a+3b shipped) | **Date:** 2026-03-31
 **This is the ONLY plan. All other plan files are archived.**
 
 ---
@@ -103,6 +103,7 @@ feedback.js, library_docs.js, deferred_intent.js — all deleted. CC replaced al
 | File-only sends | LIVE | Empty text + file attachment sends with 📎 display (S154) |
 | /primitives skill | LIVE | Architecture pattern extraction from any source (S154) |
 | Hooks engine | LIVE | 11-event HooksService + 5 handlers, wired into cc_server (S154) |
+| Next.js frontend | BUILT | frontend/ — Next.js 14 + Zustand + Tailwind, npm run build passes (S154) |
 
 ---
 
@@ -204,7 +205,7 @@ Sprint 3: Foundations (Option A — zero rework path) — IN PROGRESS
   │         • skill_activation (UserPromptSubmit) — inject relevant skill hints pre-prompt
   │         • memory_extractor (Stop + SessionEnd) — extract session memories on stop
   │         • cost_warning (PostToolUse) — warn on high session cost
-  ├── 3b: Next.js 14 Migration + Zustand Store (frontend foundation)
+  ├── 3b: Next.js 14 Migration + Zustand Store ✅ SHIPPED S154 (frontend foundation)
   │       Source: arkscaffold frontend/ + open-claude-cowork patterns
   │       Enables: context panel, self-edit banner, proper state management
   │       Palette: bg:#0d0d0f, surface:#16161a, accent:#7f5af0, text:#fffffe
@@ -509,6 +510,7 @@ You may NOT say "done" until:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.2.2 | 2026-03-31 | S154: Sprint 3b SHIPPED — Next.js 14 + Zustand store + Tailwind + 7 components (Gate, Header, ChatFeed, MessageInput, AttachPreview, RoutingHints). SSE streaming hook. npm run build passes. |
 | 3.2.1 | 2026-03-31 | S154: Sprint 3a SHIPPED — hooks_engine.py (HooksService + 11 events + condition eval + audit log) + 5 handlers (auto_handoff, compiler_in_loop, skill_activation, memory_extractor, cost_warning). Wired into cc_server_p1.py. |
 | 3.2.0 | 2026-03-31 | S154 audit: Sprint 3a detail locked (5 built-in hook handlers). Sprint 4d EditProposal schema locked. Primitives count 7→10 (3 handlers added). Karma review applied. |
 | 3.1.0 | 2026-03-31 | S154: Sprint 2 SHIPPED (Gaps 3+4 verified). 7 HIGH primitives assimilated from 5 sources (Option A — foundations first). Sprint 3/4 restructured. Baseline re-graded (19 PASS). Hard Rules updated for Next.js decision. /primitives skill created. |

@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@300;400;500;600&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  @apply bg-karma-bg text-karma-text font-mono text-[13px];
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { @apply bg-karma-border rounded; }
+
+/* Drag active state */
+.drag-active { outline: 2px dashed #6d28d9 !important; }
+
+/* Tool evidence blocks */
+.tool-block { @apply bg-karma-surface border border-karma-border rounded p-3 my-1 text-[12px]; }
+.tool-block summary { @apply cursor-pointer text-karma-muted hover:text-karma-accent; }
+.tool-block pre { @apply mt-2 text-[11px] text-karma-muted overflow-x-auto whitespace-pre-wrap; }
+
+/* Tool pills */
+.tool-pill {
+  @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px]
+         bg-karma-surface text-karma-muted border border-karma-border;
+}
