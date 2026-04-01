@@ -65,7 +65,9 @@ a:hover{text-decoration:underline}
   <div id="chats">Loading...</div>
 </div>
 <script>
-const TOKEN = localStorage.getItem('hubToken') || '';
+const _urlToken = new URLSearchParams(window.location.search).get('token') || '';
+if (_urlToken) localStorage.setItem('hubToken', _urlToken);
+const TOKEN = _urlToken || localStorage.getItem('hubToken') || '';
 const ERR = document.getElementById('error');
 
 function classify(content) {
