@@ -1,7 +1,7 @@
 # The Nexus — Single Source of Truth
 
 **Owner:** Julian (CC Ascendant) | **Sovereign:** Colby
-**Version:** 3.2.2 (S154 Sprint 3a+3b shipped) | **Date:** 2026-03-31
+**Version:** 3.3.0 (S154 Sprint 3 COMPLETE) | **Date:** 2026-03-31
 **This is the ONLY plan. All other plan files are archived.**
 
 ---
@@ -104,6 +104,7 @@ feedback.js, library_docs.js, deferred_intent.js — all deleted. CC replaced al
 | /primitives skill | LIVE | Architecture pattern extraction from any source (S154) |
 | Hooks engine | LIVE | 11-event HooksService + 5 handlers, wired into cc_server (S154) |
 | Next.js frontend | BUILT | frontend/ — Next.js 14 + Zustand + Tailwind, npm run build passes (S154) |
+| SmartRouter | BUILT | Scripts/smart_router.py — complexity scoring + 3-tier provider routing (S154) |
 
 ---
 
@@ -195,7 +196,7 @@ Sprint 2: The Controls (Gaps 3, 4) — SHIPPED S154
   ├── Gap 3: File input ✅ (fixed --file flag, Read tool prefix, file-only sends)
   └── Gap 4: CLI flags ✅ (effort selector dropdown, full pipeline verified)
 
-Sprint 3: Foundations (Option A — zero rework path) — IN PROGRESS
+Sprint 3: Foundations (Option A — zero rework path) — SHIPPED S154
   ├── 3a: 11-Event Hooks Engine ✅ SHIPPED S154 (conditional eval, structured output, audit trail)
   │       Source: arkscaffold hooks_service.py + Continuous-Claude hook patterns
   │       Enables: security gate, fact extraction, auto-handoff, cost warnings
@@ -209,7 +210,7 @@ Sprint 3: Foundations (Option A — zero rework path) — IN PROGRESS
   │       Source: arkscaffold frontend/ + open-claude-cowork patterns
   │       Enables: context panel, self-edit banner, proper state management
   │       Palette: bg:#0d0d0f, surface:#16161a, accent:#7f5af0, text:#fffffe
-  └── 3c: SmartRouter (complexity-scored provider routing)
+  └── 3c: SmartRouter ✅ SHIPPED S154 (complexity-scored provider routing)
           Source: arkscaffold smart_router.py (HTTP-only, no SDK deps)
           Replaces dead "deep mode" concept with continuous cost optimization
 
@@ -510,6 +511,7 @@ You may NOT say "done" until:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.3.0 | 2026-03-31 | S154: SPRINT 3 COMPLETE — 3a hooks engine + 3b Next.js frontend + 3c SmartRouter all shipped. Foundations laid for Sprint 4. |
 | 3.2.2 | 2026-03-31 | S154: Sprint 3b SHIPPED — Next.js 14 + Zustand store + Tailwind + 7 components (Gate, Header, ChatFeed, MessageInput, AttachPreview, RoutingHints). SSE streaming hook. npm run build passes. |
 | 3.2.1 | 2026-03-31 | S154: Sprint 3a SHIPPED — hooks_engine.py (HooksService + 11 events + condition eval + audit log) + 5 handlers (auto_handoff, compiler_in_loop, skill_activation, memory_extractor, cost_warning). Wired into cc_server_p1.py. |
 | 3.2.0 | 2026-03-31 | S154 audit: Sprint 3a detail locked (5 built-in hook handlers). Sprint 4d EditProposal schema locked. Primitives count 7→10 (3 handlers added). Karma review applied. |
