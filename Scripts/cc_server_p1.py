@@ -547,6 +547,11 @@ class CCHandler(BaseHTTPRequestHandler):
         return (not TOKEN) or (auth == f"Bearer {TOKEN}")
 
     def do_GET(self):
+        # S155: auth on sensitive GET endpoints (was missing — security gap)
+        _OPEN_PATHS = {"/health", "/memory/health"}
+        if self.path not in _OPEN_PATHS and not self._auth_ok():
+            self._json(401, {"ok": False, "error": "Unauthorized"})
+            return
         if self.path == "/cancel":
             global _current_proc
             t_cancel_start = time.time()
@@ -867,6 +872,7 @@ class CCHandler(BaseHTTPRequestHandler):
                 self.send_header("Connection", "keep-alive")
                 self._cors()  # H3: CORS on stream
                 self.end_headers()
+                stream_full_text = []  # S155: accumulate full response for memory capture
                 try:
                     t_start = time.time()
                     first_token_sent = False
@@ -876,6 +882,17 @@ class CCHandler(BaseHTTPRequestHandler):
                             first_token_sent = True
                         self.wfile.write(f"data: {line}\n\n".encode())
                         self.wfile.flush()
+                        # Accumulate assistant text from stream for memory capture
+                        try:
+                            obj = json.loads(line)
+                            if obj.get("type") == "assistant":
+                                content = obj.get("message", {}).get("content", [])
+                                if isinstance(content, list):
+                                    for block in content:
+                                        if isinstance(block, dict) and block.get("type") == "text":
+                                            stream_full_text.append(block.get("text", ""))
+                        except Exception:
+                            pass
                     _last_latency["total_ms"] = int((time.time() - t_start) * 1000)
                 except BrokenPipeError:
                     pass  # Client disconnected (cancel)
@@ -886,10 +903,14 @@ class CCHandler(BaseHTTPRequestHandler):
                         self.wfile.flush()
                     except Exception:
                         pass
+                # S155: Save stream response to claude-mem (was missing — data loss gap)
+                assistant_text = "".join(stream_full_text)
+                if assistant_text:
+                    _auto_save_memory(message, assistant_text)
                 # ── Fire Stop hooks after stream completes (Sprint 3a) ───
                 if HOOKS_AVAILABLE:
                     try:
-                        _hooks.fire("Stop", {"session_id": load_session_id() or "", "message": message})
+                        _hooks.fire("Stop", {"session_id": load_session_id() or "", "message": message, "assistant_text": assistant_text})
                     except Exception as e:
                         print(f"[hooks] Stop error: {e}")
                 return
