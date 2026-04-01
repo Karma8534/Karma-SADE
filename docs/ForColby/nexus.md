@@ -558,3 +558,189 @@ These files were merged into this document and archived to `docs/ForColby/archiv
 **LOCKED as of 2026-03-31. Modifications require Sovereign approval.**
 **Plan name:** The Nexus
 **Path:** `docs/ForColby/nexus.md`
+
+---
+
+## Appendix A: arkscaffold Full Primitive Audit (S155 — 2026-04-01)
+
+**Source:** `Karma8534/arkscaffold` (private, master branch) — 120+ files
+**Method:** Line-by-line read of every file, compared against nexus.md sections + current system state
+**Rule:** APPEND ONLY per Sovereign directive
+
+### A.1: Previously Adopted Primitives (confirmed present in Sprints 3-4)
+
+These 10 HIGH primitives were already in nexus.md and confirmed present in arkscaffold:
+
+| # | Primitive | arkscaffold File | Nexus Sprint |
+|---|-----------|-----------------|--------------|
+| 1 | 11-Event Hooks Engine | `backend/services/hooks_service.py` | 3a |
+| 2 | Zustand Store | `frontend/src/store/karma.ts` | 3b |
+| 3 | SmartRouter | `backend/router/smart_router.py` | 3c |
+| 4 | PreToolCall Security Gate | `backend/hooks/handlers/pre_tool_call.py` | 4a |
+| 5 | PostToolCall Fact Extraction | `backend/hooks/handlers/post_tool_call.py` | 4b |
+| 6 | Context Panel | `frontend/src/components/ContextPanel.tsx` | 4c |
+| 7 | Self-Edit Engine + Banner | `backend/services/self_edit_service.py` + `frontend/src/components/SelfEditBanner.tsx` | 4d |
+| 8 | auto_handoff_stop | `backend/hooks/handlers/session_end.py` (handoff logic) | 3a |
+| 9 | compiler_in_loop | `backend/hooks/handlers/post_tool_call.py` (Edit/Write condition) | 3a |
+| 10 | skill_activation | `backend/hooks/handlers/user_prompt_submit.py` (skill hints) | 3a |
+
+### A.2: Missed Primitives — Backend Services (13 new)
+
+These exist in arkscaffold but were NOT adopted into any nexus sprint:
+
+| # | Primitive | arkscaffold File | What It Does | Maps To |
+|---|-----------|-----------------|-------------|---------|
+| 11 | Agent Runner | `backend/services/agent_runner.py` | Multi-step agentic loops. Loads agent defs from `.karma/agents/*.md`. LLM→tool→LLM cycle, max_steps=50, agent chaining (depth 5), streaming support, per-run cost tracking. | "Subagent status panel" gap |
+| 12 | Command Service | `backend/services/command_service.py` | 16 slash commands: /help /clear /model /cost /memory /agent /skill /edit /diff /approve /reject /agents /skills /plugins /status /route /persona. Dynamic command registration. CommandResult dataclass. | "Skill browser + invoke UI" gap |
+| 13 | Permission Service | `backend/services/permission_service.py` | 4-level RBAC: READ_ONLY, STANDARD, ELEVATED, ADMIN. Per-tool permission mapping. Blocked dangerous commands list (rm -rf /, mkfs, dd, fork bomb). Role→level mapping. | NEW — not in any gap |
+| 14 | Persona Service | `backend/services/persona_service.py` | Dynamic persona loading from `persona/KARMA.md`. Version-tracked. PersonaSelfEdit for self-modification proposals. Trait management, behavioral rules, communication style config. | "Persona viewer" gap (extends beyond read-only) |
+| 15 | Plugin Service | `backend/services/plugin_service.py` | JSON manifest-based plugin system. 5 built-in: code_exec, file_ops, git, memory, web_search. Tier requirements per tool. Runtime enable/disable. Manifest validation. | "MCP status display" gap |
+| 16 | Query Engine | `backend/services/query_engine.py` | Orchestration layer between chat API and providers. System prompt assembly, tool execution loop (_execute_tool_calls), memory injection, session context loading. complete() + streaming_complete(). | Partial overlap with proxy.js routing |
+| 17 | Session Service | `backend/services/session_service.py` | Full CRUD: create/get/update/end/list/delete sessions. Session handoff doc on end. Message persistence. Session-scoped cost tracking. | NEW — CC uses --resume natively |
+| 18 | Skill Service | `backend/services/skill_service.py` | Loads `.karma/skills/*.md` at runtime. Auto-trigger via regex patterns (e.g., "debug" triggers debugging.md). System prompt injection of matching skills. Hot-reload support. | "Skill browser" gap |
+| 19 | Tool Registry | `backend/services/tool_registry.py` | 40 tools across 8 categories: filesystem (8), shell (4), git (5), memory (5), web (3), analysis (4), self-edit (5), agent mgmt (4), plus system. Anthropic format export. Tier-based routing per tool. | NEW — CC has native tools |
+| 20 | Self-Edit Scheduler | `backend/services/self_edit_scheduler.py` | Background cron: APPROVAL_WINDOW=15min, POLL_INTERVAL=60s. Auto-approves pending proposals after TTL. Runs as asyncio task in FastAPI lifespan. | Extends Sprint 4d |
+| 21 | Memory Service | `backend/services/memory_service.py` | Unified memory CRUD: store/recall/forget/search with pgvector embeddings. Conversation history retrieval. Type-based filtering (fact, preference, project, etc.). Relevance scoring. | NEW — we use claude-mem + vault |
+| 22 | Pre/Post LLM Hooks | `backend/hooks/handlers/pre_llm_call.py` + `post_llm_call.py` | Pre-LLM: context enrichment, persona injection, rate limiting. Post-LLM: response quality check, cost logging, telemetry capture. | Extends Sprint 3a (new event handlers) |
+| 23 | Session Lifecycle Hooks | `backend/hooks/handlers/session_start.py` + `session_end.py` | Start: memory load, persona inject, workspace init. End: handoff doc creation, memory consolidation, session summary. | Extends Sprint 3a (new event handlers) |
+
+### A.3: Missed Primitives — Frontend Components (12 new)
+
+| # | Component | arkscaffold File | What It Does | Maps To |
+|---|-----------|-----------------|-------------|---------|
+| 24 | AgentModal | `frontend/src/components/AgentModal.tsx` | Agent launch dialog: dangerous-tool warnings, metadata badges (model tier, max steps, tool count), task input field. | "Subagent status panel" gap |
+| 25 | SlashCommandPicker | `frontend/src/components/SlashCommandPicker.tsx` | Keyboard-navigable command autocomplete. Grouped by category. Triggers on `/` keystroke in MessageInput. | "Skill browser + invoke UI" gap |
+| 26 | Sidebar | `frontend/src/components/Sidebar.tsx` | Collapsible left panel: session list, agent gallery, memory browser, plugin status, pending self-edits. Session CRUD (rename, delete, new). | NEW — unified navigation |
+| 27 | TopBar | `frontend/src/components/TopBar.tsx` | Header: Karma logo, session title (editable), ModelBadge, accumulated cost display, StatusIndicator, settings gear. | NEW — status bar |
+| 28 | ModelBadge | `frontend/src/components/ModelBadge.tsx` | Tiered model selector dropdown: Free (Ollama), Ultra-cheap (GLM), Budget (Haiku), Mid (GPT-4o-mini), Heavy (Sonnet/Opus), Speed (Groq). Color-coded. Cost/token display. | Extends Gap 4 (effort→model selection) |
+| 29 | StatusIndicator | `frontend/src/components/StatusIndicator.tsx` | System health dots: DB (pg), Redis, LLM providers. Tooltip shows details. Green/yellow/red. | NEW — observability surface |
+| 30 | CodeBlock | `frontend/src/components/CodeBlock.tsx` | Code rendering: syntax highlighting (keyword/string/comment coloring), diff view (green/red lines), line numbers, copy button, run button (→ sandbox). | Extends Gap 2 (rich output) |
+| 31 | ToolCallBlock | `frontend/src/components/ToolCallBlock.tsx` | Expandable tool execution block: status badge (running/success/error), duration, collapsible input/output sections, tool icon. | Extends Gap 2 (rich output) |
+| 32 | MessageBubble | `frontend/src/components/MessageBubble.tsx` | Full message renderer: markdown (react-markdown), thinking blocks (collapsible), tool_use blocks → ToolCallBlock, agent progress bars, copy button. | Extends Gap 2 |
+| 33 | useCommands | `frontend/src/hooks/useCommands.ts` | Hook: slash command parsing, fuzzy filtering, keyboard navigation (up/down/enter/esc), command execution dispatch. Built-in + dynamic commands. | "Skill browser" gap |
+| 34 | useSession | `frontend/src/hooks/useSession.ts` | Hook: session lifecycle, optimistic message append, streaming send/cancel, session switching, message history loading. | NEW — session management UI |
+| 35 | useWebSocket | `frontend/src/hooks/useWebSocket.ts` | Hook: WebSocket connection with auto-reconnect (exponential backoff), message queue for offline, SSE fallback, event dispatch to Zustand store. | NEW — bidirectional comms |
+
+### A.4: Missed Primitives — Infrastructure (3 new)
+
+| # | Primitive | arkscaffold File | What It Does |
+|---|-----------|-----------------|-------------|
+| 36 | PostgreSQL + pgvector Schema | `memory/migrations/001_init.sql` | 15 tables: sessions, messages, memories (vector FLOAT[1536]), self_edit_proposals, hooks_log, plugins, skills, cost_ledger, session_handoffs, persona_vault, tldr_code_analysis, indexes, views, seed data. Full migration. |
+| 37 | Sandbox Service | `sandbox/scripts/server.py` | Isolated code execution: FastAPI server with token auth, session-isolated /workspace dirs, language runners (Python, Bash, Node), output capture with configurable timeout. Separate Docker container. |
+| 38 | Smoketest Script | `scripts/smoketest.sh` | 8-section automated verification: core health, API endpoints (chat/memory/tools), HTTP status codes, WebSocket connectivity, frontend rendering, nginx routing, data layer (pg+redis), hooks firing. |
+
+### A.5: Missed Primitives — Configuration & Identity (6 new)
+
+| # | Primitive | arkscaffold Files | What It Does |
+|---|-----------|------------------|-------------|
+| 39 | 15 Agent Definitions | `.karma/agents/*.md` | Pre-built agents with system prompts, tool whitelists, model tier assignments: architect (sonar-pro/T3), coder (qwen2.5-coder/T0), data_analyst (gemini-flash/T1), debugger (qwen-coder/T0), file_manager (qwen/T0), git_agent (qwen/T0), memory_curator (qwen/T0), notifier (qwen/T0), planner (gemini-flash/T1), researcher (sonar/Perplexity), reviewer (haiku-4-5/T2), self_editor (opus-4-6/T4), shell_agent (qwen/T0), tester (qwen-coder/T0), web_agent (sonar/Perplexity). |
+| 40 | 5 Plugin Manifests | `.karma/plugins/*.json` | JSON manifest schema: name, version, description, tools[] (with params, types, tier requirements), enabled flag. Built-in: code_exec (sandbox-routed), file_ops (8 tools), git (5 tools), memory (5 tools), web_search (Perplexity + SearXNG fallback). |
+| 41 | 10 Domain Skills | `.karma/skills/*.md` | Markdown skills with auto-trigger regex: api_design, debugging, docker, git, python, security, self_improvement, sql, testing, typescript. Each has: trigger patterns, system prompt injection text, example usage, do/don't rules. |
+| 42 | Persona File | `persona/KARMA.md` | Full persona definition: identity statement, personality traits, communication style rules, capability declarations, self-improvement mandate, ethical boundaries, growth metrics. |
+| 43 | CAPABILITY_MATRIX.md | `CAPABILITY_MATRIX.md` | Comprehensive inventory: 40 tools (8 categories), 32 agent capabilities, 30 hook events, all services enumerated. Derived from 4 source repos. Tracking checklist format. |
+| 44 | 6 Additional Providers | `backend/providers/` | Google (Gemini via google.genai SDK + legacy fallback), Groq (llama-3.3-70b, mixtral via AsyncGroq), MiniMax (M2.7 via httpx SSE), OpenRouter (OpenAI-compat via httpx), Perplexity (sonar/sonar-pro with citations), ZAI/Zhipu (GLM via httpx SSE). All with streaming + cost tracking. |
+
+### A.6: Mapping Missed Primitives to "Beyond the Gaps" Table
+
+The nexus.md "Beyond the Gaps" table (line 174) lists 8 CC wrapper features the Nexus needs. Here is how arkscaffold primitives map:
+
+| CC Wrapper Feature | nexus.md Status | arkscaffold Primitives That Solve It |
+|-------------------|----------------|--------------------------------------|
+| Skills (/resurrect, /deploy, etc.) | "NO skill invocation surface" | `SlashCommandPicker.tsx` (#25) + `useCommands.ts` (#33) + `command_service.py` (#12) + `skill_service.py` (#18) |
+| Hooks (PreToolUse, PostToolUse) | "NO hook management" | `StatusIndicator.tsx` (#29) — shows hook health. Hooks log in `001_init.sql` hooks_log table (#36). |
+| Subagents (Agent tool) | "NO subagent visibility" | `AgentModal.tsx` (#24) + `agent_runner.py` (#11) + 15 agent definitions (#39) |
+| CLAUDE.md persona | "NO persona editor" | `persona_service.py` (#14) + `persona/KARMA.md` (#42). PersonaSelfEdit enables self-modification. |
+| MCP servers | "NO MCP management" | `plugin_service.py` (#15) + 5 plugin manifests (#40). Plugin = MCP-equivalent extensibility. |
+| Git integration | "NO diff viewer, commit UI" | git_agent definition + `git.json` plugin (status/diff/commit/push/log). Frontend: `CodeBlock.tsx` diff view (#30). |
+| File tree / editor | "NO file browser" | `ContextPanel.tsx` Files tab (already Sprint 4c). `file_ops.json` plugin for CRUD. |
+| Cowork tab (artifacts) | "NO artifact rendering" | `CodeBlock.tsx` run button (#30) + `sandbox/server.py` (#37) for live execution. `ContextPanel.tsx` Preview tab. |
+
+### A.7: Docker Compose Reference Architecture
+
+arkscaffold `docker-compose.yml` defines 6 services:
+
+```
+postgres (pgvector) ── port 5432, vector search + session storage
+redis              ── port 6379, caching + pub/sub + self-edit queue
+backend (FastAPI)  ── port 8000, all /api/* endpoints
+frontend (Next.js) ── port 3000, SSR + static
+sandbox            ── port 8080, isolated code execution (token-gated)
+nginx              ── port 80/443, reverse proxy (/ → frontend, /api/ → backend, /ws/ → WebSocket upgrade)
+```
+
+Current Karma stack comparison:
+- postgres → we use JSONL ledger + FalkorDB + FAISS (no pgvector)
+- redis → we use proxy.js in-memory Maps (no Redis)
+- backend → we use proxy.js (~600 lines) + cc_server_p1.py (CC --resume)
+- frontend → we use unified.html (single file) + Next.js 14 (Sprint 3b, built not deployed)
+- sandbox → we have NO sandboxed execution (CC runs unsandboxed)
+- nginx → we use Caddy on vault-neo
+
+### A.8: Database Schema Primitives (from 001_init.sql)
+
+15 tables not present in current Karma stack:
+
+| Table | Purpose | Current Karma Equivalent |
+|-------|---------|------------------------|
+| sessions | Chat session CRUD | CC --resume (filesystem) |
+| messages | Message persistence with tokens | JSONL ledger (flat file) |
+| memories | Vector-searchable memory (FLOAT[1536]) | FAISS + claude-mem |
+| self_edit_proposals | Edit lifecycle tracking | self_edit_service.py (in-memory) |
+| hooks_log | Hook execution audit trail | hooks_audit.jsonl (flat file) |
+| plugins | Plugin registry | No equivalent |
+| skills | Skill registry | .claude/skills/ (filesystem) |
+| cost_ledger | Per-request cost tracking | No equivalent (telemetry only) |
+| session_handoffs | Cross-session state transfer | handoff-*.yaml (flat file) |
+| persona_vault | Persona version history | MEMORY.md + 00-karma-system-prompt-live.md |
+| tool_calls | Tool execution log | No equivalent (inline in SSE) |
+| tldr_code_analysis | Code analysis cache | No equivalent |
+| agent_runs | Agent execution tracking | No equivalent |
+| memory_links | Memory relationship graph | FalkorDB (different schema) |
+| embeddings_cache | Embedding dedup | No equivalent |
+
+### A.9: Sprint Recommendation for Missed Primitives
+
+**Sprint 7 (suggested): UI Surface Completion — using arkscaffold primitives**
+
+| Task | Primitives Used | Priority |
+|------|----------------|----------|
+| 7-A: Slash command system | #12 command_service + #25 SlashCommandPicker + #33 useCommands | P1 |
+| 7-B: Sidebar + session management | #26 Sidebar + #34 useSession + #17 session_service | P1 |
+| 7-C: Agent launch + status | #24 AgentModal + #11 agent_runner + #39 agent defs | P2 |
+| 7-D: System status bar | #27 TopBar + #29 StatusIndicator + #28 ModelBadge | P1 |
+| 7-E: Enhanced code rendering | #30 CodeBlock + #31 ToolCallBlock + #32 MessageBubble | P2 |
+| 7-F: Permission gate | #13 permission_service | P2 |
+| 7-G: Persona viewer + self-edit | #14 persona_service + #42 persona file | P3 |
+| 7-H: WebSocket upgrade | #35 useWebSocket (replace SSE-only) | P3 |
+| 7-I: Smoketest automation | #38 smoketest.sh | P1 |
+
+**Sprint 8 (suggested): Infrastructure Hardening**
+
+| Task | Primitives Used | Priority |
+|------|----------------|----------|
+| 8-A: Sandbox service | #37 sandbox/server.py | P2 |
+| 8-B: PostgreSQL migration (optional) | #36 001_init.sql schema | P3 — evaluate vs current JSONL+FalkorDB+FAISS |
+| 8-C: Plugin system | #15 plugin_service + #40 manifests | P3 |
+| 8-D: Additional providers | #44 (Google, Groq, MiniMax, OpenRouter, Perplexity, ZAI) | P3 — only if cost optimization requires |
+
+### A.10: Key Architectural Patterns in arkscaffold Not Yet in Karma
+
+1. **Tiered model assignment per agent** — Each of the 15 agents specifies its own model tier (T0=local free, T1=ultra-cheap, T2=budget, T3=mid, T4=heavy). SmartRouter respects this. Karma currently routes all requests through CC --resume (same model).
+
+2. **Plugin manifest schema** — JSON manifests with `tools[]` arrays, each tool having `params`, `types`, `tier`, `description`. Runtime enable/disable. Manifest validation at load time. Karma has no plugin system.
+
+3. **Session handoff table** — Structured cross-session state with `from_session_id`, `to_session_id`, `context_summary`, `active_tasks`, `decisions`, `blockers`. Karma uses flat YAML files.
+
+4. **Cost ledger** — Per-request cost tracking: `session_id`, `provider`, `model`, `input_tokens`, `output_tokens`, `cost_usd`, `latency_ms`. Karma has telemetry but no persistent cost ledger.
+
+5. **Persona versioning** — `persona_vault` table with `version`, `content`, `diff_from_previous`, `approved_by`, `created_at`. Enables rollback. Karma has no persona version history.
+
+6. **Auto-trigger skills** — Skills have regex `trigger` patterns. When user message matches, the skill's system prompt is automatically injected. Karma skills require explicit `/skill` invocation.
+
+7. **WebSocket + SSE fallback** — Primary: WebSocket for bidirectional real-time (agent steps, self-edit proposals, memory updates). Fallback: SSE for one-way streaming. Karma currently uses SSE only.
+
+8. **TLDR code analysis cache** — Stores code analysis results to avoid re-analyzing unchanged files. No Karma equivalent.
+
+---
+
+**Audit completed 2026-04-01 Session 155. 44 primitives cataloged: 10 previously adopted, 34 new.**

@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Session 154 wrapped. Next: line-by-line arkscaffold comparison, kill K2 ARCHON spam, AGORA button in Electron, fix AGORA auth.
-- **Session:** 154 (Tasks 0-5 complete. Next.js live at hub.arknexus.net. Electron on P1 with icon. SmartRouter routing. 4/6 hooks live. 13 pitfalls logged.)
+- **Active task:** Sprint 6 Memory Operating Discipline in progress. Tasks 1-6 built. Cortex v2.0.0 LIVE on K2:7892 with gated recall + compression. MemCube schema added to proxy.js. Task 7 (migration/fusion) pending. Pausing per Sovereign directive.
+- **Session:** 155 (arkscaffold audit: 34 new primitives appended to nexus.md. Sprint 6 tasks 1-6 built + deployed. Gap 7 verified DONE. Baseline: 22 PASS.)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)
@@ -269,4 +269,4 @@ CC ── Claude Code on P1 — execution layer
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Implement Gap 7 (reboot survival): create schtasks entry on P1 for cc_server auto-start, verify K2 sovereign-harness.service is enabled. THE ONLY PLAN is `docs/ForColby/nexus.md`.
+2. Implement Gap 7 (reboot survival): create schtasks entry on P1 for cc_server auto-start, verify K2 sovereign-harness.service is enabled. THE ONLY PLAN is `docs/ForColby/nexus.md` which is APPEND ONLY! EDITING REQUIRES EXPLICIT SOVEREIGN APPROVAL!

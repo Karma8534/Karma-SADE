@@ -363,7 +363,7 @@ const VAULT_FILE_ALIASES = {
   "cc-brief": "/karma/repo/cc-session-brief.md",
 };
 
-function buildVaultRecord({ type, content, tags, source, confidence }) {
+function buildVaultRecord({ type, content, tags, source, confidence, memcube }) {
   return {
     type: type || "log",
     content: { text: content, format: "text" },
@@ -372,7 +372,13 @@ function buildVaultRecord({ type, content, tags, source, confidence }) {
     confidence: confidence ?? 0.9,
     verification: { verified_at: new Date().toISOString(), verifier: "sovereign-proxy", notes: "auto", protocol_version: "1.0", status: "verified" },
     created_at: new Date().toISOString(),
+    memcube: memcube || { version: 1, tier: "raw", lineage: null, promotion_state: "none", decay_policy: "default" },
   };
+}
+// MemCube helper: read memcube from entry, defaulting for old entries
+function readMemcube(entry) {
+  if (entry && entry.memcube) return entry.memcube;
+  return { version: 0, tier: "raw", lineage: null, promotion_state: "none", decay_policy: "default" };
 }
 // Shared fire-and-forget: vault write + chatlog append + cortex ingest
 function postResponseSideEffects({ message, assistantText, sessionId, costUsd, model, tagSuffix }) {
