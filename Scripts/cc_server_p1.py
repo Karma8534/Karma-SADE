@@ -10,11 +10,36 @@ import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.
 from http.server import HTTPServer, ThreadingHTTPServer, BaseHTTPRequestHandler
 from collections import defaultdict
 sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 try:
     from cc_gmail import send_to_colby, check_inbox
     GMAIL_AVAILABLE = True
 except Exception:
     GMAIL_AVAILABLE = False
+
+# ── Hooks Engine (Sprint 3a) ─────────────────────────────────────────────────
+try:
+    from Scripts.hooks_engine import HooksService, HookDef
+    from Scripts.hooks.cost_warning import handle as cost_warning_handle, reset as cost_warning_reset
+    from Scripts.hooks.memory_extractor import handle as memory_extractor_handle
+    from Scripts.hooks.skill_activation import handle as skill_activation_handle
+    from Scripts.hooks.compiler_in_loop import handle as compiler_in_loop_handle
+    from Scripts.hooks.auto_handoff_stop import handle as auto_handoff_handle
+    from Scripts.hooks.pre_tool_security import handle as pre_tool_security_handle
+
+    _hooks = HooksService()
+    _hooks.register(HookDef("skill_activation", "UserPromptSubmit", "True", skill_activation_handle, 3000))
+    _hooks.register(HookDef("pre_tool_security", "PreToolUse", "True", pre_tool_security_handle, 1000))
+    _hooks.register(HookDef("compiler_in_loop", "PostToolUse", "tool_name in [Edit, Write]", compiler_in_loop_handle, 10000))
+    _hooks.register(HookDef("cost_warning", "PostToolUse", "True", cost_warning_handle, 1000))
+    _hooks.register(HookDef("memory_extractor", "Stop,SessionEnd", "True", memory_extractor_handle, 5000))
+    _hooks.register(HookDef("auto_handoff", "Stop", "True", auto_handoff_handle, 5000))
+    HOOKS_AVAILABLE = True
+    print("[cc-server] Hooks engine: 6 handlers registered")
+except Exception as e:
+    _hooks = None
+    HOOKS_AVAILABLE = False
+    print(f"[cc-server] Hooks engine: DISABLED ({e})")
 
 PORT          = 7891
 _current_proc = None  # Track running CC subprocess for cancel
@@ -513,6 +538,16 @@ class CCHandler(BaseHTTPRequestHandler):
         file_prefix, file_paths = handle_files(files)
         message = file_prefix + message  # Prepend file info to message
 
+        # ── Fire UserPromptSubmit hooks (Sprint 3a) ──────────────────────
+        if HOOKS_AVAILABLE:
+            try:
+                hook_results = _hooks.fire("UserPromptSubmit", {"message": message, "effort": effort})
+                for hr in hook_results:
+                    if hr.output and hr.output.get("systemMessage"):
+                        print(f"[hooks] {hr.hook_name}: {hr.output['systemMessage']}")
+            except Exception as e:
+                print(f"[hooks] UserPromptSubmit error: {e}")
+
         # Concurrency guard — reject if another request is active
         if not _proc_lock.acquire(blocking=False):
             self._json(429, {"ok": False, "error": "Another request is in progress. Wait or cancel first."})
@@ -546,6 +581,12 @@ class CCHandler(BaseHTTPRequestHandler):
                         self.wfile.flush()
                     except Exception:
                         pass
+                # ── Fire Stop hooks after stream completes (Sprint 3a) ───
+                if HOOKS_AVAILABLE:
+                    try:
+                        _hooks.fire("Stop", {"session_id": load_session_id() or "", "message": message})
+                    except Exception as e:
+                        print(f"[hooks] Stop error: {e}")
                 return
 
             # ── /cc — batch JSON endpoint (backward compat) ──────────────
@@ -554,6 +595,16 @@ class CCHandler(BaseHTTPRequestHandler):
                 self._json(200, {"ok": True, "response": response_text})
                 # Gate 6: Auto-save chat turn to claude-mem (fire-and-forget)
                 _auto_save_memory(message, response_text)
+                # ── Fire Stop hooks after batch completes (Sprint 3a) ────
+                if HOOKS_AVAILABLE:
+                    try:
+                        _hooks.fire("Stop", {
+                            "session_id": load_session_id() or "",
+                            "message": message,
+                            "assistant_text": response_text,
+                        })
+                    except Exception as e:
+                        print(f"[hooks] Stop error: {e}")
             except subprocess.TimeoutExpired:
                 self._json(504, {"ok": False, "error": f"CC subprocess timed out after {API_TIMEOUT}s"})
             except Exception as e:

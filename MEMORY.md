@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** SPRINT 3 COMPLETE (3a hooks + 3b Next.js + 3c SmartRouter). Starting Sprint 4 (surface features).
-- **Session:** 154 (Sprint 2 shipped, primitives from 5 sources, Sprint 3 complete)
+- **Active task:** Sprint 4 in progress. 4a security gate shipped. Next: 4b fact extraction.
+- **Session:** 154 (Sprint 2+3 complete, Sprint 4a shipped, continuing)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)

@@ -105,6 +105,7 @@ feedback.js, library_docs.js, deferred_intent.js — all deleted. CC replaced al
 | Hooks engine | LIVE | 11-event HooksService + 5 handlers, wired into cc_server (S154) |
 | Next.js frontend | BUILT | frontend/ — Next.js 14 + Zustand + Tailwind, npm run build passes (S154) |
 | SmartRouter | BUILT | Scripts/smart_router.py — complexity scoring + 3-tier provider routing (S154) |
+| Security gate | LIVE | Scripts/hooks/pre_tool_security.py — 12 blocked patterns + rate limit, wired as PreToolUse hook (S154) |
 
 ---
 
@@ -214,8 +215,8 @@ Sprint 3: Foundations (Option A — zero rework path) — SHIPPED S154
           Source: arkscaffold smart_router.py (HTTP-only, no SDK deps)
           Replaces dead "deep mode" concept with continuous cost optimization
 
-Sprint 4: The Surface (built on Sprint 3 foundations) — NOT DONE
-  ├── 4a: PreToolCall Security Gate (dangerous command detection + rate limits)
+Sprint 4: The Surface (built on Sprint 3 foundations) — IN PROGRESS
+  ├── 4a: PreToolCall Security Gate ✅ SHIPPED S154 (dangerous command detection + rate limits)
   ├── 4b: PostToolCall Fact Extraction (auto-queue tool results → memory)
   ├── 4c: Context Panel (file tree + memory browser + agent status + preview)
   ├── 4d: Self-Edit Engine + Banner (propose → 15min approve → apply → audit)
