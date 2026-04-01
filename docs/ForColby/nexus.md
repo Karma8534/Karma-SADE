@@ -883,3 +883,81 @@ Current Karma stack comparison:
 ---
 
 **Appendix C audit completed 2026-04-01 Session 155. 30 new primitives (#65-#94), 9 validated. Grand total: 94 primitives across 3 audits.**
+
+---
+
+## Appendix D: Codex Internet Primitive Search (S155 — gpt-5.4 autonomous)
+
+**Source:** Codex (ArchonPrime) autonomous internet search via `codex exec --full-auto`
+**Method:** Codex searched GitHub for projects matching Nexus requirements
+
+### D.1: Persistent Agent Frameworks
+
+| # | Project | URL | Key Primitive |
+|---|---------|-----|--------------|
+| 95 | Letta | github.com/letta-ai/letta | Persistent stateful agents with explicit long-term memory + self-improvement |
+| 96 | LangGraph | github.com/langchain-ai/langgraph | Durable agents with persistence, resumability, memory across sessions |
+| 97 | OpenHands | github.com/All-Hands-AI/OpenHands | Software-dev agent: edit code, run commands, browse, operate tools |
+| 98 | AutoGPT | github.com/Significant-Gravitas/AutoGPT | Continuous agent platform + benchmark ecosystem |
+| 99 | Voyager | github.com/MineDojo/Voyager | Lifelong learning, skill libraries, iterative self-improvement, self-verification |
+
+### D.2: Memory + Learning
+
+| # | Project | URL | Key Primitive |
+|---|---------|-----|--------------|
+| 100 | Mem0 | github.com/mem0ai/mem0 | Memory layer with long-term personalization + retrieval |
+| 101 | LangMem | github.com/langchain-ai/langmem | Learning from interactions: memory extraction, consolidation, prompt refinement |
+
+### D.3: Multi-Agent Coordination
+
+| # | Project | URL | Key Primitive |
+|---|---------|-----|--------------|
+| 102 | AutoGen | github.com/microsoft/autogen | Multi-agent conversations + orchestration |
+| 103 | CrewAI | github.com/crewAIInc/crewAI | Role-based agent teams |
+| 104 | CAMEL | github.com/camel-ai/camel | Large-scale multi-agent coordination with statefulness |
+| 105 | MetaGPT | github.com/FoundationAgents/MetaGPT | Multi-agent "AI company" with specialized sub-roles |
+
+### D.4: Self-Editing + Code
+
+| # | Project | URL | Key Primitive |
+|---|---------|-----|--------------|
+| 106 | Aider | github.com/Aider-AI/aider | Self-editing code modification loops, repo-local |
+| 107 | Continue | github.com/continuedev/continue | CLI/headless/background agent workflows |
+
+### D.5: Local Inference Optimization
+
+| # | Project | URL | Key Primitive |
+|---|---------|-----|--------------|
+| 108 | llama.cpp | github.com/ggml-org/llama.cpp | Best low-level local inference for quantized models |
+| 109 | ExLlamaV2 | github.com/turboderp-org/exllamav2 | Optimized for RTX 4070-class GPUs |
+| 110 | LocalAI | github.com/mudler/LocalAI | OpenAI-compatible local serving (text + audio + multimodal) |
+
+### D.6: Voice + Multimodal
+
+| # | Project | URL | Key Primitive |
+|---|---------|-----|--------------|
+| 111 | LiveKit Agents | github.com/livekit/agents | Realtime voice/multimodal agents with WebRTC |
+| 112 | Pipecat | github.com/pipecat-ai/pipecat | Voice AI pipeline framework |
+
+### D.7: Codex Evaluation Summary (CC/Julian Assessment)
+
+Codex (ArchonPrime) assessed CC/Julian directly:
+- **Weak point is NOT reasoning quality — it's runtime durability**
+- karma_persistent needs a real supervisor (nssm), not just Run key
+- No claim/confirm queue for tasks (crash = lost work)
+- Self-evolution Rule 22 (promote to CLAUDE.md) has never fired
+- Governor dedup gap: same persona_style promoted 5x
+- **Highest-leverage change: install nssm for karma_persistent + cc_server**
+
+### D.8: Karma Evaluation Summary
+
+Karma assessed the Nexus independently:
+- File browser, git UI, terminal panel, MCP management still missing from UI
+- SmartRouter not wired to karma_persistent (fixed S155)
+- 18/20 stable patterns are generic noise, zero code changes
+- Governor must output code change proposals, not just spine metadata
+- Regression test gate needed before promotion
+
+---
+
+**Appendix D completed 2026-04-01 Session 155. 18 new projects (#95-#112). Grand total: 112 primitives + 2 evaluations.**
