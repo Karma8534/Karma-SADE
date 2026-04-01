@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Sprints 3+4: 7/8 tasks DEPLOYED + VERIFIED LIVE. Electron needs K2 desktop test. Next: wrap session or continue with Sprint 6.
-- **Session:** 154 (Sprint 2 shipped, Sprint 3+4 deployed+verified, PITFALL #20996 resolved)
+- **Active task:** Sprints 2+3+4 COMPLETE. 8/8 tasks deployed + verified live. Electron screenshot proof from Colby. 20/27 baseline PASS.
+- **Session:** 154 (all sprints through 4 shipped and verified live)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)

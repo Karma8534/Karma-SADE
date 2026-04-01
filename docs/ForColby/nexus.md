@@ -157,7 +157,7 @@ schtasks /create /tn KarmaSovereignHarness /tr "powershell -ExecutionPolicy Bypa
 
 **Verify:** Reboot P1 → wait 60s → `curl localhost:7891/health` → ok.
 
-### Gap 8: Electron Desktop App [BUILT S154 — not live-tested]
+### Gap 8: Electron Desktop App [SHIPPED S154]
 
 **Problem:** Electron scaffold exists but just loads hub.arknexus.net in a window. No IPC utilization.
 **Priority:** P1
@@ -231,7 +231,7 @@ Sprint 4: The Surface (built on Sprint 3 foundations) — SHIPPED S154 (deployed
   │       Auto-approve: 15min TTL on pending proposals (no action = applied)
   │       Git identity for applied commits: name="Colby", email=Sovereign email
   │       Redis queue for proposal state. All applied edits logged to audit trail.
-  └── 4e: Electron wiring — BUILT S154, code verified, needs manual desktop test on K2 (Gap 8)
+  └── 4e: Electron wiring ✅ SHIPPED S154 (window opens, UI loads, message sent — screenshot proof)
 
 Sprint 5: The Evolution (Gap 6) — SHIPPED S153
   └── Gap 6: Evolution feedback ✅
@@ -368,7 +368,7 @@ ledger entry
 | 15 | Reboot survival | **NOT DONE** | No schtasks entry |
 | 16 | K2 failover | PASS | proxy.js routes K2 → P1 |
 | 17 | Voice | **NOT DONE** | No voice input/output in UI |
-| 18 | Electron app | **BUILT** | main.js + preload.js updated but npm start not tested (S154) |
+| 18 | Electron app | PASS | Window opens, UI loads, Karma responds. Screenshot proof S154. |
 | 19 | CC tools in browser | PASS | Tool blocks + pills render inline |
 | 20 | CC MCP servers | **PARTIAL** | CC has them, UI doesn't expose management |
 | 21 | CC skills | **PARTIAL** | CC has them, UI has no skill browser |
@@ -379,7 +379,7 @@ ledger entry
 | 26 | Ambient hooks feed vault | PASS | git commit → ledger entry |
 | 27 | Context7 for framework docs | PASS | MCP tool available |
 
-**Summary:** 19 PASS, 2 NOT DONE, 3 PARTIAL, 1 BUILT (Electron), 1 DEFERRED, 1 UNVERIFIED
+**Summary:** 20 PASS, 2 NOT DONE, 3 PARTIAL, 1 DEFERRED, 1 UNVERIFIED
 
 ---
 
