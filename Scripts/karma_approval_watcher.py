@@ -14,13 +14,23 @@ RETRY_DELAY = 60    # seconds before retry on failure
 SEEN_FILE = "/tmp/karma_watcher_seen.json"
 
 def _get_token():
-    """Read hub chat token."""
+    """Read hub chat token from multiple sources."""
+    # 1. Direct file (vault-neo)
     try:
         with open("/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt", "r") as f:
             return f.read().strip()
     except Exception:
-        # Fallback: try env
-        return os.environ.get("HUB_CHAT_TOKEN", "")
+        pass
+    # 2. K2 env file
+    try:
+        with open("/mnt/c/dev/Karma/k2/aria/.watcher.env", "r") as f:
+            for line in f:
+                if line.startswith("HUB_CHAT_TOKEN="):
+                    return line.split("=", 1)[1].strip()
+    except Exception:
+        pass
+    # 3. Environment variable
+    return os.environ.get("HUB_CHAT_TOKEN", "")
 
 TOKEN = _get_token()
 

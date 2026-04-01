@@ -1,14 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  async rewrites() {
-    return [
-      {
-        source: '/v1/:path*',
-        destination: process.env.NEXT_PUBLIC_API_URL
-          ? `${process.env.NEXT_PUBLIC_API_URL}/v1/:path*`
-          : 'https://hub.arknexus.net/v1/:path*',
-      },
-    ];
+  output: 'export',
+  // Static export — no server-side rendering, no rewrites needed.
+  // Frontend uses relative URLs (/v1/chat) which proxy.js handles.
+  // Images are unoptimized in static export mode.
+  images: {
+    unoptimized: true,
   },
 };
 

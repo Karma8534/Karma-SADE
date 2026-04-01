@@ -424,7 +424,31 @@ const server = http.createServer(async (req, res) => {
 
   try {
     // ── Static files ───────────────────────────────────────────────────
-    if (req.method === "GET" && (req.url === "/" || req.url === "/index.html" || req.url === "/unified.html")) {
+    // Next.js static export (Sprint 3b — Task 1)
+    if (req.method === "GET" && (req.url === "/" || req.url === "/index.html")) {
+      const nexusPath = path.join(PUBLIC_DIR, "nexus", "index.html");
+      if (fs.existsSync(nexusPath)) {
+        const html = fs.readFileSync(nexusPath, "utf-8");
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        return res.end(html);
+      }
+      // Fallback to unified.html if Next.js not deployed yet
+      const html = fs.readFileSync(path.join(PUBLIC_DIR, "unified.html"), "utf-8");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(html);
+    }
+    // Next.js _next/ static assets
+    if (req.method === "GET" && req.url.startsWith("/_next/")) {
+      const assetPath = path.join(PUBLIC_DIR, "nexus", req.url);
+      if (fs.existsSync(assetPath)) {
+        const ext = path.extname(assetPath);
+        const types = { ".js": "application/javascript", ".css": "text/css", ".json": "application/json", ".woff2": "font/woff2", ".png": "image/png", ".svg": "image/svg+xml" };
+        res.writeHead(200, { "Content-Type": types[ext] || "application/octet-stream", "Cache-Control": "public, max-age=31536000, immutable" });
+        return res.end(fs.readFileSync(assetPath));
+      }
+    }
+    // Legacy unified.html fallback
+    if (req.method === "GET" && (req.url === "/legacy" || req.url === "/unified.html")) {
       const html = fs.readFileSync(path.join(PUBLIC_DIR, "unified.html"), "utf-8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
       return res.end(html);

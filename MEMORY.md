@@ -3,7 +3,7 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Nexus build directive. Task 0: karma_approval_watcher.py deploying. Karma approval required before advancing. APPEND ONLY to nexus.md.
+- **Active task:** Nexus build. Task 0 APPROVED. Task 1 in progress: deploying Next.js static export to hub.arknexus.net. Sentinel killed. APPEND ONLY to nexus.md.
 - **Session:** 154 (all sprints through 4 shipped and verified live)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
