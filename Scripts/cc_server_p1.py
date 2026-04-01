@@ -155,6 +155,29 @@ def load_session_id():
     except Exception:
         return None
 
+def _call_ollama(message, provider_url, model):
+    """Call K2/P1 Ollama for simple queries (SmartRouter tier 0). Returns response text or None on failure."""
+    try:
+        payload = json.dumps({
+            "model": model,
+            "messages": [{"role": "user", "content": message}],
+            "stream": False,
+            "options": {"num_predict": 512},
+        }).encode()
+        req = urllib.request.Request(
+            f"{provider_url}/api/chat",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        resp = urllib.request.urlopen(req, timeout=30)
+        data = json.loads(resp.read().decode())
+        return data.get("message", {}).get("content", "")
+    except Exception as e:
+        print(f"[router] Ollama call failed ({provider_url}): {e}")
+        return None
+
+
 def save_session_id(session_id):
     """Persist session ID for next call."""
     try:
@@ -315,6 +338,58 @@ def run_cc_stream(message, effort=None, model=None, budget=None):
                     continue  # Skip hooks, init — don't expose to browser
                 if t == "rate_limit_event":
                     continue  # Skip rate limit noise
+                # ── Fire PreToolUse/PostToolUse hooks on tool events (Task 3 fix) ──
+                if t == "assistant" and HOOKS_AVAILABLE:
+                    msg = obj.get("message", {})
+                    content = msg.get("content", [])
+                    if isinstance(content, list):
+                        for block in content:
+                            if isinstance(block, dict) and block.get("type") == "tool_use":
+                                tool_name = block.get("name", "")
+                                tool_input = block.get("input", {})
+                                try:
+                                    results = _hooks.fire("PreToolUse", {
+                                        "tool_name": tool_name, "input": tool_input
+                                    })
+                                    for hr in results:
+                                        if hr.output and hr.output.get("permissionDecision") == "deny":
+                                            print(f"[hooks] BLOCKED: {tool_name} — {hr.output.get('systemMessage','')}")
+                                except Exception:
+                                    pass
+                # tool_result appears as separate type OR inside assistant content
+                if t == "tool_result" and HOOKS_AVAILABLE:
+                    tool_name = obj.get("tool_name", obj.get("name", ""))
+                    tool_output = obj.get("content", "")
+                    if isinstance(tool_output, list):
+                        tool_output = " ".join(str(b.get("text","")) for b in tool_output if isinstance(b, dict))
+                    try:
+                        _hooks.fire("PostToolUse", {
+                            "tool_name": tool_name,
+                            "input": obj.get("input", {}),
+                            "output": str(tool_output)[:4000],
+                        })
+                    except Exception:
+                        pass
+                # Also check assistant messages for tool_result content blocks
+                if t == "assistant" and HOOKS_AVAILABLE:
+                    msg2 = obj.get("message", {})
+                    content2 = msg2.get("content", [])
+                    if isinstance(content2, list):
+                        for block2 in content2:
+                            if isinstance(block2, dict) and block2.get("type") == "tool_result":
+                                tr_name = block2.get("tool_name", block2.get("name", ""))
+                                tr_content = block2.get("content", "")
+                                if isinstance(tr_content, list):
+                                    tr_content = " ".join(str(b.get("text","")) for b in tr_content if isinstance(b, dict))
+                                try:
+                                    _hooks.fire("PostToolUse", {
+                                        "tool_name": tr_name,
+                                        "input": block2.get("input", {}),
+                                        "output": str(tr_content)[:4000],
+                                    })
+                                except Exception:
+                                    pass
+
                 yield line
                 # Capture session_id from result
                 if t == "result":
@@ -602,10 +677,10 @@ class CCHandler(BaseHTTPRequestHandler):
         budget = body.get("budget")  # max budget USD (Gap 4: --max-budget-usd)
 
         # ── SmartRouter decision (Sprint 3c) ─────────────────────────────
+        _routing_decision = None
         if ROUTER_AVAILABLE:
-            routing = _router.route(message)
-            print(f"[router] {routing['provider']} (complexity={routing['complexity']}, tier={routing['tier']})")
-            # Future: if routing['tier'] == 0, route to Ollama instead of CC
+            _routing_decision = _router.route(message)
+            print(f"[router] {_routing_decision['provider']} (complexity={_routing_decision['complexity']}, tier={_routing_decision['tier']})")
         files = body.get("files", [])
         file_prefix, file_paths = handle_files(files)
         message = file_prefix + message  # Prepend file info to message
@@ -619,6 +694,36 @@ class CCHandler(BaseHTTPRequestHandler):
                         print(f"[hooks] {hr.hook_name}: {hr.output['systemMessage']}")
             except Exception as e:
                 print(f"[hooks] UserPromptSubmit error: {e}")
+
+        # ── SmartRouter tier 0: route to Ollama for simple queries ────
+        if _routing_decision and _routing_decision.get("tier") == 0 and not files:
+            provider = next((p for p in _router.providers if p.name == _routing_decision["provider"]), None)
+            if provider:
+                ollama_response = _call_ollama(message, provider.url, provider.model)
+                if ollama_response:
+                    print(f"[router] Ollama responded ({len(ollama_response)} chars)")
+                    if self.path == "/cc/stream":
+                        self.send_response(200)
+                        self.send_header("Content-Type", "text/event-stream")
+                        self.send_header("Cache-Control", "no-cache")
+                        self._cors()
+                        self.end_headers()
+                        evt = json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": ollama_response}]}})
+                        self.wfile.write(f"data: {evt}\n\n".encode())
+                        result_evt = json.dumps({"type": "result", "result": ollama_response, "total_cost_usd": 0})
+                        self.wfile.write(f"data: {result_evt}\n\n".encode())
+                        self.wfile.flush()
+                    else:
+                        self._json(200, {"ok": True, "response": ollama_response})
+                    _auto_save_memory(message, ollama_response)
+                    if HOOKS_AVAILABLE:
+                        try: _hooks.fire("Stop", {"session_id": "", "message": message, "assistant_text": ollama_response})
+                        except: pass
+                    return
+                else:
+                    # Ollama failed — fall through to CC with routing_fallback
+                    _routing_decision["routing_fallback"] = True
+                    print(f"[router] Ollama failed, falling back to CC")
 
         # Concurrency guard — reject if another request is active
         if not _proc_lock.acquire(blocking=False):

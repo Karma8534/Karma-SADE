@@ -88,13 +88,26 @@ def poll_bus():
     return found
 
 def send_to_karma(task_num, proof_text):
-    """Send audit request to Karma via /v1/chat."""
+    """Send audit request to Karma. Tries K2 cortex first (doesn't block CC), falls back to /v1/chat."""
     message = (
         f"KARMA AUDIT REQUIRED\n"
         f"Task: {task_num}\n"
         f"Proof: {proof_text[:3000]}\n"
-        f"Approve or redirect?"
+        f"Approve or redirect? Respond with [KARMA APPROVE Task {task_num}] or [KARMA REDIRECT Task {task_num}]"
     )
+    # Try K2 cortex first (doesn't compete with CC subprocess)
+    try:
+        k2_url = "http://localhost:7892/query"
+        data = json.dumps({"query": message}).encode()
+        req = urllib.request.Request(k2_url, data=data,
+            headers={"Content-Type": "application/json"}, method="POST")
+        resp = urllib.request.urlopen(req, timeout=30)
+        result = json.loads(resp.read().decode())
+        if result.get("answer"):
+            return {"ok": True, "assistant_text": result["answer"], "response": result["answer"]}
+    except Exception:
+        pass
+    # Fallback to /v1/chat (may timeout if CC is busy)
     result = _api("POST", "/v1/chat", {
         "message": message,
         "stream": False,

@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Nexus build. Task 0 APPROVED. Task 1 in progress: deploying Next.js static export to hub.arknexus.net. Sentinel killed. APPEND ONLY to nexus.md.
-- **Session:** 154 (all sprints through 4 shipped and verified live)
+- **Active task:** Session 154 wrapped. Next: line-by-line arkscaffold comparison, kill K2 ARCHON spam, AGORA button in Electron, fix AGORA auth.
+- **Session:** 154 (Tasks 0-5 complete. Next.js live at hub.arknexus.net. Electron on P1 with icon. SmartRouter routing. 4/6 hooks live. 13 pitfalls logged.)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)
