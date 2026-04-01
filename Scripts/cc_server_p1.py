@@ -26,16 +26,18 @@ try:
     from Scripts.hooks.compiler_in_loop import handle as compiler_in_loop_handle
     from Scripts.hooks.auto_handoff_stop import handle as auto_handoff_handle
     from Scripts.hooks.pre_tool_security import handle as pre_tool_security_handle
+    from Scripts.hooks.fact_extractor import handle as fact_extractor_handle
 
     _hooks = HooksService()
     _hooks.register(HookDef("skill_activation", "UserPromptSubmit", "True", skill_activation_handle, 3000))
     _hooks.register(HookDef("pre_tool_security", "PreToolUse", "True", pre_tool_security_handle, 1000))
+    _hooks.register(HookDef("fact_extractor", "PostToolUse", "True", fact_extractor_handle, 3000))
     _hooks.register(HookDef("compiler_in_loop", "PostToolUse", "tool_name in [Edit, Write]", compiler_in_loop_handle, 10000))
     _hooks.register(HookDef("cost_warning", "PostToolUse", "True", cost_warning_handle, 1000))
     _hooks.register(HookDef("memory_extractor", "Stop,SessionEnd", "True", memory_extractor_handle, 5000))
     _hooks.register(HookDef("auto_handoff", "Stop", "True", auto_handoff_handle, 5000))
     HOOKS_AVAILABLE = True
-    print("[cc-server] Hooks engine: 6 handlers registered")
+    print("[cc-server] Hooks engine: 7 handlers registered")
 except Exception as e:
     _hooks = None
     HOOKS_AVAILABLE = False
