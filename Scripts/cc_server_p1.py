@@ -660,6 +660,33 @@ class CCHandler(BaseHTTPRequestHandler):
             # Sprint 4d: List pending self-edit proposals
             from Scripts.self_edit_service import list_pending
             self._json(200, {"ok": True, "proposals": list_pending()})
+        elif self.path == "/skills":
+            # Baseline #21: Skills list for UI surface
+            skills_dir = os.path.join(WORK_DIR, ".claude", "skills")
+            skills = []
+            if os.path.isdir(skills_dir):
+                for name in sorted(os.listdir(skills_dir)):
+                    skill_file = os.path.join(skills_dir, name, "SKILL.md")
+                    if os.path.isfile(skill_file):
+                        desc = ""
+                        try:
+                            with open(skill_file, "r", encoding="utf-8", errors="replace") as f:
+                                for line in f:
+                                    line = line.strip()
+                                    if line and not line.startswith("#") and not line.startswith("---"):
+                                        desc = line[:120]
+                                        break
+                        except Exception:
+                            pass
+                        skills.append({"name": name, "description": desc})
+            self._json(200, {"ok": True, "count": len(skills), "skills": skills})
+        elif self.path == "/hooks":
+            # Baseline #22: Hooks status for UI surface
+            hooks_list = []
+            if HOOKS_AVAILABLE and _hooks:
+                for h in _hooks._hooks:
+                    hooks_list.append({"name": h.name, "events": h.events, "condition": h.condition})
+            self._json(200, {"ok": True, "count": len(hooks_list), "hooks": hooks_list, "engine": HOOKS_AVAILABLE})
         else:
             self.send_response(404)
             self.end_headers()

@@ -521,6 +521,26 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    // ── /v1/skills — Skills list for UI (Baseline #21) ──────────────────
+    if (req.method === "GET" && req.url === "/v1/skills") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const r = await fetch(`${HARNESS_P1}/skills`, { signal: AbortSignal.timeout(5000) });
+        const data = await r.json();
+        return json(res, r.ok ? 200 : 502, data);
+      } catch (e) { return json(res, 502, { ok: false, error: `Skills unavailable: ${e.message}` }); }
+    }
+
+    // ── /v1/hooks — Hooks status for UI (Baseline #22) ─────────────────
+    if (req.method === "GET" && req.url === "/v1/hooks") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const r = await fetch(`${HARNESS_P1}/hooks`, { signal: AbortSignal.timeout(5000) });
+        const data = await r.json();
+        return json(res, r.ok ? 200 : 502, data);
+      } catch (e) { return json(res, 502, { ok: false, error: `Hooks unavailable: ${e.message}` }); }
+    }
+
     // ── Health ─────────────────────────────────────────────────────────
     if (req.method === "GET" && req.url === "/health") {
       return json(res, 200, { ok: true, service: "sovereign-proxy", ts: new Date().toISOString() });

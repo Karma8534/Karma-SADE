@@ -309,7 +309,8 @@
       <option value="max">max</option>
     </select>
     <button class="hdr-btn" id="cascade-btn">CASCADE</button>
-    <button class="hdr-btn" id="agora-btn">LEARNED</button>
+    <button class="hdr-btn" id="memory-btn">MEMORY</button>
+    <button class="hdr-btn" id="skills-btn">SKILLS</button>
     <button class="hdr-btn" id="clear-btn">CLEAR</button>
   </div>
 
@@ -334,13 +335,32 @@
       <div id="processing">Karma is thinking...</div>
     </div>
 
-    <!-- Learning Panel — shows what Karma has learned/self-improved -->
-    <div id="learning-panel" style="display:none;position:fixed;top:60px;right:20px;width:420px;max-height:70vh;overflow-y:auto;background:#0a0a14;border:1px solid #2d2d5e;border-radius:8px;padding:16px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,0.6)">
+    <!-- Memory Panel — claude-mem viewer + Sovereign suggestion input (S155) -->
+    <div id="memory-panel" style="display:none;position:fixed;top:60px;right:20px;width:500px;max-height:80vh;overflow-y:auto;background:#0a0a14;border:1px solid #2d2d5e;border-radius:8px;padding:16px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,0.6)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <h3 style="margin:0;color:#a78bfa;font-size:14px">What Karma Has Learned</h3>
-        <button onclick="document.getElementById('learning-panel').style.display='none'" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:16px">&times;</button>
+        <h3 style="margin:0;color:#a78bfa;font-size:14px">MEMORY SPINE</h3>
+        <button onclick="document.getElementById('memory-panel').style.display='none'" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:16px">&times;</button>
       </div>
-      <div id="learning-content" style="font-size:12px;color:#9ca3af;line-height:1.6">Loading...</div>
+      <div id="memory-search" style="margin-bottom:12px">
+        <input id="mem-search-input" type="text" placeholder="Search memories..." style="width:100%;padding:6px 10px;background:#12121f;border:1px solid #2d2d5e;border-radius:4px;color:#e0e0e0;font-size:12px;font-family:'JetBrains Mono',monospace" />
+      </div>
+      <div id="memory-results" style="font-size:11px;color:#9ca3af;line-height:1.5;max-height:35vh;overflow-y:auto">Type to search...</div>
+      <hr style="border-color:#2d2d5e;margin:12px 0" />
+      <div style="margin-bottom:8px;font-size:11px;color:#7f5af0;font-weight:bold">SOVEREIGN SUGGESTION</div>
+      <textarea id="sovereign-suggestion" rows="2" placeholder="Nudge Karma in a direction... (idea, subject, correction)" style="width:100%;padding:6px 10px;background:#12121f;border:1px solid #2d2d5e;border-radius:4px;color:#e0e0e0;font-size:12px;font-family:'JetBrains Mono',monospace;resize:vertical"></textarea>
+      <button id="suggest-btn" style="margin-top:6px;padding:4px 12px;background:#7f5af0;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px">Send Suggestion</button>
+    </div>
+
+    <!-- Skills Panel — list of available skills (Baseline #21, S155) -->
+    <div id="skills-panel" style="display:none;position:fixed;top:60px;right:20px;width:420px;max-height:70vh;overflow-y:auto;background:#0a0a14;border:1px solid #2d2d5e;border-radius:8px;padding:16px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,0.6)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 style="margin:0;color:#a78bfa;font-size:14px">SKILLS &amp; HOOKS</h3>
+        <button onclick="document.getElementById('skills-panel').style.display='none'" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:16px">&times;</button>
+      </div>
+      <div id="skills-content" style="font-size:11px;color:#9ca3af;line-height:1.5">Loading...</div>
+      <hr style="border-color:#2d2d5e;margin:12px 0" />
+      <div style="font-size:11px;color:#7f5af0;font-weight:bold;margin-bottom:8px">HOOKS ENGINE</div>
+      <div id="hooks-content" style="font-size:11px;color:#9ca3af;line-height:1.5">Loading...</div>
     </div>
 
   </div>
@@ -423,9 +443,12 @@
       if (e.key === 'Escape' && isStreaming) { e.preventDefault(); cancelGeneration(); }
     });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && isStreaming) cancelGeneration(); });
-    document.getElementById('agora-btn').addEventListener('click', toggleAgora);
+    document.getElementById('memory-btn').addEventListener('click', toggleMemory);
+    document.getElementById('skills-btn').addEventListener('click', toggleSkills);
     document.getElementById('cascade-btn').addEventListener('click', toggleCascade);
     document.getElementById('clear-btn').addEventListener('click', clearConversation);
+    document.getElementById('mem-search-input').addEventListener('input', debounce(searchMemory, 400));
+    document.getElementById('suggest-btn').addEventListener('click', sendSuggestion);
     autoGrow(document.getElementById('msg-input'));
     setupFileHandlers();
     loadSavedMessages();
@@ -555,18 +578,101 @@
     el.addEventListener('input', () => { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 140) + 'px'; });
   }
 
-  function toggleAgora() {
-    const panel = document.getElementById('learning-panel');
+  // ── Memory Panel (S155 — replaces old learning panel) ─────────────────
+  function toggleMemory() {
+    const panel = document.getElementById('memory-panel');
     if (panel.style.display !== 'none') { panel.style.display = 'none'; return; }
+    // Close other panels
+    document.getElementById('skills-panel').style.display = 'none';
     panel.style.display = 'block';
-    loadLearningPanel();
   }
+
+  function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+  async function searchMemory() {
+    const q = document.getElementById('mem-search-input').value.trim();
+    const el = document.getElementById('memory-results');
+    if (!q) { el.innerHTML = 'Type to search...'; return; }
+    el.innerHTML = 'Searching...';
+    try {
+      const r = await fetch('/v1/memory/search', {
+        method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q, limit: 10 })
+      });
+      const d = await r.json();
+      if (d.content) {
+        const text = Array.isArray(d.content) ? d.content.map(c => c.text || '').join('\n') : String(d.content);
+        el.innerHTML = '<pre style="white-space:pre-wrap;font-size:11px;color:#c4b5fd">' + escHtml(text.slice(0, 3000)) + '</pre>';
+      } else {
+        el.innerHTML = '<span style="color:#ef4444">No results</span>';
+      }
+    } catch (e) { el.innerHTML = '<span style="color:#ef4444">Error: ' + escHtml(e.message) + '</span>'; }
+  }
+
+  async function sendSuggestion() {
+    const input = document.getElementById('sovereign-suggestion');
+    const text = input.value.trim();
+    if (!text) return;
+    try {
+      await fetch('/v1/coordination/post', {
+        method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: 'sovereign', to: 'all', type: 'directive', urgency: 'normal', content: '[SOVEREIGN SUGGESTION] ' + text })
+      });
+      input.value = '';
+      input.placeholder = 'Sent! Karma will see this.';
+      setTimeout(() => { input.placeholder = 'Nudge Karma in a direction...'; }, 3000);
+    } catch (e) { console.error('Suggestion failed:', e); }
+  }
+
+  // ── Skills + Hooks Panel (Baseline #21 + #22, S155) ──────────────────
+  function toggleSkills() {
+    const panel = document.getElementById('skills-panel');
+    if (panel.style.display !== 'none') { panel.style.display = 'none'; return; }
+    document.getElementById('memory-panel').style.display = 'none';
+    panel.style.display = 'block';
+    loadSkillsPanel();
+  }
+
+  async function loadSkillsPanel() {
+    const sel = document.getElementById('skills-content');
+    const hel = document.getElementById('hooks-content');
+    try {
+      const [sr, hr] = await Promise.all([
+        fetch('/v1/skills', { headers: auth() }),
+        fetch('/v1/hooks', { headers: auth() })
+      ]);
+      const sd = await sr.json();
+      const hd = await hr.json();
+      if (sd.skills && sd.skills.length) {
+        sel.innerHTML = sd.skills.map(s =>
+          '<div style="margin-bottom:8px;padding:6px;background:#12121f;border-radius:4px">' +
+          '<span style="color:#7f5af0;font-weight:bold">/' + escHtml(s.name) + '</span>' +
+          (s.description ? '<br><span style="color:#6b7280">' + escHtml(s.description) + '</span>' : '') +
+          '</div>'
+        ).join('');
+      } else { sel.innerHTML = 'No skills found'; }
+      if (hd.hooks && hd.hooks.length) {
+        hel.innerHTML = '<div style="margin-bottom:4px;color:#10b981">Engine: ' + (hd.engine ? 'ACTIVE' : 'OFF') + ' (' + hd.count + ' hooks)</div>' +
+          hd.hooks.map(h =>
+            '<div style="margin-bottom:4px;padding:4px 6px;background:#12121f;border-radius:4px">' +
+            '<span style="color:#a78bfa">' + escHtml(h.name) + '</span> ' +
+            '<span style="color:#4b5563">on ' + escHtml(h.events) + '</span>' +
+            '</div>'
+          ).join('');
+      } else { hel.innerHTML = 'No hooks registered'; }
+    } catch (e) {
+      sel.innerHTML = '<span style="color:#ef4444">Error: ' + escHtml(e.message) + '</span>';
+    }
+  }
+
+  // ── Legacy compat (keep toggleAgora pointing to memory) ──────────────
+  function toggleAgora() { toggleMemory(); }
 
   let _learningsCache = null;
   let _learningsCacheTs = 0;
-  const LEARNINGS_CACHE_TTL = 60000; // 60s
+  const LEARNINGS_CACHE_TTL = 60000;
   let _cascadeTs = 0;
-  const CASCADE_CACHE_TTL = 30000; // 30s
+  const CASCADE_CACHE_TTL = 30000;
 
   async function loadLearningPanel() {
     const el = document.getElementById('learning-content');
