@@ -496,6 +496,39 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, service: "sovereign-proxy", ts: new Date().toISOString() });
     }
 
+    // ── /v1/files — file tree for Context Panel (Sprint 4c) ────────────
+    if (req.method === "GET" && req.url === "/v1/files") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const r = await fetch(`${HARNESS_P1}/files`, { signal: AbortSignal.timeout(5000) });
+        const data = await r.json();
+        return json(res, 200, data);
+      } catch (e) { return json(res, 502, { ok: false, error: "files endpoint unreachable" }); }
+    }
+
+    // ── /v1/memory/search — memory search for Context Panel ──────────
+    if (req.method === "POST" && req.url === "/v1/memory/search") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      const raw = await parseBody(req, 10000);
+      try {
+        const r = await fetch(`${HARNESS_P1}/memory/search`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: raw, signal: AbortSignal.timeout(5000),
+        });
+        const data = await r.json();
+        return json(res, 200, data);
+      } catch (e) { return json(res, 502, { ok: false, error: "memory search unreachable" }); }
+    }
+
+    // ── /v1/spine — K2 spine status for Context Panel ────────────────
+    if (req.method === "GET" && req.url === "/v1/spine") {
+      try {
+        const r = await fetch("http://100.75.109.92:7892/spine", { signal: AbortSignal.timeout(3000) });
+        if (r.ok) return json(res, 200, await r.json());
+        return json(res, 502, { ok: false, error: "K2 spine unreachable" });
+      } catch (e) { return json(res, 502, { ok: false, error: "K2 spine unreachable" }); }
+    }
+
     // ── /v1/cancel — abort current CC subprocess ───────────────────────
     if (req.method === "GET" && req.url === "/v1/cancel") {
       // Cancel on whichever node is active

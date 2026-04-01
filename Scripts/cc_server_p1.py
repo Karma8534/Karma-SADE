@@ -158,6 +158,28 @@ ALLOWED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg",
                       ".pdf", ".txt", ".md", ".js", ".py", ".json", ".csv", ".yaml", ".yml",
                       ".ts", ".html", ".css", ".sh", ".ps1", ".toml", ".xml", ".log"}
 
+def _build_file_tree(root: str, max_depth: int = 3, _depth: int = 0) -> list:
+    """Build a JSON-serializable file tree for the Context Panel (Sprint 4c)."""
+    SKIP = {'.git', 'node_modules', '.next', '__pycache__', '.mypy_cache', 'venv', '.venv', 'tmp'}
+    result = []
+    try:
+        entries = sorted(os.listdir(root))
+    except PermissionError:
+        return result
+    for name in entries[:50]:  # Cap entries per dir
+        if name in SKIP or name.startswith('.'):
+            continue
+        full = os.path.join(root, name)
+        rel = os.path.relpath(full, WORK_DIR)
+        if os.path.isdir(full):
+            children = _build_file_tree(full, max_depth, _depth + 1) if _depth < max_depth else []
+            result.append({"name": name, "type": "dir", "path": rel, "children": children})
+        else:
+            size = os.path.getsize(full)
+            result.append({"name": name, "type": "file", "path": rel, "size": size})
+    return result
+
+
 def handle_files(files):
     """Write attached files to temp dir, return (prefix_string, file_paths_list).
     E301: Rejects files > MAX_FILE_SIZE. E302: Rejects unsupported extensions.
@@ -363,6 +385,11 @@ class CCHandler(BaseHTTPRequestHandler):
         elif self.path.startswith("/memory/session"):
             session_id = load_session_id()
             self._json(200, {"ok": True, "session_id": session_id or ""})
+        elif self.path == "/files":
+            # Sprint 4c: File tree endpoint for Context Panel
+            tree = _build_file_tree(WORK_DIR, max_depth=3)
+            self._json(200, {"ok": True, "root": os.path.basename(WORK_DIR), "tree": tree})
+            return
         elif self.path.startswith("/file"):
             parsed = urllib.parse.urlparse(self.path)
             params = urllib.parse.parse_qs(parsed.query)

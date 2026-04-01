@@ -6,6 +6,7 @@ import { Header } from '@/components/Header';
 import { ChatFeed } from '@/components/ChatFeed';
 import { MessageInput } from '@/components/MessageInput';
 import { RoutingHints } from '@/components/RoutingHints';
+import { ContextPanel } from '@/components/ContextPanel';
 
 export default function Home() {
   const isAuthenticated = useKarmaStore((s) => s.isAuthenticated);
@@ -30,6 +31,7 @@ export default function Home() {
             Evolve. Continue.
           </div>
         </div>
+        <ContextPanel />
       </div>
     </div>
   );
