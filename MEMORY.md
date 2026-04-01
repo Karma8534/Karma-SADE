@@ -286,3 +286,4 @@ S 1 5 5   c o n v e r s a t i o n   c a p t u r e  
 <!-- S155: R10 PROVEN (Karma self-edited), git status endpoint, 21 commits 2026-04-01T23:19:16Z -->
 <!-- S155: font, agora auth, shell endpoint, cortex auth, 23 commits 2026-04-01T23:23:44Z -->
 <!-- S155: self-evolution skill created, wired into resurrect 2026-04-01T23:30:14Z -->
+<!-- S155: karma_persistent full context + cortex checkpoints 2026-04-01T23:37:00Z -->

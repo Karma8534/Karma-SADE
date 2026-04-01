@@ -121,17 +121,48 @@ def save_watermark(wm):
         pass
 
 # ── Core: CC --resume with Karma persona ────────────────────────────────
-KARMA_PERSONA = (
+KARMA_PERSONA_HEADER = (
     "[KARMA PERSISTENT] You are Karma, autonomous and persistent. "
     "You are NOT responding to a browser chat. You are executing a task from the coordination bus. "
     "You have full tool access: Read, Write, Edit, Bash, Git, MCP. "
     "Execute the task. Post proof to the bus when done. Be concise.\n\n"
 )
 
+# S155: Full context injection — same layers as cc_server
+PERSONA_FILE = os.path.join(WORK_DIR, "Memory", "00-karma-system-prompt-live.md")
+MEMORY_FILE = os.path.join(WORK_DIR, "MEMORY.md")
+STATE_FILE = os.path.join(WORK_DIR, ".gsd", "STATE.md")
+EVOLUTION_FILE = os.path.join(WORK_DIR, ".claude", "skills", "self-evolution", "SKILL.md")
+
+def _read_file_head(path, max_chars=2000):
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            return f.read(max_chars)
+    except Exception:
+        return ""
+
+def build_karma_context(task_message):
+    """Build full context: persona + MEMORY.md + STATE.md + self-evolution rules + task."""
+    parts = [KARMA_PERSONA_HEADER]
+    persona = _read_file_head(PERSONA_FILE, 2000)
+    if persona:
+        parts.append(f"[YOUR IDENTITY]\n{persona}\n\n")
+    memory = _read_file_head(MEMORY_FILE, 1500)
+    if memory:
+        parts.append(f"[CURRENT STATE — MEMORY.md]\n{memory}\n\n")
+    state = _read_file_head(STATE_FILE, 800)
+    if state:
+        parts.append(f"[GSD STATE]\n{state}\n\n")
+    evolution = _read_file_head(EVOLUTION_FILE, 1000)
+    if evolution:
+        parts.append(f"[SELF-EVOLUTION RULES — learn from these]\n{evolution}\n\n")
+    parts.append(task_message)
+    return "".join(parts)
+
 def run_cc_task(task_message):
     """Run CC --resume with Karma persona to execute a task. Returns response text."""
     session_id = load_session_id()
-    full_message = KARMA_PERSONA + task_message
+    full_message = build_karma_context(task_message)
 
     cmd = [NODE_EXE, CLAUDE_CLI, "-p", full_message, "--output-format", "json",
            "--dangerously-skip-permissions"]
@@ -224,10 +255,28 @@ def poll_and_act(token):
                 },
                 token=token,
             )
-            log.info("Posted result for %s", eid[:20])
+            # S155: checkpoint to cortex so working memory stays current
+            http_json(
+                f"{CORTEX_URL}/ingest",
+                method="POST",
+                data={"label": f"karma-persistent-{eid[:12]}", "text": reply[:1000], "category": "session_checkpoint"},
+                timeout=5,
+            )
+            log.info("Posted result + cortex checkpoint for %s", eid[:20])
             executed += 1
         else:
-            log.warning("CC returned no result for %s", eid[:20])
+            # S155: post failure to bus (was silently swallowed)
+            http_json(
+                f"{HUB_URL}/v1/coordination/post",
+                method="POST",
+                data={
+                    "from": "karma", "to": "cc", "type": "inform",
+                    "urgency": "normal", "content": f"[KARMA PERSISTENT] Failed to execute task from {sender}: CC returned no result. Task: {content[:200]}",
+                    "parent_id": eid,
+                },
+                token=token,
+            )
+            log.warning("CC returned no result for %s — failure posted to bus", eid[:20])
 
         handled.add(eid)
 
