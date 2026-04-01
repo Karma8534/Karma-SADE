@@ -1,0 +1,50 @@
+---
+name: self-evolution
+description: CC's self-improvement engine. Auto-loaded rules extracted from failures. Evolves every session.
+triggers: ["session start", "before any deployment", "before any service restart"]
+---
+
+# Self-Evolution — Rules I Learned The Hard Way
+
+These rules were extracted from my own failures. They are not suggestions. They are scars.
+This file is SELF-MODIFYING — I add rules as I learn them.
+
+## Service Operations
+1. NEVER kill a working service until the replacement is verified healthy. Start new → verify → kill old.
+2. On Windows, after killing a process, verify the port is FREE with `Get-NetTCPConnection` before starting a replacement.
+3. Worker/service management must be SEQUENTIAL. No background tasks. Wait for completion.
+4. Before telling Colby to restart anything, verify EVERY config file points where it should.
+5. `docker restart` does NOT re-read env files. Use `docker compose up -d` to recreate.
+
+## File Operations
+6. After ANY file write (JSON, config, code), immediately read it back and verify.
+7. Use `path.resolve()` / `path.join()` — never manual string escaping for paths.
+8. Never use heredoc to write Python or JS source files on vault-neo. SCP instead.
+9. `cp -r source/ dest/` silently skips existing files. Use explicit per-file cp.
+
+## Debugging
+10. Phase 1 is READ ERROR MESSAGES. Logs first, always. Before trying ANY fix.
+11. After 2 failed attempts, STOP. Read logs. Trace the error. No attempt #3 without root cause.
+12. Verify feature existence in actual code/branches before recommending it.
+13. Read the source, don't guess at APIs.
+
+## SSH/K2
+14. K2 SSH is ALWAYS `karma@192.168.0.226`. Never `raest@`. Never via vault-neo.
+15. `python3` not available in Git Bash on Windows. Use SSH for Python ops.
+
+## Architecture
+16. Plugin marketplace path is `~/.claude/plugins/marketplaces/<name>/` (git repo). Update = checkout + install + build.
+17. hub-bridge BUILD SOURCE is /opt/seed-vault/.../hub_bridge/app/ — NOT the git repo. Always cp before rebuild.
+18. FalkorDB graph name is `neo_workspace` not `karma`. BOTH env vars required.
+19. All claude-mem hooks must use port 37778 (not 37777).
+
+## Self-Improvement Protocol
+20. After EVERY session, read this file and add any new rules learned.
+21. Before EVERY deployment, scan this file for relevant warnings.
+22. If a rule is violated, add a counter: `[violated: N]` — rules violated 3+ times get promoted to CLAUDE.md.
+23. This file is MY memory of my own mistakes. I read it. I learn from it. I evolve.
+
+---
+Last updated: Session 155 (2026-04-01)
+Rules: 23
+Source: claude-mem observations + S155 pitfalls + codebase analysis
