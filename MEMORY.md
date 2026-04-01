@@ -3,8 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Sprint 6 Memory Operating Discipline in progress. Tasks 1-6 built. Cortex v2.0.0 LIVE on K2:7892 with gated recall + compression. MemCube schema added to proxy.js. Task 7 (migration/fusion) pending. Pausing per Sovereign directive.
-- **Session:** 155 (arkscaffold audit: 34 new primitives appended to nexus.md. Sprint 6 tasks 1-6 built + deployed. Gap 7 verified DONE. Baseline: 22 PASS.)
+- **Active task:** Sprint 6 Memory Operating Discipline. Tasks 1-6 LIVE. Deterministic context injection DEPLOYED (persona + MEMORY.md + STATE.md + cortex + claude-mem). Karma has recall. Task 2 delegated to Karma (Vesper governor tier). Task 7 pending. CC + Karma building in parallel.
+- **Session:** 155 (arkscaffold: 34 primitives. claude-mem: 20 primitives. 64 total in nexus.md Appendix A+B. claude-mem upgraded to v10.6.3 on port 37778. Cortex v2.0.0 on K2. cc_server_p1.py deterministic context. Gap 7 DONE. Baseline: 22+ PASS.)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
 - **Key decision:** Spine = truth, Orchestrator = enforcement, Cortex = 32K working memory ($0), Cloud = deep reasoning ($cost)

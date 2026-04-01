@@ -744,3 +744,76 @@ Current Karma stack comparison:
 ---
 
 **Audit completed 2026-04-01 Session 155. 44 primitives cataloged: 10 previously adopted, 34 new.**
+
+---
+
+## Appendix B: claude-mem Source Primitive Audit (S155 — 2026-04-01)
+
+**Source:** `/mnt/c/dev/Karma/k2/tmp/claude-mem/` (full repo clone on K2)
+**claude-mem ver:** 10.5.2 (source on K2) / 10.6.3 (deployed on P1)
+**Method:** Read all source files via SSH to K2, compared against nexus.md + current Karma architecture
+**Rule:** APPEND ONLY per Sovereign directive
+
+### B.1: Primitives Already Implemented in Karma (different form)
+
+| # | claude-mem Primitive | Karma Equivalent | Gap |
+|---|---------------------|-----------------|-----|
+| 1 | SQLite FTS5 search | FAISS + FalkorDB | Different engine, same function |
+| 2 | Session summaries | wrap-session skill | Manual vs automated |
+| 3 | Observation storage | claude-mem MCP save_observation | Already wired |
+| 4 | Worker health endpoint | proxy.js /health | Different service, same pattern |
+| 5 | Hook system (5 lifecycle events) | hooks_engine.py (11 events) | Karma has MORE events |
+
+### B.2: New Primitives for Assimilation (20 items)
+
+| # | Primitive | claude-mem Source | What It Does | Nexus Value |
+|---|-----------|------------------|-------------|-------------|
+| 45 | 3-Layer Search Workflow | `mcp-server.ts` | search (index ~50-100 tok/result) → timeline (context around anchor) → get_observations (full detail). 10x token savings vs fetching all observations. | Sprint 6: gated recall should use this pattern — retrieve index first, then detail only for top-K |
+| 46 | Dual Session ID | `docs/SESSION_ID_ARCHITECTURE.md` | `contentSessionId` (user's CC session) vs `memorySessionId` (agent's internal session). Session isolation, resume safety, foreign key integrity. | Karma's brain wire writes without session isolation. Adopt dual-ID for nexus-chat.jsonl + cortex ingest. |
+| 47 | Persistent Work Queue | `sqlite/PendingMessageStore.ts` | Claim-confirm pattern with self-healing stale messages. Messages survive worker crashes. States: pending → processing → confirmed/failed. | Replace proxy.js fire-and-forget vaultPost() with crash-safe queue for ledger writes. |
+| 48 | Provider Fallback Chain | `SDKAgent.ts` → `GeminiAgent.ts` → `OpenRouterAgent.ts` | Auto-fallback on 429/500/502/503. Rate-limit-aware per provider. Each agent implements same interface. | SmartRouter (#3c) routes by complexity but has no fallback. Add provider fallback on failure. |
+| 49 | Search Strategy Pattern | `search/SearchOrchestrator.ts` | Three strategies: filter-only (SQLite FTS5), semantic (ChromaDB vector), hybrid (metadata + semantic intersection). Strategy selected per query. | Current FAISS search is single-strategy. Add hybrid: FAISS semantic + FalkorDB structured, merged. |
+| 50 | Content-Hash Dedup | `sqlite/observations/store.ts` | SHA hash of observation content. Duplicate writes silently skipped. | Vault ledger has no dedup — duplicate entries from hooks + brain wire + ambient. Add content-hash gate. |
+| 51 | SSE Event Broadcasting | `worker/SSEBroadcaster.ts` | Server-sent events for real-time viewer updates. Client registration, heartbeat, reconnection. | unified.html uses SSE for chat streaming but NOT for system events (memory stored, session state, pipeline health). Extend SSE. |
+| 52 | Context Builder Pipeline | `context/ContextBuilder.ts` | Config → DB query → token-budgeted output with header/timeline/summary/footer. Auto-injects into IDE rules files. | Sprint 6 Task 4 (compression) is simpler than this. Adopt full pipeline: budget → prioritize → format → inject. |
+| 53 | Hooks as CLI Commands | `cli/hook-command.ts` | Hook events dispatched via CLI subprocess, not HTTP. Standard response: `{continue: true, suppressOutput: true}`. Error classification for worker-unavailable. | Our hooks_engine.py runs in-process. CLI dispatch enables hooks in ANY CC session without shared state. |
+| 54 | MCP as Thin Proxy | `servers/mcp-server.ts` | MCP server has ZERO logic. Translates MCP tool calls → HTTP requests to Worker API. All intelligence in Worker. | Our MCP tools (claude-mem) work this way already. Pattern confirmed — keep MCP thin, logic in service. |
+| 55 | Incremental Migration Runner | `sqlite/migrations/runner.ts` | 14 versioned migrations (schema 4-23). Each migration is atomic. Version tracked in DB. Forward-only. | Vault-api has no migration system. Schema changes to memory.schema.v0.1.json are manual. Add versioned migrations. |
+| 56 | Privacy Check Validator | `validation/PrivacyCheckValidator.ts` | Validates user prompts before storage. Strips/flags sensitive content. | No privacy gate on vault ledger writes. Add pre-write validation for PII/secrets. |
+| 57 | Process Registry + Orphan Reaper | `worker/ProcessRegistry.ts` | PID tracking, pool slot management, orphan process reaper, custom spawn for SDK subprocesses. | cc_server_p1.py has basic PID file but no orphan detection. Add reaper for stale CC --resume subprocesses. |
+| 58 | Timeline with Anchor Navigation | `worker/TimelineService.ts` | Build timeline around any observation ID. Forward/backward depth. Day grouping. Markdown formatted. | Cortex /context returns flat summary. Adopt anchor-based timeline for "what happened before/after X?" queries. |
+| 59 | Observation Type + Concept System | `sqlite/observations/types.ts` | Types: bugfix, feature, refactor, discovery, decision, change. Concepts: how-it-works, why-it-exists, what-changed, problem-solution, gotcha, pattern, trade-off. | Our save_observation uses free-text titles. Adopt typed categories for structured recall (Sprint 6 Task 5 interleaved recall). |
+| 60 | Agent SDK V2 Session Pattern | `docs/context/agent-sdk-v2-preview.md` | createSession() → prompt() → resumeSession(). Session-based send/receive replacing async generators. | CC uses --resume flag. When Agent SDK V2 ships, adopt session pattern for Karma's own agent orchestration. |
+| 61 | Cursor Hooks as Portable Pattern | `cursor-hooks/hooks.json` + handler scripts | beforeSubmitPrompt → session-init + context-inject. afterExecution → save-observation. stop → session-summary. Shell scripts, portable across IDEs. | Our hooks are Python, CC-specific. Shell script hooks would work in ANY Claude-compatible tool. |
+| 62 | Stale Session Reaper | `worker/SessionManager.ts` | 15min idle timeout. Auto-close stale sessions. Prevents resource leak. | proxy.js request queue has dead-client eviction but no session-level reaping. Add for long-lived cortex sessions. |
+| 63 | OpenRouter Context Truncation | `worker/OpenRouterAgent.ts` | Context window management with history pruning. Keeps recent messages, drops oldest when budget exceeded. | Cortex v2 truncates knowledge blocks by char count. Adopt message-level truncation for conversation history. |
+| 64 | Stale Generator Detection | `http/routes/SessionRoutes.ts` | Detects when observation generator has stalled. Crash recovery with exponential backoff. Auto-restart on failure. | No equivalent in Karma. Vesper pipeline stalls silently. Add stale detection + auto-restart. |
+
+### B.3: Mapping to Existing Nexus Sprints
+
+| Nexus Sprint/Task | claude-mem Primitives That Enhance It |
+|-------------------|---------------------------------------|
+| Sprint 6 Task 3 (Gated Recall) | #45 3-Layer Search (index before detail), #49 Search Strategy Pattern (hybrid) |
+| Sprint 6 Task 4 (Compression) | #52 Context Builder Pipeline (token-budgeted output) |
+| Sprint 6 Task 5 (Interleaved Recall) | #59 Observation Type System (typed categories for structured recall) |
+| Sprint 6 Task 6 (Local-Window Priority) | #63 Context Truncation (message-level pruning) |
+| Sprint 3c (SmartRouter) | #48 Provider Fallback Chain (add failure fallback to existing routing) |
+| Sprint 4d (Self-Edit Engine) | #47 Persistent Work Queue (crash-safe proposal storage) |
+| Beyond Gaps: Session continuity | #46 Dual Session ID, #62 Stale Session Reaper |
+| Beyond Gaps: Hooks | #53 CLI-based hooks (portable), #61 Cursor hooks pattern |
+
+### B.4: Architecture Patterns Worth Adopting
+
+1. **Thin MCP, Fat Worker** — MCP server is a pure HTTP proxy. All logic lives in the Worker service. This means tools work identically whether called from CC, Cursor, or any MCP client. Karma should maintain this: proxy.js is thin, CC --resume is the brain.
+
+2. **Claim-Confirm Queue** — Instead of fire-and-forget writes, use a persistent queue where items are claimed (locked), processed, then confirmed (committed) or failed (retried). This prevents data loss on crashes. Critical for vault ledger writes.
+
+3. **Provider-Agnostic Agent Interface** — SDKAgent, GeminiAgent, OpenRouterAgent all implement the same interface (init → process messages → summarize). Fallback is automatic. Karma's cortex should have the same: Ollama → Anthropic → fallback, same interface.
+
+4. **Content-Hash Dedup at Write Time** — Every observation is hashed before storage. Duplicates silently dropped. Prevents the 209K+ ledger from growing with redundant entries from multiple capture paths (hooks, brain wire, ambient).
+
+5. **Typed Observations with Concepts** — Not just "what happened" but "what kind of thing happened" (bugfix/decision/discovery) and "what concept does it teach" (gotcha/pattern/trade-off). Enables structured recall: "show me all gotchas" or "what patterns have we learned?"
+
+---
+
+**Appendix B audit completed 2026-04-01 Session 155. 20 new primitives cataloged (#45-#64). Total across both audits: 64 primitives.**
