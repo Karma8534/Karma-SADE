@@ -65,9 +65,12 @@ a:hover{text-decoration:underline}
   <div id="chats">Loading...</div>
 </div>
 <script>
-const _urlToken = new URLSearchParams(window.location.search).get('token') || '';
-if (_urlToken) localStorage.setItem('hubToken', _urlToken);
-const TOKEN = _urlToken || localStorage.getItem('hubToken') || '';
+// S155: auth gate — redirect to hub if no token (removes token-in-URL security risk)
+const TOKEN = localStorage.getItem('hubToken') || '';
+if (!TOKEN) {
+  document.body.innerHTML = '<div style="text-align:center;margin-top:100px;color:#9ca3af">' +
+    '<h2>Login required</h2><p>Visit <a href="/" style="color:#7c3aed">hub.arknexus.net</a> first to authenticate.</p></div>';
+}
 const ERR = document.getElementById('error');
 
 function classify(content) {

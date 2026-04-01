@@ -558,6 +558,20 @@ const server = http.createServer(async (req, res) => {
       } catch (e) { return json(res, 502, { ok: false, error: `Hooks unavailable: ${e.message}` }); }
     }
 
+    // ── /v1/shell — Shell execution (R2) ──────────────────────────────
+    if (req.method === "POST" && req.url === "/v1/shell") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      const body = JSON.parse(await parseBody(req));
+      try {
+        const r = await fetch(`${HARNESS_P1}/shell`, {
+          method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${HUB_CHAT_TOKEN}` },
+          body: JSON.stringify(body), signal: AbortSignal.timeout(35000),
+        });
+        const data = await r.json();
+        return json(res, r.ok ? 200 : 502, data);
+      } catch (e) { return json(res, 502, { ok: false, error: `Shell unavailable: ${e.message}` }); }
+    }
+
     // ── /v1/git/status — Git status for UI (R2) ─────────────────────────
     if (req.method === "GET" && req.url === "/v1/git/status") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });

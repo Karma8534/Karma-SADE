@@ -779,6 +779,29 @@ class CCHandler(BaseHTTPRequestHandler):
             self._json(200 if result.get("ok") else 404, result)
             return
 
+        # ── /shell — Execute shell command (R2: shell from UI) ──────────────
+        if self.path == "/shell":
+            cmd = body.get("command", "").strip()
+            if not cmd:
+                self._json(422, {"ok": False, "error": "command required"})
+                return
+            # Security: block dangerous patterns (same as pre_tool_security)
+            BLOCKED = ["rm -rf /", "mkfs", "dd if=/dev/zero", ":(){ :|:& };:", "format c:", "del /f /s /q"]
+            if any(b in cmd.lower() for b in BLOCKED):
+                self._json(403, {"ok": False, "error": "Blocked: dangerous command pattern"})
+                return
+            try:
+                r = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=WORK_DIR, timeout=30, encoding="utf-8", errors="replace")
+                self._json(200, {
+                    "ok": True, "exit_code": r.returncode,
+                    "stdout": r.stdout[:8000], "stderr": r.stderr[:2000],
+                })
+            except subprocess.TimeoutExpired:
+                self._json(504, {"ok": False, "error": "Command timed out (30s)"})
+            except Exception as e:
+                self._json(500, {"ok": False, "error": str(e)})
+            return
+
         # ── /email/send — CC sends email to Colby ──────────────────────────
         if self.path == "/email/send":
             if not GMAIL_AVAILABLE:
