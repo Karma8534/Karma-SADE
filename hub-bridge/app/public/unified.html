@@ -466,7 +466,7 @@
     const cached = (() => { try { return JSON.parse(localStorage.getItem(BRAIN_KEY) || 'null'); } catch { return null; } })();
     const fresh = cached && (Date.now() - cached.ts < BRAIN_TTL);
     if (fresh) {
-      dot.className = 'stat-dot online';
+      dot.className = 'stat-dot alive';
       val.textContent = 'ok';
       return cached.context;
     }
@@ -479,11 +479,11 @@
       const data = await r.json();
       const context = { harness: data.harness, cost: data.cost };
       localStorage.setItem(BRAIN_KEY, JSON.stringify({ context, ts: Date.now() }));
-      dot.className = 'stat-dot online';
+      dot.className = 'stat-dot alive';
       val.textContent = 'ok';
       return context;
     } catch (e) {
-      dot.className = 'stat-dot offline';
+      dot.className = 'stat-dot dead';
       val.textContent = 'off';
       return null;
     }
@@ -1458,6 +1458,8 @@
     s = s.replace(/^- (.+)$/gm, '&bull; $1');
     // Numbered lists (1. ...)
     s = s.replace(/^(\d+)\. (.+)$/gm, '$1. $2');
+    // Links [text](url)
+    s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:#a78bfa;text-decoration:underline">$1</a>');
     // Horizontal rule (---)
     s = s.replace(/^---$/gm, '<hr style="border-color:#2a2a4a;margin:8px 0">');
     return s;

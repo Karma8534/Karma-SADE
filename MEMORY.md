@@ -279,3 +279,5 @@ S 1 5 5   c o n v e r s a t i o n   c a p t u r e  
 <!-- S155: cc-chat-logger stabilized, codex dispatch verified 2026-04-01T22:19:21Z -->
 <!-- S155: karma_persistent.py LIVE — Karma exists between messages 2026-04-01T22:21:37Z -->
 <!-- S155: stream capture fix, auth fix, codebase analysis, Next.js live 2026-04-01T22:33:13Z -->
+<!-- S155: brain dot fix, markdown links, dead code cleanup 2026-04-01T22:36:42Z -->
+<!-- S155: karma_persistent reboot survival, self-edit task dispatched, smoketest green 2026-04-01T22:46:38Z -->
