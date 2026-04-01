@@ -1,4 +1,10 @@
 {
+  "env": {
+    "DISABLE_TELEMETRY": "1",
+    "DISABLE_ERROR_REPORTING": "1",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1"
+  },
   "permissions": {
     "allow": [
       "Bash(powershell -ExecutionPolicy Bypass \"Scripts/resurrection/Get-KarmaContext.ps1\")",
@@ -532,6 +538,10 @@
           {
             "type": "command",
             "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\cc_snapshot_guard.ps1"
+          },
+          {
+            "type": "command",
+            "command": "C:\\Python314\\python.exe C:\\Users\\raest\\Documents\\Karma_SADE\\.claude\\hooks\\cc-chat-logger.py"
           }
         ]
       }
