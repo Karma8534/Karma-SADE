@@ -558,6 +558,16 @@ const server = http.createServer(async (req, res) => {
       } catch (e) { return json(res, 502, { ok: false, error: `Hooks unavailable: ${e.message}` }); }
     }
 
+    // ── /v1/git/status — Git status for UI (R2) ─────────────────────────
+    if (req.method === "GET" && req.url === "/v1/git/status") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const r = await fetch(`${HARNESS_P1}/git/status`, { signal: AbortSignal.timeout(5000) });
+        const data = await r.json();
+        return json(res, r.ok ? 200 : 502, data);
+      } catch (e) { return json(res, 502, { ok: false, error: `Git unavailable: ${e.message}` }); }
+    }
+
     // ── Health ─────────────────────────────────────────────────────────
     if (req.method === "GET" && req.url === "/health") {
       return json(res, 200, { ok: true, service: "sovereign-proxy", ts: new Date().toISOString() });

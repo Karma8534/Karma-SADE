@@ -44,7 +44,7 @@ SESSION_FILE = pathlib.Path.home() / ".karma_persistent_session_id"
 WATERMARK_FILE = pathlib.Path.home() / ".karma_persistent_watermark.json"
 LOG_FILE = pathlib.Path(WORK_DIR) / "tmp" / "karma_persistent.log"
 
-POLL_INTERVAL = 120  # seconds between bus polls
+POLL_INTERVAL = 90  # seconds between bus polls
 MAX_CC_TIMEOUT = 180  # seconds for CC subprocess
 TOKEN_FILE = pathlib.Path(WORK_DIR) / ".hub-chat-token"
 

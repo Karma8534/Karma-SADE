@@ -580,6 +580,19 @@ class CCHandler(BaseHTTPRequestHandler):
             tree = _build_file_tree(WORK_DIR, max_depth=3)
             self._json(200, {"ok": True, "root": os.path.basename(WORK_DIR), "tree": tree})
             return
+        elif self.path == "/git/status":
+            # R2: Git status for UI surface
+            try:
+                r = subprocess.run(["git", "status", "--porcelain", "-b"], capture_output=True, text=True, cwd=WORK_DIR, timeout=5)
+                lines = r.stdout.strip().splitlines()
+                branch = lines[0].replace("## ", "") if lines else "unknown"
+                changed = [l for l in lines[1:] if l.strip()]
+                r2 = subprocess.run(["git", "log", "--oneline", "-5"], capture_output=True, text=True, cwd=WORK_DIR, timeout=5)
+                commits = r2.stdout.strip().splitlines()
+                self._json(200, {"ok": True, "branch": branch, "changed": len(changed), "files": changed[:20], "recent_commits": commits})
+            except Exception as e:
+                self._json(500, {"ok": False, "error": str(e)})
+            return
         elif self.path.startswith("/file"):
             parsed = urllib.parse.urlparse(self.path)
             params = urllib.parse.parse_qs(parsed.query)
