@@ -94,9 +94,7 @@ def _redact(s):
     s = re.sub(r'(?:api[_-]?key|token|secret|password)\s*[=:]\s*["\']?[a-zA-Z0-9_\-\.]{8,}', '[REDACTED]', s, flags=re.IGNORECASE)
     return s
 WORK_DIR      = r"C:\Users\raest\Documents\Karma_SADE"
-SNAPSHOT_FILE = os.path.join(WORK_DIR, "cc_context_snapshot.md")
 SESSION_FILE  = pathlib.Path.home() / ".cc_nexus_session_id"  # Dedicated Nexus session — never shared with interactive CC
-NEXUS_SESSION_ID = "e69b50c6-fbb9-4a21-8c47-e44fce2143db"  # Fixed UUID — pinned so Nexus never collides with interactive sessions
 # Bypass .cmd wrapper — call node + cli.js directly (avoids PATH issues in background processes)
 NODE_EXE       = r"C:\Program Files\nodejs\node.exe"
 CLAUDE_CLI_JS  = r"C:\Users\raest\AppData\Roaming\npm\node_modules\@anthropic-ai\claude-code\cli.js"
