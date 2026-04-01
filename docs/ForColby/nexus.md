@@ -1,7 +1,7 @@
 # The Nexus — Single Source of Truth
 
 **Owner:** Julian (CC Ascendant) | **Sovereign:** Colby
-**Version:** 3.2.0 (S154 sprint detail lock) | **Date:** 2026-03-31
+**Version:** 3.2.1 (S154 Sprint 3a shipped) | **Date:** 2026-03-31
 **This is the ONLY plan. All other plan files are archived.**
 
 ---
@@ -102,6 +102,7 @@ feedback.js, library_docs.js, deferred_intent.js — all deleted. CC replaced al
 | Effort selector | LIVE | Header dropdown (auto/quick/normal/deep/max) → --effort flag (S154) |
 | File-only sends | LIVE | Empty text + file attachment sends with 📎 display (S154) |
 | /primitives skill | LIVE | Architecture pattern extraction from any source (S154) |
+| Hooks engine | LIVE | 11-event HooksService + 5 handlers, wired into cc_server (S154) |
 
 ---
 
@@ -193,8 +194,8 @@ Sprint 2: The Controls (Gaps 3, 4) — SHIPPED S154
   ├── Gap 3: File input ✅ (fixed --file flag, Read tool prefix, file-only sends)
   └── Gap 4: CLI flags ✅ (effort selector dropdown, full pipeline verified)
 
-Sprint 3: Foundations (Option A — zero rework path) — NOT DONE
-  ├── 3a: 11-Event Hooks Engine (conditional eval, structured output, audit trail)
+Sprint 3: Foundations (Option A — zero rework path) — IN PROGRESS
+  ├── 3a: 11-Event Hooks Engine ✅ SHIPPED S154 (conditional eval, structured output, audit trail)
   │       Source: arkscaffold hooks_service.py + Continuous-Claude hook patterns
   │       Enables: security gate, fact extraction, auto-handoff, cost warnings
   │       Built-in handlers to implement at 3a (from arkscaffold handlers/):
@@ -508,6 +509,7 @@ You may NOT say "done" until:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.2.1 | 2026-03-31 | S154: Sprint 3a SHIPPED — hooks_engine.py (HooksService + 11 events + condition eval + audit log) + 5 handlers (auto_handoff, compiler_in_loop, skill_activation, memory_extractor, cost_warning). Wired into cc_server_p1.py. |
 | 3.2.0 | 2026-03-31 | S154 audit: Sprint 3a detail locked (5 built-in hook handlers). Sprint 4d EditProposal schema locked. Primitives count 7→10 (3 handlers added). Karma review applied. |
 | 3.1.0 | 2026-03-31 | S154: Sprint 2 SHIPPED (Gaps 3+4 verified). 7 HIGH primitives assimilated from 5 sources (Option A — foundations first). Sprint 3/4 restructured. Baseline re-graded (19 PASS). Hard Rules updated for Next.js decision. /primitives skill created. |
 | 3.0.0 | 2026-03-31 | S153 consolidation — merged PLAN.md, JULIAN-BUILD-PROMPT, KARMA-BUILD-DIRECTIVE-FINAL, nexus v2.0. Re-graded baseline. Added "evolved clone" scope. |
