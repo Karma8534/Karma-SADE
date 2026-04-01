@@ -7,6 +7,7 @@ import { ChatFeed } from '@/components/ChatFeed';
 import { MessageInput } from '@/components/MessageInput';
 import { RoutingHints } from '@/components/RoutingHints';
 import { ContextPanel } from '@/components/ContextPanel';
+import { SelfEditBanner } from '@/components/SelfEditBanner';
 
 export default function Home() {
   const isAuthenticated = useKarmaStore((s) => s.isAuthenticated);
@@ -22,6 +23,7 @@ export default function Home() {
   return (
     <div className="flex flex-col h-screen">
       <Header />
+      <SelfEditBanner />
       <div className="flex flex-1 overflow-hidden min-h-0">
         <div className="flex flex-col flex-1">
           <ChatFeed />

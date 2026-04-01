@@ -529,6 +529,26 @@ const server = http.createServer(async (req, res) => {
       } catch (e) { return json(res, 502, { ok: false, error: "K2 spine unreachable" }); }
     }
 
+    // ── /v1/self-edit/* — Self-Edit Engine (Sprint 4d) ─────────────────
+    if (req.url.startsWith("/v1/self-edit/")) {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      const subPath = req.url.replace("/v1/self-edit/", "/self-edit/");
+      try {
+        const fetchOpts = { signal: AbortSignal.timeout(5000), headers: { "Content-Type": "application/json" } };
+        if (req.method === "GET") {
+          const r = await fetch(`${HARNESS_P1}${subPath}`, fetchOpts);
+          return json(res, r.status, await r.json());
+        }
+        if (req.method === "POST") {
+          const raw = await parseBody(req, 50000);
+          fetchOpts.method = "POST";
+          fetchOpts.body = raw;
+          const r = await fetch(`${HARNESS_P1}${subPath}`, fetchOpts);
+          return json(res, r.status, await r.json());
+        }
+      } catch (e) { return json(res, 502, { ok: false, error: "self-edit endpoint unreachable" }); }
+    }
+
     // ── /v1/cancel — abort current CC subprocess ───────────────────────
     if (req.method === "GET" && req.url === "/v1/cancel") {
       // Cancel on whichever node is active

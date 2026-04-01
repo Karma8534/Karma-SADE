@@ -108,6 +108,7 @@ feedback.js, library_docs.js, deferred_intent.js — all deleted. CC replaced al
 | Security gate | LIVE | Scripts/hooks/pre_tool_security.py — 12 blocked patterns + rate limit, wired as PreToolUse hook (S154) |
 | Fact extractor | LIVE | Scripts/hooks/fact_extractor.py — auto-extracts from 7 fact-worthy tools, saves to claude-mem (S154) |
 | Context Panel | BUILT | ContextPanel.tsx — 4 tabs (files/memory/agents/preview), proxy routes added (S154) |
+| Self-Edit Engine | BUILT | self_edit_service.py + SelfEditBanner.tsx — propose/approve/reject/auto-approve (S154) |
 
 ---
 
@@ -221,7 +222,7 @@ Sprint 4: The Surface (built on Sprint 3 foundations) — IN PROGRESS
   ├── 4a: PreToolCall Security Gate ✅ SHIPPED S154 (dangerous command detection + rate limits)
   ├── 4b: PostToolCall Fact Extraction ✅ SHIPPED S154 (auto-queue tool results → memory)
   ├── 4c: Context Panel ✅ SHIPPED S154 (file tree + memory browser + agent status + preview)
-  ├── 4d: Self-Edit Engine + Banner (propose → 15min approve → apply → audit)
+  ├── 4d: Self-Edit Engine + Banner ✅ SHIPPED S154 (propose → 15min approve → apply → audit)
   │       EditProposal schema (from arkscaffold self_edit_service.py):
   │         id, file_path, original_content, new_content, diff, description,
   │         proposed_at, status (pending→approved→rejected→applied),

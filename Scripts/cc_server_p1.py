@@ -469,6 +469,10 @@ class CCHandler(BaseHTTPRequestHandler):
                 self._json(200, {"ok": True, "items": items})
             except Exception as e:
                 self._json(500, {"ok": False, "error": str(e)})
+        elif self.path == "/self-edit/pending":
+            # Sprint 4d: List pending self-edit proposals
+            from Scripts.self_edit_service import list_pending
+            self._json(200, {"ok": True, "proposals": list_pending()})
         else:
             self.send_response(404)
             self.end_headers()
@@ -521,6 +525,28 @@ class CCHandler(BaseHTTPRequestHandler):
         if self.path == "/memory/save":
             code, payload = claudemem_proxy("/api/memory/save", "POST", body, timeout=5)
             self._json(code, payload)
+            return
+
+        # ── /self-edit/* — Self-Edit Engine (Sprint 4d) ──────────────────
+        if self.path == "/self-edit/propose":
+            from Scripts.self_edit_service import propose
+            result = propose(
+                body.get("file_path", ""), body.get("new_content", ""),
+                body.get("description", ""), body.get("risk_level", "low"),
+            )
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if self.path.startswith("/self-edit/approve/"):
+            from Scripts.self_edit_service import approve
+            pid = int(self.path.split("/")[-1])
+            result = approve(pid)
+            self._json(200 if result.get("ok") else 404, result)
+            return
+        if self.path.startswith("/self-edit/reject/"):
+            from Scripts.self_edit_service import reject
+            pid = int(self.path.split("/")[-1])
+            result = reject(pid)
+            self._json(200 if result.get("ok") else 404, result)
             return
 
         # ── /email/send — CC sends email to Colby ──────────────────────────
