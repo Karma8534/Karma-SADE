@@ -29,7 +29,7 @@ ACTIONABLE_TYPES = {"task", "directive", "question"}
 # Messages TO karma or TO all
 ACTIONABLE_TARGETS = {"karma", "all"}
 # Ignore messages FROM karma (don't respond to self)
-SELF_SENDERS = {"karma", "regent", "vesper"}
+SELF_SENDERS = {"karma", "regent", "vesper", "kiki"}  # S155: synced with karma_persistent.py
 
 def log(msg):
     ts = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")

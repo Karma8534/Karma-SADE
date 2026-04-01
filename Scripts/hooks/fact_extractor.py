@@ -5,7 +5,7 @@ Cap: 2KB per extraction, 50 per session.
 """
 import json, sys, os, re, threading, urllib.request, urllib.error
 
-CLAUDEMEM_URL = os.environ.get("CLAUDEMEM_URL", "http://localhost:37777")
+CLAUDEMEM_URL = os.environ.get("CLAUDEMEM_URL", "http://localhost:37778")  # S155: fixed port
 FACT_WORTHY_TOOLS = {"WebSearch", "WebFetch", "Read", "Grep", "Glob", "graph_query", "k2_file_read"}
 
 _session_count = 0

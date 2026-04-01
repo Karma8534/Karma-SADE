@@ -4,7 +4,7 @@ saves to claude-mem via HTTP.
 """
 import json, sys, os, re, urllib.request, urllib.error
 
-CLAUDEMEM_URL = os.environ.get("CLAUDEMEM_URL", "http://localhost:37777")
+CLAUDEMEM_URL = os.environ.get("CLAUDEMEM_URL", "http://localhost:37778")  # S155: fixed port
 
 
 def _save_to_claudemem(title: str, text: str, project: str = "Karma_SADE") -> bool:

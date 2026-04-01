@@ -281,3 +281,4 @@ S 1 5 5   c o n v e r s a t i o n   c a p t u r e  
 <!-- S155: stream capture fix, auth fix, codebase analysis, Next.js live 2026-04-01T22:33:13Z -->
 <!-- S155: brain dot fix, markdown links, dead code cleanup 2026-04-01T22:36:42Z -->
 <!-- S155: karma_persistent reboot survival, self-edit task dispatched, smoketest green 2026-04-01T22:46:38Z -->
+<!-- S155: port fix in hooks, dedup sync, codebase analysis complete 2026-04-01T22:48:39Z -->
