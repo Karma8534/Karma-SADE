@@ -159,8 +159,38 @@ def build_karma_context(task_message):
     parts.append(task_message)
     return "".join(parts)
 
+def _is_simple_query(msg):
+    """S155: Route simple questions to cortex ($0), complex tasks to CC."""
+    msg_l = msg.lower()
+    # Tasks that require tool access go to CC
+    tool_words = {"edit", "write", "create", "deploy", "commit", "push", "install", "run", "execute", "build", "fix", "modify", "delete", "restart"}
+    if any(w in msg_l for w in tool_words):
+        return False
+    # Short questions about state/status go to cortex
+    if len(msg) < 300 and ("?" in msg or any(w in msg_l for w in ["what", "who", "status", "how many", "tell me", "confirm", "report"])):
+        return True
+    return False
+
+def run_cortex_task(task_message):
+    """Route simple queries to cortex (free, fast). Returns response or None."""
+    try:
+        data = http_json(f"{CORTEX_URL}/query", method="POST", data={"query": task_message, "temperature": 0.3}, timeout=30)
+        if data and data.get("ok"):
+            return data.get("answer", "")
+    except Exception as e:
+        log.warning("Cortex query failed: %s", e)
+    return None
+
 def run_cc_task(task_message):
     """Run CC --resume with Karma persona to execute a task. Returns response text."""
+    # S155: SmartRouter — simple queries go to cortex, complex to CC
+    if _is_simple_query(task_message):
+        log.info("SmartRoute: simple query → cortex")
+        result = run_cortex_task(task_message)
+        if result:
+            return result
+        log.info("SmartRoute: cortex failed, falling back to CC")
+
     session_id = load_session_id()
     full_message = build_karma_context(task_message)
 
