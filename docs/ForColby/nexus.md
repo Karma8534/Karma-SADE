@@ -355,7 +355,7 @@ ledger entry
 | 26 | Ambient hooks feed vault | PASS | git commit → ledger entry |
 | 27 | Context7 for framework docs | PASS | MCP tool available |
 
-**Summary:** 19 PASS, 4 NOT DONE, 2 PARTIAL, 1 DEFERRED, 1 UNVERIFIED
+**Summary:** 19 PASS, 3 NOT DONE, 3 PARTIAL, 1 DEFERRED, 1 UNVERIFIED
 
 ---
 
