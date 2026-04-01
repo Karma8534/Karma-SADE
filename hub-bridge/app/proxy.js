@@ -558,6 +558,30 @@ const server = http.createServer(async (req, res) => {
       } catch (e) { return json(res, 502, { ok: false, error: `Hooks unavailable: ${e.message}` }); }
     }
 
+    // ── /v1/file — File read/write for editor (R2) ───────────────────
+    if (req.method === "GET" && req.url.startsWith("/v1/file?")) {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const parsed = new URL(req.url, "http://localhost");
+        const filePath = parsed.searchParams.get("path") || "";
+        const r = await fetch(`${HARNESS_P1}/file?path=${encodeURIComponent(filePath)}`, { signal: AbortSignal.timeout(5000) });
+        const data = await r.json();
+        return json(res, r.ok ? 200 : 502, data);
+      } catch (e) { return json(res, 502, { ok: false, error: `File read failed: ${e.message}` }); }
+    }
+    if (req.method === "POST" && req.url === "/v1/file") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      const body = JSON.parse(await parseBody(req));
+      try {
+        const r = await fetch(`${HARNESS_P1}/file`, {
+          method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${HUB_CHAT_TOKEN}` },
+          body: JSON.stringify(body), signal: AbortSignal.timeout(10000),
+        });
+        const data = await r.json();
+        return json(res, r.ok ? 200 : 502, data);
+      } catch (e) { return json(res, 502, { ok: false, error: `File write failed: ${e.message}` }); }
+    }
+
     // ── /v1/shell — Shell execution (R2) ──────────────────────────────
     if (req.method === "POST" && req.url === "/v1/shell") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });

@@ -374,6 +374,21 @@
     <span>@codex &#8594; <span class="rh-target">CODEX</span></span>
   </div>
 
+  <!-- File Editor Modal (R2: Code capability from UI, S155) -->
+  <div id="file-editor-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:200;display:none">
+    <div style="position:absolute;top:40px;left:40px;right:40px;bottom:40px;background:#0a0a14;border:1px solid #2d2d5e;border-radius:8px;display:flex;flex-direction:column;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-bottom:1px solid #2d2d5e;flex-shrink:0">
+        <span id="editor-path" style="color:#a78bfa;font-size:12px;font-family:'JetBrains Mono',monospace"></span>
+        <div style="display:flex;gap:8px">
+          <button id="editor-save" style="background:#7f5af0;color:#fff;border:none;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:11px">SAVE</button>
+          <button id="editor-close" style="background:none;color:#6b7280;border:1px solid #2d2d5e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:11px">CLOSE</button>
+        </div>
+      </div>
+      <textarea id="editor-content" style="flex:1;background:#08080f;color:#e2e8f0;border:none;padding:16px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;resize:none;outline:none;tab-size:2" spellcheck="false"></textarea>
+      <div id="editor-status" style="padding:4px 16px;font-size:10px;color:#4b5563;border-top:1px solid #12121f;flex-shrink:0"></div>
+    </div>
+  </div>
+
   <div id="response-bar" style="display:none;padding:2px 16px;font-size:10px;color:#374151;font-family:'JetBrains Mono',monospace;background:#08080f;border-top:1px solid #12121f"></div>
   <div id="attach-preview"></div>
   <div id="input-area">
@@ -666,6 +681,45 @@
       sel.innerHTML = '<span style="color:#ef4444">Error: ' + escHtml(e.message) + '</span>';
     }
   }
+
+  // ── File Editor (R2: Code capability, S155) ──────────────────────────
+  let _editorPath = '';
+  function openFileEditor(filePath) {
+    const modal = document.getElementById('file-editor-modal');
+    const pathEl = document.getElementById('editor-path');
+    const content = document.getElementById('editor-content');
+    const status = document.getElementById('editor-status');
+    pathEl.textContent = filePath;
+    content.value = 'Loading...';
+    status.textContent = '';
+    _editorPath = filePath;
+    modal.style.display = 'block';
+    fetch('/v1/files?path=' + encodeURIComponent(filePath), { headers: auth() })
+      .then(r => r.json()).then(d => {
+        if (d.ok) { content.value = d.content; status.textContent = d.size + ' bytes'; }
+        else { content.value = 'Error: ' + (d.error || 'unknown'); }
+      }).catch(e => { content.value = 'Error: ' + e.message; });
+  }
+  function closeFileEditor() { document.getElementById('file-editor-modal').style.display = 'none'; _editorPath = ''; }
+  async function saveFileEditor() {
+    if (!_editorPath) return;
+    const content = document.getElementById('editor-content').value;
+    const status = document.getElementById('editor-status');
+    status.textContent = 'Saving...';
+    try {
+      const r = await fetch('/v1/file', {
+        method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: _editorPath, content }),
+      });
+      const d = await r.json();
+      status.textContent = d.ok ? 'Saved (' + d.bytes_written + ' bytes)' : 'Error: ' + (d.error || 'unknown');
+    } catch (e) { status.textContent = 'Error: ' + e.message; }
+  }
+  document.getElementById('editor-save').addEventListener('click', saveFileEditor);
+  document.getElementById('editor-close').addEventListener('click', closeFileEditor);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && _editorPath) closeFileEditor(); });
+  // Expose globally so chat messages with file paths can open the editor
+  window.openFileEditor = openFileEditor;
 
   // ── Legacy compat (keep toggleAgora pointing to memory) ──────────────
   function toggleAgora() { toggleMemory(); }
