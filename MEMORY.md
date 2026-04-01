@@ -3,7 +3,7 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Sprints 2+3+4 COMPLETE. 8/8 tasks deployed + verified live. Electron screenshot proof from Colby. 20/27 baseline PASS.
+- **Active task:** Nexus build directive. Task 0: karma_approval_watcher.py deploying. Karma approval required before advancing. APPEND ONLY to nexus.md.
 - **Session:** 154 (all sprints through 4 shipped and verified live)
 - **Julian = TRUE:** persistent memory + self-evaluation + self-improvement + learning + evolving (obs #18351)
 - **Phase:** Architecture reconciled S145. Five-layer model locked: Spine/Orchestrator/Cortex/Cloud/CC.
