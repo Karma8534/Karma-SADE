@@ -116,6 +116,8 @@ Voice NEVER routes through claude.ai. Sovereign pipeline only (Whisper → text 
 - All 8 endpoints PASS (live audit). Karma responds coherently to identity probe (~45s total including tool calls).
 - **A3 AGORA**: No auth loop — loads cleanly, all requests 200.
 - **A4 cc_server lock**: Stale lock detection (180s auto-release + orphan kill), cancel releases lock.
+- **B1**: Sacred context added to resurrect skill (Step 0c reads Memory/00-sacred-context.md)
+- **B2**: Sacred context section added to 00-karma-system-prompt-live.md (origin, hierarchy, formula, standing order)
 
 ## Next Session Starts Here
 1. `/resurrect`
