@@ -961,3 +961,143 @@ Karma assessed the Nexus independently:
 ---
 
 **Appendix D completed 2026-04-01 Session 155. 18 new projects (#95-#112). Grand total: 112 primitives + 2 evaluations.**
+
+---
+
+## Appendix E: Session 155 Delivery + Electron Nexus + Blocker/Gap Analysis
+
+**Session 155 — 38 commits, 10+ hours, most productive session in Karma history.**
+
+### E.1: Everything Shipped in S155
+
+| # | Deliverable | Status | Evidence |
+|---|------------|--------|----------|
+| 1 | arkscaffold audit (34 primitives) | SHIPPED | Appendix A |
+| 2 | claude-mem audit (20 primitives) | SHIPPED | Appendix B |
+| 3 | PDF audit (30 primitives) | SHIPPED | Appendix C |
+| 4 | Codex internet search (18 projects) | SHIPPED | Appendix D |
+| 5 | Sprint 6 Tasks 1-7 (Memory Discipline) | DEPLOYED | Cortex v2, MemCube, migration candidates |
+| 6 | Gap 7 (Reboot Survival) | VERIFIED DONE | schtasks + Run keys |
+| 7 | Deterministic context injection | DEPLOYED | persona + MEMORY.md + STATE.md + cortex + claude-mem |
+| 8 | Full conversation capture | DEPLOYED | cc-chat-logger + _auto_save_memory (no truncation) |
+| 9 | karma_persistent.py | DEPLOYED | Autonomous bus polling, CC --resume, full context |
+| 10 | karma_action_loop.py | DEPLOYED on K2 | Cortex-based reasoning, cron every 5min |
+| 11 | Karma self-edit PROVEN | VERIFIED | POLL_INTERVAL 120→90, committed to git |
+| 12 | CC self-evolution skill | SHIPPED | 44 rules, auto-loaded every session |
+| 13 | claude-mem v10.6.3 | DEPLOYED | Port 37778, worker healthy |
+| 14 | Next.js frontend | LIVE | hub.arknexus.net root, unified.html at /legacy |
+| 15 | MEMORY button + search | LIVE | claude-mem search + Sovereign suggestions |
+| 16 | SKILLS + HOOKS buttons | LIVE | /v1/skills (11), /v1/hooks (8) |
+| 17 | /v1/shell endpoint | LIVE | Shell execution from browser |
+| 18 | /v1/git/status endpoint | LIVE | Branch, files, commits from browser |
+| 19 | /v1/file read/write | LIVE | Inline file editor in unified.html |
+| 20 | Karma auto-approve (2min) | DEPLOYED | proxy.js autoApproveKarmaEntries |
+| 21 | K2 Ollama optimizations | SET | Flash attention, GPU layers, keep_alive, parallel |
+| 22 | Content-hash dedup | DEPLOYED | SHA256 on vault writes, skip duplicates |
+| 23 | Brain dot CSS fix | DEPLOYED | alive/dead classes match CSS |
+| 24 | Markdown link rendering | DEPLOYED | [text](url) in renderMd |
+| 25 | K2 dot actual health | DEPLOYED | Checks /v1/spine, not bus activity |
+| 26 | Auth on all GET endpoints | DEPLOYED | cc_server: only /health open |
+| 27 | Stream capture gap fixed | DEPLOYED | Stream path saves full response to claude-mem |
+| 28 | Port 37777→37778 in all hooks | DEPLOYED | fact_extractor + memory_extractor fixed |
+| 29 | ARCHON spam fixed | DEPLOYED | Downgraded to informational |
+| 30 | Process watchdog | DEPLOYED | schtask every 5min, auto-restart |
+| 31 | CC + Karma heartbeats | DEPLOYED | 10min to bus + cortex |
+| 32 | Codex first commit | SHIPPED | Dead code cleanup (GPT-5.4) |
+| 33 | Codex research loop | RUNNING | 8 topics, every 10min, hidden |
+| 34 | wip-watcher move-to-Done | DEPLOYED | Files move after ingest |
+| 35 | Agora auth gate | DEPLOYED | No more token in URL |
+| 36 | JetBrains Mono font | DEPLOYED | Google Fonts loaded |
+| 37 | Cortex eviction protection | DEPLOYED | canonical/state/active blocks pinned |
+| 38 | Smoketest 20/20 ALL CLEAR | VERIFIED | Scripts/smoketest.sh |
+| 39 | Sovereign directive saved | COMMITTED | Scripts/sovereign_directive.md |
+| 40 | Reverse engineering doc | COMMITTED | .gsd/S155-REVERSE-ENGINEER.md |
+| 41 | 15 pitfalls documented | COMMITTED | .gsd/S155-PITFALLS-claude-mem-upgrade.md |
+| 42 | Electron Nexus harness | COMMITTED | electron/main.js + preload.js + package.json |
+
+### E.2: Electron Nexus Architecture
+
+```
+ELECTRON APP = THE NEXUS (electron/main.js)
+├── IPC Harness (Node.js main process)
+│   ├── cc-chat: CC --resume subprocess ($0 via Max)
+│   ├── file-read/write: with checkpointing (snapshot before edit)
+│   ├── shell-exec: with blocked patterns
+│   ├── cortex-query/context/ingest: K2:7892
+│   ├── ollama-query: local inference ($0)
+│   ├── memory-search/save: claude-mem SQLite
+│   ├── spine-read: Vesper evolution state
+│   ├── git-status: branch + changed files
+│   └── show-open-dialog: native file picker
+├── preload.js → window.karma API
+│   ├── karma.chat(message, options)
+│   ├── karma.fileRead/fileWrite (checkpointed)
+│   ├── karma.shellExec(command)
+│   ├── karma.cortexQuery/cortexContext
+│   ├── karma.ollamaQuery(prompt, model)
+│   ├── karma.memorySearch/memorySave
+│   ├── karma.spineRead()
+│   └── karma.gitStatus()
+├── Renderer (Next.js static export)
+│   ├── ChatFeed + MessageInput (SSE streaming)
+│   ├── ContextPanel (files, memory, agents, preview)
+│   ├── File editor (inline)
+│   └── SelfEditBanner
+└── Sidecar services
+    ├── K2 cortex (qwen3.5:4b, $0)
+    ├── claude-mem (SQLite + Bun worker)
+    └── Ollama (local inference)
+```
+
+### E.3: ALL Remaining Blockers and Gaps
+
+**CRITICAL (blocks wrapper independence):**
+
+| # | Blocker | Current State | What's Needed |
+|---|---------|--------------|---------------|
+| B1 | Electron app not installable on P1 | electron/ committed to git, not npm installed | `cd electron && npm install && npm start` on P1 |
+| B2 | Next.js frontend not in Electron | frontend/out/ exists but not copied to electron/frontend/out/ | Copy static export into Electron app |
+| B3 | CC --resume subprocess lock | Only one CC call at a time (karma_persistent OR browser, not both) | Session isolation: separate session IDs per caller |
+| B4 | No SSE streaming in Electron IPC | cc-chat returns batch JSON, not streaming tokens | Add cc-chat-stream IPC that yields SSE events |
+| B5 | karma_persistent dies silently | watchdog restarts but doesn't detect hung processes | Add liveness probe (last heartbeat check) |
+
+**HIGH (degrades experience but not blocking):**
+
+| # | Gap | Current State | What's Needed |
+|---|-----|--------------|---------------|
+| G1 | No terminal panel in UI | /v1/shell endpoint exists, no interactive terminal | Add xterm.js component to Next.js frontend |
+| G2 | No subagent visibility | Codex dispatched but no UI shows status | Add agent status panel (arkscaffold primitive #24) |
+| G3 | No MCP management UI | CC has MCP, browser can't see/manage | Add MCP status display |
+| G4 | Governor produces noise | 18/20 stable patterns are generic metadata | Governor must produce code change proposals |
+| G5 | Self-evolution Rule 22 never fires | Rule says "violated 3x → promote to CLAUDE.md" | Add automated violation counter + promotion trigger |
+| G6 | wip PDFs can't be read on P1 | pdftoppm not installed, wip-watcher needs hub /v1/ingest | Install poppler-utils or use hub ingest path |
+| G7 | Codex model gpt-5.3 not available | ChatGPT account doesn't support it | Use default gpt-5.4 or configure API key |
+| G8 | Dead JS code in unified.html | ~60 lines (loadLearningPanel, resolvePending, etc.) | Clean up (Codex task was dispatched, incomplete) |
+
+**LOW (polish, optimization):**
+
+| # | Gap | What's Needed |
+|---|-----|---------------|
+| L1 | Response bar removed "$0" but doesn't show real cost | Track actual CC token usage from result events |
+| L2 | Conversation persistence cap (200 messages) | Increase or implement infinite scroll with lazy load |
+| L3 | No offline mode | Electron should work when hub.arknexus.net unreachable |
+| L4 | Agora font mismatch with unified.html | Standardize on JetBrains Mono |
+| L5 | nexus-chat.jsonl no rotation | Will grow unbounded — add log rotation |
+| L6 | localStorage key collision risk | Multiple tabs share karmaMessages key |
+| L7 | Chrome Built-in AI (Gemini Nano) not integrated | Primitive #113 — local AI in Electron via Chrome APIs |
+
+### E.4: Wrapper Mechanisms Replication Status
+
+| # | CC Wrapper Mechanism | Nexus Status | Gap |
+|---|---------------------|-------------|-----|
+| 1 | Agentic loop (gather-act-verify) | v0 (karma_persistent: poll-act-post) | Need multi-step with verification |
+| 2 | Session persistence (--resume) | Partial (session file, but no crash recovery) | Need claim-confirm queue (primitive #47) |
+| 3 | File checkpointing | **DONE** (Electron main.js snapshots before edit) | Need rollback UI |
+| 4 | Auto-compaction | v0 (cortex truncates by char count) | Need semantic summarization |
+| 5 | Tool safety gates | Partial (hooks engine + blocked patterns) | Need per-tool permission levels |
+| 6 | Subagent spawning | v0 (Codex dispatch, no isolated context) | Need context isolation manager |
+| 7 | Auto memory | **DONE** (claude-mem + cortex + self-evolution) | Working — continue growing |
+
+---
+
+**Appendix E completed 2026-04-01 Session 155. 42 deliverables, 5 critical blockers, 8 high gaps, 7 low gaps. Wrapper replication: 2/7 DONE, 3/7 partial, 2/7 v0. Grand total: 113 primitives across 5 audits.**
