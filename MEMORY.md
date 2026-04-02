@@ -131,6 +131,8 @@ Voice NEVER routes through claude.ai. Sovereign pipeline only (Whisper → text 
 - **Instant auto-approve**: Known agents (regent, karma, cc, kcc) auto-approve immediately. Unknown senders wait 2min.
 - **Learnings field mapping fixed**: API returns {type, learning, detail, date} not {content, from}. Click expands detail.
 - **PROOF filter in AGORA**: Passing proofs (grade=1.0, 100%, pass) no longer show APPROVE/REJECT buttons.
+- **VESPER LOOP CLOSED (S157)**: build_context_prefix() now fetches stable_identity patterns from K2 spine via aria /api/exec. Injected as [VESPER — learned behavioral patterns] section. 5min cache. This is THE wire Codex identified as missing — promotions now reach Karma's response path.
+- **Codex gap analysis**: old server.js references in repo confused Codex. fetchK2WorkingMemory() is dead code (S153). Active context injection is in cc_server_p1.py build_context_prefix().
 
 ## Next Session Starts Here
 1. `/resurrect`

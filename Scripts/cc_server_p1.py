@@ -253,6 +253,30 @@ CORTEX_URL = "http://192.168.0.226:7892"  # K2 cortex (LAN direct)
 _context_cache = {"text": "", "ts": 0}  # Cache cortex context (refresh every 60s)
 CONTEXT_CACHE_TTL = 60
 
+_spine_cache = {"text": "", "ts": 0}
+SPINE_CACHE_TTL = 300  # 5 min — spine changes slowly (governor runs every 2min)
+
+def _fetch_vesper_stable_patterns():
+    """Fetch promoted behavioral patterns from K2 Vesper spine. Closes the evolution loop."""
+    now = time.time()
+    if now - _spine_cache["ts"] < SPINE_CACHE_TTL and _spine_cache["text"]:
+        return _spine_cache["text"]
+    try:
+        req = urllib.request.Request(f"http://192.168.0.226:7890/api/exec",
+            data=json.dumps({"command": "python3 -c \"import json; s=json.load(open('/mnt/c/dev/Karma/k2/cache/vesper_identity_spine.json')); ps=[p.get('proposed_change',{}).get('description','')[:150] for p in s.get('evolution',{}).get('stable_identity',[]) if p.get('proposed_change',{}).get('description')]; print('\\n'.join(ps[:10]))\""}).encode(),
+            headers={"Content-Type": "application/json", "X-Aria-Service-Key": os.environ.get("ARIA_SERVICE_KEY", "")},
+            method="POST")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read())
+            output = data.get("output", "").strip()
+            if output and len(output) > 20:
+                _spine_cache["text"] = output[:1500]
+                _spine_cache["ts"] = now
+                return _spine_cache["text"]
+    except Exception as e:
+        print(f"[vesper-spine] fetch failed: {e}")
+    return ""
+
 def _fetch_cortex_context(query_hint=None):
     """Fetch current state from K2 cortex. Returns context string or empty on failure."""
     now = time.time()
@@ -348,6 +372,11 @@ def build_context_prefix(user_message):
     memories = _fetch_recent_memories(user_message[:200])
     if memories:
         parts.append(f"[RELEVANT MEMORIES — from claude-mem spine]\n{memories}\n\n")
+
+    # Layer 3: VESPER SPINE — behavioral patterns from self-improvement pipeline (S157)
+    spine_patterns = _fetch_vesper_stable_patterns()
+    if spine_patterns:
+        parts.append(f"[VESPER — learned behavioral patterns]\n{spine_patterns}\n\n")
 
     return "".join(parts)
 UPLOAD_DIR = os.path.join(WORK_DIR, "tmp", "nexus_uploads")
