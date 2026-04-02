@@ -100,6 +100,15 @@ SESSION_FILE  = pathlib.Path.home() / ".cc_nexus_session_id"  # Dedicated Nexus 
 # Bypass .cmd wrapper — call node + cli.js directly (avoids PATH issues in background processes)
 NODE_EXE       = r"C:\Program Files\nodejs\node.exe"
 CLAUDE_CLI_JS  = r"C:\Users\raest\AppData\Roaming\npm\node_modules\@anthropic-ai\claude-code\cli.js"
+# ── Nexus Agent: Karma's own agentic loop (S157 — independence primitive) ─────
+try:
+    from nexus_agent import run_agent as nexus_run_agent, append_transcript, load_transcript
+    NEXUS_AGENT_AVAILABLE = True
+    print(f"[cc-server] NexusAgent: AVAILABLE")
+except ImportError as e:
+    NEXUS_AGENT_AVAILABLE = False
+    print(f"[cc-server] NexusAgent: DISABLED ({e})")
+
 API_TIMEOUT    = 120  # seconds — CC subprocess can be slow on complex tasks
 CLAUDEMEM_URL  = "http://127.0.0.1:37778"  # claude-mem worker (loopback) — updated S155 port change
 
@@ -1079,6 +1088,10 @@ class CCHandler(BaseHTTPRequestHandler):
                 self._cors()  # H3: CORS on stream
                 self.end_headers()
                 stream_full_text = []  # S155: accumulate full response for memory capture
+                # P2: Crash-safe — write user message BEFORE API call
+                if NEXUS_AGENT_AVAILABLE:
+                    _conv_id = self.headers.get("x-conversation-id", "default")
+                    append_transcript(_conv_id, {"role": "user", "content": message, "ts": time.time()})
                 try:
                     t_start = time.time()
                     first_token_sent = False
@@ -1119,12 +1132,37 @@ class CCHandler(BaseHTTPRequestHandler):
                             print(f"[escapehatch] Fallback response delivered: {len(or_text)} chars via {or_model}")
                         except Exception as or_err:
                             print(f"[escapehatch] OpenRouter also failed: {or_err}")
-                            err = json.dumps({"type": "error", "error": f"All providers failed. CC: {err_str}. OpenRouter: {or_err}"})
-                            try:
-                                self.wfile.write(f"data: {err}\n\n".encode())
-                                self.wfile.flush()
-                            except Exception:
-                                pass
+                            # Tier 3: Nexus Agent — Karma's own agentic loop
+                            if NEXUS_AGENT_AVAILABLE:
+                                print(f"[nexus-agent] All external providers failed. Running own agentic loop.")
+                                try:
+                                    ctx = build_context_prefix(message)
+                                    for agent_line in nexus_run_agent(message, system_prompt=ctx):
+                                        self.wfile.write(f"data: {agent_line}\n\n".encode())
+                                        self.wfile.flush()
+                                        try:
+                                            aobj = json.loads(agent_line)
+                                            if aobj.get("type") == "assistant":
+                                                for ab in aobj.get("message",{}).get("content",[]):
+                                                    if isinstance(ab, dict) and ab.get("type") == "text":
+                                                        stream_full_text.append(ab.get("text",""))
+                                        except Exception:
+                                            pass
+                                except Exception as ne:
+                                    print(f"[nexus-agent] Also failed: {ne}")
+                                    err = json.dumps({"type": "error", "error": f"All tiers failed. CC: {err_str}. OR: {or_err}. Nexus: {ne}"})
+                                    try:
+                                        self.wfile.write(f"data: {err}\n\n".encode())
+                                        self.wfile.flush()
+                                    except Exception:
+                                        pass
+                            else:
+                                err = json.dumps({"type": "error", "error": f"All providers failed. CC: {err_str}. OpenRouter: {or_err}"})
+                                try:
+                                    self.wfile.write(f"data: {err}\n\n".encode())
+                                    self.wfile.flush()
+                                except Exception:
+                                    pass
                     else:
                         err = json.dumps({"type": "error", "error": err_str})
                         try:

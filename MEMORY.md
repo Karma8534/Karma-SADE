@@ -133,7 +133,9 @@ Voice NEVER routes through claude.ai. Sovereign pipeline only (Whisper → text 
 - **PROOF filter in AGORA**: Passing proofs (grade=1.0, 100%, pass) no longer show APPROVE/REJECT buttons.
 - **VESPER LOOP CLOSED (S157)**: build_context_prefix() now fetches stable_identity patterns from K2 spine via aria /api/exec. Injected as [VESPER — learned behavioral patterns] section. 5min cache. This is THE wire Codex identified as missing — promotions now reach Karma's response path.
 - **Codex gap analysis**: old server.js references in repo confused Codex. fetchK2WorkingMemory() is dead code (S153). Active context injection is in cc_server_p1.py build_context_prefix().
-- **Phase E started**: Memory/02-extracted-primitives.md written. 5 USE NOW (done), 4 DEFER. Codex analyzing wrapper source (1902 files).
+- **Phase E DONE**: Memory/02-extracted-primitives.md — 15 USE NOW + 5 DEFER. Codex wrapper analysis merged.
+- **P1 NEXUS AGENT BUILT**: Scripts/nexus_agent.py — own agentic loop with 6 tools (Read/Write/Edit/Bash/Glob/Grep). OpenRouter LLM + tool execution loop. Wired as Tier 3 fallback in cc_server_p1.py.
+- **P2 CRASH-SAFE**: append_transcript() writes user message BEFORE API call. JSONL transcripts in tmp/transcripts/.
 
 ## Next Session Starts Here
 1. `/resurrect`
