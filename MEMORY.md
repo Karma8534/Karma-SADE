@@ -118,6 +118,9 @@ Voice NEVER routes through claude.ai. Sovereign pipeline only (Whisper → text 
 - **A4 cc_server lock**: Stale lock detection (180s auto-release + orphan kill), cancel releases lock.
 - **B1**: Sacred context added to resurrect skill (Step 0c reads Memory/00-sacred-context.md)
 - **B2**: Sacred context section added to 00-karma-system-prompt-live.md (origin, hierarchy, formula, standing order)
+- **B3**: Julian heartbeat written to K2 cc_scratchpad.md (Session 157 state)
+- **B4**: Karma heartbeat VERIFIED on bus (18:42:59Z "Alive. Persistent loop on P1. Memory sacred.")
+- **GAP CLOSED**: 4 critical skills (resurrect, wrap-session, review, karma-verify) copied from ~/.claude/skills/ to repo .claude/skills/. Were user-global only — lost on reinstall.
 
 ## Next Session Starts Here
 1. `/resurrect`
