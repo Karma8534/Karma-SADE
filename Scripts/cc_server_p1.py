@@ -102,6 +102,59 @@ API_TIMEOUT    = 120  # seconds — CC subprocess can be slow on complex tasks
 CLAUDEMEM_URL  = "http://127.0.0.1:37778"  # claude-mem worker (loopback) — updated S155 port change
 CLAUDEMEM_DB   = pathlib.Path.home() / ".claude-mem" / "claude-mem.db"
 
+# ── Agents Status Cache (Sprint 6 — #20-22) ────────────────────────────────
+_agents_status_cache = None
+_agents_status_ts = 0.0
+
+def _get_agents_status():
+    """Return cached MCP/Skills/Hooks status. Refreshes every 300s."""
+    global _agents_status_cache, _agents_status_ts
+    now = time.time()
+    if _agents_status_cache and (now - _agents_status_ts) < 300:
+        return _agents_status_cache
+
+    result = {"ok": True, "mcp_servers": [], "skills": [], "hooks": {}}
+    try:
+        # Skills — read directory names
+        skills_dir = os.path.join(WORK_DIR, ".claude", "skills")
+        if os.path.isdir(skills_dir):
+            result["skills"] = sorted(
+                d for d in os.listdir(skills_dir)
+                if os.path.isdir(os.path.join(skills_dir, d))
+            )
+        # Hooks — read settings.json
+        settings_path = os.path.join(WORK_DIR, ".claude", "settings.json")
+        if os.path.isfile(settings_path):
+            with open(settings_path, "r", encoding="utf-8") as f:
+                settings = json.load(f)
+            hooks = settings.get("hooks", {})
+            for event, handlers in hooks.items():
+                names = []
+                for h in handlers:
+                    for ih in h.get("hooks", []):
+                        cmd = ih.get("command", "")
+                        name = cmd.split("/")[-1].replace(".py", "").replace('"', "").strip()
+                        if name:
+                            names.append(name)
+                result["hooks"][event] = names
+        # MCP — read ~/.claude.json (servers nested under projects)
+        claude_json = os.path.expanduser("~/.claude.json")
+        if os.path.isfile(claude_json):
+            with open(claude_json, "r", encoding="utf-8") as f:
+                cdata = json.load(f)
+            # Check top-level and per-project mcpServers
+            mcp = dict(cdata.get("mcpServers", {}))
+            for proj_data in cdata.get("projects", {}).values():
+                if isinstance(proj_data, dict):
+                    mcp.update(proj_data.get("mcpServers", {}))
+            result["mcp_servers"] = sorted(k for k in mcp.keys() if mcp[k])
+    except Exception as e:
+        result["error"] = str(e)
+
+    _agents_status_cache = result
+    _agents_status_ts = now
+    return result
+
 # Module-level read-only SQLite connection — reused across requests (no per-request open/close)
 _ro_db_conn = None
 def _get_ro_conn():
@@ -596,6 +649,10 @@ class CCHandler(BaseHTTPRequestHandler):
                 self._json(200, {"ok": True, "branch": branch, "changed": len(changed), "files": changed[:20], "recent_commits": commits})
             except Exception as e:
                 self._json(500, {"ok": False, "error": str(e)})
+            return
+        elif self.path == "/agents-status":
+            # Sprint 6 (#20-22): MCP/Skills/Hooks read-only status
+            self._json(200, _get_agents_status())
             return
         elif self.path.startswith("/file"):
             parsed = urllib.parse.urlparse(self.path)

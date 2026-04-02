@@ -80,8 +80,12 @@ Browser/Electron → proxy.js (vault-neo:18090, ~600 lines)
 - Memory search response format fixed in cc_server_p1.py.
 - MEMORY.md consolidated 300→75 lines.
 
+- #20-22 FIXED: /agents-status endpoint + AgentTab shows MCP (2), Skills (12), Hooks (6 events)
+- Task 7-11 already done in governor (memcube.tier=stable on promotion)
+- Next.js rebuilt with updated ContextPanel
+
 ## Next Session Starts Here
 1. `/resurrect`
-2. Sprint 6 Task 7-11 (migration/fusion rules in Vesper governor) — last task
-3. Fix remaining PARTIAL items: #20-22 (MCP/Skills/Hooks UI exposure)
+2. Smoke test end-to-end — verify #20-22 in browser after deploy
+3. Only remaining: #17 Voice (deferred), #24 Video (deferred), #15 Reboot (deferred)
 4. THE ONLY PLAN is `docs/ForColby/nexus.md` — APPEND ONLY

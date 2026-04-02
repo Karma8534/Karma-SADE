@@ -213,55 +213,82 @@ function MemoryTab() {
 // ── Agent Tab ─────────────────────────────────────────────────────────────────
 
 function AgentTab() {
-  const [data, setData] = useState<Record<string, unknown> | null>(null);
+  const [spine, setSpine] = useState<Record<string, unknown> | null>(null);
+  const [agents, setAgents] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
+  const token = useKarmaStore((s) => s.token);
 
   useEffect(() => {
     async function load() {
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
       try {
-        // Fetch from K2 spine via proxy
-        const res = await fetch('/v1/spine');
-        if (res.ok) setData(await res.json());
-      } catch {
-        // ignore
-      }
+        const [spineRes, agentsRes] = await Promise.all([
+          fetch('/v1/spine').catch(() => null),
+          fetch('/v1/agents-status', { headers }).catch(() => null),
+        ]);
+        if (spineRes?.ok) setSpine(await spineRes.json());
+        if (agentsRes?.ok) setAgents(await agentsRes.json());
+      } catch { /* ignore */ }
       setLoading(false);
     }
     load();
-  }, []);
+  }, [token]);
 
-  if (loading) return <div className="text-karma-muted">Loading agent status...</div>;
-  if (!data) return <div className="text-karma-muted">K2 spine unavailable.</div>;
+  if (loading) return <div className="text-karma-muted">Loading...</div>;
 
-  // /v1/spine returns { pipeline: {...}, spine: { version, stable_patterns, total_promotions, self_improving, ... } }
-  const spineData = (data.spine as Record<string, unknown>) || {};
-  const pipelineData = (data.pipeline as Record<string, unknown>) || {};
+  const spineData = (spine?.spine as Record<string, unknown>) || {};
+  const pipelineData = (spine?.pipeline as Record<string, unknown>) || {};
+  const mcpServers = (agents?.mcp_servers as string[]) || [];
+  const skills = (agents?.skills as string[]) || [];
+  const hooks = (agents?.hooks as Record<string, string[]>) || {};
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="text-karma-accent font-bold text-[10px]">Vesper Pipeline</div>
-      <div className="grid grid-cols-2 gap-1 text-[10px]">
-        <span className="text-karma-muted">Spine version:</span>
-        <span className="text-karma-text">{String(spineData.version ?? '?')}</span>
-        <span className="text-karma-muted">Promotions:</span>
-        <span className="text-karma-text">{String(spineData.total_promotions ?? '?')}</span>
-        <span className="text-karma-muted">Stable patterns:</span>
-        <span className="text-karma-text">{String(spineData.stable_patterns ?? '?')}</span>
+    <div className="flex flex-col gap-2 text-[10px]">
+      {/* Vesper Pipeline */}
+      <div className="text-karma-accent font-bold">Vesper Pipeline</div>
+      <div className="grid grid-cols-2 gap-1">
+        <span className="text-karma-muted">Spine:</span>
+        <span className="text-karma-text">v{String(spineData.version ?? '?')} · {String(spineData.total_promotions ?? '?')} promotions</span>
+        <span className="text-karma-muted">Patterns:</span>
+        <span className="text-karma-text">{String(spineData.stable_patterns ?? '?')} stable</span>
         <span className="text-karma-muted">Self-improving:</span>
-        <span className={`${spineData.self_improving ? 'text-karma-accent2' : 'text-karma-danger'}`}>
+        <span className={spineData.self_improving ? 'text-karma-accent2' : 'text-karma-danger'}>
           {String(spineData.self_improving ?? '?')}
         </span>
       </div>
 
-      <div className="text-karma-accent font-bold text-[10px] mt-2">Pipeline</div>
-      <div className="grid grid-cols-2 gap-1 text-[10px]">
-        <span className="text-karma-muted">Watchdog:</span>
-        <span className="text-karma-text">{String((pipelineData.pipeline_status as Record<string,unknown>)?.watchdog ?? '?')}</span>
-        <span className="text-karma-muted">Governor:</span>
-        <span className="text-karma-text">{String((pipelineData.pipeline_status as Record<string,unknown>)?.governor ?? '?')}</span>
-        <span className="text-karma-muted">Promotions (live):</span>
-        <span className="text-karma-text">{String(pipelineData.total_promotions ?? '?')}</span>
-      </div>
+      {/* MCP Servers (#20) */}
+      <div className="text-karma-accent font-bold mt-2">MCP Servers ({mcpServers.length})</div>
+      {mcpServers.length > 0 ? (
+        <div className="flex flex-wrap gap-1">
+          {mcpServers.map((s) => (
+            <span key={s} className="bg-karma-surface px-1.5 py-0.5 rounded text-karma-text border border-karma-border">{s}</span>
+          ))}
+        </div>
+      ) : <span className="text-karma-muted">None detected</span>}
+
+      {/* Skills (#21) */}
+      <div className="text-karma-accent font-bold mt-2">Skills ({skills.length})</div>
+      {skills.length > 0 ? (
+        <div className="flex flex-wrap gap-1">
+          {skills.map((s) => (
+            <span key={s} className="bg-karma-surface px-1.5 py-0.5 rounded text-karma-text border border-karma-border">{s}</span>
+          ))}
+        </div>
+      ) : <span className="text-karma-muted">None detected</span>}
+
+      {/* Hooks (#22) */}
+      <div className="text-karma-accent font-bold mt-2">Hooks ({Object.keys(hooks).length} events)</div>
+      {Object.entries(hooks).map(([event, handlers]) => (
+        <div key={event} className="ml-1">
+          <span className="text-karma-accent2">{event}</span>
+          <span className="text-karma-muted"> ({(handlers as string[]).length})</span>
+          <div className="ml-2 text-karma-muted">
+            {(handlers as string[]).map((h, i) => <div key={i}>· {h}</div>)}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

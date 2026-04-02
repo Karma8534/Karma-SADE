@@ -662,6 +662,15 @@ const server = http.createServer(async (req, res) => {
       } catch (e) { return json(res, 502, { ok: false, error: "K2 spine unreachable" }); }
     }
 
+    // ── /v1/agents-status — MCP/Skills/Hooks for Context Panel (#20-22) ──
+    if (req.method === "GET" && req.url === "/v1/agents-status") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const r = await fetch(`${HARNESS_P1}/agents-status`, { signal: AbortSignal.timeout(5000) });
+        return json(res, r.status, await r.json());
+      } catch (e) { return json(res, 502, { ok: false, error: "agents-status unreachable" }); }
+    }
+
     // ── /v1/self-edit/* — Self-Edit Engine (Sprint 4d) ─────────────────
     if (req.url.startsWith("/v1/self-edit/")) {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
