@@ -12,6 +12,7 @@
 import http from "http";
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 import { URL } from "url";
 
 // ── Config ───────────────────────────────────────────────────────────────────
@@ -368,7 +369,6 @@ function autoApproveKarmaEntries() {
 setInterval(autoApproveKarmaEntries, 30000); // Check every 30s
 
 // ── Content-hash dedup (S155 Rule 36) ───────────────────────────────────────
-const crypto = require("crypto");
 const _recentHashes = new Set();
 const DEDUP_MAX = 500;
 function contentHash(text) { return crypto.createHash("sha256").update(String(text)).digest("hex").slice(0, 16); }
