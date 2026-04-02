@@ -49,7 +49,12 @@ function Send-File {
         $body   = @{ filename = $filename; file_b64 = $b64; mime_type = $mimeType; source = "docs/wip"; priority = $true } | ConvertTo-Json
         $resp   = Invoke-RestMethod -Uri $HubUrl -Method Post -Body $body -ContentType "application/json" `
                     -Headers @{ Authorization = "Bearer $token" } -TimeoutSec 60
-        Write-Host "[wip-watcher] OK: $filename → $($resp | ConvertTo-Json -Compress)"
+        Write-Host "[wip-watcher] OK: $filename"
+        # S155: Move to Done after successful ingest
+        $doneDir = Join-Path (Split-Path $FilePath -Parent) "Done"
+        if (-not (Test-Path $doneDir)) { New-Item -ItemType Directory -Path $doneDir -Force | Out-Null }
+        Move-Item -Path $FilePath -Destination (Join-Path $doneDir $filename) -Force
+        Write-Host "[wip-watcher] Moved to Done: $filename"
     } catch {
         Write-Host "[wip-watcher] ERROR ingesting $filename`: $_"
     }
@@ -100,6 +105,11 @@ $null = Register-ObjectEvent $watcher Created -Action {
         $resp  = Invoke-RestMethod -Uri "https://hub.arknexus.net/v1/ingest" -Method Post -Body $body `
                     -ContentType "application/json" -Headers @{ Authorization = "Bearer $token" } -TimeoutSec 60
         Write-Host "[wip-watcher] OK: $filename"
+        # S155: Move to Done after successful ingest
+        $doneDir = Join-Path (Split-Path $path -Parent) "Done"
+        if (-not (Test-Path $doneDir)) { New-Item -ItemType Directory -Path $doneDir -Force | Out-Null }
+        Move-Item -Path $path -Destination (Join-Path $doneDir $filename) -Force
+        Write-Host "[wip-watcher] Moved to Done: $filename"
     } catch {
         Write-Host "[wip-watcher] ERROR: $_"
     }
