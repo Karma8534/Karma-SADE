@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/locked-invariant-guard.py\""
+            "command": "py \"$CLAUDE_PROJECT_DIR/.claude/hooks/locked-invariant-guard.py\""
           }
         ]
       },
@@ -14,7 +14,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/quality-gate.py\""
+            "command": "py \"$CLAUDE_PROJECT_DIR/.claude/hooks/quality-gate.py\""
           }
         ]
       },
@@ -23,7 +23,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-worktree.py\""
+            "command": "py \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-worktree.py\""
           }
         ]
       },
@@ -32,7 +32,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/file-restriction-guard.py\""
+            "command": "py \"$CLAUDE_PROJECT_DIR/.claude/hooks/file-restriction-guard.py\""
           }
         ]
       },
@@ -41,7 +41,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/credential-guard.py\""
+            "command": "py \"$CLAUDE_PROJECT_DIR/.claude/hooks/credential-guard.py\""
           }
         ]
       },
@@ -50,7 +50,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/map-check-reminder.py\""
+            "command": "py \"$CLAUDE_PROJECT_DIR/.claude/hooks/map-check-reminder.py\""
           }
         ]
       }
@@ -61,7 +61,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/memory-reminder.py\""
+            "command": "py \"$CLAUDE_PROJECT_DIR/.claude/hooks/memory-reminder.py\""
           }
         ]
       }
@@ -71,11 +71,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/bus-check.py\""
+            "command": "py \"$CLAUDE_PROJECT_DIR/.claude/hooks/bus-check.py\""
           },
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/compaction-cliff-guard.py\""
+            "command": "py \"$CLAUDE_PROJECT_DIR/.claude/hooks/compaction-cliff-guard.py\""
           }
         ]
       }
@@ -85,7 +85,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-tool-failure-logger.py\""
+            "command": "py \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-tool-failure-logger.py\""
           }
         ]
       }
@@ -95,11 +95,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/governance-audit.py\""
+            "command": "py \"$CLAUDE_PROJECT_DIR/.claude/hooks/governance-audit.py\""
           },
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/cc-chat-logger.py\"",
+            "command": "py \"$CLAUDE_PROJECT_DIR/.claude/hooks/cc-chat-logger.py\"",
             "async": true
           }
         ]

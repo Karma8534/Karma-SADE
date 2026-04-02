@@ -102,6 +102,12 @@ NODE_EXE       = r"C:\Program Files\nodejs\node.exe"
 CLAUDE_CLI_JS  = r"C:\Users\raest\AppData\Roaming\npm\node_modules\@anthropic-ai\claude-code\cli.js"
 API_TIMEOUT    = 120  # seconds — CC subprocess can be slow on complex tasks
 CLAUDEMEM_URL  = "http://127.0.0.1:37778"  # claude-mem worker (loopback) — updated S155 port change
+
+# ── EscapeHatch: OpenRouter fallback (S157 — rate limit contingency) ──────────
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+OPENROUTER_MODEL = "anthropic/claude-haiku-4-5-20251001"  # Same model, different rate limit pool
+OPENROUTER_FALLBACK_MODEL = "google/gemini-2.0-flash"  # Tier 2: if OR Anthropic also rate-limited
 CLAUDEMEM_DB   = pathlib.Path.home() / ".claude-mem" / "claude-mem.db"
 
 # ── Agents Status Cache (Sprint 6 — #20-22) ────────────────────────────────
@@ -433,6 +439,39 @@ def _build_cc_cmd(message, effort=None, model=None, budget=None, stream=False):
     # Files are handled by prepending instructions to the message (handle_files prefix).
     # CC will use its Read tool to view attached files at the paths specified in the message.
     return cmd
+
+def _openrouter_fallback(message, model=None):
+    """EscapeHatch: Direct OpenRouter API call when CC/Anthropic is rate-limited.
+    Returns (response_text, model_used) or raises on failure."""
+    if not OPENROUTER_API_KEY:
+        raise RuntimeError("OPENROUTER_API_KEY not set — fallback unavailable")
+    or_model = model or OPENROUTER_MODEL
+    payload = json.dumps({
+        "model": or_model,
+        "messages": [{"role": "user", "content": message}],
+        "max_tokens": 4096,
+    }).encode()
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://hub.arknexus.net",
+        "X-Title": "Karma Nexus",
+    }
+    req = urllib.request.Request(f"{OPENROUTER_BASE_URL}/chat/completions",
+                                data=payload, headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            data = json.loads(resp.read())
+            text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            used = data.get("model", or_model)
+            print(f"[escapehatch] OpenRouter OK: model={used}, len={len(text)}")
+            return text, used
+    except urllib.error.HTTPError as e:
+        if e.code == 429 and or_model == OPENROUTER_MODEL:
+            # Tier 2: try Gemini Flash
+            print(f"[escapehatch] OpenRouter {or_model} also rate-limited, trying {OPENROUTER_FALLBACK_MODEL}")
+            return _openrouter_fallback(message, model=OPENROUTER_FALLBACK_MODEL)
+        raise
 
 def run_cc(message, effort=None, model=None, budget=None):
     """Call real CC subprocess with session continuity."""
@@ -1035,12 +1074,35 @@ class CCHandler(BaseHTTPRequestHandler):
                 except BrokenPipeError:
                     pass  # Client disconnected (cancel)
                 except Exception as e:
-                    err = json.dumps({"type": "error", "error": str(e)})
-                    try:
-                        self.wfile.write(f"data: {err}\n\n".encode())
-                        self.wfile.flush()
-                    except Exception:
-                        pass
+                    err_str = str(e)
+                    # ── EscapeHatch: rate limit detection → OpenRouter fallback ──
+                    if OPENROUTER_API_KEY and ("rate" in err_str.lower() or "overloaded" in err_str.lower() or "529" in err_str or "429" in err_str):
+                        print(f"[escapehatch] CC rate-limited, falling back to OpenRouter")
+                        try:
+                            or_text, or_model = _openrouter_fallback(message)
+                            stream_full_text.append(or_text)
+                            # Send as synthetic SSE events
+                            synth_msg = json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": or_text}]}})
+                            synth_result = json.dumps({"type": "result", "model": or_model, "total_cost_usd": 0, "escapehatch": True})
+                            self.wfile.write(f"data: {synth_msg}\n\n".encode())
+                            self.wfile.write(f"data: {synth_result}\n\n".encode())
+                            self.wfile.flush()
+                            print(f"[escapehatch] Fallback response delivered: {len(or_text)} chars via {or_model}")
+                        except Exception as or_err:
+                            print(f"[escapehatch] OpenRouter also failed: {or_err}")
+                            err = json.dumps({"type": "error", "error": f"All providers failed. CC: {err_str}. OpenRouter: {or_err}"})
+                            try:
+                                self.wfile.write(f"data: {err}\n\n".encode())
+                                self.wfile.flush()
+                            except Exception:
+                                pass
+                    else:
+                        err = json.dumps({"type": "error", "error": err_str})
+                        try:
+                            self.wfile.write(f"data: {err}\n\n".encode())
+                            self.wfile.flush()
+                        except Exception:
+                            pass
                 # S155: Save stream response to claude-mem (was missing — data loss gap)
                 assistant_text = "".join(stream_full_text)
                 if assistant_text:

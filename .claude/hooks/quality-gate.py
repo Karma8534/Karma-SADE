@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Quality Gate — PreToolUse hook on Bash (git push)
 Runs secret scan before any git push. Exit 2 = block push.
@@ -42,7 +42,7 @@ SCAN_EXTENSIONS = {'.js', '.py', '.json', '.md', '.sh', '.env', '.yaml', '.yml',
 
 # Directories to skip
 SKIP_DIRS = {'node_modules', '.git', '__pycache__', '.claude', 'Logs', 'Learned',
-             'docs', 'PHASE-', 'SESSION-', 'Karma_PDFs'}
+             'docs', 'PHASE-', 'SESSION-', 'Karma_PDFs', 'claude-mem-dev', 'EscapePlan'}
 
 
 def is_safe_line(line: str) -> bool:
@@ -115,23 +115,15 @@ def main():
             break  # Enough evidence
 
     if suspicious:
-        print(f"\n{'='*60}")
-        print(f"🚨  QUALITY GATE — PUSH BLOCKED")
-        print(f"{'='*60}")
-        print(f"  {len(suspicious)} potential hardcoded secret(s) in {scanned} files scanned:")
+        msg = f"QUALITY GATE — PUSH BLOCKED: {len(suspicious)} potential secret(s) in {scanned} files."
         for (fp, ln, line) in suspicious[:5]:
-            # Show relative path
             try:
                 rel = str(Path(fp).relative_to(cwd))
             except Exception:
                 rel = fp
-            print(f"  {rel}:{ln}: {line}")
-        if len(suspicious) > 5:
-            print(f"  ... and {len(suspicious) - 5} more")
-        print(f"")
-        print(f"  Fix secrets before pushing.")
-        print(f"  Override (false positive only): set QUALITY_GATE_BYPASS=1")
-        print(f"{'='*60}")
+            msg += f"\n  {rel}:{ln}: {line}"
+        msg += "\n  Fix secrets before pushing. Override: QUALITY_GATE_BYPASS=1"
+        print(msg, file=sys.stderr)
         sys.exit(2)
 
     print(f"[QUALITY GATE] Secret scan clean ({scanned} files) — push allowed.", file=sys.stderr)

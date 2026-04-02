@@ -121,6 +121,9 @@ Voice NEVER routes through claude.ai. Sovereign pipeline only (Whisper → text 
 - **B3**: Julian heartbeat written to K2 cc_scratchpad.md (Session 157 state)
 - **B4**: Karma heartbeat VERIFIED on bus (18:42:59Z "Alive. Persistent loop on P1. Memory sacred.")
 - **GAP CLOSED**: 4 critical skills (resurrect, wrap-session, review, karma-verify) copied from ~/.claude/skills/ to repo .claude/skills/. Were user-global only — lost on reinstall.
+- **EscapeHatch DEPLOYED**: OpenRouter fallback in cc_server_p1.py. CC rate limit → auto-retry via OpenRouter (anthropic/claude-haiku-4-5) → tier 2 (google/gemini-2.0-flash). OPENROUTER_API_KEY set as User env var on P1.
+- **P100**: LEARNED→AGORA routing, MEMORY button dead, auto-approval broken, archon alerts noise — 5 surface failures identified, NOT YET FIXED.
+- **P101**: Never offer to accept secrets in chat. Always read from mylocks.
 
 ## Next Session Starts Here
 1. `/resurrect`
