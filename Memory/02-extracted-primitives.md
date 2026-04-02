@@ -67,5 +67,59 @@
 **What:** Same failure 3+ times → STOP, diagnose root cause, don't retry.
 **Implementation:** D010 in scope index. Violated this session (P102 — git push 4x).
 
----
-*This file will be updated when Codex returns wrapper primitives analysis.*
+## Source: CC Wrapper (Codex Analysis — 1902 files, S157)
+
+### Agentic Loop Orchestrator — USE NOW
+**What:** One owning loop: decide → act → verify → repeat. Streams intermediate events, re-enters after tool use.
+**Source:** src/query.ts `queryLoop`, src/QueryEngine.ts `submitMessage`
+**Karma has:** cc_server_p1.py streams CC subprocess output. Missing: own loop that can mutate state mid-turn.
+
+### Crash-Safe Transcript Persistence — USE NOW
+**What:** User messages written BEFORE API call starts. Kill/crash leaves resumable transcript.
+**Source:** src/QueryEngine.ts `submitMessage`, src/utils/sessionStorage.ts `recordTranscript`
+**Karma has:** Session ID persistence. Missing: append-first writes for crash recovery.
+
+### Resume Recovery and Repair — USE NOW
+**What:** Reconstructs message chain from transcripts. Detects mid-turn interruption. Restores session-scoped side data.
+**Source:** src/utils/conversationRecovery.ts `loadConversationForResume`
+**Karma has:** cc --resume (delegates to CC). Missing: own resume logic independent of CC subprocess.
+
+### Auto-Compaction Pipeline — USE NOW
+**What:** Token counting → threshold gate → circuit-break on repeated failures → session-memory-first summarization → cleanup.
+**Source:** src/services/compact/autoCompact.ts `autoCompactIfNeeded`
+**Karma has:** Manual /compact. Missing: automatic context pressure management.
+
+### Subcontext Isolation for Subagents — USE NOW
+**What:** Forked agents get cloned file caches, fresh tracking, new abort controllers. Explicit opt-in for shared state.
+**Source:** src/utils/forkedAgent.ts `createSubagentContext`
+**Karma has:** Codex dispatch via --full-auto. Missing: real isolation boundary preventing parent state corruption.
+
+### Spawned Agent Sidechains — USE NOW
+**What:** Each agent writes own transcript sidechain + metadata sidecar. Resumable independently.
+**Source:** src/tools/AgentTool/runAgent.ts, src/utils/sessionStorage.ts
+**Karma has:** Bus posts from agents. Missing: per-agent durable traces for inspection and debug.
+
+### Persistent Memory Prompting — USE NOW
+**What:** File-backed memory loaded into system prompt. Teaches model when to write/update/search.
+**Source:** src/memdir/memdir.ts `loadMemoryPrompt`
+**Karma has:** claude-mem + MEMORY.md injection. Gap is small — mostly about teaching Karma WHEN to consult memory.
+
+### Background Memory Extraction — USE NOW
+**What:** Post-turn forked agent scans transcript. Skips if main already wrote. Throttled. Dedup.
+**Source:** src/services/extractMemories/extractMemories.ts `executeExtractMemories`
+**Karma has:** _auto_save_memory() saves every turn. Missing: selective extraction (not every turn is worth saving).
+
+### Permission Stack and Sandbox Bridge — USE NOW
+**What:** Layered: allow/deny/ask rules → classifier → permission hooks → sandbox bridge.
+**Source:** src/utils/permissions/permissions.ts
+**Karma has:** hooks.py ALLOWED_TOOLS whitelist. Missing: classifier-based dangerous action detection, layered gates.
+
+### NDJSON Streaming Transport — USE NOW
+**What:** Line-delimited JSON with stdout guard. Stray logging diverted to stderr.
+**Source:** src/cli/structuredIO.ts, src/utils/streamJsonStdoutGuard.ts
+**Karma has:** SSE streaming in cc_server_p1.py. Missing: stdout guard preventing stray output from corrupting stream.
+
+### In-Process Teammates — DEFER
+**What:** Teammate loop inside same process. Shared state where allowed. Per-turn abort.
+**Source:** src/utils/swarm/inProcessRunner.ts
+**Karma has:** Codex + KCC as separate processes. Defer until multi-agent cohabitation needed.
