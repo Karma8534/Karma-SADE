@@ -290,3 +290,4 @@ S 1 5 5   c o n v e r s a t i o n   c a p t u r e  
 <!-- S155: file editor, full karma context, codex+karma evaluation dispatched 2026-04-01T23:45:20Z -->
 <!-- S155: SmartRoute in karma_persistent, file editor deployed, 27 commits 2026-04-01T23:47:57Z -->
 <!-- S155: process watchdog, 112 primitives, 28+ commits 2026-04-01T23:51:31Z -->
+<!-- S155: heartbeats + K2 failover + watchdog + 30 commits 2026-04-02T00:06:28Z -->

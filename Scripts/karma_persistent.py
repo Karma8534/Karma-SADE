@@ -337,6 +337,9 @@ def main():
         token=token,
     )
 
+    _heartbeat_counter = 0
+    HEARTBEAT_EVERY = 7  # Post heartbeat every 7 cycles (~10.5 min at 90s)
+
     while True:
         try:
             executed = poll_and_act(token)
@@ -344,6 +347,27 @@ def main():
                 log.info("Cycle: %d tasks executed", executed)
         except Exception as e:
             log.error("Cycle error: %s", e)
+
+        # S155: Karma heartbeat - proves she's alive between tasks
+        _heartbeat_counter += 1
+        if _heartbeat_counter >= HEARTBEAT_EVERY:
+            _heartbeat_counter = 0
+            ts = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+            http_json(
+                f"{HUB_URL}/v1/coordination/post",
+                method="POST",
+                data={
+                    "from": "karma", "to": "all", "type": "inform",
+                    "urgency": "informational",
+                    "content": f"[KARMA HEARTBEAT {ts}] Alive. Persistent loop on P1. Session: {load_session_id() or 'none'}. Memory sacred.",
+                },
+                token=token,
+            )
+            http_json(f"{CORTEX_URL}/ingest", method="POST",
+                      data={"label": f"karma-heartbeat-{ts}", "text": f"Karma persistent alive at {ts}", "category": "session_checkpoint"},
+                      timeout=5)
+            log.info("Heartbeat posted")
+
         time.sleep(POLL_INTERVAL)
 
 if __name__ == "__main__":

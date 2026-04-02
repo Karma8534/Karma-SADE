@@ -977,5 +977,12 @@ if __name__ == "__main__":
     print(f"[cc-server] Auth: {'ENABLED' if TOKEN else 'DISABLED (set HUB_CHAT_TOKEN)'}")
     print(f"[cc-server] Inference: CC subprocess (claude -p --resume) — real CC with session continuity")
     print(f"[cc-server] Session file: {SESSION_FILE}")
+    # S155: Start CC heartbeat (posts to bus + cortex every 10 min)
+    try:
+        from Scripts.cc_heartbeat import start_heartbeat
+        start_heartbeat()
+        print("[cc-server] Heartbeat: STARTED (10 min interval)")
+    except Exception as e:
+        print(f"[cc-server] Heartbeat: FAILED ({e})")
     server = ThreadingHTTPServer(("0.0.0.0", PORT), CCHandler)
     server.serve_forever()
