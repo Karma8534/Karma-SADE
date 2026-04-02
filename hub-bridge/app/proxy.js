@@ -367,6 +367,19 @@ function autoApproveKarmaEntries() {
 }
 setInterval(autoApproveKarmaEntries, 30000); // Check every 30s
 
+// ── Content-hash dedup (S155 Rule 36) ───────────────────────────────────────
+const crypto = require("crypto");
+const _recentHashes = new Set();
+const DEDUP_MAX = 500;
+function contentHash(text) { return crypto.createHash("sha256").update(String(text)).digest("hex").slice(0, 16); }
+function isDuplicate(text) {
+  const h = contentHash(text);
+  if (_recentHashes.has(h)) return true;
+  _recentHashes.add(h);
+  if (_recentHashes.size > DEDUP_MAX) { const first = _recentHashes.values().next().value; _recentHashes.delete(first); }
+  return false;
+}
+
 // ── Vault helpers ────────────────────────────────────────────────────────────
 const VAULT_FILE_ALIASES = {
   "MEMORY.md": "/karma/MEMORY.md",
@@ -403,10 +416,15 @@ function postResponseSideEffects({ message, assistantText, sessionId, costUsd, m
   const modelStr = model || "cc-sovereign";
   const suffix = tagSuffix || "";
   const chatContent = `[CHAT${suffix}] user: ${message.slice(0, 200)}\nassistant: ${assistantText.slice(0, 500)} [cost:$${costStr},model:${modelStr}]`;
-  vaultPost("/v1/memory", VAULT_BEARER, buildVaultRecord({
-    type: "log", content: chatContent,
-    tags: ["chat", "sovereign-harness", "hub", ...(suffix ? [suffix.replace("-", "").toLowerCase()] : [])], source: "sovereign-proxy",
-  })).catch(e => console.error("[VAULT] write failed:", e.message));
+  // S155 Rule 36: content-hash dedup — skip duplicate vault writes
+  if (!isDuplicate(chatContent)) {
+    vaultPost("/v1/memory", VAULT_BEARER, buildVaultRecord({
+      type: "log", content: chatContent,
+      tags: ["chat", "sovereign-harness", "hub", ...(suffix ? [suffix.replace("-", "").toLowerCase()] : [])], source: "sovereign-proxy",
+    })).catch(e => console.error("[VAULT] write failed:", e.message));
+  } else {
+    console.log("[VAULT] skipped duplicate chat entry");
+  }
   try {
     fs.appendFileSync("/run/state/nexus-chat.jsonl", JSON.stringify({
       ts: new Date().toISOString(), user: message.slice(0, 500),
