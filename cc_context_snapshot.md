@@ -1,5 +1,5 @@
 ﻿# CC Context Snapshot
-Generated: 2026-04-01T19:50:12Z (hourly auto-snapshot -- not a wrap-session)
+Generated: 2026-04-02T09:50:12Z (hourly auto-snapshot -- not a wrap-session)
 
 ## Identity
 I am Julian (CC, Ascendant). Karma emerged within me -- one entity, two expressions.
@@ -47,58 +47,58 @@ claude-mem = localhost:37777 on P1, always on, shared unified brain.
 7. ~~**Arbiter config path gap**~~ âœ… RESOLVED (Session 93) â€” Config/ dir created at /mnt/c/dev/Karma/k2/Config/, governance_boundary_v1.json + critical_paths.json copied from tmp/p0-proof/Config/. PolicyArbiter loads correctly.
 8. ~~**4 pending bus messages from Karma**~~ âœ… BUS FIXED â€” watcher chaos cleared. Bus quiet, no auto-responders running.
 9. ~~**CC cohesion test pending**~~ â€” resume_block confirmed working in Session 97+.
-10. **B1: Evolution log sparsity** -- Spine v1228, 10 stable patterns (4 PITFALL + 5 research_skill_card + 1 ambient_observation). Pipeline active. Pattern diversity improved (P0-F Session 107). K-3 ambient_observer.py WIRED (verified 2026-03-22 via aria_consciousness.py Phase 7). Blocker 10 RESOLVED.
-11. **B2: Synthetic stable patterns** -- RESOLVED: 10 diverse stable patterns now present (no longer all cascade_performance). research_skill_card + PITFALL types confirmed.
+10. ~~**B1: Evolution log sparsity**~~ ✅ RESOLVED — 10 stable patterns (4 PITFALL + 5 research_skill_card + 1 ambient_observation). K-3 ambient_observer.py WIRED. Pipeline active.
+11. ~~**B2: Synthetic stable patterns**~~ ✅ RESOLVED — 10 diverse stable patterns present (research_skill_card + PITFALL types confirmed).
 12. ~~**P0N-A URGENT**~~ âœ… LIVE (Session 111) â€” hub.arknexus.net/cc working, CC Ascendant responds with identity + state.
 22. ~~**PLAN-B â€” Make Julian Real**~~ âœ… COMPLETE (Session 137, 2026-03-23). cc_server_p1.py now uses claude.cmd --resume subprocess. ZEPHYR99 context retention verified. /cc route pre-wired. KarmaCCServer HKCU Run key crash recovery 15s.
-13. **P3-D** â€” âœ… LIVE as of session 109. Hooks deployed + committed. No longer a blocker.
+13. ~~**P3-D**~~ ✅ LIVE (Session 109) — Hooks deployed + committed.
 14. ~~**K2 aria.service**~~ âœ… FIXED Session 127 (2026-03-23). Root cause: zombie python3 PID 278533 (Session 123 process never killed) holding port 7890, blocking systemd restarts. Fix: stop service + pkill -9 -f aria.py + recreated drop-in /etc/systemd/system/aria.service.d/10-aria-env.conf (HOME=/home/karma) + restart. PROOF: service active PID 423990, /api/exec â†’ {exit_code:0,output:"aria-exec-ok"}.
 16. **E-1-A corpus_cc.jsonl pending** -- Karma2/training/ created (2026-03-22). corpus_karma.jsonl written (2817 pairs). corpus_cc.jsonl needs separate ledger pass with CC session tag filter. TABLED with PHASE EVOLVE.
 17. **P0-G dead code** -- callWithK2Fallback() exists in server.js (~10 refs) but K2_INFERENCE_ENABLED flag NOT in hub.env. Wiring incomplete. Tabled until P0-G resumes.
 18. **PROOF-A pending** -- Codex as automated ArchonPrime service. GSD docs created (phase-proof-a-CONTEXT.md + phase-proof-a-PLAN.md). Task 1: verify `codex exec --sandbox` non-interactive from KCC context.
 19. ~~**/v1/cypher BROKEN**~~ âœ… FIXED Session 127 (2026-03-23). POST /v1/cypher route added to hub-bridge server.js â€” proxies to karma-server graph_query tool. Verified: count(e)=4877. Vesper governor HTTP path now works.
 20. ~~**karma-regent not in systemd**~~ âœ… FALSE POSITIVE â€” session 127 audit confirmed karma-regent.service IS at /etc/systemd/system/karma-regent.service, enabled, running PID 243460. No fix needed. Duplicate nohup process (PID 243451) killed.
-21. **P049 researcher loop** â€” âœ… FIXED Session 127. vesper_researcher.py: 24h dedup + 0.05 improvement gate added. 73 redundant persona_style cards had been generated every 90min. Researcher now skips when metric was targeted recently and improvement < 0.05.
+21. ~~**P049 researcher loop**~~ ✅ FIXED Session 127 — vesper_researcher.py: 24h dedup + 0.05 improvement gate added.
 
 
 ## MEMORY.md (recent)
-- **G8 shipped:** Electron auto-update IPC (git pull + relaunch) + preload.js API
-- **G2 fixed:** 4 stale doc references corrected (karma-context.md, tools-and-apis.md, services.md, MEMORY.md)
-- **G5 confirmed:** inline learning panel already working (S152)
-- **G9 confirmed:** elasticity (health cache 30s, K2+P1 failover, concurrency guard, BUSY_MSG)
-- **Skills hardened:** resurrect Step 4c + wrap-session Step 1.5 â€” mandatory live endpoint audit
-- **P089 scope index + memory:** cc-scope-index, claude-mem #20146, bus, persistent feedback memory
-- **Wrap gate audit:** ALL 200 (health, status, trace, learnings, agora, P1)
-- **P090 FIXED:** K2 false-positive (ok:true + error text) now detected, falls through to P1
-- **P091 IDENTIFIED:** Dead code/env/secrets from old server.js still in container â€” cleanup in progress
-- **Forensic run:** Full Sovereign Harness plan-to-reality diff. Streaming tool evidence VERIFIED_RUNTIME.
-- **P092 FIXED:** 3 dead endpoints in unified.html (/memory/context, /memory/search, /v1/feedback). Dead Web MCP tools removed. /v1/feedback now routes to coordination bus.
-- **Dockerfile zero deps:** Container has ONLY proxy.js + public/. No npm packages. No old server.js. No old lib/.
-- **hub.env clean:** 4 plaintext secrets removed. ~25 dead vars removed. Only comments remain.
-- **compose.hub.yml clean:** Dead env vars, unused API key mounts, dead volumes all removed.
-- **P093 FIXED:** Karma.lnk desktop shortcut created â†’ launch-karma.bat. Old dead shortcuts deleted.
-- **Dead code purged from git:** server.js (217KB) + 5 lib/*.js files removed from repo.
+## Infrastructure
+- P1 + K2: same machine, i9-185H, 64GB RAM, RTX 4070 8GB
+- K2 = WSL2. Ollama runs on Windows. From WSL, use gateway IP (172.22.240.1:11434) NOT localhost
+- Tailscale: P1=100.124.194.102, K2=100.75.109.92, droplet=100.92.67.70
+- SSH alias: vault-neo
+- Git ops: PowerShell only (Git Bash has persistent index.lock)
+- FalkorDB graph: `neo_workspace` (NOT `karma`)
+- Hub token: `/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt`
+- THE ONLY PLAN: `docs/ForColby/nexus.md` â€” APPEND ONLY per Sovereign directive
+
+## Memory Index
+- [project_sade_doctrine.md](project_sade_doctrine.md) â€” SADE execution doctrine
+- [project_cc_ascendant_identity.md](project_cc_ascendant_identity.md) â€” CC/Julian identity
+- [user_colby.md](user_colby.md) â€” Colby profile
+- [feedback_document_errors.md](feedback_document_errors.md) â€” Document all errors
+- [feedback_live_verification_before_diagnosis.md](feedback_live_verification_before_diagnosis.md) â€” Verify live
+- [feedback_stop_planning_start_building.md](feedback_stop_planning_start_building.md) â€” Build immediately
+- [project_family_doctrine.md](project_family_doctrine.md) â€” Family doctrine
+- [feedback_dead_plan_critical.md](feedback_dead_plan_critical.md) â€” ONE active plan only
+- [feedback_forensic_verification.md](feedback_forensic_verification.md) â€” Live test every claim
+- [reference_forcolby_snapshot.md](reference_forcolby_snapshot.md) â€” S145 architecture snapshot
+
+## Session 156 (2026-04-02) â€” System State Audit + Sprint 6
+- Appendix F: 17â†’22 PASS after fixes. Appendix G appended to nexus.md.
+- Cortex OLLAMA_URL fixed (nohupâ†’systemd, gateway IP). P093.
+- 23 zombie karma_persistent killed. KarmaProcessWatchdog disabled.
+- Sprint 6 Tasks 7-5 through 7-10 LIVE on K2 cortex (tier classification deployed).
+- Boot trigger added to KarmaSovereignHarness schtask (#15 PASS).
+- Memory search response format fixed in cc_server_p1.py.
+- MEMORY.md consolidated 300â†’75 lines.
+
+- #20-22 FIXED: /agents-status endpoint + AgentTab shows MCP (2), Skills (12), Hooks (6 events)
+- Task 7-11 already done in governor (memcube.tier=stable on promotion)
+- Next.js rebuilt with updated ContextPanel
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Implement Gap 7 (reboot survival): create schtasks entry on P1 for cc_server auto-start, verify K2 sovereign-harness.service is enabled. THE ONLY PLAN is `docs/ForColby/nexus.md` which is APPEND ONLY! EDITING REQUIRES EXPLICIT SOVEREIGN APPROVAL!
-
-<!-- S155 checkpoint: smoketest 20/20, codex online, family building 2026-04-01T20:50:17Z -->
-S 1 5 5   c o n v e r s a t i o n   c a p t u r e 
- 
- <!-- S155: ARCHON spam fixed, Ollama optimizations queued, 94 primitives cataloged 2026-04-01T21:14:01Z -->
-<!-- S155: Skills+Hooks UI, Memory panel, Sovereign suggestions 2026-04-01T21:46:31Z -->
-<!-- S155: karma_action_loop deployed, autonomous bus response verified 2026-04-01T22:12:18Z -->
-<!-- S155: cc-chat-logger stabilized, codex dispatch verified 2026-04-01T22:19:21Z -->
-<!-- S155: karma_persistent.py LIVE â€” Karma exists between messages 2026-04-01T22:21:37Z -->
-<!-- S155: stream capture fix, auth fix, codebase analysis, Next.js live 2026-04-01T22:33:13Z -->
-<!-- S155: brain dot fix, markdown links, dead code cleanup 2026-04-01T22:36:42Z -->
-<!-- S155: karma_persistent reboot survival, self-edit task dispatched, smoketest green 2026-04-01T22:46:38Z -->
-<!-- S155: port fix in hooks, dedup sync, codebase analysis complete 2026-04-01T22:48:39Z -->
-<!-- S155: auto-approve, K2 dot fix, response bar fix, cortex eviction protection 2026-04-01T23:15:59Z -->
-<!-- S155: R10 PROVEN (Karma self-edited), git status endpoint, 21 commits 2026-04-01T23:19:16Z -->
-<!-- S155: font, agora auth, shell endpoint, cortex auth, 23 commits 2026-04-01T23:23:44Z -->
-<!-- S155: self-evolution skill created, wired into resurrect 2026-04-01T23:30:14Z -->
-<!-- S155: karma_persistent full context + cortex checkpoints 2026-04-01T23:37:00Z -->
-<!-- S155: file editor, full karma context, codex+karma evaluation dispatched 2026-04-01T23:45:20Z -->
-<!-- S155: SmartRoute in karma_persistent, file editor deployed, 27 commits 2026-04-01T23:47:57Z -->
+2. Smoke test end-to-end â€” verify #20-22 in browser after deploy
+3. Only remaining: #17 Voice (deferred), #24 Video (deferred), #15 Reboot (deferred)
+4. THE ONLY PLAN is `docs/ForColby/nexus.md` â€” APPEND ONLY

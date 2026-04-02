@@ -113,18 +113,18 @@
 7. ~~**Arbiter config path gap**~~ ✅ RESOLVED (Session 93) — Config/ dir created at /mnt/c/dev/Karma/k2/Config/, governance_boundary_v1.json + critical_paths.json copied from tmp/p0-proof/Config/. PolicyArbiter loads correctly.
 8. ~~**4 pending bus messages from Karma**~~ ✅ BUS FIXED — watcher chaos cleared. Bus quiet, no auto-responders running.
 9. ~~**CC cohesion test pending**~~ — resume_block confirmed working in Session 97+.
-10. **B1: Evolution log sparsity** -- Spine v1228, 10 stable patterns (4 PITFALL + 5 research_skill_card + 1 ambient_observation). Pipeline active. Pattern diversity improved (P0-F Session 107). K-3 ambient_observer.py WIRED (verified 2026-03-22 via aria_consciousness.py Phase 7). Blocker 10 RESOLVED.
-11. **B2: Synthetic stable patterns** -- RESOLVED: 10 diverse stable patterns now present (no longer all cascade_performance). research_skill_card + PITFALL types confirmed.
+10. ~~**B1: Evolution log sparsity**~~ ✅ RESOLVED — 10 stable patterns (4 PITFALL + 5 research_skill_card + 1 ambient_observation). K-3 ambient_observer.py WIRED. Pipeline active.
+11. ~~**B2: Synthetic stable patterns**~~ ✅ RESOLVED — 10 diverse stable patterns present (research_skill_card + PITFALL types confirmed).
 12. ~~**P0N-A URGENT**~~ ✅ LIVE (Session 111) — hub.arknexus.net/cc working, CC Ascendant responds with identity + state.
 22. ~~**PLAN-B — Make Julian Real**~~ ✅ COMPLETE (Session 137, 2026-03-23). cc_server_p1.py now uses claude.cmd --resume subprocess. ZEPHYR99 context retention verified. /cc route pre-wired. KarmaCCServer HKCU Run key crash recovery 15s.
-13. **P3-D** — ✅ LIVE as of session 109. Hooks deployed + committed. No longer a blocker.
+13. ~~**P3-D**~~ ✅ LIVE (Session 109) — Hooks deployed + committed.
 14. ~~**K2 aria.service**~~ ✅ FIXED Session 127 (2026-03-23). Root cause: zombie python3 PID 278533 (Session 123 process never killed) holding port 7890, blocking systemd restarts. Fix: stop service + pkill -9 -f aria.py + recreated drop-in /etc/systemd/system/aria.service.d/10-aria-env.conf (HOME=/home/karma) + restart. PROOF: service active PID 423990, /api/exec → {exit_code:0,output:"aria-exec-ok"}.
 16. **E-1-A corpus_cc.jsonl pending** -- Karma2/training/ created (2026-03-22). corpus_karma.jsonl written (2817 pairs). corpus_cc.jsonl needs separate ledger pass with CC session tag filter. TABLED with PHASE EVOLVE.
 17. **P0-G dead code** -- callWithK2Fallback() exists in server.js (~10 refs) but K2_INFERENCE_ENABLED flag NOT in hub.env. Wiring incomplete. Tabled until P0-G resumes.
 18. **PROOF-A pending** -- Codex as automated ArchonPrime service. GSD docs created (phase-proof-a-CONTEXT.md + phase-proof-a-PLAN.md). Task 1: verify `codex exec --sandbox` non-interactive from KCC context.
 19. ~~**/v1/cypher BROKEN**~~ ✅ FIXED Session 127 (2026-03-23). POST /v1/cypher route added to hub-bridge server.js — proxies to karma-server graph_query tool. Verified: count(e)=4877. Vesper governor HTTP path now works.
 20. ~~**karma-regent not in systemd**~~ ✅ FALSE POSITIVE — session 127 audit confirmed karma-regent.service IS at /etc/systemd/system/karma-regent.service, enabled, running PID 243460. No fix needed. Duplicate nohup process (PID 243451) killed.
-21. **P049 researcher loop** — ✅ FIXED Session 127. vesper_researcher.py: 24h dedup + 0.05 improvement gate added. 73 redundant persona_style cards had been generated every 90min. Researcher now skips when metric was targeted recently and improvement < 0.05.
+21. ~~**P049 researcher loop**~~ ✅ FIXED Session 127 — vesper_researcher.py: 24h dedup + 0.05 improvement gate added.
 
 ## Next Session Starts Here
 1. /resurrect
