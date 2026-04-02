@@ -205,7 +205,7 @@ def _fetch_cortex_context(query_hint=None):
             headers={"Content-Type": "application/json"} if query_hint else {},
             method="POST" if query_hint else "GET",
         )
-        with urllib.request.urlopen(req, timeout=10) as resp:
+        with urllib.request.urlopen(req, timeout=90) as resp:
             data = json.loads(resp.read().decode())
             ctx = data.get("context", "")
             if ctx:
@@ -214,7 +214,11 @@ def _fetch_cortex_context(query_hint=None):
                 return _context_cache["text"]
     except Exception as e:
         print(f"[cortex] Context fetch failed: {e}")
-    return _context_cache.get("text", "")  # Return stale cache on failure
+    # On failure: return stale cache only if it doesn't contain an error string
+    stale = _context_cache.get("text", "")
+    if stale and "CORTEX ERROR" not in stale:
+        return stale
+    return ""
 
 def _fetch_recent_memories(query, limit=5):
     """Fetch relevant memories from claude-mem for this query."""

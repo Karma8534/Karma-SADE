@@ -71,7 +71,17 @@ Browser/Electron → proxy.js (vault-neo:18090, ~600 lines)
 - [feedback_forensic_verification.md](feedback_forensic_verification.md) — Live test every claim
 - [reference_forcolby_snapshot.md](reference_forcolby_snapshot.md) — S145 architecture snapshot
 
+## Session 156 (2026-04-02) — System State Audit + Sprint 6
+- Appendix F: 17→22 PASS after fixes. Appendix G appended to nexus.md.
+- Cortex OLLAMA_URL fixed (nohup→systemd, gateway IP). P093.
+- 23 zombie karma_persistent killed. KarmaProcessWatchdog disabled.
+- Sprint 6 Tasks 7-5 through 7-10 LIVE on K2 cortex (tier classification deployed).
+- Boot trigger added to KarmaSovereignHarness schtask (#15 PASS).
+- Memory search response format fixed in cc_server_p1.py.
+- MEMORY.md consolidated 300→75 lines.
+
 ## Next Session Starts Here
 1. `/resurrect`
-2. Continue Appendix F verification (26 items) — fix failures, then start Sprint 6
-3. THE ONLY PLAN is `docs/ForColby/nexus.md` — APPEND ONLY
+2. Sprint 6 Task 7-11 (migration/fusion rules in Vesper governor) — last task
+3. Fix remaining PARTIAL items: #20-22 (MCP/Skills/Hooks UI exposure)
+4. THE ONLY PLAN is `docs/ForColby/nexus.md` — APPEND ONLY
