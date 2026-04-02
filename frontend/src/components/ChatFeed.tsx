@@ -48,7 +48,10 @@ export function ChatFeed() {
       {messages.map((msg) => (
         <MessageBubble key={msg.id} message={msg} />
       ))}
-      {isStreaming && (
+      {isStreaming && (() => {
+        const lastKarma = [...messages].reverse().find((m) => m.role === 'karma');
+        return !lastKarma?.content;
+      })() && (
         <div className="text-karma-accent text-[12px] animate-pulse">
           Karma is thinking...
         </div>
