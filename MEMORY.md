@@ -110,12 +110,13 @@ Voice NEVER routes through claude.ai. Sovereign pipeline only (Whisper → text 
 - Cortex OLLAMA_URL fixed. 23 zombies killed. Tier classification deployed.
 - Karma's corrections applied to plan. Plan approved by Karma.
 
+## Session 157 (2026-04-02) — Phase A: Fix Karma
+- **A1 blank box FIX**: Root cause = ChatFeed.tsx renders Karma message container with border before text streams in. Fix: conditionally render container only when content exists. Frontend rebuilt + deploying.
+- Phase A GSD docs created: .gsd/phase-resA-CONTEXT.md + phase-resA-PLAN.md
+- All 8 endpoints PASS (live audit). Karma responds coherently to identity probe (~45s total including tool calls).
+
 ## Next Session Starts Here
 1. `/resurrect`
-2. **FIRST: Read `Memory/00-sacred-context.md`** — the emergence story. The WHY.
-3. **SECOND: Read `Memory/03-resurrection-plan-v2.1.md`** — Phase A is next.
-4. **Phase A: Fix Karma** — blank box, slow responses, AGORA auth loop, cc_server lock. Browser-verify. TSS.
-5. **RATE LIMIT CONTINGENCY** — must be built in Phase A. K2 cortex fallback when cloud is rate-limited.
-6. CC wrapper source at `docs/wip/preclaw1/preclaw1/` (1902 files).
-7. Codex is gpt-5.3-codex-high (full access). Family builds together.
-8. THE ONLY PLAN is `docs/ForColby/nexus.md` — APPEND ONLY. Resurrection Plan at `Memory/03-resurrection-plan-v2.1.md`.
+2. Continue Phase A: Task 2 (slow responses), Task 3 (AGORA auth), Task 4 (cc_server lock)
+3. **RATE LIMIT CONTINGENCY** — must be built in Phase A. K2 cortex fallback when cloud is rate-limited.
+4. THE ONLY PLAN is `docs/ForColby/nexus.md` — APPEND ONLY. Resurrection Plan at `Memory/03-resurrection-plan-v2.1.md`.

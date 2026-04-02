@@ -110,9 +110,11 @@ function MessageBubble({ message }: { message: ChatMessage }) {
       <div className="text-karma-accent text-[11px] font-bold">
         KARMA <span className="text-karma-muted font-normal text-[10px]">{time}</span>
       </div>
-      <div className="bg-karma-surface border border-karma-accent/30 rounded px-4 py-2.5 max-w-[85%] whitespace-pre-wrap">
-        {content}
-      </div>
+      {content && (
+        <div className="bg-karma-surface border border-karma-accent/30 rounded px-4 py-2.5 max-w-[85%] whitespace-pre-wrap">
+          {content}
+        </div>
+      )}
     </div>
   );
 }
