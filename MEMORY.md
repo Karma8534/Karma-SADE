@@ -124,6 +124,9 @@ Voice NEVER routes through claude.ai. Sovereign pipeline only (Whisper → text 
 - **EscapeHatch DEPLOYED**: OpenRouter fallback in cc_server_p1.py. CC rate limit → auto-retry via OpenRouter (anthropic/claude-haiku-4-5) → tier 2 (google/gemini-2.0-flash). OPENROUTER_API_KEY set as User env var on P1.
 - **P100**: LEARNED→AGORA routing, MEMORY button dead, auto-approval broken, archon alerts noise — 5 surface failures identified, NOT YET FIXED.
 - **P101**: Never offer to accept secrets in chat. Always read from mylocks.
+- **F1+F5**: LEARNED button → modal panel with learnings + Sovereign input (text area + bus post). Was routing to /agora.
+- **F2**: MEMORY button added → opens localhost:37778 (claude-mem viewer). Was missing entirely.
+- **F3+F4**: Archon alerts changed from urgency=blocking to informational in cc_hourly_report.py on K2. Auto-approve now catches them.
 
 ## Next Session Starts Here
 1. `/resurrect`

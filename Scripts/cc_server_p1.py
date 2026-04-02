@@ -106,7 +106,7 @@ CLAUDEMEM_URL  = "http://127.0.0.1:37778"  # claude-mem worker (loopback) — up
 # ── EscapeHatch: OpenRouter fallback (S157 — rate limit contingency) ──────────
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-OPENROUTER_MODEL = "anthropic/claude-haiku-4-5-20251001"  # Same model, different rate limit pool
+OPENROUTER_MODEL = "anthropic/claude-sonnet-4-6"  # Same model name on OR, different rate limit pool
 OPENROUTER_FALLBACK_MODEL = "google/gemini-2.0-flash"  # Tier 2: if OR Anthropic also rate-limited
 CLAUDEMEM_DB   = pathlib.Path.home() / ".claude-mem" / "claude-mem.db"
 

@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { useKarmaStore, type EffortLevel } from '@/store/karma';
+import { LearnedPanel } from './LearnedPanel';
 
 export function Header() {
   const lastSeen = useKarmaStore((s) => s.lastSeen);
@@ -10,6 +12,7 @@ export function Header() {
   const setEffort = useKarmaStore((s) => s.setEffort);
   const clearMessages = useKarmaStore((s) => s.clearMessages);
   const sessionCost = useKarmaStore((s) => s.sessionCost);
+  const [showLearned, setShowLearned] = useState(false);
 
   const timeSince = lastSeen
     ? formatTimeSince(lastSeen)
@@ -51,8 +54,12 @@ export function Header() {
       </select>
 
       {/* Action buttons */}
-      <HeaderButton onClick={() => window.open('/agora', '_blank')}>LEARNED</HeaderButton>
+      <HeaderButton onClick={() => setShowLearned(true)}>LEARNED</HeaderButton>
+      <HeaderButton onClick={() => window.open('http://localhost:37778', '_blank')}>MEMORY</HeaderButton>
       <HeaderButton onClick={clearMessages}>CLEAR</HeaderButton>
+
+      {/* Learned panel modal */}
+      {showLearned && <LearnedPanel onClose={() => setShowLearned(false)} />}
 
       {/* Cost display */}
       {sessionCost > 0 && (
