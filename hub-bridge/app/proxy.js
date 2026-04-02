@@ -350,18 +350,19 @@ function evictCoord() {
     for (const [id] of sorted.slice(0, _coordCache.size - COORD_MAX_ENTRIES)) _coordCache.delete(id);
   }
 }
-// S155: Sovereign directive — auto-approve Karma bus posts after 2 min wall clock
+// S155: Sovereign directive — auto-approve agent bus posts after 2 min wall clock
+// S156: Extended from karma-only to all agents — kiki pulse + CC hourly don't need Sovereign approval
 const KARMA_AUTO_APPROVE_MS = 2 * 60 * 1000;
 function autoApproveKarmaEntries() {
   const now = Date.now();
   for (const [id, e] of _coordCache) {
-    if (e.from === "karma" && e.status === "pending" && e.type !== "task") {
+    if (e.status === "pending" && e.type !== "task" && e.urgency !== "blocking") {
       const age = now - new Date(e.created_at).getTime();
       if (age > KARMA_AUTO_APPROVE_MS) {
         e.status = "approved";
         e.approved_by = "auto-sovereign";
         e.approved_at = new Date().toISOString();
-        console.log(`[COORD] Auto-approved karma entry ${id} (${Math.round(age/1000)}s old)`);
+        console.log(`[COORD] Auto-approved ${e.from} entry ${id} (${Math.round(age/1000)}s old)`);
       }
     }
   }

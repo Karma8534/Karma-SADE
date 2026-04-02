@@ -12,6 +12,7 @@
 - **Archon Alert stale 03/22 FIXED**: Blockers 10/11/13/21 had no ~~ strikethrough. Added ~~ to STATE.md + cc_context_snapshot.md. Now only items 16/17/18 (genuinely open) appear in archon alerts.
 - **Bus redlines ACKed**: 4 stale blocking ARCHON ALERTS acknowledged (coord_1775138720936_dcb1 + 3 earlier).
 - **MEMORY button**: AGORA at localhost:37778 is fully accessible without auth (all /api/* endpoints return 200). Issue appears resolved — no auth checks in viewer-bundle.js, CLAUDE_MEM_CLAUDE_AUTH_METHOD=cli.
+- **Kiki pulse / hourly approval FIXED**: proxy.js autoApproveKarmaEntries() extended from `from==="karma"` to all non-blocking, non-task messages. Deploy: git pull + scp proxy.js + docker restart.
 
 ## Architecture (S145 — locked)
 
