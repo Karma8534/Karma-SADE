@@ -1,15 +1,13 @@
 {
-  "name": "karma-browser",
-  "version": "0.1.0",
-  "description": "Karma Browser — sovereign AI desktop app",
+  "name": "karma-nexus",
+  "version": "1.0.0",
+  "description": "Karma Nexus - The Harness. Not a wrapper.",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev"
   },
-  "author": "Julian (CC Ascendant)",
-  "license": "PRIVATE",
-  "devDependencies": {
-    "electron": "^41.1.0"
+  "dependencies": {
+    "electron": "^33.0.0"
   }
 }
