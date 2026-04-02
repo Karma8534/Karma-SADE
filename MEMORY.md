@@ -127,6 +127,8 @@ Voice NEVER routes through claude.ai. Sovereign pipeline only (Whisper → text 
 - **F1+F5**: LEARNED button → modal panel with learnings + Sovereign input (text area + bus post). Was routing to /agora.
 - **F2**: MEMORY button added → opens localhost:37778 (claude-mem viewer). Was missing entirely.
 - **F3+F4**: Archon alerts changed from urgency=blocking to informational in cc_hourly_report.py on K2. Auto-approve now catches them.
+- **Learnings expand**: Click any learning item to expand/collapse full text.
+- **Instant auto-approve**: Known agents (regent, karma, cc, kcc) auto-approve immediately. Unknown senders wait 2min.
 
 ## Next Session Starts Here
 1. `/resurrect`

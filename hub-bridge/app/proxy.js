@@ -353,12 +353,17 @@ function evictCoord() {
 // S155: Sovereign directive — auto-approve agent bus posts after 2 min wall clock
 // S156: Extended from karma-only to all agents — kiki pulse + CC hourly don't need Sovereign approval
 const KARMA_AUTO_APPROVE_MS = 2 * 60 * 1000;
+// S157: agents that self-report verified results get instant auto-approve
+const INSTANT_APPROVE_SENDERS = new Set(["regent", "karma", "cc", "cc-watchdog", "kcc"]);
+
 function autoApproveKarmaEntries() {
   const now = Date.now();
   for (const [id, e] of _coordCache) {
     if (e.status === "pending" && e.type !== "task" && e.urgency !== "blocking") {
       const age = now - new Date(e.created_at).getTime();
-      if (age > KARMA_AUTO_APPROVE_MS) {
+      // Instant approve for known agents; 2-min delay for unknown senders
+      const threshold = INSTANT_APPROVE_SENDERS.has(e.from) ? 0 : KARMA_AUTO_APPROVE_MS;
+      if (age > threshold) {
         e.status = "approved";
         e.approved_by = "auto-sovereign";
         e.approved_at = new Date().toISOString();

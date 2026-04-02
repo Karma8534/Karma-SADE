@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useKarmaStore } from '@/store/karma';
 
 interface Learning {
@@ -115,22 +115,36 @@ export function LearnedPanel({ onClose }: { onClose: () => void }) {
             <div className="text-karma-muted text-[11px] text-center py-4">No learnings yet.</div>
           )}
           {learnings.map((l) => (
-            <div key={l.id} className="border-b border-karma-border py-2">
-              <div className="flex items-center gap-2">
-                <span className="text-karma-accent text-[10px] font-bold">{l.from || 'karma'}</span>
-                <span className="text-karma-muted text-[9px]">
-                  {l.created_at ? new Date(l.created_at).toLocaleString() : ''}
-                </span>
-                {l.type && (
-                  <span className="text-karma-accent2 text-[9px] bg-karma-surface px-1 rounded">
-                    {l.type}
-                  </span>
-                )}
-              </div>
-              <div className="text-karma-text text-[11px] mt-0.5">{l.content}</div>
-            </div>
+            <LearningItem key={l.id} learning={l} />
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function LearningItem({ learning }: { learning: Learning }) {
+  const [expanded, setExpanded] = useState(false);
+  const l = learning;
+  return (
+    <div
+      className="border-b border-karma-border py-2 cursor-pointer hover:bg-karma-surface/50"
+      onClick={() => setExpanded(!expanded)}
+    >
+      <div className="flex items-center gap-2">
+        <span className="text-karma-accent text-[10px] font-bold">{l.from || 'karma'}</span>
+        <span className="text-karma-muted text-[9px]">
+          {l.created_at ? new Date(l.created_at).toLocaleString() : ''}
+        </span>
+        {l.type && (
+          <span className="text-karma-accent2 text-[9px] bg-karma-surface px-1 rounded">
+            {l.type}
+          </span>
+        )}
+        <span className="text-karma-muted text-[9px] ml-auto">{expanded ? '\u25BC' : '\u25B6'}</span>
+      </div>
+      <div className={`text-karma-text text-[11px] mt-0.5 ${expanded ? '' : 'line-clamp-1'}`}>
+        {l.content}
       </div>
     </div>
   );
