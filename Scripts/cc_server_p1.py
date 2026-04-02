@@ -747,8 +747,22 @@ class CCHandler(BaseHTTPRequestHandler):
 
         # ── /memory/search — proxy to claude-mem ──────────────────────────
         if self.path == "/memory/search":
-            code, payload = claudemem_proxy("/api/search", "GET", body, timeout=5)
-            self._json(code, payload)
+            query = body.get("query", "recent")
+            limit = body.get("limit", 20)
+            code, payload = claudemem_proxy(
+                f"/api/search?query={query}&limit={limit}", "GET", {}, timeout=5
+            )
+            # Transform MCP content format to structured results for frontend
+            if isinstance(payload, dict) and "content" in payload:
+                # claude-mem returns {content: [{type: "text", text: "..."}]}
+                # Frontend expects {results: [{id, title, text, ...}]}
+                text = ""
+                for block in payload.get("content", []):
+                    if isinstance(block, dict):
+                        text += block.get("text", "")
+                self._json(code, {"ok": True, "results": [{"id": 0, "text": text}], "raw": text})
+            else:
+                self._json(code, payload)
             return
 
         # ── /memory/save — proxy to claude-mem ────────────────────────────
