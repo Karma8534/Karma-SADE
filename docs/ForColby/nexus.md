@@ -1101,3 +1101,83 @@ ELECTRON APP = THE NEXUS (electron/main.js)
 ---
 
 **Appendix E completed 2026-04-01 Session 155. 42 deliverables, 5 critical blockers, 8 high gaps, 7 low gaps. Wrapper replication: 2/7 DONE, 3/7 partial, 2/7 v0. Grand total: 113 primitives across 5 audits.**
+
+---
+
+## Appendix F: S155 Honesty Audit — FIRST ACTION AFTER /resurrect
+
+**Context:** S155 shipped 39 commits. Many features were CLAIMED as shipped but never end-to-end verified. The honesty contract was violated. This list is the mandatory verification checklist before any new work begins.
+
+**Rule: Do NOT build anything new until every item below is PASS or FAIL with terminal/browser evidence.**
+
+### F.1: Browser Verification (open hub.arknexus.net, test each)
+
+| # | Feature | Test | Expected | Status |
+|---|---------|------|----------|--------|
+| V1 | Next.js frontend renders | Navigate to hub.arknexus.net | See Next.js layout (Gate, Header, ChatFeed), NOT raw HTML | |
+| V2 | Chat works through Next.js | Send message, observe streaming response | Tokens appear progressively, Karma responds with context | |
+| V3 | MEMORY button opens panel | Click MEMORY in header | Panel opens with search input + Sovereign suggestion | |
+| V4 | Memory search returns results | Type query in memory search | Results appear (not "Error" or empty) | |
+| V5 | SKILLS button opens panel | Click SKILLS in header | Panel shows 11 skills + hooks status | |
+| V6 | File editor opens and loads | Click a file in Context Panel (or call `window.openFileEditor('MEMORY.md')` in console) | Modal opens, file content loads | |
+| V7 | File editor saves | Edit content, click SAVE | Status shows "Saved (N bytes)" | |
+| V8 | Legacy unified.html still works | Navigate to hub.arknexus.net/legacy | Old UI loads, chat works | |
+| V9 | AGORA loads without token-in-URL | Navigate to hub.arknexus.net/agora | Auth gate shows if no token, dashboard loads if token exists | |
+
+### F.2: karma_persistent Verification
+
+| # | Test | Command | Expected | Status |
+|---|------|---------|----------|--------|
+| V10 | Process alive | `curl -sf http://localhost:7891/health` + check karma_persistent in process list | cc_server healthy + karma_persistent PID exists | |
+| V11 | Heartbeat on bus | `curl /v1/coordination/recent?from=karma` | [KARMA HEARTBEAT] entry within last 15 min | |
+| V12 | Task execution | Post task to bus, wait 2 min, check response | [KARMA PERSISTENT] response with result | |
+
+### F.3: Conversation Capture Verification
+
+| # | Test | Command | Expected | Status |
+|---|------|---------|----------|--------|
+| V13 | Stream path saves to claude-mem | Send streaming chat via hub, then search claude-mem for the message | Observation found with full text (not truncated) | |
+| V14 | cc-chat-logger fires on Stop | End a CC session, check nexus-chat.jsonl | New entry with source "cc-code-tab" | |
+| V15 | Fact extractor saves on port 37778 | Trigger a Read tool, check claude-mem for fact observation | Fact observation found | |
+
+### F.4: Content-Hash Dedup Verification
+
+| # | Test | Command | Expected | Status |
+|---|------|---------|----------|--------|
+| V16 | Duplicate skipped | Send same message to /v1/chat twice, count ledger entries | Only ONE new entry (not two) | |
+
+### F.5: Sprint 6 Verification
+
+| # | Test | Command | Expected | Status |
+|---|------|---------|----------|--------|
+| V17 | Cortex gated recall | `curl -X POST K2:7892/query -d '{"query":"test"}'` | Response uses filtered blocks (status shows sprint6:true) | |
+| V18 | Migration candidates exist | `ssh K2 "ls /mnt/c/dev/Karma/k2/cache/regent_candidates/ | grep migration"` | At least one migration candidate file | |
+| V19 | Governor tier field | Check if any promoted spine entry has memcube.tier | memcube field present on promoted entry | |
+
+### F.6: Electron Verification
+
+| # | Test | Command | Expected | Status |
+|---|------|---------|----------|--------|
+| V20 | npm install succeeds | `cd electron && npm install` | Dependencies installed, no errors | |
+| V21 | Electron launches | `cd electron && npm start` | Window opens with Karma title | |
+| V22 | Local frontend loads | Check if electron/frontend/out/index.html exists | Next.js static export present | |
+
+### F.7: Self-Evolution Verification
+
+| # | Test | Command | Expected | Status |
+|---|------|---------|----------|--------|
+| V23 | Resurrect loads self-evolution | Run `/resurrect`, check if Step 3b reads the skill | Self-evolution rules in context | |
+| V24 | Self-evolution has 44 rules | `wc -l .claude/skills/self-evolution/SKILL.md` | File exists with 44 rules | |
+
+### F.8: Karma Self-Edit Verification
+
+| # | Test | Command | Expected | Status |
+|---|------|---------|----------|--------|
+| V25 | POLL_INTERVAL is 90 | `grep POLL_INTERVAL Scripts/karma_persistent.py` | 90 (not 120) | |
+| V26 | Change was made by Karma (not manual) | Check git log for the commit | Commit message or diff shows automated change | |
+
+**Total: 26 verification items. ALL must be PASS or FAIL with evidence before building new features.**
+
+**If any item FAILS: fix it FIRST, then re-verify, then continue.**
+
+**This is the honesty contract enforced. No more "SHIPPED" without proof.**
