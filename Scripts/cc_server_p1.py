@@ -59,6 +59,8 @@ except Exception as e:
 PORT          = 7891
 _current_proc = None  # Track running CC subprocess for cancel
 _proc_lock    = threading.Lock()  # Concurrency guard — one CC subprocess at a time
+_lock_acquired_at = 0  # timestamp when lock was acquired (for stale detection)
+LOCK_STALE_SECONDS = 180  # auto-release lock after 3 minutes (covers API_TIMEOUT + overhead)
 TOKEN         = os.environ.get("HUB_CHAT_TOKEN", "")
 
 # H3: Rate limiting — per-IP sliding window
@@ -618,6 +620,11 @@ class CCHandler(BaseHTTPRequestHandler):
                 except Exception:
                     pass
                 _current_proc = None
+                # Release lock so next request can proceed
+                try:
+                    _proc_lock.release()
+                except RuntimeError:
+                    pass  # Lock not held (race with normal completion)
                 cancel_ms = int((time.time() - t_cancel_start) * 1000)
                 _last_latency["cancel_ms"] = cancel_ms  # H2: measure cancel time
                 self._json(200, {"ok": True, "cancelled": True, "cancel_ms": cancel_ms})
@@ -967,10 +974,32 @@ class CCHandler(BaseHTTPRequestHandler):
                     _routing_decision["routing_fallback"] = True
                     print(f"[router] Ollama failed, falling back to CC")
 
-        # Concurrency guard — reject if another request is active
+        # Concurrency guard — reject if another request is active (with stale lock recovery)
+        global _lock_acquired_at
         if not _proc_lock.acquire(blocking=False):
-            self._json(429, {"ok": False, "error": "Another request is in progress. Wait or cancel first."})
-            return
+            # Check for stale lock — auto-recover if held too long
+            if time.time() - _lock_acquired_at > LOCK_STALE_SECONDS:
+                print(f"[cc-server] STALE LOCK detected ({int(time.time() - _lock_acquired_at)}s). Killing orphan subprocess.")
+                proc = _current_proc
+                if proc and proc.poll() is None:
+                    try:
+                        proc.kill()
+                        proc.wait(timeout=3)
+                    except Exception:
+                        pass
+                _current_proc = None
+                # Force-release and re-acquire
+                try:
+                    _proc_lock.release()
+                except RuntimeError:
+                    pass  # Already released
+                _proc_lock.acquire(blocking=False)
+                _lock_acquired_at = time.time()
+            else:
+                self._json(429, {"ok": False, "error": "Another request is in progress. Wait or cancel first."})
+                return
+        else:
+            _lock_acquired_at = time.time()
 
         try:
             # ── /cc/stream — SSE streaming endpoint ──────────────────────

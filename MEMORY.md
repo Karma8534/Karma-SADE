@@ -114,6 +114,8 @@ Voice NEVER routes through claude.ai. Sovereign pipeline only (Whisper → text 
 - **A1 blank box FIX**: Root cause = ChatFeed.tsx renders Karma message container with border before text streams in. Fix: conditionally render container only when content exists. Frontend rebuilt + deploying.
 - Phase A GSD docs created: .gsd/phase-resA-CONTEXT.md + phase-resA-PLAN.md
 - All 8 endpoints PASS (live audit). Karma responds coherently to identity probe (~45s total including tool calls).
+- **A3 AGORA**: No auth loop — loads cleanly, all requests 200.
+- **A4 cc_server lock**: Stale lock detection (180s auto-release + orphan kill), cancel releases lock.
 
 ## Next Session Starts Here
 1. `/resurrect`
