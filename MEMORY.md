@@ -142,7 +142,9 @@ Voice NEVER routes through claude.ai. Sovereign pipeline only (Whisper → text 
 
 ## Next Session Starts Here
 1. `/resurrect`
-2. Phase F: Sovereign browser walkthrough — regrade all 27 baseline items with live evidence. Colby tests each surface.
-3. Sprint 7 scope ready: microphone icon, camera icon, subagent panel, git panel, file editor (APPROVED), artifact preview, auto-dream, arknexus.net decoy page.
-4. THE ONLY PLAN is `docs/ForColby/nexus.md` — APPEND ONLY. Resurrection Plan at `Memory/03-resurrection-plan-v2.1.md`.
-5. Codex available for delegation (gpt-5.4-mini). Vesper loop closed. OpenRouter fallback wired. KarmaInboxWatcher running for PDF drops.
+2. Read Codex output at `/tmp/codex_reverse_engineer.log` — his reverse-engineering of Nexus vs goal. Execute his critical path.
+3. Phase F: Sovereign browser walkthrough — regrade all 27 baseline items with live evidence.
+4. ALL 5 CC primitives built in nexus_agent.py (agentic loop, crash-safe, auto-compaction, subagent isolation, permission stack). NEEDS TESTING.
+5. Sprint 7 scope: mic icon, camera icon, subagent panel, git panel, file editor (APPROVED), artifact preview, auto-dream, decoy page.
+6. THE ONLY PLAN is `docs/ForColby/nexus.md` — APPEND ONLY. Resurrection Plan at `Memory/03-resurrection-plan-v2.1.md`.
+7. Sovereign granted identity autonomy (voice, persona = Julian+Karma's decision). obs #21947.
