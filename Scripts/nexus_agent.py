@@ -101,7 +101,10 @@ TOOLS = [
 # ── Tool Execution ───────────────────────────────────────────────────────────
 
 def _exec_tool(name, input_data):
-    """Execute a tool and return the result string."""
+    """Execute a tool and return the result string. P5: permission-gated."""
+    allowed, reason = check_permission(name, input_data)
+    if not allowed:
+        return f"PERMISSION DENIED: {reason}"
     try:
         if name == "Read":
             fp = input_data["file_path"]
@@ -225,6 +228,10 @@ def run_agent(message, system_prompt="", model=None):
     messages.append({"role": "user", "content": message})
 
     for iteration in range(MAX_ITERATIONS):
+        # P3: Auto-compact if context is getting too large
+        if _estimate_chars(messages) > COMPACTION_THRESHOLD:
+            messages = _compact_messages(messages, model=model)
+
         try:
             response = _call_llm(messages, tools=TOOLS, model=model)
         except urllib.error.HTTPError as e:
@@ -337,6 +344,143 @@ def load_transcript(session_id):
                 except json.JSONDecodeError:
                     continue
     return entries
+
+
+# ── P3: Auto-Compaction ──────────────────────────────────────────────────────
+
+COMPACTION_THRESHOLD = 80000  # chars in messages before triggering compaction
+COMPACTION_TARGET = 20000     # target size after compaction
+
+def _estimate_chars(messages):
+    """Rough char count of message history."""
+    return sum(len(json.dumps(m)) for m in messages)
+
+def _compact_messages(messages, model=None):
+    """Summarize old messages to stay under context limits.
+    Keeps system prompt + last 4 messages intact. Summarizes the rest."""
+    if len(messages) < 6:
+        return messages  # Nothing to compact
+
+    # Split: system (if any) + old messages + recent 4
+    system = [m for m in messages[:1] if m.get("role") == "system"]
+    rest = messages[len(system):]
+    recent = rest[-4:]
+    old = rest[:-4]
+
+    if not old:
+        return messages
+
+    # Summarize old messages via LLM
+    summary_prompt = "Summarize this conversation history in 500 words or less. Preserve: key decisions, tool results, file paths, error messages, and action items. Drop: verbose tool output, repeated content."
+    summary_messages = [
+        {"role": "system", "content": summary_prompt},
+        {"role": "user", "content": json.dumps(old, indent=1)[:30000]},
+    ]
+
+    try:
+        resp = _call_llm(summary_messages, tools=None, model=model or FALLBACK_MODEL)
+        summary = resp.get("choices", [{}])[0].get("message", {}).get("content", "")
+        if summary:
+            compacted = system + [
+                {"role": "user", "content": f"[COMPACTED HISTORY]\n{summary}"},
+                {"role": "assistant", "content": "Understood. I have the context from the compacted history. Continuing."},
+            ] + recent
+            print(f"[nexus-agent] Compacted: {len(messages)} messages ({_estimate_chars(messages)} chars) → {len(compacted)} messages ({_estimate_chars(compacted)} chars)")
+            return compacted
+    except Exception as e:
+        print(f"[nexus-agent] Compaction failed: {e}")
+
+    return messages  # Return unchanged on failure
+
+
+# ── P4: Subagent Isolation ───────────────────────────────────────────────────
+
+def run_subagent(task, parent_session_id=None, model=None):
+    """Run an isolated subagent with its own message history and transcript.
+    Returns the final result text. Parent state is not modified."""
+    sub_session = f"sub_{parent_session_id or 'anon'}_{int(time.time())}"
+    results = []
+
+    for event in run_agent(task, model=model):
+        # Write to subagent's own transcript
+        append_transcript(sub_session, {"event": event, "ts": time.time()})
+        obj = json.loads(event)
+        if obj.get("type") == "assistant":
+            for block in obj.get("message", {}).get("content", []):
+                if isinstance(block, dict) and block.get("type") == "text":
+                    results.append(block.get("text", ""))
+        if obj.get("type") == "result":
+            break
+
+    return "".join(results), sub_session
+
+
+# ── P5: Permission Stack ────────────────────────────────────────────────────
+
+# Layered permission gates for tool execution
+PERMISSION_RULES = {
+    # Tool → permission level: "allow" (always), "gate" (log + allow), "deny" (block)
+    "Read": "allow",
+    "Glob": "allow",
+    "Grep": "allow",
+    "Write": "gate",      # Log all writes
+    "Edit": "gate",       # Log all edits
+    "Bash": "gate",       # Log all shell commands
+}
+
+# Dangerous command patterns — require extra scrutiny
+DANGEROUS_PATTERNS = [
+    re.compile(r"rm\s+-rf", re.IGNORECASE),
+    re.compile(r"del\s+/[sfq]", re.IGNORECASE),
+    re.compile(r"format\s+[a-z]:", re.IGNORECASE),
+    re.compile(r"DROP\s+TABLE", re.IGNORECASE),
+    re.compile(r"DELETE\s+FROM", re.IGNORECASE),
+    re.compile(r"git\s+push\s+.*--force", re.IGNORECASE),
+    re.compile(r"git\s+reset\s+--hard", re.IGNORECASE),
+]
+
+PERMISSION_LOG = os.path.join(WORK_DIR, "tmp", "permission_audit.jsonl")
+
+def check_permission(tool_name, tool_input):
+    """Check if a tool call is permitted. Returns (allowed: bool, reason: str)."""
+    level = PERMISSION_RULES.get(tool_name, "gate")
+
+    if level == "deny":
+        return False, f"Tool {tool_name} is denied by permission stack"
+
+    # Check for dangerous patterns in Bash commands
+    if tool_name == "Bash":
+        cmd = tool_input.get("command", "")
+        for pattern in DANGEROUS_PATTERNS:
+            if pattern.search(cmd):
+                _log_permission("BLOCKED", tool_name, tool_input, f"Dangerous pattern: {pattern.pattern}")
+                return False, f"Dangerous command pattern detected: {pattern.pattern}"
+
+    # Check for writes outside WORK_DIR
+    if tool_name in ("Write", "Edit"):
+        fp = tool_input.get("file_path", "")
+        if fp and not fp.startswith(WORK_DIR) and not fp.startswith("C:\\Users\\raest\\Documents\\Karma"):
+            _log_permission("BLOCKED", tool_name, tool_input, f"Write outside WORK_DIR: {fp}")
+            return False, f"Write outside permitted directory: {fp}"
+
+    if level == "gate":
+        _log_permission("ALLOWED", tool_name, tool_input, "Gated — logged")
+
+    return True, "ok"
+
+def _log_permission(decision, tool_name, tool_input, reason):
+    """Append to permission audit log."""
+    try:
+        with open(PERMISSION_LOG, "a", encoding="utf-8") as f:
+            f.write(json.dumps({
+                "ts": time.time(),
+                "decision": decision,
+                "tool": tool_name,
+                "input_summary": str(tool_input)[:200],
+                "reason": reason,
+            }) + "\n")
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":

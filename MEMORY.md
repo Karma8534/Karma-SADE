@@ -136,6 +136,9 @@ Voice NEVER routes through claude.ai. Sovereign pipeline only (Whisper → text 
 - **Phase E DONE**: Memory/02-extracted-primitives.md — 15 USE NOW + 5 DEFER. Codex wrapper analysis merged.
 - **P1 NEXUS AGENT BUILT**: Scripts/nexus_agent.py — own agentic loop with 6 tools (Read/Write/Edit/Bash/Glob/Grep). OpenRouter LLM + tool execution loop. Wired as Tier 3 fallback in cc_server_p1.py.
 - **P2 CRASH-SAFE**: append_transcript() writes user message BEFORE API call. JSONL transcripts in tmp/transcripts/.
+- **P3 AUTO-COMPACTION**: When messages exceed 80K chars, summarize old history via LLM, keep last 4 messages intact.
+- **P4 SUBAGENT ISOLATION**: run_subagent() — isolated message history + own transcript. Parent state never modified.
+- **P5 PERMISSION STACK**: 3-level gates (allow/gate/deny) + dangerous command pattern detection + write-outside-workdir block + audit log.
 
 ## Next Session Starts Here
 1. `/resurrect`
