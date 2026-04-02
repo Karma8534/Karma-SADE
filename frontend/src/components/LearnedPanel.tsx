@@ -4,11 +4,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useKarmaStore } from '@/store/karma';
 
 interface Learning {
-  id: string;
-  content: string;
-  from: string;
-  created_at: string;
-  type?: string;
+  id: number;
+  type: string;
+  learning: string;
+  detail: string;
+  date: string;
 }
 
 export function LearnedPanel({ onClose }: { onClose: () => void }) {
@@ -132,20 +132,17 @@ function LearningItem({ learning }: { learning: Learning }) {
       onClick={() => setExpanded(!expanded)}
     >
       <div className="flex items-center gap-2">
-        <span className="text-karma-accent text-[10px] font-bold">{l.from || 'karma'}</span>
-        <span className="text-karma-muted text-[9px]">
-          {l.created_at ? new Date(l.created_at).toLocaleString() : ''}
-        </span>
-        {l.type && (
-          <span className="text-karma-accent2 text-[9px] bg-karma-surface px-1 rounded">
-            {l.type}
-          </span>
-        )}
+        <span className="text-karma-accent text-[10px] font-bold">karma</span>
+        <span className="text-karma-accent2 text-[9px] bg-karma-surface px-1 rounded">{l.type}</span>
+        <span className="text-karma-muted text-[9px]">{l.date}</span>
         <span className="text-karma-muted text-[9px] ml-auto">{expanded ? '\u25BC' : '\u25B6'}</span>
       </div>
-      <div className={`text-karma-text text-[11px] mt-0.5 ${expanded ? '' : 'line-clamp-1'}`}>
-        {l.content}
-      </div>
+      <div className="text-karma-text text-[11px] mt-0.5">{l.learning}</div>
+      {expanded && l.detail && (
+        <div className="text-karma-muted text-[10px] mt-1 pl-2 border-l-2 border-karma-accent/30">
+          {l.detail}
+        </div>
+      )}
     </div>
   );
 }

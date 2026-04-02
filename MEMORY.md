@@ -129,6 +129,8 @@ Voice NEVER routes through claude.ai. Sovereign pipeline only (Whisper → text 
 - **F3+F4**: Archon alerts changed from urgency=blocking to informational in cc_hourly_report.py on K2. Auto-approve now catches them.
 - **Learnings expand**: Click any learning item to expand/collapse full text.
 - **Instant auto-approve**: Known agents (regent, karma, cc, kcc) auto-approve immediately. Unknown senders wait 2min.
+- **Learnings field mapping fixed**: API returns {type, learning, detail, date} not {content, from}. Click expands detail.
+- **PROOF filter in AGORA**: Passing proofs (grade=1.0, 100%, pass) no longer show APPROVE/REJECT buttons.
 
 ## Next Session Starts Here
 1. `/resurrect`

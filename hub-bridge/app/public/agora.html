@@ -178,7 +178,8 @@ async function _load() {
         var fromColor = e.from==='regent'?'#10b981':e.from==='cc'?'#3b82f6':e.from==='cc-watchdog'?'#f59e0b':'#9ca3af';
         var c = (e.content || '').toLowerCase();
         var isAck = c.startsWith('acknowledged') || c.includes('watchdog ack') || c.includes('[sovereign approve') || c.includes('[sovereign reject') || c.includes('[sovereign redirect') || e.from === 'colby';
-        var needsAction = !isAck && (cls === 'promote' || cls === 'self-edit' || cls === 'pitfall' || cls === 'decision' || cls === 'proof');
+        var isPassingProof = cls === 'proof' && (c.includes('grade=1.0') || c.includes('100%') || c.includes('pass'));
+        var needsAction = !isAck && !isPassingProof && (cls === 'promote' || cls === 'self-edit' || cls === 'pitfall' || cls === 'decision' || cls === 'proof');
         var actions = needsAction ? '<div class="ev-actions">' +
           '<button class="ev-btn approve" onclick="sovereignAction(\'' + e.id + '\',\'approve\',this)">APPROVE</button>' +
           '<button class="ev-btn reject" onclick="sovereignAction(\'' + e.id + '\',\'reject\',this)">REJECT</button>' +
