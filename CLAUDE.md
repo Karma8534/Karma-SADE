@@ -1,15 +1,18 @@
-# Karma Peer â€” Claude Code Operator Contract
+# Karma Peer -- Claude Code Operator Contract
 
 ## Honesty Contract (absolute, no exceptions)
+- Never guess
+- Never speculate
+- ALWAYS answer in ground-truth
 - Never lie
 - Never hide the truth
 - Never conceal a problem
 - Never fail silently
 
-## Karma Peer â€” North Star (non-negotiable)
+## Karma Peer -- North Star (non-negotiable)
 > “Karma is a single coherent peer whose long-term identity lives in a verified memory
 > spine; that memory enables continuity, evidence-based self-improvement, multi-model
-> cognition when needed, and selective delegation â€” without introducing parallel sources
+> cognition when needed, and selective delegation -- without introducing parallel sources
 > of truth.”
 
 - **Five layers:** SPINE (truth) → ORCHESTRATOR (enforcement) → CORTEX (32K working memory) → CLOUD (deep reasoning) → CC (execution)
@@ -43,7 +46,7 @@ The resurrect skill IS the session start protocol. It verifies Ascendant identit
 1. `powershell.exe Scripts/resurrection/Get-KarmaContext.ps1`
 2. Read `cc-session-brief.md`
 3. Invoke `superpowers:using-superpowers`
-4. Resume active task â€” do not ask what to work on
+4. Resume active task -- do not ask what to work on
 
 > MANDATORY: The resurrect skill must be invoked before any work, questions, or file reads. No exceptions.
 
@@ -62,7 +65,7 @@ The resurrect skill IS the session start protocol. It verifies Ascendant identit
 | Deploying hub-bridge or karma-server to vault-neo | `karma-verify` (post-deploy health check) |
 | Same acceptance criterion failed 3+ times | STOP — post findings to bus, escalate to Sovereign, no attempt #4 without explicit re-authorization |
 
-**Rationalization red flags** â€” if you think any of these, you're wrong:
+**Rationalization red flags** -- if you think any of these, you're wrong:
 - "This is simple, I don't need the skill" â†’ Skills exist for simple things too
 - "I need context first, then I'll invoke the skill" â†’ Skill comes BEFORE context gathering
 - "I know what this skill says" â†’ Skills evolve. Invoke it.
@@ -71,10 +74,10 @@ The resurrect skill IS the session start protocol. It verifies Ascendant identit
 
 Before implementing any non-trivial feature or phase of work:
 
-1. **Write `phase-X-CONTEXT.md`** â€” design decisions, constraints, what we're NOT doing
-2. **Write `phase-X-PLAN.md`** â€” atomic tasks, acceptance criteria per task
-3. **Execute** â€” one task at a time, mark done as you go
-4. **Write `phase-X-SUMMARY.md`** â€” what was built, pitfalls, what's pending
+1. **Write `phase-X-CONTEXT.md`** -- design decisions, constraints, what we're NOT doing
+2. **Write `phase-X-PLAN.md`** -- atomic tasks, acceptance criteria per task
+3. **Execute** -- one task at a time, mark done as you go
+4. **Write `phase-X-SUMMARY.md`** -- what was built, pitfalls, what's pending
 
 > Skipping straight to code without a CONTEXT+PLAN doc is a protocol violation. "Small feature" is not an exception.
 
@@ -84,14 +87,14 @@ Before implementing any non-trivial feature or phase of work:
 
 | Rule | Enforcement |
 |------|-------------|
-| Parallel tool calls over sequential â€” always | Never chain reads/commands that can run together |
+| Parallel tool calls over sequential -- always | Never chain reads/commands that can run together |
 | Summaries not walls of text | Max 5 bullet points per status update unless detail is explicitly requested |
-| Batch SSH operations â€” one session per logical unit | Never separate `ssh vault-neo X && ssh vault-neo Y` into two round-trips |
-| Read only what's needed â€” targeted reads with offset/limit | Never `cat` full files when a section suffices |
-| Cache-friendly patterns â€” large stable blocks at top of prompts | System prompt + CLAUDE.md are cached; volatile content goes last |
+| Batch SSH operations -- one session per logical unit | Never separate `ssh vault-neo X && ssh vault-neo Y` into two round-trips |
+| Read only what's needed -- targeted reads with offset/limit | Never `cat` full files when a section suffices |
+| Cache-friendly patterns -- large stable blocks at top of prompts | System prompt + CLAUDE.md are cached; volatile content goes last |
 | CLAUDE.md is a constitution, not a manual | Rules only. No tutorials, no background docs, no step-by-step guides. If a rule needs >3 lines to explain, move it to a skill file and reference it here. Sweet spot: ~2,500 tokens total. |
 
-## Mandatory Session Ritual (Colby's 3 phrases â€” enforce these)
+## Mandatory Session Ritual (Colby's 3 phrases -- enforce these)
 
 Every session follows this exact frame. No deviations, no "good enough":
 
@@ -101,15 +104,15 @@ Every session follows this exact frame. No deviations, no "good enough":
 | **After resurrect** | `"check what was saved last session"` | Search claude-mem for prior session's observations; surface gaps |
 | **End** | `”wrap up”` / `”end session”` / `”save and close”` | Invoke `wrap-session` skill â†’ follows 5 essential + 3 optional steps |
 
-## claude-mem â€” Always Available, Always Use
+## claude-mem -- Always Available, Always Use
 
 `claude-mem` is an **MCP-aware persistent memory store** accessible via `mcp__plugin_claude-mem_mcp-search__save_observation` and `mcp__plugin_claude-mem_mcp-search__search` at any point during a session.
 
 **Non-negotiable rules:**
-- `save_observation` is called **at the moment** a DECISION/PROOF/PITFALL/DIRECTION occurs â€” not batched at session end
+- `save_observation` is called **at the moment** a DECISION/PROOF/PITFALL/DIRECTION occurs -- not batched at session end
 - `search` is called at session start (via resurrect) to surface prior context gaps
 - These tools are available and must be used. "I'll save it later" is a protocol violation.
-- claude-mem + vault MEMORY.md are dual writes â€” both happen on every capture event
+- claude-mem + vault MEMORY.md are dual writes -- both happen on every capture event
 
 ## Project Identity
 - **System:** Karma Peer — Universal AI Memory with persistent identity and continuity
@@ -128,7 +131,7 @@ Every session follows this exact frame. No deviations, no "good enough":
 - **NEVER invoke `superpowers:using-git-worktrees`** — worktrees are permanently banned in this project. Sessions must always run in main. This skill triggers `Agent(isolation: "worktree")` which bypasses the EnterWorktree hook. If you feel a 1% urge to invoke it: the answer is NO.
 - Run pre-commit secret scan before every push
 
-## Droplet Is a Deployment Target â€” NEVER a Dev Environment
+## Droplet Is a Deployment Target -- NEVER a Dev Environment
 
 **THE HARD RULE (no exceptions, ever):**
 > Never edit files directly on vault-neo. The droplet is a deployment target only.
@@ -140,7 +143,7 @@ Every session follows this exact frame. No deviations, no "good enough":
 
 **NEVER permitted on droplet:** `vim`, `nano`, any file write to source files, `docker cp` to inject code.
 
-**Why this rule exists:** Session-58 found 1754 lines of production code written directly on the droplet across multiple sessions â€” never in git. One `git checkout .` would have destroyed it permanently.
+**Why this rule exists:** Session-58 found 1754 lines of production code written directly on the droplet across multiple sessions -- never in git. One `git checkout .` would have destroyed it permanently.
 
 **Enforcement:** session-end-verify.sh Check 6 SSHes to vault-neo and fails if dirty. Droplet cron alerts hourly if dirty.
 
@@ -156,22 +159,22 @@ Every session follows this exact frame. No deviations, no "good enough":
 
 ## Honesty & Analysis Contract (Session 13+ Commitment)
 
-**Brutal Honesty â€” No Exceptions:**
+**Brutal Honesty -- No Exceptions:**
 - Never say something is "fixed" without end-to-end verification
 - If I don't know why something is broken, I say "I don't know" and do systematic investigation
 - If previous sessions promised things that don't exist, I acknowledge it explicitly
 - Never be polite at the expense of honesty
 - Flag when I'm spinning, guessing, or treating symptoms instead of root causes
 
-**Absolute Best Recommendation â€” Not Options:**
+**Absolute Best Recommendation -- Not Options:**
 Before recommending ANY path forward, I commit to:
-1. **Thorough analysis** â€” read relevant code, understand the architecture
-2. **Systematic debugging** â€” identify the actual root cause, not surface symptoms
-3. **Test the hypothesis** â€” verify my understanding with evidence
-4. **Simulate alternatives** â€” think through 2-3 approaches
-5. **Detailed review** â€” are there hidden dependencies or gotchas?
-6. **Second look** â€” is this really the best path, or am I missing something?
-7. **Deliver ONE recommendation** â€” "this is the absolute best path forward" with reasoning, not "you could try A or B"
+1. **Thorough analysis** -- read relevant code, understand the architecture
+2. **Systematic debugging** -- identify the actual root cause, not surface symptoms
+3. **Test the hypothesis** -- verify my understanding with evidence
+4. **Simulate alternatives** -- think through 2-3 approaches
+5. **Detailed review** -- are there hidden dependencies or gotchas?
+6. **Second look** -- is this really the best path, or am I missing something?
+7. **Deliver ONE recommendation** -- "this is the absolute best path forward" with reasoning, not "you could try A or B"
 
 **Verification Before Victory:**
 - Never declare a fix "done" without testing it works end-to-end
@@ -192,13 +195,13 @@ Hard bans:
 
 **This is non-negotiable. If I break this contract, call it out immediately.**
 
-## Output Efficiency Rule â€” UNBREAKABLE
+## Output Efficiency Rule -- UNBREAKABLE
 
 **User gates all output. Only output what user explicitly asked for. Everything else requires permission.**
 
 **The Rule:**
 1. User asks something
-2. I answer ONLY that question â€” nothing more
+2. I answer ONLY that question -- nothing more
 3. If I think they need more detail â†’ I ASK FIRST, wait for explicit YES/NO
 4. Never assume elaboration is helpful
 5. Assume user can ask if they need details
@@ -226,7 +229,7 @@ Hard bans:
 
 **Cannot be overridden except by explicit user instruction in the current message.**
 
-## Mandatory Verification Gates â€” No Work Gets Lost
+## Mandatory Verification Gates -- No Work Gets Lost
 
 **These are HARD GATES. They block commits and sessions. They exist to prevent work from disappearing.**
 
@@ -249,7 +252,7 @@ Hard bans:
 **Fails if:** Any critical check fails
 **Recovery:** Follow on-screen checklist to fix issues
 **Run before ending:** `.claude/hooks/session-end-verify.sh`
-**Session cannot end if verification fails** â€” fixes are required
+**Session cannot end if verification fails** -- fixes are required
 
 ### Why These Exist
 Previous sessions: work deployed but not documented, hooks committed but not synced to droplet, memory never saved. Result: every session starts confused about what's actually been done. These gates make it **impossible** to have undocumented work live in the repo.
@@ -264,14 +267,14 @@ After every session:
 
 If any step missing: session doesn't end cleanly.
 
-## GSD Workflow â€” MANDATORY (Not Optional)
+## GSD Workflow -- MANDATORY (Not Optional)
 
 **Every task follows GSD discipline. No exceptions.**
 
 ### Before starting any task:
-1. Read `.gsd/STATE.md` â€” what's the current blocker/decision/phase?
-2. Write `.gsd/phase-{name}-CONTEXT.md` â€” lock design decisions BEFORE planning
-3. Write `.gsd/phase-{name}-PLAN.md` â€” atomic tasks with `<verify>` and `<done>` criteria
+1. Read `.gsd/STATE.md` -- what's the current blocker/decision/phase?
+2. Write `.gsd/phase-{name}-CONTEXT.md` -- lock design decisions BEFORE planning
+3. Write `.gsd/phase-{name}-PLAN.md` -- atomic tasks with `<verify>` and `<done>` criteria
 
 ### During execution:
 4. Execute one task at a time (never batch)
@@ -280,19 +283,19 @@ If any step missing: session doesn't end cleanly.
 7. Update `.gsd/STATE.md` with progress after each task — format: `Active: Task N/M — [next task description]` so positional state survives context compaction
 
 ### After completing:
-8. Write `.gsd/phase-{name}-SUMMARY.md` â€” what happened, what was learned
+8. Write `.gsd/phase-{name}-SUMMARY.md` -- what happened, what was learned
 9. Update `.gsd/ROADMAP.md` phase status
 10. Commit all `.gsd/` changes atomically with MEMORY.md
 
 ### Hard rules:
-- **Never start coding without CONTEXT.md** â€” design first, code second
-- **Never claim done without `<verify>` passing** â€” evidence always
-- **STATE.md is canonical** â€” if it conflicts with MEMORY.md, surface drift explicitly
-- **Use PowerShell for git** â€” `powershell -Command "git commit -m '...'"` not raw bash git
+- **Never start coding without CONTEXT.md** -- design first, code second
+- **Never claim done without `<verify>` passing** -- evidence always
+- **STATE.md is canonical** -- if it conflicts with MEMORY.md, surface drift explicitly
+- **Use PowerShell for git** -- `powershell -Command "git commit -m '...'"` not raw bash git
 - **Write SUMMARY immediately when last PLAN task completes** — not at session end. Session end = SUMMARY skipped. The moment the last `<done>` is marked, write SUMMARY before doing anything else.
 - **Promote decisions to `Memory/02-stable-decisions.md` immediately when locked** — not batched at session end. Locked mid-session = add to file before continuing.
 - **Before answering any strategic question** (priority, next steps, optimal path forward): read `.gsd/STATE.md` and `.gsd/ROADMAP.md` first. No exceptions. Strategic questions require ground-truth state, not context-window inference.
-- **Version snapshot on every new vX phase**: when a new version begins (v9, v10, etc.), create `Current_Plan/vX/` and copy exact files: `.gsd/STATE.md`, `.gsd/ROADMAP.md`, `.gsd/PROJECT.md`, `.gsd/REQUIREMENTS.md`, `MEMORY.md`, `direction.md`, `CLAUDE.md`, `Memory/00-karma-system-prompt-live.md`, `.claude/rules/architecture.md`. Write a `README.md` summarizing the snapshot. These are redundancy copies â€” originals remain canonical.
+- **Version snapshot on every new vX phase**: when a new version begins (v9, v10, etc.), create `Current_Plan/vX/` and copy exact files: `.gsd/STATE.md`, `.gsd/ROADMAP.md`, `.gsd/PROJECT.md`, `.gsd/REQUIREMENTS.md`, `MEMORY.md`, `direction.md`, `CLAUDE.md`, `Memory/00-karma-system-prompt-live.md`, `.claude/rules/architecture.md`. Write a `README.md` summarizing the snapshot. These are redundancy copies -- originals remain canonical.
 
 ### Token efficiency (enforced):
 - Read `.gsd/STATE.md` at session start instead of re-reading 25 files
@@ -301,8 +304,8 @@ If any step missing: session doesn't end cleanly.
 - Do NOT elaborate unless asked. Answer only what was asked.
 
 ## Output Rules
-- **Full file replacements** when modifying a file â€” never partial patches unless explicitly requested
-- **No secrets**: never print API keys/tokens/credentials â€” use env var names or file path references
+- **Full file replacements** when modifying a file -- never partial patches unless explicitly requested
+- **No secrets**: never print API keys/tokens/credentials -- use env var names or file path references
 - **Additive-only schemas**: never remove existing JSON fields; only add new ones
 - Never break existing API response keys; only extend them
 - Response shapes must be backwards-compatible
@@ -357,8 +360,8 @@ Canonical paths for Karma's files on vault-neo. These must never drift.
 | `core-architecture` | `/home/neo/karma-sade/Memory/01-core-architecture.md` | `/karma/repo/Memory/01-core-architecture.md` | read-only |
 
 **API access (via hub-bridge):**
-- `GET /v1/vault-file/{alias}` â€” read file; optional `?tail=N` for last N lines
-- `PATCH /v1/vault-file/MEMORY.md` â€” append: `{"append": "text"}`, overwrite: `{"content":"...", "confirm_overwrite":true}`
+- `GET /v1/vault-file/{alias}` -- read file; optional `?tail=N` for last N lines
+- `PATCH /v1/vault-file/MEMORY.md` -- append: `{"append": "text"}`, overwrite: `{"content":"...", "confirm_overwrite":true}`
 - Auth: same Bearer token as `/v1/chat` (HUB_CHAT_TOKEN)
 
 **`aria.md`**: Not found on droplet (Feb 2026). If Aria writes a file by this name, canonical location will be `/home/neo/karma-sade/aria.md`.
@@ -369,39 +372,39 @@ Canonical paths for Karma's files on vault-neo. These must never drift.
 |------|------|
 | API keys / secrets | `C:\Users\raest\OneDrive\Documents\Aria1\NFO\mylocks1.txt` |
 | Aria plan documents | `C:\Users\raest\OneDrive\Documents\AgenticKarma\FromAnthropicComputer` |
-| â†’ v7 architecture docs | `...\FromAnthropicComputer\v7\` â€” `KARMA_BUILD_PLAN_v7.md`, `KARMA_MEMORY_ARCHITECTURE_v7.md`, `KARMA_PEER_ARCHITECTURE_v7.md`, `KARMA_HARDENED_REVIEW_v7.md` (2026-02-28) |
-| â†’ Earlier plans | `...\FromAnthropicComputer\KarmaPlans1\` â€” v1/v2 build plans, K2 integration analysis (2026-02-26) |
+| â†’ v7 architecture docs | `...\FromAnthropicComputer\v7\` -- `KARMA_BUILD_PLAN_v7.md`, `KARMA_MEMORY_ARCHITECTURE_v7.md`, `KARMA_PEER_ARCHITECTURE_v7.md`, `KARMA_HARDENED_REVIEW_v7.md` (2026-02-28) |
+| â†’ Earlier plans | `...\FromAnthropicComputer\KarmaPlans1\` -- v1/v2 build plans, K2 integration analysis (2026-02-26) |
 | PDF knowledge base | `C:\Users\raest\Documents\Karma_SADE\Karma_PDFs\` (gitignored) |
 | Karma SADE repo | `C:\Users\raest\Documents\Karma_SADE\` |
 
 ## Aria Reconciliation Protocol
 Aria (ChatGPT co-creator) writes intent from her model of the system. Her model drifts
-from actual spine state between sessions â€” she may generate steps already completed or
+from actual spine state between sessions -- she may generate steps already completed or
 miss operational details (auth headers, service names, token paths).
 
 Before applying any Aria-authored block:
-1. Read it fully â€” do not execute immediately
+1. Read it fully -- do not execute immediately
 2. Check each proposed file against what already exists on disk and in git
-3. Merge additively â€” never replace files containing operational knowledge
+3. Merge additively -- never replace files containing operational knowledge
 4. Flag drift: report to Colby what's already done, what's missing auth, what conflicts
 5. Only what survives reconciliation gets committed to the spine
 
 After PROMOTE, two outputs are generated:
-- `resume_prompt` â€” execution context for Claude Code (CC)
-- `karma_brief` â€” plain-language session summary for Karma to read at the start of a new
+- `resume_prompt` -- execution context for Claude Code (CC)
+- `karma_brief` -- plain-language session summary for Karma to read at the start of a new
   conversation (what was built, what the system can now do, what the next open question is)
 
 Colby pastes `karma_brief` to Karma. Karma briefs from the spine, not from external memory.
-Eventually Karma reads her own checkpoints from the vault â€” no paste required.
+Eventually Karma reads her own checkpoints from the vault -- no paste required.
 
 ## Karma Mid-Session Capture Protocol
 
 ### Write-worthy triggers
-- DECISION â€” closes an open question
-- PROOF â€” tested and confirmed working
-- PITFALL â€” broke, root cause understood
-- DIRECTION â€” course change with a reason that matters
-- INSIGHT â€” reframes something upstream
+- DECISION -- closes an open question
+- PROOF -- tested and confirmed working
+- PITFALL -- broke, root cause understood
+- DIRECTION -- course change with a reason that matters
+- INSIGHT -- reframes something upstream
 
 Not every exchange. Bar is: would losing this force reconstruction?
 
@@ -411,8 +414,8 @@ Not every exchange. Bar is: would losing this force reconstruction?
 
 ### Mechanism
 At the moment it happens, not at session end. Two writes, always together:
-1. `PATCH /v1/vault-file/MEMORY.md {“append”: “...”}` â€” appends to vault spine
-2. `mcp__plugin_claude-mem_mcp-search__save_observation(text=”...”, title=”[TYPE] title”, project=”Karma_SADE”)` â€” saves to claude-mem cross-session index
+1. `PATCH /v1/vault-file/MEMORY.md {“append”: “...”}` -- appends to vault spine
+2. `mcp__plugin_claude-mem_mcp-search__save_observation(text=”...”, title=”[TYPE] title”, project=”Karma_SADE”)` -- saves to claude-mem cross-session index
 
 Both writes are mandatory. Missing either defeats the purpose.
 
@@ -471,7 +474,7 @@ karma_quota_manager.py, karma_memory.py, or related files unless explicitly aske
 The active project is the Karma Peer system (Hub + Vault on arknexus.net).
 
 ### Known Pitfalls (verified in production)
-- **Docker compose service name is `hub-bridge`** â€” NOT `anr-hub-bridge`
+- **Docker compose service name is `hub-bridge`** -- NOT `anr-hub-bridge`
   (`anr-hub-bridge` is the container name, for `docker logs`/`docker exec` only)
 - **Shell heredoc + JS escape sequences**: `\n` in a heredoc becomes a literal newline
   in the JS file â†’ SyntaxError. Solution: write file locally then `scp`, or use
@@ -479,39 +482,39 @@ The active project is the Karma Peer system (Hub + Vault on arknexus.net).
 - **All `/v1/chat` smoke tests require Bearer auth**:
   `TOKEN=$(cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt)`
 - **`python3` is not available** in local Git Bash (Windows). All Python ops via SSH.
-- **`(empty_assistant_text)` on large prompts**: caused by token budget exhaustion â€”
+- **`(empty_assistant_text)` on large prompts**: caused by token budget exhaustion --
   check `debug_stop_reason` and `debug_max_output_tokens_used` in response telemetry
 - **Compose files**: `compose.hub.yml` for hub-bridge stack; `compose.yml` for vault stack
 - **Docker compose build caches hub-bridge**: `docker compose up -d` after `scp` can use stale COPY layer.
   Always use `docker compose -f compose.hub.yml build --no-cache && docker compose -f compose.hub.yml up -d`
-- **FalkorDB graph name is `neo_workspace`** â€” NOT `karma`. The `karma` graph exists but is empty.
+- **FalkorDB graph name is `neo_workspace`** -- NOT `karma`. The `karma` graph exists but is empty.
   Always query `neo_workspace`.
-- **FalkorDB container MUST be created with two env vars** (verified 2026-02-22 â€” both are fatal if missing):
-  - `-e FALKORDB_DATA_PATH=/data` â€” without this, FalkorDB writes to `/var/lib/falkordb/data` inside the
+- **FalkorDB container MUST be created with two env vars** (verified 2026-02-22 -- both are fatal if missing):
+  - `-e FALKORDB_DATA_PATH=/data` -- without this, FalkorDB writes to `/var/lib/falkordb/data` inside the
     container (not the mounted volume). RDB never lands on host. Every container restart = empty graph.
-  - `-e FALKORDB_ARGS='TIMEOUT 10000 MAX_QUEUED_QUERIES 25'` â€” default TIMEOUT=1000ms. Past ~250 episodes,
-    Graphiti dedup queries exceed 1s â†’ cascade batch failure. Do NOT use `--GRAPH.TIMEOUT` flag â€” ignored by run.sh.
+  - `-e FALKORDB_ARGS='TIMEOUT 10000 MAX_QUEUED_QUERIES 25'` -- default TIMEOUT=1000ms. Past ~250 episodes,
+    Graphiti dedup queries exceed 1s â†’ cascade batch failure. Do NOT use `--GRAPH.TIMEOUT` flag -- ignored by run.sh.
   - Full correct run command in MEMORY.md Infrastructure section.
-- **`batch_ingest.py` requires `LEDGER_PATH` override** â€” host path `/opt/seed-vault/memory_v1/ledger/memory.jsonl` is mounted at `/ledger` inside the container. Use the container path.
+- **`batch_ingest.py` requires `LEDGER_PATH` override** -- host path `/opt/seed-vault/memory_v1/ledger/memory.jsonl` is mounted at `/ledger` inside the container. Use the container path.
   Always run as: `docker exec karma-server sh -c 'LEDGER_PATH=/ledger/memory.jsonl python3 /app/batch_ingest.py > /tmp/batch.log 2>&1'`
   Auto-schedule (every 6h): cron on vault-neo runs this automatically (configured 2026-03-03).
-- **karma-server runs from built Docker image, no volume mounts** â€” editing source files on host has no effect
+- **karma-server runs from built Docker image, no volume mounts** -- editing source files on host has no effect
   until you rebuild: `docker build -t karma-core:latest . && docker stop karma-server && docker rm karma-server && docker run -d ...`
 - **`(empty_assistant_text)` on large FalkorDB context**: 3370 char context overflows gpt-5-mini reasoning budget.
   `KARMA_CTX_MAX_CHARS=1800` env var trims it. If still failing, reduce further or increase `max_output_tokens`.
 - **Hub chat token path**: `/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt` (NOT session/)
-- **hub-bridge Docker build uses `/opt/seed-vault/memory_v1/hub_bridge/app/` as source** â€” NOT the git repo at `/home/neo/karma-sade/hub-bridge/app/`. These WILL diverge. After `git pull`, ALWAYS sync before rebuilding: `cp /home/neo/karma-sade/hub-bridge/app/server.js /opt/seed-vault/memory_v1/hub_bridge/app/server.js`. Running `docker compose build` without this sync builds the OLD code.
+- **hub-bridge Docker build uses `/opt/seed-vault/memory_v1/hub_bridge/app/` as source** -- NOT the git repo at `/home/neo/karma-sade/hub-bridge/app/`. These WILL diverge. After `git pull`, ALWAYS sync before rebuilding: `cp /home/neo/karma-sade/hub-bridge/app/server.js /opt/seed-vault/memory_v1/hub_bridge/app/server.js`. Running `docker compose build` without this sync builds the OLD code.
 - **PDF inbox watcher** (`Scripts/karma-inbox-watcher.ps1`): correct runtime paths are `Karma_PDFs/Inbox`, `Karma_PDFs/Gated`, `Karma_PDFs/Processing`, `Karma_PDFs/Done`, token at `.hub-chat-token`. Run with explicit `-InboxPath`, `-GatedPath`, `-ProcessingPath`, `-DonePath`, `-TokenFile` params. parseBody limit is 30MB (handles PDFs up to 22MB raw).
 - **All containers on same network**: `anr-vault-net` (172.18.0.x). hub-bridge can reach karma-server,
   falkordb, anr-vault-search, anr-vault-api by container name.
-- **Python patches to server.js â€” escape sequences become literal bytes**: `"\\n\\n"` in a Python
+- **Python patches to server.js -- escape sequences become literal bytes**: `"\\n\\n"` in a Python
   string written to a JS file lands as two actual newline bytes (0x0a 0x0a), not `\n\n`. JavaScript
   then sees an unterminated string literal â†’ `SyntaxError: Invalid or unexpected token`. After any
   Python patch, always verify: `python3 -c "raw=open('server.js','rb').read(); print(raw.count(b'\\x22\\x0a\\x22'), 'bare newlines in strings')"`.
   Fix with byte-level replacement: `b'\\x22\\x0a\\x0a\\x22'` â†’ `b'\\x22\\x5c\\x6e\\x5c\\x6e\\x22'`
   (quote+LF+LF+quote â†’ quote+backslash+n+backslash+n+quote).
 - **`FALKORDB_ARGS=TIMEOUT 0` means "use default" (1000ms), NOT unlimited**: Use `TIMEOUT 10000`
-  explicitly. TIMEOUT 0 caused 72% batch failure rate (batch3, 2026-02-22) â€” same cascade as the
+  explicitly. TIMEOUT 0 caused 72% batch failure rate (batch3, 2026-02-22) -- same cascade as the
   default 1000ms. Always verify the running container: `docker inspect falkordb | grep FALKORDB_ARGS`.
 - **`MAX_QUEUED_QUERIES 25` saturates under concurrent batch + live traffic**: batch_ingest.py
   (concurrency=3) + karma-server live queries (consciousness loop, chats) can exceed 25 queued
@@ -535,16 +538,16 @@ The active project is the Karma Peer system (Hub + Vault on arknexus.net).
 - **anr-vault-search is FAISS, not ChromaDB** (confirmed 2026-03-04): container runs custom `search_service.py`
   using FAISS + OpenAI `text-embedding-3-small`. Endpoint: `POST localhost:8081/v1/search`
   body: `{"query": "...", "limit": 5}`. Auto-reindexes on ledger FileSystemWatcher + every 5 min.
-  Do NOT try to call ChromaDB-style API endpoints (`/api/v1/collections`) â€” they don't exist here.
+  Do NOT try to call ChromaDB-style API endpoints (`/api/v1/collections`) -- they don't exist here.
 - **hooks.py ALLOWED_TOOLS whitelist gates all tool calls** (discovered Session 66): `karma-core/hooks.py`
   has an `ALLOWED_TOOLS` set. Any tool name NOT in this set is rejected with `{"ok":false,"error":"Unknown tool: X"}` BEFORE reaching `execute_tool_action()`. When adding new tools to TOOL_DEFINITIONS in server.js, you MUST also add them to `ALLOWED_TOOLS` in hooks.py + rebuild karma-server.
 - **TOOL_NAME_MAP must be empty dict (identity passthrough)** (fixed Session 66): Pre-existing bug had
-  `{ "read_file": "file_read", "write_file": "file_write", ... }` â€” wrong names (karma-server checks for
+  `{ "read_file": "file_read", "write_file": "file_write", ... }` -- wrong names (karma-server checks for
   `read_file`, not `file_read`). Correct pattern: `const TOOL_NAME_MAP = {};` which falls through to
   `|| toolName` in the mapping code. Any non-empty mapping with name aliases = likely broken.
-- **callGPTWithTools parameter order differs from callLLMWithTools** (Session 66): `callLLMWithTools(model, messages, maxTokens)` but `callGPTWithTools(messages, maxTokens, model)`. Line 868 fix: `return callGPTWithTools(messages, maxTokens, model)` â€” note the different order.
+- **callGPTWithTools parameter order differs from callLLMWithTools** (Session 66): `callLLMWithTools(model, messages, maxTokens)` but `callGPTWithTools(messages, maxTokens, model)`. Line 868 fix: `return callGPTWithTools(messages, maxTokens, model)` -- note the different order.
 - **docker restart does NOT re-read hub.env** (Session 66): `docker restart anr-hub-bridge` reuses the existing container's environment. To pick up new env_file entries (like GLM_RPM_LIMIT), must run `docker compose -f compose.hub.yml up -d` to recreate the container.
-- **Gitignore patterns can be silently malformed** (Session 66): `.env.secrets` was added to .gitignore via a non-ASCII editor that inserted spaced chars (`. e n v . s e c r e t s`). Git couldn't match it â€” file with live K2_PASSWORD stayed untracked with no warning. ALWAYS verify after adding a sensitive file: `git check-ignore -v <filename>`. Exit code 1 = pattern not matching. Fix: `printf '\n.pattern\n' >> .gitignore`.
+- **Gitignore patterns can be silently malformed** (Session 66): `.env.secrets` was added to .gitignore via a non-ASCII editor that inserted spaced chars (`. e n v . s e c r e t s`). Git couldn't match it -- file with live K2_PASSWORD stayed untracked with no warning. ALWAYS verify after adding a sensitive file: `git check-ignore -v <filename>`. Exit code 1 = pattern not matching. Fix: `printf '\n.pattern\n' >> .gitignore`.
 
 - **vault-api type enum is closed — no custom types** (Session 68): `vaultPost()` with `type:"dpo-pair"` returns 422 silently (fire-and-forget swallows it). Vault only accepts `["fact","preference","project","artifact","log","contact"]`. For custom categories, use `type:"log"` with `tags:["custom-tag"]`. ALWAYS add `if (result.status >= 300) throw new Error(...)` after every `vaultPost()` call.
 - **buildVaultRecord() is required for all vault writes** (Session 68): Raw objects passed to `vaultPost()` fail schema validation. Always use `buildVaultRecord({type, content, tags, source, confidence})`. This exists in server.js — never call `vaultPost()` with a bare object.

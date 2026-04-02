@@ -790,3 +790,179 @@ K2 has 99 blocks
 Fetching K2 cortex state...
 K2 has 95 blocks
 ERROR: P1 cortex unreachable
+Fetching K2 cortex state...
+K2 has 107 blocks
+ERROR: P1 cortex unreachable
+Fetching K2 cortex state...
+K2 has 95 blocks
+ERROR: P1 cortex unreachable
+Fetching K2 cortex state...
+K2 has 93 blocks
+P1 has 261 known labels
+Missing from P1: 93 blocks
+Synced 93/93 blocks to P1
+Fetching K2 cortex state...
+K2 has 103 blocks
+P1 has 246 known labels
+Traceback (most recent call last):
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 100, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 84, in main
+    missing = [(label, text) for label, text in k2_blocks if label not in p1_labels]
+                                 ^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2, got 4)
+Fetching K2 cortex state...
+K2 has 105 blocks
+P1 has 246 known labels
+Traceback (most recent call last):
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 100, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 84, in main
+    missing = [(label, text) for label, text in k2_blocks if label not in p1_labels]
+                                 ^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2, got 4)
+Fetching K2 cortex state...
+K2 has 99 blocks
+P1 has 246 known labels
+Traceback (most recent call last):
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 100, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 84, in main
+    missing = [(label, text) for label, text in k2_blocks if label not in p1_labels]
+                                 ^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2, got 4)
+Fetching K2 cortex state...
+K2 has 106 blocks
+P1 has 246 known labels
+Traceback (most recent call last):
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 100, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 84, in main
+    missing = [(label, text) for label, text in k2_blocks if label not in p1_labels]
+                                 ^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2, got 4)
+Fetching K2 cortex state...
+K2 has 109 blocks
+P1 has 246 known labels
+Traceback (most recent call last):
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 100, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 84, in main
+    missing = [(label, text) for label, text in k2_blocks if label not in p1_labels]
+                                 ^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2, got 4)
+Fetching K2 cortex state...
+K2 has 77 blocks
+P1 has 246 known labels
+Traceback (most recent call last):
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 100, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 84, in main
+    missing = [(label, text) for label, text in k2_blocks if label not in p1_labels]
+                                 ^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2, got 4)
+Fetching K2 cortex state...
+K2 has 64 blocks
+P1 has 246 known labels
+Traceback (most recent call last):
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 100, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 84, in main
+    missing = [(label, text) for label, text in k2_blocks if label not in p1_labels]
+                                 ^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2, got 4)
+Fetching K2 cortex state...
+K2 has 62 blocks
+P1 has 246 known labels
+Traceback (most recent call last):
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 100, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 84, in main
+    missing = [(label, text) for label, text in k2_blocks if label not in p1_labels]
+                                 ^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2, got 4)
+Fetching K2 cortex state...
+K2 has 119 blocks
+P1 has 246 known labels
+Traceback (most recent call last):
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 100, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 84, in main
+    missing = [(label, text) for label, text in k2_blocks if label not in p1_labels]
+                                 ^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2, got 4)
+Fetching K2 cortex state...
+K2 has 126 blocks
+P1 has 246 known labels
+Traceback (most recent call last):
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 100, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 84, in main
+    missing = [(label, text) for label, text in k2_blocks if label not in p1_labels]
+                                 ^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2, got 4)
+Fetching K2 cortex state...
+K2 has 93 blocks
+P1 has 246 known labels
+Traceback (most recent call last):
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 100, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 84, in main
+    missing = [(label, text) for label, text in k2_blocks if label not in p1_labels]
+                                 ^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2, got 4)
+Fetching K2 cortex state...
+K2 has 78 blocks
+P1 has 246 known labels
+Traceback (most recent call last):
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 100, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 84, in main
+    missing = [(label, text) for label, text in k2_blocks if label not in p1_labels]
+                                 ^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2, got 4)
+Fetching K2 cortex state...
+K2 has 60 blocks
+P1 has 246 known labels
+Traceback (most recent call last):
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 100, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 84, in main
+    missing = [(label, text) for label, text in k2_blocks if label not in p1_labels]
+                                 ^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2, got 4)
+Fetching K2 cortex state...
+K2 has 68 blocks
+P1 has 246 known labels
+Traceback (most recent call last):
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 100, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 84, in main
+    missing = [(label, text) for label, text in k2_blocks if label not in p1_labels]
+                                 ^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2, got 4)
+Fetching K2 cortex state...
+K2 has 90 blocks
+P1 has 246 known labels
+Traceback (most recent call last):
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 100, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\raest\Documents\Karma_SADE\Scripts\cortex\sync_k2_to_p1.py", line 84, in main
+    missing = [(label, text) for label, text in k2_blocks if label not in p1_labels]
+                                 ^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2, got 4)

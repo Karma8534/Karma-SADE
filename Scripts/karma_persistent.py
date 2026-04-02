@@ -141,13 +141,22 @@ def _read_file_head(path, max_chars=2000):
     except Exception:
         return ""
 
+def _read_file_tail(path, max_chars=2000):
+    """Read the TAIL of a file — for chronological files like MEMORY.md where newest is last."""
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            content = f.read()
+        return content[-max_chars:] if len(content) > max_chars else content
+    except Exception:
+        return ""
+
 def build_karma_context(task_message):
-    """Build full context: persona + MEMORY.md + STATE.md + self-evolution rules + task."""
+    """Build full context: persona + MEMORY.md (tail) + STATE.md + self-evolution rules + task."""
     parts = [KARMA_PERSONA_HEADER]
     persona = _read_file_head(PERSONA_FILE, 2000)
     if persona:
         parts.append(f"[YOUR IDENTITY]\n{persona}\n\n")
-    memory = _read_file_head(MEMORY_FILE, 1500)
+    memory = _read_file_tail(MEMORY_FILE, 1500)  # TAIL: newest state is at the bottom
     if memory:
         parts.append(f"[CURRENT STATE — MEMORY.md]\n{memory}\n\n")
     state = _read_file_head(STATE_FILE, 800)
