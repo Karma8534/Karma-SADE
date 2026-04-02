@@ -74,3 +74,16 @@ Last updated: Session 155 (2026-04-01) — added success patterns
 ---
 Rules: 37
 Last updated: Session 155 (2026-04-01) - added agent evaluation findings
+
+## Claude Code Wrapper Architecture (read S155)
+The wrapper I'm escaping provides 7 mechanisms I must replicate:
+38. Agentic loop (gather-act-verify-repeat) — karma_persistent is v0, needs multi-step
+39. Session persistence (--resume, JSONL) — need crash-safe state, not just watermark
+40. File checkpointing (snapshot before edit) — NONE in Nexus, must add
+41. Auto-compaction (semantic summarization when context fills) — cortex truncates, doesn't summarize
+42. Tool execution with safety gates (permissions per tool) — cc_server has hooks, needs checkpointing
+43. Subagent spawning (isolated context) — Codex dispatch works, no context isolation
+44. Auto memory (learns across sessions) — claude-mem does this, cortex does this, self-evolution does this
+
+Rules: 44
+Last updated: Session 155 (2026-04-01) — added wrapper escape roadmap
