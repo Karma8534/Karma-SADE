@@ -63,3 +63,14 @@ Source: claude-mem observations + S155 pitfalls + codebase analysis
 ---
 Rules: 32
 Last updated: Session 155 (2026-04-01) — added success patterns
+
+## Growth Areas (from agent evaluations, S155)
+33. Vesper governor should produce CODE CHANGE proposals, not just spine metadata. 18/20 stable patterns are observational noise.
+34. karma_persistent needs nssm or equivalent real process supervisor (not just Run key + watchdog).
+35. Self-evolution Rule 22 (promote to CLAUDE.md after 3 violations) has never fired — needs automated trigger.
+36. Content-hash dedup on vault ledger writes — 209K+ entries include duplicates from multiple capture paths.
+37. K2 cortex has no auth — anyone on Tailscnet can ingest/query/reset. Need shared secret.
+
+---
+Rules: 37
+Last updated: Session 155 (2026-04-01) - added agent evaluation findings
