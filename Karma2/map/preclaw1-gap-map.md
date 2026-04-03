@@ -1,0 +1,237 @@
+# Preclaw1 → Nexus Capability Gap Map
+
+**Source:** `docs/wip/preclaw1/preclaw1/src` (1,902 files — full Claude Code desktop app)
+**Date:** 2026-04-03, Session 159
+**Purpose:** Every feature in preclaw1 mapped against Nexus current state.
+**Exclusions:** buddy (companion sprite), undercover (stealth), coordinator (KAIROS enterprise)
+
+---
+
+## LEGEND
+
+- **HAVE** = Nexus has this, verified working
+- **PARTIAL** = Backend exists but no UI surface, or UI exists but incomplete
+- **MISSING** = Not implemented at all
+- **N/A** = Excluded or not applicable
+
+---
+
+## 1. SETTINGS SYSTEM
+
+| preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
+|-----------------|---------------|-------------|-----|
+| Settings page (General/Account/Privacy/Billing/Usage/Capabilities/Connectors) | `commands/config/`, `utils/settings/` | **MISSING** | No settings UI at all |
+| Model selection | `commands/model/` | **PARTIAL** | Backend has effort dropdown; no model picker |
+| Theme/color config | `commands/theme/`, `commands/color/` | **MISSING** | Hardcoded dark theme |
+| Output style config | `commands/output-style/` | **MISSING** | No output style options |
+| Keybindings config | `commands/keybindings/`, `keybindings/` | **MISSING** | No keybinding UI |
+| Vim mode | `commands/vim/`, `vim/` | **MISSING** | No vim mode |
+| Language preference | Settings schema `language` | **MISSING** | No language setting |
+| Privacy settings | `commands/privacy-settings/` | **MISSING** | No privacy UI |
+| Personal preferences (system prompt injection) | Settings schema | **MISSING** | No user preferences injection |
+| Permission rules (allow/deny/ask) | `commands/permissions/`, `types/permissions.ts` | **MISSING** | No permission management UI |
+| Hooks config | Settings schema `hooks` | **PARTIAL** | Backend hooks work; no UI config |
+| Auto-update channel | Settings schema `autoUpdatesChannel` | **MISSING** | No update management |
+| MCP server management | Settings schema (enable/disable/allow/deny) | **PARTIAL** | CC has MCP; no management UI |
+| Plugin config | Settings schema `pluginConfigs` | **MISSING** | No plugin system |
+| Worktree config | Settings schema `worktree.*` | **MISSING** | Worktrees banned in this project |
+| Fast mode toggle | `commands/fast/` | **MISSING** | No fast mode |
+| Thinking mode toggle | Settings `thinkingEnabled` | **MISSING** | No thinking toggle |
+| Prompt suggestions | Settings `promptSuggestionEnabled` | **MISSING** | No prompt suggestions |
+
+## 2. SESSION MANAGEMENT
+
+| preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
+|-----------------|---------------|-------------|-----|
+| Session history sidebar | `history.ts`, `commands/resume/` | **MISSING** | No session list |
+| Resume session | `commands/resume/` | **PARTIAL** | CC --resume works; no UI picker |
+| Rewind/checkpoint | `commands/rewind/` | **MISSING** | No rewind capability |
+| Export conversation | `commands/export/` | **MISSING** | No export UI |
+| Compact session | `commands/compact/` | **MISSING** | No compact UI |
+| Session rename | `commands/rename/` | **MISSING** | No rename |
+| Session share | `commands/share/` | **MISSING** | No share |
+| Session tag | `commands/tag/` | **MISSING** | No tagging |
+| Teleport session | `commands/teleport/` | **MISSING** | No teleport |
+| Session diff counts (+N -N) | Sidebar UI | **MISSING** | No diff visibility |
+
+## 3. COMMANDS / SLASH COMMANDS
+
+| preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
+|-----------------|---------------|-------------|-----|
+| 80+ slash commands | `commands/` (207 files) | **MISSING** | No slash command system in browser UI |
+| Command autocomplete on `/` | Component (SlashCommandPicker equivalent) | **MISSING** | No command picker |
+| /help | `commands/help/` | **MISSING** | No help system |
+| /status | `commands/status/` | **PARTIAL** | /v1/status exists; no UI |
+| /doctor (diagnostics) | `commands/doctor/` | **MISSING** | No diagnostics UI |
+| /cost | `commands/cost/` | **MISSING** | No cost display |
+| /usage | `commands/usage/` | **MISSING** | No usage display |
+| /plan (structured planning) | `commands/plan/` | **MISSING** | No plan mode UI |
+| /context (show context size) | `commands/context/` | **PARTIAL** | Context panel exists; no context budget display |
+| /clear (clear conversation) | `commands/clear/` | **HAVE** | CLEAR button in header |
+| /memory | `commands/memory/` | **PARTIAL** | MEMORY button opens external localhost:37778 |
+
+## 4. TOOLS
+
+| preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
+|-----------------|---------------|-------------|-----|
+| 40+ tools (file, bash, grep, glob, etc.) | `tools/` (184 files) | **HAVE** | CC has all tools natively |
+| Tool permission dialogs | `components/permissions/` | **MISSING** | No permission UI in browser |
+| Tool progress indicators | `components/ToolUseLoader.tsx` | **HAVE** | Pills + blocks render |
+| Tool search/discovery | `tools/ToolSearchTool/` | **MISSING** | No tool search UI |
+| Notebook editing | `tools/NotebookEditTool/` | **HAVE** | CC has it natively |
+
+## 5. SCHEDULING / DISPATCH / TASKS
+
+| preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
+|-----------------|---------------|-------------|-----|
+| Scheduled tasks UI | `hooks/useScheduledTasks.ts` | **MISSING** | No scheduling UI |
+| Cron task creation | `tools/ScheduleCronTool/` | **HAVE** | CC has CronCreate natively |
+| Background tasks | `tools/TaskCreateTool/` etc. | **HAVE** | CC has Agent/Task tools |
+| Task list/status UI | `tasks/`, `hooks/useTasksV2.ts` | **MISSING** | No task visibility in browser |
+| Dispatch (agent coordination) | `utils/swarm/`, `commands/agents/` | **MISSING** | No dispatch UI |
+
+## 6. MULTI-AGENT / TEAMS
+
+| preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
+|-----------------|---------------|-------------|-----|
+| Agent spawn + status | `tools/AgentTool/`, `components/agents/` | **PARTIAL** | CC spawns agents; no UI visibility |
+| Agent gallery/wizard | `components/agents/new-agent-creation/` | **MISSING** | No agent creation UI |
+| Team create/delete | `tools/TeamCreateTool/TeamDeleteTool/` | **MISSING** | No team UI |
+| Agent progress line | `components/AgentProgressLine.tsx` | **MISSING** | No agent progress in browser |
+| Team memory sync | `services/teamMemorySync/` | **MISSING** | No team memory |
+
+## 7. MEMORY SYSTEM
+
+| preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
+|-----------------|---------------|-------------|-----|
+| Memory file scanning | `memdir/memoryScan.ts` | **PARTIAL** | We have MEMORY.md + claude-mem; no memdir scan |
+| Auto memory extraction | `services/extractMemories/` | **HAVE** | fact_extractor + memory_extractor hooks |
+| Auto dream (consolidation) | `services/autoDream/` | **PARTIAL** | /dream skill exists; not automated |
+| Session memory management | `services/SessionMemory/` | **PARTIAL** | Brain wire exists; no per-session isolation |
+| Memory editor UI | `commands/memory/`, `components/memory/` | **PARTIAL** | MEMORY button opens external tool |
+
+## 8. IDE INTEGRATION
+
+| preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
+|-----------------|---------------|-------------|-----|
+| IDE auto-connect | `hooks/useIdeAutoConnect.tsx` | **MISSING** | No IDE integration |
+| LSP integration | `services/lsp/`, `tools/LSPTool/` | **MISSING** | No LSP |
+| Show in IDE | `hooks/useShowInIDE.ts` | **MISSING** | No IDE bridge |
+| IDE status indicator | `components/IdeStatusIndicator.tsx` | **MISSING** | No IDE awareness |
+
+## 9. CHROME / BROWSER INTEGRATION
+
+| preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
+|-----------------|---------------|-------------|-----|
+| Claude in Chrome | `commands/chrome/`, `utils/claudeInChrome/` | **MISSING** | No Chrome extension |
+| Chrome prompts integration | `hooks/usePromptsFromClaudeInChrome.tsx` | **MISSING** | No Chrome integration |
+
+## 10. PLUGINS / EXTENSIONS
+
+| preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
+|-----------------|---------------|-------------|-----|
+| Plugin marketplace | `commands/plugin/BrowseMarketplace.tsx` | **MISSING** | No plugin system |
+| Plugin install/manage | `commands/plugin/ManagePlugins.tsx` | **MISSING** | No plugins |
+| Plugin configuration | `commands/plugin/PluginSettings.tsx` | **MISSING** | No plugin config |
+| Plugin trust warnings | `commands/plugin/PluginTrustWarning.tsx` | **MISSING** | No trust system |
+
+## 11. VOICE
+
+| preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
+|-----------------|---------------|-------------|-----|
+| Voice mode (hold-to-talk) | `commands/voice/`, `voice/` | **MISSING** | No voice |
+| Voice dictation | `services/voice.ts` | **MISSING** | No STT |
+| Voice enabled setting | Settings schema | **MISSING** | No voice config |
+
+## 12. COST TRACKING
+
+| preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
+|-----------------|---------------|-------------|-----|
+| Per-request cost display | `cost-tracker.ts`, `costHook.ts` | **PARTIAL** | Stream events include cost; no persistent display |
+| /cost command | `commands/cost/` | **MISSING** | No cost command |
+| Cost threshold dialog | `components/CostThresholdDialog.tsx` | **MISSING** | No cost warnings |
+| Session cost summary | `commands/stats/` | **MISSING** | No stats |
+
+## 13. GIT INTEGRATION (UI)
+
+| preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
+|-----------------|---------------|-------------|-----|
+| Git status display | Various | **PARTIAL** | /v1/git/status endpoint exists; minimal UI |
+| Diff viewer | `commands/diff/`, `components/diff/` | **MISSING** | No diff viewer |
+| Commit UI | `commands/commit.ts` | **MISSING** | No commit UI |
+| PR creation workflow | `commands/commit-push-pr.ts` | **MISSING** | No PR UI |
+| Branch management | `commands/branch/` | **MISSING** | No branch UI |
+
+## 14. AUTO-UPDATE
+
+| preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
+|-----------------|---------------|-------------|-----|
+| Auto-updater | `components/AutoUpdater.tsx` | **MISSING** | No auto-update |
+| Release channel selection | Settings `autoUpdatesChannel` | **MISSING** | No channel config |
+| Release notes | `commands/release-notes/` | **MISSING** | No release notes |
+
+## 15. BRIDGE / TRANSPORT
+
+| preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
+|-----------------|---------------|-------------|-----|
+| RPC bridge (CLI ↔ REPL) | `bridge/` (31 files) | **PARTIAL** | proxy.js ↔ cc_server; no bidirectional bridge |
+| WebSocket transport | `cli/transports/WebSocketTransport.ts` | **MISSING** | SSE only |
+| Hybrid transport | `cli/transports/HybridTransport.ts` | **MISSING** | No hybrid |
+| SSE transport | `cli/transports/SSETransport.ts` | **HAVE** | SSE streaming works |
+
+## 16. RENDERING / UI
+
+| preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
+|-----------------|---------------|-------------|-----|
+| 389 React components | `components/` | **PARTIAL** | ~15 components in Next.js frontend |
+| Markdown rendering | `components/Markdown.tsx` | **PARTIAL** | Basic markdown in chat |
+| Syntax highlighted code | `components/HighlightedCode.tsx` | **MISSING** | No syntax highlighting |
+| Structured diff display | `components/StructuredDiff.tsx` | **MISSING** | No diff display |
+| Virtual message list | `components/VirtualMessageList.tsx` | **MISSING** | No virtualization |
+| Quick open dialog | `components/QuickOpenDialog.tsx` | **MISSING** | No quick open |
+| Global search | `components/GlobalSearchDialog.tsx` | **MISSING** | No global search |
+
+---
+
+## SUMMARY
+
+| Category | HAVE | PARTIAL | MISSING | N/A |
+|----------|------|---------|---------|-----|
+| Settings | 0 | 3 | 15 | 0 |
+| Session Management | 0 | 1 | 9 | 0 |
+| Commands | 1 | 3 | 5 | 0 |
+| Tools | 3 | 0 | 2 | 0 |
+| Scheduling/Tasks | 2 | 0 | 3 | 0 |
+| Multi-Agent | 0 | 1 | 4 | 0 |
+| Memory | 1 | 3 | 1 | 0 |
+| IDE | 0 | 0 | 4 | 0 |
+| Chrome | 0 | 0 | 2 | 0 |
+| Plugins | 0 | 0 | 4 | 0 |
+| Voice | 0 | 0 | 3 | 0 |
+| Cost | 0 | 1 | 3 | 0 |
+| Git UI | 0 | 1 | 4 | 0 |
+| Auto-Update | 0 | 0 | 3 | 0 |
+| Bridge | 1 | 1 | 2 | 0 |
+| UI/Rendering | 0 | 2 | 5 | 0 |
+| **TOTAL** | **8** | **16** | **69** | **0** |
+
+**8 features fully implemented. 16 partial. 69 MISSING.**
+
+The Nexus has ~8.6% of preclaw1's user-facing feature surface.
+
+---
+
+## CRITICAL BLOCKERS (must resolve for wrapper independence)
+
+1. **No settings system** — Users can't configure anything
+2. **No session management UI** — Can't resume, browse, or manage sessions
+3. **No slash command system** — Can't invoke skills/commands from browser
+4. **No agent/task visibility** — Agents run blind
+5. **No permission UI** — Can't approve/deny tool operations from browser
+6. **SSE only, no WebSocket** — No bidirectional real-time
+7. **No IDE integration** — Can't bridge to VS Code/JetBrains
+8. **No plugin system** — Can't extend functionality
+
+---
+
+*This map is the canonical reference for what Nexus must build. Updated by CC only when features ship.*

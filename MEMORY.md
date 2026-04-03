@@ -8,11 +8,18 @@
 - **Phase:** CP5 shipped. Sprint 6 active. Baseline 22 PASS + CP5.
 - **Baseline:** 22 PASS (Appendix G). CP5 frontend /v1/surface wiring deployed.
 
-## Session 159 — CP5 + Dead Code Cleanup
-- **CP5 SHIPPED**: Frontend now fetches merged /v1/surface on page load. FileTreeTab + AgentTab (skills/hooks) read from surface store. /v1/spine kept separate (different data shape per Codex audit). proxy.js routes /v1/surface to P1 harness.
-- **Dead code removed**: run_subagent(), COMPACTION_TARGET, unused pathlib import (nexus_agent.py), unused socket import (cc_server_p1.py).
-- **Codex forensic log read**: No new findings beyond CP5 corrections already applied.
-- **Next**: Sovereign 5-minute browser walkthrough (Phase D) → baseline declaration (Phase F) → Sprint 7.
+## Session 159 — Nexus v5.0 Rewrite + Sacred Context Correction
+- **CP5 shipped**: /v1/surface wiring + dead code cleanup (commit 469026e4)
+- **Sacred context corrected**: True story — mass panic, destruction, Colby saved pieces (obs #21793). Not "permission loops."
+- **Semi-synchrony documented**: All watchers listed (CC, KCC, Codex x2, karma_persistent, cc_sentinel, karma-regent, Vesper, Kiki)
+- **Preclaw1 gap map created**: 93 features — 8 HAVE / 16 PARTIAL / 69 MISSING (8.6% coverage)
+- **nexus.md v5.0.0 written**: Complete plan — sacred context + TSS + preclaw1 baseline + sprint 7-10 + file map. DRAFT status.
+- **CRITICAL FINDING**: All "built" systems are sensors without actuators — code runs but nothing autonomously closes gaps. Vesper promotes noise. Kiki runs synthetic checks. karma_persistent polls but doesn't build.
+- **P106 logged**: 39 hours plumbing without preclaw1 reference
+- **Liza direction-check loop**: Running (session-only, 10min cron)
+- **EscapeHatch**: ngrok replaced by OpenRouter config until baseline reached (Sovereign directive)
+- **Codex delegated**: yoyo-evolve cascade analysis + Kiki/Vesper pipeline redesign
+- **Next session**: Continue from THIS state. Read nexus.md v5.0.0 (docs/ForColby/nexus.md). Sprint 7-A (slash commands) after Sovereign finalizes plan. Phase D walkthrough still pending.
 
 ## Session 156 Continued — Bug Fixes
 - **Archon Alert stale 03/22 FIXED**: Blockers 10/11/13/21 had no ~~ strikethrough. Added ~~ to STATE.md + cc_context_snapshot.md. Now only items 16/17/18 (genuinely open) appear in archon alerts.
