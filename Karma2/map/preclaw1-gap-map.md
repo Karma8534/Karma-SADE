@@ -20,7 +20,7 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| Settings page (General/Account/Privacy/Billing/Usage/Capabilities/Connectors) | `commands/config/`, `utils/settings/` | **PARTIAL** | No settings UI at all [S159: 5-tab modal (General/Model/Hooks/MCP/Permissions)] [S160: StatusBar shows context %, msg count, health dots] |
+| Settings page (General/Account/Privacy/Billing/Usage/Capabilities/Connectors) | `commands/config/`, `utils/settings/` | **HAVE** | No settings UI at all [S159: 5-tab modal (General/Model/Hooks/MCP/Permissions)] [S160: StatusBar shows context %, msg count, health dots] [S160: local handler shows msg breakdown, context %, cost, model] |
 | Model selection | `commands/model/` | **PARTIAL** | Backend has effort dropdown; no model picker [S159: effort dropdown + tier display] |
 | Theme/color config | `commands/theme/`, `commands/color/` | **PARTIAL** | Hardcoded dark theme [S160: dark/light toggle in Settings General tab] |
 | Output style config | `commands/output-style/` | **MISSING** | No output style options |
@@ -197,7 +197,7 @@
 
 | Category | HAVE | PARTIAL | MISSING | N/A |
 |----------|------|---------|---------|-----|
-| Settings | 2 | 7 | 8 | 1 |
+| Settings | 3 | 6 | 8 | 1 |
 | Session Management | 2 | 1 | 0 | 7 |
 | Commands | 7 | 2 | 2 | 0 |
 | Tools | 3 | 0 | 2 | 0 |
@@ -213,9 +213,9 @@
 | Auto-Update | 0 | 0 | 3 | 0 |
 | Bridge | 1 | 1 | 2 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **18** | **20** | **49** | **8** |
+| **TOTAL** | **19** | **19** | **49** | **8** |
 
-**18 features fully implemented. 20 partial. 49 MISSING.**
+**19 features fully implemented. 19 partial. 49 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 

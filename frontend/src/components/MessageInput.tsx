@@ -48,6 +48,20 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'usage') {
+      const store = useKarmaStore.getState();
+      const chars = store.messages.reduce((s, m) => s + (m.content?.length || 0), 0);
+      const userMsgs = store.messages.filter(m => m.role === 'user').length;
+      const karmaMsgs = store.messages.filter(m => m.role === 'karma').length;
+      const toolMsgs = store.messages.filter(m => m.role === 'tool-evidence').length;
+      store.addMessage({
+        id: Date.now().toString(36), role: 'system',
+        content: `**USAGE**\n  Messages: ${store.messages.length} (${userMsgs} you, ${karmaMsgs} Karma, ${toolMsgs} tools)\n  Context: ${(chars/1024).toFixed(1)}KB / 128KB (${Math.min(100, chars/1280).toFixed(0)}%)\n  Session cost: $${store.sessionCost.toFixed(4)}\n  Model: cc-sovereign (Max subscription, $0/request)`,
+        timestamp: new Date().toISOString(),
+      });
+      setText('');
+      return;
+    }
     if (cmd.name === 'export') {
       const store = useKarmaStore.getState();
       const lines = store.messages.map(m => {
