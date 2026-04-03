@@ -40,6 +40,7 @@ const COMMANDS: SlashCommand[] = [
   { name: 'commit', description: 'Create a git commit', category: 'dev', action: 'prompt' },
   { name: 'review', description: 'Code review current changes', category: 'dev', action: 'prompt' },
   { name: 'convert', description: 'Convert new PDFs in Karma_PDFs to markdown', category: 'tools' },
+  { name: 'watchers', description: 'Show all active watchers and their status', category: 'tools' },
   { name: 'skills', description: 'List available skills', category: 'tools' },
   { name: 'hooks', description: 'Show hook status', category: 'tools' },
   { name: 'agents', description: 'Show agent status', category: 'tools' },

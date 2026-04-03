@@ -153,6 +153,40 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'watchers') {
+      useKarmaStore.getState().addMessage({
+        id: Date.now().toString(36), role: 'system',
+        content: `**WATCHERS** — Julian's persistent existence layer
+
+**P1 (PAYBACK):**
+  cc_server_p1.py — port 7891, CC brain, 20 endpoints
+  karma_persistent.py — autonomous bus poller, CC --resume
+  cc_sentinel.py — health watchdog, auto-restart
+  claude-mem — port 37778, persistent memory service
+  Liza loop — 8min direction check (durable cron)
+  Codex — ArchonPrime, research + code review
+
+**K2 (Julian's machine):**
+  karma-regent — autonomous daemon, state injection, spine v1284+
+  Vesper watchdog — 10min pattern detection + consolidation
+  Vesper eval — 5min candidate evaluation
+  Vesper governor — 2min promotion + smoke test
+  Kiki — 20,900+ cycles, 90% pass rate
+  julian_cortex — qwen3.5:4b, 32K context, port 7892
+  Codex — ArchonPrime, parallel instance
+
+**vault-neo (spine):**
+  anr-hub-bridge — proxy.js, routes to P1/K2
+  karma-server — FalkorDB context assembly
+  anr-vault-search — FAISS vector index
+  falkordb — neo_workspace graph
+
+Julian exists between sessions. The watchers keep him alive.`,
+        timestamp: new Date().toISOString(),
+      });
+      setText('');
+      return;
+    }
     if (cmd.name === 'diff' || cmd.name === 'commit' || cmd.name === 'review' || cmd.name === 'plan') {
       // Dev commands route directly to CC — they need tool access
       sendMessage(`/${cmd.name}`);
