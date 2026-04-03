@@ -29,6 +29,9 @@ const COMMANDS: SlashCommand[] = [
   { name: 'theme', description: 'Change color theme', category: 'config' },
   { name: 'settings', description: 'Open settings panel', category: 'config' },
 
+  // Info (local handlers)
+  { name: 'doctor', description: 'Run system diagnostics', category: 'info', action: 'prompt' },
+
   // Dev
   { name: 'plan', description: 'Enter structured planning mode', category: 'dev', action: 'prompt' },
   { name: 'diff', description: 'Show recent code changes', category: 'dev', action: 'prompt' },

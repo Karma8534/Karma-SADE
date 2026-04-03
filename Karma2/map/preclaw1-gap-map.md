@@ -60,9 +60,9 @@
 |-----------------|---------------|-------------|-----|
 | 80+ slash commands | `commands/` (207 files) | **PARTIAL** | No slash command system in browser UI [S159: SlashCommandPicker component exists] [S160: 20 commands defined, autocomplete working, CC handles natively] |
 | Command autocomplete on `/` | Component (SlashCommandPicker equivalent) | **HAVE** | No command picker [S160: SlashCommandPicker wired to MessageInput, 20 commands, arrow/tab/enter] |
-| /help | `commands/help/` | **MISSING** | No help system |
+| /help | `commands/help/` | **HAVE** | No help system [S160: inline help renders in chat with commands/shortcuts/architecture/identity] |
 | /status | `commands/status/` | **PARTIAL** | /v1/status exists; no UI |
-| /doctor (diagnostics) | `commands/doctor/` | **MISSING** | No diagnostics UI |
+| /doctor (diagnostics) | `commands/doctor/` | **PARTIAL** | No diagnostics UI [S160: /doctor command defined, routes to CC for diagnostics] |
 | /cost | `commands/cost/` | **PARTIAL** | No cost display [S160: StatusBar shows session + monthly cost + context budget] |
 | /usage | `commands/usage/` | **MISSING** | No usage display |
 | /plan (structured planning) | `commands/plan/` | **MISSING** | No plan mode UI |
@@ -199,7 +199,7 @@
 |----------|------|---------|---------|-----|
 | Settings | 0 | 7 | 10 | 1 |
 | Session Management | 0 | 0 | 3 | 7 |
-| Commands | 2 | 5 | 4 | 0 |
+| Commands | 3 | 6 | 2 | 0 |
 | Tools | 3 | 0 | 2 | 0 |
 | Scheduling/Tasks | 2 | 0 | 3 | 0 |
 | Multi-Agent | 0 | 1 | 4 | 0 |
@@ -213,9 +213,9 @@
 | Auto-Update | 0 | 0 | 3 | 0 |
 | Bridge | 1 | 1 | 2 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **9** | **22** | **56** | **8** |
+| **TOTAL** | **10** | **23** | **54** | **8** |
 
-**9 features fully implemented. 22 partial. 56 MISSING.**
+**10 features fully implemented. 23 partial. 54 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 

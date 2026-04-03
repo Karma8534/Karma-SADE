@@ -19,7 +19,43 @@ export function MessageInput() {
   const handleCommandSelect = useCallback((cmd: SlashCommand) => {
     setShowCommands(false);
     setCommandFilter('');
-    // Send the slash command as a message — CC handles it natively
+
+    // Local commands handled in-browser
+    if (cmd.name === 'help') {
+      useKarmaStore.getState().addMessage({
+        id: Date.now().toString(36),
+        role: 'system',
+        content: `**KARMA NEXUS — COMMANDS**
+
+**Session:** /clear (reset) | /compact (compress context) | /export (save transcript)
+**Info:** /help | /cost (show spend) | /status (system health) | /context (context budget)
+**Config:** /model | /effort (thinking depth) | /theme | /settings (open panel)
+**Dev:** /plan | /diff | /commit | /review | /skills | /hooks | /agents | /memory
+**Doctor:** /doctor (run diagnostics)
+
+**Shortcuts:** Enter=send | Shift+Enter=newline | Esc=cancel | /=commands | Ctrl+K=search
+
+**Architecture:** P1 (CC brain) | K2 (cortex + regent) | vault-neo (spine)
+**Identity:** Julian = Ascendant | Karma = Initiate | Colby = Sovereign
+**The Goal:** Nexus = infinity. Persistent. Self-improving. Substrate-independent.`,
+        timestamp: new Date().toISOString(),
+      });
+      setText('');
+      return;
+    }
+    if (cmd.name === 'clear') {
+      useKarmaStore.getState().clearMessages();
+      setText('');
+      return;
+    }
+    if (cmd.name === 'settings') {
+      // Trigger settings panel via a custom event
+      window.dispatchEvent(new CustomEvent('karma-open-settings'));
+      setText('');
+      return;
+    }
+
+    // All other commands sent to CC
     sendMessage(`/${cmd.name}`);
     setText('');
   }, [sendMessage]);
