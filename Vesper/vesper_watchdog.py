@@ -169,6 +169,117 @@ def write_gap_brief_section(backlog):
 """
 
 
+CONSOLIDATION_FILE = CACHE_DIR / "vesper_consolidations.jsonl"
+CONSOLIDATION_THRESHOLD = 10  # consolidate after 10+ unconsolidated entries
+OLLAMA_URL = os.environ.get("K2_OLLAMA_URL", "http://localhost:11434")
+OLLAMA_MODEL = os.environ.get("K2_OLLAMA_MODEL", "qwen3.5:4b")
+
+
+def consolidate_memories():
+    """Memory Agent pattern: find cross-cutting insights across recent evolution entries.
+    Uses local Ollama ($0) to reason over unconsolidated entries and generate connections.
+    Inspired by Google's always-on-memory-agent (obs #22288, #22319)."""
+    if not EVOLUTION_LOG.exists():
+        return 0
+
+    # Load entries that haven't been consolidated yet
+    lines = [l for l in EVOLUTION_LOG.read_text().splitlines() if l.strip()]
+    entries = []
+    for line in lines[-50:]:  # last 50 entries
+        try:
+            e = json.loads(line)
+            if not e.get("consolidated"):
+                entries.append(e)
+        except Exception:
+            continue
+
+    if len(entries) < CONSOLIDATION_THRESHOLD:
+        print(f"[watchdog] consolidation: {len(entries)} unconsolidated (threshold {CONSOLIDATION_THRESHOLD}), skipping")
+        return 0
+
+    # Build prompt for Ollama — ask it to find connections
+    summaries = []
+    for e in entries[:20]:  # batch of 20
+        src = e.get("source", "unknown")
+        cat = e.get("category", "")
+        grade = e.get("grade", "?")
+        tool = "with tools" if e.get("tool_used") else "no tools"
+        summaries.append(f"[{e.get('ts', '')}] from={e.get('from', '?')} src={src} cat={cat} grade={grade} {tool}")
+
+    prompt = (
+        "You are analyzing Karma's recent activity log. Find cross-cutting patterns and generate insights.\n\n"
+        "ENTRIES:\n" + "\n".join(summaries) + "\n\n"
+        "Respond with a JSON object:\n"
+        '{"connections": "what patterns connect these entries", '
+        '"insights": "what this means for Karma\'s growth", '
+        '"recommendation": "one specific improvement to make"}\n'
+        "JSON only, no markdown."
+    )
+
+    try:
+        import urllib.request
+        payload = json.dumps({
+            "model": OLLAMA_MODEL,
+            "messages": [{"role": "user", "content": prompt}],
+            "stream": False,
+            "options": {"temperature": 0.3, "num_ctx": 4096},
+        }).encode()
+        req = urllib.request.Request(
+            f"{OLLAMA_URL}/api/chat", data=payload,
+            headers={"Content-Type": "application/json"}, method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=60) as r:
+            data = json.loads(r.read())
+        content = data.get("message", {}).get("content", "")
+
+        # Strip thinking tags
+        if "<think>" in content and "</think>" in content:
+            content = content[content.index("</think>") + len("</think>"):].strip()
+
+        # Parse JSON response
+        import re
+        m = re.search(r"\{.*\}", content, re.DOTALL)
+        if m:
+            insight = json.loads(m.group())
+        else:
+            insight = {"connections": content[:200], "insights": "", "recommendation": ""}
+
+        # Write consolidation record
+        record = {
+            "ts": datetime.datetime.utcnow().isoformat() + "Z",
+            "entry_count": len(entries[:20]),
+            "connections": insight.get("connections", ""),
+            "insights": insight.get("insights", ""),
+            "recommendation": insight.get("recommendation", ""),
+        }
+        with open(CONSOLIDATION_FILE, "a", encoding="utf-8") as f:
+            f.write(json.dumps(record) + "\n")
+
+        # Mark entries as consolidated in the evolution log
+        all_lines = EVOLUTION_LOG.read_text().splitlines()
+        updated = []
+        consolidated_count = 0
+        for line in all_lines:
+            if not line.strip():
+                updated.append(line)
+                continue
+            try:
+                e = json.loads(line)
+                if not e.get("consolidated") and consolidated_count < 20:
+                    e["consolidated"] = True
+                    consolidated_count += 1
+                updated.append(json.dumps(e))
+            except Exception:
+                updated.append(line)
+        EVOLUTION_LOG.write_text("\n".join(updated) + "\n")
+
+        print(f"[watchdog] CONSOLIDATED {consolidated_count} entries -> insight: {insight.get('connections', '')[:80]}")
+        return consolidated_count
+    except Exception as e:
+        print(f"[watchdog] consolidation failed: {e}")
+        return 0
+
+
 if __name__ == "__main__":
     print(f"[watchdog] {datetime.datetime.utcnow().isoformat()}Z — running")
     stats = load_evolution_stats()
@@ -183,6 +294,9 @@ if __name__ == "__main__":
             f.write(gap_section)
         print(f"[watchdog] gap backlog appended: {backlog['missing']} missing, {backlog['partial']} partial")
     update_spine(state, stats)
+    # Memory Agent pattern: consolidate unconsolidated entries
+    consolidated = consolidate_memories()
     print(f"[watchdog] done. grade={stats['avg_grade']} "
           f"cycles_threshold={stats['cycles_at_threshold']} "
+          f"consolidated={consolidated} "
           f"option_c={'ELIGIBLE' if stats['option_c_gate'] else 'not yet'}")
