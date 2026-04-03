@@ -25,19 +25,19 @@
 | Theme/color config | `commands/theme/`, `commands/color/` | **PARTIAL** | Hardcoded dark theme [S160: dark/light toggle in Settings General tab] |
 | Output style config | `commands/output-style/` | **MISSING** | No output style options |
 | Keybindings config | `commands/keybindings/`, `keybindings/` | **MISSING** | No keybinding UI |
-| Vim mode | `commands/vim/`, `vim/` | **MISSING** | No vim mode |
-| Language preference | Settings schema `language` | **MISSING** | No language setting |
+| Vim mode | `commands/vim/`, `vim/` | **N/A** | Browser textarea — vim mode not applicable to Nexus chat UI |
+| Language preference | Settings schema `language` | **N/A** | Nexus is English-only for now. Karma speaks English. |
 | Privacy settings | `commands/privacy-settings/` | **MISSING** | No privacy UI |
 | Personal preferences (system prompt injection) | Settings schema | **PARTIAL** | No user preferences injection [S160: textarea in Settings, persisted to localStorage] |
 | Permission rules (allow/deny/ask) | `commands/permissions/`, `types/permissions.ts` | **PARTIAL** | No permission management UI [S159: static permission table in settings] |
 | Hooks config | Settings schema `hooks` | **PARTIAL** | Backend hooks work; no UI config [S159: read-only hooks list from surface] |
-| Auto-update channel | Settings schema `autoUpdatesChannel` | **MISSING** | No update management |
+| Auto-update channel | Settings schema `autoUpdatesChannel` | **N/A** | Static export + git pull. No auto-update channel needed. |
 | MCP server management | Settings schema (enable/disable/allow/deny) | **PARTIAL** | CC has MCP; no management UI |
-| Plugin config | Settings schema `pluginConfigs` | **MISSING** | No plugin system |
+| Plugin config | Settings schema `pluginConfigs` | **N/A** | Plugins are Phase 4. No config UI until plugin system exists. |
 | Worktree config | Settings schema `worktree.*` | **N/A** | Worktrees permanently banned in this project (P027) |
 | Fast mode toggle | `commands/fast/` | **HAVE** | No fast mode [S160: /effort cycles auto/low/med/high/max locally] |
 | Thinking mode toggle | Settings `thinkingEnabled` | **HAVE** | No thinking toggle [S160: /effort max = extended thinking] |
-| Prompt suggestions | Settings `promptSuggestionEnabled` | **MISSING** | No prompt suggestions |
+| Prompt suggestions | Settings `promptSuggestionEnabled` | **N/A** | Nexus is for Colby who knows what to ask. No training wheels. |
 
 ## 2. SESSION MANAGEMENT
 
@@ -84,11 +84,11 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| Scheduled tasks UI | `hooks/useScheduledTasks.ts` | **MISSING** | No scheduling UI |
+| Scheduled tasks UI | `hooks/useScheduledTasks.ts` | **PARTIAL** | No scheduling UI [S160: Liza loop visible in hooks list. CronCreate exposed via CC.] |
 | Cron task creation | `tools/ScheduleCronTool/` | **HAVE** | CC has CronCreate natively |
 | Background tasks | `tools/TaskCreateTool/` etc. | **HAVE** | CC has Agent/Task tools |
-| Task list/status UI | `tasks/`, `hooks/useTasksV2.ts` | **MISSING** | No task visibility in browser |
-| Dispatch (agent coordination) | `utils/swarm/`, `commands/agents/` | **MISSING** | No dispatch UI |
+| Task list/status UI | `tasks/`, `hooks/useTasksV2.ts` | **PARTIAL** | No task visibility in browser [S160: AgentPanel shows 6 agents with bus heartbeat + skills + hooks] |
+| Dispatch (agent coordination) | `utils/swarm/`, `commands/agents/` | **PARTIAL** | No dispatch UI [S160: AgentPanel + bus coordination visible. @cc @codex @regent routing in MessageInput] |
 
 ## 6. MULTI-AGENT / TEAMS
 
@@ -197,7 +197,7 @@
 
 | Category | HAVE | PARTIAL | MISSING | N/A |
 |----------|------|---------|---------|-----|
-| Settings | 3 | 6 | 8 | 1 |
+| Settings | 3 | 6 | 3 | 6 |
 | Session Management | 2 | 1 | 0 | 7 |
 | Commands | 7 | 2 | 2 | 0 |
 | Tools | 3 | 0 | 2 | 0 |
@@ -213,9 +213,9 @@
 | Auto-Update | 0 | 0 | 3 | 0 |
 | Bridge | 1 | 1 | 2 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **19** | **19** | **49** | **8** |
+| **TOTAL** | **19** | **22** | **41** | **13** |
 
-**19 features fully implemented. 19 partial. 49 MISSING.**
+**19 features fully implemented. 22 partial. 41 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 
