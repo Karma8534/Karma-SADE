@@ -130,6 +130,20 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'style') {
+      const styles = ['', 'concise', 'detailed', 'technical', 'creative'] as const;
+      const store = useKarmaStore.getState();
+      const cur = styles.indexOf(store.outputStyle as typeof styles[number]);
+      const next = styles[(cur + 1) % styles.length];
+      store.setOutputStyle(next);
+      store.addMessage({
+        id: Date.now().toString(36), role: 'system',
+        content: `**STYLE** set to **${next || 'auto'}** — ${next === 'concise' ? 'short, direct answers' : next === 'detailed' ? 'thorough explanations' : next === 'technical' ? 'code-focused, minimal prose' : next === 'creative' ? 'expressive, personality-forward' : 'Karma decides based on context'}`,
+        timestamp: new Date().toISOString(),
+      });
+      setText('');
+      return;
+    }
     if (cmd.name === 'effort') {
       // Cycle through effort levels
       const levels = ['', 'low', 'medium', 'high', 'max'] as const;

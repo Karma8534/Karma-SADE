@@ -27,6 +27,7 @@ const COMMANDS: SlashCommand[] = [
   { name: 'model', description: 'Switch model (opus/sonnet/haiku)', category: 'config' },
   { name: 'effort', description: 'Set effort level (low/medium/high/max)', category: 'config' },
   { name: 'theme', description: 'Change color theme', category: 'config' },
+  { name: 'style', description: 'Set output style (concise/detailed/technical/creative)', category: 'config' },
   { name: 'settings', description: 'Open settings panel', category: 'config' },
 
   // Info (local handlers)
