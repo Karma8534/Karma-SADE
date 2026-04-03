@@ -179,6 +179,8 @@ Voice NEVER routes through claude.ai. Sovereign pipeline only (Whisper → text 
 - **ORF applied**: Architecture minimal (2 files). One gap (transcript rotation) patched.
 - P1/K2 always on AC via docking stations (obs #21996).
 
+## HARD COPY: Memory/HARD-COPY-PLAN.md — PRINT AND VAULT. Self-contained. No references.
+
 ## SYSTEM IS NOT AT BASELINE — DO NOT CLAIM OTHERWISE
 
 **CP5 NOT DONE.** Frontend still uses 3 individual fetches instead of /v1/surface.
