@@ -23,6 +23,7 @@
 - **Codex forensic audit**: Hung after 25min (cancelled). Partial findings: confirmed sensors-not-actuators, confirmed gap_map.py doesn't exist, identified governor as the real gate.
 - **Cascade pipeline PLAN written**: `.gsd/phase-cascade-pipeline-PLAN.md` — 7 files, all insertion points mapped, failure modes documented.
 - **ccburn installed**: v0.7.2, needs OAuth refresh next session. Aliases: `burn`, `burnwatch`, `burnfull`.
+- **nexus.md updated to v5.1.0**: Part 4 honest audit (sensors not actuators table), Sprint 0 cascade pipeline, token budget rules, EscapeHatch = OpenRouter.
 - **FUTURE**: Clean up PowerShell profile (ArkNexus SADE v7 banner). Install Rust for claudelytics.
 - **Next session**: Read nexus.md v5.0.0 + MASTER-INDEX.md. Receive Codex audit results. Implement cascade pipeline. Sprint 7-A after.
 
