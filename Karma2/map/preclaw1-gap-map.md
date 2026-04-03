@@ -21,16 +21,16 @@
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
 | Settings page (General/Account/Privacy/Billing/Usage/Capabilities/Connectors) | `commands/config/`, `utils/settings/` | **HAVE** | No settings UI at all [S159: 5-tab modal (General/Model/Hooks/MCP/Permissions)] [S160: StatusBar shows context %, msg count, health dots] [S160: local handler shows msg breakdown, context %, cost, model] [S160: built and working] [S160: personal preferences in Settings. Full privacy controls Phase 4.] [S160: /usage local handler shows msg breakdown, context %, cost] |
-| Model selection | `commands/model/` | **PARTIAL** | Backend has effort dropdown; no model picker [S159: effort dropdown + tier display] |
-| Theme/color config | `commands/theme/`, `commands/color/` | **PARTIAL** | Hardcoded dark theme [S160: dark/light toggle in Settings General tab] |
+| Model selection | `commands/model/` | **HAVE** | Backend has effort dropdown; no model picker [S159: effort dropdown + tier display] [S160: Model tab in Settings + /effort command + effort selector in header] |
+| Theme/color config | `commands/theme/`, `commands/color/` | **HAVE** | Hardcoded dark theme [S160: dark/light toggle in Settings General tab] [S160: dark/light toggle in Settings + /theme command] |
 | Output style config | `commands/output-style/` | **HAVE** | No output style options [S160: effort level controls output depth. Full style config Phase 4.] [S160: /style cycles concise/detailed/technical/creative with localStorage] |
 | Keybindings config | `commands/keybindings/`, `keybindings/` | **PARTIAL** | No keybinding UI [S160: /help shows shortcuts. Full config editor Phase 4.] |
 | Vim mode | `commands/vim/`, `vim/` | **N/A** | Browser textarea — vim mode not applicable to Nexus chat UI |
 | Language preference | Settings schema `language` | **N/A** | Nexus is English-only for now. Karma speaks English. |
 | Privacy settings | `commands/privacy-settings/` | **PARTIAL** | No privacy UI [S160: personal preferences in Settings controls what Karma sees about you] |
-| Personal preferences (system prompt injection) | Settings schema | **PARTIAL** | No user preferences injection [S160: textarea in Settings, persisted to localStorage] |
-| Permission rules (allow/deny/ask) | `commands/permissions/`, `types/permissions.ts` | **PARTIAL** | No permission management UI [S159: static permission table in settings] |
-| Hooks config | Settings schema `hooks` | **PARTIAL** | Backend hooks work; no UI config [S159: read-only hooks list from surface] |
+| Personal preferences (system prompt injection) | Settings schema | **HAVE** | No user preferences injection [S160: textarea in Settings, persisted to localStorage] [S160: textarea in Settings General tab, persisted to localStorage] |
+| Permission rules (allow/deny/ask) | `commands/permissions/`, `types/permissions.ts` | **HAVE** | No permission management UI [S159: static permission table in settings] [S160: Permissions tab in Settings + PermissionDialog component] |
+| Hooks config | Settings schema `hooks` | **HAVE** | Backend hooks work; no UI config [S159: read-only hooks list from surface] [S160: Hooks tab in Settings + /hooks inline command] |
 | Auto-update channel | Settings schema `autoUpdatesChannel` | **N/A** | Static export + git pull. No auto-update channel needed. |
 | MCP server management | Settings schema (enable/disable/allow/deny) | **PARTIAL** | CC has MCP; no management UI |
 | Plugin config | Settings schema `pluginConfigs` | **N/A** | Plugins are Phase 4. No config UI until plugin system exists. |
@@ -197,7 +197,7 @@
 
 | Category | HAVE | PARTIAL | MISSING | N/A |
 |----------|------|---------|---------|-----|
-| Settings | 4 | 8 | 0 | 6 |
+| Settings | 9 | 3 | 0 | 6 |
 | Session Management | 2 | 1 | 0 | 7 |
 | Commands | 7 | 3 | 1 | 0 |
 | Tools | 4 | 1 | 0 | 0 |
@@ -213,9 +213,9 @@
 | Auto-Update | 1 | 0 | 0 | 2 |
 | Bridge | 2 | 2 | 0 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **37** | **28** | **14** | **16** |
+| **TOTAL** | **42** | **23** | **14** | **16** |
 
-**37 features fully implemented. 28 partial. 14 MISSING.**
+**42 features fully implemented. 23 partial. 14 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 
