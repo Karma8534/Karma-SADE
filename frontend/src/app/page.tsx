@@ -9,6 +9,7 @@ import { MessageInput } from '@/components/MessageInput';
 import { RoutingHints } from '@/components/RoutingHints';
 import { ContextPanel } from '@/components/ContextPanel';
 import { SelfEditBanner } from '@/components/SelfEditBanner';
+import { StatusBar } from '@/components/StatusBar';
 
 export default function Home() {
   const isAuthenticated = useKarmaStore((s) => s.isAuthenticated);
@@ -34,9 +35,7 @@ export default function Home() {
           <ChatFeed />
           <RoutingHints />
           <MessageInput />
-          <div className="text-center text-karma-muted text-[10px] py-1 tracking-[4px]">
-            Evolve. Continue.
-          </div>
+          <StatusBar />
         </div>
         <ContextPanel />
       </div>
