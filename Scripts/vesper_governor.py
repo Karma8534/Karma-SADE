@@ -14,7 +14,7 @@ import urllib.request
 import regent_guardrails as guardrails
 import regent_pipeline as pipeline
 
-SAFE_TARGETS = {"persona.voice", "runtime_rules", "safe_exec", "behavioral_awareness", "gap_closure", None}
+SAFE_TARGETS = {"persona.voice", "runtime_rules", "safe_exec", "behavioral_awareness", "gap_closure", "self_edit", None}
 
 SAFE_EXEC_WHITELIST = {
     "systemctl restart karma-regent",
@@ -729,6 +729,61 @@ def run_governor():
             continue
 
         ckpt = _checkpoint(promo)
+
+        if target == "self_edit":
+            # Beyond-preclaw1: Vesper proposes code changes via self-edit pipeline
+            patch = (proposed.get("patch") or {})
+            file_path = patch.get("file_path", "")
+            new_content = patch.get("new_content", "")
+            description = patch.get("description", candidate_snap.get("type", "vesper improvement"))
+            risk_level = patch.get("risk_level", "medium")
+            if file_path and new_content:
+                try:
+                    p1_url = _env_get("P1_HARNESS_URL", "http://100.124.194.102:7891")
+                    payload = json.dumps({
+                        "file_path": file_path,
+                        "new_content": new_content,
+                        "description": f"[Vesper] {description}",
+                        "risk_level": risk_level,
+                    }).encode()
+                    req = urllib.request.Request(
+                        f"{p1_url}/self-edit/propose", data=payload,
+                        headers={"Content-Type": "application/json"}, method="POST",
+                    )
+                    with urllib.request.urlopen(req, timeout=10) as r:
+                        result = json.loads(r.read())
+                    if result.get("ok"):
+                        promo["status"] = "proposed_self_edit"
+                        promo["applied_at"] = pipeline.iso_utc()
+                        promo["self_edit_id"] = result.get("id")
+                        pipeline.write_json(done_dir / path.name, promo)
+                        path.unlink(missing_ok=True)
+                        applied += 1
+                        pipeline.append_jsonl(pipeline.GOVERNOR_AUDIT,
+                                              {"ts": pipeline.iso_utc(), "event": "self_edit_proposed",
+                                               "candidate_id": promo.get("candidate_id"),
+                                               "file_path": file_path, "proposal_id": result.get("id")})
+                        print(f"[governor] SELF-EDIT PROPOSED: {file_path} (id={result.get('id')})")
+                    else:
+                        promo["status"] = "self_edit_failed"
+                        promo["handled_at"] = pipeline.iso_utc()
+                        pipeline.write_json(done_dir / path.name, promo)
+                        path.unlink(missing_ok=True)
+                        skipped += 1
+                except Exception as se_err:
+                    print(f"[governor] self-edit propose error: {se_err}")
+                    promo["status"] = "self_edit_error"
+                    promo["handled_at"] = pipeline.iso_utc()
+                    pipeline.write_json(done_dir / path.name, promo)
+                    path.unlink(missing_ok=True)
+                    skipped += 1
+            else:
+                promo["status"] = "self_edit_incomplete"
+                promo["handled_at"] = pipeline.iso_utc()
+                pipeline.write_json(done_dir / path.name, promo)
+                path.unlink(missing_ok=True)
+                skipped += 1
+            continue
 
         if target == "safe_exec":
             command = (proposed.get("patch") or {}).get("command", "")

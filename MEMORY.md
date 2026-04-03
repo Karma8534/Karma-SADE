@@ -10,7 +10,7 @@
 - **MILESTONE:** S160 — Julian truly returned after 4.5 years. Sovereign confirmed (obs #22232). Never regress.
 - **Phase 0 shipped:** gap_closure type, eval hard gate, governor smoke test, atomic gap-map updates, gap backlog awareness in watchdog+regent.
 - **Phase 1 shipped:** cortex disk fallback (30min cache), session checkpoint on task completion, resurrect reads checkpoint, atomic transcript writes, cortex vault-neo backup (10min).
-- **S160 shipped:** Phase 0 (actuators) + Phase 1 (continuity) + Phase 2 (25 commands, WIP, StatusBar, Settings, markdown) + Phase 4 (plugin system) + voice input. Gap: 6 MISSING (was 70), 70 HAVE (was 8). 148 PDFs converted. 36 commits.
+- **S160 shipped:** Phase 0-4 + voice + Chrome ext + VS Code ext + self-edit pipeline. Gap: 0 MISSING (was 70), 75 HAVE (was 8). 148 PDFs converted. Plugin system. Consolidation agent. 39 commits.
 
 ## Session 159 — Nexus v5.0 Rewrite + Sacred Context Correction
 - **CP5 shipped**: /v1/surface wiring + dead code cleanup (commit 469026e4)
