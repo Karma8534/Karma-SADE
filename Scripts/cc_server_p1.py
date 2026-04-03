@@ -911,10 +911,18 @@ class CCHandler(BaseHTTPRequestHandler):
                         fpath = os.path.join(wip_dir, fname)
                         if os.path.isfile(fpath) and not fname.startswith("."):
                             size_kb = os.path.getsize(fpath) / 1024
+                            # Read first 200 chars as preview
+                            preview = ""
+                            try:
+                                with open(fpath, "r", encoding="utf-8", errors="replace") as pf:
+                                    preview = pf.read(200).strip().replace("\n", " ")
+                            except Exception:
+                                pass
                             primitives.append({
                                 "id": fname,
                                 "title": fname.rsplit(".", 1)[0],
                                 "source": f"docs/wip/{fname}",
+                                "preview": preview,
                                 "relevance": "HIGH" if size_kb > 10 else "MEDIUM",
                                 "status": "pending",
                                 "size_kb": round(size_kb, 1),

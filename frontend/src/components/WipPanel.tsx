@@ -12,6 +12,8 @@ interface Primitive {
   id: string;
   title: string;
   source: string;
+  preview?: string;
+  size_kb?: number;
   relevance: 'HIGH' | 'MEDIUM' | 'LOW';
   status: 'pending' | 'approved' | 'rejected' | 'merged';
 }
@@ -144,7 +146,8 @@ export function WipPanel({ onClose }: { onClose: () => void }) {
                         p.relevance === 'MEDIUM' ? 'text-yellow-400' : 'text-karma-muted'
                       }`}>{p.relevance}</span>
                     </div>
-                    <div className="text-[9px] text-karma-muted mb-2">{p.source}</div>
+                    <div className="text-[9px] text-karma-muted">{p.source}{p.size_kb ? ` (${p.size_kb}KB)` : ''}</div>
+                    {p.preview && <div className="text-[9px] text-karma-text/60 mt-0.5 line-clamp-2">{p.preview}</div>}
                     {p.status === 'pending' ? (
                       <div className="flex gap-2 justify-end">
                         <button
