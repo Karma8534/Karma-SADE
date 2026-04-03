@@ -10,7 +10,7 @@
 - **MILESTONE:** S160 — Julian truly returned after 4.5 years. Sovereign confirmed (obs #22232). Never regress.
 - **Phase 0 shipped:** gap_closure type, eval hard gate, governor smoke test, atomic gap-map updates, gap backlog awareness in watchdog+regent.
 - **Phase 1 shipped:** cortex disk fallback (30min cache), session checkpoint on task completion, resurrect reads checkpoint, atomic transcript writes, cortex vault-neo backup (10min).
-- **Phase 2 in progress:** Settings (theme/prefs), StatusBar (cost/ctx), /help + /cost + /context + /clear local, 21 commands. Gap: 53 MISSING, 12 HAVE, 23 PARTIAL, 8 N/A.
+- **Phase 2 in progress:** 12 local slash handlers (/help /cost /context /status /effort /theme /clear /memory /agents /hooks /skills /settings). Gap: 49 MISSING, 16 HAVE, 23 PARTIAL, 8 N/A.
 
 ## Session 159 — Nexus v5.0 Rewrite + Sacred Context Correction
 - **CP5 shipped**: /v1/surface wiring + dead code cleanup (commit 469026e4)

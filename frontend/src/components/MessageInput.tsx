@@ -48,6 +48,46 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'memory') {
+      // Open MEMORY panel (same as header button)
+      window.dispatchEvent(new CustomEvent('karma-open-memory'));
+      setText('');
+      return;
+    }
+    if (cmd.name === 'agents') {
+      window.dispatchEvent(new CustomEvent('karma-open-agents'));
+      setText('');
+      return;
+    }
+    if (cmd.name === 'hooks') {
+      // Show hooks inline from surface data
+      const store = useKarmaStore.getState();
+      const hooks = (store.surface?.hooks?.list as { name: string; event: string }[]) || [];
+      const hookList = hooks.length > 0
+        ? hooks.map(h => `  ${h.event} → ${h.name}`).join('\n')
+        : '  No hooks loaded';
+      store.addMessage({
+        id: Date.now().toString(36), role: 'system',
+        content: `**HOOKS** (${hooks.length} active)\n${hookList}`,
+        timestamp: new Date().toISOString(),
+      });
+      setText('');
+      return;
+    }
+    if (cmd.name === 'skills') {
+      const store = useKarmaStore.getState();
+      const skills = store.surface?.skills;
+      const skillList = skills?.names?.length
+        ? skills.names.map((n: string) => `  ${n}`).join('\n')
+        : '  No skills loaded';
+      store.addMessage({
+        id: Date.now().toString(36), role: 'system',
+        content: `**SKILLS** (${skills?.count || 0})\n${skillList}`,
+        timestamp: new Date().toISOString(),
+      });
+      setText('');
+      return;
+    }
     if (cmd.name === 'effort') {
       // Cycle through effort levels
       const levels = ['', 'low', 'medium', 'high', 'max'] as const;

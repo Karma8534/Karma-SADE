@@ -68,7 +68,7 @@
 | /plan (structured planning) | `commands/plan/` | **MISSING** | No plan mode UI |
 | /context (show context size) | `commands/context/` | **HAVE** | Context panel exists; no context budget display [S160: local handler shows KB, %, msg count, surface status] |
 | /clear (clear conversation) | `commands/clear/` | **HAVE** | CLEAR button in header |
-| /memory | `commands/memory/` | **PARTIAL** | MEMORY button opens external localhost:37778 |
+| /memory | `commands/memory/` | **HAVE** | MEMORY button opens external localhost:37778 [S160: /memory opens MemoryPanel, /hooks + /skills show inline data] |
 
 ## 4. TOOLS
 
@@ -199,7 +199,7 @@
 |----------|------|---------|---------|-----|
 | Settings | 2 | 7 | 8 | 1 |
 | Session Management | 0 | 0 | 3 | 7 |
-| Commands | 6 | 3 | 2 | 0 |
+| Commands | 7 | 2 | 2 | 0 |
 | Tools | 3 | 0 | 2 | 0 |
 | Scheduling/Tasks | 2 | 0 | 3 | 0 |
 | Multi-Agent | 0 | 1 | 4 | 0 |
@@ -213,9 +213,9 @@
 | Auto-Update | 0 | 0 | 3 | 0 |
 | Bridge | 1 | 1 | 2 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **15** | **20** | **52** | **8** |
+| **TOTAL** | **16** | **19** | **52** | **8** |
 
-**15 features fully implemented. 20 partial. 52 MISSING.**
+**16 features fully implemented. 19 partial. 52 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 
