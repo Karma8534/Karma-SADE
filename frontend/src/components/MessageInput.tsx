@@ -130,6 +130,12 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'diff' || cmd.name === 'commit' || cmd.name === 'review' || cmd.name === 'plan') {
+      // Dev commands route directly to CC — they need tool access
+      sendMessage(`/${cmd.name}`);
+      setText('');
+      return;
+    }
     if (cmd.name === 'convert') {
       const store = useKarmaStore.getState();
       store.addMessage({
