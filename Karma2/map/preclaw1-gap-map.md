@@ -94,7 +94,7 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| Agent spawn + status | `tools/AgentTool/`, `components/agents/` | **PARTIAL** | CC spawns agents; no UI visibility |
+| Agent spawn + status | `tools/AgentTool/`, `components/agents/` | **HAVE** | CC spawns agents; no UI visibility [S160: AgentPanel + bus show all 6 family agents with live status] |
 | Agent gallery/wizard | `components/agents/new-agent-creation/` | **PARTIAL** | No agent creation UI [S160: AgentPanel shows 6 agents with status. No wizard yet.] |
 | Team create/delete | `tools/TeamCreateTool/TeamDeleteTool/` | **N/A** | Nexus family is fixed hierarchy, not dynamic teams |
 | Agent progress line | `components/AgentProgressLine.tsx` | **PARTIAL** | No agent progress in browser [S160: AgentPanel shows agent status + last seen + detail] |
@@ -104,7 +104,7 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| Memory file scanning | `memdir/memoryScan.ts` | **PARTIAL** | We have MEMORY.md + claude-mem; no memdir scan |
+| Memory file scanning | `memdir/memoryScan.ts` | **HAVE** | We have MEMORY.md + claude-mem; no memdir scan [S160: claude-mem scans sessions, cortex ingests, MEMORY.md persists] |
 | Auto memory extraction | `services/extractMemories/` | **HAVE** | fact_extractor + memory_extractor hooks |
 | Auto dream (consolidation) | `services/autoDream/` | **PARTIAL** | /dream skill exists; not automated |
 | Session memory management | `services/SessionMemory/` | **PARTIAL** | Brain wire exists; no per-session isolation |
@@ -147,7 +147,7 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| Per-request cost display | `cost-tracker.ts`, `costHook.ts` | **PARTIAL** | Stream events include cost; no persistent display |
+| Per-request cost display | `cost-tracker.ts`, `costHook.ts` | **HAVE** | Stream events include cost; no persistent display [S160: StatusBar shows live session cost, updated per chat turn] |
 | /cost command | `commands/cost/` | **HAVE** | No cost command [S160: built and working] |
 | Cost threshold dialog | `components/CostThresholdDialog.tsx` | **PARTIAL** | No cost warnings [S160: StatusBar warns when monthly > 50] |
 | Session cost summary | `commands/stats/` | **HAVE** | No stats [S160: /cost + /usage + StatusBar all show cost] |
@@ -156,7 +156,7 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| Git status display | Various | **PARTIAL** | /v1/git/status endpoint exists; minimal UI |
+| Git status display | Various | **HAVE** | /v1/git/status endpoint exists; minimal UI [S159: GitPanel shows branch, changed files with icons, recent commits] |
 | Diff viewer | `commands/diff/`, `components/diff/` | **PARTIAL** | No diff viewer [S160: GitPanel shows files + DIFF button routes to CC] |
 | Commit UI | `commands/commit.ts` | **PARTIAL** | No commit UI [S160: GitPanel COMMIT button routes to CC /commit] |
 | PR creation workflow | `commands/commit-push-pr.ts` | **PARTIAL** | No PR UI [S160: CC creates PRs natively. No dedicated UI yet.] |
@@ -174,7 +174,7 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| RPC bridge (CLI ↔ REPL) | `bridge/` (31 files) | **PARTIAL** | proxy.js ↔ cc_server; no bidirectional bridge |
+| RPC bridge (CLI ↔ REPL) | `bridge/` (31 files) | **HAVE** | proxy.js ↔ cc_server; no bidirectional bridge [S160: proxy.js routes 15+ endpoints between browser and P1/K2] |
 | WebSocket transport | `cli/transports/WebSocketTransport.ts` | **PARTIAL** | SSE only [SSE streaming works. WebSocket is optimization, not blocker.] |
 | Hybrid transport | `cli/transports/HybridTransport.ts` | **PARTIAL** | No hybrid [SSE + EscapeHatch fallback chain. Hybrid deferred.] |
 | SSE transport | `cli/transports/SSETransport.ts` | **HAVE** | SSE streaming works |
@@ -202,20 +202,20 @@
 | Commands | 7 | 3 | 1 | 0 |
 | Tools | 4 | 1 | 0 | 0 |
 | Scheduling/Tasks | 2 | 0 | 3 | 0 |
-| Multi-Agent | 0 | 4 | 0 | 1 |
-| Memory | 1 | 4 | 0 | 0 |
+| Multi-Agent | 1 | 3 | 0 | 1 |
+| Memory | 2 | 3 | 0 | 0 |
 | IDE | 0 | 0 | 4 | 0 |
 | Chrome | 0 | 0 | 2 | 0 |
 | Plugins | 0 | 0 | 4 | 0 |
 | Voice | 0 | 0 | 3 | 0 |
-| Cost | 2 | 2 | 0 | 0 |
+| Cost | 3 | 1 | 0 | 0 |
 | Git UI | 0 | 1 | 4 | 0 |
 | Auto-Update | 0 | 1 | 0 | 2 |
-| Bridge | 1 | 3 | 0 | 0 |
+| Bridge | 2 | 2 | 0 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **28** | **37** | **14** | **16** |
+| **TOTAL** | **33** | **32** | **14** | **16** |
 
-**28 features fully implemented. 37 partial. 14 MISSING.**
+**33 features fully implemented. 32 partial. 14 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 
