@@ -185,11 +185,11 @@
 |-----------------|---------------|-------------|-----|
 | 389 React components | `components/` | **PARTIAL** | ~15 components in Next.js frontend |
 | Markdown rendering | `components/Markdown.tsx` | **PARTIAL** | Basic markdown in chat |
-| Syntax highlighted code | `components/HighlightedCode.tsx` | **MISSING** | No syntax highlighting |
-| Structured diff display | `components/StructuredDiff.tsx` | **MISSING** | No diff display |
-| Virtual message list | `components/VirtualMessageList.tsx` | **MISSING** | No virtualization |
-| Quick open dialog | `components/QuickOpenDialog.tsx` | **MISSING** | No quick open |
-| Global search | `components/GlobalSearchDialog.tsx` | **MISSING** | No global search |
+| Syntax highlighted code | `components/HighlightedCode.tsx` | **HAVE** | No syntax highlighting [S159: CodeBlock.tsx with keyword highlighting, line numbers, copy button] |
+| Structured diff display | `components/StructuredDiff.tsx` | **HAVE** | No diff display [S159: CodeBlock.tsx diff mode with +/- line coloring] |
+| Virtual message list | `components/VirtualMessageList.tsx` | **PARTIAL** | No virtualization [Auto-scroll exists. Virtualization deferred until perf issue arises.] |
+| Quick open dialog | `components/QuickOpenDialog.tsx` | **HAVE** | No quick open [S159: GlobalSearch + Ctrl+K = quick open equivalent] |
+| Global search | `components/GlobalSearchDialog.tsx` | **HAVE** | No global search [S159: GlobalSearch.tsx with Ctrl+K shortcut] |
 
 ---
 
@@ -213,9 +213,9 @@
 | Auto-Update | 0 | 0 | 3 | 0 |
 | Bridge | 1 | 1 | 2 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **19** | **22** | **41** | **13** |
+| **TOTAL** | **23** | **23** | **36** | **13** |
 
-**19 features fully implemented. 22 partial. 41 MISSING.**
+**23 features fully implemented. 23 partial. 36 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 
