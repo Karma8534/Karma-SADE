@@ -448,16 +448,31 @@ def _transcript_path(session_id):
     return os.path.join(TRANSCRIPT_DIR, f"{session_id}.jsonl")
 
 def append_transcript(session_id, entry):
-    """Append-first: write BEFORE processing. Crash-safe."""
-    with open(_transcript_path(session_id), "a", encoding="utf-8") as f:
-        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    """Phase 1 Edit 4: Atomic append — write to .tmp then rename for crash-safety."""
+    path = _transcript_path(session_id)
+    line = json.dumps(entry, ensure_ascii=False) + "\n"
+    tmp_path = path + ".tmp"
+    try:
+        # Read existing content, append new line, write atomically
+        existing = ""
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                existing = f.read()
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            f.write(existing + line)
+        os.replace(tmp_path, path)
+    except Exception:
+        # Fallback to simple append if atomic fails (better than losing data)
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(line)
 
 def load_transcript(session_id):
-    """Load transcript for resume/recovery."""
+    """Phase 1 Edit 4: Load transcript with corrupt-line recovery."""
     path = _transcript_path(session_id)
     if not os.path.exists(path):
         return []
     entries = []
+    corrupt_lines = 0
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
@@ -465,7 +480,18 @@ def load_transcript(session_id):
                 try:
                     entries.append(json.loads(line))
                 except json.JSONDecodeError:
+                    corrupt_lines += 1
                     continue
+    if corrupt_lines > 0:
+        # Rewrite file with only valid entries (self-healing)
+        try:
+            tmp_path = path + ".tmp"
+            with open(tmp_path, "w", encoding="utf-8") as f:
+                for e in entries:
+                    f.write(json.dumps(e, ensure_ascii=False) + "\n")
+            os.replace(tmp_path, path)
+        except Exception:
+            pass
     return entries
 
 

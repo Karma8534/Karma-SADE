@@ -42,6 +42,7 @@ CLAUDEMEM_URL = "http://127.0.0.1:37778"
 # Karma's own session — never shared with interactive CC or browser Nexus
 SESSION_FILE = pathlib.Path.home() / ".karma_persistent_session_id"
 WATERMARK_FILE = pathlib.Path.home() / ".karma_persistent_watermark.json"
+CHECKPOINT_FILE = pathlib.Path.home() / ".karma_persistent_checkpoint.json"
 LOG_FILE = pathlib.Path(WORK_DIR) / "tmp" / "karma_persistent.log"
 
 POLL_INTERVAL = 90  # seconds between bus polls
@@ -113,6 +114,27 @@ def load_watermark():
     except Exception:
         return {"handled_ids": []}
 
+
+def save_checkpoint(task_content, result_summary, session_id=None):
+    """Phase 1 Edit 2: Persist last-completed task for cold-start recovery."""
+    try:
+        ckpt = {
+            "task": task_content[:500],
+            "result": result_summary[:500],
+            "session_id": session_id or "",
+            "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+        }
+        CHECKPOINT_FILE.write_text(json.dumps(ckpt))
+    except Exception:
+        pass
+
+
+def load_checkpoint():
+    try:
+        return json.loads(CHECKPOINT_FILE.read_text()) if CHECKPOINT_FILE.exists() else None
+    except Exception:
+        return None
+
 def save_watermark(wm):
     wm["handled_ids"] = wm["handled_ids"][-200:]
     try:
@@ -165,6 +187,12 @@ def build_karma_context(task_message):
     evolution = _read_file_head(EVOLUTION_FILE, 1000)
     if evolution:
         parts.append(f"[SELF-EVOLUTION RULES — learn from these]\n{evolution}\n\n")
+    # Phase 1 Edit 2: inject last-completed checkpoint
+    ckpt = load_checkpoint()
+    if ckpt:
+        parts.append(f"[LAST COMPLETED TASK]\nTask: {ckpt.get('task', '')[:200]}\n"
+                     f"Result: {ckpt.get('result', '')[:200]}\n"
+                     f"When: {ckpt.get('timestamp', 'unknown')}\n\n")
     parts.append(task_message)
     return "".join(parts)
 
@@ -321,6 +349,8 @@ def poll_and_act(token):
                 timeout=5,
             )
             log.info("Posted result + cortex checkpoint for %s", eid[:20])
+            # Phase 1 Edit 2: save checkpoint for cold-start recovery
+            save_checkpoint(content, result[:500], load_session_id())
             executed += 1
         else:
             # S155: post failure to bus (was silently swallowed)

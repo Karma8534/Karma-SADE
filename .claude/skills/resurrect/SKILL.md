@@ -73,6 +73,13 @@ mcp__plugin_claude-mem_mcp-search__search(query="active task Plan current sprint
 Read file: C:\Users\raest\Documents\Karma_SADE\Karma2\PLAN.md (first 90 lines)
 ```
 
+**Step 1a2: Load last-completed checkpoint (Phase 1 — cold-start recovery)**
+```bash
+# Check if karma_persistent left a checkpoint
+python -c "import json, pathlib; p=pathlib.Path.home()/'.karma_persistent_checkpoint.json'; print(p.read_text()) if p.exists() else print('no checkpoint')"
+```
+If checkpoint exists, note the last task and result. This tells you what Karma did between sessions.
+
 **Step 1b: Load scope index (too large for cortex — stays as file read)**
 ```
 Read file: C:\Users\raest\Documents\Karma_SADE\Karma2\cc-scope-index.md

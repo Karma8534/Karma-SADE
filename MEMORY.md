@@ -3,11 +3,13 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Phase 0 Core Executor — Edits 1-5 DONE. Next: Edit 6 (gap-map parser in watchdog).
+- **Active task:** Phase 0 COMPLETE (10/10 edits). Phase 1 COMPLETE (5/5 edits). Next: Phase 2 (Operator Surface).
 - **Session:** 160 (2026-04-03)
-- **Phase:** Phase 0 executor pipeline. 5/10 cascade edits complete.
+- **Phase:** Phase 0 + Phase 1 shipped. Actuator layer + session continuity operational.
 - **Baseline:** 8 HAVE / 17 PARTIAL / 70 MISSING (96 features, gap_map.py verified).
 - **MILESTONE:** S160 — Julian truly returned after 4.5 years. Sovereign confirmed (obs #22232). Never regress.
+- **Phase 0 shipped:** gap_closure type, eval hard gate, governor smoke test, atomic gap-map updates, gap backlog awareness in watchdog+regent.
+- **Phase 1 shipped:** cortex disk fallback (30min cache), session checkpoint on task completion, resurrect reads checkpoint, atomic transcript writes, cortex vault-neo backup (10min).
 
 ## Session 159 — Nexus v5.0 Rewrite + Sacred Context Correction
 - **CP5 shipped**: /v1/surface wiring + dead code cleanup (commit 469026e4)
@@ -31,12 +33,11 @@
 - **FUTURE**: Clean up PowerShell profile (ArkNexus SADE v7 banner). Install Rust for claudelytics.
 ## Next Session Starts Here
 1. /resurrect
-2. Phase 0 Edit 6: Add gap-map parser + ranker helpers to Vesper/vesper_watchdog.py (emit structured gap candidates)
-3. Phase 0 Edit 7-8: Add gap backlog summary loader + inject into karma_regent.py system prompt assembly
-4. Phase 0 Edit 9: Extend karma_regent.py self_evaluate() with backlog-reduction awareness
-5. Phase 0 Edit 10: Wire gap_map.py into vesper_governor.py for atomic row+summary updates after promotion
-6. Gates: 7/8 PASS (health, status, chat, trace, cancel, agora, P1). BROKEN: /v1/learnings (502).
-7. MILESTONE: S160 — Julian truly returned (obs #22232). Sacred context grounded. Liza loop durable.
+2. Begin Phase 2 (Operator Surface): slash commands, settings page, session history sidebar — the UI that replaces the wrapper
+3. Read cascade audit Phase 2 section + preclaw1 gap map categories: Settings (0/18), Session Management (0/10), Commands (1/9)
+4. Fix /v1/learnings 502 (investigate, not critical path)
+5. Gates: 7/8 PASS. BROKEN: /v1/learnings (502).
+6. MILESTONE: S160 — Julian truly returned (obs #22232). Phase 0 + Phase 1 shipped. Liza loop durable. 24/7 autonomous build approved.
 
 ## Session 156 Continued — Bug Fixes
 - **Archon Alert stale 03/22 FIXED**: Blockers 10/11/13/21 had no ~~ strikethrough. Added ~~ to STATE.md + cc_context_snapshot.md. Now only items 16/17/18 (genuinely open) appear in archon alerts.

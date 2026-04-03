@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-julian_cortex.py â€” Julian's Memory Cortex
+julian_cortex.py -- Julian's Memory Cortex
 Persistent Ollama-backed context service on K2.
 Holds Julian/Karma's full state in a 128K context window.
 Replaces 20-file resurrection, MEMORY.md manual maintenance, and multi-source assembly.
@@ -22,16 +22,16 @@ from pathlib import Path
 from flask import Flask, request, jsonify
 import requests as http_requests
 
-# â”€â”€ Config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# "" Config """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 PORT = int(os.environ.get("CORTEX_PORT", 7893))
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 MODEL = os.environ.get("CORTEX_MODEL", "qwen3.5:4b")
 STATE_DIR = Path(os.environ.get("CORTEX_STATE_DIR", os.path.expanduser("~/Documents/Karma_SADE/Scripts/cortex/state")))
 SAVE_INTERVAL = 300  # seconds between auto-saves
-MAX_KNOWLEDGE_CHARS = 100_000  # ~25K tokens â€” leaves room for conversation
+MAX_KNOWLEDGE_CHARS = 100_000  # ~25K tokens -- leaves room for conversation
 MAX_CONVERSATION_PAIRS = 50  # keep last 50 query/response pairs
 
-# â”€â”€ Logging â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# "" Logging """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [cortex] %(levelname)s %(message)s",
@@ -39,15 +39,15 @@ logging.basicConfig(
 )
 log = logging.getLogger("cortex")
 
-# â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-SYSTEM_PROMPT = """You are Julian's Memory Cortex â€” the persistent brain of the Karma Peer system.
+# "" State """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+SYSTEM_PROMPT = """You are Julian's Memory Cortex " the persistent brain of the Karma Peer system.
 
 Your role:
 - Hold Julian/Karma's complete current state in your context window
 - Answer questions about the project, architecture, decisions, and active work
 - Receive new knowledge via ingestion and integrate it into your understanding
 - Provide context summaries when asked
-- Never fabricate â€” if you don't have information, say so
+- Never fabricate " if you don't have information, say so
 
 You are always on. You never forget what has been ingested into this session.
 Your knowledge comes from ingested documents, session summaries, decisions, and real-time updates.
@@ -68,7 +68,7 @@ _ingest_count = 0
 app = Flask(__name__)
 
 
-# â”€â”€ Persistence â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# "" Persistence """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 def _ensure_state_dir():
     STATE_DIR.mkdir(parents=True, exist_ok=True)
@@ -100,7 +100,7 @@ def load_state():
     global _knowledge_blocks, _conversation, _query_count, _ingest_count
     state_file = STATE_DIR / "state.json"
     if not state_file.exists():
-        log.info("No saved state found â€” starting fresh")
+        log.info("No saved state found -- starting fresh")
         return
     try:
         state = json.loads(state_file.read_text(encoding="utf-8"))
@@ -114,15 +114,57 @@ def load_state():
         log.error("Failed to load state: %s", e)
 
 
+_vault_backup_counter = 0
+
 def _auto_save_loop():
-    """Background thread that saves state periodically."""
+    """Background thread that saves state periodically + backs up to vault-neo every 10min."""
+    global _vault_backup_counter
     while True:
         time.sleep(SAVE_INTERVAL)
         with _lock:
             save_state()
+        # Phase 1 Edit 5: Every 2 save cycles (10min), backup summary to vault-neo
+        _vault_backup_counter += 1
+        if _vault_backup_counter >= 2:
+            _vault_backup_counter = 0
+            _backup_to_vault()
 
 
-# â”€â”€ Ollama Interface â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+def _backup_to_vault():
+    """Phase 1 Edit 5: POST knowledge summary to vault-neo /v1/ambient."""
+    try:
+        hub_url = os.environ.get("HUB_URL", "https://hub.arknexus.net")
+        token_path = os.environ.get("HUB_TOKEN_FILE", "")
+        token = ""
+        if token_path and Path(token_path).exists():
+            token = Path(token_path).read_text().strip()
+        if not token:
+            return  # no token, skip silently
+        summary = f"[CORTEX BACKUP {datetime.now(timezone.utc).isoformat()}] " \
+                  f"{len(_knowledge_blocks)} knowledge blocks, " \
+                  f"{len(_conversation)} conversation messages, " \
+                  f"queries={_query_count}, ingests={_ingest_count}"
+        # Include labels of last 5 knowledge blocks for context
+        if _knowledge_blocks:
+            recent_labels = [label for label, _ in _knowledge_blocks[-5:]]
+            summary += f" | recent: {', '.join(recent_labels)}"
+        payload = json.dumps({
+            "type": "log", "content": summary,
+            "tags": ["cortex-backup", "session-state"],
+            "source": "julian-cortex-p1",
+        }).encode()
+        req = __import__("urllib.request", fromlist=["Request"]).Request(
+            f"{hub_url}/v1/ambient", data=payload,
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+            method="POST",
+        )
+        __import__("urllib.request", fromlist=["urlopen"]).urlopen(req, timeout=10)
+        log.info("Cortex backup posted to vault-neo")
+    except Exception as e:
+        log.warning("Vault backup failed (non-fatal): %s", e)
+
+
+# "" Ollama Interface """"""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 def _build_messages(extra_user_msg=None):
     """Build the full message list for Ollama."""
@@ -138,7 +180,7 @@ def _build_messages(extra_user_msg=None):
 
         messages.append({
             "role": "user",
-            "content": f"KNOWLEDGE BASE (ingested documents â€” reference this for all answers):\n\n{knowledge_text}"
+            "content": f"KNOWLEDGE BASE (ingested documents -- reference this for all answers):\n\n{knowledge_text}"
         })
         messages.append({
             "role": "assistant",
@@ -182,13 +224,13 @@ def _call_ollama(messages, temperature=0.3):
         return content
     except http_requests.exceptions.Timeout:
         log.error("Ollama timeout (120s)")
-        return "[CORTEX ERROR: Ollama timeout â€” model may be loading]"
+        return "[CORTEX ERROR: Ollama timeout -- model may be loading]"
     except Exception as e:
         log.error("Ollama call failed: %s", e)
         return f"[CORTEX ERROR: {e}]"
 
 
-# â”€â”€ Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# "" Endpoints """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 @app.route("/health", methods=["GET"])
 def health():
@@ -254,6 +296,45 @@ def ingest():
 
 @app.route("/context", methods=["GET", "POST"])
 def context():
+    # Phase 1 Edit 1: Try K2 cortex first, cache result on success, serve cache on failure
+    k2_url = os.environ.get("K2_CORTEX_URL", "http://192.168.0.226:7892")
+    cache_file = STATE_DIR / "cortex_cache.json"
+    cache_ttl = 1800  # 30 minutes
+
+    try:
+        resp = http_requests.get(f"{k2_url}/context", timeout=15)
+        if resp.ok:
+            data = resp.json()
+            # Cache successful K2 response to disk
+            cache_data = {"cached_at": datetime.now(timezone.utc).isoformat(), "data": data}
+            try:
+                tmp = cache_file.with_suffix(".tmp")
+                tmp.write_text(json.dumps(cache_data, ensure_ascii=False), encoding="utf-8")
+                tmp.replace(cache_file)
+            except Exception as ce:
+                log.warning("Cache write failed: %s", ce)
+            return jsonify(data)
+    except Exception as e:
+        log.warning("K2 cortex unreachable: %s -- checking cache", e)
+
+    # K2 down: serve from cache if fresh enough
+    if cache_file.exists():
+        try:
+            cached = json.loads(cache_file.read_text(encoding="utf-8"))
+            cached_at = datetime.fromisoformat(cached["cached_at"].replace("Z", "+00:00"))
+            age_s = (datetime.now(timezone.utc) - cached_at).total_seconds()
+            if age_s < cache_ttl:
+                log.info("Serving cached cortex context (age: %ds)", int(age_s))
+                result = cached["data"]
+                result["_cached"] = True
+                result["_cache_age_s"] = int(age_s)
+                return jsonify(result)
+            else:
+                log.warning("Cache stale (%ds old, TTL %ds)", int(age_s), cache_ttl)
+        except Exception as ce:
+            log.warning("Cache read failed: %s", ce)
+
+    # Both K2 and cache failed: fall back to local Ollama
     with _lock:
         messages = _build_messages(
             extra_user_msg="Summarize your current knowledge state concisely. "
@@ -261,7 +342,7 @@ def context():
                           "and any blockers or open questions you know about."
         )
         summary = _call_ollama(messages, temperature=0.2)
-    return jsonify({"ok": True, "context": summary})
+    return jsonify({"ok": True, "context": summary, "_source": "p1_local"})
 
 
 @app.route("/status", methods=["GET"])
@@ -294,13 +375,13 @@ def reset():
         save_state()
 
     log.warning("Cortex state RESET")
-    return jsonify({"ok": True, "message": "cortex reset â€” all knowledge cleared"})
+    return jsonify({"ok": True, "message": "cortex reset -- all knowledge cleared"})
 
 
-# â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# "" Lifecycle """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 def _shutdown_handler(signum, frame):
-    log.info("Shutdown signal received â€” saving state")
+    log.info("Shutdown signal received -- saving state")
     with _lock:
         save_state()
     sys.exit(0)
