@@ -139,6 +139,8 @@ Voice NEVER routes through claude.ai. Sovereign pipeline only (Whisper → text 
 - **P3 AUTO-COMPACTION**: When messages exceed 80K chars, summarize old history via LLM, keep last 4 messages intact.
 - **P4 SUBAGENT ISOLATION**: run_subagent() — isolated message history + own transcript. Parent state never modified.
 - **P5 PERMISSION STACK**: 3-level gates (allow/gate/deny) + dangerous command pattern detection + write-outside-workdir block + audit log.
+- **Watcher fixed**: Defaults from OneDrive→Karma_SADE local. DonePath→Reviewed. Restarted with correct paths.
+- **Primitives goldmine**: Karma2/primitives/INDEX.md — running list of all extracted patterns by date.
 
 ## Next Session Starts Here
 1. `/resurrect`

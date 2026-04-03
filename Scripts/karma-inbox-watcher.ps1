@@ -26,10 +26,10 @@
 #   Register-ScheduledTask -TaskName "KarmaInboxWatcher" -Action $action -Trigger $trigger -RunLevel Highest
 
 param(
-    [string]$InboxPath              = "$env:USERPROFILE\OneDrive\Karma\Inbox",
-    [string]$ProcessingPath         = "$env:USERPROFILE\OneDrive\Karma\Processing",
-    [string]$DonePath               = "$env:USERPROFILE\OneDrive\Karma\Done",
-    [string]$GatedPath              = "$env:USERPROFILE\OneDrive\Karma\Gated",
+    [string]$InboxPath              = "$env:USERPROFILE\Documents\Karma_SADE\Karma_PDFs\Inbox",
+    [string]$ProcessingPath         = "$env:USERPROFILE\Documents\Karma_SADE\Karma_PDFs\Processing",
+    [string]$DonePath               = "$env:USERPROFILE\Documents\Karma_SADE\Karma_PDFs\Reviewed",
+    [string]$GatedPath              = "$env:USERPROFILE\Documents\Karma_SADE\Karma_PDFs\Gated",
     [string]$HubUrl                 = "https://hub.arknexus.net/v1/ingest",
     [string]$TokenFile              = "$env:USERPROFILE\Documents\Karma_SADE\.hub-chat-token",
     [int]$IngestDelaySec            = 8,    # seconds between batch files — prevents GLM rate-limit starvation
