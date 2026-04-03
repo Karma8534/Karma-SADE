@@ -20,6 +20,10 @@ except ImportError:
     print("ERROR: pdfplumber not installed. Run: pip install pdfplumber")
     sys.exit(1)
 
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 KARMA_PDFS = Path(r"C:\Users\raest\Documents\Karma_SADE\Karma_PDFs")
 OUTPUT_DIR = KARMA_PDFS / "Converted"
 WIP_DIR = Path(r"C:\Users\raest\Documents\Karma_SADE\docs\wip")

@@ -130,6 +130,18 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'convert') {
+      const store = useKarmaStore.getState();
+      store.addMessage({
+        id: Date.now().toString(36), role: 'system',
+        content: '**CONVERT** — Running PDF batch converter...',
+        timestamp: new Date().toISOString(),
+      });
+      // Fire to CC which has filesystem access
+      sendMessage('Run: python Scripts/batch_pdf_to_md.py --execute --wip');
+      setText('');
+      return;
+    }
     if (cmd.name === 'style') {
       const styles = ['', 'concise', 'detailed', 'technical', 'creative'] as const;
       const store = useKarmaStore.getState();
