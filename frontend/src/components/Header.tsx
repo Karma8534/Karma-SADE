@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { useKarmaStore, type EffortLevel } from '@/store/karma';
 import { LearnedPanel } from './LearnedPanel';
+import { AgentPanel } from './AgentPanel';
+import { GitPanel } from './GitPanel';
+import { SettingsPanel } from './SettingsPanel';
 
 export function Header() {
   const lastSeen = useKarmaStore((s) => s.lastSeen);
@@ -13,6 +16,9 @@ export function Header() {
   const clearMessages = useKarmaStore((s) => s.clearMessages);
   const sessionCost = useKarmaStore((s) => s.sessionCost);
   const [showLearned, setShowLearned] = useState(false);
+  const [showAgents, setShowAgents] = useState(false);
+  const [showGit, setShowGit] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const timeSince = lastSeen
     ? formatTimeSince(lastSeen)
@@ -55,11 +61,17 @@ export function Header() {
 
       {/* Action buttons */}
       <HeaderButton onClick={() => setShowLearned(true)}>LEARNED</HeaderButton>
+      <HeaderButton onClick={() => setShowAgents(true)}>AGENTS</HeaderButton>
+      <HeaderButton onClick={() => setShowGit(true)}>GIT</HeaderButton>
       <HeaderButton onClick={() => window.open('http://localhost:37778', '_blank')}>MEMORY</HeaderButton>
+      <HeaderButton onClick={() => setShowSettings(true)}>SETTINGS</HeaderButton>
       <HeaderButton onClick={clearMessages}>CLEAR</HeaderButton>
 
-      {/* Learned panel modal */}
+      {/* Modal panels */}
       {showLearned && <LearnedPanel onClose={() => setShowLearned(false)} />}
+      {showAgents && <AgentPanel onClose={() => setShowAgents(false)} />}
+      {showGit && <GitPanel onClose={() => setShowGit(false)} />}
+      {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
 
       {/* Cost display */}
       {sessionCost > 0 && (
