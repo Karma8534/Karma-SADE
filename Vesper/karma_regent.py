@@ -300,7 +300,7 @@ _current_goal: dict = {"mission": "Evolve. Continue.", "pending_tasks": 0}
 _kpi_window: list = []  # rolling last 10 turn KPI results
 
 def load_vesper_brief():
-    """Load watchdog-generated session brief."""
+    """Load watchdog-generated session brief (now includes gap backlog section)."""
     global _vesper_brief
     if VESPER_BRIEF_FILE.exists():
         try:
@@ -308,6 +308,30 @@ def load_vesper_brief():
             log(f"vesper brief loaded: {len(_vesper_brief)} chars")
         except Exception as e:
             log(f"brief load error: {e}")
+
+
+def load_gap_backlog_summary() -> str:
+    """Load concise gap backlog for system prompt injection. ~50 tokens."""
+    import re
+    gap_map_path = Path("/mnt/c/Users/raest/Documents/Karma_SADE/Karma2/map/preclaw1-gap-map.md")
+    if not gap_map_path.exists():
+        gap_map_path = CACHE_DIR / "preclaw1-gap-map.md"
+    if not gap_map_path.exists():
+        return ""
+    try:
+        text = gap_map_path.read_text(encoding="utf-8")
+        # Extract summary totals from the TOTAL row
+        m = re.search(r"\*\*TOTAL\*\*\s*\|\s*\*\*(\d+)\*\*\s*\|\s*\*\*(\d+)\*\*\s*\|\s*\*\*(\d+)\*\*", text)
+        if m:
+            have, partial, missing = m.group(1), m.group(2), m.group(3)
+            return f"[GAP BACKLOG: {have} HAVE / {partial} PARTIAL / {missing} MISSING out of 96 features]"
+    except Exception:
+        pass
+    return ""
+
+
+_gap_backlog_summary = ""
+_gap_backlog_last_load = 0
 
 # Ã¢â€â‚¬Ã¢â€â‚¬ Self-Audit + Self-Edit Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 def self_audit():
@@ -417,6 +441,14 @@ def get_system_prompt():
         base += f"\n\n[SESSION BRIEF]\n{_vesper_brief[:1500]}"
     if memory_ctx:
         base += f"\n\nRecent memory:\n{memory_ctx}"
+    # Phase 0: gap backlog awareness (~50 tokens, refreshed every 5min)
+    global _gap_backlog_summary, _gap_backlog_last_load
+    now = time.time()
+    if now - _gap_backlog_last_load > 300:  # 5min cache
+        _gap_backlog_summary = load_gap_backlog_summary()
+        _gap_backlog_last_load = now
+    if _gap_backlog_summary:
+        base += f"\n\n{_gap_backlog_summary}"
     return base
 
 def log_evolution(msg_id, from_addr, category, response_source, response_len, tool_used=False):
@@ -477,11 +509,17 @@ def self_evaluate():
                 else:
                     f.write(rec["raw"] + "\n")
 
+        # Phase 0: backlog-reduction signal
+        backlog_note = ""
+        gap_summary = load_gap_backlog_summary()
+        if gap_summary:
+            backlog_note = f" | backlog={gap_summary}"
+
         report = (f"PROOF [Karma Self-Eval]: grade={grade:.2f} | "
                   f"local={local_rate:.0%} | avg_len={avg_len:.0f} | "
-                  f"tools={tool_rate:.0%} | n={len(recent)}")
+                  f"tools={tool_rate:.0%} | n={len(recent)}{backlog_note}")
         bus_post("all", report, urgency="informational")
-        log(f"self-eval: grade={grade:.2f}")
+        log(f"self-eval: grade={grade:.2f}{backlog_note}")
 
         if grade < 0.4:
             bus_post("all",

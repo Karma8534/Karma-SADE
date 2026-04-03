@@ -14,7 +14,7 @@ import urllib.request
 import regent_guardrails as guardrails
 import regent_pipeline as pipeline
 
-SAFE_TARGETS = {"persona.voice", "runtime_rules", "safe_exec", "behavioral_awareness", None}
+SAFE_TARGETS = {"persona.voice", "runtime_rules", "safe_exec", "behavioral_awareness", "gap_closure", None}
 
 SAFE_EXEC_WHITELIST = {
     "systemctl restart karma-regent",
@@ -789,12 +789,37 @@ def run_governor():
             applied += 1
 
             spine_ver = pipeline.read_json(pipeline.SPINE_FILE, {}).get("evolution", {}).get("version", "?")
+
+            # Phase 0 Edit 10: If this is a gap_closure promotion, update the gap map atomically
+            gap_update_result = None
+            if target == "gap_closure":
+                gap_feature = (proposed.get("patch") or {}).get("feature_name", "")
+                gap_new_status = (proposed.get("patch") or {}).get("new_status", "HAVE")
+                gap_evidence = f"Promoted spine v{spine_ver}, {pipeline.iso_utc()}"
+                if gap_feature:
+                    try:
+                        # Import gap_map from Scripts/ (P1 path)
+                        import importlib.util
+                        gm_path = os.path.join(os.path.dirname(__file__), "gap_map.py")
+                        spec = importlib.util.spec_from_file_location("gap_map", gm_path)
+                        gm = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(gm)
+                        gap_update_result = gm.update_gap_status(gap_feature, gap_new_status, evidence=gap_evidence)
+                        if gap_update_result.get("updated"):
+                            print(f"[governor] GAP MAP UPDATED: {gap_feature} -> {gap_new_status}")
+                        else:
+                            print(f"[governor] gap map update skipped: {gap_update_result.get('error')}")
+                    except Exception as gm_err:
+                        print(f"[governor] gap map update error: {gm_err}")
+                        gap_update_result = {"updated": False, "error": str(gm_err)}
+
             pipeline.append_jsonl(pipeline.GOVERNOR_AUDIT,
                                   {"ts": pipeline.iso_utc(), "event": "applied",
                                    "candidate_id": promo.get("candidate_id"),
                                    "spine_version": spine_ver, "checksum": checksum_or_err,
                                    "falkor_write": falkor_status,
-                                   "smoke_test": smoke_detail})
+                                   "smoke_test": smoke_detail,
+                                   "gap_map_update": gap_update_result})
             print(f"[governor] APPLIED {promo.get('candidate_id', '?')} -> spine v{spine_ver}")
         else:
             promo["status"] = "apply_failed"

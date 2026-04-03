@@ -114,12 +114,74 @@ def update_spine(state, stats):
     print(f"[watchdog] spine updated: resume_block refreshed (v{v}, msgs={msgs}, grade={grade:.2f})")
 
 
+def load_gap_backlog():
+    """Parse preclaw1 gap map and return ranked MISSING/PARTIAL items."""
+    # gap_map.py lives on P1 at Scripts/gap_map.py — we read the markdown directly
+    gap_map_path = Path("/mnt/c/Users/raest/Documents/Karma_SADE/Karma2/map/preclaw1-gap-map.md")
+    if not gap_map_path.exists():
+        # Fallback: try relative from K2 cache
+        gap_map_path = CACHE_DIR / "preclaw1-gap-map.md"
+    if not gap_map_path.exists():
+        return {"missing": 0, "partial": 0, "total": 0, "top_missing": []}
+    try:
+        import re
+        lines = gap_map_path.read_text(encoding="utf-8").splitlines()
+        row_re = re.compile(r"^\|(.+)\|(.+)\|\s*\*\*(\w+)\*\*\s*\|(.+)\|$")
+        cat_re = re.compile(r"^## \d+\.\s+(.+)$")
+        current_cat = ""
+        missing = []
+        partial = []
+        for line in lines:
+            cm = cat_re.match(line.strip())
+            if cm:
+                current_cat = cm.group(1).strip()
+                continue
+            rm = row_re.match(line.strip())
+            if rm:
+                feature = rm.group(1).strip()
+                status = rm.group(3).strip()
+                gap = rm.group(4).strip()
+                if status == "MISSING":
+                    missing.append({"feature": feature, "category": current_cat, "gap": gap})
+                elif status == "PARTIAL":
+                    partial.append({"feature": feature, "category": current_cat, "gap": gap})
+        return {
+            "missing": len(missing),
+            "partial": len(partial),
+            "total": len(missing) + len(partial),
+            "top_missing": missing[:5],  # top 5 for brief injection
+        }
+    except Exception as e:
+        print(f"[watchdog] gap map parse error: {e}")
+        return {"missing": 0, "partial": 0, "total": 0, "top_missing": []}
+
+
+def write_gap_brief_section(backlog):
+    """Return a brief section summarizing gap backlog for injection into vesper_brief."""
+    if backlog["total"] == 0:
+        return ""
+    top = "\n".join(f"  - {g['feature']} ({g['category']})" for g in backlog["top_missing"][:5])
+    return f"""
+## Gap Backlog
+- MISSING: {backlog['missing']} | PARTIAL: {backlog['partial']} | Total open: {backlog['total']}
+- Top MISSING items:
+{top}
+"""
+
+
 if __name__ == "__main__":
     print(f"[watchdog] {datetime.datetime.utcnow().isoformat()}Z — running")
     stats = load_evolution_stats()
     state = load_state()
     last_colby = load_recent_conversations()
+    backlog = load_gap_backlog()
     write_brief(state, stats, last_colby)
+    # Append gap backlog section to brief
+    if backlog["total"] > 0:
+        gap_section = write_gap_brief_section(backlog)
+        with open(BRIEF_FILE, "a") as f:
+            f.write(gap_section)
+        print(f"[watchdog] gap backlog appended: {backlog['missing']} missing, {backlog['partial']} partial")
     update_spine(state, stats)
     print(f"[watchdog] done. grade={stats['avg_grade']} "
           f"cycles_threshold={stats['cycles_at_threshold']} "
