@@ -35,8 +35,8 @@
 | MCP server management | Settings schema (enable/disable/allow/deny) | **PARTIAL** | CC has MCP; no management UI |
 | Plugin config | Settings schema `pluginConfigs` | **MISSING** | No plugin system |
 | Worktree config | Settings schema `worktree.*` | **N/A** | Worktrees permanently banned in this project (P027) |
-| Fast mode toggle | `commands/fast/` | **MISSING** | No fast mode |
-| Thinking mode toggle | Settings `thinkingEnabled` | **MISSING** | No thinking toggle |
+| Fast mode toggle | `commands/fast/` | **HAVE** | No fast mode [S160: /effort cycles auto/low/med/high/max locally] |
+| Thinking mode toggle | Settings `thinkingEnabled` | **HAVE** | No thinking toggle [S160: /effort max = extended thinking] |
 | Prompt suggestions | Settings `promptSuggestionEnabled` | **MISSING** | No prompt suggestions |
 
 ## 2. SESSION MANAGEMENT
@@ -197,7 +197,7 @@
 
 | Category | HAVE | PARTIAL | MISSING | N/A |
 |----------|------|---------|---------|-----|
-| Settings | 0 | 7 | 10 | 1 |
+| Settings | 2 | 7 | 8 | 1 |
 | Session Management | 0 | 0 | 3 | 7 |
 | Commands | 6 | 3 | 2 | 0 |
 | Tools | 3 | 0 | 2 | 0 |
@@ -213,9 +213,9 @@
 | Auto-Update | 0 | 0 | 3 | 0 |
 | Bridge | 1 | 1 | 2 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **13** | **20** | **54** | **8** |
+| **TOTAL** | **15** | **20** | **52** | **8** |
 
-**13 features fully implemented. 20 partial. 54 MISSING.**
+**15 features fully implemented. 20 partial. 52 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 

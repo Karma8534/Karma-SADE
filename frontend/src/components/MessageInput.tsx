@@ -48,6 +48,33 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'effort') {
+      // Cycle through effort levels
+      const levels = ['', 'low', 'medium', 'high', 'max'] as const;
+      const store = useKarmaStore.getState();
+      const cur = levels.indexOf(store.effortLevel as typeof levels[number]);
+      const next = levels[(cur + 1) % levels.length];
+      store.setEffort(next);
+      store.addMessage({
+        id: Date.now().toString(36), role: 'system',
+        content: `**EFFORT** set to **${next || 'auto'}**`,
+        timestamp: new Date().toISOString(),
+      });
+      setText('');
+      return;
+    }
+    if (cmd.name === 'theme') {
+      const store = useKarmaStore.getState();
+      const next = store.theme === 'dark' ? 'light' : 'dark';
+      store.setTheme(next);
+      store.addMessage({
+        id: Date.now().toString(36), role: 'system',
+        content: `**THEME** switched to **${next}**`,
+        timestamp: new Date().toISOString(),
+      });
+      setText('');
+      return;
+    }
     if (cmd.name === 'status') {
       const store = useKarmaStore.getState();
       // Fire async health check and render result
