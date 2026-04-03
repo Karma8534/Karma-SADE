@@ -19,6 +19,7 @@ const COMMANDS: SlashCommand[] = [
 
   // Tools
   { name: 'help', description: 'Show available commands', category: 'info' },
+  { name: 'whoami', description: 'Show Karma identity and family hierarchy', category: 'info' },
   { name: 'cost', description: 'Show session cost and duration', category: 'info' },
   { name: 'status', description: 'Show system status (P1/K2/vault-neo)', category: 'info' },
   { name: 'context', description: 'Show context window usage', category: 'info' },
