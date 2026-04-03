@@ -48,6 +48,31 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'cost') {
+      const store = useKarmaStore.getState();
+      useKarmaStore.getState().addMessage({
+        id: Date.now().toString(36),
+        role: 'system',
+        content: `**COST** | Session: $${store.sessionCost.toFixed(4)} | Model: cc-sovereign (Max $0/request) | Infrastructure: $24/mo (droplet)`,
+        timestamp: new Date().toISOString(),
+      });
+      setText('');
+      return;
+    }
+    if (cmd.name === 'context') {
+      const store = useKarmaStore.getState();
+      const chars = store.messages.reduce((s, m) => s + (m.content?.length || 0), 0);
+      const kb = (chars / 1024).toFixed(1);
+      const pct = Math.min(100, (chars / 128000) * 100).toFixed(0);
+      useKarmaStore.getState().addMessage({
+        id: Date.now().toString(36),
+        role: 'system',
+        content: `**CONTEXT** | ${kb}KB used (${pct}% of 128K window) | ${store.messages.length} messages | Surface: ${store.surface ? 'loaded' : 'not loaded'}`,
+        timestamp: new Date().toISOString(),
+      });
+      setText('');
+      return;
+    }
     if (cmd.name === 'settings') {
       // Trigger settings panel via a custom event
       window.dispatchEvent(new CustomEvent('karma-open-settings'));

@@ -63,10 +63,10 @@
 | /help | `commands/help/` | **HAVE** | No help system [S160: inline help renders in chat with commands/shortcuts/architecture/identity] |
 | /status | `commands/status/` | **PARTIAL** | /v1/status exists; no UI |
 | /doctor (diagnostics) | `commands/doctor/` | **PARTIAL** | No diagnostics UI [S160: /doctor command defined, routes to CC for diagnostics] |
-| /cost | `commands/cost/` | **PARTIAL** | No cost display [S160: StatusBar shows session + monthly cost + context budget] |
+| /cost | `commands/cost/` | **HAVE** | No cost display [S160: StatusBar shows session + monthly cost + context budget] [S160: local handler shows session + model + infra cost] |
 | /usage | `commands/usage/` | **MISSING** | No usage display |
 | /plan (structured planning) | `commands/plan/` | **MISSING** | No plan mode UI |
-| /context (show context size) | `commands/context/` | **PARTIAL** | Context panel exists; no context budget display |
+| /context (show context size) | `commands/context/` | **HAVE** | Context panel exists; no context budget display [S160: local handler shows KB, %, msg count, surface status] |
 | /clear (clear conversation) | `commands/clear/` | **HAVE** | CLEAR button in header |
 | /memory | `commands/memory/` | **PARTIAL** | MEMORY button opens external localhost:37778 |
 
@@ -199,7 +199,7 @@
 |----------|------|---------|---------|-----|
 | Settings | 0 | 7 | 10 | 1 |
 | Session Management | 0 | 0 | 3 | 7 |
-| Commands | 3 | 6 | 2 | 0 |
+| Commands | 5 | 4 | 2 | 0 |
 | Tools | 3 | 0 | 2 | 0 |
 | Scheduling/Tasks | 2 | 0 | 3 | 0 |
 | Multi-Agent | 0 | 1 | 4 | 0 |
@@ -213,9 +213,9 @@
 | Auto-Update | 0 | 0 | 3 | 0 |
 | Bridge | 1 | 1 | 2 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **10** | **23** | **54** | **8** |
+| **TOTAL** | **12** | **21** | **54** | **8** |
 
-**10 features fully implemented. 23 partial. 54 MISSING.**
+**12 features fully implemented. 21 partial. 54 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 
