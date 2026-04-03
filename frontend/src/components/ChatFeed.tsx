@@ -60,6 +60,43 @@ export function ChatFeed() {
   );
 }
 
+function renderMarkdown(text: string): JSX.Element {
+  // Split on code blocks first (```...```)
+  const parts = text.split(/(```[\s\S]*?```)/g);
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith('```') && part.endsWith('```')) {
+          const inner = part.slice(3, -3);
+          const firstLine = inner.indexOf('\n');
+          const lang = firstLine > 0 ? inner.slice(0, firstLine).trim() : '';
+          const code = firstLine > 0 ? inner.slice(firstLine + 1) : inner;
+          return (
+            <pre key={i} className="bg-karma-bg border border-karma-border rounded p-2 my-1 text-[11px] font-mono overflow-x-auto">
+              {lang && <div className="text-karma-muted text-[9px] mb-1">{lang}</div>}
+              <code>{code}</code>
+            </pre>
+          );
+        }
+        // Inline markdown: **bold**, `code`, *italic*
+        return (
+          <span key={i}>
+            {part.split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g).map((seg, j) => {
+              if (seg.startsWith('**') && seg.endsWith('**'))
+                return <strong key={j} className="text-karma-accent">{seg.slice(2, -2)}</strong>;
+              if (seg.startsWith('`') && seg.endsWith('`'))
+                return <code key={j} className="bg-karma-bg px-1 rounded text-[11px] font-mono text-karma-accent2">{seg.slice(1, -1)}</code>;
+              if (seg.startsWith('*') && seg.endsWith('*') && !seg.startsWith('**'))
+                return <em key={j} className="text-karma-muted">{seg.slice(1, -1)}</em>;
+              return <span key={j}>{seg}</span>;
+            })}
+          </span>
+        );
+      })}
+    </>
+  );
+}
+
 function MessageBubble({ message }: { message: ChatMessage }) {
   const { role, content, timestamp, toolName, toolInput, toolOutput } = message;
 
@@ -102,16 +139,12 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   if (role === 'system') {
     return (
       <div className="bg-karma-bg border border-karma-border/50 rounded px-4 py-2.5 text-[11px] text-karma-text whitespace-pre-wrap my-1">
-        {content.split(/(\*\*[^*]+\*\*)/).map((part, i) =>
-          part.startsWith('**') && part.endsWith('**')
-            ? <span key={i} className="text-karma-accent font-bold">{part.slice(2, -2)}</span>
-            : <span key={i}>{part}</span>
-        )}
+        {renderMarkdown(content)}
       </div>
     );
   }
 
-  // Karma message
+  // Karma message — with basic markdown rendering
   return (
     <div className="flex flex-col items-start gap-0.5">
       <div className="text-karma-accent text-[11px] font-bold">
@@ -119,7 +152,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
       </div>
       {content && (
         <div className="bg-karma-surface border border-karma-accent/30 rounded px-4 py-2.5 max-w-[85%] whitespace-pre-wrap">
-          {content}
+          {renderMarkdown(content)}
         </div>
       )}
     </div>

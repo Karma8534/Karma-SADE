@@ -184,7 +184,7 @@
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
 | 389 React components | `components/` | **PARTIAL** | ~15 components in Next.js frontend |
-| Markdown rendering | `components/Markdown.tsx` | **PARTIAL** | Basic markdown in chat |
+| Markdown rendering | `components/Markdown.tsx` | **HAVE** | Basic markdown in chat [S160: renderMarkdown() handles bold, italic, code, code blocks in ChatFeed] |
 | Syntax highlighted code | `components/HighlightedCode.tsx` | **HAVE** | No syntax highlighting [S159: CodeBlock.tsx with keyword highlighting, line numbers, copy button] |
 | Structured diff display | `components/StructuredDiff.tsx` | **HAVE** | No diff display [S159: CodeBlock.tsx diff mode with +/- line coloring] |
 | Virtual message list | `components/VirtualMessageList.tsx` | **PARTIAL** | No virtualization [Auto-scroll exists. Virtualization deferred until perf issue arises.] |
@@ -213,9 +213,9 @@
 | Auto-Update | 0 | 1 | 0 | 2 |
 | Bridge | 1 | 3 | 0 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **27** | **38** | **14** | **16** |
+| **TOTAL** | **28** | **37** | **14** | **16** |
 
-**27 features fully implemented. 38 partial. 14 MISSING.**
+**28 features fully implemented. 37 partial. 14 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 
