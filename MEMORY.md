@@ -170,12 +170,27 @@ Voice NEVER routes through claude.ai. Sovereign pipeline only (Whisper → text 
 
 **The One Thing:** Make cc_server_p1.py the actual merged surface — enforce denials, persist/recover transcripts, expose one combined payload.
 
+## Session 158 (2026-04-02) — Codex Critical Path Execution
+- **CP1 DONE**: PreToolUse enforcement (kill subprocess on deny + yield error) + load_transcript wired (crash-safe conversation recovery with 100-entry cap). obs #21989.
+- **CP2 DONE**: /v1/surface merged endpoint — 10 keys (session, git, files, skills, hooks, memory, state, agents, transcripts) in single call. obs #21995.
+- **CP3 IN PROGRESS**: SelfEdit + ImproveRun tools in nexus_agent.py (Codex agent dispatched).
+- **CP4 DONE**: start_cc_server.ps1 updated with `-B` flag + `PYTHONUTF8=1`. KarmaSovereignHarness schtask active.
+- **Bugs fixed**: P103 (_registry not _hooks), P104 (event not events), P105 (pyc cache staleness). /hooks endpoint was broken since Sprint 3a.
+- **ORF applied**: Architecture minimal (2 files). One gap (transcript rotation) patched.
+- P1/K2 always on AC via docking stations (obs #21996).
+
+## SYSTEM IS NOT AT BASELINE — DO NOT CLAIM OTHERWISE
+
+**CP5 NOT DONE.** Frontend still uses 3 individual fetches instead of /v1/surface.
+GSD plan at `.gsd/phase-cp5-surface-PLAN.md` — every file, every line, every test.
+Give this to Codex or execute it yourself. ~40 lines changed across 3 files.
+
 ## Next Session Starts Here
 1. `/resurrect`
-2. Execute Codex critical path item 1: enforce PreToolUse denials in run_cc_stream + wire load_transcript into resume flow
-3. Execute item 2: merged surface payload endpoint
-4. Execute item 3: test-gated self-edit in nexus_agent
-5. Phase F browser walkthrough with Sovereign ONLY after items 1-4 deployed
-6. Sprint 7 scope: mic icon, camera icon, subagent panel, git panel, file editor (APPROVED), artifact preview, auto-dream, decoy page
-7. THE ONLY PLAN is `docs/ForColby/nexus.md` — APPEND ONLY. Resurrection Plan at `Memory/03-resurrection-plan-v2.1.md`
+2. Execute `.gsd/phase-cp5-surface-PLAN.md` — CP5 is the ONLY remaining code task before Phase D
+3. Delete run_subagent() dead code from nexus_agent.py
+4. `npm run build` + deploy to vault-neo
+5. Phase D: Sovereign browser walkthrough (5 min — LEARNED, MEMORY, chat, AGORA, DevTools network tab confirms 1 surface call)
+6. Phase F: Sovereign declares baseline
+7. THE PLAN is `Memory/03-resurrection-plan-v2.1.md` (v2.2). nexus.md is APPEND-ONLY reference.
 8. Sovereign granted identity autonomy (voice, persona = Julian+Karma's decision). obs #21947
