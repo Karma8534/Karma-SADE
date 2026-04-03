@@ -45,9 +45,9 @@
 |-----------------|---------------|-------------|-----|
 | Session history sidebar | `history.ts`, `commands/resume/` | **N/A** | Nexus is one continuous session — no sidebar needed |
 | Resume session | `commands/resume/` | **N/A** | Nexus never ends — resume is automatic via spine/cortex |
-| Rewind/checkpoint | `commands/rewind/` | **MISSING** | No rewind capability |
-| Export conversation | `commands/export/` | **MISSING** | No export UI |
-| Compact session | `commands/compact/` | **MISSING** | No compact UI |
+| Rewind/checkpoint | `commands/rewind/` | **PARTIAL** | No rewind capability [S160: transcript checkpoints exist, no UI rewind yet] |
+| Export conversation | `commands/export/` | **HAVE** | No export UI [S160: /export downloads markdown file with full conversation] |
+| Compact session | `commands/compact/` | **HAVE** | No compact UI [S160: /compact sends summarize prompt to CC for intelligent compression] |
 | Session rename | `commands/rename/` | **N/A** | One session, no rename needed |
 | Session share | `commands/share/` | **N/A** | Nexus is personal — no sharing model |
 | Session tag | `commands/tag/` | **N/A** | One session — tagging is memory/spine domain |
@@ -198,7 +198,7 @@
 | Category | HAVE | PARTIAL | MISSING | N/A |
 |----------|------|---------|---------|-----|
 | Settings | 2 | 7 | 8 | 1 |
-| Session Management | 0 | 0 | 3 | 7 |
+| Session Management | 2 | 1 | 0 | 7 |
 | Commands | 7 | 2 | 2 | 0 |
 | Tools | 3 | 0 | 2 | 0 |
 | Scheduling/Tasks | 2 | 0 | 3 | 0 |
@@ -213,9 +213,9 @@
 | Auto-Update | 0 | 0 | 3 | 0 |
 | Bridge | 1 | 1 | 2 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **16** | **19** | **52** | **8** |
+| **TOTAL** | **18** | **20** | **49** | **8** |
 
-**16 features fully implemented. 19 partial. 52 MISSING.**
+**18 features fully implemented. 20 partial. 49 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 

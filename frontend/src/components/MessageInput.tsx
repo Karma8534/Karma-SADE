@@ -48,6 +48,34 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'export') {
+      const store = useKarmaStore.getState();
+      const lines = store.messages.map(m => {
+        const role = m.role === 'karma' ? 'Karma' : m.role === 'user' ? 'You' : 'System';
+        return `**${role}** (${new Date(m.timestamp).toLocaleString()})\n${m.content}\n`;
+      });
+      const md = `# Karma Nexus Conversation\nExported: ${new Date().toISOString()}\n\n---\n\n${lines.join('\n---\n\n')}`;
+      const blob = new Blob([md], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `karma-conversation-${Date.now()}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+      store.addMessage({
+        id: Date.now().toString(36), role: 'system',
+        content: `**EXPORT** — ${store.messages.length} messages saved as markdown`,
+        timestamp: new Date().toISOString(),
+      });
+      setText('');
+      return;
+    }
+    if (cmd.name === 'compact') {
+      // Send to CC for intelligent compaction
+      sendMessage('/compact — Summarize the conversation so far into key decisions, facts, and open questions. Then I will use this summary as context going forward.');
+      setText('');
+      return;
+    }
     if (cmd.name === 'memory') {
       // Open MEMORY panel (same as header button)
       window.dispatchEvent(new CustomEvent('karma-open-memory'));
