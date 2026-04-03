@@ -48,6 +48,36 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'status') {
+      const store = useKarmaStore.getState();
+      // Fire async health check and render result
+      (async () => {
+        let healthText = 'Checking...';
+        try {
+          const res = await fetch('/v1/status', {
+            headers: { Authorization: `Bearer ${store.token}` },
+          });
+          if (res.ok) {
+            const d = await res.json();
+            const p1 = d.harness?.p1?.healthy ? 'UP' : 'DOWN';
+            const k2 = d.harness?.k2?.healthy ? 'UP' : 'DOWN';
+            healthText = `P1: ${p1} | K2: ${k2} | vault: ${d.ok ? 'UP' : 'DOWN'} | uptime: ${d.uptime || 'unknown'}`;
+          } else {
+            healthText = `Hub returned ${res.status}`;
+          }
+        } catch (e) {
+          healthText = 'Hub unreachable';
+        }
+        store.addMessage({
+          id: Date.now().toString(36),
+          role: 'system',
+          content: `**STATUS** | ${healthText}`,
+          timestamp: new Date().toISOString(),
+        });
+      })();
+      setText('');
+      return;
+    }
     if (cmd.name === 'cost') {
       const store = useKarmaStore.getState();
       useKarmaStore.getState().addMessage({
