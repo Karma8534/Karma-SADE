@@ -9,6 +9,10 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState<SettingsTab>('general');
   const effortLevel = useKarmaStore((s) => s.effortLevel);
   const setEffort = useKarmaStore((s) => s.setEffort);
+  const theme = useKarmaStore((s) => s.theme);
+  const setTheme = useKarmaStore((s) => s.setTheme);
+  const personalPreferences = useKarmaStore((s) => s.personalPreferences);
+  const setPersonalPreferences = useKarmaStore((s) => s.setPersonalPreferences);
   const surface = useKarmaStore((s) => s.surface);
   const fetchSurface = useKarmaStore((s) => s.fetchSurface);
 
@@ -70,7 +74,32 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
                 </div>
 
                 <div className="text-karma-accent font-bold mt-3 mb-1">Theme</div>
-                <div className="text-karma-muted">Dark (Karma default). Custom themes coming in Sprint 8.</div>
+                <div className="flex gap-1">
+                  {(['dark', 'light'] as const).map((t) => (
+                    <button
+                      key={t}
+                      className={`px-2 py-1 text-[10px] border cursor-pointer
+                                 ${theme === t
+                                   ? 'border-karma-accent text-karma-accent bg-karma-accent/10'
+                                   : 'border-karma-border text-karma-muted bg-transparent hover:text-karma-text'}`}
+                      onClick={() => setTheme(t)}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="text-karma-accent font-bold mt-3 mb-1">Personal Preferences</div>
+                <textarea
+                  className="w-full bg-karma-bg border border-karma-border text-karma-text text-[10px] p-2 resize-y min-h-[60px] outline-none focus:border-karma-accent"
+                  placeholder="Tell Karma about yourself — preferences, context, working style. This is injected into every conversation."
+                  value={personalPreferences}
+                  onChange={(e) => setPersonalPreferences(e.target.value)}
+                  rows={3}
+                />
+                <div className="text-karma-muted text-[9px]">
+                  Injected as context into every conversation. Helps Karma understand your preferences.
+                </div>
 
                 <div className="text-karma-accent font-bold mt-3 mb-1">Keyboard Shortcuts</div>
                 <div className="grid grid-cols-2 gap-1 text-[10px]">

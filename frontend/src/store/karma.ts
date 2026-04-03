@@ -104,6 +104,8 @@ interface KarmaState {
 
   // Controls
   effortLevel: EffortLevel;
+  theme: 'dark' | 'light';
+  personalPreferences: string;
 
   // Tool tracking (for stream)
   activeToolCalls: Map<string, ToolCall>;
@@ -146,6 +148,8 @@ interface KarmaState {
   removeFile: (index: number) => void;
   clearFiles: () => void;
   setEffort: (level: EffortLevel) => void;
+  setTheme: (theme: 'dark' | 'light') => void;
+  setPersonalPreferences: (prefs: string) => void;
   addToolCall: (tc: ToolCall) => void;
   updateToolResult: (id: string, output: string) => void;
   addSelfEditProposal: (p: SelfEditProposal) => void;
@@ -173,6 +177,8 @@ export const useKarmaStore = create<KarmaState>((set, get) => ({
   streamAbortController: null,
   pendingFiles: [],
   effortLevel: '',
+  theme: 'dark' as const,
+  personalPreferences: typeof window !== 'undefined' ? localStorage.getItem('karma-preferences') || '' : '',
   activeToolCalls: new Map(),
   selfEditProposals: [],
   sessionCost: 0,
@@ -225,6 +231,17 @@ export const useKarmaStore = create<KarmaState>((set, get) => ({
 
   // Controls
   setEffort: (level) => set({ effortLevel: level }),
+  setTheme: (theme) => {
+    if (typeof window !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('karma-theme', theme);
+    }
+    set({ theme });
+  },
+  setPersonalPreferences: (prefs) => {
+    if (typeof window !== 'undefined') localStorage.setItem('karma-preferences', prefs);
+    set({ personalPreferences: prefs });
+  },
 
   // Tools
   addToolCall: (tc) =>

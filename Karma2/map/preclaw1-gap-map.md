@@ -20,17 +20,17 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| Settings page (General/Account/Privacy/Billing/Usage/Capabilities/Connectors) | `commands/config/`, `utils/settings/` | **MISSING** | No settings UI at all |
-| Model selection | `commands/model/` | **PARTIAL** | Backend has effort dropdown; no model picker |
-| Theme/color config | `commands/theme/`, `commands/color/` | **MISSING** | Hardcoded dark theme |
+| Settings page (General/Account/Privacy/Billing/Usage/Capabilities/Connectors) | `commands/config/`, `utils/settings/` | **PARTIAL** | No settings UI at all [S159: 5-tab modal (General/Model/Hooks/MCP/Permissions)] |
+| Model selection | `commands/model/` | **PARTIAL** | Backend has effort dropdown; no model picker [S159: effort dropdown + tier display] |
+| Theme/color config | `commands/theme/`, `commands/color/` | **PARTIAL** | Hardcoded dark theme [S160: dark/light toggle in Settings General tab] |
 | Output style config | `commands/output-style/` | **MISSING** | No output style options |
 | Keybindings config | `commands/keybindings/`, `keybindings/` | **MISSING** | No keybinding UI |
 | Vim mode | `commands/vim/`, `vim/` | **MISSING** | No vim mode |
 | Language preference | Settings schema `language` | **MISSING** | No language setting |
 | Privacy settings | `commands/privacy-settings/` | **MISSING** | No privacy UI |
-| Personal preferences (system prompt injection) | Settings schema | **MISSING** | No user preferences injection |
-| Permission rules (allow/deny/ask) | `commands/permissions/`, `types/permissions.ts` | **MISSING** | No permission management UI |
-| Hooks config | Settings schema `hooks` | **PARTIAL** | Backend hooks work; no UI config |
+| Personal preferences (system prompt injection) | Settings schema | **PARTIAL** | No user preferences injection [S160: textarea in Settings, persisted to localStorage] |
+| Permission rules (allow/deny/ask) | `commands/permissions/`, `types/permissions.ts` | **PARTIAL** | No permission management UI [S159: static permission table in settings] |
+| Hooks config | Settings schema `hooks` | **PARTIAL** | Backend hooks work; no UI config [S159: read-only hooks list from surface] |
 | Auto-update channel | Settings schema `autoUpdatesChannel` | **MISSING** | No update management |
 | MCP server management | Settings schema (enable/disable/allow/deny) | **PARTIAL** | CC has MCP; no management UI |
 | Plugin config | Settings schema `pluginConfigs` | **MISSING** | No plugin system |
@@ -43,8 +43,8 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| Session history sidebar | `history.ts`, `commands/resume/` | **MISSING** | No session list |
-| Resume session | `commands/resume/` | **PARTIAL** | CC --resume works; no UI picker |
+| Session history sidebar | `history.ts`, `commands/resume/` | **N/A** | Nexus is one continuous session — no sidebar needed |
+| Resume session | `commands/resume/` | **N/A** | Nexus never ends — resume is automatic via spine/cortex |
 | Rewind/checkpoint | `commands/rewind/` | **MISSING** | No rewind capability |
 | Export conversation | `commands/export/` | **MISSING** | No export UI |
 | Compact session | `commands/compact/` | **MISSING** | No compact UI |
@@ -58,7 +58,7 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| 80+ slash commands | `commands/` (207 files) | **MISSING** | No slash command system in browser UI |
+| 80+ slash commands | `commands/` (207 files) | **PARTIAL** | No slash command system in browser UI [S159: SlashCommandPicker component exists] |
 | Command autocomplete on `/` | Component (SlashCommandPicker equivalent) | **MISSING** | No command picker |
 | /help | `commands/help/` | **MISSING** | No help system |
 | /status | `commands/status/` | **PARTIAL** | /v1/status exists; no UI |
@@ -197,13 +197,13 @@
 
 | Category | HAVE | PARTIAL | MISSING | N/A |
 |----------|------|---------|---------|-----|
-| Settings | 0 | 3 | 15 | 0 |
-| Session Management | 0 | 1 | 9 | 0 |
-| Commands | 1 | 3 | 5 | 0 |
+| Settings | 0 | 7 | 11 | 0 |
+| Session Management | 0 | 0 | 8 | 2 |
+| Commands | 1 | 4 | 6 | 0 |
 | Tools | 3 | 0 | 2 | 0 |
 | Scheduling/Tasks | 2 | 0 | 3 | 0 |
 | Multi-Agent | 0 | 1 | 4 | 0 |
-| Memory | 1 | 3 | 1 | 0 |
+| Memory | 1 | 4 | 0 | 0 |
 | IDE | 0 | 0 | 4 | 0 |
 | Chrome | 0 | 0 | 2 | 0 |
 | Plugins | 0 | 0 | 4 | 0 |
@@ -213,9 +213,9 @@
 | Auto-Update | 0 | 0 | 3 | 0 |
 | Bridge | 1 | 1 | 2 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **8** | **16** | **69** | **0** |
+| **TOTAL** | **8** | **21** | **64** | **2** |
 
-**8 features fully implemented. 16 partial. 69 MISSING.**
+**8 features fully implemented. 21 partial. 64 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 
