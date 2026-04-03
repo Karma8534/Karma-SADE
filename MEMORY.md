@@ -140,6 +140,8 @@ Voice NEVER routes through claude.ai. Sovereign pipeline only (Whisper → text 
 - **P4 SUBAGENT ISOLATION**: run_subagent() — isolated message history + own transcript. Parent state never modified.
 - **P5 PERMISSION STACK**: 3-level gates (allow/gate/deny) + dangerous command pattern detection + write-outside-workdir block + audit log.
 - **Watcher fixed**: Defaults from OneDrive→Karma_SADE local. DonePath→Reviewed. Restarted with correct paths.
+- **VESPER IMPROVE BUILT (THE LISA LOOP)**: Scripts/vesper_improve.py — detect failures from ledger → diagnose via Ollama ($0) → generate fix → apply + verify → keep or revert. Uses user corrections, error responses, DPO thumbs-down as signals. Fixes target system prompt, spine patterns, or memory. $0 cost (K2 Ollama).
+- **LIZA PRIMITIVES SAVED**: obs #21971 — behavioral contract, adversarial review, code-enforced circuit breaker, approval requests. Key insight: we have Ralph (loop until converge), we're missing Lisa (verify work is actually right).
 - **Primitives goldmine**: Karma2/primitives/INDEX.md — running list of all extracted patterns by date.
 
 ## Next Session Starts Here
