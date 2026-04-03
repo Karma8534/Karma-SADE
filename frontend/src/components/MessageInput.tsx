@@ -5,6 +5,7 @@ import { useKarmaStore } from '@/store/karma';
 import { useKarmaStream } from '@/hooks/useKarmaStream';
 import { AttachPreview } from '@/components/AttachPreview';
 import { SlashCommandPicker, type SlashCommand } from '@/components/SlashCommandPicker';
+import { useVoiceInput } from '@/hooks/useVoiceInput';
 
 export function MessageInput() {
   const [text, setText] = useState('');
@@ -15,6 +16,9 @@ export function MessageInput() {
   const isStreaming = useKarmaStore((s) => s.isStreaming);
   const pendingFiles = useKarmaStore((s) => s.pendingFiles);
   const { sendMessage, cancelStream } = useKarmaStream();
+  const { isListening, isSupported: voiceSupported, toggleListening } = useVoiceInput((voiceText) => {
+    setText(prev => prev + voiceText);
+  });
 
   const handleCommandSelect = useCallback((cmd: SlashCommand) => {
     setShowCommands(false);
@@ -419,6 +423,17 @@ Julian exists between sessions. The watchers keep him alive.`,
         >
           +
         </button>
+        {/* Voice button */}
+        {voiceSupported && (
+          <button
+            className={`text-lg pb-2 cursor-pointer bg-transparent border-none transition-colors
+                       ${isListening ? 'text-karma-danger animate-pulse' : 'text-karma-muted hover:text-karma-accent'}`}
+            title={isListening ? 'Stop listening' : 'Voice input'}
+            onClick={toggleListening}
+          >
+            {isListening ? '\u23F9' : '\uD83C\uDF99'}
+          </button>
+        )}
         <input
           ref={fileInputRef}
           type="file"

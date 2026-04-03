@@ -139,9 +139,9 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| Voice mode (hold-to-talk) | `commands/voice/`, `voice/` | **MISSING** | No voice |
-| Voice dictation | `services/voice.ts` | **MISSING** | No STT |
-| Voice enabled setting | Settings schema | **MISSING** | No voice config |
+| Voice mode (hold-to-talk) | `commands/voice/`, `voice/` | **HAVE** | No voice [S160: Web Speech API hold-to-talk in MessageInput. Zero dependency. Mic button with pulse animation.] |
+| Voice dictation | `services/voice.ts` | **HAVE** | No STT [S160: useVoiceInput hook uses browser SpeechRecognition. Interim + final results.] |
+| Voice enabled setting | Settings schema | **HAVE** | No voice config [S160: Mic button auto-hides if browser lacks SpeechRecognition support] |
 
 ## 12. COST TRACKING
 
@@ -207,15 +207,15 @@
 | IDE | 0 | 0 | 4 | 0 |
 | Chrome | 0 | 0 | 2 | 0 |
 | Plugins | 1 | 3 | 0 | 0 |
-| Voice | 0 | 0 | 3 | 0 |
+| Voice | 3 | 0 | 0 | 0 |
 | Cost | 4 | 0 | 0 | 0 |
 | Git UI | 0 | 1 | 4 | 0 |
 | Auto-Update | 1 | 0 | 0 | 2 |
 | Bridge | 4 | 0 | 0 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **67** | **3** | **9** | **16** |
+| **TOTAL** | **70** | **3** | **6** | **16** |
 
-**67 features fully implemented. 3 partial. 9 MISSING.**
+**70 features fully implemented. 3 partial. 6 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 
