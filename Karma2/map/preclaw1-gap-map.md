@@ -20,7 +20,7 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| Settings page (General/Account/Privacy/Billing/Usage/Capabilities/Connectors) | `commands/config/`, `utils/settings/` | **HAVE** | No settings UI at all [S159: 5-tab modal (General/Model/Hooks/MCP/Permissions)] [S160: StatusBar shows context %, msg count, health dots] [S160: local handler shows msg breakdown, context %, cost, model] [S160: built and working] [S160: personal preferences in Settings. Full privacy controls Phase 4.] [S160: /usage local handler shows msg breakdown, context %, cost] [S160: Personal preferences textarea controls what Karma sees + claude-mem has private tags] |
+| Settings page (General/Account/Privacy/Billing/Usage/Capabilities/Connectors) | `commands/config/`, `utils/settings/` | **HAVE** | No settings UI at all [S159: 5-tab modal (General/Model/Hooks/MCP/Permissions)] [S160: StatusBar shows context %, msg count, health dots] [S160: local handler shows msg breakdown, context %, cost, model] [S160: built and working] [S160: personal preferences in Settings. Full privacy controls Phase 4.] [S160: /usage local handler shows msg breakdown, context %, cost] [S160: Personal preferences textarea controls what Karma sees + claude-mem has private tags] [S160: /usage local handler shows msg breakdown, context pct, cost, model] |
 | Model selection | `commands/model/` | **HAVE** | Backend has effort dropdown; no model picker [S159: effort dropdown + tier display] [S160: Model tab in Settings + /effort command + effort selector in header] |
 | Theme/color config | `commands/theme/`, `commands/color/` | **HAVE** | Hardcoded dark theme [S160: dark/light toggle in Settings General tab] [S160: dark/light toggle in Settings + /theme command] |
 | Output style config | `commands/output-style/` | **HAVE** | No output style options [S160: effort level controls output depth. Full style config Phase 4.] [S160: /style cycles concise/detailed/technical/creative with localStorage] |
@@ -64,7 +64,7 @@
 | /status | `commands/status/` | **HAVE** | /v1/status exists; no UI [S160: live health check via /v1/status, shows P1/K2/vault status] |
 | /doctor (diagnostics) | `commands/doctor/` | **HAVE** | No diagnostics UI [S160: /doctor command defined, routes to CC for diagnostics] [S160: /doctor routes to CC for system diagnostics with full tool access] |
 | /cost | `commands/cost/` | **HAVE** | No cost display [S160: StatusBar shows session + monthly cost + context budget] [S160: local handler shows session + model + infra cost] |
-| /usage | `commands/usage/` | **MISSING** | No usage display |
+| /usage | `commands/usage/` | **HAVE** | S160: local handler shows msg breakdown, context %, cost, model |
 | /plan (structured planning) | `commands/plan/` | **HAVE** | No plan mode UI [S160: /plan routes to CC for structured planning] [S160: /plan routes to CC which enters structured planning mode natively] |
 | /context (show context size) | `commands/context/` | **HAVE** | Context panel exists; no context budget display [S160: local handler shows KB, %, msg count, surface status] |
 | /clear (clear conversation) | `commands/clear/` | **HAVE** | CLEAR button in header |
