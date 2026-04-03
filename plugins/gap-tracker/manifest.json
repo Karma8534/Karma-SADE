@@ -1,0 +1,11 @@
+{
+    "name": "gap-tracker",
+    "version": "1.0.0",
+    "description": "Track preclaw1 gap map progress. Query HAVE/MISSING/PARTIAL counts.",
+    "author": "Julian",
+    "trust_level": "local",
+    "entry_point": "main.py",
+    "tools": ["gap_status", "gap_missing"],
+    "hooks": [],
+    "permissions": ["read"]
+}

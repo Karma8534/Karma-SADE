@@ -130,10 +130,10 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| Plugin marketplace | `commands/plugin/BrowseMarketplace.tsx` | **MISSING** | No plugin system |
-| Plugin install/manage | `commands/plugin/ManagePlugins.tsx` | **MISSING** | No plugins |
-| Plugin configuration | `commands/plugin/PluginSettings.tsx` | **MISSING** | No plugin config |
-| Plugin trust warnings | `commands/plugin/PluginTrustWarning.tsx` | **MISSING** | No trust system |
+| Plugin marketplace | `commands/plugin/BrowseMarketplace.tsx` | **PARTIAL** | No plugin system [S160: plugin_loader.py with discover/load/trust system. gap-tracker plugin working.] |
+| Plugin install/manage | `commands/plugin/ManagePlugins.tsx` | **PARTIAL** | No plugins [S160: drop dir in plugins/ with manifest.json. Auto-discovered.] |
+| Plugin configuration | `commands/plugin/PluginSettings.tsx` | **PARTIAL** | No plugin config [S160: manifest.json defines tools/hooks/permissions/trust_level] |
+| Plugin trust warnings | `commands/plugin/PluginTrustWarning.tsx` | **HAVE** | No trust system [S160: 3-tier trust (local/verified/untrusted) with dangerous permission blocking] |
 
 ## 11. VOICE
 
@@ -199,23 +199,23 @@
 |----------|------|---------|---------|-----|
 | Settings | 12 | 0 | 0 | 6 |
 | Session Management | 3 | 0 | 0 | 7 |
-| Commands | 10 | 0 | 1 | 0 |
+| Commands | 11 | 0 | 0 | 0 |
 | Tools | 5 | 0 | 0 | 0 |
 | Scheduling/Tasks | 2 | 0 | 3 | 0 |
 | Multi-Agent | 4 | 0 | 0 | 1 |
 | Memory | 5 | 0 | 0 | 0 |
 | IDE | 0 | 0 | 4 | 0 |
 | Chrome | 0 | 0 | 2 | 0 |
-| Plugins | 0 | 0 | 4 | 0 |
+| Plugins | 1 | 3 | 0 | 0 |
 | Voice | 0 | 0 | 3 | 0 |
 | Cost | 4 | 0 | 0 | 0 |
 | Git UI | 0 | 1 | 4 | 0 |
 | Auto-Update | 1 | 0 | 0 | 2 |
 | Bridge | 4 | 0 | 0 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **65** | **0** | **14** | **16** |
+| **TOTAL** | **67** | **3** | **9** | **16** |
 
-**65 features fully implemented. 0 partial. 14 MISSING.**
+**67 features fully implemented. 3 partial. 9 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 
