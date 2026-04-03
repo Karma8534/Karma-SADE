@@ -157,10 +157,10 @@
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
 | Git status display | Various | **PARTIAL** | /v1/git/status endpoint exists; minimal UI |
-| Diff viewer | `commands/diff/`, `components/diff/` | **MISSING** | No diff viewer |
-| Commit UI | `commands/commit.ts` | **MISSING** | No commit UI |
+| Diff viewer | `commands/diff/`, `components/diff/` | **PARTIAL** | No diff viewer [S160: GitPanel shows files + DIFF button routes to CC] |
+| Commit UI | `commands/commit.ts` | **PARTIAL** | No commit UI [S160: GitPanel COMMIT button routes to CC /commit] |
 | PR creation workflow | `commands/commit-push-pr.ts` | **MISSING** | No PR UI |
-| Branch management | `commands/branch/` | **MISSING** | No branch UI |
+| Branch management | `commands/branch/` | **PARTIAL** | No branch UI [S160: GitPanel shows branch + changed files] |
 
 ## 14. AUTO-UPDATE
 
@@ -213,9 +213,9 @@
 | Auto-Update | 0 | 0 | 3 | 0 |
 | Bridge | 1 | 1 | 2 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **24** | **28** | **30** | **13** |
+| **TOTAL** | **24** | **31** | **27** | **13** |
 
-**24 features fully implemented. 28 partial. 30 MISSING.**
+**24 features fully implemented. 31 partial. 27 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 

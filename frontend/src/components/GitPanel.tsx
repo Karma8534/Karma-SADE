@@ -43,7 +43,17 @@ export function GitPanel({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={onClose}>
       <div className="bg-karma-surface border border-karma-border w-[520px] max-h-[70vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-4 py-2 border-b border-karma-border">
-          <span className="text-karma-accent text-[11px] tracking-[2px] font-bold">GIT STATUS</span>
+          <div className="flex items-center gap-2">
+            <span className="text-karma-accent text-[11px] tracking-[2px] font-bold">GIT STATUS</span>
+            <button
+              onClick={() => { onClose(); window.dispatchEvent(new CustomEvent('karma-send-message', { detail: '/diff' })); }}
+              className="text-[9px] px-2 py-0.5 border border-karma-border text-karma-muted bg-transparent hover:border-karma-accent hover:text-karma-accent cursor-pointer"
+            >DIFF</button>
+            <button
+              onClick={() => { onClose(); window.dispatchEvent(new CustomEvent('karma-send-message', { detail: '/commit' })); }}
+              className="text-[9px] px-2 py-0.5 border border-karma-accent text-karma-accent bg-transparent hover:bg-karma-accent/10 cursor-pointer"
+            >COMMIT</button>
+          </div>
           <button onClick={onClose} className="text-karma-muted hover:text-karma-danger cursor-pointer bg-transparent border-none">x</button>
         </div>
 
