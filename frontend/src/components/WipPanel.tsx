@@ -30,31 +30,14 @@ export function WipPanel({ onClose }: { onClose: () => void }) {
   async function loadData() {
     setLoading(true);
     try {
-      // Fetch active todos from surface/status
-      const statusRes = await fetch('/v1/status', {
+      const res = await fetch('/v1/wip', {
         headers: { Authorization: `Bearer ${token}` },
       }).catch(() => null);
 
-      if (statusRes?.ok) {
-        const data = await statusRes.json();
-        // Parse todos if available from CC state
-        if (data.todos) {
-          setTodos(data.todos);
-        }
-      }
-
-      // Fetch primitives from claude-mem or gap map
-      // For now, show gap map MISSING items as primitives to assimilate
-      const surfaceRes = await fetch('/v1/surface', {
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => null);
-
-      if (surfaceRes?.ok) {
-        const surface = await surfaceRes.json();
-        // Extract any pending primitives from surface state
-        if (surface.primitives) {
-          setPrimitives(surface.primitives);
-        }
+      if (res?.ok) {
+        const data = await res.json();
+        if (data.todos) setTodos(data.todos);
+        if (data.primitives) setPrimitives(data.primitives);
       }
     } catch {}
     setLoading(false);

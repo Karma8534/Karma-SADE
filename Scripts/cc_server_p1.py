@@ -885,6 +885,45 @@ class CCHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 self._json(500, {"ok": False, "error": f"/v1/surface failed: {e}"})
             return
+        elif self.path == "/v1/wip":
+            # S160: WIP endpoint — serves todos + primitives for Sovereign review surface
+            try:
+                wip = {"ok": True}
+                # Todos: read from .gsd/STATE.md or current TodoWrite state
+                todos = []
+                state_path = os.path.join(WORK_DIR, ".gsd", "STATE.md")
+                if os.path.exists(state_path):
+                    with open(state_path, "r", encoding="utf-8", errors="replace") as f:
+                        state_text = f.read(2000)
+                    # Extract task lines (lines starting with - [ ] or - [x])
+                    for line in state_text.splitlines():
+                        stripped = line.strip()
+                        if stripped.startswith("- [x]") or stripped.startswith("- [X]"):
+                            todos.append({"content": stripped[5:].strip(), "status": "completed"})
+                        elif stripped.startswith("- [ ]"):
+                            todos.append({"content": stripped[5:].strip(), "status": "pending"})
+                wip["todos"] = todos
+                # Primitives: read pending from docs/wip/ (files not in Done/)
+                primitives = []
+                wip_dir = os.path.join(WORK_DIR, "docs", "wip")
+                if os.path.isdir(wip_dir):
+                    for fname in sorted(os.listdir(wip_dir)):
+                        fpath = os.path.join(wip_dir, fname)
+                        if os.path.isfile(fpath) and not fname.startswith("."):
+                            size_kb = os.path.getsize(fpath) / 1024
+                            primitives.append({
+                                "id": fname,
+                                "title": fname.rsplit(".", 1)[0],
+                                "source": f"docs/wip/{fname}",
+                                "relevance": "HIGH" if size_kb > 10 else "MEDIUM",
+                                "status": "pending",
+                                "size_kb": round(size_kb, 1),
+                            })
+                wip["primitives"] = primitives[:20]
+                self._json(200, wip)
+            except Exception as e:
+                self._json(500, {"ok": False, "error": f"/v1/wip failed: {e}"})
+            return
         elif self.path == "/self-edit/pending":
             # Sprint 4d: List pending self-edit proposals
             from Scripts.self_edit_service import list_pending
