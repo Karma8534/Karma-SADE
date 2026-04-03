@@ -1,9 +1,9 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-03-31 Session 153 (Plan consolidation — all plans merged into nexus.md)
-**THE ONLY PLAN:** `docs/ForColby/nexus.md` (v3.0.0). All other plan files archived.
-**Status:** 16 of 27 baseline items PASS. 6 NOT DONE. 3 PARTIAL. Sprint 2 is next.
-**Session:** S153 — Phases 1-4 UI shipped, AGORA fixed, plans consolidated, P094-P112 logged.
+**Last updated:** 2026-04-03 Session 159
+**THE ONLY PLAN:** `docs/ForColby/nexus.md` (v5.2.0 APPEND ONLY — Sovereign approved)
+**Status:** Sprint 7 (7/8) + Sprint 8 (2/6) shipped. Phase 0 (Core Executor) is NEXT. Gap map: ~30/93 HAVE.
+**Session:** S159 — nexus rewrite, sacred context corrected, 10 frontend components deployed, cascade pipeline designed.
 **Canonical source:** This file. Read at session start.
 
 ---

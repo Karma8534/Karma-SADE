@@ -28,7 +28,13 @@
 - **Sprint 8 PARTIAL**: 8-D MemoryPanel + 8-F GlobalSearch shipped.
 - **nexus v5.2.0**: Merged Julian + Codex plans. 4-layer architecture. Phase 0 executor corrections. Non-negotiables adopted. Old sprints replaced with phases.
 - **FUTURE**: Clean up PowerShell profile (ArkNexus SADE v7 banner). Install Rust for claudelytics.
-- **Next session**: Read nexus.md v5.0.0 + MASTER-INDEX.md. Receive Codex audit results. Implement cascade pipeline. Sprint 7-A after.
+## Next Session Starts Here
+1. /resurrect
+2. Phase 0 Task 1: Add `gap_closure` to ACTIONABLE_TYPES in Scripts/karma_persistent.py (line ~52) with retry on failed CC resume
+3. Read docs/ForColby/nexus.md (v5.2.0 APPEND ONLY) + Karma2/map/MASTER-INDEX.md + .gsd/codex-cascade-audit.md
+4. Continue Phase 0 work queue: vesper_eval.py hard gate → vesper_governor.py smoke test → gap_map.py shared helper
+5. Gates: 6/6 PASS (health, status, trace, learnings, agora, P1). Sprint 7/8 UI NOT browser-verified (Phase D deferred to baseline).
+6. Codex prompt for forensic audit ready in MEMORY.md S159 section (resubmit if needed)
 
 ## Session 156 Continued — Bug Fixes
 - **Archon Alert stale 03/22 FIXED**: Blockers 10/11/13/21 had no ~~ strikethrough. Added ~~ to STATE.md + cc_context_snapshot.md. Now only items 16/17/18 (genuinely open) appear in archon alerts.
