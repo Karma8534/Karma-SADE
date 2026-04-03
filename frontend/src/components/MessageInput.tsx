@@ -117,6 +117,18 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'dream') {
+      // Trigger consolidation — Karma reasons over her own memories
+      const store = useKarmaStore.getState();
+      store.addMessage({
+        id: Date.now().toString(36), role: 'system',
+        content: '**DREAM** — Triggering memory consolidation. Karma will reason over recent memories, find cross-cutting patterns, and generate insights...',
+        timestamp: new Date().toISOString(),
+      });
+      sendMessage('Consolidate your recent memories. Read the last 20 observations from claude-mem, find cross-cutting patterns and connections between them, generate insights about what they mean together, and save the consolidated insight back to memory. This is your dream cycle — the sleeping brain finding meaning.');
+      setText('');
+      return;
+    }
     if (cmd.name === 'memory') {
       // Open MEMORY panel (same as header button)
       window.dispatchEvent(new CustomEvent('karma-open-memory'));
