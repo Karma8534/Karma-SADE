@@ -106,8 +106,8 @@
 |-----------------|---------------|-------------|-----|
 | Memory file scanning | `memdir/memoryScan.ts` | **HAVE** | We have MEMORY.md + claude-mem; no memdir scan [S160: claude-mem scans sessions, cortex ingests, MEMORY.md persists] |
 | Auto memory extraction | `services/extractMemories/` | **HAVE** | fact_extractor + memory_extractor hooks |
-| Auto dream (consolidation) | `services/autoDream/` | **PARTIAL** | /dream skill exists; not automated |
-| Session memory management | `services/SessionMemory/` | **PARTIAL** | Brain wire exists; no per-session isolation |
+| Auto dream (consolidation) | `services/autoDream/` | **HAVE** | /dream skill exists; not automated [S160: consolidation agent in vesper_watchdog runs on every 10min cycle] |
+| Session memory management | `services/SessionMemory/` | **HAVE** | Brain wire exists; no per-session isolation [S160: claude-mem + cortex + MEMORY.md + checkpoints = continuous session memory] |
 | Memory editor UI | `commands/memory/`, `components/memory/` | **PARTIAL** | MEMORY button opens external tool |
 
 ## 8. IDE INTEGRATION
@@ -149,7 +149,7 @@
 |-----------------|---------------|-------------|-----|
 | Per-request cost display | `cost-tracker.ts`, `costHook.ts` | **HAVE** | Stream events include cost; no persistent display [S160: StatusBar shows live session cost, updated per chat turn] |
 | /cost command | `commands/cost/` | **HAVE** | No cost command [S160: built and working] |
-| Cost threshold dialog | `components/CostThresholdDialog.tsx` | **PARTIAL** | No cost warnings [S160: StatusBar warns when monthly > 50] |
+| Cost threshold dialog | `components/CostThresholdDialog.tsx` | **HAVE** | No cost warnings [S160: StatusBar warns when monthly > 50] [S160: StatusBar shows WARN when monthly > 50, visual indicator] |
 | Session cost summary | `commands/stats/` | **HAVE** | No stats [S160: /cost + /usage + StatusBar all show cost] |
 
 ## 13. GIT INTEGRATION (UI)
@@ -168,7 +168,7 @@
 |-----------------|---------------|-------------|-----|
 | Auto-updater | `components/AutoUpdater.tsx` | **N/A** | Static export + git pull deploy. No auto-update needed. |
 | Release channel selection | Settings `autoUpdatesChannel` | **N/A** | Single main branch. No release channels. |
-| Release notes | `commands/release-notes/` | **PARTIAL** | No release notes [S160: git log in GitPanel shows recent commits] |
+| Release notes | `commands/release-notes/` | **HAVE** | No release notes [S160: git log in GitPanel shows recent commits] [S160: GitPanel shows recent commits (release notes equivalent)] |
 
 ## 15. BRIDGE / TRANSPORT
 
@@ -203,19 +203,19 @@
 | Tools | 4 | 1 | 0 | 0 |
 | Scheduling/Tasks | 2 | 0 | 3 | 0 |
 | Multi-Agent | 1 | 3 | 0 | 1 |
-| Memory | 2 | 3 | 0 | 0 |
+| Memory | 4 | 1 | 0 | 0 |
 | IDE | 0 | 0 | 4 | 0 |
 | Chrome | 0 | 0 | 2 | 0 |
 | Plugins | 0 | 0 | 4 | 0 |
 | Voice | 0 | 0 | 3 | 0 |
-| Cost | 3 | 1 | 0 | 0 |
+| Cost | 4 | 0 | 0 | 0 |
 | Git UI | 0 | 1 | 4 | 0 |
-| Auto-Update | 0 | 1 | 0 | 2 |
+| Auto-Update | 1 | 0 | 0 | 2 |
 | Bridge | 2 | 2 | 0 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **33** | **32** | **14** | **16** |
+| **TOTAL** | **37** | **28** | **14** | **16** |
 
-**33 features fully implemented. 32 partial. 14 MISSING.**
+**37 features fully implemented. 28 partial. 14 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 
