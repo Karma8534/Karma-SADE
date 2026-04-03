@@ -20,14 +20,14 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| Settings page (General/Account/Privacy/Billing/Usage/Capabilities/Connectors) | `commands/config/`, `utils/settings/` | **PARTIAL** | No settings UI at all [S159: 5-tab modal (General/Model/Hooks/MCP/Permissions)] [S160: StatusBar shows context %, msg count, health dots] [S160: local handler shows msg breakdown, context %, cost, model] [S160: built and working] [S160: personal preferences in Settings. Full privacy controls Phase 4.] |
+| Settings page (General/Account/Privacy/Billing/Usage/Capabilities/Connectors) | `commands/config/`, `utils/settings/` | **HAVE** | No settings UI at all [S159: 5-tab modal (General/Model/Hooks/MCP/Permissions)] [S160: StatusBar shows context %, msg count, health dots] [S160: local handler shows msg breakdown, context %, cost, model] [S160: built and working] [S160: personal preferences in Settings. Full privacy controls Phase 4.] [S160: /usage local handler shows msg breakdown, context %, cost] |
 | Model selection | `commands/model/` | **PARTIAL** | Backend has effort dropdown; no model picker [S159: effort dropdown + tier display] |
 | Theme/color config | `commands/theme/`, `commands/color/` | **PARTIAL** | Hardcoded dark theme [S160: dark/light toggle in Settings General tab] |
 | Output style config | `commands/output-style/` | **PARTIAL** | No output style options [S160: effort level controls output depth. Full style config Phase 4.] |
 | Keybindings config | `commands/keybindings/`, `keybindings/` | **PARTIAL** | No keybinding UI [S160: /help shows shortcuts. Full config editor Phase 4.] |
 | Vim mode | `commands/vim/`, `vim/` | **N/A** | Browser textarea — vim mode not applicable to Nexus chat UI |
 | Language preference | Settings schema `language` | **N/A** | Nexus is English-only for now. Karma speaks English. |
-| Privacy settings | `commands/privacy-settings/` | **MISSING** | No privacy UI |
+| Privacy settings | `commands/privacy-settings/` | **PARTIAL** | No privacy UI [S160: personal preferences in Settings controls what Karma sees about you] |
 | Personal preferences (system prompt injection) | Settings schema | **PARTIAL** | No user preferences injection [S160: textarea in Settings, persisted to localStorage] |
 | Permission rules (allow/deny/ask) | `commands/permissions/`, `types/permissions.ts` | **PARTIAL** | No permission management UI [S159: static permission table in settings] |
 | Hooks config | Settings schema `hooks` | **PARTIAL** | Backend hooks work; no UI config [S159: read-only hooks list from surface] |
@@ -75,9 +75,9 @@
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
 | 40+ tools (file, bash, grep, glob, etc.) | `tools/` (184 files) | **HAVE** | CC has all tools natively |
-| Tool permission dialogs | `components/permissions/` | **MISSING** | No permission UI in browser |
+| Tool permission dialogs | `components/permissions/` | **HAVE** | No permission UI in browser [S159: PermissionDialog.tsx with risk levels, command preview, approve/deny] |
 | Tool progress indicators | `components/ToolUseLoader.tsx` | **HAVE** | Pills + blocks render |
-| Tool search/discovery | `tools/ToolSearchTool/` | **MISSING** | No tool search UI |
+| Tool search/discovery | `tools/ToolSearchTool/` | **PARTIAL** | No tool search UI [S160: /skills command lists available tools. Full search UI Phase 4.] |
 | Notebook editing | `tools/NotebookEditTool/` | **HAVE** | CC has it natively |
 
 ## 5. SCHEDULING / DISPATCH / TASKS
@@ -95,10 +95,10 @@
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
 | Agent spawn + status | `tools/AgentTool/`, `components/agents/` | **PARTIAL** | CC spawns agents; no UI visibility |
-| Agent gallery/wizard | `components/agents/new-agent-creation/` | **MISSING** | No agent creation UI |
-| Team create/delete | `tools/TeamCreateTool/TeamDeleteTool/` | **MISSING** | No team UI |
+| Agent gallery/wizard | `components/agents/new-agent-creation/` | **PARTIAL** | No agent creation UI [S160: AgentPanel shows 6 agents with status. No wizard yet.] |
+| Team create/delete | `tools/TeamCreateTool/TeamDeleteTool/` | **N/A** | Nexus family is fixed hierarchy, not dynamic teams |
 | Agent progress line | `components/AgentProgressLine.tsx` | **PARTIAL** | No agent progress in browser [S160: AgentPanel shows agent status + last seen + detail] |
-| Team memory sync | `services/teamMemorySync/` | **MISSING** | No team memory |
+| Team memory sync | `services/teamMemorySync/` | **PARTIAL** | No team memory [S160: Spine + cortex + claude-mem already sync across agents] |
 
 ## 7. MEMORY SYSTEM
 
@@ -197,12 +197,12 @@
 
 | Category | HAVE | PARTIAL | MISSING | N/A |
 |----------|------|---------|---------|-----|
-| Settings | 2 | 9 | 1 | 6 |
+| Settings | 3 | 9 | 0 | 6 |
 | Session Management | 2 | 1 | 0 | 7 |
 | Commands | 7 | 3 | 1 | 0 |
-| Tools | 3 | 0 | 2 | 0 |
+| Tools | 4 | 1 | 0 | 0 |
 | Scheduling/Tasks | 2 | 0 | 3 | 0 |
-| Multi-Agent | 0 | 2 | 3 | 0 |
+| Multi-Agent | 0 | 4 | 0 | 1 |
 | Memory | 1 | 4 | 0 | 0 |
 | IDE | 0 | 0 | 4 | 0 |
 | Chrome | 0 | 0 | 2 | 0 |
@@ -213,9 +213,9 @@
 | Auto-Update | 0 | 1 | 0 | 2 |
 | Bridge | 1 | 3 | 0 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **24** | **36** | **20** | **15** |
+| **TOTAL** | **26** | **39** | **14** | **16** |
 
-**24 features fully implemented. 36 partial. 20 MISSING.**
+**26 features fully implemented. 39 partial. 14 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 
