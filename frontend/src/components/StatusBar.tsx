@@ -11,8 +11,11 @@ interface SystemHealth {
 
 export function StatusBar() {
   const sessionCost = useKarmaStore((s) => s.sessionCost);
+  const messages = useKarmaStore((s) => s.messages);
   const [health, setHealth] = useState<SystemHealth>({ p1: false, k2: false, vault: false });
   const [model, setModel] = useState('cc-sovereign');
+  const [contextChars, setContextChars] = useState(0);
+  const [monthlyCost, setMonthlyCost] = useState(0);
   const token = useKarmaStore((s) => s.token);
 
   useEffect(() => {
@@ -29,13 +32,23 @@ export function StatusBar() {
             vault: data.ok ?? false,
           });
           if (data.harness?.p1?.healthy) setModel('cc-sovereign (Max $0)');
+          if (data.monthly_cost_usd != null) setMonthlyCost(data.monthly_cost_usd);
         }
       } catch {}
     }
     checkHealth();
-    const interval = setInterval(checkHealth, 30000); // refresh every 30s
+    const interval = setInterval(checkHealth, 30000);
     return () => clearInterval(interval);
   }, [token]);
+
+  // Estimate context size from messages
+  useEffect(() => {
+    const chars = messages.reduce((sum, m) => sum + (m.content?.length || 0), 0);
+    setContextChars(chars);
+  }, [messages]);
+
+  const contextKB = (contextChars / 1024).toFixed(1);
+  const contextPct = Math.min(100, (contextChars / 128000) * 100).toFixed(0);
 
   const dot = (ok: boolean) => (
     <span className={`inline-block w-1.5 h-1.5 rounded-full ${ok ? 'bg-karma-accent2' : 'bg-karma-danger'}`} />
@@ -51,6 +64,29 @@ export function StatusBar() {
         ${sessionCost.toFixed(4)}
         <span className="text-karma-border ml-1">session</span>
       </span>
+
+      {/* Monthly cost */}
+      {monthlyCost > 0 && (
+        <span>
+          ${monthlyCost.toFixed(2)}
+          <span className="text-karma-border ml-1">/mo</span>
+          <span className={`ml-1 ${monthlyCost > 50 ? 'text-karma-danger' : 'text-karma-accent2'}`}>
+            {monthlyCost > 50 ? 'WARN' : 'OK'}
+          </span>
+        </span>
+      )}
+
+      {/* Context budget */}
+      <span>
+        {contextKB}KB
+        <span className="text-karma-border ml-1">ctx</span>
+        <span className={`ml-1 ${Number(contextPct) > 80 ? 'text-yellow-400' : 'text-karma-accent2'}`}>
+          {contextPct}%
+        </span>
+      </span>
+
+      {/* Message count */}
+      <span>{messages.length} msgs</span>
 
       {/* System health dots */}
       <span className="flex items-center gap-1.5 ml-auto">

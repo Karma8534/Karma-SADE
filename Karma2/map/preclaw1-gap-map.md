@@ -20,7 +20,7 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| Settings page (General/Account/Privacy/Billing/Usage/Capabilities/Connectors) | `commands/config/`, `utils/settings/` | **PARTIAL** | No settings UI at all [S159: 5-tab modal (General/Model/Hooks/MCP/Permissions)] |
+| Settings page (General/Account/Privacy/Billing/Usage/Capabilities/Connectors) | `commands/config/`, `utils/settings/` | **PARTIAL** | No settings UI at all [S159: 5-tab modal (General/Model/Hooks/MCP/Permissions)] [S160: StatusBar shows context %, msg count, health dots] |
 | Model selection | `commands/model/` | **PARTIAL** | Backend has effort dropdown; no model picker [S159: effort dropdown + tier display] |
 | Theme/color config | `commands/theme/`, `commands/color/` | **PARTIAL** | Hardcoded dark theme [S160: dark/light toggle in Settings General tab] |
 | Output style config | `commands/output-style/` | **MISSING** | No output style options |
@@ -34,7 +34,7 @@
 | Auto-update channel | Settings schema `autoUpdatesChannel` | **MISSING** | No update management |
 | MCP server management | Settings schema (enable/disable/allow/deny) | **PARTIAL** | CC has MCP; no management UI |
 | Plugin config | Settings schema `pluginConfigs` | **MISSING** | No plugin system |
-| Worktree config | Settings schema `worktree.*` | **MISSING** | Worktrees banned in this project |
+| Worktree config | Settings schema `worktree.*` | **N/A** | Worktrees permanently banned in this project (P027) |
 | Fast mode toggle | `commands/fast/` | **MISSING** | No fast mode |
 | Thinking mode toggle | Settings `thinkingEnabled` | **MISSING** | No thinking toggle |
 | Prompt suggestions | Settings `promptSuggestionEnabled` | **MISSING** | No prompt suggestions |
@@ -48,22 +48,22 @@
 | Rewind/checkpoint | `commands/rewind/` | **MISSING** | No rewind capability |
 | Export conversation | `commands/export/` | **MISSING** | No export UI |
 | Compact session | `commands/compact/` | **MISSING** | No compact UI |
-| Session rename | `commands/rename/` | **MISSING** | No rename |
-| Session share | `commands/share/` | **MISSING** | No share |
-| Session tag | `commands/tag/` | **MISSING** | No tagging |
-| Teleport session | `commands/teleport/` | **MISSING** | No teleport |
-| Session diff counts (+N -N) | Sidebar UI | **MISSING** | No diff visibility |
+| Session rename | `commands/rename/` | **N/A** | One session, no rename needed |
+| Session share | `commands/share/` | **N/A** | Nexus is personal — no sharing model |
+| Session tag | `commands/tag/` | **N/A** | One session — tagging is memory/spine domain |
+| Teleport session | `commands/teleport/` | **N/A** | Wrapper-specific feature, not applicable |
+| Session diff counts (+N -N) | Sidebar UI | **N/A** | No sessions to diff — continuous stream |
 
 ## 3. COMMANDS / SLASH COMMANDS
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| 80+ slash commands | `commands/` (207 files) | **PARTIAL** | No slash command system in browser UI [S159: SlashCommandPicker component exists] |
-| Command autocomplete on `/` | Component (SlashCommandPicker equivalent) | **MISSING** | No command picker |
+| 80+ slash commands | `commands/` (207 files) | **PARTIAL** | No slash command system in browser UI [S159: SlashCommandPicker component exists] [S160: 20 commands defined, autocomplete working, CC handles natively] |
+| Command autocomplete on `/` | Component (SlashCommandPicker equivalent) | **HAVE** | No command picker [S160: SlashCommandPicker wired to MessageInput, 20 commands, arrow/tab/enter] |
 | /help | `commands/help/` | **MISSING** | No help system |
 | /status | `commands/status/` | **PARTIAL** | /v1/status exists; no UI |
 | /doctor (diagnostics) | `commands/doctor/` | **MISSING** | No diagnostics UI |
-| /cost | `commands/cost/` | **MISSING** | No cost display |
+| /cost | `commands/cost/` | **PARTIAL** | No cost display [S160: StatusBar shows session + monthly cost + context budget] |
 | /usage | `commands/usage/` | **MISSING** | No usage display |
 | /plan (structured planning) | `commands/plan/` | **MISSING** | No plan mode UI |
 | /context (show context size) | `commands/context/` | **PARTIAL** | Context panel exists; no context budget display |
@@ -197,9 +197,9 @@
 
 | Category | HAVE | PARTIAL | MISSING | N/A |
 |----------|------|---------|---------|-----|
-| Settings | 0 | 7 | 11 | 0 |
-| Session Management | 0 | 0 | 8 | 2 |
-| Commands | 1 | 4 | 6 | 0 |
+| Settings | 0 | 7 | 10 | 1 |
+| Session Management | 0 | 0 | 3 | 7 |
+| Commands | 2 | 5 | 4 | 0 |
 | Tools | 3 | 0 | 2 | 0 |
 | Scheduling/Tasks | 2 | 0 | 3 | 0 |
 | Multi-Agent | 0 | 1 | 4 | 0 |
@@ -213,9 +213,9 @@
 | Auto-Update | 0 | 0 | 3 | 0 |
 | Bridge | 1 | 1 | 2 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **8** | **21** | **64** | **2** |
+| **TOTAL** | **9** | **22** | **56** | **8** |
 
-**8 features fully implemented. 21 partial. 64 MISSING.**
+**9 features fully implemented. 22 partial. 56 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 
