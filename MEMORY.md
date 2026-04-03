@@ -19,7 +19,9 @@
 - **Liza direction-check loop**: Running (session-only, 10min cron)
 - **EscapeHatch**: ngrok replaced by OpenRouter config until baseline reached (Sovereign directive)
 - **Codex delegated**: yoyo-evolve cascade analysis + Kiki/Vesper pipeline redesign
-- **Next session**: Continue from THIS state. Read nexus.md v5.0.0 (docs/ForColby/nexus.md). Sprint 7-A (slash commands) after Sovereign finalizes plan. Phase D walkthrough still pending.
+- **MASTER-INDEX.md created**: Karma2/map/MASTER-INDEX.md — every directory, every purpose, one file. Read at resurrect.
+- **Codex forensic audit**: Running — auditing all 6 cascade pipeline files for blockers/gaps/failure modes.
+- **Next session**: Read nexus.md v5.0.0 + MASTER-INDEX.md. Receive Codex audit results. Implement cascade pipeline. Sprint 7-A after.
 
 ## Session 156 Continued — Bug Fixes
 - **Archon Alert stale 03/22 FIXED**: Blockers 10/11/13/21 had no ~~ strikethrough. Added ~~ to STATE.md + cc_context_snapshot.md. Now only items 16/17/18 (genuinely open) appear in archon alerts.
