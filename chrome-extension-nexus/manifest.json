@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "Karma Nexus",
+  "version": "1.0.0",
+  "description": "Karma Nexus browser integration — persistent AI memory, context capture, and Sovereign review",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "sidePanel"
+  ],
+  "host_permissions": [
+    "https://hub.arknexus.net/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/karma-16.png",
+      "48": "icons/karma-48.png",
+      "128": "icons/karma-128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/karma-16.png",
+    "48": "icons/karma-48.png",
+    "128": "icons/karma-128.png"
+  }
+}

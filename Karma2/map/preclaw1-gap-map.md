@@ -123,8 +123,8 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| Claude in Chrome | `commands/chrome/`, `utils/claudeInChrome/` | **MISSING** | No Chrome extension |
-| Chrome prompts integration | `hooks/usePromptsFromClaudeInChrome.tsx` | **MISSING** | No Chrome integration |
+| Claude in Chrome | `commands/chrome/`, `utils/claudeInChrome/` | **HAVE** | No Chrome extension [S160: Karma Nexus Chrome extension — popup + sidepanel + content script + background worker] |
+| Chrome prompts integration | `hooks/usePromptsFromClaudeInChrome.tsx` | **HAVE** | No Chrome integration [S160: content.js captures selection, popup sends to /v1/chat, sidepanel is persistent chat] |
 
 ## 10. PLUGINS / EXTENSIONS
 
@@ -205,7 +205,7 @@
 | Multi-Agent | 4 | 0 | 0 | 1 |
 | Memory | 5 | 0 | 0 | 0 |
 | IDE | 0 | 0 | 4 | 0 |
-| Chrome | 0 | 0 | 2 | 0 |
+| Chrome | 2 | 0 | 0 | 0 |
 | Plugins | 1 | 3 | 0 | 0 |
 | Voice | 3 | 0 | 0 | 0 |
 | Cost | 4 | 0 | 0 | 0 |
@@ -213,9 +213,9 @@
 | Auto-Update | 1 | 0 | 0 | 2 |
 | Bridge | 4 | 0 | 0 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **70** | **3** | **6** | **16** |
+| **TOTAL** | **72** | **3** | **4** | **16** |
 
-**70 features fully implemented. 3 partial. 6 MISSING.**
+**72 features fully implemented. 3 partial. 4 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 
