@@ -176,6 +176,27 @@ def run_eval():
         ctype = candidate.get("type", "")
         is_observational = candidate.get("proposed_change") is None
 
+        # HARD GATE (Phase 0): reject non-observational candidates missing
+        # target_files, test_command, or a real diff. No promotion without evidence.
+        if not is_observational:
+            proposed = candidate.get("proposed_change", {}) or {}
+            has_target_files = bool(proposed.get("target_files"))
+            has_test_command = bool(proposed.get("test_command"))
+            has_diff = bool(proposed.get("diff", "").strip())
+            missing = []
+            if not has_target_files:
+                missing.append("target_files")
+            if not has_test_command:
+                missing.append("test_command")
+            if not has_diff:
+                missing.append("diff")
+            if missing:
+                reason = f"HARD_GATE_REJECT: missing {', '.join(missing)}"
+                print(f"[eval] {reason} — {path.stem}")
+                pipeline.update_candidate_status(path, "rejected", {"gate_reason": reason})
+                rejected += 1
+                continue
+
         # PITFALL_FAST_PATH: awareness candidates from CC sessions are pre-evaluated.
         # Bypass model/heuristic gate — approve directly on confidence.
         AWARENESS_TYPES = {"PITFALL", "verbosity_correction", "claude_dependency", "ambient_observation"}  # K-3: ambient is observational, no task completion applicable

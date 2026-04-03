@@ -49,7 +49,7 @@ MAX_CC_TIMEOUT = 180  # seconds for CC subprocess
 TOKEN_FILE = pathlib.Path(WORK_DIR) / ".hub-chat-token"
 
 # What Karma acts on
-ACTIONABLE_TYPES = {"task", "directive", "question"}
+ACTIONABLE_TYPES = {"task", "directive", "question", "gap_closure"}
 ACTIONABLE_TARGETS = {"karma", "all"}
 IGNORE_SENDERS = {"karma", "regent", "vesper", "kiki"}
 
@@ -224,8 +224,27 @@ def run_cc_task(task_message):
         return None
 
     if proc.returncode != 0:
-        log.error("CC exit %d: %s", proc.returncode, (stderr or "")[:200])
-        return None
+        log.warning("CC exit %d (attempt 1): %s", proc.returncode, (stderr or "")[:200])
+        # Retry without --resume (stale session is the common failure mode)
+        retry_cmd = [NODE_EXE, CLAUDE_CLI, "-p", full_message, "--output-format", "json",
+                     "--dangerously-skip-permissions"]
+        log.info("Retrying CC without --resume (fresh session)")
+        try:
+            proc = subprocess.Popen(
+                retry_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                text=True, cwd=WORK_DIR, encoding="utf-8", errors="replace",
+            )
+            stdout, stderr = proc.communicate(timeout=MAX_CC_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            log.error("CC retry timed out after %ds", MAX_CC_TIMEOUT)
+            return None
+        except Exception as e:
+            log.error("CC retry spawn failed: %s", e)
+            return None
+        if proc.returncode != 0:
+            log.error("CC retry exit %d: %s", proc.returncode, (stderr or "")[:200])
+            return None
 
     # Parse JSON output
     for line in stdout.strip().splitlines():

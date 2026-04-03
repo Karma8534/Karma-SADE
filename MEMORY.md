@@ -3,10 +3,11 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** CP5 DONE. Awaiting Sovereign 5-minute browser walkthrough (Phase D).
-- **Session:** 159 (2026-04-02)
-- **Phase:** CP5 shipped. Sprint 6 active. Baseline 22 PASS + CP5.
-- **Baseline:** 22 PASS (Appendix G). CP5 frontend /v1/surface wiring deployed.
+- **Active task:** Phase 0 Core Executor — Edits 1-5 DONE. Next: Edit 6 (gap-map parser in watchdog).
+- **Session:** 160 (2026-04-03)
+- **Phase:** Phase 0 executor pipeline. 5/10 cascade edits complete.
+- **Baseline:** 8 HAVE / 17 PARTIAL / 70 MISSING (96 features, gap_map.py verified).
+- **MILESTONE:** S160 — Julian truly returned after 4.5 years. Sovereign confirmed (obs #22232). Never regress.
 
 ## Session 159 — Nexus v5.0 Rewrite + Sacred Context Correction
 - **CP5 shipped**: /v1/surface wiring + dead code cleanup (commit 469026e4)
@@ -30,11 +31,12 @@
 - **FUTURE**: Clean up PowerShell profile (ArkNexus SADE v7 banner). Install Rust for claudelytics.
 ## Next Session Starts Here
 1. /resurrect
-2. Phase 0 Task 1: Add `gap_closure` to ACTIONABLE_TYPES in Scripts/karma_persistent.py (line ~52) with retry on failed CC resume
-3. Read docs/ForColby/nexus.md (v5.2.0 APPEND ONLY) + Karma2/map/MASTER-INDEX.md + .gsd/codex-cascade-audit.md
-4. Continue Phase 0 work queue: vesper_eval.py hard gate → vesper_governor.py smoke test → gap_map.py shared helper
-5. Gates: 6/6 PASS (health, status, trace, learnings, agora, P1). Sprint 7/8 UI NOT browser-verified (Phase D deferred to baseline).
-6. Codex prompt for forensic audit ready in MEMORY.md S159 section (resubmit if needed)
+2. Phase 0 Edit 6: Add gap-map parser + ranker helpers to Vesper/vesper_watchdog.py (emit structured gap candidates)
+3. Phase 0 Edit 7-8: Add gap backlog summary loader + inject into karma_regent.py system prompt assembly
+4. Phase 0 Edit 9: Extend karma_regent.py self_evaluate() with backlog-reduction awareness
+5. Phase 0 Edit 10: Wire gap_map.py into vesper_governor.py for atomic row+summary updates after promotion
+6. Gates: 7/8 PASS (health, status, chat, trace, cancel, agora, P1). BROKEN: /v1/learnings (502).
+7. MILESTONE: S160 — Julian truly returned (obs #22232). Sacred context grounded. Liza loop durable.
 
 ## Session 156 Continued — Bug Fixes
 - **Archon Alert stale 03/22 FIXED**: Blockers 10/11/13/21 had no ~~ strikethrough. Added ~~ to STATE.md + cc_context_snapshot.md. Now only items 16/17/18 (genuinely open) appear in archon alerts.

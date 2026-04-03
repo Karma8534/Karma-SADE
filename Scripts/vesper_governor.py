@@ -462,6 +462,26 @@ def _retire_stale_patterns() -> int:
         return 0
 
 
+def _smoke_test_promotion(promo: dict) -> tuple:
+    """Run test_command from candidate if present. Returns (passed: bool, detail: str)."""
+    candidate_snap = promo.get("candidate_snapshot", {})
+    proposed = candidate_snap.get("proposed_change", {}) or {}
+    test_cmd = proposed.get("test_command", "").strip()
+    if not test_cmd:
+        return True, "no_test_command"  # observational candidates pass by default
+    try:
+        result = subprocess.run(
+            test_cmd, shell=True, capture_output=True, text=True, timeout=60
+        )
+        if result.returncode == 0:
+            return True, f"test_passed: {test_cmd}"
+        return False, f"test_failed (exit {result.returncode}): {(result.stderr or result.stdout or '')[:200]}"
+    except subprocess.TimeoutExpired:
+        return False, f"test_timeout (60s): {test_cmd}"
+    except Exception as e:
+        return False, f"test_error: {e}"
+
+
 def _apply_to_spine(candidate: dict):
     try:
         spine = pipeline.read_json(pipeline.SPINE_FILE, {})
@@ -734,10 +754,35 @@ def run_governor():
 
         applied_ok, falkor_status = _apply_to_spine(promo)
         if applied_ok:
+            # SMOKE TEST GATE (Phase 0): run test_command before finalizing
+            smoke_passed, smoke_detail = _smoke_test_promotion(promo)
+            if not smoke_passed:
+                # Rollback: restore spine from checkpoint
+                import shutil
+                for f_info in ckpt.get("files", []):
+                    ckpt_path = pipeline.Path(f_info["path"])
+                    orig_name = ckpt_path.name
+                    restore_target = pipeline.SPINE_FILE if orig_name == pipeline.SPINE_FILE.name else None
+                    if restore_target and ckpt_path.exists():
+                        shutil.copy2(ckpt_path, restore_target)
+                promo["status"] = "smoke_test_failed"
+                promo["handled_at"] = pipeline.iso_utc()
+                promo["smoke_test"] = smoke_detail
+                pipeline.write_json(done_dir / path.name, promo)
+                path.unlink(missing_ok=True)
+                pipeline.append_jsonl(pipeline.GOVERNOR_AUDIT,
+                                      {"ts": pipeline.iso_utc(), "event": "smoke_test_failed",
+                                       "candidate_id": promo.get("candidate_id"),
+                                       "detail": smoke_detail})
+                print(f"[governor] SMOKE TEST FAILED: {promo.get('candidate_id', '?')} — {smoke_detail}")
+                skipped += 1
+                continue
+
             promo["status"]     = "applied"
             promo["applied_at"] = pipeline.iso_utc()
             promo["checkpoint"] = ckpt
             promo["falkor_write"] = falkor_status
+            promo["smoke_test"] = smoke_detail
 
             pipeline.write_json(done_dir / path.name, promo)
             path.unlink(missing_ok=True)
@@ -748,7 +793,8 @@ def run_governor():
                                   {"ts": pipeline.iso_utc(), "event": "applied",
                                    "candidate_id": promo.get("candidate_id"),
                                    "spine_version": spine_ver, "checksum": checksum_or_err,
-                                   "falkor_write": falkor_status})
+                                   "falkor_write": falkor_status,
+                                   "smoke_test": smoke_detail})
             print(f"[governor] APPLIED {promo.get('candidate_id', '?')} -> spine v{spine_ver}")
         else:
             promo["status"] = "apply_failed"
