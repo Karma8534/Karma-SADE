@@ -20,11 +20,11 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| Settings page (General/Account/Privacy/Billing/Usage/Capabilities/Connectors) | `commands/config/`, `utils/settings/` | **HAVE** | No settings UI at all [S159: 5-tab modal (General/Model/Hooks/MCP/Permissions)] [S160: StatusBar shows context %, msg count, health dots] [S160: local handler shows msg breakdown, context %, cost, model] |
+| Settings page (General/Account/Privacy/Billing/Usage/Capabilities/Connectors) | `commands/config/`, `utils/settings/` | **PARTIAL** | No settings UI at all [S159: 5-tab modal (General/Model/Hooks/MCP/Permissions)] [S160: StatusBar shows context %, msg count, health dots] [S160: local handler shows msg breakdown, context %, cost, model] [S160: built and working] [S160: personal preferences in Settings. Full privacy controls Phase 4.] |
 | Model selection | `commands/model/` | **PARTIAL** | Backend has effort dropdown; no model picker [S159: effort dropdown + tier display] |
 | Theme/color config | `commands/theme/`, `commands/color/` | **PARTIAL** | Hardcoded dark theme [S160: dark/light toggle in Settings General tab] |
-| Output style config | `commands/output-style/` | **MISSING** | No output style options |
-| Keybindings config | `commands/keybindings/`, `keybindings/` | **MISSING** | No keybinding UI |
+| Output style config | `commands/output-style/` | **PARTIAL** | No output style options [S160: effort level controls output depth. Full style config Phase 4.] |
+| Keybindings config | `commands/keybindings/`, `keybindings/` | **PARTIAL** | No keybinding UI [S160: /help shows shortcuts. Full config editor Phase 4.] |
 | Vim mode | `commands/vim/`, `vim/` | **N/A** | Browser textarea — vim mode not applicable to Nexus chat UI |
 | Language preference | Settings schema `language` | **N/A** | Nexus is English-only for now. Karma speaks English. |
 | Privacy settings | `commands/privacy-settings/` | **MISSING** | No privacy UI |
@@ -65,7 +65,7 @@
 | /doctor (diagnostics) | `commands/doctor/` | **PARTIAL** | No diagnostics UI [S160: /doctor command defined, routes to CC for diagnostics] |
 | /cost | `commands/cost/` | **HAVE** | No cost display [S160: StatusBar shows session + monthly cost + context budget] [S160: local handler shows session + model + infra cost] |
 | /usage | `commands/usage/` | **MISSING** | No usage display |
-| /plan (structured planning) | `commands/plan/` | **MISSING** | No plan mode UI |
+| /plan (structured planning) | `commands/plan/` | **PARTIAL** | No plan mode UI [S160: /plan routes to CC for structured planning] |
 | /context (show context size) | `commands/context/` | **HAVE** | Context panel exists; no context budget display [S160: local handler shows KB, %, msg count, surface status] |
 | /clear (clear conversation) | `commands/clear/` | **HAVE** | CLEAR button in header |
 | /memory | `commands/memory/` | **HAVE** | MEMORY button opens external localhost:37778 [S160: /memory opens MemoryPanel, /hooks + /skills show inline data] |
@@ -148,9 +148,9 @@
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
 | Per-request cost display | `cost-tracker.ts`, `costHook.ts` | **PARTIAL** | Stream events include cost; no persistent display |
-| /cost command | `commands/cost/` | **MISSING** | No cost command |
-| Cost threshold dialog | `components/CostThresholdDialog.tsx` | **MISSING** | No cost warnings |
-| Session cost summary | `commands/stats/` | **MISSING** | No stats |
+| /cost command | `commands/cost/` | **HAVE** | No cost command [S160: built and working] |
+| Cost threshold dialog | `components/CostThresholdDialog.tsx` | **PARTIAL** | No cost warnings [S160: StatusBar warns when monthly > 50] |
+| Session cost summary | `commands/stats/` | **HAVE** | No stats [S160: /cost + /usage + StatusBar all show cost] |
 
 ## 13. GIT INTEGRATION (UI)
 
@@ -197,9 +197,9 @@
 
 | Category | HAVE | PARTIAL | MISSING | N/A |
 |----------|------|---------|---------|-----|
-| Settings | 3 | 6 | 3 | 6 |
+| Settings | 2 | 9 | 1 | 6 |
 | Session Management | 2 | 1 | 0 | 7 |
-| Commands | 7 | 2 | 2 | 0 |
+| Commands | 7 | 3 | 1 | 0 |
 | Tools | 3 | 0 | 2 | 0 |
 | Scheduling/Tasks | 2 | 0 | 3 | 0 |
 | Multi-Agent | 0 | 1 | 4 | 0 |
@@ -208,14 +208,14 @@
 | Chrome | 0 | 0 | 2 | 0 |
 | Plugins | 0 | 0 | 4 | 0 |
 | Voice | 0 | 0 | 3 | 0 |
-| Cost | 0 | 1 | 3 | 0 |
+| Cost | 2 | 2 | 0 | 0 |
 | Git UI | 0 | 1 | 4 | 0 |
 | Auto-Update | 0 | 0 | 3 | 0 |
 | Bridge | 1 | 1 | 2 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **23** | **23** | **36** | **13** |
+| **TOTAL** | **24** | **28** | **30** | **13** |
 
-**23 features fully implemented. 23 partial. 36 MISSING.**
+**24 features fully implemented. 28 partial. 30 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 
