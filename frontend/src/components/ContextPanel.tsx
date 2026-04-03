@@ -1,17 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useKarmaStore } from '@/store/karma';
+import { useKarmaStore, type FileNode } from '@/store/karma';
 
 type Tab = 'files' | 'memory' | 'agents' | 'preview';
-
-interface FileNode {
-  name: string;
-  type: 'file' | 'dir';
-  path: string;
-  size?: number;
-  children?: FileNode[];
-}
 
 interface MemoryItem {
   id: number;
@@ -80,27 +72,14 @@ export function ContextPanel() {
 // ── File Tree Tab ─────────────────────────────────────────────────────────────
 
 function FileTreeTab() {
-  const [tree, setTree] = useState<FileNode[]>([]);
-  const [loading, setLoading] = useState(true);
-  const token = useKarmaStore((s) => s.token);
+  const surface = useKarmaStore((s) => s.surface);
+  const fetchSurface = useKarmaStore((s) => s.fetchSurface);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch('/v1/files', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        if (data.ok) setTree(data.tree || []);
-      } catch {
-        // ignore
-      }
-      setLoading(false);
-    }
-    load();
-  }, [token]);
+  useEffect(() => { if (!surface) fetchSurface(); }, [surface, fetchSurface]);
 
-  if (loading) return <div className="text-karma-muted">Loading files...</div>;
+  const tree = (surface?.files?.tree as FileNode[]) || [];
+
+  if (!surface) return <div className="text-karma-muted">Loading files...</div>;
 
   return (
     <div>
@@ -214,34 +193,29 @@ function MemoryTab() {
 
 function AgentTab() {
   const [spine, setSpine] = useState<Record<string, unknown> | null>(null);
-  const [agents, setAgents] = useState<Record<string, unknown> | null>(null);
-  const [loading, setLoading] = useState(true);
-  const token = useKarmaStore((s) => s.token);
+  const [spineLoading, setSpineLoading] = useState(true);
+  const surface = useKarmaStore((s) => s.surface);
+  const fetchSurface = useKarmaStore((s) => s.fetchSurface);
+
+  useEffect(() => { if (!surface) fetchSurface(); }, [surface, fetchSurface]);
 
   useEffect(() => {
-    async function load() {
-      const headers: Record<string, string> = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+    async function loadSpine() {
       try {
-        const [spineRes, agentsRes] = await Promise.all([
-          fetch('/v1/spine').catch(() => null),
-          fetch('/v1/agents-status', { headers }).catch(() => null),
-        ]);
+        const spineRes = await fetch('/v1/spine').catch(() => null);
         if (spineRes?.ok) setSpine(await spineRes.json());
-        if (agentsRes?.ok) setAgents(await agentsRes.json());
       } catch { /* ignore */ }
-      setLoading(false);
+      setSpineLoading(false);
     }
-    load();
-  }, [token]);
+    loadSpine();
+  }, []);
 
-  if (loading) return <div className="text-karma-muted">Loading...</div>;
+  if (spineLoading && !surface) return <div className="text-karma-muted">Loading...</div>;
 
   const spineData = (spine?.spine as Record<string, unknown>) || {};
-  const pipelineData = (spine?.pipeline as Record<string, unknown>) || {};
-  const mcpServers = (agents?.mcp_servers as string[]) || [];
-  const skills = (agents?.skills as string[]) || [];
-  const hooks = (agents?.hooks as Record<string, string[]>) || {};
+  const mcpServers = (surface?.agents as Record<string, unknown>)?.mcp_servers as string[] || [];
+  const skills = surface?.skills?.names || [];
+  const hooks = surface?.hooks?.list || [];
 
   return (
     <div className="flex flex-col gap-2 text-[10px]">
@@ -279,14 +253,11 @@ function AgentTab() {
       ) : <span className="text-karma-muted">None detected</span>}
 
       {/* Hooks (#22) */}
-      <div className="text-karma-accent font-bold mt-2">Hooks ({Object.keys(hooks).length} events)</div>
-      {Object.entries(hooks).map(([event, handlers]) => (
-        <div key={event} className="ml-1">
-          <span className="text-karma-accent2">{event}</span>
-          <span className="text-karma-muted"> ({(handlers as string[]).length})</span>
-          <div className="ml-2 text-karma-muted">
-            {(handlers as string[]).map((h, i) => <div key={i}>· {h}</div>)}
-          </div>
+      <div className="text-karma-accent font-bold mt-2">Hooks ({hooks.length})</div>
+      {(hooks as { name: string; event: string }[]).map((h, i) => (
+        <div key={i} className="ml-1">
+          <span className="text-karma-accent2">{h.event}</span>
+          <span className="text-karma-muted"> · {h.name}</span>
         </div>
       ))}
     </div>

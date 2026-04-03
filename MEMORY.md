@@ -3,10 +3,16 @@
 # Karma SADE — Active Memory
 
 ## Current State
-- **Active task:** Bug fixes from Colby screenshot (archon alert stale date, MEMORY btn, kiki approval, bus redlines)
-- **Session:** 156 cont. (2026-04-02)
-- **Phase:** Sprints 1-5 SHIPPED. Sprint 6 active. Baseline 22 PASS.
-- **Baseline:** 22 PASS (Appendix G). Sprint 6 tasks 7-5 through 7-10 deployed.
+- **Active task:** CP5 DONE. Awaiting Sovereign 5-minute browser walkthrough (Phase D).
+- **Session:** 159 (2026-04-02)
+- **Phase:** CP5 shipped. Sprint 6 active. Baseline 22 PASS + CP5.
+- **Baseline:** 22 PASS (Appendix G). CP5 frontend /v1/surface wiring deployed.
+
+## Session 159 — CP5 + Dead Code Cleanup
+- **CP5 SHIPPED**: Frontend now fetches merged /v1/surface on page load. FileTreeTab + AgentTab (skills/hooks) read from surface store. /v1/spine kept separate (different data shape per Codex audit). proxy.js routes /v1/surface to P1 harness.
+- **Dead code removed**: run_subagent(), COMPACTION_TARGET, unused pathlib import (nexus_agent.py), unused socket import (cc_server_p1.py).
+- **Codex forensic log read**: No new findings beyond CP5 corrections already applied.
+- **Next**: Sovereign 5-minute browser walkthrough (Phase D) → baseline declaration (Phase F) → Sprint 7.
 
 ## Session 156 Continued — Bug Fixes
 - **Archon Alert stale 03/22 FIXED**: Blockers 10/11/13/21 had no ~~ strikethrough. Added ~~ to STATE.md + cc_context_snapshot.md. Now only items 16/17/18 (genuinely open) appear in archon alerts.

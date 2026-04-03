@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useKarmaStore } from '@/store/karma';
 import { Gate } from '@/components/Gate';
 import { Header } from '@/components/Header';
@@ -12,11 +13,15 @@ import { SelfEditBanner } from '@/components/SelfEditBanner';
 export default function Home() {
   const isAuthenticated = useKarmaStore((s) => s.isAuthenticated);
   const token = useKarmaStore((s) => s.token);
+  const fetchSurface = useKarmaStore((s) => s.fetchSurface);
 
   // Auto-authenticate if token exists from localStorage
   if (token && !isAuthenticated) {
     useKarmaStore.getState().setToken(token);
   }
+
+  // Fetch merged surface state on page load
+  useEffect(() => { if (isAuthenticated) fetchSurface(); }, [isAuthenticated, fetchSurface]);
 
   if (!isAuthenticated) return <Gate />;
 

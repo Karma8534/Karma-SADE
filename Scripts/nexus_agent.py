@@ -9,7 +9,7 @@ This replaces CC subprocess for autonomous operation when CC is unavailable,
 rate-limited, or when Karma needs to act independently.
 """
 
-import json, os, subprocess, pathlib, urllib.request, urllib.error, time, re, glob as globmod
+import json, os, subprocess, urllib.request, urllib.error, time, re, glob as globmod, shutil
 
 WORK_DIR = r"C:\Users\raest\Documents\Karma_SADE"
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
@@ -58,6 +58,28 @@ TOOLS = [
                 "new_string": {"type": "string", "description": "Replacement text"},
             },
             "required": ["file_path", "old_string", "new_string"],
+        },
+    },
+    {
+        "name": "SelfEdit",
+        "description": "Safely edit a file with backup and optional verification rollback.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "file_path": {"type": "string", "description": "Absolute path"},
+                "old_string": {"type": "string", "description": "Text to find"},
+                "new_string": {"type": "string", "description": "Replacement text"},
+                "verify_cmd": {"type": "string", "description": "Optional command to verify the edit"},
+            },
+            "required": ["file_path", "old_string", "new_string"],
+        },
+    },
+    {
+        "name": "ImproveRun",
+        "description": "Run the Vesper improvement cycle.",
+        "input_schema": {
+            "type": "object",
+            "properties": {},
         },
     },
     {
@@ -143,6 +165,19 @@ def _exec_tool(name, input_data):
                 f.write(content)
             return f"Edited {fp}"
 
+        elif name == "SelfEdit":
+            return json.dumps(self_edit(
+                input_data["file_path"],
+                input_data["old_string"],
+                input_data["new_string"],
+                input_data.get("verify_cmd"),
+            ), ensure_ascii=False)
+
+        elif name == "ImproveRun":
+            from Scripts.vesper_improve import run as vesper_run
+            vesper_run()
+            return "ImproveRun completed"
+
         elif name == "Bash":
             cmd = input_data["command"]
             timeout = input_data.get("timeout", 30)
@@ -214,6 +249,94 @@ def _call_llm(messages, tools=None, model=None):
     )
     with urllib.request.urlopen(req, timeout=90) as resp:
         return json.loads(resp.read())
+
+def self_edit(file_path, old_string, new_string, verify_cmd=None):
+    """Safely edit a file with backup and optional verification rollback."""
+    try:
+        fp = file_path
+        if not os.path.isabs(fp):
+            fp = os.path.join(WORK_DIR, fp)
+        fp = os.path.normpath(fp)
+        if not fp.startswith(WORK_DIR):
+            return {"ok": False, "error": f"path outside WORK_DIR: {fp}", "file_path": fp}
+
+        if not os.path.exists(fp):
+            return {"ok": False, "error": f"file not found: {fp}", "file_path": fp}
+
+        backup_path = fp + ".self_edit_backup"
+        shutil.copy2(fp, backup_path)
+
+        with open(fp, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        old_count = content.count(old_string)
+        if old_count == 0:
+            shutil.copy2(backup_path, fp)
+            return {
+                "ok": False,
+                "error": "old_string not found",
+                "file_path": fp,
+                "backup_path": backup_path,
+            }
+        if old_count > 1:
+            shutil.copy2(backup_path, fp)
+            return {
+                "ok": False,
+                "error": f"old_string appears {old_count} times",
+                "file_path": fp,
+                "backup_path": backup_path,
+            }
+
+        updated = content.replace(old_string, new_string, 1)
+        with open(fp, "w", encoding="utf-8") as f:
+            f.write(updated)
+
+        verify_result = None
+        if verify_cmd:
+            verify_proc = subprocess.run(
+                verify_cmd,
+                shell=True,
+                cwd=WORK_DIR,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            verify_result = {
+                "command": verify_cmd,
+                "returncode": verify_proc.returncode,
+                "stdout": verify_proc.stdout[:4000],
+                "stderr": verify_proc.stderr[:4000],
+            }
+            if verify_proc.returncode != 0:
+                shutil.copy2(backup_path, fp)
+                return {
+                    "ok": False,
+                    "error": "verification failed; reverted",
+                    "file_path": fp,
+                    "backup_path": backup_path,
+                    "verify": verify_result,
+                }
+
+        return {
+            "ok": True,
+            "file_path": fp,
+            "backup_path": backup_path,
+            "replaced": 1,
+            "verify": verify_result,
+        }
+    except Exception as e:
+        try:
+            if "backup_path" in locals() and os.path.exists(backup_path) and os.path.exists(fp):
+                shutil.copy2(backup_path, fp)
+        except Exception:
+            pass
+        return {
+            "ok": False,
+            "error": str(e),
+            "file_path": fp if "fp" in locals() else file_path,
+            "backup_path": backup_path if "backup_path" in locals() else None,
+        }
 
 # ── Agentic Loop ─────────────────────────────────────────────────────────────
 
@@ -349,7 +472,6 @@ def load_transcript(session_id):
 # ── P3: Auto-Compaction ──────────────────────────────────────────────────────
 
 COMPACTION_THRESHOLD = 80000  # chars in messages before triggering compaction
-COMPACTION_TARGET = 20000     # target size after compaction
 
 def _estimate_chars(messages):
     """Rough char count of message history."""
@@ -393,28 +515,6 @@ def _compact_messages(messages, model=None):
     return messages  # Return unchanged on failure
 
 
-# ── P4: Subagent Isolation ───────────────────────────────────────────────────
-
-def run_subagent(task, parent_session_id=None, model=None):
-    """Run an isolated subagent with its own message history and transcript.
-    Returns the final result text. Parent state is not modified."""
-    sub_session = f"sub_{parent_session_id or 'anon'}_{int(time.time())}"
-    results = []
-
-    for event in run_agent(task, model=model):
-        # Write to subagent's own transcript
-        append_transcript(sub_session, {"event": event, "ts": time.time()})
-        obj = json.loads(event)
-        if obj.get("type") == "assistant":
-            for block in obj.get("message", {}).get("content", []):
-                if isinstance(block, dict) and block.get("type") == "text":
-                    results.append(block.get("text", ""))
-        if obj.get("type") == "result":
-            break
-
-    return "".join(results), sub_session
-
-
 # ── P5: Permission Stack ────────────────────────────────────────────────────
 
 # Layered permission gates for tool execution
@@ -425,6 +525,8 @@ PERMISSION_RULES = {
     "Grep": "allow",
     "Write": "gate",      # Log all writes
     "Edit": "gate",       # Log all edits
+    "SelfEdit": "gate",   # Log all self-edits
+    "ImproveRun": "gate", # Log improvement cycles
     "Bash": "gate",       # Log all shell commands
 }
 
@@ -457,7 +559,7 @@ def check_permission(tool_name, tool_input):
                 return False, f"Dangerous command pattern detected: {pattern.pattern}"
 
     # Check for writes outside WORK_DIR
-    if tool_name in ("Write", "Edit"):
+    if tool_name in ("Write", "Edit", "SelfEdit"):
         fp = tool_input.get("file_path", "")
         if fp and not fp.startswith(WORK_DIR) and not fp.startswith("C:\\Users\\raest\\Documents\\Karma"):
             _log_permission("BLOCKED", tool_name, tool_input, f"Write outside WORK_DIR: {fp}")

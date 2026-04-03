@@ -80,6 +80,14 @@ function cleanToolName(name: string): string {
 
 // ── Store ────────────────────────────────────────────────────────────────────
 
+export interface FileNode {
+  name: string;
+  type: 'file' | 'dir';
+  path: string;
+  size?: number;
+  children?: FileNode[];
+}
+
 interface KarmaState {
   // Auth
   token: string;
@@ -106,6 +114,19 @@ interface KarmaState {
   // Cost
   sessionCost: number;
 
+  // Surface (merged state from /v1/surface)
+  surface: {
+    session?: { session_id: string };
+    git?: { branch: string; changed: number; files: string[]; recent_commits: string[] };
+    files?: { root: string; tree: FileNode[] };
+    skills?: { count: number; names: string[] };
+    hooks?: { count: number; active: boolean; list: { name: string; event: string }[] };
+    memory?: { tail: string; file: string };
+    state?: { text: string };
+    agents?: Record<string, unknown>;
+    transcripts?: { count: number; sessions: string[] };
+  } | null;
+
   // Status
   lastSeen: string;
   k2Active: boolean;
@@ -113,6 +134,7 @@ interface KarmaState {
   error: string | null;
 
   // Actions
+  fetchSurface: () => Promise<void>;
   setToken: (token: string) => void;
   logout: () => void;
   addMessage: (msg: ChatMessage) => void;
@@ -154,6 +176,7 @@ export const useKarmaStore = create<KarmaState>((set, get) => ({
   activeToolCalls: new Map(),
   selfEditProposals: [],
   sessionCost: 0,
+  surface: null,
   lastSeen: '',
   k2Active: false,
   brainOk: false,
@@ -243,4 +266,18 @@ export const useKarmaStore = create<KarmaState>((set, get) => ({
 
   // Error
   setError: (err) => set({ error: err }),
+
+  // Surface
+  fetchSurface: async () => {
+    const { token } = get();
+    try {
+      const res = await fetch('/v1/surface', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        set({ surface: data });
+      }
+    } catch {}
+  },
 }));

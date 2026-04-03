@@ -6,7 +6,7 @@ Uses local Ollama for inference — Anthropic-independent, no MCP startup overhe
 Returns: {response, ok}
 Auth: Bearer token checked against HUB_CHAT_TOKEN env var.
 """
-import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.parse, socket, sqlite3, base64, threading, time
+import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.parse, sqlite3, base64, threading, time
 from http.server import HTTPServer, ThreadingHTTPServer, BaseHTTPRequestHandler
 from collections import defaultdict
 sys.path.insert(0, os.path.dirname(__file__))
@@ -102,7 +102,7 @@ NODE_EXE       = r"C:\Program Files\nodejs\node.exe"
 CLAUDE_CLI_JS  = r"C:\Users\raest\AppData\Roaming\npm\node_modules\@anthropic-ai\claude-code\cli.js"
 # ── Nexus Agent: Karma's own agentic loop (S157 — independence primitive) ─────
 try:
-    from nexus_agent import run_agent as nexus_run_agent, append_transcript, load_transcript
+    from nexus_agent import run_agent as nexus_run_agent, append_transcript, load_transcript, TRANSCRIPT_DIR
     NEXUS_AGENT_AVAILABLE = True
     print(f"[cc-server] NexusAgent: AVAILABLE")
 except ImportError as e:
@@ -574,6 +574,7 @@ def run_cc_stream(message, effort=None, model=None, budget=None):
                 if t == "rate_limit_event":
                     continue  # Skip rate limit noise
                 # ── Fire PreToolUse/PostToolUse hooks on tool events (Task 3 fix) ──
+                # Codex CP1: Enforce denials — kill subprocess + yield error on deny
                 if t == "assistant" and HOOKS_AVAILABLE:
                     msg = obj.get("message", {})
                     content = msg.get("content", [])
@@ -588,7 +589,20 @@ def run_cc_stream(message, effort=None, model=None, budget=None):
                                     })
                                     for hr in results:
                                         if hr.output and hr.output.get("permissionDecision") == "deny":
-                                            print(f"[hooks] BLOCKED: {tool_name} — {hr.output.get('systemMessage','')}")
+                                            reason = hr.output.get('systemMessage', 'Permission denied')
+                                            print(f"[hooks] ENFORCED DENIAL: {tool_name} — {reason}")
+                                            # Kill the CC subprocess to prevent execution
+                                            if _current_proc and _current_proc.poll() is None:
+                                                _current_proc.kill()
+                                            # Yield denial event to browser
+                                            denial_event = json.dumps({
+                                                "type": "error",
+                                                "error": f"Tool '{tool_name}' blocked by permission stack: {reason}",
+                                                "tool_name": tool_name,
+                                                "permission_denied": True,
+                                            })
+                                            yield denial_event
+                                            return  # Stop streaming
                                 except Exception:
                                     pass
                 # tool_result appears as separate type OR inside assistant content
@@ -817,6 +831,60 @@ class CCHandler(BaseHTTPRequestHandler):
                 self._json(200, {"ok": True, "items": items})
             except Exception as e:
                 self._json(500, {"ok": False, "error": str(e)})
+        elif self.path == "/v1/surface":
+            # Codex CP2: Merged surface payload — chat+files+git+skills+memory in ONE call
+            try:
+                surface = {"ok": True}
+                surface["session"] = {"session_id": load_session_id() or "", "service": "cc-server-p1"}
+                # Git
+                try:
+                    r = subprocess.run(["git", "status", "--porcelain", "-b"], capture_output=True, text=True, cwd=WORK_DIR, timeout=5)
+                    lines = r.stdout.strip().splitlines()
+                    branch = lines[0].replace("## ", "") if lines else "unknown"
+                    changed = [l for l in lines[1:] if l.strip()]
+                    r2 = subprocess.run(["git", "log", "--oneline", "-5"], capture_output=True, text=True, cwd=WORK_DIR, timeout=5)
+                    surface["git"] = {"branch": branch, "changed": len(changed), "files": changed[:10], "recent_commits": r2.stdout.strip().splitlines()}
+                except Exception as e:
+                    surface["git"] = {"error": str(e)}
+                # Files
+                try:
+                    surface["files"] = {"root": os.path.basename(WORK_DIR), "tree": _build_file_tree(WORK_DIR, max_depth=2)}
+                except Exception as e:
+                    surface["files"] = {"error": str(e)}
+                # Skills
+                skills_dir = os.path.join(WORK_DIR, ".claude", "skills")
+                skills = []
+                if os.path.isdir(skills_dir):
+                    for name in sorted(os.listdir(skills_dir)):
+                        if os.path.isfile(os.path.join(skills_dir, name, "SKILL.md")):
+                            skills.append(name)
+                surface["skills"] = {"count": len(skills), "names": skills}
+                # Hooks
+                hooks_list = []
+                if HOOKS_AVAILABLE and _hooks:
+                    for hook_list in _hooks._registry.values():
+                        for h in hook_list:
+                            hooks_list.append({"name": h.name, "event": h.event})
+                surface["hooks"] = {"count": len(hooks_list), "active": HOOKS_AVAILABLE, "list": hooks_list}
+                # Memory
+                mem_text = _read_cached_file(MEMORY_FILE, 1500)
+                surface["memory"] = {"tail": mem_text or "", "file": str(MEMORY_FILE)}
+                # State
+                state_text = _read_cached_file(STATE_FILE, 500)
+                surface["state"] = {"text": state_text or ""}
+                # Agents
+                surface["agents"] = _get_agents_status()
+                # Transcripts
+                if NEXUS_AGENT_AVAILABLE:
+                    try:
+                        tfiles = [f.replace(".jsonl", "") for f in os.listdir(TRANSCRIPT_DIR) if f.endswith(".jsonl")]
+                        surface["transcripts"] = {"count": len(tfiles), "sessions": tfiles[:10]}
+                    except Exception:
+                        surface["transcripts"] = {"count": 0, "sessions": []}
+                self._json(200, surface)
+            except Exception as e:
+                self._json(500, {"ok": False, "error": f"/v1/surface failed: {e}"})
+            return
         elif self.path == "/self-edit/pending":
             # Sprint 4d: List pending self-edit proposals
             from Scripts.self_edit_service import list_pending
@@ -845,8 +913,9 @@ class CCHandler(BaseHTTPRequestHandler):
             # Baseline #22: Hooks status for UI surface
             hooks_list = []
             if HOOKS_AVAILABLE and _hooks:
-                for h in _hooks._hooks:
-                    hooks_list.append({"name": h.name, "events": h.events, "condition": h.condition})
+                for hook_list in _hooks._registry.values():
+                    for h in hook_list:
+                        hooks_list.append({"name": h.name, "event": h.event, "condition": h.condition})
             self._json(200, {"ok": True, "count": len(hooks_list), "hooks": hooks_list, "engine": HOOKS_AVAILABLE})
         else:
             self.send_response(404)
@@ -1089,8 +1158,32 @@ class CCHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 stream_full_text = []  # S155: accumulate full response for memory capture
                 # P2: Crash-safe — write user message BEFORE API call
+                # Codex CP1: Wire load_transcript for resume after restart
+                _conv_id = self.headers.get("x-conversation-id", "default")
                 if NEXUS_AGENT_AVAILABLE:
-                    _conv_id = self.headers.get("x-conversation-id", "default")
+                    # Load prior conversation context for this conversation-id
+                    prior_transcript = load_transcript(_conv_id)
+                    # Cap transcript file at 100 entries to prevent unbounded growth
+                    if len(prior_transcript) > 100:
+                        _tp = os.path.join(TRANSCRIPT_DIR, f"{_conv_id}.jsonl") if NEXUS_AGENT_AVAILABLE else None
+                        if _tp and os.path.exists(_tp):
+                            trimmed = prior_transcript[-100:]
+                            with open(_tp, "w", encoding="utf-8") as _tf:
+                                for _te in trimmed:
+                                    _tf.write(json.dumps(_te, ensure_ascii=False) + "\n")
+                            prior_transcript = trimmed
+                    if prior_transcript:
+                        # Inject last 5 exchanges as conversation memory
+                        recent = prior_transcript[-10:]  # last 10 entries (5 user + 5 assistant)
+                        conv_summary = []
+                        for entry in recent:
+                            role = entry.get("role", "?")
+                            text = entry.get("content", "")[:300]
+                            conv_summary.append(f"  [{role}]: {text}")
+                        if conv_summary:
+                            _transcript_context = "\n".join(conv_summary)
+                            # Prepend to message so CC has conversation context after restart
+                            message = f"[CONVERSATION HISTORY — recovered from transcript]\n{_transcript_context}\n[END HISTORY]\n\n{message}"
                     append_transcript(_conv_id, {"role": "user", "content": message, "ts": time.time()})
                 try:
                     t_start = time.time()
@@ -1174,6 +1267,9 @@ class CCHandler(BaseHTTPRequestHandler):
                 assistant_text = "".join(stream_full_text)
                 if assistant_text:
                     _auto_save_memory(message, assistant_text)
+                # Codex CP1: Append assistant response to transcript for crash-safe recovery
+                if NEXUS_AGENT_AVAILABLE and assistant_text:
+                    append_transcript(_conv_id, {"role": "assistant", "content": assistant_text[:2000], "ts": time.time()})
                 # ── Fire Stop hooks after stream completes (Sprint 3a) ───
                 if HOOKS_AVAILABLE:
                     try:
