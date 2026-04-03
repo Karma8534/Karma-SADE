@@ -98,11 +98,15 @@ function MessageBubble({ message }: { message: ChatMessage }) {
     );
   }
 
-  // System message
+  // System message — render basic markdown (bold, newlines)
   if (role === 'system') {
     return (
-      <div className="text-center text-karma-muted text-[11px] italic py-1">
-        {content}
+      <div className="bg-karma-bg border border-karma-border/50 rounded px-4 py-2.5 text-[11px] text-karma-text whitespace-pre-wrap my-1">
+        {content.split(/(\*\*[^*]+\*\*)/).map((part, i) =>
+          part.startsWith('**') && part.endsWith('**')
+            ? <span key={i} className="text-karma-accent font-bold">{part.slice(2, -2)}</span>
+            : <span key={i}>{part}</span>
+        )}
       </div>
     );
   }
