@@ -157,6 +157,34 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'plugins') {
+      const store = useKarmaStore.getState();
+      // Fetch plugin info from cc_server
+      (async () => {
+        try {
+          const res = await fetch('/v1/surface', {
+            headers: { Authorization: `Bearer ${store.token}` },
+          });
+          if (res.ok) {
+            const surface = await res.json();
+            const skills = surface.skills?.names || [];
+            store.addMessage({
+              id: Date.now().toString(36), role: 'system',
+              content: `**PLUGINS** (${skills.length} loaded)\n\n**Plugin System:** plugin_loader.py — discover, load, trust-gate\n**Trust Levels:** local (family) | verified (Sovereign) | untrusted (sandboxed)\n\n**Installed:**\n  gap-tracker v1.0.0 [local] — gap_status, gap_missing tools\n\n**Skills (${skills.length}):**\n${skills.slice(0, 15).map((s: string) => '  ' + s).join('\n')}\n${skills.length > 15 ? `  ...and ${skills.length - 15} more` : ''}\n\n**Add plugins:** drop directory with manifest.json in plugins/`,
+              timestamp: new Date().toISOString(),
+            });
+          }
+        } catch {
+          store.addMessage({
+            id: Date.now().toString(36), role: 'system',
+            content: '**PLUGINS** — could not reach hub. Check connection.',
+            timestamp: new Date().toISOString(),
+          });
+        }
+      })();
+      setText('');
+      return;
+    }
     if (cmd.name === 'watchers') {
       useKarmaStore.getState().addMessage({
         id: Date.now().toString(36), role: 'system',

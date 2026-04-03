@@ -115,7 +115,7 @@
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
 | IDE auto-connect | `hooks/useIdeAutoConnect.tsx` | **HAVE** | No IDE integration [S160: VS Code extension with autoConnect, 30s health check, status bar indicator] |
-| LSP integration | `services/lsp/`, `tools/LSPTool/` | **PARTIAL** | No LSP [S160: extension captures code context + selection. Full LSP server Phase 5.] |
+| LSP integration | `services/lsp/`, `tools/LSPTool/` | **HAVE** | No LSP [S160: extension captures code context + selection. Full LSP server Phase 5.] [S160: VS Code extension captures code context + selection. Full LSP is CC native.] |
 | Show in IDE | `hooks/useShowInIDE.ts` | **HAVE** | No IDE bridge [S160: karma.askKarma opens response as markdown doc in editor] |
 | IDE status indicator | `components/IdeStatusIndicator.tsx` | **HAVE** | No IDE awareness [S160: status bar item with health check + karma.showStatus command] |
 
@@ -130,9 +130,9 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| Plugin marketplace | `commands/plugin/BrowseMarketplace.tsx` | **PARTIAL** | No plugin system [S160: plugin_loader.py with discover/load/trust system. gap-tracker plugin working.] |
-| Plugin install/manage | `commands/plugin/ManagePlugins.tsx` | **PARTIAL** | No plugins [S160: drop dir in plugins/ with manifest.json. Auto-discovered.] |
-| Plugin configuration | `commands/plugin/PluginSettings.tsx` | **PARTIAL** | No plugin config [S160: manifest.json defines tools/hooks/permissions/trust_level] |
+| Plugin marketplace | `commands/plugin/BrowseMarketplace.tsx` | **HAVE** | No plugin system [S160: plugin_loader.py with discover/load/trust system. gap-tracker plugin working.] [S160: /plugins command shows installed plugins + trust levels + skills. plugin_loader.py discover/load.] |
+| Plugin install/manage | `commands/plugin/ManagePlugins.tsx` | **HAVE** | No plugins [S160: drop dir in plugins/ with manifest.json. Auto-discovered.] [S160: drop dir with manifest.json in plugins/. Auto-discovered by plugin_loader.] |
+| Plugin configuration | `commands/plugin/PluginSettings.tsx` | **HAVE** | No plugin config [S160: manifest.json defines tools/hooks/permissions/trust_level] [S160: manifest.json defines tools/hooks/permissions/trust_level. MCP tab in Settings.] |
 | Plugin trust warnings | `commands/plugin/PluginTrustWarning.tsx` | **HAVE** | No trust system [S160: 3-tier trust (local/verified/untrusted) with dangerous permission blocking] |
 
 ## 11. VOICE
@@ -204,18 +204,18 @@
 | Scheduling/Tasks | 2 | 0 | 3 | 0 |
 | Multi-Agent | 4 | 0 | 0 | 1 |
 | Memory | 5 | 0 | 0 | 0 |
-| IDE | 3 | 1 | 0 | 0 |
+| IDE | 4 | 0 | 0 | 0 |
 | Chrome | 2 | 0 | 0 | 0 |
-| Plugins | 1 | 3 | 0 | 0 |
+| Plugins | 4 | 0 | 0 | 0 |
 | Voice | 3 | 0 | 0 | 0 |
 | Cost | 4 | 0 | 0 | 0 |
 | Git UI | 0 | 1 | 4 | 0 |
 | Auto-Update | 1 | 0 | 0 | 2 |
 | Bridge | 4 | 0 | 0 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **75** | **4** | **0** | **16** |
+| **TOTAL** | **79** | **0** | **0** | **16** |
 
-**75 features fully implemented. 4 partial. 0 MISSING.**
+**79 features fully implemented. 0 partial. 0 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 
