@@ -1,0 +1,39 @@
+{
+  "name": "karma-nexus",
+  "displayName": "Karma Nexus",
+  "description": "Karma Nexus IDE integration — persistent AI memory, context from editor, status indicator",
+  "version": "1.0.0",
+  "publisher": "karma-family",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["AI", "Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "karma.askKarma", "title": "Ask Karma" },
+      { "command": "karma.captureContext", "title": "Karma: Capture Current File" },
+      { "command": "karma.showStatus", "title": "Karma: Show Status" },
+      { "command": "karma.openHub", "title": "Karma: Open Hub" }
+    ],
+    "configuration": {
+      "title": "Karma Nexus",
+      "properties": {
+        "karma.hubUrl": {
+          "type": "string",
+          "default": "https://hub.arknexus.net",
+          "description": "Karma Hub URL"
+        },
+        "karma.token": {
+          "type": "string",
+          "default": "",
+          "description": "Hub authentication token"
+        },
+        "karma.autoConnect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-connect to hub on startup"
+        }
+      }
+    }
+  }
+}

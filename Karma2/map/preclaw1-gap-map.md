@@ -114,10 +114,10 @@
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| IDE auto-connect | `hooks/useIdeAutoConnect.tsx` | **MISSING** | No IDE integration |
-| LSP integration | `services/lsp/`, `tools/LSPTool/` | **MISSING** | No LSP |
-| Show in IDE | `hooks/useShowInIDE.ts` | **MISSING** | No IDE bridge |
-| IDE status indicator | `components/IdeStatusIndicator.tsx` | **MISSING** | No IDE awareness |
+| IDE auto-connect | `hooks/useIdeAutoConnect.tsx` | **HAVE** | No IDE integration [S160: VS Code extension with autoConnect, 30s health check, status bar indicator] |
+| LSP integration | `services/lsp/`, `tools/LSPTool/` | **PARTIAL** | No LSP [S160: extension captures code context + selection. Full LSP server Phase 5.] |
+| Show in IDE | `hooks/useShowInIDE.ts` | **HAVE** | No IDE bridge [S160: karma.askKarma opens response as markdown doc in editor] |
+| IDE status indicator | `components/IdeStatusIndicator.tsx` | **HAVE** | No IDE awareness [S160: status bar item with health check + karma.showStatus command] |
 
 ## 9. CHROME / BROWSER INTEGRATION
 
@@ -204,7 +204,7 @@
 | Scheduling/Tasks | 2 | 0 | 3 | 0 |
 | Multi-Agent | 4 | 0 | 0 | 1 |
 | Memory | 5 | 0 | 0 | 0 |
-| IDE | 0 | 0 | 4 | 0 |
+| IDE | 3 | 1 | 0 | 0 |
 | Chrome | 2 | 0 | 0 | 0 |
 | Plugins | 1 | 3 | 0 | 0 |
 | Voice | 3 | 0 | 0 | 0 |
@@ -213,9 +213,9 @@
 | Auto-Update | 1 | 0 | 0 | 2 |
 | Bridge | 4 | 0 | 0 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **72** | **3** | **4** | **16** |
+| **TOTAL** | **75** | **4** | **0** | **16** |
 
-**72 features fully implemented. 3 partial. 4 MISSING.**
+**75 features fully implemented. 4 partial. 0 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 
