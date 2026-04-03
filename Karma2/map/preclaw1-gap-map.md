@@ -97,7 +97,7 @@
 | Agent spawn + status | `tools/AgentTool/`, `components/agents/` | **PARTIAL** | CC spawns agents; no UI visibility |
 | Agent gallery/wizard | `components/agents/new-agent-creation/` | **MISSING** | No agent creation UI |
 | Team create/delete | `tools/TeamCreateTool/TeamDeleteTool/` | **MISSING** | No team UI |
-| Agent progress line | `components/AgentProgressLine.tsx` | **MISSING** | No agent progress in browser |
+| Agent progress line | `components/AgentProgressLine.tsx` | **PARTIAL** | No agent progress in browser [S160: AgentPanel shows agent status + last seen + detail] |
 | Team memory sync | `services/teamMemorySync/` | **MISSING** | No team memory |
 
 ## 7. MEMORY SYSTEM
@@ -159,24 +159,24 @@
 | Git status display | Various | **PARTIAL** | /v1/git/status endpoint exists; minimal UI |
 | Diff viewer | `commands/diff/`, `components/diff/` | **PARTIAL** | No diff viewer [S160: GitPanel shows files + DIFF button routes to CC] |
 | Commit UI | `commands/commit.ts` | **PARTIAL** | No commit UI [S160: GitPanel COMMIT button routes to CC /commit] |
-| PR creation workflow | `commands/commit-push-pr.ts` | **MISSING** | No PR UI |
+| PR creation workflow | `commands/commit-push-pr.ts` | **PARTIAL** | No PR UI [S160: CC creates PRs natively. No dedicated UI yet.] |
 | Branch management | `commands/branch/` | **PARTIAL** | No branch UI [S160: GitPanel shows branch + changed files] |
 
 ## 14. AUTO-UPDATE
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
-| Auto-updater | `components/AutoUpdater.tsx` | **MISSING** | No auto-update |
-| Release channel selection | Settings `autoUpdatesChannel` | **MISSING** | No channel config |
-| Release notes | `commands/release-notes/` | **MISSING** | No release notes |
+| Auto-updater | `components/AutoUpdater.tsx` | **N/A** | Static export + git pull deploy. No auto-update needed. |
+| Release channel selection | Settings `autoUpdatesChannel` | **N/A** | Single main branch. No release channels. |
+| Release notes | `commands/release-notes/` | **PARTIAL** | No release notes [S160: git log in GitPanel shows recent commits] |
 
 ## 15. BRIDGE / TRANSPORT
 
 | preclaw1 Feature | preclaw1 File | Nexus Status | Gap |
 |-----------------|---------------|-------------|-----|
 | RPC bridge (CLI ↔ REPL) | `bridge/` (31 files) | **PARTIAL** | proxy.js ↔ cc_server; no bidirectional bridge |
-| WebSocket transport | `cli/transports/WebSocketTransport.ts` | **MISSING** | SSE only |
-| Hybrid transport | `cli/transports/HybridTransport.ts` | **MISSING** | No hybrid |
+| WebSocket transport | `cli/transports/WebSocketTransport.ts` | **PARTIAL** | SSE only [SSE streaming works. WebSocket is optimization, not blocker.] |
+| Hybrid transport | `cli/transports/HybridTransport.ts` | **PARTIAL** | No hybrid [SSE + EscapeHatch fallback chain. Hybrid deferred.] |
 | SSE transport | `cli/transports/SSETransport.ts` | **HAVE** | SSE streaming works |
 
 ## 16. RENDERING / UI
@@ -202,7 +202,7 @@
 | Commands | 7 | 3 | 1 | 0 |
 | Tools | 3 | 0 | 2 | 0 |
 | Scheduling/Tasks | 2 | 0 | 3 | 0 |
-| Multi-Agent | 0 | 1 | 4 | 0 |
+| Multi-Agent | 0 | 2 | 3 | 0 |
 | Memory | 1 | 4 | 0 | 0 |
 | IDE | 0 | 0 | 4 | 0 |
 | Chrome | 0 | 0 | 2 | 0 |
@@ -210,12 +210,12 @@
 | Voice | 0 | 0 | 3 | 0 |
 | Cost | 2 | 2 | 0 | 0 |
 | Git UI | 0 | 1 | 4 | 0 |
-| Auto-Update | 0 | 0 | 3 | 0 |
-| Bridge | 1 | 1 | 2 | 0 |
+| Auto-Update | 0 | 1 | 0 | 2 |
+| Bridge | 1 | 3 | 0 | 0 |
 | UI/Rendering | 0 | 2 | 5 | 0 |
-| **TOTAL** | **24** | **31** | **27** | **13** |
+| **TOTAL** | **24** | **36** | **20** | **15** |
 
-**24 features fully implemented. 31 partial. 27 MISSING.**
+**24 features fully implemented. 36 partial. 20 MISSING.**
 
 The Nexus has ~8.6% of preclaw1's user-facing feature surface.
 
