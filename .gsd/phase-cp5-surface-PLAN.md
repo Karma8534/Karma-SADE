@@ -166,5 +166,35 @@ ssh vault-neo 'cd /home/neo/karma-sade && git pull origin main && cp -r frontend
 
 ALL must work. If ANY fails, the deploy is rolled back.
 
+## CODEX AUDIT CORRECTIONS (S157 — mandatory before executing)
+
+### CRITICAL: proxy.js MUST add /v1/surface route
+proxy.js (vault-neo) does NOT route /v1/surface to P1. Browser fetch will 404.
+FIX: Add to proxy.js alongside existing /v1/* routes:
+```javascript
+// In the GET handler section of proxy.js, add:
+if (req.method === "GET" && req.url === "/v1/surface") {
+  return proxyToHarness(req, res);  // same pattern as other /v1/* routes
+}
+```
+This is a 4th file change (proxy.js) that was MISSING from original spec.
+
+### CRITICAL: surface.agents shape is WRONG in AgentTab replacement
+cc_server /v1/surface puts `_get_agents_status()` in `surface.agents` — this contains
+{mcp_servers, skills, hooks}, NOT {spine, pipeline}. The original AgentTab fetches
+/v1/spine separately for spine/pipeline data.
+
+FIX: Either:
+(a) Add spine data to /v1/surface response in cc_server (fetch from K2 cortex), OR
+(b) Keep AgentTab's /v1/spine fetch as-is and only replace /v1/files and /v1/agents-status
+
+Option (b) is safer — fewer changes, less risk. Replace 2 fetches, not 3.
+
+### Dead code confirmed:
+- socket import in cc_server_p1.py — unused
+- pathlib import in nexus_agent.py — unused
+- COMPACTION_TARGET in nexus_agent.py — unused
+- run_subagent() in nexus_agent.py — uncalled
+
 ## Estimated Complexity: S-M
-3 files changed (store, ContextPanel, page). ~40 lines added, ~30 lines removed. No new dependencies. No architectural change.
+4 files changed (store, ContextPanel, page, proxy.js). Option (b): replace 2 fetches only.

@@ -172,10 +172,15 @@ karma_regent.py: autonomous daemon with state injection
 ## CP5: Frontend /v1/surface Wiring — NOT DONE
 The /v1/surface endpoint EXISTS (returns 10 keys in one call). But the frontend still makes 3 SEPARATE fetch calls to /v1/files, /v1/spine, /v1/agents-status instead of consuming /v1/surface.
 
-Fix (3 files, ~40 lines):
-1. frontend/src/store/karma.ts — add surface state + fetchSurface action
-2. frontend/src/components/ContextPanel.tsx — FileTreeTab and AgentTab read from surface store instead of individual fetches
-3. frontend/src/app/page.tsx — call fetchSurface on mount
+Fix (4 files, ~50 lines):
+1. hub-bridge/app/proxy.js — ADD /v1/surface route (currently 404 from browser!)
+2. frontend/src/store/karma.ts — add surface state + fetchSurface action
+3. frontend/src/components/ContextPanel.tsx — FileTreeTab reads surface.files; AgentTab keeps /v1/spine fetch (surface.agents has wrong shape for spine data)
+4. frontend/src/app/page.tsx — call fetchSurface on mount
+
+CODEX AUDIT WARNING: original CP5 spec was WRONG about surface.agents containing
+spine/pipeline data. It contains MCP/skills/hooks from _get_agents_status(). AgentTab
+must keep its /v1/spine fetch. Only FileTreeTab and agents-status fetch get replaced.
 
 Fetches to REPLACE:
 - GET /v1/files (ContextPanel.tsx:90) -> surface.files
@@ -194,8 +199,12 @@ Verify in browser:
 3. Chat works
 4. LEARNED + MEMORY buttons work
 
-## Dead Code
-- nexus_agent.py: run_subagent() — writes sidecars nothing reads. DELETE.
+## Dead Code (confirmed by Codex forensic audit)
+- nexus_agent.py: run_subagent() — defined, never called. DELETE.
+- nexus_agent.py: COMPACTION_TARGET — defined, never used. DELETE.
+- nexus_agent.py: pathlib import — unused. DELETE.
+- cc_server_p1.py: socket import — unused. DELETE.
+- cc_server_p1.py: file_paths from handle_files() — assigned, never read (paths ARE embedded in message text though, so leave the function, just remove the unused variable).
 
 ## Phase D: Sovereign Walkthrough — NOT DONE
 Colby must click through hub.arknexus.net. 5 minutes.
