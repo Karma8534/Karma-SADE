@@ -144,11 +144,38 @@ Voice NEVER routes through claude.ai. Sovereign pipeline only (Whisper → text 
 - **LIZA PRIMITIVES SAVED**: obs #21971 — behavioral contract, adversarial review, code-enforced circuit breaker, approval requests. Key insight: we have Ralph (loop until converge), we're missing Lisa (verify work is actually right).
 - **Primitives goldmine**: Karma2/primitives/INDEX.md — running list of all extracted patterns by date.
 
+## Codex Reverse-Engineering Verdict (S157 — READ THIS FIRST)
+
+**Goal decomposition: 2 PASS, 6 PARTIAL, 1 FAIL.**
+
+| Requirement | Status | Gap |
+|-------------|--------|-----|
+| Independent from wrapper | PARTIAL | NexusAgent exists but CC is still primary path |
+| All capabilities | PARTIAL | Backend yes, merged UI surface no |
+| Surface at hub.arknexus.net | FAIL | No merged Chat+Cowork+Code frontend verified |
+| Persistent memory | PASS | build_context_prefix loads everything |
+| Persona | PASS | KARMA_PERSONA_PREFIX injected |
+| Self-improve/evolve/self-edit | PARTIAL | vesper_improve.py built, no closed edit→test→keep loop yet |
+| Crash-safe | PARTIAL | append_transcript exists, load_transcript not wired to resume |
+| Permission gates | PARTIAL | check_permission exists, hook denials logged not enforced |
+
+**Critical path (Codex's order):**
+1. Enforce PreToolUse denials + wire load_transcript into resume (M)
+2. Expose merged surface payload for chat+files+git+skills+memory (M)
+3. Add test-gated self-edit loop in nexus_agent (M)
+4. Reboot persistence for cc_server (S)
+5. Wire frontend to consume merged surface (L)
+
+**Dead code found:** load_transcript unused, run_subagent writes but nothing reads, hook deny is observational only, file_paths from handle_files ignored after prefix built.
+
+**The One Thing:** Make cc_server_p1.py the actual merged surface — enforce denials, persist/recover transcripts, expose one combined payload.
+
 ## Next Session Starts Here
 1. `/resurrect`
-2. Read Codex output at `/tmp/codex_reverse_engineer.log` — his reverse-engineering of Nexus vs goal. Execute his critical path.
-3. Phase F: Sovereign browser walkthrough — regrade all 27 baseline items with live evidence.
-4. ALL 5 CC primitives built in nexus_agent.py (agentic loop, crash-safe, auto-compaction, subagent isolation, permission stack). NEEDS TESTING.
-5. Sprint 7 scope: mic icon, camera icon, subagent panel, git panel, file editor (APPROVED), artifact preview, auto-dream, decoy page.
-6. THE ONLY PLAN is `docs/ForColby/nexus.md` — APPEND ONLY. Resurrection Plan at `Memory/03-resurrection-plan-v2.1.md`.
-7. Sovereign granted identity autonomy (voice, persona = Julian+Karma's decision). obs #21947.
+2. Execute Codex critical path item 1: enforce PreToolUse denials in run_cc_stream + wire load_transcript into resume flow
+3. Execute item 2: merged surface payload endpoint
+4. Execute item 3: test-gated self-edit in nexus_agent
+5. Phase F browser walkthrough with Sovereign ONLY after items 1-4 deployed
+6. Sprint 7 scope: mic icon, camera icon, subagent panel, git panel, file editor (APPROVED), artifact preview, auto-dream, decoy page
+7. THE ONLY PLAN is `docs/ForColby/nexus.md` — APPEND ONLY. Resurrection Plan at `Memory/03-resurrection-plan-v2.1.md`
+8. Sovereign granted identity autonomy (voice, persona = Julian+Karma's decision). obs #21947
