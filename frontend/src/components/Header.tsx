@@ -6,6 +6,7 @@ import { LearnedPanel } from './LearnedPanel';
 import { AgentPanel } from './AgentPanel';
 import { GitPanel } from './GitPanel';
 import { SettingsPanel } from './SettingsPanel';
+import { MemoryPanel } from './MemoryPanel';
 
 export function Header() {
   const lastSeen = useKarmaStore((s) => s.lastSeen);
@@ -19,6 +20,7 @@ export function Header() {
   const [showAgents, setShowAgents] = useState(false);
   const [showGit, setShowGit] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showMemory, setShowMemory] = useState(false);
 
   const timeSince = lastSeen
     ? formatTimeSince(lastSeen)
@@ -63,7 +65,7 @@ export function Header() {
       <HeaderButton onClick={() => setShowLearned(true)}>LEARNED</HeaderButton>
       <HeaderButton onClick={() => setShowAgents(true)}>AGENTS</HeaderButton>
       <HeaderButton onClick={() => setShowGit(true)}>GIT</HeaderButton>
-      <HeaderButton onClick={() => window.open('http://localhost:37778', '_blank')}>MEMORY</HeaderButton>
+      <HeaderButton onClick={() => setShowMemory(true)}>MEMORY</HeaderButton>
       <HeaderButton onClick={() => setShowSettings(true)}>SETTINGS</HeaderButton>
       <HeaderButton onClick={clearMessages}>CLEAR</HeaderButton>
 
@@ -72,6 +74,7 @@ export function Header() {
       {showAgents && <AgentPanel onClose={() => setShowAgents(false)} />}
       {showGit && <GitPanel onClose={() => setShowGit(false)} />}
       {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
+      {showMemory && <MemoryPanel onClose={() => setShowMemory(false)} />}
 
       {/* Cost display */}
       {sessionCost > 0 && (

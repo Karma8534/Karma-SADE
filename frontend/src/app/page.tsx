@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useKarmaStore } from '@/store/karma';
 import { Gate } from '@/components/Gate';
 import { Header } from '@/components/Header';
@@ -10,6 +10,7 @@ import { RoutingHints } from '@/components/RoutingHints';
 import { ContextPanel } from '@/components/ContextPanel';
 import { SelfEditBanner } from '@/components/SelfEditBanner';
 import { StatusBar } from '@/components/StatusBar';
+import { GlobalSearch } from '@/components/GlobalSearch';
 
 export default function Home() {
   const isAuthenticated = useKarmaStore((s) => s.isAuthenticated);
@@ -23,6 +24,20 @@ export default function Home() {
 
   // Fetch merged surface state on page load
   useEffect(() => { if (isAuthenticated) fetchSurface(); }, [isAuthenticated, fetchSurface]);
+
+  const [showSearch, setShowSearch] = useState(false);
+
+  // Ctrl+K opens global search
+  const handleGlobalKey = useCallback((e: KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      setShowSearch(true);
+    }
+  }, []);
+  useEffect(() => {
+    window.addEventListener('keydown', handleGlobalKey);
+    return () => window.removeEventListener('keydown', handleGlobalKey);
+  }, [handleGlobalKey]);
 
   if (!isAuthenticated) return <Gate />;
 
@@ -39,6 +54,7 @@ export default function Home() {
         </div>
         <ContextPanel />
       </div>
+      {showSearch && <GlobalSearch onClose={() => setShowSearch(false)} />}
     </div>
   );
 }
