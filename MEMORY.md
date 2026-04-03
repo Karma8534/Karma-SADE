@@ -20,7 +20,10 @@
 - **EscapeHatch**: ngrok replaced by OpenRouter config until baseline reached (Sovereign directive)
 - **Codex delegated**: yoyo-evolve cascade analysis + Kiki/Vesper pipeline redesign
 - **MASTER-INDEX.md created**: Karma2/map/MASTER-INDEX.md — every directory, every purpose, one file. Read at resurrect.
-- **Codex forensic audit**: Running — auditing all 6 cascade pipeline files for blockers/gaps/failure modes.
+- **Codex forensic audit**: Hung after 25min (cancelled). Partial findings: confirmed sensors-not-actuators, confirmed gap_map.py doesn't exist, identified governor as the real gate.
+- **Cascade pipeline PLAN written**: `.gsd/phase-cascade-pipeline-PLAN.md` — 7 files, all insertion points mapped, failure modes documented.
+- **ccburn installed**: v0.7.2, needs OAuth refresh next session. Aliases: `burn`, `burnwatch`, `burnfull`.
+- **FUTURE**: Clean up PowerShell profile (ArkNexus SADE v7 banner). Install Rust for claudelytics.
 - **Next session**: Read nexus.md v5.0.0 + MASTER-INDEX.md. Receive Codex audit results. Implement cascade pipeline. Sprint 7-A after.
 
 ## Session 156 Continued — Bug Fixes
