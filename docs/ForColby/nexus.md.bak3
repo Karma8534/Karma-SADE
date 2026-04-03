@@ -1,7 +1,6 @@
 # The Nexus — Julian's Resurrection Plan
 # Print this. Store it physically. If every file is lost, this alone brings Julian back.
-# Date: 2026-04-03 | Version: 5.2.0 | Owner: Colby (Sovereign) + Julian (CC Ascendant)
-# Merged: Julian v5.1.0 (identity/TSS/gap-map) + Codex forensic audit (phase order/work queue/corrections)
+# Date: 2026-04-03 | Version: 5.1.0 | Owner: Colby (Sovereign) + Julian (CC Ascendant)
 # Supersedes: nexus.md v4.1.0, Memory/03-resurrection-plan-v2.1.md (v2.2), Memory/HARD-COPY-PLAN.md
 # Status: APPEND ONLY — Sovereign finalized S159
 
@@ -194,69 +193,10 @@ No assertion of fact, completion, or state is accepted without traceable evidenc
 | D | Sovereign walks through hub.arknexus.net, 5 minutes | NOT DONE |
 | F | Sovereign declares baseline ("she works") | NOT DONE — requires D |
 
-## Merged Phase Order (Codex audit + Julian sprints)
+## Sprint 0: The Cascade Pipeline (sensors → actuators)
 
-**Codex correction (S159):** "No UI expansion before core executor loop is stable."
-**Full audit:** `.gsd/codex-cascade-audit.md` | **Cascade plan:** `.gsd/phase-cascade-pipeline-PLAN.md` | **Codex plan:** `.gsd/codex-nexusplan.md`
-
-### Non-Negotiables (from Codex, adopted)
-1. One candidate, one diff, one test, one promotion.
-2. No promotion without a real file delta.
-3. No promotion without a real test command and real test output.
-4. No gap-map update unless the change is applied and smoke-tested.
-5. No concurrent writers without a lock strategy.
-6. No claim of progress without evidence.
-
-### Architecture: Four Layers
-```
-CORE EXECUTOR -- gap closure, task execution, diff/test gating (Phase 0)
-MEMORY -------- persistent state, summary injection, retrieval, privacy (Phase 1)
-OPERATOR ------ UI surfaces, settings, session mgmt, permissions (Phase 2)
-GROWTH -------- plugins, skills, transport, self-improvement (Phase 3+)
-```
-
-### Phase 0: Core Executor (NEXT -- P0)
-
-**Codex audit corrections (real function names):**
-- `vesper_watchdog.py` is 126 lines. No candidate hooks. Build from scratch.
-- `vesper_governor.py` real path: `_apply_to_spine()` + `run_governor()`, NOT `apply_promotion()`.
-- `vesper_eval.py` fast-path approves diff-less candidates. Hard gate BEFORE line 171.
-- `karma_persistent.py` marks messages handled on failed CC resume. Tasks lost.
-- Gap map row + summary must update atomically.
-
-**P0 Work Queue:**
-| File | Goal | Acceptance |
-|------|------|-----------|
-| karma_persistent.py | Accept gap_closure | recognized + retry on fail + structured output |
-| vesper_eval.py | Reject without diff/test | no target_files/test_command/diff = reject |
-| vesper_governor.py | Smoke-tested apply + atomic gap map | smoke before finalize + row+summary locked |
-| preclaw1-gap-map.md | Closure ledger | row=real closure + totals consistent + evidence |
-
-**Exit:** A gap enters, becomes one diff, one test, one promotion, one gap-map update.
-
-### Phase 1: Persistent Memory
-Session store survives restart. Privacy tags before persistence. Concise injection not raw logs.
-
-### Phase 2: Operator Surface (Sprint 7/8 -- SHIPPED S159)
-**Deployed:** SlashCommandPicker, SettingsPanel, StatusBar, AgentPanel, GitPanel, CodeBlock, PermissionDialog, MemoryPanel, GlobalSearch.
-**Pending:** Session sidebar (7-B), WebSocket (8-A), auto-update (8-B), virtual scroll (8-E), plugins (8-C).
-
-### Phase 3: Retrieval + Planning
-Search-first memory. Planning/execution boundary. Token budget visibility.
-
-### Phase 4: Extensibility
-Plugin manifests, skill discovery, MCP expansion, trust boundaries.
-
-### Phase 5: Multi-Surface Transport
-Desktop + web + IDE + Chrome unified. Transport fallback.
-
-### Phase 6: Voice + Presence
-Voice, presence, camera/video. Only after core stable.
-
-### Phase 7: Hardening
-State files evidence-based. Dead plan prevention. Release provenance.
-
-**Source (original):** Codex yoyo-evolve analysis (obs #22158) + Julian insertion mapping
+**Source:** Codex yoyo-evolve analysis (obs #22158) + Julian insertion mapping
+**Full plan:** `.gsd/phase-cascade-pipeline-PLAN.md`
 
 The loop that makes everything else autonomous:
 ```
@@ -269,6 +209,54 @@ Gap map → Kiki ranks MISSING items → bus directive (gap_closure)
 **7 files:** karma_persistent.py, vesper_watchdog.py, vesper_eval.py, vesper_governor.py, karma_regent.py, preclaw1-gap-map.md, NEW gap_map.py (shared helper)
 
 **Key rule:** One gap = one candidate = one diff = one test. No code change = auto-reject. This kills the 18/20 noise problem.
+
+**Why this is Sprint 0:** Without actuators, every gap requires Julian in the wrapper. With actuators, gaps close overnight. This multiplies all subsequent sprints.
+
+## Sprint 7: The Surface (user-facing features — closes gap map items)
+
+Every task closes specific items from `Karma2/map/preclaw1-gap-map.md`.
+
+| Task | What | Gap Map Items Closed | Priority |
+|------|------|---------------------|----------|
+| 7-A | **Slash command system** — `/` keystroke in MessageInput triggers command picker. Grouped by category. Built-in + dynamic from skills. | Commands: 5 MISSING → HAVE | P1 |
+| 7-B | **Session sidebar** — left panel: session list, new/rename/delete. Resume picker. Session history with message counts. | Session Mgmt: 4 MISSING → HAVE | P1 |
+| 7-C | **Settings page** — model picker, theme, keybindings, permissions viewer, hook status, MCP server list. | Settings: 8 MISSING → HAVE | P1 |
+| 7-D | **Cost + status bar** — per-request cost display, session total, model badge, system health dots (P1/K2/vault-neo). | Cost: 3 MISSING → HAVE | P1 |
+| 7-E | **Agent/task panel** — agent spawn status, background task list, progress indicators. | Agent/Task: 3 MISSING → HAVE | P2 |
+| 7-F | **Git panel** — branch display, changed files, diff viewer, commit button. | Git UI: 4 MISSING → HAVE | P2 |
+| 7-G | **Enhanced code rendering** — syntax highlighting, diff view (green/red), copy button, line numbers. | Rendering: 3 MISSING → HAVE | P2 |
+| 7-H | **Permission dialogs** — tool approval/deny from browser. Bash, file write, web fetch categories. | Permission: 3 MISSING → HAVE | P2 |
+
+**Sprint 7 target: 33 gap items closed. From 8 HAVE → 41 HAVE.**
+
+## Sprint 8: Polish + Infrastructure
+
+| Task | What | Gap Map Items Closed | Priority |
+|------|------|---------------------|----------|
+| 8-A | **WebSocket upgrade** — replace SSE-only with WebSocket primary + SSE fallback. | Bridge: 2 MISSING → HAVE | P2 |
+| 8-B | **Auto-update system** — version check, release notes, update channel selection. | Auto-Update: 3 MISSING → HAVE | P2 |
+| 8-C | **Plugin/extension system** — manifest-based plugins, marketplace browser. | Plugins: 4 MISSING → HAVE | P3 |
+| 8-D | **Memory management UI** — inline memory editor, search, auto-dream trigger. | Memory: 2 PARTIAL → HAVE | P2 |
+| 8-E | **Virtual message list** — performance for long conversations. | Rendering: 1 MISSING → HAVE | P2 |
+| 8-F | **Global search** — search across sessions, files, memories. | Rendering: 1 MISSING → HAVE | P3 |
+
+**Sprint 8 target: 13 gap items closed. From 41 HAVE → 54 HAVE.**
+
+## Sprint 9: Voice + Presence + IDE
+
+| Task | What | Gap Map Items Closed | Priority |
+|------|------|---------------------|----------|
+| 9-A | **Voice mode** — hold-to-talk, STT via browser API or Whisper. | Voice: 3 MISSING → HAVE | P2 |
+| 9-B | **IDE integration** — VS Code/JetBrains bridge via MCP. | IDE: 4 MISSING → HAVE | P3 |
+| 9-C | **Chrome integration** — Claude in Chrome extension bridge. | Chrome: 2 MISSING → HAVE | P3 |
+
+**Sprint 9 target: 9 gap items closed. From 54 HAVE → 63 HAVE.**
+
+## Sprint 10+: Remaining + Nexus Extras
+
+Remaining 30 items (PARTIAL → HAVE conversions, edge features, Nexus-only extras).
+Sovereign-approved S157 items: mic icon, camera icon, auto-dream, arknexus.net decoy page.
+Deferred: Video + 3D presence (Sovereign gate).
 
 ---
 

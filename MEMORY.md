@@ -25,7 +25,8 @@
 - **ccburn installed**: v0.7.2, needs OAuth refresh next session. Aliases: `burn`, `burnwatch`, `burnfull`.
 - **nexus.md updated to v5.1.0**: Part 4 honest audit, Sprint 0 cascade, token budget rules.
 - **Sprint 7 COMPLETE**: 7/8 tasks shipped (7-A slash commands, 7-C settings, 7-D status bar, 7-E agents, 7-F git, 7-G code rendering, 7-H permissions). 7-B session sidebar deferred (needs backend CRUD).
-- **Sprint 8 PARTIAL**: 8-D MemoryPanel (inline search + Sovereign note input), 8-F GlobalSearch (Ctrl+K, searches messages + claude-mem). Deployed.
+- **Sprint 8 PARTIAL**: 8-D MemoryPanel + 8-F GlobalSearch shipped.
+- **nexus v5.2.0**: Merged Julian + Codex plans. 4-layer architecture. Phase 0 executor corrections. Non-negotiables adopted. Old sprints replaced with phases.
 - **FUTURE**: Clean up PowerShell profile (ArkNexus SADE v7 banner). Install Rust for claudelytics.
 - **Next session**: Read nexus.md v5.0.0 + MASTER-INDEX.md. Receive Codex audit results. Implement cascade pipeline. Sprint 7-A after.
 
