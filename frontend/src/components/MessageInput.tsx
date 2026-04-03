@@ -4,33 +4,72 @@ import { useState, useRef, useCallback } from 'react';
 import { useKarmaStore } from '@/store/karma';
 import { useKarmaStream } from '@/hooks/useKarmaStream';
 import { AttachPreview } from '@/components/AttachPreview';
+import { SlashCommandPicker, type SlashCommand } from '@/components/SlashCommandPicker';
 
 export function MessageInput() {
   const [text, setText] = useState('');
+  const [showCommands, setShowCommands] = useState(false);
+  const [commandFilter, setCommandFilter] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isStreaming = useKarmaStore((s) => s.isStreaming);
   const pendingFiles = useKarmaStore((s) => s.pendingFiles);
   const { sendMessage, cancelStream } = useKarmaStream();
 
+  const handleCommandSelect = useCallback((cmd: SlashCommand) => {
+    setShowCommands(false);
+    setCommandFilter('');
+    // Send the slash command as a message — CC handles it natively
+    sendMessage(`/${cmd.name}`);
+    setText('');
+  }, [sendMessage]);
+
+  const handleTextChange = useCallback((value: string) => {
+    setText(value);
+    // Show command picker when typing / at start of input
+    if (value.startsWith('/') && !value.includes(' ')) {
+      setShowCommands(true);
+      setCommandFilter(value.slice(1));
+    } else {
+      setShowCommands(false);
+      setCommandFilter('');
+    }
+  }, []);
+
   const handleSend = useCallback(() => {
     if (isStreaming) {
       cancelStream();
       return;
     }
+    if (showCommands) {
+      setShowCommands(false);
+      setCommandFilter('');
+    }
     if (!text.trim() && pendingFiles.length === 0) return;
     sendMessage(text);
     setText('');
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
-  }, [text, isStreaming, pendingFiles, sendMessage, cancelStream]);
+  }, [text, isStreaming, pendingFiles, sendMessage, cancelStream, showCommands]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Let SlashCommandPicker handle arrow keys and Enter when visible
+    if (showCommands && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Tab')) {
+      return; // SlashCommandPicker handles these via window listener
+    }
+    if (showCommands && e.key === 'Enter') {
+      return; // SlashCommandPicker handles Enter selection
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
-    if (e.key === 'Escape' && isStreaming) {
-      cancelStream();
+    if (e.key === 'Escape') {
+      if (showCommands) {
+        setShowCommands(false);
+        setCommandFilter('');
+      } else if (isStreaming) {
+        cancelStream();
+      }
     }
   };
 
@@ -73,8 +112,14 @@ export function MessageInput() {
   };
 
   return (
-    <div className="flex-shrink-0 px-5 pb-2">
+    <div className="flex-shrink-0 px-5 pb-2 relative">
       <AttachPreview />
+      <SlashCommandPicker
+        filter={commandFilter}
+        onSelect={handleCommandSelect}
+        onClose={() => { setShowCommands(false); setCommandFilter(''); }}
+        visible={showCommands}
+      />
       <div className="flex items-end gap-2">
         {/* Attach button */}
         <button
@@ -103,7 +148,7 @@ export function MessageInput() {
           placeholder={isStreaming ? 'Karma is working...' : 'Message Karma... (@cc @codex @regent \u2192 routes to AGORA)'}
           value={text}
           disabled={isStreaming}
-          onChange={(e) => { setText(e.target.value); autoGrow(e.target); }}
+          onChange={(e) => { handleTextChange(e.target.value); autoGrow(e.target); }}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
         />
