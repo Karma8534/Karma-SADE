@@ -696,6 +696,22 @@ const server = http.createServer(async (req, res) => {
       return json(res, 404, { ok: false, error: `Unknown K2 endpoint: ${subpath}` });
     }
 
+    // ── /v1/email/send — CC-independent email (S160 inversion) ────────────
+    if (req.method === "POST" && req.url === "/v1/email/send") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const body = await parseBody(req);
+        const r = await fetch(`${HARNESS_P1}/email/send`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(15000),
+        });
+        const data = await r.json();
+        return json(res, r.ok ? 200 : 502, data);
+      } catch (e) { return json(res, 502, { ok: false, error: `Email failed: ${e.message?.slice(0, 100)}` }); }
+    }
+
     // ── /v1/wip — WIP panel data (S160) ─────────────────────────────────
     if (req.method === "GET" && req.url === "/v1/wip") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });

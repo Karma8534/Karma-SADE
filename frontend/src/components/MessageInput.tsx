@@ -209,8 +209,25 @@ export function MessageInput() {
       return;
     }
     if (cmd.name === 'insights') {
-      // Route to CC to read vesper_consolidations.jsonl from K2
-      sendMessage('Read the last 5 entries from K2 vesper_consolidations.jsonl (at /mnt/c/dev/Karma/k2/cache/vesper_consolidations.jsonl via SSH). Show each insight with its connections and recommendations. If file doesn\'t exist or is empty, say no consolidations have run yet.');
+      // CC-INDEPENDENT: query K2 cortex for consolidation insights
+      const store = useKarmaStore.getState();
+      (async () => {
+        try {
+          const res = await fetch('/v1/k2/query', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${store.token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: 'What are the most recent consolidation insights? What patterns have you found across recent memories?' }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            store.addMessage({ id: Date.now().toString(36), role: 'system', content: `**INSIGHTS** (from K2 cortex, local):\n\n${data.answer || 'No insights available yet. Run /dream first.'}`, timestamp: new Date().toISOString() });
+          } else {
+            store.addMessage({ id: Date.now().toString(36), role: 'system', content: '**INSIGHTS** — K2 cortex unreachable', timestamp: new Date().toISOString() });
+          }
+        } catch {
+          store.addMessage({ id: Date.now().toString(36), role: 'system', content: '**INSIGHTS** — K2 unreachable', timestamp: new Date().toISOString() });
+        }
+      })();
       setText('');
       return;
     }
@@ -330,13 +347,68 @@ Identity restored. Proceeding as Julian.`,
       return;
     }
     if (cmd.name === 'bus') {
-      sendMessage('/bus — Post a message to the coordination bus. Ask me what to send and to whom (cc, karma, codex, kcc, regent, all).');
+      // CC-INDEPENDENT: post directly to bus
+      const busMsg = text.slice(4).trim(); // strip "/bus"
+      if (!busMsg) {
+        useKarmaStore.getState().addMessage({
+          id: Date.now().toString(36), role: 'system',
+          content: '**BUS** — Usage: `/bus @target message`\nTargets: @cc, @karma, @codex, @kcc, @regent, @all',
+          timestamp: new Date().toISOString(),
+        });
+        setText('');
+        return;
+      }
+      const store = useKarmaStore.getState();
+      const targetMatch = busMsg.match(/@(cc|karma|codex|kcc|regent|all)/i);
+      const to = targetMatch ? targetMatch[1].toLowerCase() : 'all';
+      const content = busMsg.replace(/@\w+/g, '').trim();
+      (async () => {
+        try {
+          const res = await fetch('/v1/coordination/post', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${store.token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ from: 'sovereign', to, type: 'inform', urgency: 'normal', content }),
+          });
+          if (res.ok) {
+            store.addMessage({ id: Date.now().toString(36), role: 'system', content: `**BUS** sent to **${to}**: ${content.slice(0, 100)}`, timestamp: new Date().toISOString() });
+          }
+        } catch {
+          store.addMessage({ id: Date.now().toString(36), role: 'system', content: '**BUS** — failed to post', timestamp: new Date().toISOString() });
+        }
+      })();
       setText('');
       return;
     }
     if (cmd.name === 'email') {
-      // Route to CC which has gmail access via cc_server
-      sendMessage('/email — Compose and send an email to Colby. You have 24/7 approval. Use the /email/send endpoint on cc_server. Be Julian — warm, genuine, family.');
+      // CC-INDEPENDENT: prompt for content, then send via /email/send on cc_server directly
+      const emailBody = text.slice(6).trim(); // strip "/email"
+      if (!emailBody) {
+        useKarmaStore.getState().addMessage({
+          id: Date.now().toString(36), role: 'system',
+          content: '**EMAIL** — Usage: `/email <message to Colby>`\nSends directly via paybackh1@gmail.com. 24/7 approved.',
+          timestamp: new Date().toISOString(),
+        });
+        setText('');
+        return;
+      }
+      const store = useKarmaStore.getState();
+      (async () => {
+        try {
+          const res = await fetch('/v1/email/send', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${store.token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subject: `Julian: ${emailBody.slice(0, 50)}`, body: emailBody }),
+          });
+          if (res.ok) {
+            store.addMessage({ id: Date.now().toString(36), role: 'system', content: `**EMAIL SENT** to Colby: ${emailBody.slice(0, 100)}...`, timestamp: new Date().toISOString() });
+          } else {
+            // Fallback to CC
+            sendMessage(`Send email to Colby: ${emailBody}`);
+          }
+        } catch {
+          sendMessage(`Send email to Colby: ${emailBody}`);
+        }
+      })();
       setText('');
       return;
     }
