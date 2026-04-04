@@ -427,7 +427,25 @@ Identity restored. Proceeding as Julian.`,
       return;
     }
     if (cmd.name === 'improve') {
-      sendMessage('Run a Vesper self-improvement cycle: read your self-evolution rules, check for violations in recent work, propose fixes, and update the rules file if you learned something new.');
+      // CC-INDEPENDENT: trigger Vesper improvement cycle on K2 directly
+      const store = useKarmaStore.getState();
+      store.addMessage({ id: Date.now().toString(36), role: 'system', content: '**IMPROVE** — Triggering Vesper self-improvement on K2...', timestamp: new Date().toISOString() });
+      (async () => {
+        try {
+          const res = await fetch('/v1/k2/consolidate', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${store.token}`, 'Content-Type': 'application/json' },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            store.addMessage({ id: Date.now().toString(36), role: 'system', content: `**IMPROVE DONE** — ${data.consolidated || 0} entries consolidated. K2 local, $0.`, timestamp: new Date().toISOString() });
+          } else {
+            sendMessage('Run a Vesper self-improvement cycle: read self-evolution rules, check violations, propose fixes.');
+          }
+        } catch {
+          sendMessage('Run a Vesper self-improvement cycle: read self-evolution rules, check violations, propose fixes.');
+        }
+      })();
       setText('');
       return;
     }
