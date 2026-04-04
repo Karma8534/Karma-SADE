@@ -1118,6 +1118,17 @@ class CCHandler(BaseHTTPRequestHandler):
         model = body.get("model")    # model override
         budget = body.get("budget")  # max budget USD (Gap 4: --max-budget-usd)
 
+        # S160: Inject user preferences + output style into message context
+        user_prefs = body.get("user_preferences", "").strip()
+        output_style = body.get("output_style", "").strip()
+        if user_prefs or output_style:
+            pref_prefix = ""
+            if user_prefs:
+                pref_prefix += f"[USER PREFERENCES: {user_prefs[:500]}]\n"
+            if output_style:
+                pref_prefix += f"[OUTPUT STYLE: {output_style}]\n"
+            message = pref_prefix + message
+
         # ── SmartRouter decision (Sprint 3c) ─────────────────────────────
         _routing_decision = None
         if ROUTER_AVAILABLE:

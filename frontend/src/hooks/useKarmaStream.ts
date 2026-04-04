@@ -11,7 +11,7 @@ export function useKarmaStream(options: StreamOptions = {}) {
   const apiUrl = options.apiUrl || '/v1/chat';
 
   async function sendMessage(text: string) {
-    const { token, conversationId, pendingFiles, effortLevel } = useKarmaStore.getState();
+    const { token, conversationId, pendingFiles, effortLevel, personalPreferences, outputStyle } = useKarmaStore.getState();
 
     if (!text.trim() && pendingFiles.length === 0) return;
 
@@ -52,6 +52,8 @@ export function useKarmaStream(options: StreamOptions = {}) {
           session_id: conversationId,
           stream: true,
           effort: effortLevel || undefined,
+          output_style: outputStyle || undefined,
+          user_preferences: personalPreferences || undefined,
           files: pendingFiles.length ? pendingFiles : undefined,
         }),
         signal: abortController.signal,
