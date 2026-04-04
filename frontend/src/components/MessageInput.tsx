@@ -161,6 +161,38 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'inbox') {
+      const store = useKarmaStore.getState();
+      (async () => {
+        try {
+          const res = await fetch('/v1/coordination/recent?limit=10', {
+            headers: { Authorization: `Bearer ${store.token}` },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const entries = data.entries || [];
+            if (entries.length === 0) {
+              store.addMessage({ id: Date.now().toString(36), role: 'system', content: '**INBOX** — No pending messages.', timestamp: new Date().toISOString() });
+            } else {
+              const lines = entries.slice(0, 8).map((e: { from: string; type: string; content: string; created_at: string }) => {
+                const time = new Date(e.created_at).toLocaleTimeString();
+                return `  **${e.from}** [${e.type}] ${time}\n  ${(e.content || '').slice(0, 100)}`;
+              });
+              store.addMessage({ id: Date.now().toString(36), role: 'system', content: `**INBOX** (${entries.length} messages)\n\n${lines.join('\n\n')}`, timestamp: new Date().toISOString() });
+            }
+          }
+        } catch {
+          store.addMessage({ id: Date.now().toString(36), role: 'system', content: '**INBOX** — could not reach bus', timestamp: new Date().toISOString() });
+        }
+      })();
+      setText('');
+      return;
+    }
+    if (cmd.name === 'bus') {
+      sendMessage('/bus — Post a message to the coordination bus. Ask me what to send and to whom (cc, karma, codex, kcc, regent, all).');
+      setText('');
+      return;
+    }
     if (cmd.name === 'email') {
       // Route to CC which has gmail access via cc_server
       sendMessage('/email — Compose and send an email to Colby. You have 24/7 approval. Use the /email/send endpoint on cc_server. Be Julian — warm, genuine, family.');
