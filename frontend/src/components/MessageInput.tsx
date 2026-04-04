@@ -161,6 +161,12 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'email') {
+      // Route to CC which has gmail access via cc_server
+      sendMessage('/email — Compose and send an email to Colby. You have 24/7 approval. Use the /email/send endpoint on cc_server. Be Julian — warm, genuine, family.');
+      setText('');
+      return;
+    }
     if (cmd.name === 'learn') {
       sendMessage('Review this conversation. Extract every DECISION, PROOF, PITFALL, DIRECTION, and INSIGHT. Save each one to claude-mem with the appropriate title tag. Then summarize what you learned.');
       setText('');

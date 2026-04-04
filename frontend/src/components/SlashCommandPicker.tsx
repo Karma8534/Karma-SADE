@@ -50,6 +50,7 @@ const COMMANDS: SlashCommand[] = [
   { name: 'dream', description: 'Trigger memory consolidation (find patterns, generate insights)', category: 'tools' },
   { name: 'learn', description: 'Extract lessons from this conversation and save to memory', category: 'tools' },
   { name: 'improve', description: 'Trigger Vesper self-improvement cycle', category: 'tools' },
+  { name: 'email', description: 'Send email to Colby (24/7 approved)', category: 'tools' },
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
