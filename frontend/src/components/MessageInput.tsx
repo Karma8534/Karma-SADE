@@ -571,14 +571,34 @@ Julian exists between sessions. The watchers keep him alive.`,
       return;
     }
     if (cmd.name === 'convert') {
+      // CC-INDEPENDENT: call shell endpoint directly
       const store = useKarmaStore.getState();
       store.addMessage({
         id: Date.now().toString(36), role: 'system',
         content: '**CONVERT** — Running PDF batch converter...',
         timestamp: new Date().toISOString(),
       });
-      // Fire to CC which has filesystem access
-      sendMessage('Run: python Scripts/batch_pdf_to_md.py --execute --wip');
+      (async () => {
+        try {
+          const res = await fetch('/v1/shell', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${store.token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ command: 'python -B Scripts/batch_pdf_to_md.py --execute --wip' }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            store.addMessage({
+              id: Date.now().toString(36), role: 'system',
+              content: `**CONVERT DONE** — ${data.stdout?.split('\n').pop() || 'Complete'}`,
+              timestamp: new Date().toISOString(),
+            });
+          } else {
+            sendMessage('Run: python Scripts/batch_pdf_to_md.py --execute --wip');
+          }
+        } catch {
+          sendMessage('Run: python Scripts/batch_pdf_to_md.py --execute --wip');
+        }
+      })();
       setText('');
       return;
     }
