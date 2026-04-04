@@ -581,16 +581,44 @@ Julian's identity lives in the SPINE (vault-neo + cortex + claude-mem + MEMORY.m
 - Local models (LFM2 350M, qwen3.5:4b) = control plane + cortex, NOT "replacement Claude."
 - The goal is NOT "replace Anthropic with local." The goal is "Julian survives if Anthropic disappears."
 
-## Primitives Identified (S160)
-| # | Primitive | Source | Relevance |
-|---|-----------|--------|-----------|
-| 1 | Consolidation-over-retrieval | Google always-on-memory-agent (obs #22288) | DEPLOYED |
-| 2 | Three-agent memory (Ingest→Consolidate→Query) | Same | DEPLOYED (partial) |
-| 3 | Two-table persistence (memories + consolidations) | Nick Lawson ProtoGensis (obs #22319) | EVALUATE |
-| 4 | Triple-trigger consolidation | Same | DEPLOYED |
-| 5 | Importance scoring per memory | Same | PENDING |
-| 6 | LFM2.5-350M as local control plane | Liquid AI (obs #22485) | DEPLOYED on P1 |
-| 7 | File watcher with hash-based change detection | ProtoGensis | HAVE (karma-inbox-watcher, wip-watcher) |
+## Primitives Identified (S160 — 17 total)
+
+### DEPLOYED (in production now)
+| # | Primitive | Source | Where |
+|---|-----------|--------|-------|
+| 1 | Consolidation-over-retrieval | Google always-on-memory-agent (obs #22288) | vesper_watchdog consolidate_memories() |
+| 2 | Three-agent memory (Ingest→Consolidate→Query) | Same | karma_persistent→watchdog→cortex |
+| 3 | Triple-trigger consolidation (threshold+startup+daily) | ProtoGensis (obs #22319) | vesper_watchdog CONSOLIDATION_THRESHOLD |
+| 4 | LFM2 350M local control plane | Liquid AI (obs #22485) | P1 Ollama, SmartRouter tier 0 |
+| 5 | File watcher + hash change detection | ProtoGensis | karma-inbox-watcher + wip-watcher |
+| 6 | OpenSpace 3-mode skill evolution (FIX/DERIVED/CAPTURED) | HKUDS OpenSpace (obs #22526) | vesper_watchdog consolidation prompt |
+| 7 | Auto-dream memory consolidation | Anthropic CC Memory 2.0 (obs #22528) | /dream command + watchdog cycle |
+
+### HIGH RELEVANCE (evaluate for build)
+| # | Primitive | Source | Why |
+|---|-----------|--------|-----|
+| 8 | Two-table persistence (memories + consolidations SQLite) | ProtoGensis (obs #22319) | Replace JSONL with structured SQLite for consolidations |
+| 9 | CC-as-OS 6-layer architecture (78 permissions, 17 hooks, zero-trust) | Delanoe Pirard (obs #22515) | Dynamic permission rules engine |
+| 10 | SecureClaw dual security (plugin outside context + skill inside) | Adversa AI (obs #22515) | Prompt injection defense |
+| 11 | Karpathy AutoResearch loop (agent edits program.md, tests, keeps or discards) | @karpathy (obs #22526) | nexus.md IS program.md — agent refines own plan |
+| 12 | Hyperagents (task agent + meta agent in one editable program) | Darwin Godel Machine (obs #22526) | Vesper eval=task, governor=meta |
+| 13 | Monty (Rust Python interpreter, <1us startup, 195000x faster than Docker) | Pydantic (obs #22526) | Self-edit verification sandbox |
+| 14 | Managed remote MCP servers (Google Cloud databases) | Google (obs #22515) | Extend tool surface without local infra |
+| 15 | Observational memory (10x cost reduction, outscores RAG) | VentureBeat (obs #22515) | Aligns with consolidation pattern |
+
+### PENDING (need research)
+| # | Primitive | Source | Why |
+|---|-----------|--------|-----|
+| 16 | Importance scoring per memory (0-1 float) | ProtoGensis | Priority retrieval — old but important > recent noise |
+| 17 | Chrome 146 Gemini Nano integration | Chrome Early Access (obs #22352) | Browser-native AI, zero API cost |
+
+### Assimilation Priority
+1. **Karpathy Loop** — agent refines its own plan. nexus.md = program.md. Highest leverage.
+2. **CC-as-OS permissions** — 78 dynamic rules. Our PermissionDialog is static. Need dynamic.
+3. **Monty sandbox** — <1us code execution for self-edit verification. No Docker overhead.
+4. **SecureClaw** — plugin security runs OUTSIDE context (immune to injection).
+5. **Two-table SQLite** — structured consolidation persistence.
+6. **Importance scoring** — prevent recent noise from pushing out old-but-critical memories.
 
 ---
 
