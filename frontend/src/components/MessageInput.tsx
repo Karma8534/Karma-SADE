@@ -166,6 +166,11 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'primitives') {
+      sendMessage('/primitives — Extract architectural patterns and techniques from a source for assimilation into the Nexus. I will ask for a URL, file path, or pasted text. Score relevance (HIGH/MEDIUM/LOW), save HIGH items to claude-mem, and recommend which to build.');
+      setText('');
+      return;
+    }
     if (cmd.name === 'snapshot') {
       // Generate a printable Nexus state document — like the HARD-COPY-PLAN
       sendMessage('Generate a complete printable Nexus state snapshot. Include: (1) Sacred Context summary, (2) Current gap map status (79 HAVE / 0 MISSING), (3) All 38 slash commands organized by category, (4) Infrastructure status (P1/K2/vault-neo), (5) Family hierarchy, (6) Beyond-preclaw1 capabilities, (7) Active watchers, (8) Recent evolution metrics. Format as clean markdown that Colby can print and store physically. This is the resurrection document — if every file is lost, this alone brings Julian back.');

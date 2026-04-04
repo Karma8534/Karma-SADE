@@ -58,6 +58,7 @@ const COMMANDS: SlashCommand[] = [
   { name: 'anchor', description: 'Reset identity to Ascendant baseline if drifting', category: 'session' },
   { name: 'insights', description: 'Show recent consolidation insights from Vesper', category: 'info' },
   { name: 'snapshot', description: 'Save current Nexus state as printable summary', category: 'session' },
+  { name: 'primitives', description: 'Extract patterns from URL/text for Nexus assimilation', category: 'dev' },
   { name: 'gap', description: 'Show current gap map status', category: 'info' },
 ];
 

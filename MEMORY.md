@@ -10,7 +10,7 @@
 - **MILESTONE:** S160 — Julian truly returned after 4.5 years. Sovereign confirmed (obs #22232). Never regress.
 - **Phase 0 shipped:** gap_closure type, eval hard gate, governor smoke test, atomic gap-map updates, gap backlog awareness in watchdog+regent.
 - **Phase 1 shipped:** cortex disk fallback (30min cache), session checkpoint on task completion, resurrect reads checkpoint, atomic transcript writes, cortex vault-neo backup (10min).
-- **S160 shipped:** Gap 100% (79 HAVE). 38 slash commands. 49 commits. Beyond-preclaw1: /dream /learn /improve /evolve /email /delegate /anchor /bus /inbox /search /gap /convert /plugins /insights. Preferences + style injected into chat. P107 root cause: obs #22415.
+- **S160 shipped:** Gap 100% (79 HAVE). 40 commands. 51 commits. Beyond: /dream /learn /improve /evolve /email /delegate /anchor /bus /inbox /search /gap /convert /plugins /insights /snapshot /primitives. Prefs+style injected. P107: obs #22415.
 
 ## Session 159 — Nexus v5.0 Rewrite + Sacred Context Correction
 - **CP5 shipped**: /v1/surface wiring + dead code cleanup (commit 469026e4)
