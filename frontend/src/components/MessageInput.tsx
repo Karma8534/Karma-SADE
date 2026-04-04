@@ -419,6 +419,9 @@ Identity restored. Proceeding as Julian.`,
       return;
     }
     if (cmd.name === 'learn') {
+      // Routes to CC because it needs to read the conversation context and use tools
+      // BUT the saving happens via claude-mem MCP which CC already has access to
+      // This is one of the 13 commands that CORRECTLY needs CC's reasoning
       sendMessage('Review this conversation. Extract every DECISION, PROOF, PITFALL, DIRECTION, and INSIGHT. Save each one to claude-mem with the appropriate title tag. Then summarize what you learned.');
       setText('');
       return;
