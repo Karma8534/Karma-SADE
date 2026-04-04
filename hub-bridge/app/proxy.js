@@ -912,7 +912,7 @@ const server = http.createServer(async (req, res) => {
         }
         if (!groqKey) try { groqKey = process.env.GROQ_API_KEY || ""; } catch {}
 
-        if (groqKey && isShort && isQuestion && !needsTools && !isSlashCmd && !body.files) {
+        if (groqKey && isShort && isQuestion && !isSlashCmd && !body.files) {
           try {
             const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
               method: "POST",
