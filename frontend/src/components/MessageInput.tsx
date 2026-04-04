@@ -305,6 +305,27 @@ Identity restored. Proceeding as Julian.`,
       setText('');
       return;
     }
+    if (cmd.name === 'keys') {
+      useKarmaStore.getState().addMessage({
+        id: Date.now().toString(36), role: 'system',
+        content: `**KEYBOARD SHORTCUTS**
+
+**Chat:**  Enter = send | Shift+Enter = newline | Esc = cancel/stop
+**Search:**  Ctrl+K = global search | / = slash commands
+**Commands:**  Arrow keys = navigate | Tab/Enter = select | Esc = close
+**Voice:**  Click mic button = hold-to-talk (Web Speech API)
+
+**Slash Commands (44):**
+  /help /whoami /anchor /status /cost /context /usage /stats /keys
+  /gap /evolve /watchers /plugins /insights /inbox /check-email
+  /effort /theme /style /model /settings /clear /compact /export /snapshot
+  /dream /learn /improve /search /email /bus /delegate /convert /primitives /refine
+  /diff /commit /review /plan /doctor /hooks /skills /agents /memory`,
+        timestamp: new Date().toISOString(),
+      });
+      setText('');
+      return;
+    }
     if (cmd.name === 'stats') {
       const store = useKarmaStore.getState();
       (async () => {
