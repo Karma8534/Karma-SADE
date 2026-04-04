@@ -712,6 +712,16 @@ const server = http.createServer(async (req, res) => {
       } catch (e) { return json(res, 502, { ok: false, error: `Shell failed: ${e.message?.slice(0, 100)}` }); }
     }
 
+    // ── /v1/email/inbox — CC-independent inbox check (S160) ───────────────
+    if (req.method === "GET" && req.url === "/v1/email/inbox") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const r = await fetch(`${HARNESS_P1}/email/inbox`, { signal: AbortSignal.timeout(15000) });
+        const data = await r.json();
+        return json(res, r.ok ? 200 : 502, data);
+      } catch (e) { return json(res, 502, { ok: false, error: `Inbox check failed: ${e.message?.slice(0, 100)}` }); }
+    }
+
     // ── /v1/email/send — CC-independent email (S160 inversion) ────────────
     if (req.method === "POST" && req.url === "/v1/email/send") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });

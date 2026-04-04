@@ -51,6 +51,7 @@ const COMMANDS: SlashCommand[] = [
   { name: 'learn', description: 'Extract lessons from this conversation and save to memory', category: 'tools' },
   { name: 'improve', description: 'Trigger Vesper self-improvement cycle', category: 'tools' },
   { name: 'email', description: 'Send email to Colby (24/7 approved)', category: 'tools' },
+  { name: 'check-email', description: 'Check gmail inbox for new messages', category: 'tools' },
   { name: 'inbox', description: 'Check coordination bus for pending messages', category: 'info' },
   { name: 'bus', description: 'Post a message to the coordination bus', category: 'tools' },
   { name: 'search', description: 'Deep search across all memory sources', category: 'tools' },

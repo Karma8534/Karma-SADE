@@ -385,6 +385,36 @@ Identity restored. Proceeding as Julian.`,
       setText('');
       return;
     }
+    if (cmd.name === 'check-email') {
+      // CC-INDEPENDENT: check gmail via /v1/email/inbox proxy route
+      const store = useKarmaStore.getState();
+      store.addMessage({ id: Date.now().toString(36), role: 'system', content: '**CHECKING EMAIL**...', timestamp: new Date().toISOString() });
+      (async () => {
+        try {
+          const res = await fetch('/v1/email/inbox', {
+            headers: { Authorization: `Bearer ${store.token}` },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const msgs = data.messages || [];
+            if (msgs.length === 0) {
+              store.addMessage({ id: Date.now().toString(36), role: 'system', content: '**INBOX** — No new messages.', timestamp: new Date().toISOString() });
+            } else {
+              const lines = msgs.slice(0, 5).map((m: { from: string; subject: string; date: string }) =>
+                `  **${m.from?.split('<')[0]?.trim() || '?'}** — ${m.subject || '(no subject)'}\n  ${m.date || ''}`
+              );
+              store.addMessage({ id: Date.now().toString(36), role: 'system', content: `**INBOX** (${msgs.length} messages)\n\n${lines.join('\n\n')}`, timestamp: new Date().toISOString() });
+            }
+          } else {
+            store.addMessage({ id: Date.now().toString(36), role: 'system', content: '**INBOX** — check failed', timestamp: new Date().toISOString() });
+          }
+        } catch {
+          store.addMessage({ id: Date.now().toString(36), role: 'system', content: '**INBOX** — unreachable', timestamp: new Date().toISOString() });
+        }
+      })();
+      setText('');
+      return;
+    }
     if (cmd.name === 'email') {
       // CC-INDEPENDENT: prompt for content, then send via /email/send on cc_server directly
       const emailBody = text.slice(6).trim(); // strip "/email"
