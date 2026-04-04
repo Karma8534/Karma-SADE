@@ -903,9 +903,11 @@ const server = http.createServer(async (req, res) => {
         } catch { /* K2 unreachable — try Groq */ }
 
         // Tier 1.5: Try Groq for medium-complexity questions (free tier, <500ms)
-        const groqKeyPath = require("path").join(__dirname, "..", "..", "..", "karma-sade", ".groq-api-key");
         let groqKey = "";
-        try { groqKey = require("fs").readFileSync("/home/neo/karma-sade/.groq-api-key", "utf-8").trim(); } catch {}
+        // Try multiple paths (container vs host)
+        for (const p of ["/karma/repo/.groq-api-key", "/home/neo/karma-sade/.groq-api-key"]) {
+          try { groqKey = require("fs").readFileSync(p, "utf-8").trim(); if (groqKey) break; } catch {}
+        }
         if (!groqKey) try { groqKey = process.env.GROQ_API_KEY || ""; } catch {}
 
         if (groqKey && !needsTools) {
