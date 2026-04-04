@@ -140,8 +140,33 @@ def propose():
     return proposal
 
 
+def verify_proposal(proposal_id):
+    """Verify a proposal makes sense — quick sanity check before applying."""
+    proposal_path = PROPOSALS_DIR / f"{proposal_id}.json"
+    if not proposal_path.exists():
+        return {"ok": False, "error": "not found"}
+
+    proposal = json.loads(proposal_path.read_text())
+    text = proposal.get("text", "")
+
+    # Sanity checks
+    if len(text) < 10:
+        return {"ok": False, "error": "text too short"}
+    if len(text) > 2000:
+        return {"ok": False, "error": "text too long (max 2000 chars)"}
+    if "```" in text and text.count("```") % 2 != 0:
+        return {"ok": False, "error": "unclosed code block"}
+
+    # Check it doesn't break nexus.md structure
+    nexus = NEXUS_PATH.read_text(encoding="utf-8")
+    if "PART 1:" not in nexus:
+        return {"ok": False, "error": "nexus.md structure broken"}
+
+    return {"ok": True, "text_len": len(text)}
+
+
 def apply_proposal(proposal_id):
-    """Apply an approved proposal to nexus.md."""
+    """Apply an approved proposal to nexus.md with verify/keep/discard cycle."""
     proposal_path = PROPOSALS_DIR / f"{proposal_id}.json"
     if not proposal_path.exists():
         print(f"[karpathy] Proposal not found: {proposal_id}")
@@ -152,12 +177,23 @@ def apply_proposal(proposal_id):
         print(f"[karpathy] Proposal not approved (status: {proposal.get('status')})")
         return False
 
-    text_to_append = proposal.get("text", "")
-    if not text_to_append:
-        print("[karpathy] No text to append")
+    # VERIFY before applying
+    verify = verify_proposal(proposal_id)
+    if not verify["ok"]:
+        proposal["status"] = "discarded"
+        proposal["discard_reason"] = verify["error"]
+        proposal_path.write_text(json.dumps(proposal, indent=2))
+        print(f"[karpathy] DISCARDED {proposal_id}: {verify['error']}")
         return False
 
-    # Append to nexus.md (before the final signature line)
+    text_to_append = proposal.get("text", "")
+
+    # BACKUP nexus.md before applying
+    import shutil
+    backup_path = NEXUS_PATH.with_suffix(".md.pre-karpathy")
+    shutil.copy2(NEXUS_PATH, backup_path)
+
+    # APPLY
     nexus = NEXUS_PATH.read_text(encoding="utf-8")
     insert_marker = "*This document is owned by Colby"
     if insert_marker in nexus:
@@ -166,11 +202,27 @@ def apply_proposal(proposal_id):
         nexus += "\n\n" + text_to_append
 
     NEXUS_PATH.write_text(nexus, encoding="utf-8")
+
+    # VERIFY structure still intact after apply
+    post_verify = NEXUS_PATH.read_text(encoding="utf-8")
+    if "PART 1:" not in post_verify or len(post_verify) < 1000:
+        # ROLLBACK — structure broken
+        shutil.copy2(backup_path, NEXUS_PATH)
+        proposal["status"] = "rolled_back"
+        proposal["rollback_reason"] = "post-apply structure check failed"
+        proposal_path.write_text(json.dumps(proposal, indent=2))
+        print(f"[karpathy] ROLLED BACK {proposal_id}: structure check failed")
+        return False
+
+    # SUCCESS — keep the change
     proposal["status"] = "applied"
     proposal["applied_at"] = datetime.datetime.utcnow().isoformat() + "Z"
     proposal_path.write_text(json.dumps(proposal, indent=2))
 
-    print(f"[karpathy] Applied: {proposal_id}")
+    # Clean up backup
+    backup_path.unlink(missing_ok=True)
+
+    print(f"[karpathy] APPLIED: {proposal_id} (verified + kept)")
     return True
 
 
