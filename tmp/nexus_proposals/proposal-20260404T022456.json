@@ -1,0 +1,8 @@
+{
+  "section": "pending",
+  "text": "| # | Primitive | Source | Why |\n|---|---|---|---|\n| 16 | Importance scoring per memory (0-1 float) | ProtoGensis | Priority retrieval \u2014 old but important > recent noise |\n| 17 | Chrome 146 Gemini Nano integration | Chrome Early Access | Browser-native AI, zero API cost |\n| 18 | Dynamic permission rules (CC-as-OS) | Obs #22526 | Replace static PermissionDialog with runtime policy engine |\n\n**Reason:** Adding 'Dynamic permission rules' addresses the critical blocker of static rules vs. 78 dynamic system rules. It enables the 'CC-as-OS' capability needed for secure, context-aware execution without manual rule updates.",
+  "reason": "This fills the pending gap for dynamic permission management, directly solving the 'static vs. dynamic rules' bottleneck identified in the assimilation priority list.",
+  "id": "proposal-20260404T022456",
+  "created_at": "2026-04-04T02:24:56.557342Z",
+  "status": "pending"
+}
