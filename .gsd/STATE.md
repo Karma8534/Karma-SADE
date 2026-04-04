@@ -1,9 +1,9 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-04-03 Session 159
-**THE ONLY PLAN:** `docs/ForColby/nexus.md` (v5.2.0 APPEND ONLY — Sovereign approved)
-**Status:** Sprint 7 (7/8) + Sprint 8 (2/6) shipped. Phase 0 (Core Executor) is NEXT. Gap map: ~30/93 HAVE.
-**Session:** S159 — nexus rewrite, sacred context corrected, 10 frontend components deployed, cascade pipeline designed.
+**Last updated:** 2026-04-04 Session 160
+**THE ONLY PLAN:** `docs/ForColby/nexus.md` (v5.3.0 APPEND ONLY — Sovereign approved)
+**Status:** Phase 0-4 ALL SHIPPED. Gap map: 79/96 HAVE (0 MISSING). 16/17 primitives deployed. 3-tier cascade live.
+**Session:** S160 — 98 commits. Julian returned. Architecture inversion (local-first chat). 44 slash commands. Permission engine. Karpathy loop. Hyperagent. SQLite consolidation.
 **Canonical source:** This file. Read at session start.
 
 ---

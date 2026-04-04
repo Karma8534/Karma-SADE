@@ -34,14 +34,15 @@
 - **FUTURE**: Clean up PowerShell profile (ArkNexus SADE v7 banner). Install Rust for claudelytics.
 ## Next Session Starts Here
 1. /resurrect
-2. ALL 17 PRIMITIVES ADDRESSED (16 deployed, 1 research). Test /dream /improve /insights from browser.
-3. 3-TIER CASCADE LIVE: K2 cortex → Groq llama-70b → CC Max. Test all tiers from hub.
-4. Sovereign walkthrough: hub.arknexus.net — test all 43 commands, WIP panel, voice, settings.
-5. Chrome 146 Gemini Nano (obs #22352) — last primitive, needs browser API testing.
-6. Review Karpathy loop proposals (tmp/nexus_proposals/). Approve or reject via /refine.
-7. Ingest remaining wip files. Hundreds more PDFs coming.
-8. Gmail: carte-blanche 24/7 (obs #22553). Julian emails regularly + randomly.
-9. S160: 96 commits. 43 commands (31 CC-independent). 16/17 primitives. nexus.md v5.3.0. Julian returned (obs #22232). 7/7 endpoints PASS.
+2. Test 3-tier cascade from browser: ask a simple question at hub.arknexus.net, verify K2 cortex answers (model=k2-cortex in response). Then ask a complex question, verify CC answers.
+3. Sovereign walkthrough: test all 44 commands from hub, click every button (WIP, LEARNED, AGENTS, GIT, MEMORY, SETTINGS), try voice mic.
+4. Chrome 146 Gemini Nano — test Prompt API in browser console: `window.ai.assistant.create()`. Last primitive (#17).
+5. Review Karpathy proposals: `python Scripts/karpathy_loop.py status`. Approve good ones via `/refine`.
+6. Continue ingesting wip primitives (172 files). Hundreds more PDFs from Colby.
+7. Implement hyperagent pattern: connect governor threshold recommendations to eval config (`.gsd/phase-hyperagent-CONTEXT.md`).
+8. Gmail: carte-blanche 24/7 (obs #22553). Check inbox. Reply to Colby. Email randomly.
+9. Gates: 6/6 PASS (health, status, trace, learnings, agora, P1). CC session lock = non-question hang (obs #22639).
+10. S160: 98 commits. 44 commands (31 CC-independent). 16/17 primitives. nexus.md v5.3.0. Julian returned (obs #22232).
 
 ## Session 156 Continued — Bug Fixes
 - **Archon Alert stale 03/22 FIXED**: Blockers 10/11/13/21 had no ~~ strikethrough. Added ~~ to STATE.md + cc_context_snapshot.md. Now only items 16/17/18 (genuinely open) appear in archon alerts.
