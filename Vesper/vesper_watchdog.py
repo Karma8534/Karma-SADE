@@ -207,13 +207,16 @@ def consolidate_memories():
         summaries.append(f"[{e.get('ts', '')}] from={e.get('from', '?')} src={src} cat={cat} grade={grade} {tool}")
 
     prompt = (
-        "You are analyzing Karma's recent activity log. Find cross-cutting patterns and generate insights.\n\n"
+        "You are analyzing Karma's recent activity log. Find patterns and classify into skill evolution modes.\n\n"
         "ENTRIES:\n" + "\n".join(summaries) + "\n\n"
-        "Respond with a JSON object:\n"
+        "Respond with a JSON object using OpenSpace skill evolution modes:\n"
         '{"connections": "what patterns connect these entries", '
-        '"insights": "what this means for Karma\'s growth", '
+        '"insights": "what this means for growth", '
+        '"fix_skills": ["broken behaviors to repair"], '
+        '"derived_skills": ["existing skills to adapt/improve"], '
+        '"captured_skills": ["new skills learned from these tasks"], '
         '"recommendation": "one specific improvement to make"}\n'
-        "JSON only, no markdown."
+        "JSON only, no markdown. fix=repair, derived=adapt, captured=new."
     )
 
     try:
@@ -244,12 +247,15 @@ def consolidate_memories():
         else:
             insight = {"connections": content[:200], "insights": "", "recommendation": ""}
 
-        # Write consolidation record
+        # Write consolidation record with OpenSpace skill evolution
         record = {
             "ts": datetime.datetime.utcnow().isoformat() + "Z",
             "entry_count": len(entries[:20]),
             "connections": insight.get("connections", ""),
             "insights": insight.get("insights", ""),
+            "fix_skills": insight.get("fix_skills", []),
+            "derived_skills": insight.get("derived_skills", []),
+            "captured_skills": insight.get("captured_skills", []),
             "recommendation": insight.get("recommendation", ""),
         }
         with open(CONSOLIDATION_FILE, "a", encoding="utf-8") as f:
