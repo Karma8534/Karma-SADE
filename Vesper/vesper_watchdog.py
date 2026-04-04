@@ -171,7 +171,7 @@ def write_gap_brief_section(backlog):
 
 CONSOLIDATION_FILE = CACHE_DIR / "vesper_consolidations.jsonl"
 CONSOLIDATION_THRESHOLD = 10  # consolidate after 10+ unconsolidated entries
-OLLAMA_URL = os.environ.get("K2_OLLAMA_URL", "http://localhost:11434")
+OLLAMA_URL = os.environ.get("K2_OLLAMA_URL", "http://172.22.240.1:11434")
 OLLAMA_MODEL = os.environ.get("K2_OLLAMA_MODEL", "qwen3.5:4b")
 
 
