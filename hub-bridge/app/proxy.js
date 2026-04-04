@@ -869,7 +869,7 @@ const server = http.createServer(async (req, res) => {
       const isSlashCmd = message.startsWith("/");
 
       if (isShort && isQuestion && !needsTools && !isSlashCmd && !body.files) {
-        // Try K2 cortex first for simple questions
+        // Tier 1: Try K2 cortex first for simple questions ($0)
         try {
           const cortexRes = await fetch(`${K2_CORTEX}/query`, {
             method: "POST",
@@ -900,7 +900,50 @@ const server = http.createServer(async (req, res) => {
               });
             }
           }
-        } catch { /* K2 unreachable — fall through to CC */ }
+        } catch { /* K2 unreachable — try Groq */ }
+
+        // Tier 1.5: Try Groq for medium-complexity questions (free tier, <500ms)
+        const groqKeyPath = require("path").join(__dirname, "..", "..", "..", "karma-sade", ".groq-api-key");
+        let groqKey = "";
+        try { groqKey = require("fs").readFileSync("/home/neo/karma-sade/.groq-api-key", "utf-8").trim(); } catch {}
+        if (!groqKey) try { groqKey = process.env.GROQ_API_KEY || ""; } catch {}
+
+        if (groqKey && !needsTools) {
+          try {
+            const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+              method: "POST",
+              headers: { "Authorization": `Bearer ${groqKey}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                model: "llama-3.3-70b-versatile",
+                messages: [
+                  { role: "system", content: "You are Karma, a helpful AI assistant. Be concise." },
+                  { role: "user", content: message },
+                ],
+                max_tokens: 500,
+                temperature: 0.3,
+              }),
+              signal: AbortSignal.timeout(10000),
+            });
+            if (groqRes.ok) {
+              const groqData = await groqRes.json();
+              const groqAnswer = groqData.choices?.[0]?.message?.content || "";
+              if (groqAnswer && groqAnswer.length > 20) {
+                postResponseSideEffects({ message, assistantText: groqAnswer, sessionId, costUsd: 0, model: "groq-llama-70b" });
+                if (body.stream === true) {
+                  res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive", "Access-Control-Allow-Origin": "*" });
+                  res.write(`data: ${JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text: groqAnswer }], model: "groq-llama-70b" } })}\n\n`);
+                  res.write(`data: ${JSON.stringify({ type: "message_stop" })}\n\n`);
+                  res.end();
+                  return;
+                }
+                return json(res, 200, {
+                  ok: true, response: groqAnswer, assistant_text: groqAnswer,
+                  model: "groq-llama-70b", routing: "groq-tier", cost_usd: 0,
+                });
+              }
+            }
+          } catch { /* Groq failed — fall through to CC */ }
+        }
       }
 
       // ── Streaming path (SSE) ──────────────────────────────────────────
