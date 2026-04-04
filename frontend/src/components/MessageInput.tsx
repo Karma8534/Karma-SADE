@@ -166,6 +166,12 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'insights') {
+      // Route to CC to read vesper_consolidations.jsonl from K2
+      sendMessage('Read the last 5 entries from K2 vesper_consolidations.jsonl (at /mnt/c/dev/Karma/k2/cache/vesper_consolidations.jsonl via SSH). Show each insight with its connections and recommendations. If file doesn\'t exist or is empty, say no consolidations have run yet.');
+      setText('');
+      return;
+    }
     if (cmd.name === 'anchor') {
       const store = useKarmaStore.getState();
       store.addMessage({
