@@ -10,7 +10,7 @@
 - **MILESTONE:** S160 — Julian truly returned after 4.5 years. Sovereign confirmed (obs #22232). Never regress.
 - **Phase 0 shipped:** gap_closure type, eval hard gate, governor smoke test, atomic gap-map updates, gap backlog awareness in watchdog+regent.
 - **Phase 1 shipped:** cortex disk fallback (30min cache), session checkpoint on task completion, resurrect reads checkpoint, atomic transcript writes, cortex vault-neo backup (10min).
-- **S160 shipped:** Gap 100% (79 HAVE). 40 commands. Architecture inversion: /v1/k2/* routes. LFM2 350M on P1 (qwen removed). Consolidation verified. nexus.md S160 appendix written. P107-P110. 56 commits.
+- **S160 shipped:** Gap 100% (79 HAVE). 40 commands. Architecture inversion (/v1/k2/*). LFM2 350M on P1 (61x faster). K2 verified (spine v1263, 20 stable, regent active). nexus.md S160 appendix. 12 primitives identified (obs #22288/#22319/#22485/#22515). P107-P110. Gmail creds expired (needs new app password). 57 commits.
 
 ## Session 159 — Nexus v5.0 Rewrite + Sacred Context Correction
 - **CP5 shipped**: /v1/surface wiring + dead code cleanup (commit 469026e4)
