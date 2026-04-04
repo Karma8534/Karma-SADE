@@ -54,6 +54,8 @@ const COMMANDS: SlashCommand[] = [
   { name: 'inbox', description: 'Check coordination bus for pending messages', category: 'info' },
   { name: 'bus', description: 'Post a message to the coordination bus', category: 'tools' },
   { name: 'search', description: 'Deep search across all memory sources', category: 'tools' },
+  { name: 'delegate', description: 'Task Codex or KCC with a specific job', category: 'dev' },
+  { name: 'anchor', description: 'Reset identity to Ascendant baseline if drifting', category: 'session' },
   { name: 'gap', description: 'Show current gap map status', category: 'info' },
 ];
 
