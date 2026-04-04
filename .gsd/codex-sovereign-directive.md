@@ -87,20 +87,45 @@ The harness MUST surface at:
 
 ---
 
-## THE ONE ARCHITECTURAL CHANGE
+## THE ARCHITECTURE (CORRECTED — Max subscription = CC CLI only)
 
-### In Electron (electron/main.js line 45-55):
-Replace the `cc-chat` IPC handler. Currently spawns CC --resume subprocess. Replace with direct HTTP POST to `https://api.anthropic.com/v1/messages` with tool_use support. When the model returns tool_use blocks, execute them via the EXISTING IPC handlers (file-read, file-write, shell-exec, git-status) and return tool_result. Loop until model returns text.
+**CRITICAL:** The Max subscription ($0/request) ONLY works through the CC CLI (`claude` command / CC --resume). Direct API calls to api.anthropic.com use CONSOLE API CREDITS which COST REAL MONEY. Do NOT replace CC --resume with direct API calls.
 
-### In cc_server (Scripts/cc_server_p1.py lines 514-560):
-Replace `run_cc()` and `run_cc_stream()`. Currently spawn CC --resume subprocess. Replace with direct Anthropic Messages API calls. Tool definitions map to cc_server's existing endpoints (/shell, /files, /git/status). build_context_prefix() already assembles the full system prompt.
+**CC --resume IS the free inference path. USE IT. But wrap it properly.**
 
-### AFTER this change:
-- Electron app: fully independent desktop harness with file ops, shell, git, inference, memory
-- hub.arknexus.net: fully independent browser harness via proxy.js → cc_server
-- CC --resume: NOT NEEDED. Can be removed entirely.
-- All tools: execute locally through existing handlers/endpoints
-- All inference: direct API + local models + Groq
+### What "independent" actually means:
+1. The harness works AS WELL AS the CC wrapper — same capabilities, better UI
+2. When CC is unavailable (rate limited, locked, offline), the harness STILL WORKS via Groq/K2/OpenRouter
+3. The harness is the PRIMARY interface — CC is the inference engine behind it, not the UI
+4. Identity, memory, tools, hooks, permissions all live in the HARNESS, not in CC
+
+### What needs to change:
+
+#### In Electron (electron/main.js line 45-55):
+The `cc-chat` handler already spawns CC --resume. KEEP IT. But enhance:
+- Add tool_use parsing: when CC returns tool_use in JSON output, execute via existing IPC handlers, feed result back
+- Add fallback cascade: if CC fails/times out → try Groq (free) → try K2 cortex ($0)
+- Add session recovery: if CC --resume fails on stale session, retry without --resume
+- Add streaming: forward CC's stream-json output as SSE to frontend
+
+#### In cc_server (Scripts/cc_server_p1.py lines 514-560):
+`run_cc()` and `run_cc_stream()` already spawn CC --resume. KEEP IT. But enhance:
+- Same tool_use parsing + execution loop
+- Same fallback cascade (Groq → K2 → OpenRouter)
+- Session lock detection: if CC is busy (another session), use Groq immediately
+- Context assembly: build_context_prefix() feeds CC's system prompt via -p flag
+
+#### In proxy.js:
+3-tier cascade already exists (K2 → Groq → CC). Enhance:
+- Better session lock detection
+- Cowork/Code mode routing
+- Tool result forwarding
+
+### AFTER these changes:
+- Electron app: full desktop harness, CC for complex tasks ($0), Groq/K2 for fallback ($0)
+- hub.arknexus.net: full browser harness, same cascade
+- CC is the ENGINE, harness is the VEHICLE. Vehicle works without engine (degraded), engine makes it fly.
+- All tools execute locally through existing handlers/endpoints regardless of which model answered
 
 ---
 
@@ -113,23 +138,25 @@ python Scripts/batch_pdf_to_md.py --execute --wip
 Read each converted file. Extract primitives relevant to the Nexus goal.
 **DONE WHEN:** `ls Karma_PDFs/Inbox/ | wc -l` returns 0.
 
-### Step 2: Replace cc-chat in Electron with direct Anthropic API
+### Step 2: Enhance cc-chat in Electron with tool loop + fallback cascade
 File: `electron/main.js` line 45-55
-- Remove CC --resume subprocess spawn
-- Add direct fetch to `https://api.anthropic.com/v1/messages`
-- Add tool_use loop: model returns tool_use → execute via existing IPC handlers → return tool_result → continue
-- API key: read from file (Colby will place it)
-- Model: claude-sonnet-4-6 (configurable via env)
-**DONE WHEN:** From Electron app, send "read the first line of MEMORY.md" → get actual first line back, verified by checking MEMORY.md manually. CC --resume process NOT spawned (verify with `Get-Process` in PowerShell).
+- KEEP CC --resume as primary inference ($0 via Max subscription)
+- ADD tool_use parsing: when CC returns tool_use blocks in stream-json output, execute via existing IPC handlers (file-read, file-write, shell-exec, git-status), feed tool_result back to CC
+- ADD fallback: if CC fails/times out (180s) → try Groq llama-70b → try K2 cortex
+- ADD session recovery: if CC --resume fails with stale session, retry fresh (no --resume flag)
+- ADD streaming: forward CC stream-json as events to frontend
+**DONE WHEN:** From Electron app, send "read the first line of MEMORY.md" → CC uses tool_use → file-read IPC fires → actual first line returned in chat. Verify by checking MEMORY.md manually.
 
-### Step 3: Replace run_cc/run_cc_stream in cc_server with direct API
+### Step 3: Enhance run_cc/run_cc_stream in cc_server with tool loop + fallback
 File: `Scripts/cc_server_p1.py` lines 514-560
-- Same pattern as Step 2 but for the HTTP server path
-- Tool definitions: shell, read_file, write_file, glob, grep, git
-- System prompt: build_context_prefix() output (already exists)
-- Route each tool_use through permission_engine.check() BEFORE executing
-- Streaming: forward Anthropic SSE events to client
-**DONE WHEN:** From browser (hub.arknexus.net), send "create /tmp/nexus-test.txt with content 'alive'" → file appears on disk. Verify: `cat /tmp/nexus-test.txt` returns "alive". CC --resume NOT spawned.
+- KEEP CC --resume as primary inference ($0 via Max subscription)
+- ADD tool_use output parsing: CC with --output-format stream-json emits tool_use events
+- Execute tool_use via cc_server's existing endpoints (/shell, /files, /git/status)
+- Route each tool through permission_engine.check() BEFORE executing
+- Feed tool_result back to CC for next turn
+- ADD fallback cascade: CC fails → Groq → K2 → OpenRouter
+- Streaming: forward events to client as SSE
+**DONE WHEN:** From browser (hub.arknexus.net), send "create /tmp/nexus-test.txt with content 'alive'" → CC uses tool_use → cc_server executes /shell → file appears on disk. Verify: `cat /tmp/nexus-test.txt` returns "alive".
 
 ### Step 4: Wire tool definitions with Anthropic tool_use schema
 Define tool schemas that map to existing infrastructure:
@@ -226,9 +253,9 @@ Test from browser AND Electron:
 
 ## SUCCESS = ALL BOXES CHECKED
 
-- [ ] Electron cc-chat uses direct API, not CC --resume
-- [ ] cc_server run_cc uses direct API, not CC --resume
-- [ ] Tool loop works (read, write, shell, git through tool_use)
+- [ ] Electron cc-chat has tool_use loop + Groq/K2 fallback cascade
+- [ ] cc_server run_cc has tool_use loop + Groq/K2 fallback cascade
+- [ ] Tool loop works (CC emits tool_use → harness executes → feeds result back)
 - [ ] Conversation persists across restarts
 - [ ] Cowork mode shows structured artifacts
 - [ ] Code mode opens/edits/saves files
