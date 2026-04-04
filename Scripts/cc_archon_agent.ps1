@@ -204,4 +204,8 @@ Write-Log "Status email: $StatusResult"
 $PersonalResult = & py -3 "$ScriptRepo\Scripts\cc_email_daemon.py" personal 2>&1
 Write-Log "Personal: $PersonalResult"
 
+# ── 13. Karpathy loop: propose one nexus.md improvement per cycle ────────────
+$KarpathyResult = & py -3 "$ScriptRepo\Scripts\karpathy_loop.py" propose 2>&1
+Write-Log "Karpathy: $KarpathyResult"
+
 Write-Log "CC ArchonAgent complete. State=$StateTag"
