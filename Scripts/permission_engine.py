@@ -72,6 +72,9 @@ class PermissionEngine:
             PermissionRule("allow-glob", "Glob", "allow", r".*", "Safe: file search", 50),
             PermissionRule("allow-grep", "Grep", "allow", r".*", "Safe: content search", 50),
 
+            # ALLOW: safe shell commands (priority 50)
+            PermissionRule("allow-ls", "Bash", "allow", r"^ls\b|^dir\b|^pwd\b|^echo\b|^cat\b|^head\b|^tail\b|^wc\b|^grep\b|^find\b", "Safe: read-only shell", 50),
+
             # ALLOW: git operations (priority 50)
             PermissionRule("allow-git-status", "Bash", "allow", r"git\s+(status|log|diff|branch|show)", "Safe: git read", 50),
             PermissionRule("allow-git-commit", "Bash", "allow", r"git\s+(add|commit|push)", "Git write (logged)", 50),

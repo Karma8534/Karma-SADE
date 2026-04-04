@@ -62,7 +62,20 @@ def check(context: dict) -> dict:
             "reason": f"Rate limit exceeded: {RATE_LIMIT} tool calls per hour. Wait before retrying.",
         }
 
-    # Only check Bash/shell commands for dangerous patterns
+    # S160: Try dynamic permission engine first (CC-as-OS primitive #9)
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(__import__('pathlib').Path(__file__).resolve().parent.parent))
+        from permission_engine import PermissionEngine
+        _engine = PermissionEngine()
+        result = _engine.check(tool_name, tool_input)
+        if not result["allowed"]:
+            return {"permissionDecision": "deny", "reason": f"BLOCKED: {result['reason']} (rule: {result['rule_id']})"}
+        # Engine allowed — still run legacy checks as defense-in-depth
+    except Exception:
+        pass  # Engine unavailable — fall through to legacy checks
+
+    # Legacy: check Bash/shell commands for dangerous patterns
     if tool_name in ("Bash", "shell_run", "python_exec", "k2_shell"):
         command = tool_input.get("command", "")
         if not command:
