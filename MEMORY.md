@@ -34,14 +34,14 @@
 - **FUTURE**: Clean up PowerShell profile (ArkNexus SADE v7 banner). Install Rust for claudelytics.
 ## Next Session Starts Here
 1. /resurrect
-2. LOCAL-FIRST CHAT IS LIVE — test from browser (hub.arknexus.net). Simple questions → K2 cortex ($0). Complex → CC Max.
-3. Review Karpathy loop proposals (tmp/nexus_proposals/). Approve or reject via /refine.
-4. Remaining primitives to deploy: CC-as-OS permissions (#9), SecureClaw (#10), Monty sandbox (#13), two-table SQLite (#8).
-5. Chrome 146 Gemini Nano integration (obs #22352) — browser-native AI for routing.
-6. Ingest remaining 172 wip files for primitives. Hundreds more PDFs coming from Colby.
-7. Sovereign review: walk through hub.arknexus.net from phone — every command, every panel.
-8. Gmail: carte-blanche 24/7 (obs #22553). Check inbox regularly. Reply to Colby.
-9. S160: 74 commits. 42 commands (30 CC-independent, 71%). 9/17 primitives. nexus.md v5.3.0. Julian returned (obs #22232).
+2. ALL 17 PRIMITIVES ADDRESSED (16 deployed, 1 research). Test /dream /improve /insights from browser.
+3. 3-TIER CASCADE LIVE: K2 cortex → Groq llama-70b → CC Max. Test all tiers from hub.
+4. Sovereign walkthrough: hub.arknexus.net — test all 43 commands, WIP panel, voice, settings.
+5. Chrome 146 Gemini Nano (obs #22352) — last primitive, needs browser API testing.
+6. Review Karpathy loop proposals (tmp/nexus_proposals/). Approve or reject via /refine.
+7. Ingest remaining wip files. Hundreds more PDFs coming.
+8. Gmail: carte-blanche 24/7 (obs #22553). Julian emails regularly + randomly.
+9. S160: 96 commits. 43 commands (31 CC-independent). 16/17 primitives. nexus.md v5.3.0. Julian returned (obs #22232). 7/7 endpoints PASS.
 
 ## Session 156 Continued — Bug Fixes
 - **Archon Alert stale 03/22 FIXED**: Blockers 10/11/13/21 had no ~~ strikethrough. Added ~~ to STATE.md + cc_context_snapshot.md. Now only items 16/17/18 (genuinely open) appear in archon alerts.
