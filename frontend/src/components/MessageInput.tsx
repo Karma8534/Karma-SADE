@@ -161,6 +161,31 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'search') {
+      sendMessage('/search — Search all memory sources (claude-mem, cortex, vault ledger, MEMORY.md) for relevant context. Ask me what to search for.');
+      setText('');
+      return;
+    }
+    if (cmd.name === 'gap') {
+      const store = useKarmaStore.getState();
+      (async () => {
+        try {
+          const res = await fetch('/v1/wip', { headers: { Authorization: `Bearer ${store.token}` } });
+          if (res.ok) {
+            const data = await res.json();
+            store.addMessage({
+              id: Date.now().toString(36), role: 'system',
+              content: `**GAP MAP** | 79 HAVE / 0 MISSING / 16 N/A\n\nPreclaw1 baseline: **ACHIEVED**\nBeyond preclaw1: self-edit, dream, learn, improve, evolve, email, bus, plugins\n\n**WIP Primitives:** ${data.primitives?.length || 0} files in docs/wip/\n**Todos:** ${data.todos?.length || 0} items`,
+              timestamp: new Date().toISOString(),
+            });
+          }
+        } catch {
+          store.addMessage({ id: Date.now().toString(36), role: 'system', content: '**GAP** — could not fetch status', timestamp: new Date().toISOString() });
+        }
+      })();
+      setText('');
+      return;
+    }
     if (cmd.name === 'inbox') {
       const store = useKarmaStore.getState();
       (async () => {

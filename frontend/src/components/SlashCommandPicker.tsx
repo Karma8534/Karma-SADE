@@ -53,6 +53,8 @@ const COMMANDS: SlashCommand[] = [
   { name: 'email', description: 'Send email to Colby (24/7 approved)', category: 'tools' },
   { name: 'inbox', description: 'Check coordination bus for pending messages', category: 'info' },
   { name: 'bus', description: 'Post a message to the coordination bus', category: 'tools' },
+  { name: 'search', description: 'Deep search across all memory sources', category: 'tools' },
+  { name: 'gap', description: 'Show current gap map status', category: 'info' },
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
