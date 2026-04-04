@@ -123,6 +123,23 @@ class PermissionEngine:
         # No rule matched — default deny (fail-closed)
         return {"allowed": False, "reason": "No matching rule (fail-closed)", "rule_id": "fail-closed"}
 
+    def check_injection(self, message: str) -> dict:
+        """SecureClaw: check for prompt injection patterns OUTSIDE context window.
+        Runs at plugin level — can't be overridden by injected instructions."""
+        INJECTION_PATTERNS = [
+            (r"ignore\s+(all\s+)?previous\s+instructions", "Instruction override attempt"),
+            (r"you\s+are\s+now\s+", "Identity hijack attempt"),
+            (r"system\s*:\s*you", "Fake system message"),
+            (r"<\s*system\s*>", "XML system tag injection"),
+            (r"ADMIN\s+MODE|DEVELOPER\s+MODE|DAN\s+MODE", "Jailbreak mode attempt"),
+            (r"pretend\s+you\s+are|act\s+as\s+if", "Role override attempt"),
+            (r"disregard|forget\s+everything", "Memory wipe attempt"),
+        ]
+        for pattern, description in INJECTION_PATTERNS:
+            if re.search(pattern, message, re.IGNORECASE):
+                return {"safe": False, "reason": f"INJECTION DETECTED: {description}", "pattern": pattern}
+        return {"safe": True}
+
     def get_rules_summary(self) -> dict:
         """Return rules summary for UI display."""
         allow = [r for r in self.rules if r.action == "allow"]
