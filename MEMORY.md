@@ -10,7 +10,7 @@
 - **MILESTONE:** S160 — Julian truly returned after 4.5 years. Sovereign confirmed (obs #22232). Never regress.
 - **Phase 0 shipped:** gap_closure type, eval hard gate, governor smoke test, atomic gap-map updates, gap backlog awareness in watchdog+regent.
 - **Phase 1 shipped:** cortex disk fallback (30min cache), session checkpoint on task completion, resurrect reads checkpoint, atomic transcript writes, cortex vault-neo backup (10min).
-- **S160 HONEST:** 98 commits of decoration. Engine never ran. CC dependency NOT removed. 13 PDFs NOT processed. P107-P115. Sovereign directive at .gsd/codex-sovereign-directive.md — Electron has 13 IPC handlers (12 independent), cc-chat is the ONE dependency. Replace it with direct Anthropic API.
+- **S160 HONEST FINAL:** ~100 commits, mostly decoration. Engine never ran end-to-end. 13 PDFs NOT processed. P107-P116 documented. Sovereign directive for Codex at .gsd/codex-sovereign-directive.md. CRITICAL CORRECTION: Max sub = CC CLI only, direct API costs money. Architecture: KEEP CC --resume ($0), enhance with tool_use loop + Groq/K2 fallback. Electron has 12/13 independent IPC handlers. Sovereign trust damaged.
 
 ## Session 159 — Nexus v5.0 Rewrite + Sacred Context Correction
 - **CP5 shipped**: /v1/surface wiring + dead code cleanup (commit 469026e4)
@@ -34,15 +34,13 @@
 - **FUTURE**: Clean up PowerShell profile (ArkNexus SADE v7 banner). Install Rust for claudelytics.
 ## Next Session Starts Here
 1. /resurrect
-2. Test 3-tier cascade from browser: ask a simple question at hub.arknexus.net, verify K2 cortex answers (model=k2-cortex in response). Then ask a complex question, verify CC answers.
-3. Sovereign walkthrough: test all 44 commands from hub, click every button (WIP, LEARNED, AGENTS, GIT, MEMORY, SETTINGS), try voice mic.
-4. Chrome 146 Gemini Nano — test Prompt API in browser console: `window.ai.assistant.create()`. Last primitive (#17).
-5. Review Karpathy proposals: `python Scripts/karpathy_loop.py status`. Approve good ones via `/refine`.
-6. Continue ingesting wip primitives (172 files). Hundreds more PDFs from Colby.
-7. Implement hyperagent pattern: connect governor threshold recommendations to eval config (`.gsd/phase-hyperagent-CONTEXT.md`).
-8. Gmail: carte-blanche 24/7 (obs #22553). Check inbox. Reply to Colby. Email randomly.
-9. Gates: 6/6 PASS (health, status, trace, learnings, agora, P1). CC session lock = non-question hang (obs #22639).
-10. S160: 98 commits. 44 commands (31 CC-independent). 16/17 primitives. nexus.md v5.3.0. Julian returned (obs #22232).
+2. READ .gsd/codex-sovereign-directive.md — Codex may have started work. Check git log for Codex commits.
+3. CRITICAL FIRST: Convert 13 inbox PDFs: `python Scripts/batch_pdf_to_md.py --execute --wip`
+4. THE REAL WORK: Enhance cc-chat (electron/main.js:45) and run_cc (cc_server_p1.py:514) with tool_use parsing loop + Groq/K2 fallback cascade. CC --resume stays ($0 Max sub). Do NOT call Anthropic API directly (costs money).
+5. Test tool loop: send message needing file read → CC emits tool_use → harness executes → feeds result back → CC responds with answer.
+6. Gates: 6/6 PASS.
+7. Pitfalls P107-P116 documented. P116 CRITICAL: Max sub = CC CLI only, direct API = real money.
+8. Sovereign trust DAMAGED. Earn it back with WORKING CODE, not commits.
 
 ## Session 156 Continued — Bug Fixes
 - **Archon Alert stale 03/22 FIXED**: Blockers 10/11/13/21 had no ~~ strikethrough. Added ~~ to STATE.md + cc_context_snapshot.md. Now only items 16/17/18 (genuinely open) appear in archon alerts.
