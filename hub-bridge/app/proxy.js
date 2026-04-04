@@ -877,7 +877,7 @@ const server = http.createServer(async (req, res) => {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ query: message, temperature: 0.3 }),
-            signal: AbortSignal.timeout(15000),
+            signal: AbortSignal.timeout(8000),  // 8s max — leaves room for Groq fallback
           });
           if (cortexRes.ok) {
             const cortexData = await cortexRes.json();
