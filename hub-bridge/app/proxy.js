@@ -645,6 +645,57 @@ const server = http.createServer(async (req, res) => {
       } catch (e) { return json(res, 502, { ok: false, error: `Surface endpoint unreachable: ${e.message}` }); }
     }
 
+    // ── /v1/k2/* — Direct K2 endpoints (CC-INDEPENDENT, S160 inversion) ──
+    if (req.url.startsWith("/v1/k2/")) {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      const K2_CORTEX = process.env.K2_CORTEX_URL || "http://100.75.109.92:7892";
+      const subpath = req.url.replace("/v1/k2", "");
+
+      if (req.method === "POST" && subpath === "/consolidate") {
+        // Trigger consolidation on K2 via SSH (runs vesper_watchdog consolidate_memories)
+        try {
+          const { execSync } = require("child_process");
+          const result = execSync(
+            'ssh -o ConnectTimeout=5 karma@192.168.0.226 "cd /mnt/c/dev/Karma/k2/aria && python3 -c \\"import vesper_watchdog as w; r=w.consolidate_memories(); print(r)\\""',
+            { timeout: 90000, encoding: "utf-8" }
+          ).trim();
+          return json(res, 200, { ok: true, consolidated: parseInt(result) || 0, source: "k2-direct" });
+        } catch (e) {
+          return json(res, 502, { ok: false, error: `K2 consolidation failed: ${e.message?.slice(0, 100)}` });
+        }
+      }
+
+      if (req.method === "POST" && subpath === "/query") {
+        // Direct cortex query — no CC wrapper
+        try {
+          const body = await parseBody(req);
+          const r = await fetch(`${K2_CORTEX}/query`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: body.query || "", temperature: 0.3 }),
+            signal: AbortSignal.timeout(30000),
+          });
+          const data = await r.json();
+          return json(res, 200, data);
+        } catch (e) {
+          return json(res, 502, { ok: false, error: `K2 cortex query failed: ${e.message?.slice(0, 100)}` });
+        }
+      }
+
+      if (req.method === "GET" && subpath === "/context") {
+        // Direct cortex context — no CC wrapper
+        try {
+          const r = await fetch(`${K2_CORTEX}/context`, { signal: AbortSignal.timeout(15000) });
+          const data = await r.json();
+          return json(res, 200, data);
+        } catch (e) {
+          return json(res, 502, { ok: false, error: `K2 context failed: ${e.message?.slice(0, 100)}` });
+        }
+      }
+
+      return json(res, 404, { ok: false, error: `Unknown K2 endpoint: ${subpath}` });
+    }
+
     // ── /v1/wip — WIP panel data (S160) ─────────────────────────────────
     if (req.method === "GET" && req.url === "/v1/wip") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });

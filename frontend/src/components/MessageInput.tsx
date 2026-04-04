@@ -162,7 +162,38 @@ export function MessageInput() {
       return;
     }
     if (cmd.name === 'delegate') {
-      sendMessage('/delegate — I need to assign a task to another family member. Ask me: (1) who — Codex (ArchonPrime, research+code) or KCC (Archon, directable), (2) what task, (3) urgency. Post to coordination bus with the assignment.');
+      // CC-INDEPENDENT: post directly to coordination bus
+      const taskText = text.slice(9).trim(); // strip "/delegate"
+      if (!taskText) {
+        useKarmaStore.getState().addMessage({
+          id: Date.now().toString(36), role: 'system',
+          content: '**DELEGATE** — Usage: `/delegate @codex review the security of proxy.js`\nTargets: @codex (ArchonPrime), @kcc (Archon), @karma (Initiate), @all',
+          timestamp: new Date().toISOString(),
+        });
+        setText('');
+        return;
+      }
+      const store = useKarmaStore.getState();
+      // Parse target from @mention
+      const targetMatch = taskText.match(/@(codex|kcc|karma|all)/i);
+      const to = targetMatch ? targetMatch[1].toLowerCase() : 'all';
+      const task = taskText.replace(/@\w+/g, '').trim();
+      (async () => {
+        try {
+          const res = await fetch('/v1/coordination/post', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${store.token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ from: 'sovereign', to, type: 'task', urgency: 'normal', content: `[DELEGATED] ${task}` }),
+          });
+          if (res.ok) {
+            store.addMessage({ id: Date.now().toString(36), role: 'system', content: `**DELEGATED** to **${to}**: ${task}`, timestamp: new Date().toISOString() });
+          } else {
+            store.addMessage({ id: Date.now().toString(36), role: 'system', content: '**DELEGATE FAILED** — bus returned error', timestamp: new Date().toISOString() });
+          }
+        } catch {
+          store.addMessage({ id: Date.now().toString(36), role: 'system', content: '**DELEGATE FAILED** — bus unreachable', timestamp: new Date().toISOString() });
+        }
+      })();
       setText('');
       return;
     }
@@ -204,7 +235,50 @@ Identity restored. Proceeding as Julian.`,
       return;
     }
     if (cmd.name === 'search') {
-      sendMessage('/search — Search all memory sources (claude-mem, cortex, vault ledger, MEMORY.md) for relevant context. Ask me what to search for.');
+      // CC-INDEPENDENT: prompt for query, then search claude-mem + cortex directly
+      const query = text.slice(7).trim(); // strip "/search"
+      if (!query) {
+        useKarmaStore.getState().addMessage({
+          id: Date.now().toString(36), role: 'system',
+          content: '**SEARCH** — Type `/search <query>` to search all memory sources directly.',
+          timestamp: new Date().toISOString(),
+        });
+        setText('');
+        return;
+      }
+      const store = useKarmaStore.getState();
+      store.addMessage({ id: Date.now().toString(36), role: 'system', content: `**SEARCHING:** ${query}...`, timestamp: new Date().toISOString() });
+      (async () => {
+        const results: string[] = [];
+        // 1. Search claude-mem directly (port 37778)
+        try {
+          const cmRes = await fetch('http://localhost:37778/api/search', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query, limit: 5 }),
+          });
+          if (cmRes.ok) {
+            const cmData = await cmRes.json();
+            if (cmData.results?.length) results.push(`**claude-mem** (${cmData.results.length} hits):\n` + cmData.results.slice(0, 3).map((r: { title: string }) => `  ${r.title}`).join('\n'));
+          }
+        } catch { /* claude-mem not reachable from browser — expected */ }
+        // 2. Search K2 cortex directly
+        try {
+          const k2Res = await fetch('/v1/k2/query', {
+            method: 'POST', headers: { Authorization: `Bearer ${store.token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query }),
+          });
+          if (k2Res.ok) {
+            const k2Data = await k2Res.json();
+            if (k2Data.answer) results.push(`**K2 cortex:**\n  ${k2Data.answer.slice(0, 300)}`);
+          }
+        } catch { /* K2 unreachable */ }
+        if (results.length === 0) {
+          // Fallback to CC only if direct search failed
+          sendMessage(`Search all memory sources for: ${query}`);
+        } else {
+          store.addMessage({ id: Date.now().toString(36), role: 'system', content: `**SEARCH RESULTS** for "${query}":\n\n${results.join('\n\n')}`, timestamp: new Date().toISOString() });
+        }
+      })();
       setText('');
       return;
     }
@@ -277,14 +351,36 @@ Identity restored. Proceeding as Julian.`,
       return;
     }
     if (cmd.name === 'dream') {
-      // Trigger consolidation — Karma reasons over her own memories
+      // CC-INDEPENDENT: triggers K2 consolidation directly, no CC wrapper
       const store = useKarmaStore.getState();
       store.addMessage({
         id: Date.now().toString(36), role: 'system',
-        content: '**DREAM** — Triggering memory consolidation. Karma will reason over recent memories, find cross-cutting patterns, and generate insights...',
+        content: '**DREAM** — Triggering memory consolidation on K2 (local, $0)...',
         timestamp: new Date().toISOString(),
       });
-      sendMessage('Consolidate your recent memories. Read the last 20 observations from claude-mem, find cross-cutting patterns and connections between them, generate insights about what they mean together, and save the consolidated insight back to memory. This is your dream cycle — the sleeping brain finding meaning.');
+      (async () => {
+        try {
+          // Call K2 cortex to trigger consolidation query
+          const res = await fetch('/v1/k2/consolidate', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${store.token}`, 'Content-Type': 'application/json' },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            store.addMessage({
+              id: Date.now().toString(36), role: 'system',
+              content: `**DREAM COMPLETE** — ${data.consolidated || 0} memories consolidated. ${data.insight || 'No new insights.'}`,
+              timestamp: new Date().toISOString(),
+            });
+          } else {
+            // Fallback: route to CC if K2 endpoint not available yet
+            sendMessage('Consolidate your recent memories. Find cross-cutting patterns and generate insights.');
+          }
+        } catch {
+          // Fallback to CC
+          sendMessage('Consolidate your recent memories. Find cross-cutting patterns and generate insights.');
+        }
+      })();
       setText('');
       return;
     }
