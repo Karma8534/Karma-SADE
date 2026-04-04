@@ -840,7 +840,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, count: _traceLog.length, entries: _traceLog });
     }
 
-    // ── /v1/chat — proxy to sovereign harness ─────────────────────────
+    // ── /v1/chat — proxy to sovereign harness with local pre-classification ──
     if (req.method === "POST" && req.url === "/v1/chat") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
       const raw = await parseBody(req, 500000);
@@ -848,6 +848,40 @@ const server = http.createServer(async (req, res) => {
       const message = body.message || body.content || "";
       if (!message) return json(res, 400, { ok: false, error: "message required" });
       const sessionId = body.session_id || "";
+
+      // ── S160: Local pre-classification (LFM2 350M on P1, 0.1s) ──────
+      // Simple factual questions → K2 cortex ($0). Everything else → CC.
+      const K2_CORTEX = process.env.K2_CORTEX_URL || "http://100.75.109.92:7892";
+      const msgLower = message.toLowerCase();
+      const isShort = message.length < 200;
+      const isQuestion = /\?$/.test(message.trim()) || /^(what|who|when|where|how|why|is |are |do |does |can |could |tell me|show me|list|describe)/i.test(msgLower);
+      const needsTools = /\b(edit|write|create|deploy|commit|push|install|run|execute|build|fix|modify|delete|restart|read file|ssh|curl)\b/i.test(msgLower);
+      const isSlashCmd = message.startsWith("/");
+
+      if (isShort && isQuestion && !needsTools && !isSlashCmd && !body.files) {
+        // Try K2 cortex first for simple questions
+        try {
+          const cortexRes = await fetch(`${K2_CORTEX}/query`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: message, temperature: 0.3 }),
+            signal: AbortSignal.timeout(15000),
+          });
+          if (cortexRes.ok) {
+            const cortexData = await cortexRes.json();
+            const answer = cortexData.answer || "";
+            if (answer && !answer.includes("CORTEX ERROR") && answer.length > 20) {
+              // K2 cortex answered — return directly, skip CC entirely
+              const assistantText = answer;
+              postResponseSideEffects({ message, assistantText, sessionId, costUsd: 0, model: "k2-cortex" });
+              return json(res, 200, {
+                ok: true, response: assistantText, assistant_text: assistantText,
+                model: "k2-cortex", routing: "local-first", cost_usd: 0,
+              });
+            }
+          }
+        } catch { /* K2 unreachable — fall through to CC */ }
+      }
 
       // ── Streaming path (SSE) ──────────────────────────────────────────
       if (body.stream === true) {
