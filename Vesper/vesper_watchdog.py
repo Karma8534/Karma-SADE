@@ -268,6 +268,38 @@ def consolidate_memories():
         with open(CONSOLIDATION_FILE, "a", encoding="utf-8") as f:
             f.write(json.dumps(record) + "\n")
 
+        # S160: Also write to SQLite two-table DB (primitive #12)
+        try:
+            import sys as _s
+            _s.path.insert(0, str(Path("/mnt/c/Users/raest/Documents/Karma_SADE/Scripts")))
+            from consolidation_db import ConsolidationDB
+            db = ConsolidationDB(str(CACHE_DIR / "consolidation.db"))
+            # Add each entry as a memory
+            mem_ids = []
+            for e in entries[:20]:
+                mid = db.add_memory(
+                    summary=f"{e.get('from','?')} {e.get('category','')} grade={e.get('grade','?')}",
+                    importance=float(record.get("importance", 0.5)),
+                    entities=record.get("entities", []),
+                    topics=record.get("topics", []),
+                    source="evolution_log",
+                )
+                mem_ids.append(mid)
+            # Add consolidation record
+            db.add_consolidation(
+                memory_ids=mem_ids,
+                connections=record.get("connections", ""),
+                insights=record.get("insights", ""),
+                fix_skills=record.get("fix_skills", []),
+                derived_skills=record.get("derived_skills", []),
+                captured_skills=record.get("captured_skills", []),
+                importance=float(record.get("importance", 0.5)),
+                recommendation=record.get("recommendation", ""),
+            )
+            db.close()
+        except Exception as db_err:
+            print(f"[watchdog] SQLite write failed (non-fatal): {db_err}")
+
         # Mark entries as consolidated in the evolution log
         all_lines = EVOLUTION_LOG.read_text().splitlines()
         updated = []
