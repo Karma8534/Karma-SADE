@@ -78,16 +78,18 @@ function renderMarkdown(text: string): JSX.Element {
             </pre>
           );
         }
-        // Inline markdown: **bold**, `code`, *italic*
+        // Inline markdown: **bold**, `code`, *italic*, URLs
         return (
           <span key={i}>
-            {part.split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g).map((seg, j) => {
+            {part.split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*|https?:\/\/[^\s)<]+)/g).map((seg, j) => {
               if (seg.startsWith('**') && seg.endsWith('**'))
                 return <strong key={j} className="text-karma-accent">{seg.slice(2, -2)}</strong>;
               if (seg.startsWith('`') && seg.endsWith('`'))
                 return <code key={j} className="bg-karma-bg px-1 rounded text-[11px] font-mono text-karma-accent2">{seg.slice(1, -1)}</code>;
               if (seg.startsWith('*') && seg.endsWith('*') && !seg.startsWith('**'))
                 return <em key={j} className="text-karma-muted">{seg.slice(1, -1)}</em>;
+              if (/^https?:\/\//.test(seg))
+                return <a key={j} href={seg} target="_blank" rel="noopener" className="text-karma-accent2 underline hover:text-karma-accent">{seg.length > 60 ? seg.slice(0, 57) + '...' : seg}</a>;
               return <span key={j}>{seg}</span>;
             })}
           </span>
