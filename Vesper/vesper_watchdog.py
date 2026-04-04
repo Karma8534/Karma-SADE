@@ -217,6 +217,9 @@ def consolidate_memories():
         '"derived_skills": ["existing skills to adapt/improve"], '
         '"captured_skills": ["new skills learned from these tasks"], '
         '"recommendation": "one specific improvement to make"}\n'
+        '"entities": ["key people, systems, or concepts mentioned"], '
+        '"topics": ["high-level topic tags for this batch"], '
+        '"recommendation": "one specific improvement to make"}\n'
         "JSON only. importance: 0.9+=sacred/identity, 0.7+=decision/architecture, 0.5+=operational, 0.3+=routine."
     )
 
@@ -258,6 +261,8 @@ def consolidate_memories():
             "fix_skills": insight.get("fix_skills", []),
             "derived_skills": insight.get("derived_skills", []),
             "captured_skills": insight.get("captured_skills", []),
+            "entities": insight.get("entities", []),
+            "topics": insight.get("topics", []),
             "recommendation": insight.get("recommendation", ""),
         }
         with open(CONSOLIDATION_FILE, "a", encoding="utf-8") as f:
