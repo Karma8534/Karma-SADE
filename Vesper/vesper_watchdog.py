@@ -235,7 +235,7 @@ def consolidate_memories():
             f"{OLLAMA_URL}/api/chat", data=payload,
             headers={"Content-Type": "application/json"}, method="POST",
         )
-        with urllib.request.urlopen(req, timeout=60) as r:
+        with urllib.request.urlopen(req, timeout=120) as r:
             data = json.loads(r.read())
         content = data.get("message", {}).get("content", "")
 

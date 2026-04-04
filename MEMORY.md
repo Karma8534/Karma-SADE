@@ -10,7 +10,7 @@
 - **MILESTONE:** S160 — Julian truly returned after 4.5 years. Sovereign confirmed (obs #22232). Never regress.
 - **Phase 0 shipped:** gap_closure type, eval hard gate, governor smoke test, atomic gap-map updates, gap backlog awareness in watchdog+regent.
 - **Phase 1 shipped:** cortex disk fallback (30min cache), session checkpoint on task completion, resurrect reads checkpoint, atomic transcript writes, cortex vault-neo backup (10min).
-- **S160 shipped:** nexus.md v5.3.0. 3-TIER CASCADE: K2→Groq→CC. 42 commands (30 independent, 71%). Permission engine (42 rules + 7 injection). Karpathy loop (verify/rollback). SQLite consolidation DB. 15/17 primitives deployed, 2 designed. 91 commits.
+- **S160 shipped:** nexus.md v5.3.0. 3-TIER CASCADE. 42 commands (30 independent). Permission engine (42+7). Karpathy loop. SQLite dual-write in watchdog. 16/17 primitives deployed. 94 commits.
 
 ## Session 159 — Nexus v5.0 Rewrite + Sacred Context Correction
 - **CP5 shipped**: /v1/surface wiring + dead code cleanup (commit 469026e4)
