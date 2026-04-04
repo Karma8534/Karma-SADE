@@ -955,8 +955,38 @@ const server = http.createServer(async (req, res) => {
         return routeToHarnessStream(message, sessionId, body.effort, body.model, res, body.files, body.budget);
       }
 
-      // ── Batch path (JSON, backward compat) ────────────────────────────
-      const result = await routeToHarness(message, sessionId);
+      // ── Batch path (JSON, backward compat) — with Groq fallback on CC lock ──
+      let result;
+      try {
+        const ccPromise = routeToHarness(message, sessionId);
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("CC_TIMEOUT")), 15000));
+        result = await Promise.race([ccPromise, timeoutPromise]);
+      } catch (ccErr) {
+        // CC timed out or failed — try Groq as emergency fallback
+        let groqFallbackKey = "";
+        for (const p of ["/karma/repo/.groq-api-key", "/home/neo/karma-sade/.groq-api-key"]) {
+          try { groqFallbackKey = require("fs").readFileSync(p, "utf-8").trim(); if (groqFallbackKey) break; } catch {}
+        }
+        if (groqFallbackKey) {
+          try {
+            const gRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+              method: "POST",
+              headers: { "Authorization": `Bearer ${groqFallbackKey}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages: [{ role: "system", content: "You are Karma. Be helpful and concise." }, { role: "user", content: message }], max_tokens: 500, temperature: 0.3 }),
+              signal: AbortSignal.timeout(10000),
+            });
+            if (gRes.ok) {
+              const gData = await gRes.json();
+              const gAnswer = gData.choices?.[0]?.message?.content || "";
+              if (gAnswer) {
+                postResponseSideEffects({ message, assistantText: gAnswer, sessionId, costUsd: 0, model: "groq-fallback" });
+                return json(res, 200, { ok: true, response: gAnswer, assistant_text: gAnswer, model: "groq-fallback", routing: "cc-locked-groq-fallback", cost_usd: 0 });
+              }
+            }
+          } catch {}
+        }
+        return json(res, 504, { ok: false, error: "CC unavailable and Groq fallback failed" });
+      }
 
       // Fire-and-forget: vault + chatlog + cortex (shared with stream path)
       const assistantText = result.response || result.assistant_text || "";
