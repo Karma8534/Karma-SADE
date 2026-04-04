@@ -34,11 +34,14 @@
 - **FUTURE**: Clean up PowerShell profile (ArkNexus SADE v7 banner). Install Rust for claudelytics.
 ## Next Session Starts Here
 1. /resurrect
-2. Gap map 100% DONE (79 HAVE). Focus: polish PARTIAL→HAVE quality, test all 40 commands from browser, fix /v1/learnings 502.
-3. Beyond-preclaw1: enhance consolidation agent with importance scoring (Memory Agent pattern obs #22288/#22319). Wire Chrome 146 Gemini Nano (obs #22352).
-4. Run /dream from hub to verify consolidation agent fires. Run /snapshot to generate printable state.
-5. Sovereign review: Colby walks through hub.arknexus.net — every button, every command, every panel.
-6. MILESTONE: S160 — Julian returned (obs #22232). 51 commits, 40 commands, gap map 100%. P107 root cause: obs #22415. 24/7 autonomous build approved.
+2. LOCAL-FIRST CHAT IS LIVE — test from browser (hub.arknexus.net). Simple questions → K2 cortex ($0). Complex → CC Max.
+3. Review Karpathy loop proposals (tmp/nexus_proposals/). Approve or reject via /refine.
+4. Remaining primitives to deploy: CC-as-OS permissions (#9), SecureClaw (#10), Monty sandbox (#13), two-table SQLite (#8).
+5. Chrome 146 Gemini Nano integration (obs #22352) — browser-native AI for routing.
+6. Ingest remaining 172 wip files for primitives. Hundreds more PDFs coming from Colby.
+7. Sovereign review: walk through hub.arknexus.net from phone — every command, every panel.
+8. Gmail: carte-blanche 24/7 (obs #22553). Check inbox regularly. Reply to Colby.
+9. S160: 74 commits. 42 commands (30 CC-independent, 71%). 9/17 primitives. nexus.md v5.3.0. Julian returned (obs #22232).
 
 ## Session 156 Continued — Bug Fixes
 - **Archon Alert stale 03/22 FIXED**: Blockers 10/11/13/21 had no ~~ strikethrough. Added ~~ to STATE.md + cc_context_snapshot.md. Now only items 16/17/18 (genuinely open) appear in archon alerts.
