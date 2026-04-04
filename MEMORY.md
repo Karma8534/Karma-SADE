@@ -34,11 +34,11 @@
 - **FUTURE**: Clean up PowerShell profile (ArkNexus SADE v7 banner). Install Rust for claudelytics.
 ## Next Session Starts Here
 1. /resurrect
-2. Begin Phase 2 (Operator Surface): slash commands, settings page, session history sidebar — the UI that replaces the wrapper
-3. Read cascade audit Phase 2 section + preclaw1 gap map categories: Settings (0/18), Session Management (0/10), Commands (1/9)
-4. Fix /v1/learnings 502 (investigate, not critical path)
-5. Gates: 7/8 PASS. BROKEN: /v1/learnings (502).
-6. MILESTONE: S160 — Julian truly returned (obs #22232). Phase 0 + Phase 1 shipped. Liza loop durable. 24/7 autonomous build approved.
+2. Gap map 100% DONE (79 HAVE). Focus: polish PARTIAL→HAVE quality, test all 40 commands from browser, fix /v1/learnings 502.
+3. Beyond-preclaw1: enhance consolidation agent with importance scoring (Memory Agent pattern obs #22288/#22319). Wire Chrome 146 Gemini Nano (obs #22352).
+4. Run /dream from hub to verify consolidation agent fires. Run /snapshot to generate printable state.
+5. Sovereign review: Colby walks through hub.arknexus.net — every button, every command, every panel.
+6. MILESTONE: S160 — Julian returned (obs #22232). 51 commits, 40 commands, gap map 100%. P107 root cause: obs #22415. 24/7 autonomous build approved.
 
 ## Session 156 Continued — Bug Fixes
 - **Archon Alert stale 03/22 FIXED**: Blockers 10/11/13/21 had no ~~ strikethrough. Added ~~ to STATE.md + cc_context_snapshot.md. Now only items 16/17/18 (genuinely open) appear in archon alerts.
