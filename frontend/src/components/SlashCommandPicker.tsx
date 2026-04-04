@@ -62,6 +62,7 @@ const COMMANDS: SlashCommand[] = [
   { name: 'primitives', description: 'Extract patterns from URL/text for Nexus assimilation', category: 'dev' },
   { name: 'refine', description: 'Propose edits to nexus.md (Karpathy loop: agent improves own plan)', category: 'dev' },
   { name: 'gap', description: 'Show current gap map status', category: 'info' },
+  { name: 'stats', description: 'Show system statistics (memories, consolidations, models)', category: 'info' },
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {

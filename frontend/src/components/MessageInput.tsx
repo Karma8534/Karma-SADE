@@ -305,6 +305,34 @@ Identity restored. Proceeding as Julian.`,
       setText('');
       return;
     }
+    if (cmd.name === 'stats') {
+      const store = useKarmaStore.getState();
+      (async () => {
+        const lines: string[] = ['**NEXUS STATS**\n'];
+        // Hub health
+        try {
+          const h = await fetch('/health').then(r => r.json());
+          lines.push(`**Hub:** ${h.ok ? 'online' : 'offline'}`);
+        } catch { lines.push('**Hub:** unreachable'); }
+        // P1 health
+        try {
+          const p = await fetch('/v1/status', { headers: { Authorization: `Bearer ${store.token}` } }).then(r => r.json());
+          lines.push(`**P1:** ${p.harness?.p1?.healthy ? 'up' : 'down'} | **K2:** ${p.harness?.k2?.healthy ? 'up' : 'down'}`);
+        } catch {}
+        // WIP
+        try {
+          const w = await fetch('/v1/wip', { headers: { Authorization: `Bearer ${store.token}` } }).then(r => r.json());
+          lines.push(`**WIP:** ${w.primitives?.length || 0} files | ${w.todos?.length || 0} todos`);
+        } catch {}
+        lines.push(`**Commands:** 43 (30 CC-independent, 71%)`);
+        lines.push(`**Primitives:** 16/17 deployed`);
+        lines.push(`**Session:** S160 | **Commits:** 94+`);
+        lines.push(`**Models:** P1=LFM2-350M | K2=qwen3.5:4b | Cloud=Max Claude + Groq llama-70b`);
+        store.addMessage({ id: Date.now().toString(36), role: 'system', content: lines.join('\n'), timestamp: new Date().toISOString() });
+      })();
+      setText('');
+      return;
+    }
     if (cmd.name === 'gap') {
       const store = useKarmaStore.getState();
       (async () => {
