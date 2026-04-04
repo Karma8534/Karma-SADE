@@ -124,7 +124,7 @@ class SmartRouter:
         k2_url = os.environ.get("K2_OLLAMA_URL", "http://100.75.109.92:11434")
         p1_url = os.environ.get("P1_OLLAMA_URL", "http://localhost:11434")
         k2_model = os.environ.get("K2_OLLAMA_MODEL", "qwen3:8b")
-        p1_model = os.environ.get("P1_OLLAMA_MODEL", "gemma3:4b")
+        p1_model = os.environ.get("P1_OLLAMA_MODEL", "sam860/LFM2:350m")
 
         self.providers = [
             Provider("k2-ollama", 0, k2_url, k2_model),
