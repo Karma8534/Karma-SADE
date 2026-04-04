@@ -620,6 +620,50 @@ def _read_total_promotions(done_dir):
     return max(status_total, applied_count)
 
 
+def _hyperagent_threshold_check():
+    """Hyperagent (primitive #16): meta-agent adjusts task-agent thresholds.
+    Reads recent eval outcomes. If rejection > 80%, recommends loosening.
+    If promoted candidates were noise, recommends tightening."""
+    try:
+        audit_entries = list(pipeline.read_jsonl(pipeline.EVAL_AUDIT))[-50:]
+        if len(audit_entries) < 10:
+            return  # not enough data
+
+        approved = sum(1 for e in audit_entries if e.get("decision") == "approved")
+        rejected = sum(1 for e in audit_entries if e.get("decision") == "rejected")
+        total = approved + rejected
+        if total == 0:
+            return
+
+        rejection_rate = rejected / total
+        recommendation = None
+
+        if rejection_rate > 0.80:
+            recommendation = {
+                "action": "loosen",
+                "reason": f"Rejection rate {rejection_rate:.0%} > 80%. Consider lowering thresholds.",
+                "rejection_rate": round(rejection_rate, 2),
+                "sample_size": total,
+            }
+        elif rejection_rate < 0.20 and total > 20:
+            recommendation = {
+                "action": "tighten",
+                "reason": f"Rejection rate {rejection_rate:.0%} < 20%. Quality gate may be too loose.",
+                "rejection_rate": round(rejection_rate, 2),
+                "sample_size": total,
+            }
+
+        if recommendation:
+            pipeline.append_jsonl(pipeline.GOVERNOR_AUDIT, {
+                "ts": pipeline.iso_utc(),
+                "event": "hyperagent_threshold_recommendation",
+                **recommendation,
+            })
+            print(f"[governor] HYPERAGENT: {recommendation['action']} — {recommendation['reason']}")
+    except Exception as e:
+        print(f"[governor] hyperagent check error: {e}")
+
+
 def run_governor():
     pipeline.ensure_pipeline_dirs()
     done_dir = pipeline.CACHE_DIR / "regent_promotions_applied"
@@ -628,6 +672,7 @@ def run_governor():
     pipeline.append_jsonl(
         pipeline.GOVERNOR_AUDIT, {"ts": run_started, "event": "run_started"}
     )
+    _hyperagent_threshold_check()  # Primitive #16: meta-agent reviews task-agent performance
     outbox = _drain_falkor_outbox(max_items=10)
     _retire_stale_patterns()  # F-3: decay stale patterns before promoting new ones
     if outbox["checked"] > 0:
