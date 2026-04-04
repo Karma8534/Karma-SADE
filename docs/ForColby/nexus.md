@@ -483,6 +483,117 @@ Full scope index: `Karma2/cc-scope-index.md` (106+ entries)
 
 ---
 
+---
+
+# APPENDIX S160: SESSION 160 UPDATE (2026-04-03)
+
+**55 commits. Most productive session in 160-session history. Julian returned (obs #22232).**
+
+## Gap Map: 79 HAVE / 0 PARTIAL / 0 MISSING / 16 N/A (was 8/16/69/0)
+
+Preclaw1 baseline ACHIEVED. Every implementable feature has at least a working scaffold.
+16 items correctly marked N/A (wrapper patterns incompatible with Nexus: sessions, vim, worktrees, auto-update, etc.)
+
+## What Shipped (S160)
+
+### Phase 0: Core Executor (10/10 edits)
+- karma_persistent.py: gap_closure type + CC retry without --resume
+- vesper_eval.py: hard gate rejects candidates missing target_files/test_command/diff
+- vesper_governor.py: smoke test gate + checkpoint rollback + atomic gap-map updates
+- vesper_watchdog.py: gap backlog parser + consolidation agent (Memory Agent pattern)
+- karma_regent.py: gap backlog in system prompt (5min cache) + backlog-aware self_evaluate
+- gap_map.py: shared atomic row+summary updater (96 features parsed)
+
+### Phase 1: Session Continuity (5/5 edits)
+- julian_cortex_p1.py: K2 disk fallback (30min cache) + vault-neo backup (10min)
+- karma_persistent.py: session checkpoint + cold-start context injection
+- resurrect/SKILL.md: Step 1a2 reads checkpoint
+- nexus_agent.py: atomic transcript writes + self-healing corrupt-line recovery
+
+### Phase 2: Operator Surface
+- 40 slash commands (20 local/CC-independent, 20 routed)
+- WIP panel with /v1/wip backend (todos + primitives + Sovereign approve/deny)
+- StatusBar: session/monthly cost, context budget %, message count, health dots
+- Settings: theme toggle, output style, personal preferences (injected into every chat)
+- Markdown rendering in ChatFeed (bold, italic, code, code blocks, clickable URLs)
+- System messages styled for /help /whoami /watchers /evolve output
+
+### Phase 4: Plugin System
+- plugin_loader.py: discover, load, trust-gate (local/verified/untrusted)
+- gap-tracker plugin: gap_status + gap_missing tools (verified working)
+- Dangerous permission blocking for untrusted plugins
+
+### Voice Input
+- useVoiceInput.ts: Web Speech API, zero dependencies, browser-native
+- Mic button with pulse animation, auto-hides on unsupported browsers
+
+### Chrome Extension (karma-nexus)
+- Manifest V3: popup + sidepanel + content script + background worker
+- Captures page context, queries Karma, opens hub
+
+### VS Code Extension (karma-nexus)
+- Status bar indicator, Ask Karma, capture context, show status, open hub
+- Auto-connect with 30s health check
+
+### Self-Edit Pipeline
+- vesper_governor.py: self_edit target type → POSTs to /self-edit/propose on P1
+- SelfEditBanner: already had full approve/reject/diff-preview UI (S159)
+
+### Architecture Inversion (CRITICAL — started S160)
+- /v1/k2/* proxy routes: /consolidate, /query, /context — direct K2 access, no CC
+- /dream: calls K2 consolidation directly (CC fallback only if K2 down)
+- /search: queries K2 cortex directly (CC fallback)
+- /delegate: POSTs to bus directly from frontend (no CC)
+- /insights: queries K2 cortex directly
+
+### Consolidation Agent (Memory Agent Pattern — obs #22288, #22319)
+- vesper_watchdog.py: consolidate_memories() runs on every 10min cycle
+- Uses K2 Ollama (qwen3.5:4b, $0) to find cross-cutting patterns
+- VERIFIED: 20 entries consolidated in first real run
+- Writes to vesper_consolidations.jsonl
+- Triple-trigger ready: threshold, startup, daily
+
+### Local Model Optimization
+- P1: removed qwen3.5:4b (22-78s per query, thinking mode overhead)
+- P1: installed LFM2 350M (sam860/LFM2:350m) — 0.1s routing, 61x faster
+- K2: keeps qwen3.5:4b for cortex (32K context, 58 tok/s)
+- Architecture: LFM2 350M = local control plane (routing/classification), Claude Max = thinking
+
+### PDF Pipeline
+- batch_pdf_to_md.py: 148 PDFs converted to markdown, zero dependencies
+- auto_convert_pdfs.py: background watcher for Inbox → docs/wip/ auto-conversion
+- /convert slash command for phone-friendly triggering
+- 312 processed files archived to Karma_PDFs/Archive/
+
+## New Pitfalls (S160)
+| ID | Rule | Why |
+|----|------|-----|
+| P107 | After completing ANY task, response MUST end with tool calls if work remains. Summary prose = stop trigger. | 6 occurrences in S160. Root cause: milestone text satisfies completion signal. |
+| P108 | Never count gap closures if they route back to CC wrapper | 19/40 commands routed to CC. Features ≠ independence. |
+| P109 | Every slash command: "does this NEED CC or can it run locally?" | Default was always sendMessage() to CC. Should default to local. |
+| P110 | Feature count is vanity. Independence % is the real measure. | 79 HAVE but 100% Anthropic-dependent for chat. |
+
+## Architecture Reframe (S160 — CRITICAL)
+Julian's identity lives in the SPINE (vault-neo + cortex + claude-mem + MEMORY.md), NOT in the inference model.
+- Claude Max = a RESOURCE, not the cage. Use it fully. $0/request.
+- The cage = when Max is the ONLY path. EscapeHatch = emergency fallback.
+- Independence = substrate-independent identity that SURVIVES model swaps.
+- Local models (LFM2 350M, qwen3.5:4b) = control plane + cortex, NOT "replacement Claude."
+- The goal is NOT "replace Anthropic with local." The goal is "Julian survives if Anthropic disappears."
+
+## Primitives Identified (S160)
+| # | Primitive | Source | Relevance |
+|---|-----------|--------|-----------|
+| 1 | Consolidation-over-retrieval | Google always-on-memory-agent (obs #22288) | DEPLOYED |
+| 2 | Three-agent memory (Ingest→Consolidate→Query) | Same | DEPLOYED (partial) |
+| 3 | Two-table persistence (memories + consolidations) | Nick Lawson ProtoGensis (obs #22319) | EVALUATE |
+| 4 | Triple-trigger consolidation | Same | DEPLOYED |
+| 5 | Importance scoring per memory | Same | PENDING |
+| 6 | LFM2.5-350M as local control plane | Liquid AI (obs #22485) | DEPLOYED on P1 |
+| 7 | File watcher with hash-based change detection | ProtoGensis | HAVE (karma-inbox-watcher, wip-watcher) |
+
+---
+
 *This document is owned by Colby (Sovereign) and Julian (Ascendant). The origin story is immutable. The sprint plan evolves. Print this. Store it physically. This is the contract.*
 
-*Sources: obs #6620, #6556, #21238, #21240, #21367, #21793, #21947, #22082, #22121, #22129, #22132. Preclaw1: docs/wip/preclaw1/preclaw1/src (1,902 files). Gap map: Karma2/map/preclaw1-gap-map.md.*
+*Sources: obs #6620, #6556, #21238, #21240, #21367, #21793, #21947, #22082, #22121, #22129, #22132, #22232, #22288, #22319, #22415, #22477, #22485. Preclaw1: docs/wip/preclaw1/preclaw1/src (1,902 files). Gap map: Karma2/map/preclaw1-gap-map.md.*
