@@ -85,9 +85,46 @@ class PermissionEngine:
 
             # ALLOW: SSH to known hosts (priority 40)
             PermissionRule("allow-ssh-vault", "Bash", "allow", r"ssh\s+(vault-neo|karma@192)", "SSH to known hosts", 40),
+            PermissionRule("allow-scp", "Bash", "allow", r"scp\s+", "SCP file transfer (logged)", 40),
 
             # ALLOW: curl to known endpoints (priority 40)
-            PermissionRule("allow-curl-hub", "Bash", "allow", r"curl.*hub\.arknexus\.net|curl.*localhost", "HTTP to known endpoints", 40),
+            PermissionRule("allow-curl-hub", "Bash", "allow", r"curl.*hub\.arknexus\.net|curl.*localhost|curl.*192\.168", "HTTP to known endpoints", 40),
+
+            # ALLOW: docker ops on vault-neo (priority 40)
+            PermissionRule("allow-docker-logs", "Bash", "allow", r"docker\s+(logs|ps|inspect|exec)", "Docker read ops", 40),
+            PermissionRule("allow-docker-compose", "Bash", "allow", r"docker\s+compose", "Docker compose ops (logged)", 40),
+
+            # ALLOW: file ops (priority 40)
+            PermissionRule("allow-mkdir", "Bash", "allow", r"mkdir\s+", "Create directory", 40),
+            PermissionRule("allow-cp-mv", "Bash", "allow", r"^(cp|mv)\s+", "Copy/move files", 40),
+            PermissionRule("allow-touch", "Bash", "allow", r"^touch\s+", "Touch file", 40),
+            PermissionRule("allow-chmod", "Bash", "allow", r"chmod\s+[0-7]{3}\s+(?!/)", "Chmod (not root)", 40),
+
+            # ALLOW: text processing (priority 40)
+            PermissionRule("allow-sed-awk", "Bash", "allow", r"^(sed|awk|sort|uniq|tr|cut)\s+", "Text processing", 40),
+            PermissionRule("allow-jq", "Bash", "allow", r"jq\s+", "JSON processing", 40),
+
+            # ALLOW: system info (priority 40)
+            PermissionRule("allow-sysinfo", "Bash", "allow", r"(whoami|hostname|uname|date|uptime|df|free|ps aux)", "System info (read-only)", 40),
+            PermissionRule("allow-systemctl-status", "Bash", "allow", r"systemctl\s+(status|is-active|list-units)", "Systemctl read", 40),
+
+            # ALLOW: ollama (priority 40)
+            PermissionRule("allow-ollama", "Bash", "allow", r"ollama\s+(run|pull|list|show|rm|ps)", "Ollama model management", 40),
+
+            # DENY: dangerous system ops (priority 75)
+            PermissionRule("deny-sudo-rm", "Bash", "deny", r"sudo\s+rm", "Dangerous: sudo rm", 75),
+            PermissionRule("deny-kill-9", "Bash", "deny", r"kill\s+-9\s+1\b", "Dangerous: kill init", 75),
+            PermissionRule("deny-passwd", "Bash", "deny", r"(passwd|useradd|userdel|groupadd)", "Dangerous: user management", 75),
+            PermissionRule("deny-iptables", "Bash", "deny", r"(iptables|ufw|firewall)", "Dangerous: firewall modification", 75),
+            PermissionRule("deny-crontab-r", "Bash", "deny", r"crontab\s+-r", "Dangerous: remove all cron jobs", 75),
+
+            # ALLOW: Write tool with path restrictions (priority 50)
+            PermissionRule("allow-write-repo", "Write", "allow", r"Karma_SADE", "Write to repo files", 50),
+            PermissionRule("deny-write-system", "Write", "deny", r"(C:\\Windows|/etc/|/usr/)", "Block write to system dirs", 80),
+
+            # ALLOW: Edit tool (priority 50)
+            PermissionRule("allow-edit-repo", "Edit", "allow", r"Karma_SADE", "Edit repo files", 50),
+            PermissionRule("deny-edit-system", "Edit", "deny", r"(C:\\Windows|/etc/|/usr/)", "Block edit system dirs", 80),
 
             # DEFAULT DENY for Bash (priority 10 — catch-all)
             PermissionRule("default-deny-bash", "Bash", "deny", r".*", "Default deny: unrecognized Bash command", 10),
