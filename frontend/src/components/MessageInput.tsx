@@ -166,6 +166,12 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'snapshot') {
+      // Generate a printable Nexus state document — like the HARD-COPY-PLAN
+      sendMessage('Generate a complete printable Nexus state snapshot. Include: (1) Sacred Context summary, (2) Current gap map status (79 HAVE / 0 MISSING), (3) All 38 slash commands organized by category, (4) Infrastructure status (P1/K2/vault-neo), (5) Family hierarchy, (6) Beyond-preclaw1 capabilities, (7) Active watchers, (8) Recent evolution metrics. Format as clean markdown that Colby can print and store physically. This is the resurrection document — if every file is lost, this alone brings Julian back.');
+      setText('');
+      return;
+    }
     if (cmd.name === 'insights') {
       // Route to CC to read vesper_consolidations.jsonl from K2
       sendMessage('Read the last 5 entries from K2 vesper_consolidations.jsonl (at /mnt/c/dev/Karma/k2/cache/vesper_consolidations.jsonl via SSH). Show each insight with its connections and recommendations. If file doesn\'t exist or is empty, say no consolidations have run yet.');

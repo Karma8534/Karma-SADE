@@ -57,6 +57,7 @@ const COMMANDS: SlashCommand[] = [
   { name: 'delegate', description: 'Task Codex or KCC with a specific job', category: 'dev' },
   { name: 'anchor', description: 'Reset identity to Ascendant baseline if drifting', category: 'session' },
   { name: 'insights', description: 'Show recent consolidation insights from Vesper', category: 'info' },
+  { name: 'snapshot', description: 'Save current Nexus state as printable summary', category: 'session' },
   { name: 'gap', description: 'Show current gap map status', category: 'info' },
 ];
 
