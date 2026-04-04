@@ -197,6 +197,12 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'refine') {
+      // Karpathy loop: agent proposes edits to its own plan
+      sendMessage('/refine — Read docs/ForColby/nexus.md. Identify ONE specific improvement based on what you learned this session. Propose a surgical APPEND ONLY edit. Show the exact text to add. The Sovereign will approve or reject. This is the Karpathy loop — you are programming the program.');
+      setText('');
+      return;
+    }
     if (cmd.name === 'primitives') {
       sendMessage('/primitives — Extract architectural patterns and techniques from a source for assimilation into the Nexus. I will ask for a URL, file path, or pasted text. Score relevance (HIGH/MEDIUM/LOW), save HIGH items to claude-mem, and recommend which to build.');
       setText('');

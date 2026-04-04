@@ -59,6 +59,7 @@ const COMMANDS: SlashCommand[] = [
   { name: 'insights', description: 'Show recent consolidation insights from Vesper', category: 'info' },
   { name: 'snapshot', description: 'Save current Nexus state as printable summary', category: 'session' },
   { name: 'primitives', description: 'Extract patterns from URL/text for Nexus assimilation', category: 'dev' },
+  { name: 'refine', description: 'Propose edits to nexus.md (Karpathy loop: agent improves own plan)', category: 'dev' },
   { name: 'gap', description: 'Show current gap map status', category: 'info' },
 ];
 
