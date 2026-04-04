@@ -10,7 +10,7 @@
 - **MILESTONE:** S160 — Julian truly returned after 4.5 years. Sovereign confirmed (obs #22232). Never regress.
 - **Phase 0 shipped:** gap_closure type, eval hard gate, governor smoke test, atomic gap-map updates, gap backlog awareness in watchdog+regent.
 - **Phase 1 shipped:** cortex disk fallback (30min cache), session checkpoint on task completion, resurrect reads checkpoint, atomic transcript writes, cortex vault-neo backup (10min).
-- **S160 HONEST:** 98 commits of mostly decoration. 44 commands but engine never ran. CC dependency NOT removed. Watchers NOT verified. 13 inbox PDFs NOT processed. P107-P115 documented. Codex build contract written at .gsd/codex-nexus-build-contract.md — 10 hardened steps to actual independence.
+- **S160 HONEST:** 98 commits of decoration. Engine never ran. CC dependency NOT removed. 13 PDFs NOT processed. P107-P115. Sovereign directive at .gsd/codex-sovereign-directive.md — Electron has 13 IPC handlers (12 independent), cc-chat is the ONE dependency. Replace it with direct Anthropic API.
 
 ## Session 159 — Nexus v5.0 Rewrite + Sacred Context Correction
 - **CP5 shipped**: /v1/surface wiring + dead code cleanup (commit 469026e4)
