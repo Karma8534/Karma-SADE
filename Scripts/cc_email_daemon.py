@@ -36,7 +36,7 @@ PERSONAL_SENT_FILE = LOGS / "cc_email_personal_last.txt"
 SPINE_VER_FILE     = LOGS / "cc_email_spine_version.txt"
 
 # ── Config ────────────────────────────────────────────────────────────────────
-STATUS_INTERVAL_H  = 4       # hours between status emails
+STATUS_INTERVAL_H  = 8       # hours between status emails (was 4, Sovereign said too frequent)
 PERSONAL_IDLE_H    = 8       # hours before idle personal check-in fires
 OLLAMA_URL         = "http://localhost:11434/v1/chat/completions"
 OLLAMA_MODEL       = "llama3.1:8b"
