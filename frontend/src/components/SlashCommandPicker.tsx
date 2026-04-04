@@ -15,6 +15,7 @@ const COMMANDS: SlashCommand[] = [
   { name: 'clear', description: 'Clear conversation history', category: 'session', aliases: ['reset', 'new'] },
   { name: 'compact', description: 'Summarize and compress session context', category: 'session' },
   { name: 'export', description: 'Export conversation to file', category: 'session' },
+  { name: 'evolve', description: 'Show Karma evolution metrics + spine version + growth markers', category: 'info' },
   { name: 'resume', description: 'Resume a previous session', category: 'session', aliases: ['continue'] },
 
   // Tools

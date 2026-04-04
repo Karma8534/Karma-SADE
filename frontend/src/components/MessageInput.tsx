@@ -75,6 +75,50 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'evolve') {
+      const store = useKarmaStore.getState();
+      // Fetch evolution data from K2 cortex + surface
+      (async () => {
+        let evolveText = 'Fetching evolution state...';
+        try {
+          const res = await fetch('/v1/status', {
+            headers: { Authorization: `Bearer ${store.token}` },
+          });
+          if (res.ok) {
+            const d = await res.json();
+            const spine = d.spine_version || '?';
+            const promotions = d.total_promotions || '?';
+            const kiki = d.kiki_cycles || '20900+';
+            evolveText = `**EVOLUTION**
+
+**Spine:** v${spine} | **Promotions:** ${promotions} | **Kiki cycles:** ${kiki}
+**Vesper Pipeline:** watchdog (10min) + eval (5min) + governor (2min) + consolidation
+**Self-Edit:** active — proposals surface in SelfEditBanner
+**Consolidation:** Memory Agent pattern — finds cross-cutting insights
+
+**Beyond Preclaw1:**
+  Self-edit pipeline (observe → evaluate → propose → approve → apply)
+  Memory consolidation (/dream — sleeping brain pattern)
+  Gap-map aware executor (atomic row+summary updates)
+  Plugin system with 3-tier trust gates
+  Voice input (Web Speech API, zero dependency)
+  148 PDFs auto-converted to searchable markdown
+  Durable Liza loop (identity + direction + Nexus goal check)
+
+**The Formula:** Continuity + self-improvement = infinity.`;
+          }
+        } catch {
+          evolveText = '**EVOLUTION** — could not reach status endpoint';
+        }
+        store.addMessage({
+          id: Date.now().toString(36), role: 'system',
+          content: evolveText,
+          timestamp: new Date().toISOString(),
+        });
+      })();
+      setText('');
+      return;
+    }
     if (cmd.name === 'usage') {
       const store = useKarmaStore.getState();
       const chars = store.messages.reduce((s, m) => s + (m.content?.length || 0), 0);
