@@ -868,8 +868,10 @@ const server = http.createServer(async (req, res) => {
       const needsTools = /\b(edit|write|create|deploy|commit|push|install|run|execute|build|fix|modify|delete|restart|read file|ssh|curl)\b/i.test(msgLower);
       const isSlashCmd = message.startsWith("/");
 
-      if (isShort && isQuestion && !needsTools && !isSlashCmd && !body.files) {
-        // Tier 1: Try K2 cortex first for simple questions ($0)
+      const isVeryShort = message.length < 80;
+
+      if (isVeryShort && isQuestion && !needsTools && !isSlashCmd && !body.files) {
+        // Tier 1: K2 cortex for very short factual questions ($0, fast for lookups)
         try {
           const cortexRes = await fetch(`${K2_CORTEX}/query`, {
             method: "POST",
@@ -910,7 +912,7 @@ const server = http.createServer(async (req, res) => {
         }
         if (!groqKey) try { groqKey = process.env.GROQ_API_KEY || ""; } catch {}
 
-        if (groqKey && !needsTools) {
+        if (groqKey && isShort && isQuestion && !needsTools && !isSlashCmd && !body.files) {
           try {
             const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
               method: "POST",
