@@ -161,6 +161,16 @@ export function MessageInput() {
       setText('');
       return;
     }
+    if (cmd.name === 'learn') {
+      sendMessage('Review this conversation. Extract every DECISION, PROOF, PITFALL, DIRECTION, and INSIGHT. Save each one to claude-mem with the appropriate title tag. Then summarize what you learned.');
+      setText('');
+      return;
+    }
+    if (cmd.name === 'improve') {
+      sendMessage('Run a Vesper self-improvement cycle: read your self-evolution rules, check for violations in recent work, propose fixes, and update the rules file if you learned something new.');
+      setText('');
+      return;
+    }
     if (cmd.name === 'dream') {
       // Trigger consolidation — Karma reasons over her own memories
       const store = useKarmaStore.getState();

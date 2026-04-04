@@ -48,6 +48,8 @@ const COMMANDS: SlashCommand[] = [
   { name: 'agents', description: 'Show agent status', category: 'tools' },
   { name: 'memory', description: 'Search persistent memory', category: 'tools' },
   { name: 'dream', description: 'Trigger memory consolidation (find patterns, generate insights)', category: 'tools' },
+  { name: 'learn', description: 'Extract lessons from this conversation and save to memory', category: 'tools' },
+  { name: 'improve', description: 'Trigger Vesper self-improvement cycle', category: 'tools' },
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
