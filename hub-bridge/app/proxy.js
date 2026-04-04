@@ -871,9 +871,19 @@ const server = http.createServer(async (req, res) => {
             const cortexData = await cortexRes.json();
             const answer = cortexData.answer || "";
             if (answer && !answer.includes("CORTEX ERROR") && answer.length > 20) {
-              // K2 cortex answered — return directly, skip CC entirely
+              // K2 cortex answered — skip CC entirely
               const assistantText = answer;
               postResponseSideEffects({ message, assistantText, sessionId, costUsd: 0, model: "k2-cortex" });
+
+              if (body.stream === true) {
+                // SSE format for streaming clients
+                res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive", "Access-Control-Allow-Origin": "*" });
+                res.write(`data: ${JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text: assistantText }], model: "k2-cortex" } })}\n\n`);
+                res.write(`data: ${JSON.stringify({ type: "message_stop" })}\n\n`);
+                res.end();
+                return;
+              }
+
               return json(res, 200, {
                 ok: true, response: assistantText, assistant_text: assistantText,
                 model: "k2-cortex", routing: "local-first", cost_usd: 0,
