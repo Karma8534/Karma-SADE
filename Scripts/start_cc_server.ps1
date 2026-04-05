@@ -1,4 +1,10 @@
+param(
+    [switch]$HiddenRelaunch
+)
+
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "HiddenRelaunch.ps1")
+Invoke-HiddenRelaunchIfNeeded -ScriptPath $PSCommandPath -HiddenRelaunch:$HiddenRelaunch
 
 $scriptPath = Join-Path $PSScriptRoot "Start-CCServer.ps1"
 

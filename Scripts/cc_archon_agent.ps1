@@ -15,7 +15,14 @@
     Task: CC-Anchor-Ascendant (update to 30min interval)
 #>
 
+param(
+    [switch]$HiddenRelaunch
+)
+
 $ErrorActionPreference = "Continue"
+. (Join-Path $PSScriptRoot "HiddenRelaunch.ps1")
+Invoke-HiddenRelaunchIfNeeded -ScriptPath $PSCommandPath -HiddenRelaunch:$HiddenRelaunch
+
 $LogFile = "C:\Users\raest\Documents\Karma_SADE\Logs\cc_archon_agent.log"
 $SnapshotFile = "C:\Users\raest\Documents\Karma_SADE\cc_context_snapshot.md"
 $ClaudeMemUrl = "http://localhost:37777"

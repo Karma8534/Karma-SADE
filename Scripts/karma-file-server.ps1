@@ -1,11 +1,32 @@
 param(
     [string]$BaseDir  = 'C:\Users\raest\Documents\Karma_SADE',
     [string]$BindAddr = 'http://+:7771/',
-    [string]$TokenFile = 'C:\Users\raest\Documents\Karma_SADE\.local-file-token'
+    [string]$TokenFile = 'C:\Users\raest\Documents\Karma_SADE\.local-file-token',
+    [switch]$HiddenRelaunch
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot "HiddenRelaunch.ps1")
+Invoke-HiddenRelaunchIfNeeded -ScriptPath $PSCommandPath -HiddenRelaunch:$HiddenRelaunch -ExtraArgs @(
+    "-BaseDir", $BaseDir,
+    "-BindAddr", $BindAddr,
+    "-TokenFile", $TokenFile
+)
+
 Add-Type -AssemblyName System.Web
+$MutexName = 'Global\KarmaFileServer'
+$serverMutex = New-Object System.Threading.Mutex($false, $MutexName)
+$hasServerHandle = $false
+try {
+    $hasServerHandle = $serverMutex.WaitOne(0, $false)
+} catch [System.Threading.AbandonedMutexException] {
+    $hasServerHandle = $true
+}
+
+if (-not $hasServerHandle) {
+    Write-Output "[karma-file-server] Another instance already owns $MutexName. Exiting."
+    exit 0
+}
 
 # Load token from file (never hardcode)
 if (-not (Test-Path $TokenFile)) {
@@ -118,3 +139,8 @@ while ($listener.IsListening) {
         try { $res.OutputStream.Close() } catch {}
     }
 }
+
+if ($hasServerHandle) {
+    $serverMutex.ReleaseMutex() | Out-Null
+}
+$serverMutex.Dispose()

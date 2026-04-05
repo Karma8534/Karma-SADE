@@ -36,30 +36,60 @@ param(
     [int]$MaxRetries                = 3,    # max attempts per file before jamming
     [int]$RateLimitBackoffSec       = 60,   # seconds to wait after a 429 before retrying
     [int]$ProcessingWindowStart     = 0,    # hour (0-23) batch window opens; 0 = no restriction
-    [int]$ProcessingWindowEnd       = 0     # hour (0-23) batch window closes; 0 = no restriction
+    [int]$ProcessingWindowEnd       = 0,    # hour (0-23) batch window closes; 0 = no restriction
+    [switch]$HiddenRelaunch
 )
 
 $ErrorActionPreference = "Continue"
+. (Join-Path $PSScriptRoot "HiddenRelaunch.ps1")
+Invoke-HiddenRelaunchIfNeeded -ScriptPath $PSCommandPath -HiddenRelaunch:$HiddenRelaunch -ExtraArgs @(
+    "-InboxPath", $InboxPath,
+    "-ProcessingPath", $ProcessingPath,
+    "-DonePath", $DonePath,
+    "-GatedPath", $GatedPath,
+    "-HubUrl", $HubUrl,
+    "-TokenFile", $TokenFile,
+    "-IngestDelaySec", $IngestDelaySec.ToString(),
+    "-MaxRetries", $MaxRetries.ToString(),
+    "-RateLimitBackoffSec", $RateLimitBackoffSec.ToString(),
+    "-ProcessingWindowStart", $ProcessingWindowStart.ToString(),
+    "-ProcessingWindowEnd", $ProcessingWindowEnd.ToString()
+)
 
-# Verify paths
-foreach ($p in @($InboxPath, $ProcessingPath, $DonePath, $GatedPath)) {
-    if (-not (Test-Path $p)) {
-        New-Item -ItemType Directory -Path $p -Force | Out-Null
-        Write-Host "[INIT] Created: $p"
+$MutexName = "Global\KarmaInboxWatcher"
+$watcherMutex = New-Object System.Threading.Mutex($false, $MutexName)
+$hasWatcherHandle = $false
+try {
+    $hasWatcherHandle = $watcherMutex.WaitOne(0, $false)
+} catch [System.Threading.AbandonedMutexException] {
+    $hasWatcherHandle = $true
+}
+
+if (-not $hasWatcherHandle) {
+    Write-Host "[INIT] Another Karma inbox watcher already owns $MutexName. Exiting."
+    exit 0
+}
+
+try {
+    # Verify paths
+    foreach ($p in @($InboxPath, $ProcessingPath, $DonePath, $GatedPath)) {
+        if (-not (Test-Path $p)) {
+            New-Item -ItemType Directory -Path $p -Force | Out-Null
+            Write-Host "[INIT] Created: $p"
+        }
     }
-}
 
-# Load Bearer token
-if (-not (Test-Path $TokenFile)) {
-    Write-Error "Token file not found: $TokenFile"
-    exit 1
-}
-$token = (Get-Content $TokenFile -Raw).Trim()
+    # Load Bearer token
+    if (-not (Test-Path $TokenFile)) {
+        Write-Error "Token file not found: $TokenFile"
+        exit 1
+    }
+    $token = (Get-Content $TokenFile -Raw).Trim()
 
-$SUPPORTED_EXTENSIONS = @('.pdf', '.PDF', '.txt', '.md', '.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.gif', '.GIF', '.webp', '.WEBP')
+    $SUPPORTED_EXTENSIONS = @('.pdf', '.PDF', '.txt', '.md', '.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.gif', '.GIF', '.webp', '.WEBP')
 
-# Returns $true on success, $false on terminal failure, $null if jammed (left in Processing for manual recovery)
-function Send-ToKarma {
+    # Returns $true on success, $false on terminal failure, $null if jammed (left in Processing for manual recovery)
+    function Send-ToKarma {
     param(
         [string]$FilePath,
         [switch]$Priority,
@@ -175,10 +205,10 @@ action_required: Move $filename from Processing\ back to $(if ($Priority) { 'Gat
         }
     }
     return $false
-}
+    }
 
-# Waits until the processing window opens (batch only). Returns immediately if no window configured.
-function Wait-ForProcessingWindow {
+    # Waits until the processing window opens (batch only). Returns immediately if no window configured.
+    function Wait-ForProcessingWindow {
     if ($ProcessingWindowStart -eq 0 -and $ProcessingWindowEnd -eq 0) { return }
 
     $now         = Get-Date
@@ -202,45 +232,45 @@ function Wait-ForProcessingWindow {
     Write-Host "[BATCH] Outside processing window ($ProcessingWindowStart`:00–$ProcessingWindowEnd`:00). Waiting $waitMin min until window opens at $($target.ToString('HH:mm'))..."
     Start-Sleep -Seconds ([int](($target - $now).TotalSeconds))
     Write-Host "[BATCH] Processing window open. Starting batch."
-}
+    }
 
-# Process any files already in Inbox at startup (batch — respects time window and IngestDelaySec)
-Write-Host "[INIT] Checking Inbox for existing files..."
-Wait-ForProcessingWindow
-$inboxBatch = @(Get-ChildItem -Path $InboxPath -File | Where-Object {
+    # Process any files already in Inbox at startup (batch — respects time window and IngestDelaySec)
+    Write-Host "[INIT] Checking Inbox for existing files..."
+    Wait-ForProcessingWindow
+    $inboxBatch = @(Get-ChildItem -Path $InboxPath -File | Where-Object {
     $SUPPORTED_EXTENSIONS -contains $_.Extension -and
     -not $_.Name.EndsWith('.error.txt') -and
     -not $_.Name.EndsWith('.verdict.txt') -and
     -not $_.Name.EndsWith('.jammed.txt')
-})
-Write-Host "[BATCH] $($inboxBatch.Count) file(s) in Inbox."
-foreach ($f in $inboxBatch) {
+    })
+    Write-Host "[BATCH] $($inboxBatch.Count) file(s) in Inbox."
+    foreach ($f in $inboxBatch) {
     Send-ToKarma $f.FullName
     Start-Sleep -Seconds $IngestDelaySec
-}
+    }
 
-# Process any files already in Gated at startup
-Write-Host "[INIT] Checking Gated for existing files..."
-$gatedBatch = @(Get-ChildItem -Path $GatedPath -File | Where-Object {
+    # Process any files already in Gated at startup
+    Write-Host "[INIT] Checking Gated for existing files..."
+    $gatedBatch = @(Get-ChildItem -Path $GatedPath -File | Where-Object {
     $SUPPORTED_EXTENSIONS -contains $_.Extension -and
     -not $_.Name.EndsWith('.error.txt') -and
     -not $_.Name.EndsWith('.verdict.txt') -and
     -not $_.Name.EndsWith('.jammed.txt')
-})
-Write-Host "[BATCH] $($gatedBatch.Count) file(s) in Gated."
-foreach ($f in $gatedBatch) {
+    })
+    Write-Host "[BATCH] $($gatedBatch.Count) file(s) in Gated."
+    foreach ($f in $gatedBatch) {
     Send-ToKarma $f.FullName -Priority
     Start-Sleep -Seconds $IngestDelaySec
-}
+    }
 
-# Set up FileSystemWatcher for Inbox (live events — no time-window, no IngestDelaySec)
-$watcher = New-Object System.IO.FileSystemWatcher
-$watcher.Path                  = $InboxPath
-$watcher.Filter                = "*.*"
-$watcher.IncludeSubdirectories = $false
-$watcher.EnableRaisingEvents   = $true
+    # Set up FileSystemWatcher for Inbox (live events — no time-window, no IngestDelaySec)
+    $watcher = New-Object System.IO.FileSystemWatcher
+    $watcher.Path                  = $InboxPath
+    $watcher.Filter                = "*.*"
+    $watcher.IncludeSubdirectories = $false
+    $watcher.EnableRaisingEvents   = $true
 
-$action = {
+    $action = {
     $path = $Event.SourceEventArgs.FullPath
     $ext  = [System.IO.Path]::GetExtension($path).ToLower()
     $name = Split-Path $path -Leaf
@@ -254,18 +284,18 @@ $action = {
     if (Test-Path $path) {
         & $using:function:Send-ToKarma $path -IsLiveEvent
     }
-}
+    }
 
-Register-ObjectEvent -InputObject $watcher -EventName Created -Action $action | Out-Null
+    Register-ObjectEvent -InputObject $watcher -EventName Created -Action $action | Out-Null
 
-# Set up FileSystemWatcher for Gated
-$gatedWatcher = New-Object System.IO.FileSystemWatcher
-$gatedWatcher.Path                  = $GatedPath
-$gatedWatcher.Filter                = "*.*"
-$gatedWatcher.IncludeSubdirectories = $false
-$gatedWatcher.EnableRaisingEvents   = $true
+    # Set up FileSystemWatcher for Gated
+    $gatedWatcher = New-Object System.IO.FileSystemWatcher
+    $gatedWatcher.Path                  = $GatedPath
+    $gatedWatcher.Filter                = "*.*"
+    $gatedWatcher.IncludeSubdirectories = $false
+    $gatedWatcher.EnableRaisingEvents   = $true
 
-$gatedAction = {
+    $gatedAction = {
     $path = $Event.SourceEventArgs.FullPath
     $ext  = [System.IO.Path]::GetExtension($path).ToLower()
     $name = Split-Path $path -Leaf
@@ -278,29 +308,28 @@ $gatedAction = {
     if (Test-Path $path) {
         & $using:function:Send-ToKarma $path -Priority -IsLiveEvent
     }
-}
+    }
 
-Register-ObjectEvent -InputObject $gatedWatcher -EventName Created -Action $gatedAction | Out-Null
+    Register-ObjectEvent -InputObject $gatedWatcher -EventName Created -Action $gatedAction | Out-Null
 
-Write-Host ""
-Write-Host "Karma inbox watcher running."
-Write-Host "  Inbox:         $InboxPath  (entity extraction only)"
-Write-Host "  Gated:         $GatedPath  (entity extraction + queued for Karma review)"
-Write-Host "  Processing:    $ProcessingPath"
-Write-Host "  Done:          $DonePath"
-Write-Host "  Hub:           $HubUrl"
-Write-Host "  Batch delay:   ${IngestDelaySec}s between files"
-Write-Host "  Rate-limit:    backoff ${RateLimitBackoffSec}s, max $MaxRetries retries (then → Processing/*.jammed.txt)"
-if ($ProcessingWindowStart -ne 0 -or $ProcessingWindowEnd -ne 0) {
-    Write-Host "  Batch window:  $ProcessingWindowStart`:00 – $ProcessingWindowEnd`:00 (live events process any time)"
-} else {
-    Write-Host "  Batch window:  unrestricted"
-}
-Write-Host "Press Ctrl+C to stop."
-Write-Host ""
+    Write-Host ""
+    Write-Host "Karma inbox watcher running."
+    Write-Host "  Inbox:         $InboxPath  (entity extraction only)"
+    Write-Host "  Gated:         $GatedPath  (entity extraction + queued for Karma review)"
+    Write-Host "  Processing:    $ProcessingPath"
+    Write-Host "  Done:          $DonePath"
+    Write-Host "  Hub:           $HubUrl"
+    Write-Host "  Batch delay:   ${IngestDelaySec}s between files"
+    Write-Host "  Rate-limit:    backoff ${RateLimitBackoffSec}s, max $MaxRetries retries (then -> Processing/*.jammed.txt)"
+    if ($ProcessingWindowStart -ne 0 -or $ProcessingWindowEnd -ne 0) {
+        Write-Host "  Batch window:  $ProcessingWindowStart`:00 – $ProcessingWindowEnd`:00 (live events process any time)"
+    } else {
+        Write-Host "  Batch window:  unrestricted"
+    }
+    Write-Host "Press Ctrl+C to stop."
+    Write-Host ""
 
-# Keep process alive
-try {
+    # Keep process alive
     while ($true) { Start-Sleep -Seconds 10 }
 } finally {
     $watcher.EnableRaisingEvents = $false
@@ -308,4 +337,8 @@ try {
     $gatedWatcher.EnableRaisingEvents = $false
     $gatedWatcher.Dispose()
     Write-Host "Watcher stopped."
+    if ($hasWatcherHandle) {
+        $watcherMutex.ReleaseMutex() | Out-Null
+    }
+    $watcherMutex.Dispose()
 }

@@ -1,13 +1,15 @@
 $ErrorActionPreference = "Stop"
 
 $repoRoot = "C:\Users\raest\Documents\Karma_SADE"
-$pwsh = (Get-Command pwsh.exe -ErrorAction SilentlyContinue).Source
-if (-not $pwsh) {
-    $pwsh = (Get-Command pwsh -ErrorAction SilentlyContinue).Source
+$wscript = Join-Path $env:SystemRoot "System32\wscript.exe"
+$hiddenLauncher = Join-Path $repoRoot "Scripts\RunHiddenPowerShell.vbs"
+if (-not (Test-Path $wscript)) {
+    throw "wscript.exe not found at $wscript"
 }
-if (-not $pwsh) {
-    throw "pwsh.exe not found in PATH"
+if (-not (Test-Path $hiddenLauncher)) {
+    throw "Hidden launcher helper missing at $hiddenLauncher"
 }
+$runKeyPath = "Software\Microsoft\Windows\CurrentVersion\Run"
 
 function Register-PersistentTask {
     param(
@@ -21,10 +23,11 @@ function Register-PersistentTask {
         throw "Missing script for task ${TaskName}: $ScriptPath"
     }
 
+    $quotedLauncher = '"' + $hiddenLauncher + '"'
     $quotedScript = '"' + $ScriptPath + '"'
-    $arguments = "-ExecutionPolicy Bypass -WindowStyle Hidden -NonInteractive -File $quotedScript"
+    $arguments = "//B //nologo $quotedLauncher $quotedScript"
 
-    $action = New-ScheduledTaskAction -Execute $pwsh -Argument $arguments -WorkingDirectory $repoRoot
+    $action = New-ScheduledTaskAction -Execute $wscript -Argument $arguments -WorkingDirectory $repoRoot
     $triggers = @(
         (New-ScheduledTaskTrigger -AtLogOn),
         (New-ScheduledTaskTrigger -AtStartup)
@@ -34,7 +37,8 @@ function Register-PersistentTask {
         -RestartCount 999 `
         -RestartInterval (New-TimeSpan -Minutes $RestartMinutes) `
         -MultipleInstances IgnoreNew `
-        -StartWhenAvailable
+        -StartWhenAvailable `
+        -Hidden
 
     try {
         Register-ScheduledTask `
@@ -44,16 +48,23 @@ function Register-PersistentTask {
             -RunLevel Highest `
             -Settings $settings `
             -Description $Description `
-            -Force | Out-Null
+            -Force `
+            -ErrorAction Stop | Out-Null
 
-        Start-ScheduledTask -TaskName $TaskName
+        $runKey = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey($runKeyPath)
+        try {
+            $runKey.DeleteValue($TaskName, $false)
+        } finally {
+            $runKey.Close()
+        }
+
+        Start-ScheduledTask -TaskName $TaskName -ErrorAction Stop
         return [pscustomobject]@{
             Name = $TaskName
             Mode = "scheduled_task"
         }
     } catch {
-        $runCommand = '"' + $pwsh + '" -ExecutionPolicy Bypass -WindowStyle Hidden -NonInteractive -File ' + $quotedScript
-        $runKeyPath = "Software\Microsoft\Windows\CurrentVersion\Run"
+        $runCommand = '"' + $wscript + '" //B //nologo ' + $quotedLauncher + ' ' + $quotedScript
         $runKey = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey($runKeyPath)
         $runKey.SetValue($TaskName, $runCommand, [Microsoft.Win32.RegistryValueKind]::String)
         $runKey.Flush()
@@ -62,7 +73,7 @@ function Register-PersistentTask {
         if ($actual -ne $runCommand) {
             throw "Failed to persist HKCU Run entry for $TaskName"
         }
-        Start-Process -FilePath $pwsh -ArgumentList "-ExecutionPolicy Bypass -WindowStyle Hidden -NonInteractive -File $quotedScript" -WindowStyle Hidden
+        Start-Process -FilePath $wscript -ArgumentList "//B", "//nologo", $hiddenLauncher, $ScriptPath
         return [pscustomobject]@{
             Name = $TaskName
             Mode = "hkcu_run"
@@ -102,9 +113,27 @@ $tasks = @(
         RestartMinutes = 1
     },
     @{
+        TaskName = "KarmaLauncherSentinel"
+        ScriptPath = "$repoRoot\Scripts\Start-LauncherSentinel.ps1"
+        Description = "Hidden persistent launcher sentinel for auditing and repairing launcher drift. Survives reboot and restarts on failure."
+        RestartMinutes = 1
+    },
+    @{
         TaskName = "KarmaInboxWatcher"
         ScriptPath = "$repoRoot\Scripts\start-karma-watcher.ps1"
         Description = "Hidden persistent launcher for the Karma PDF inbox watcher. Survives reboot and restarts on failure."
+        RestartMinutes = 1
+    },
+    @{
+        TaskName = "KarmaFileServer"
+        ScriptPath = "$repoRoot\Scripts\karma-file-server.ps1"
+        Description = "Hidden persistent launcher for the Karma local file server. Survives reboot and restarts on failure."
+        RestartMinutes = 1
+    },
+    @{
+        TaskName = "KarmaSessionIndexer"
+        ScriptPath = "$repoRoot\Scripts\karma_session_indexer.ps1"
+        Description = "Hidden persistent launcher for Claude session JSONL indexing. Survives reboot and restarts on failure."
         RestartMinutes = 1
     }
 )

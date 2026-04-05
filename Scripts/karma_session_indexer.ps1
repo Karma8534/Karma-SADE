@@ -21,11 +21,34 @@
 param(
     [string]$WatchDir = "$env:USERPROFILE\.claude\projects\C--Users-raest-Documents-Karma-SADE",
     [string]$ScriptDir = "$PSScriptRoot\..",
-    [int]$DebounceSeconds = 10
+    [int]$DebounceSeconds = 10,
+    [int]$PollSeconds = 15,
+    [switch]$HiddenRelaunch
 )
 
 $ErrorActionPreference = 'SilentlyContinue'
+. (Join-Path $PSScriptRoot "HiddenRelaunch.ps1")
+Invoke-HiddenRelaunchIfNeeded -ScriptPath $PSCommandPath -HiddenRelaunch:$HiddenRelaunch -ExtraArgs @(
+    "-WatchDir", $WatchDir,
+    "-ScriptDir", $ScriptDir,
+    "-DebounceSeconds", $DebounceSeconds.ToString(),
+    "-PollSeconds", $PollSeconds.ToString()
+)
+
 $LogFile = "$ScriptDir\Logs\karma_session_indexer.log"
+$MutexName = "Global\KarmaSessionIndexer"
+$indexerMutex = New-Object System.Threading.Mutex($false, $MutexName)
+$hasIndexerHandle = $false
+try {
+    $hasIndexerHandle = $indexerMutex.WaitOne(0, $false)
+} catch [System.Threading.AbandonedMutexException] {
+    $hasIndexerHandle = $true
+}
+
+if (-not $hasIndexerHandle) {
+    Write-Host "[KarmaSessionIndexer] Another instance already owns $MutexName. Exiting."
+    exit 0
+}
 
 # Ensure log directory exists
 $null = New-Item -ItemType Directory -Force -Path (Split-Path $LogFile)
@@ -51,61 +74,62 @@ if (-not (Test-Path $HarvestScript)) {
 
 Write-Log "KarmaSessionIndexer started. Watching: $WatchDir"
 
-# FileSystemWatcher setup
-$watcher = New-Object System.IO.FileSystemWatcher
-$watcher.Path = $WatchDir
-$watcher.Filter = "*.jsonl"
-$watcher.NotifyFilter = [System.IO.NotifyFilters]'FileName,LastWrite'
-$watcher.EnableRaisingEvents = $true
+function Invoke-HarvestForFile {
+    param(
+        [Parameter(Mandatory = $true)][string]$FullPath,
+        [Parameter(Mandatory = $true)][string]$Reason
+    )
 
-# Debounce: track recently processed files
-$recentlyProcessed = @{}
-
-$action = {
-    $eventFile = $Event.SourceEventArgs.FullPath
-    $eventType = $Event.SourceEventArgs.ChangeType
-
-    # Skip if recently processed (debounce)
-    $now = [datetime]::UtcNow
-    if ($recentlyProcessed.ContainsKey($eventFile)) {
-        $lastProcessed = $recentlyProcessed[$eventFile]
-        if (($now - $lastProcessed).TotalSeconds -lt $using:DebounceSeconds) {
-            return
-        }
-    }
-    $recentlyProcessed[$eventFile] = $now
-
-    $fileName = Split-Path $eventFile -Leaf
-    & $using:function:Write-Log "New session file detected [$eventType]: $fileName"
-
-    # Wait briefly for file to finish writing
+    $fileName = Split-Path $FullPath -Leaf
+    Write-Log "Session file detected [$Reason]: $fileName"
     Start-Sleep -Seconds 3
-
-    # Run extraction on the new file only (via watermark it will skip already-processed)
-    $result = python $using:HarvestScript 2>&1
+    $result = python $HarvestScript 2>&1
     if ($LASTEXITCODE -eq 0) {
-        & $using:function:Write-Log "Extraction complete for $fileName. Output: $($result | Select-String 'new observations')"
+        $summary = ($result | Select-String 'New observations extracted|Done\.|Output:') | ForEach-Object { $_.Line.Trim() }
+        Write-Log "Extraction complete for $fileName. $($summary -join ' | ')"
     } else {
-        & $using:function:Write-Log "Extraction ERROR for $fileName`: $($result | Select-Object -Last 3)"
+        $tail = ($result | Select-Object -Last 3) -join ' '
+        Write-Log "Extraction ERROR for $fileName`: $tail"
     }
 }
 
-# Register events
-$createdJob = Register-ObjectEvent $watcher 'Created' -Action $action
-$changedJob = Register-ObjectEvent $watcher 'Changed' -Action $action
+Write-Log "Polling for .jsonl changes every $PollSeconds seconds."
 
-Write-Log "Watching for new .jsonl files. Press Ctrl+C to stop (or task runs in background)."
+$knownFiles = @{}
+Get-ChildItem -Path $WatchDir -Filter '*.jsonl' -File | ForEach-Object {
+    $knownFiles[$_.FullName] = $_.LastWriteTimeUtc
+}
 
-# Keep alive loop — check every 60 seconds and log heartbeat
 try {
     while ($true) {
-        Start-Sleep -Seconds 60
-        # Check for any pending events
-        Get-Job | Where-Object { $_.HasMoreData } | Receive-Job | Out-Null
+        Start-Sleep -Seconds $PollSeconds
+        $now = [datetime]::UtcNow
+        Get-ChildItem -Path $WatchDir -Filter '*.jsonl' -File | ForEach-Object {
+            $fullPath = $_.FullName
+            $lastWrite = $_.LastWriteTimeUtc
+            $knownWrite = $knownFiles[$fullPath]
+            $ageSeconds = ($now - $lastWrite).TotalSeconds
+
+            if ($ageSeconds -lt 2) {
+                return
+            }
+
+            if (-not $knownFiles.ContainsKey($fullPath)) {
+                $knownFiles[$fullPath] = $lastWrite
+                Invoke-HarvestForFile -FullPath $fullPath -Reason 'created'
+                return
+            }
+
+            if ($lastWrite -gt $knownWrite.AddSeconds($DebounceSeconds)) {
+                $knownFiles[$fullPath] = $lastWrite
+                Invoke-HarvestForFile -FullPath $fullPath -Reason 'changed'
+            }
+        }
     }
 } finally {
-    Unregister-Event $createdJob.Id -ErrorAction SilentlyContinue
-    Unregister-Event $changedJob.Id -ErrorAction SilentlyContinue
-    $watcher.Dispose()
     Write-Log "KarmaSessionIndexer stopped."
+    if ($hasIndexerHandle) {
+        $indexerMutex.ReleaseMutex() | Out-Null
+    }
+    $indexerMutex.Dispose()
 }
