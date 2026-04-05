@@ -648,6 +648,29 @@ Julian's identity lives in the SPINE (vault-neo + cortex + claude-mem + MEMORY.m
 | ci-cd-pipeline-builder | `Skill("ci-cd-pipeline-builder")` | CI/CD pipeline design and implementation |
 | docker-development | `Skill("docker-development")` | Docker/containerization development patterns |
 
+### ADDITIONAL ENGINEERING (installed S160b batch 2)
+| Skill | Capability |
+|-------|-----------|
+| agent-workflow-designer | Workflow orchestration patterns |
+| api-design-reviewer | REST/GraphQL linting, breaking change detection |
+| api-test-suite-builder | API test generation |
+| browser-automation | Web scraping, form filling, screenshot capture |
+| dependency-auditor | Dependency security scanning |
+| env-secrets-manager | Secrets rotation, vault integration |
+| observability-designer | SLOs, alerts, dashboards |
+| performance-profiler | CPU, memory, load profiling |
+| self-eval | Honest AI work quality scoring (two-axis) |
+| spec-driven-workflow | Spec-first development, acceptance criteria |
+| tech-debt-tracker | Debt scoring, remediation plans |
+| adversarial-reviewer | Adversarial code review |
+| ai-security | AI-specific security patterns |
+| senior-devops | Senior DevOps engineering patterns |
+| senior-fullstack | Full-stack development patterns |
+| senior-backend | Backend architecture patterns |
+| tdd-guide | Test-driven development guide |
+| red-team | Red team security exercises |
+| incident-commander | Incident response orchestration |
+
 ### NOT INSTALLED (irrelevant to Nexus)
 Marketing (45), C-Level (34), Project Management (9), Regulatory (14), Business/Finance (9), most Product skills
 
