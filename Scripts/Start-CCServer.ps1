@@ -7,47 +7,78 @@ $Script    = "$WorkDir\Scripts\cc_server_p1.py"
 $LogFile   = "$WorkDir\Logs\cc-server.log"
 $TokenFile = "$WorkDir\.hub-chat-token"
 $PidFile   = "$WorkDir\Scripts\cc_server.pid"
-
-# Ensure log directory exists
-if (-not (Test-Path "$WorkDir\Logs")) {
-    New-Item -ItemType Directory -Path "$WorkDir\Logs" | Out-Null
+$MutexName = "Global\KarmaSovereignHarnessCCServer"
+$PythonExe = (Get-Command python -ErrorAction SilentlyContinue).Source
+if (-not $PythonExe) {
+    $PythonExe = (Get-Command py -ErrorAction SilentlyContinue).Source
+}
+if (-not $PythonExe) {
+    throw "python executable not found in PATH"
 }
 
-# Load token from local cache
-if (Test-Path $TokenFile) {
-    $env:HUB_CHAT_TOKEN = (Get-Content $TokenFile -Raw).Trim()
-} else {
-    Write-Host "[cc-server] WARNING: No token file found at $TokenFile — auth disabled"
+$mutex = New-Object System.Threading.Mutex($false, $MutexName)
+$hasHandle = $false
+try {
+    $hasHandle = $mutex.WaitOne(0, $false)
+} catch [System.Threading.AbandonedMutexException] {
+    $hasHandle = $true
 }
 
-Write-Host "[cc-server] Starting cc_server_p1.py on port 7891 at $(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
-
-# Kill any existing processes on port 7891 before spawning new one
-$existingPids = @(netstat -ano | Select-String ":7891 " | ForEach-Object {
-    $parts = ($_ -split '\s+') | Where-Object { $_ -ne '' }
-    $parts[-1]
-} | Select-Object -Unique)
-if ($existingPids.Count -gt 0) {
-    Write-Host "[cc-server] Killing $($existingPids.Count) existing process(es) on port 7891: $($existingPids -join ', ')"
-    $existingPids | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }
-    Start-Sleep -Seconds 1
+if (-not $hasHandle) {
+    Write-Host "[cc-server] Another Start-CCServer instance already owns $MutexName — exiting"
+    exit 0
 }
 
-# Auto-restart loop — if server crashes, restart after 10s
-while ($true) {
-    $proc = Start-Process py -ArgumentList "-3",$Script `
-        -WorkingDirectory $WorkDir `
-        -RedirectStandardOutput $LogFile `
-        -RedirectStandardError "$WorkDir\Logs\cc-server-err.log" `
-        -PassThru -NoNewWindow
+try {
 
-    # Write PID for monitoring
-    $proc.Id | Out-File $PidFile -Encoding ascii
+    # Ensure log directory exists
+    if (-not (Test-Path "$WorkDir\Logs")) {
+        New-Item -ItemType Directory -Path "$WorkDir\Logs" | Out-Null
+    }
 
-    Write-Host "[cc-server] PID $($proc.Id) started at $(Get-Date -Format 'HH:mm:ss')"
-    $proc.WaitForExit()
-    $exitCode = $proc.ExitCode
+    # Load token from local cache
+    if (Test-Path $TokenFile) {
+        $env:HUB_CHAT_TOKEN = (Get-Content $TokenFile -Raw).Trim()
+    } else {
+        Write-Host "[cc-server] WARNING: No token file found at $TokenFile — auth disabled"
+    }
 
-    Write-Host "[cc-server] Exited with code $exitCode at $(Get-Date -Format 'HH:mm:ss') — restarting in 10s"
-    Start-Sleep -Seconds 10
+    Write-Host "[cc-server] Starting cc_server_p1.py on port 7891 at $(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
+
+    # Kill any existing processes on port 7891 before spawning new one
+    $existingPids = @(netstat -ano | Select-String ":7891 " | ForEach-Object {
+        $parts = ($_ -split '\s+') | Where-Object { $_ -ne '' }
+        $parts[-1]
+    } | Select-Object -Unique)
+    if ($existingPids.Count -gt 0) {
+        Write-Host "[cc-server] Killing $($existingPids.Count) existing process(es) on port 7891: $($existingPids -join ', ')"
+        $existingPids | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }
+        Start-Sleep -Seconds 1
+    }
+
+    # Auto-restart loop — if server crashes, restart after 10s
+    while ($true) {
+        $arguments = if ($PythonExe -like "*\py.exe") { @("-3", $Script) } else { @($Script) }
+        $proc = Start-Process $PythonExe -ArgumentList $arguments `
+            -WorkingDirectory $WorkDir `
+            -RedirectStandardOutput $LogFile `
+            -RedirectStandardError "$WorkDir\Logs\cc-server-err.log" `
+            -PassThru -NoNewWindow
+
+        # Write PID for monitoring
+        $proc.Id | Out-File $PidFile -Encoding ascii
+
+        Write-Host "[cc-server] PID $($proc.Id) started at $(Get-Date -Format 'HH:mm:ss')"
+        $proc.WaitForExit()
+        $exitCode = $proc.ExitCode
+
+        Write-Host "[cc-server] Exited with code $exitCode at $(Get-Date -Format 'HH:mm:ss') — restarting in 10s"
+        Start-Sleep -Seconds 10
+    }
+}
+finally {
+    if ($hasHandle) {
+        $mutex.ReleaseMutex() | Out-Null
+    }
+    $mutex.Dispose()
 }

@@ -10,6 +10,7 @@
  */
 
 import http from "http";
+import https from "https";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
@@ -48,6 +49,35 @@ function bearerToken(req) {
   return m?.[1]?.trim() || "";
 }
 function authChat(req) { return HUB_CHAT_TOKEN && bearerToken(req) === HUB_CHAT_TOKEN; }
+function harnessHeaders(extra = {}) {
+  return { Authorization: `Bearer ${HUB_CHAT_TOKEN}`, ...extra };
+}
+function internalJsonRequest(targetUrl, { method = "GET", headers = {}, body = null, timeoutMs = 10000 } = {}) {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(targetUrl);
+    const client = parsed.protocol === "https:" ? https : http;
+    const req = client.request({
+      protocol: parsed.protocol,
+      hostname: parsed.hostname,
+      port: parsed.port || (parsed.protocol === "https:" ? 443 : 80),
+      path: `${parsed.pathname}${parsed.search}`,
+      method,
+      headers,
+    }, (res) => {
+      let data = "";
+      res.on("data", (chunk) => { data += chunk; });
+      res.on("end", () => {
+        let parsedBody = null;
+        try { parsedBody = data ? JSON.parse(data) : {}; } catch { parsedBody = { ok: false, error: data || "invalid_json" }; }
+        resolve({ status: res.statusCode || 500, ok: (res.statusCode || 500) >= 200 && (res.statusCode || 500) < 300, json: parsedBody });
+      });
+    });
+    req.on("error", reject);
+    req.setTimeout(timeoutMs, () => req.destroy(new Error("timeout")));
+    if (body) req.write(body);
+    req.end();
+  });
+}
 function authCapture(req) { return HUB_CAPTURE_TOKEN && bearerToken(req) === HUB_CAPTURE_TOKEN; }
 function setCors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -588,9 +618,11 @@ const server = http.createServer(async (req, res) => {
       try {
         const parsed = new URL(req.url, "http://localhost");
         const filePath = parsed.searchParams.get("path") || "";
-        const r = await fetch(`${HARNESS_P1}/file?path=${encodeURIComponent(filePath)}`, { signal: AbortSignal.timeout(5000) });
-        const data = await r.json();
-        return json(res, r.ok ? 200 : 502, data);
+        const r = await internalJsonRequest(`${HARNESS_P1}/file?path=${encodeURIComponent(filePath)}`, {
+          headers: harnessHeaders(),
+          timeoutMs: 5000,
+        });
+        return json(res, r.ok ? 200 : 502, r.json);
       } catch (e) { return json(res, 502, { ok: false, error: `File read failed: ${e.message}` }); }
     }
     if (req.method === "POST" && req.url === "/v1/file") {
@@ -598,7 +630,7 @@ const server = http.createServer(async (req, res) => {
       const body = JSON.parse(await parseBody(req));
       try {
         const r = await fetch(`${HARNESS_P1}/file`, {
-          method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${HUB_CHAT_TOKEN}` },
+          method: "POST", headers: harnessHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify(body), signal: AbortSignal.timeout(10000),
         });
         const data = await r.json();
@@ -612,7 +644,7 @@ const server = http.createServer(async (req, res) => {
       const body = JSON.parse(await parseBody(req));
       try {
         const r = await fetch(`${HARNESS_P1}/shell`, {
-          method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${HUB_CHAT_TOKEN}` },
+          method: "POST", headers: harnessHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify(body), signal: AbortSignal.timeout(35000),
         });
         const data = await r.json();
@@ -624,9 +656,11 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "GET" && req.url === "/v1/git/status") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
       try {
-        const r = await fetch(`${HARNESS_P1}/git/status`, { signal: AbortSignal.timeout(5000) });
-        const data = await r.json();
-        return json(res, r.ok ? 200 : 502, data);
+        const r = await internalJsonRequest(`${HARNESS_P1}/git/status`, {
+          headers: harnessHeaders(),
+          timeoutMs: 5000,
+        });
+        return json(res, r.ok ? 200 : 502, r.json);
       } catch (e) { return json(res, 502, { ok: false, error: `Git unavailable: ${e.message}` }); }
     }
 
@@ -639,9 +673,11 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "GET" && req.url === "/v1/surface") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
       try {
-        const r = await fetch(`${HARNESS_P1}/v1/surface`, { signal: AbortSignal.timeout(10000) });
-        const data = await r.json();
-        return json(res, r.ok ? 200 : 502, data);
+        const r = await internalJsonRequest(`${HARNESS_P1}/v1/surface`, {
+          headers: harnessHeaders(),
+          timeoutMs: 10000,
+        });
+        return json(res, r.ok ? 200 : 502, r.json);
       } catch (e) { return json(res, 502, { ok: false, error: `Surface endpoint unreachable: ${e.message}` }); }
     }
 
@@ -703,7 +739,7 @@ const server = http.createServer(async (req, res) => {
         const body = await parseBody(req);
         const r = await fetch(`${HARNESS_P1}/shell`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: harnessHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify(body),
           signal: AbortSignal.timeout(60000),
         });
@@ -716,9 +752,11 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "GET" && req.url === "/v1/email/inbox") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
       try {
-        const r = await fetch(`${HARNESS_P1}/email/inbox`, { signal: AbortSignal.timeout(15000) });
-        const data = await r.json();
-        return json(res, r.ok ? 200 : 502, data);
+        const r = await internalJsonRequest(`${HARNESS_P1}/email/inbox`, {
+          headers: harnessHeaders(),
+          timeoutMs: 15000,
+        });
+        return json(res, r.ok ? 200 : 502, r.json);
       } catch (e) { return json(res, 502, { ok: false, error: `Inbox check failed: ${e.message?.slice(0, 100)}` }); }
     }
 
@@ -729,7 +767,7 @@ const server = http.createServer(async (req, res) => {
         const body = await parseBody(req);
         const r = await fetch(`${HARNESS_P1}/email/send`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: harnessHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify(body),
           signal: AbortSignal.timeout(15000),
         });
@@ -742,9 +780,11 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "GET" && req.url === "/v1/wip") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
       try {
-        const r = await fetch(`${HARNESS_P1}/v1/wip`, { signal: AbortSignal.timeout(10000) });
-        const data = await r.json();
-        return json(res, r.ok ? 200 : 502, data);
+        const r = await internalJsonRequest(`${HARNESS_P1}/v1/wip`, {
+          headers: harnessHeaders(),
+          timeoutMs: 10000,
+        });
+        return json(res, r.ok ? 200 : 502, r.json);
       } catch (e) { return json(res, 502, { ok: false, error: `WIP endpoint unreachable: ${e.message}` }); }
     }
 
@@ -752,9 +792,11 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "GET" && req.url === "/v1/files") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
       try {
-        const r = await fetch(`${HARNESS_P1}/files`, { signal: AbortSignal.timeout(5000) });
-        const data = await r.json();
-        return json(res, 200, data);
+        const r = await internalJsonRequest(`${HARNESS_P1}/files`, {
+          headers: harnessHeaders(),
+          timeoutMs: 5000,
+        });
+        return json(res, r.ok ? 200 : 502, r.json);
       } catch (e) { return json(res, 502, { ok: false, error: "files endpoint unreachable" }); }
     }
 
@@ -764,7 +806,7 @@ const server = http.createServer(async (req, res) => {
       const raw = await parseBody(req, 10000);
       try {
         const r = await fetch(`${HARNESS_P1}/memory/search`, {
-          method: "POST", headers: { "Content-Type": "application/json" },
+          method: "POST", headers: harnessHeaders({ "Content-Type": "application/json" }),
           body: raw, signal: AbortSignal.timeout(5000),
         });
         const data = await r.json();
@@ -785,8 +827,11 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "GET" && req.url === "/v1/agents-status") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
       try {
-        const r = await fetch(`${HARNESS_P1}/agents-status`, { signal: AbortSignal.timeout(5000) });
-        return json(res, r.status, await r.json());
+        const r = await internalJsonRequest(`${HARNESS_P1}/agents-status`, {
+          headers: harnessHeaders(),
+          timeoutMs: 5000,
+        });
+        return json(res, r.status, r.json);
       } catch (e) { return json(res, 502, { ok: false, error: "agents-status unreachable" }); }
     }
 
@@ -795,10 +840,13 @@ const server = http.createServer(async (req, res) => {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
       const subPath = req.url.replace("/v1/self-edit/", "/self-edit/");
       try {
-        const fetchOpts = { signal: AbortSignal.timeout(5000), headers: { "Content-Type": "application/json" } };
+        const fetchOpts = { signal: AbortSignal.timeout(5000), headers: harnessHeaders({ "Content-Type": "application/json" }) };
         if (req.method === "GET") {
-          const r = await fetch(`${HARNESS_P1}${subPath}`, fetchOpts);
-          return json(res, r.status, await r.json());
+          const r = await internalJsonRequest(`${HARNESS_P1}${subPath}`, {
+            headers: fetchOpts.headers,
+            timeoutMs: 5000,
+          });
+          return json(res, r.status, r.json);
         }
         if (req.method === "POST") {
           const raw = await parseBody(req, 50000);
@@ -867,10 +915,11 @@ const server = http.createServer(async (req, res) => {
       const isQuestion = /\?$/.test(message.trim()) || /^(what|who|when|where|how|why|is |are |do |does |can |could |tell me|show me|list|describe)/i.test(msgLower);
       const needsTools = /\b(edit|write|create|deploy|commit|push|install|run|execute|build|fix|modify|delete|restart|read file|ssh|curl)\b/i.test(msgLower);
       const isSlashCmd = message.startsWith("/");
+      const needsGroundedHarness = /\b(memory\.md|state\.md|whoami|dream|spine|transcript|conversation|heading|first line|top of|local file|workspace|repo|repository|this project|current state)\b/i.test(msgLower);
 
       const isVeryShort = message.length < 80;
 
-      if (isVeryShort && isQuestion && !needsTools && !isSlashCmd && !body.files) {
+      if (!body.stream && isVeryShort && isQuestion && !needsTools && !isSlashCmd && !body.files && !needsGroundedHarness) {
         // Tier 1: K2 cortex for very short factual questions ($0, fast for lookups)
         try {
           const cortexRes = await fetch(`${K2_CORTEX}/query`, {
