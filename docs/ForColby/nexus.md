@@ -354,18 +354,68 @@ Gap map → Kiki ranks MISSING items → bus directive (gap_closure)
 | `EscapePlan/README.md` (289KB) | Comprehensive contingency |
 | `EscapePlan/manifest.json` (21MB) | Full system manifest |
 
-## Skills (30+)
-| Path | Key Skills |
-|------|-----------|
-| `.claude/skills/resurrect/` | Session resurrection |
-| `.claude/skills/anchor/` | Emergency identity recovery |
-| `.claude/skills/wrap-session/` | Session cleanup |
-| `.claude/skills/deploy/` | Autonomous deployment |
-| `.claude/skills/dream/` | Memory consolidation |
-| `.claude/skills/self-evolution/` | 44 self-improvement rules |
-| `.claude/skills/orf/` | Organic Reasoning Flow |
-| `.claude/skills/harvest/` | Event extraction |
-| `.claude/skills/security-auditor/` | Security review |
+## Skills (46 directories — verified S160b)
+
+### Karma-native skills
+| Skill | Purpose |
+|-------|---------|
+| resurrect | Session start protocol |
+| anchor | Emergency identity recovery |
+| wrap-session | Session cleanup |
+| deploy | Docker build→deploy→verify |
+| dream | Memory consolidation |
+| self-evolution | 44 self-improvement rules |
+| orf | Organic Reasoning Flow |
+| harvest | Event extraction from sessions |
+| security-auditor | Karma-specific security review |
+| primitives | Extract patterns from sources |
+| review | Session state display |
+| api-design-principles | REST endpoint review |
+| cc-delegation | Task delegation via bus |
+| chrome-cdp | Browser interaction |
+
+### Codex plugin (openai-codex v1.0.2)
+| Command | Purpose |
+|---------|---------|
+| /codex:adversarial-review | Challenges design decisions with different model |
+| /codex:review | Standard code review |
+| /codex:rescue | Delegates task entirely to Codex |
+| /codex:setup | Configure Codex CLI |
+| /codex:status, /codex:result | Job management |
+
+### claude-code-skills marketplace (30 installed)
+| Skill | Purpose |
+|-------|---------|
+| self-improving-agent | Memory curation + pattern promotion (5 sub-skills) |
+| autoresearch-agent | Karpathy-style autonomous experiment loop |
+| agenthub | Multi-agent spawning + evaluation + merge |
+| agent-designer | Multi-agent architecture patterns |
+| agent-workflow-designer | Workflow orchestration |
+| mcp-server-builder | Build MCP servers |
+| rag-architect | RAG pipeline design |
+| llm-cost-optimizer | Cost analysis + model routing |
+| security-pen-testing | OWASP + vulnerability scanning |
+| ai-security | AI-specific security (injection, jailbreak) |
+| adversarial-reviewer | Adversarial code review |
+| red-team | Offensive security exercises |
+| playwright-pro | E2E browser testing (12 sub-skills) |
+| ci-cd-pipeline-builder | CI/CD pipeline design |
+| docker-development | Dockerfile optimization + compose |
+| senior-devops | DevOps patterns |
+| senior-fullstack | Full-stack patterns |
+| senior-backend | Backend architecture |
+| tdd-guide | Test-driven development |
+| spec-driven-workflow | Spec-first development |
+| self-eval | Honest AI work quality scoring |
+| tech-debt-tracker | Debt scoring + remediation |
+| performance-profiler | CPU/memory/load profiling |
+| observability-designer | SLOs + alerts + dashboards |
+| dependency-auditor | Dependency security |
+| env-secrets-manager | Secrets rotation |
+| api-design-reviewer | REST/GraphQL linting |
+| api-test-suite-builder | API test generation |
+| browser-automation | Web scraping + form filling |
+| incident-commander | Incident response |
 
 ## GSD State
 | File | Path | Purpose |
