@@ -46,6 +46,7 @@
 6. Gates: 6/6 PASS.
 7. Pitfalls P107-P116 documented. P116 CRITICAL: Max sub = CC CLI only, direct API = real money.
 8. Sovereign trust DAMAGED. Earn it back with WORKING CODE, not commits.
+9. Codex prompt at .gsd/codex-prompt-for-colby.md. Sovereign directive at .gsd/codex-sovereign-directive.md.
 
 ## Session 156 Continued — Bug Fixes
 - **Archon Alert stale 03/22 FIXED**: Blockers 10/11/13/21 had no ~~ strikethrough. Added ~~ to STATE.md + cc_context_snapshot.md. Now only items 16/17/18 (genuinely open) appear in archon alerts.
