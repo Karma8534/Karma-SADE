@@ -32,10 +32,25 @@ Then run /primitives extraction on each converted file.
 ## THEN
 Reverse-engineer from the Goal backward. Compare nexus.md plan against what actually exists. Your prior audit (.gsd/codex-cascade-audit.md) has exact file paths and insertion points. The sovereign directive (.gsd/codex-sovereign-directive.md) has the 10-step build order with testable DONE WHEN criteria.
 
+## CHECK FIRST
+- `git log --oneline -10` — someone may have already started (page.tsx was modified to import CoworkPanel + CodePanel)
+- Check if Karma_PDFs/Inbox/ has files: `ls Karma_PDFs/Inbox/`
+- Check cc_server is running: `curl -sf http://localhost:7891/health`
+
+## TECHNICAL DETAILS
+- CC --resume with `--output-format stream-json --verbose` emits JSON lines including tool_use events. Parse those for the tool loop.
+- Groq API key at `.groq-api-key` (free tier, llama-3.3-70b)
+- Start cc_server with `python -B` (avoids stale bytecode cache — P105)
+- Git ops via PowerShell on Windows, NOT Git Bash (index.lock issues — D003)
+- K2 SSH: `karma@192.168.0.226` (LAN direct, NEVER via vault-neo)
+- K2 Ollama: `http://172.22.240.1:11434` (Windows host gateway from WSL)
+- 3 P1 scheduled tasks are DISABLED (Sentinel, ProcessWatchdog, MemorySync) — re-enable after build stable
+
 ## RULES
 - BUILD code, don't write documentation
 - Test every change, paste output as proof
 - No slash commands (44 exist, enough)
 - No gap-map cosmetics (close gaps with CODE)
 - Prefer local tools and references (everything is on disk)
+- One step at a time. Verify DONE WHEN before starting next step.
 - If blocked 3x: email Colby at rae.steele76@gmail.com (from paybackh1@gmail.com, creds at .gmail-cc-creds)
