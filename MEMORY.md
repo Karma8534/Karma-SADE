@@ -39,15 +39,15 @@
 - **FUTURE**: Clean up PowerShell profile (ArkNexus SADE v7 banner). Install Rust for claudelytics.
 ## Next Session Starts Here
 1. /resurrect
-2. READ .gsd/codex-sovereign-directive.md — Codex may have started work. Check git log for Codex commits.
-3. CRITICAL FIRST: Convert 13 inbox PDFs: `python Scripts/batch_pdf_to_md.py --execute --wip`
-4. THE REAL WORK: Enhance cc-chat (electron/main.js:45) and run_cc (cc_server_p1.py:514) with tool_use parsing loop + Groq/K2 fallback cascade. CC --resume stays ($0 Max sub). Do NOT call Anthropic API directly (costs money).
-5. Test tool loop: send message needing file read → CC emits tool_use → harness executes → feeds result back → CC responds with answer.
-6. Gates: 6/6 PASS.
-7. Pitfalls P107-P116 documented. P116 CRITICAL: Max sub = CC CLI only, direct API = real money.
-8. Sovereign trust DAMAGED. Earn it back with WORKING CODE, not commits.
-9. Codex prompt at .gsd/codex-prompt-for-colby.md. Sovereign directive at .gsd/codex-sovereign-directive.md.
-10. 46 skill directories total. 30 from claude-code-skills marketplace. Codex plugin v1.0.2 with /codex:adversarial-review, /codex:rescue, /codex:review. All verified TSS 46/46 SKILL.md present. codex4ccwork primitives: obs #22830.
+2. READ `.gsd/codex-final-directive.md` — THE consolidated Codex directive. Supersedes all prior prompts.
+3. Check `git log --oneline -20` — Codex already modified cc_server_p1.py (TOOL_DEFS, _groq_fallback, _execute_tool_locally). Build on that work.
+4. Convert 7 inbox PDFs: `python Scripts/batch_pdf_to_md.py --execute --wip`
+5. THE REAL WORK: Enhance cc-chat (electron/main.js:45) with tool_use loop + Groq/K2 fallback. CC --resume stays ($0 Max sub). Do NOT call Anthropic API directly (costs money — P116).
+6. Gates: 5/6 PASS. /v1/learnings 502 (needs cc_server restart).
+7. 46 skills installed (TSS verified). Use /codex:adversarial-review before shipping.
+8. P107-P116 documented. Sovereign trust DAMAGED.
+9. Settings panel completely reworked (7 tabs, provider dropdown, no Anthropic lock-in).
+10. S160 HONEST: ~100 commits of mostly decoration. Engine never ran end-to-end. 7 inbox PDFs still unprocessed.
 
 ## Session 156 Continued — Bug Fixes
 - **Archon Alert stale 03/22 FIXED**: Blockers 10/11/13/21 had no ~~ strikethrough. Added ~~ to STATE.md + cc_context_snapshot.md. Now only items 16/17/18 (genuinely open) appear in archon alerts.
