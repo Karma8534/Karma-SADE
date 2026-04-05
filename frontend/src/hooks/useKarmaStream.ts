@@ -6,6 +6,18 @@ interface StreamOptions {
   apiUrl?: string;
 }
 
+declare global {
+  interface Window {
+    karma?: {
+      isElectron?: boolean;
+      fileWrite?: (path: string, content: string) => Promise<unknown>;
+      chat: (message: string, options?: Record<string, unknown>) => Promise<Record<string, unknown>>;
+      cancel: () => Promise<Record<string, unknown>>;
+      onChatEvent?: (handler: (payload: Record<string, unknown>) => void) => (() => void);
+    };
+  }
+}
+
 export function useKarmaStream(options: StreamOptions = {}) {
   const store = useKarmaStore();
   const apiUrl = options.apiUrl || '/v1/chat';
@@ -40,6 +52,43 @@ export function useKarmaStream(options: StreamOptions = {}) {
     });
 
     try {
+      if (typeof window !== 'undefined' && window.karma?.isElectron) {
+        const runId = `electron-${Date.now().toString(36)}`;
+        const toolMap = new Map<string, string>();
+        let unsubscribe: (() => void) | null = null;
+        if (window.karma.onChatEvent) {
+          unsubscribe = window.karma.onChatEvent((evt) => {
+            if (evt.runId !== runId) return;
+            handleSSEEvent(evt, toolMap);
+          });
+        }
+        abortController.signal.addEventListener('abort', () => {
+          window.karma?.cancel().catch(() => {});
+        }, { once: true });
+        const data = await window.karma.chat(text || 'Describe the attached file.', {
+          runId,
+          effort: effortLevel || undefined,
+          output_style: outputStyle || undefined,
+          user_preferences: personalPreferences || undefined,
+          files: pendingFiles.length ? pendingFiles : undefined,
+          session_id: conversationId,
+        });
+        unsubscribe?.();
+        store.clearFiles();
+        if (data?.ok === false) {
+          store.setError((data.error as string) || 'Electron chat failed');
+        } else {
+          const state = useKarmaStore.getState();
+          const lastMsg = state.messages[state.messages.length - 1];
+          if (lastMsg?.role === 'karma' && !lastMsg.content) {
+            store.updateLastMessage(
+              (data.result as string) || (data.response as string) || (data.content as string) || ''
+            );
+          }
+        }
+        return;
+      }
+
       const res = await fetch(apiUrl, {
         method: 'POST',
         headers: {

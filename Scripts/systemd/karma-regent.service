@@ -1,0 +1,19 @@
+[Unit]
+Description=KarmaRegent - AscendantCC autonomous daemon
+After=network.target aria.service
+Wants=aria.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=karma
+EnvironmentFile=/etc/karma-regent.env
+WorkingDirectory=/mnt/c/dev/Karma/k2/aria
+ExecStart=/usr/bin/python3 /mnt/c/dev/Karma/k2/aria/karma_regent.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/mnt/c/dev/Karma/k2/cache/regent.log
+StandardError=append:/mnt/c/dev/Karma/k2/cache/regent.log
+
+[Install]
+WantedBy=multi-user.target

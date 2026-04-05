@@ -1,7 +1,6 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
-// KARMA NEXUS IPC Bridge (S155)
-// Every capability CC has, Karma has through this bridge.
+// KARMA NEXUS IPC Bridge (S156)
 contextBridge.exposeInMainWorld("karma", {
   isElectron: true,
   isNexus: true,
@@ -14,9 +13,14 @@ contextBridge.exposeInMainWorld("karma", {
   // Shell execution
   shellExec: (command) => ipcRenderer.invoke("shell-exec", command),
 
-  // CC --resume (the brain)
+  // CC harness
   chat: (message, options) => ipcRenderer.invoke("cc-chat", message, options),
   cancel: () => ipcRenderer.invoke("cc-cancel"),
+  onChatEvent: (handler) => {
+    const listener = (_event, payload) => handler(payload);
+    ipcRenderer.on("cc-chat-event", listener);
+    return () => ipcRenderer.removeListener("cc-chat-event", listener);
+  },
 
   // Cortex (K2 working memory)
   cortexQuery: (query) => ipcRenderer.invoke("cortex-query", query),

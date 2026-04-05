@@ -1,0 +1,17 @@
+[Unit]
+Description=Aria Local AI Assistant
+After=network.target
+
+[Service]
+Type=simple
+User=karma
+WorkingDirectory=/mnt/c/dev/Karma/k2/aria
+ExecStart=/usr/bin/python3 /mnt/c/dev/Karma/k2/aria/aria.py
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/log/aria.log
+StandardError=append:/var/log/aria.log
+Environment=PATH=/home/karma/.local/bin:/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=multi-user.target

@@ -118,14 +118,7 @@ function FileTreeNode({ node, depth }: { node: FileNode; depth: number }) {
       className="py-0.5 cursor-pointer text-karma-text hover:text-karma-accent hover:bg-karma-surface"
       style={{ paddingLeft: indent + 16 }}
       onClick={() => {
-        // Send "Read <path>" to chat
-        const store = useKarmaStore.getState();
-        store.addMessage({
-          id: Date.now().toString(36),
-          role: 'user',
-          content: `Read ${node.path}`,
-          timestamp: new Date().toISOString(),
-        });
+        window.dispatchEvent(new CustomEvent('karma-open-code', { detail: { path: node.path } }));
       }}
       title={`${node.path} (${formatSize(node.size || 0)})`}
     >

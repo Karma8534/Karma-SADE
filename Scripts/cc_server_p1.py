@@ -6,7 +6,7 @@ Uses local Ollama for inference — Anthropic-independent, no MCP startup overhe
 Returns: {response, ok}
 Auth: Bearer token checked against HUB_CHAT_TOKEN env var.
 """
-import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.parse, sqlite3, base64, threading, time
+import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.parse, sqlite3, base64, threading, time, re, fnmatch, glob
 from http.server import HTTPServer, ThreadingHTTPServer, BaseHTTPRequestHandler
 from collections import defaultdict
 sys.path.insert(0, os.path.dirname(__file__))
@@ -16,6 +16,14 @@ try:
     GMAIL_AVAILABLE = True
 except Exception:
     GMAIL_AVAILABLE = False
+try:
+    from permission_engine import PermissionEngine
+    _permission_engine = PermissionEngine()
+    PERMISSION_ENGINE_AVAILABLE = True
+except Exception as e:
+    _permission_engine = None
+    PERMISSION_ENGINE_AVAILABLE = False
+    print(f"[cc-server] PermissionEngine: DISABLED ({e})")
 
 # ── Hooks Engine (Sprint 3a) ─────────────────────────────────────────────────
 try:
@@ -118,6 +126,29 @@ OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 OPENROUTER_MODEL = "anthropic/claude-sonnet-4-6"  # Same model name on OR, different rate limit pool
 OPENROUTER_FALLBACK_MODEL = "google/gemini-2.0-flash"  # Tier 2: if OR Anthropic also rate-limited
 CLAUDEMEM_DB   = pathlib.Path.home() / ".claude-mem" / "claude-mem.db"
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODEL = "llama-3.3-70b-versatile"
+TOOL_LOOP_LIMIT = 6
+TOOL_DEFS = [
+    {"name": "shell", "description": "Execute shell command on P1", "input_schema": {"type": "object", "properties": {"command": {"type": "string"}}, "required": ["command"]}},
+    {"name": "read_file", "description": "Read file from disk", "input_schema": {"type": "object", "properties": {"path": {"type": "string"}, "limit": {"type": "integer"}}, "required": ["path"]}},
+    {"name": "write_file", "description": "Write content to file (checkpointed)", "input_schema": {"type": "object", "properties": {"path": {"type": "string"}, "content": {"type": "string"}}, "required": ["path", "content"]}},
+    {"name": "glob", "description": "Find files matching pattern", "input_schema": {"type": "object", "properties": {"pattern": {"type": "string"}, "path": {"type": "string"}}, "required": ["pattern"]}},
+    {"name": "grep", "description": "Search file contents with regex", "input_schema": {"type": "object", "properties": {"pattern": {"type": "string"}, "path": {"type": "string"}}, "required": ["pattern"]}},
+    {"name": "git", "description": "Run git command", "input_schema": {"type": "object", "properties": {"command": {"type": "string"}}, "required": ["command"]}},
+]
+TOOL_PROMPT = "\n".join([
+    "You are Karma inside the Nexus harness.",
+    "You do not have direct filesystem or shell access.",
+    "When you need a tool, respond with ONLY a JSON object in this exact form:",
+    '{"tool_use":{"name":"read_file","input":{"path":"MEMORY.md"}}}',
+    "Allowed tools:",
+    json.dumps(TOOL_DEFS),
+    "Rules:",
+    "1. Use tools instead of guessing about files, git state, or shell output.",
+    "2. After a tool result is returned, continue from that result.",
+    "3. When you are done, return plain text only, not JSON.",
+])
 
 # ── Agents Status Cache (Sprint 6 — #20-22) ────────────────────────────────
 _agents_status_cache = None
@@ -456,15 +487,180 @@ def handle_files(files):
     all_parts = parts + errors
     return ("\n".join(all_parts) + "\n\n" if all_parts else ""), paths
 
-def _build_cc_cmd(message, effort=None, model=None, budget=None, stream=False):
+
+def _read_secret_file(*candidates):
+    for candidate in candidates:
+        if not candidate:
+            continue
+        try:
+            value = pathlib.Path(candidate).read_text(encoding="utf-8").strip()
+            if value:
+                return value
+        except Exception:
+            pass
+    return ""
+
+
+def _normalize_workspace_path(target_path=""):
+    resolved = os.path.abspath(os.path.join(WORK_DIR, target_path))
+    root = os.path.abspath(WORK_DIR)
+    if resolved != root and not resolved.startswith(root + os.sep):
+        raise ValueError(f"path escapes workspace: {target_path}")
+    return resolved
+
+
+def _safe_preview(value, max_chars=4000):
+    text = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, indent=2)
+    return text if len(text) <= max_chars else text[:max_chars] + "\n...[truncated]..."
+
+
+def _tool_result_content(value):
+    return [{"type": "text", "text": _safe_preview(value)}]
+
+
+def _parse_json_object(text):
+    trimmed = (text or "").strip()
+    if not trimmed:
+        return None
+    candidates = [trimmed]
+    fenced = re.search(r"```json\s*([\s\S]+?)```", trimmed, re.IGNORECASE)
+    if fenced:
+        candidates.append(fenced.group(1).strip())
+    bare = re.search(r"\{[\s\S]+\}", trimmed)
+    if bare:
+        candidates.append(bare.group(0).strip())
+    for candidate in candidates:
+        try:
+            return json.loads(candidate)
+        except Exception:
+            continue
+    return None
+
+
+def _is_stale_resume_error(text):
+    lower = (text or "").lower()
+    return any(token in lower for token in ("resume", "session", "not found", "invalid conversation"))
+
+
+def _map_tool_for_permissions(tool_name, tool_input):
+    if tool_name == "read_file":
+        return "Read", {"file_path": tool_input.get("path", "")}
+    if tool_name == "write_file":
+        return "Write", {"file_path": tool_input.get("path", "")}
+    if tool_name in ("shell", "git"):
+        command = tool_input.get("command", "")
+        if tool_name == "git":
+            command = f"git {command}".strip()
+        return "Bash", {"command": command}
+    if tool_name == "glob":
+        return "Glob", {"pattern": tool_input.get("pattern", ""), "path": tool_input.get("path", ".")}
+    if tool_name == "grep":
+        return "Grep", {"pattern": tool_input.get("pattern", ""), "path": tool_input.get("path", ".")}
+    return tool_name, tool_input
+
+
+def _check_tool_permission(tool_name, tool_input):
+    mapped_name, mapped_input = _map_tool_for_permissions(tool_name, tool_input)
+    if PERMISSION_ENGINE_AVAILABLE and _permission_engine:
+        result = _permission_engine.check(mapped_name, mapped_input)
+        if not result.get("allowed"):
+            return False, f"{result.get('reason', 'Permission denied')} (rule: {result.get('rule_id', '?')})"
+    if HOOKS_AVAILABLE:
+        try:
+            hook_results = _hooks.fire("PreToolUse", {"tool_name": mapped_name, "input": mapped_input})
+            for hr in hook_results:
+                if hr.output and hr.output.get("permissionDecision") == "deny":
+                    return False, hr.output.get("systemMessage", "Permission denied")
+        except Exception:
+            pass
+    return True, ""
+
+
+def _post_tool_hook(tool_name, tool_input, tool_output):
+    mapped_name, mapped_input = _map_tool_for_permissions(tool_name, tool_input)
+    if HOOKS_AVAILABLE:
+        try:
+            _hooks.fire("PostToolUse", {
+                "tool_name": mapped_name,
+                "input": mapped_input,
+                "output": _safe_preview(tool_output, 3000),
+            })
+        except Exception:
+            pass
+
+
+def _execute_tool_locally(tool_name, tool_input):
+    allowed, reason = _check_tool_permission(tool_name, tool_input)
+    if not allowed:
+        return {"ok": False, "error": f"Blocked by permission engine: {reason}"}
+    try:
+        if tool_name == "read_file":
+            file_path = _normalize_workspace_path(tool_input.get("path", ""))
+            limit = int(tool_input.get("limit") or 0)
+            content = pathlib.Path(file_path).read_text(encoding="utf-8", errors="replace")
+            if limit > 0:
+                content = content[:limit]
+            result = {"ok": True, "path": file_path, "size": os.path.getsize(file_path), "content": content}
+        elif tool_name == "write_file":
+            from write_checkpoint import write_with_checkpoint
+            file_path = _normalize_workspace_path(tool_input.get("path", ""))
+            content = tool_input.get("content", "")
+            wr = write_with_checkpoint(file_path, content, actor="nexus-harness")
+            result = {"ok": bool(wr.get("ok")), "path": file_path, "checkpoint": wr.get("checkpoint"), "error": wr.get("error")}
+        elif tool_name == "shell":
+            command = tool_input.get("command", "").strip()
+            if not command:
+                result = {"ok": False, "error": "command required"}
+            else:
+                proc = subprocess.run(command, shell=True, capture_output=True, text=True, cwd=WORK_DIR, timeout=30, encoding="utf-8", errors="replace")
+                result = {"ok": proc.returncode == 0, "stdout": proc.stdout[:8000], "stderr": proc.stderr[:2000], "exit_code": proc.returncode}
+        elif tool_name == "git":
+            command = tool_input.get("command", "").strip()
+            if not command:
+                result = {"ok": False, "error": "command required"}
+            else:
+                proc = subprocess.run(["git"] + command.split(), capture_output=True, text=True, cwd=WORK_DIR, timeout=30, encoding="utf-8", errors="replace")
+                result = {"ok": proc.returncode == 0, "stdout": proc.stdout[:8000], "stderr": proc.stderr[:2000], "exit_code": proc.returncode}
+        elif tool_name == "glob":
+            pattern = tool_input.get("pattern", "")
+            base_path = _normalize_workspace_path(tool_input.get("path", "."))
+            matches = []
+            for found in glob.glob(os.path.join(base_path, "**", pattern), recursive=True):
+                if os.path.isfile(found):
+                    matches.append(os.path.relpath(found, WORK_DIR).replace("\\", "/"))
+            result = {"ok": True, "matches": sorted(set(matches))[:500]}
+        elif tool_name == "grep":
+            pattern = tool_input.get("pattern", "")
+            base_path = _normalize_workspace_path(tool_input.get("path", "."))
+            regex = re.compile(pattern, re.IGNORECASE)
+            matches = []
+            for root, dirs, files in os.walk(base_path):
+                dirs[:] = [d for d in dirs if d not in {".git", "node_modules", ".next", "__pycache__"}]
+                for name in files:
+                    full = os.path.join(root, name)
+                    rel = os.path.relpath(full, WORK_DIR).replace("\\", "/")
+                    try:
+                        with open(full, "r", encoding="utf-8", errors="replace") as fh:
+                            for idx, line in enumerate(fh, start=1):
+                                if regex.search(line):
+                                    matches.append({"path": rel, "line": idx, "text": line.strip()[:200]})
+                    except Exception:
+                        continue
+            result = {"ok": True, "matches": matches[:500]}
+        else:
+            result = {"ok": False, "error": f"unknown tool: {tool_name}"}
+    except subprocess.TimeoutExpired:
+        result = {"ok": False, "error": "tool timed out (30s)"}
+    except Exception as e:
+        result = {"ok": False, "error": str(e)}
+    _post_tool_hook(tool_name, tool_input, result)
+    return result
+
+def _build_cc_cmd(message, effort=None, model=None, budget=None, stream=False, resume=True):
     """Build the CC subprocess command list. Shared by run_cc and run_cc_stream."""
-    session_id = load_session_id()
+    session_id = load_session_id() if resume else None
     full_message = build_context_prefix(message) + message
-    if stream:
-        cmd = [NODE_EXE, CLAUDE_CLI_JS, "-p", full_message,
-               "--output-format", "stream-json", "--verbose"]
-    else:
-        cmd = [NODE_EXE, CLAUDE_CLI_JS, "-p", full_message, "--output-format", "json"]
+    cmd = [NODE_EXE, CLAUDE_CLI_JS, "-p", full_message, "--output-format", "stream-json", "--verbose"]
     if session_id:
         cmd += ["--resume", session_id]
     if effort:
@@ -473,20 +669,186 @@ def _build_cc_cmd(message, effort=None, model=None, budget=None, stream=False):
         cmd += ["--model", model]
     if budget:
         cmd += ["--max-budget-usd", str(budget)]
-    # NOTE: --file is for API file resource IDs, NOT local paths.
-    # Files are handled by prepending instructions to the message (handle_files prefix).
-    # CC will use its Read tool to view attached files at the paths specified in the message.
     return cmd
 
-def _openrouter_fallback(message, model=None):
+
+def _run_cc_attempt(message, effort=None, model=None, budget=None, resume=True):
+    cmd = _build_cc_cmd(message, effort=effort, model=model, budget=budget, stream=True, resume=resume)
+    global _current_proc
+    _current_proc = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        text=True, cwd=WORK_DIR, encoding='utf-8', errors='replace',
+    )
+    lines, stderr_chunks = [], []
+    try:
+        start = time.time()
+        while True:
+            if _current_proc.poll() is not None and not _current_proc.stdout.readable():
+                break
+            line = _current_proc.stdout.readline()
+            if line:
+                line = line.strip()
+                if line:
+                    lines.append(line)
+                    try:
+                        obj = json.loads(line)
+                        if obj.get("type") == "result":
+                            new_sid = obj.get("session_id", "")
+                            if new_sid:
+                                save_session_id(new_sid)
+                    except Exception:
+                        pass
+            elif _current_proc.poll() is not None:
+                break
+            if time.time() - start > API_TIMEOUT:
+                raise subprocess.TimeoutExpired(cmd, API_TIMEOUT)
+        stderr_chunks.append(_current_proc.stderr.read() or "")
+        returncode = _current_proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        _current_proc.kill()
+        raise
+    finally:
+        _current_proc = None
+    stderr = "".join(stderr_chunks)
+    text = ""
+    for raw in lines:
+        try:
+            obj = json.loads(raw)
+            if obj.get("type") == "assistant":
+                for block in obj.get("message", {}).get("content", []):
+                    if isinstance(block, dict) and block.get("type") == "text":
+                        text += block.get("text", "")
+            elif obj.get("type") == "result" and not text:
+                text = obj.get("result", "")
+        except Exception:
+            continue
+    if returncode != 0:
+        raise RuntimeError(f"claude exit {returncode}: {(stderr or text).strip()[:400]}")
+    return {"text": text.strip(), "lines": lines, "stderr": stderr}
+
+
+def _build_recovered_transcript_context(transcript):
+    if not transcript:
+        return ""
+    recent = transcript[-10:]
+    lines = []
+    for entry in recent:
+        role = entry.get("role", "?")
+        text = str(entry.get("content", ""))[:300]
+        lines.append(f"[{role.upper()}] {text}")
+    if not lines:
+        return ""
+    return "[RECOVERED TRANSCRIPT]\n" + "\n".join(lines) + "\n[END RECOVERED TRANSCRIPT]"
+
+
+def _compose_harness_message(message, transcript_context=""):
+    if transcript_context:
+        return f"{transcript_context}\n\n[USER]\n{message}"
+    return message
+
+
+def _build_harness_prompt(message, transcript, transcript_context=""):
+    parts = [TOOL_PROMPT]
+    if transcript_context:
+        parts.append(transcript_context)
+    for entry in transcript:
+        parts.append(f"[{entry['role'].upper()}]\n{entry['content']}")
+    parts.append(f"[USER]\n{message}")
+    return "\n\n".join(parts)
+
+
+def _contextualize_message(message, transcript_context=""):
+    composed = _compose_harness_message(message, transcript_context=transcript_context)
+    return build_context_prefix(composed) + composed
+
+
+def _groq_fallback(message, transcript_context=""):
+    groq_key = os.environ.get("GROQ_API_KEY", "") or _read_secret_file(os.path.join(WORK_DIR, ".groq-api-key"))
+    if not groq_key:
+        raise RuntimeError("missing Groq API key")
+    contextual_message = _contextualize_message(message, transcript_context=transcript_context)
+    payload = json.dumps({
+        "model": GROQ_MODEL,
+        "messages": [{"role": "user", "content": contextual_message}],
+        "max_tokens": 1024,
+        "temperature": 0.2,
+    }).encode()
+    req = urllib.request.Request(GROQ_URL, data=payload, headers={
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {groq_key}",
+        "User-Agent": "Karma-Nexus/1.0",
+    }, method="POST")
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        data = json.loads(resp.read().decode())
+    return data.get("choices", [{}])[0].get("message", {}).get("content", "").strip(), data.get("model", GROQ_MODEL)
+
+
+def _k2_fallback(message, transcript_context=""):
+    contextual_message = _contextualize_message(message, transcript_context=transcript_context)
+    payload = json.dumps({"query": contextual_message}).encode()
+    req = urllib.request.Request(f"{CORTEX_URL}/query", data=payload, headers={"Content-Type": "application/json"}, method="POST")
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        data = json.loads(resp.read().decode())
+    return (data.get("answer") or data.get("response") or "").strip(), "k2-cortex"
+
+
+def _run_cc_harness(message, effort=None, model=None, budget=None, event_sink=None, transcript_context=""):
+    transcript = []
+    used_fresh_session = False
+    final_lines = []
+    for turn in range(TOOL_LOOP_LIMIT):
+        prompt = _build_harness_prompt(message, transcript, transcript_context=transcript_context)
+        try:
+            attempt = _run_cc_attempt(prompt, effort=effort, model=model, budget=budget, resume=not used_fresh_session)
+        except Exception as e:
+            if not used_fresh_session and _is_stale_resume_error(str(e)):
+                try:
+                    SESSION_FILE.unlink(missing_ok=True)
+                except Exception:
+                    pass
+                used_fresh_session = True
+                continue
+            raise
+        final_lines = attempt["lines"]
+        for raw in attempt["lines"]:
+            try:
+                obj = json.loads(raw)
+                if obj.get("type") in ("assistant", "stream_event"):
+                    if event_sink and obj.get("type") != "system":
+                        event_sink(obj)
+            except Exception:
+                continue
+        parsed = _parse_json_object(attempt["text"])
+        tool_use = parsed.get("tool_use") if isinstance(parsed, dict) else None
+        if not tool_use or not tool_use.get("name"):
+            result_evt = {"type": "result", "result": attempt["text"], "session_id": load_session_id() or ""}
+            if event_sink:
+                event_sink(result_evt)
+            return attempt["text"].strip(), final_lines
+        tool_name = tool_use.get("name", "")
+        tool_input = tool_use.get("input", {}) or {}
+        tool_id = f"{tool_name}-{int(time.time() * 1000)}-{turn}"
+        assistant_evt = {"type": "assistant", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": tool_id, "name": tool_name, "input": tool_input}]}}
+        if event_sink:
+            event_sink(assistant_evt)
+        tool_output = _execute_tool_locally(tool_name, tool_input)
+        tool_evt = {"type": "tool_result", "tool_use_id": tool_id, "content": _tool_result_content(tool_output)}
+        if event_sink:
+            event_sink(tool_evt)
+        transcript.append({"role": "assistant", "content": json.dumps({"tool_use": {"name": tool_name, "input": tool_input}}, ensure_ascii=False)})
+        transcript.append({"role": "tool", "content": json.dumps(tool_output, ensure_ascii=False, indent=2)})
+    raise RuntimeError("tool loop limit exceeded")
+
+def _openrouter_fallback(message, model=None, transcript_context=""):
     """EscapeHatch: Direct OpenRouter API call when CC/Anthropic is rate-limited.
     Returns (response_text, model_used) or raises on failure."""
     if not OPENROUTER_API_KEY:
         raise RuntimeError("OPENROUTER_API_KEY not set — fallback unavailable")
     or_model = model or OPENROUTER_MODEL
+    contextual_message = _contextualize_message(message, transcript_context=transcript_context)
     payload = json.dumps({
         "model": or_model,
-        "messages": [{"role": "user", "content": message}],
+        "messages": [{"role": "user", "content": contextual_message}],
         "max_tokens": 4096,
     }).encode()
     headers = {
@@ -511,157 +873,59 @@ def _openrouter_fallback(message, model=None):
             return _openrouter_fallback(message, model=OPENROUTER_FALLBACK_MODEL)
         raise
 
-def run_cc(message, effort=None, model=None, budget=None):
-    """Call real CC subprocess with session continuity."""
-    cmd = _build_cc_cmd(message, effort=effort, model=model, budget=budget, stream=False)
-    global _current_proc
-    _current_proc = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        text=True, cwd=WORK_DIR, encoding='utf-8', errors='replace',
-    )
+def run_cc(message, effort=None, model=None, budget=None, transcript_context=""):
+    """Run the harness-managed CC loop with degraded fallback cascade."""
     try:
-        stdout, stderr = _current_proc.communicate(timeout=API_TIMEOUT)
-        returncode = _current_proc.returncode
-    except subprocess.TimeoutExpired:
-        _current_proc.kill()
-        _current_proc = None
-        raise
-    finally:
-        _current_proc = None
-    result = type('R', (), {'returncode': returncode, 'stdout': stdout, 'stderr': stderr})()
-    if result.returncode != 0:
-        # stderr may contain useful info
-        err_detail = (result.stderr or "").strip()[:300]
-        raise RuntimeError(f"claude exit {result.returncode}: {err_detail}")
-    # Parse JSON output
-    stdout = result.stdout.strip()
-    # --output-format json outputs one JSON object; there may be warning lines before it
-    for line in stdout.splitlines():
-        line = line.strip()
-        if line.startswith("{"):
-            try:
-                d = json.loads(line)
-                if d.get("type") == "result":
-                    new_session_id = d.get("session_id", "")
-                    if new_session_id:
-                        save_session_id(new_session_id)
-                    return d.get("result", "").strip()
-            except json.JSONDecodeError:
-                continue
-    # Fallback: return raw stdout if no JSON found
-    return stdout
+        text, _lines = _run_cc_harness(message, effort=effort, model=model, budget=budget, transcript_context=transcript_context)
+        return text
+    except Exception as cc_err:
+        print(f"[cc-server] Claude failed, trying Groq: {cc_err}")
+        try:
+            text, _used_model = _groq_fallback(message, transcript_context=transcript_context)
+            if text:
+                return text
+        except Exception as groq_err:
+            print(f"[cc-server] Groq failed, trying K2: {groq_err}")
+        try:
+            text, _used_model = _k2_fallback(message, transcript_context=transcript_context)
+            if text:
+                return text
+        except Exception as k2_err:
+            print(f"[cc-server] K2 failed, trying OpenRouter: {k2_err}")
+        text, _used_model = _openrouter_fallback(message, transcript_context=transcript_context)
+        return text
 
-def run_cc_stream(message, effort=None, model=None, budget=None):
-    """Yield filtered stream-json lines from CC subprocess as SSE-ready strings.
-    Requires --verbose with -p mode (P069). Filters out system/hook events."""
-    cmd = _build_cc_cmd(message, effort=effort, model=model, budget=budget, stream=True)
-    global _current_proc
-    _current_proc = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        text=True, cwd=WORK_DIR, encoding='utf-8', errors='replace',
-    )
+def run_cc_stream(message, effort=None, model=None, budget=None, transcript_context=""):
+    """Yield harness-managed SSE events with permission-gated local tools and fallback cascade."""
+    events = []
+    def sink(evt):
+        events.append(json.dumps(evt, ensure_ascii=False))
     try:
-        for line in iter(_current_proc.stdout.readline, ''):
-            line = line.strip()
-            if not line:
-                continue
-            # Parse and filter — only forward assistant/user/result/error to browser
-            try:
-                obj = json.loads(line)
-                t = obj.get("type", "")
-                if t == "system":
-                    continue  # Skip hooks, init — don't expose to browser
-                if t == "rate_limit_event":
-                    continue  # Skip rate limit noise
-                # ── Fire PreToolUse/PostToolUse hooks on tool events (Task 3 fix) ──
-                # Codex CP1: Enforce denials — kill subprocess + yield error on deny
-                if t == "assistant" and HOOKS_AVAILABLE:
-                    msg = obj.get("message", {})
-                    content = msg.get("content", [])
-                    if isinstance(content, list):
-                        for block in content:
-                            if isinstance(block, dict) and block.get("type") == "tool_use":
-                                tool_name = block.get("name", "")
-                                tool_input = block.get("input", {})
-                                try:
-                                    results = _hooks.fire("PreToolUse", {
-                                        "tool_name": tool_name, "input": tool_input
-                                    })
-                                    for hr in results:
-                                        if hr.output and hr.output.get("permissionDecision") == "deny":
-                                            reason = hr.output.get('systemMessage', 'Permission denied')
-                                            print(f"[hooks] ENFORCED DENIAL: {tool_name} — {reason}")
-                                            # Kill the CC subprocess to prevent execution
-                                            if _current_proc and _current_proc.poll() is None:
-                                                _current_proc.kill()
-                                            # Yield denial event to browser
-                                            denial_event = json.dumps({
-                                                "type": "error",
-                                                "error": f"Tool '{tool_name}' blocked by permission stack: {reason}",
-                                                "tool_name": tool_name,
-                                                "permission_denied": True,
-                                            })
-                                            yield denial_event
-                                            return  # Stop streaming
-                                except Exception:
-                                    pass
-                # tool_result appears as separate type OR inside assistant content
-                if t == "tool_result" and HOOKS_AVAILABLE:
-                    tool_name = obj.get("tool_name", obj.get("name", ""))
-                    tool_output = obj.get("content", "")
-                    if isinstance(tool_output, list):
-                        tool_output = " ".join(str(b.get("text","")) for b in tool_output if isinstance(b, dict))
-                    try:
-                        _hooks.fire("PostToolUse", {
-                            "tool_name": tool_name,
-                            "input": obj.get("input", {}),
-                            "output": str(tool_output)[:4000],
-                        })
-                    except Exception:
-                        pass
-                # Also check assistant messages for tool_result content blocks
-                if t == "assistant" and HOOKS_AVAILABLE:
-                    msg2 = obj.get("message", {})
-                    content2 = msg2.get("content", [])
-                    if isinstance(content2, list):
-                        for block2 in content2:
-                            if isinstance(block2, dict) and block2.get("type") == "tool_result":
-                                tr_name = block2.get("tool_name", block2.get("name", ""))
-                                tr_content = block2.get("content", "")
-                                if isinstance(tr_content, list):
-                                    tr_content = " ".join(str(b.get("text","")) for b in tr_content if isinstance(b, dict))
-                                try:
-                                    _hooks.fire("PostToolUse", {
-                                        "tool_name": tr_name,
-                                        "input": block2.get("input", {}),
-                                        "output": str(tr_content)[:4000],
-                                    })
-                                except Exception:
-                                    pass
-
-                yield line
-                # Capture session_id from result
-                if t == "result":
-                    new_sid = obj.get("session_id", "")
-                    if new_sid:
-                        save_session_id(new_sid)
-            except json.JSONDecodeError:
-                continue
-        if _current_proc:
-            try:
-                _current_proc.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                _current_proc.kill()
-                try:
-                    _current_proc.wait(timeout=3)
-                except subprocess.TimeoutExpired:
-                    pass
-    except Exception:
-        if _current_proc and _current_proc.poll() is None:
-            _current_proc.kill()
-        raise
-    finally:
-        _current_proc = None
+        _run_cc_harness(message, effort=effort, model=model, budget=budget, event_sink=sink, transcript_context=transcript_context)
+        for evt in events:
+            yield evt
+        return
+    except Exception as cc_err:
+        print(f"[cc-server] Claude stream failed, trying Groq: {cc_err}")
+        for evt in events:
+            yield evt
+        try:
+            text, used_model = _groq_fallback(message, transcript_context=transcript_context)
+            yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+            yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "groq"})
+            return
+        except Exception as groq_err:
+            yield json.dumps({"type": "error", "error": f"Groq fallback failed: {groq_err}"})
+        try:
+            text, used_model = _k2_fallback(message, transcript_context=transcript_context)
+            yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+            yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "k2"})
+            return
+        except Exception as k2_err:
+            yield json.dumps({"type": "error", "error": f"K2 fallback failed: {k2_err}"})
+        text, used_model = _openrouter_fallback(message, transcript_context=transcript_context)
+        yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+        yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "openrouter"})
 
 class CCHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
@@ -1060,17 +1324,18 @@ class CCHandler(BaseHTTPRequestHandler):
             if not cmd:
                 self._json(422, {"ok": False, "error": "command required"})
                 return
-            # Security: block dangerous patterns (same as pre_tool_security)
-            BLOCKED = ["rm -rf /", "mkfs", "dd if=/dev/zero", ":(){ :|:& };:", "format c:", "del /f /s /q"]
-            if any(b in cmd.lower() for b in BLOCKED):
-                self._json(403, {"ok": False, "error": "Blocked: dangerous command pattern"})
+            allowed, reason = _check_tool_permission("shell", {"command": cmd})
+            if not allowed:
+                self._json(403, {"ok": False, "error": f"Blocked by permission engine: {reason}"})
                 return
             try:
                 r = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=WORK_DIR, timeout=30, encoding="utf-8", errors="replace")
-                self._json(200, {
+                result = {
                     "ok": True, "exit_code": r.returncode,
                     "stdout": r.stdout[:8000], "stderr": r.stderr[:2000],
-                })
+                }
+                _post_tool_hook("shell", {"command": cmd}, result)
+                self._json(200, result)
             except subprocess.TimeoutExpired:
                 self._json(504, {"ok": False, "error": "Command timed out (30s)"})
             except Exception as e:
@@ -1218,6 +1483,7 @@ class CCHandler(BaseHTTPRequestHandler):
                 # P2: Crash-safe — write user message BEFORE API call
                 # Codex CP1: Wire load_transcript for resume after restart
                 _conv_id = self.headers.get("x-conversation-id", "default")
+                transcript_context = ""
                 if NEXUS_AGENT_AVAILABLE:
                     # Load prior conversation context for this conversation-id
                     prior_transcript = load_transcript(_conv_id)
@@ -1230,23 +1496,12 @@ class CCHandler(BaseHTTPRequestHandler):
                                 for _te in trimmed:
                                     _tf.write(json.dumps(_te, ensure_ascii=False) + "\n")
                             prior_transcript = trimmed
-                    if prior_transcript:
-                        # Inject last 5 exchanges as conversation memory
-                        recent = prior_transcript[-10:]  # last 10 entries (5 user + 5 assistant)
-                        conv_summary = []
-                        for entry in recent:
-                            role = entry.get("role", "?")
-                            text = entry.get("content", "")[:300]
-                            conv_summary.append(f"  [{role}]: {text}")
-                        if conv_summary:
-                            _transcript_context = "\n".join(conv_summary)
-                            # Prepend to message so CC has conversation context after restart
-                            message = f"[CONVERSATION HISTORY — recovered from transcript]\n{_transcript_context}\n[END HISTORY]\n\n{message}"
+                    transcript_context = _build_recovered_transcript_context(prior_transcript)
                     append_transcript(_conv_id, {"role": "user", "content": message, "ts": time.time()})
                 try:
                     t_start = time.time()
                     first_token_sent = False
-                    for line in run_cc_stream(message, effort=effort, model=model, budget=budget):
+                    for line in run_cc_stream(message, effort=effort, model=model, budget=budget, transcript_context=transcript_context):
                         if not first_token_sent:
                             _last_latency["first_token_ms"] = int((time.time() - t_start) * 1000)
                             first_token_sent = True
@@ -1338,10 +1593,17 @@ class CCHandler(BaseHTTPRequestHandler):
 
             # ── /cc — batch JSON endpoint (backward compat) ──────────────
             try:
-                response_text = run_cc(message, effort=effort, model=model, budget=budget)
+                batch_transcript_context = ""
+                batch_conv_id = self.headers.get("x-conversation-id", "default")
+                if NEXUS_AGENT_AVAILABLE:
+                    batch_transcript_context = _build_recovered_transcript_context(load_transcript(batch_conv_id))
+                    append_transcript(batch_conv_id, {"role": "user", "content": message, "ts": time.time()})
+                response_text = run_cc(message, effort=effort, model=model, budget=budget, transcript_context=batch_transcript_context)
                 self._json(200, {"ok": True, "response": response_text})
                 # Gate 6: Auto-save chat turn to claude-mem (fire-and-forget)
                 _auto_save_memory(message, response_text)
+                if NEXUS_AGENT_AVAILABLE and response_text:
+                    append_transcript(batch_conv_id, {"role": "assistant", "content": response_text[:2000], "ts": time.time()})
                 # ── Fire Stop hooks after batch completes (Sprint 3a) ────
                 if HOOKS_AVAILABLE:
                     try:

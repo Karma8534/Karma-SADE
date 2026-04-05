@@ -3,6 +3,10 @@
 # Karma SADE — Active Memory
 
 ## Current State
+- **Session 160 update (2026-04-04):** Nexus harness fallback runtime now works end-to-end on the protected `/cc/stream` path. After a real `cc_server_p1.py` restart, fallback Groq recovered `sovereign-restart-signal` and returned `# Karma SADE — Active Memory` from MEMORY.md correctly.
+- **What changed:** Electron `cc-chat` now has a harness/tool loop + Groq/K2 fallback; `cc_server_p1.py` now keeps recovered transcript context out of the literal user turn and feeds it through the harness/fallback prompt path; frontend gained persisted chat state plus Cowork/Code surfaces; Step 8 regent modules were created and Phase 0 executor ran to a real gap-map update; hidden persistent P1 launchers were stamped into HKCU Run; K2 now has repo-owned systemd units/install path for `karma-regent`, `aria`, and `cc-ascendant-watchdog.timer`.
+- **Why it changed:** The wrapper was not independent enough, restart recovery polluted fallback prompts, and PowerShell/service survival needed to be explicit on both P1 and K2 instead of relying on ad hoc live state.
+- **Next steps / blockers:** Deploy the committed Nexus slice cleanly without pulling in unrelated local churn; browser/Electron walkthrough still needs final sovereign verification; `pytest` in this shell hits an `OSError` on stdout flush, so direct in-process harness tests were used as proof instead.
 - **Active task:** Phase 0 COMPLETE (10/10 edits). Phase 1 COMPLETE (5/5 edits). Next: Phase 2 (Operator Surface).
 - **Session:** 160 (2026-04-03)
 - **Phase:** Phase 0 + Phase 1 shipped. Actuator layer + session continuity operational.

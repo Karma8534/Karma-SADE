@@ -167,11 +167,44 @@ function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
+const MESSAGES_KEY = 'karma-messages';
+const SESSION_SNAPSHOT_PATH = 'tmp/karma-ui-session.json';
+
+function readStoredMessages(): ChatMessage[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(MESSAGES_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistMessages(messages: ChatMessage[], conversationId: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
+  } catch {}
+  try {
+    const electronApi = (window as typeof window & {
+      karma?: { isElectron?: boolean; fileWrite?: (path: string, content: string) => Promise<unknown> };
+    }).karma;
+    if (electronApi?.isElectron && electronApi.fileWrite) {
+      void electronApi.fileWrite(
+        SESSION_SNAPSHOT_PATH,
+        JSON.stringify({ conversationId, savedAt: new Date().toISOString(), messages }, null, 2),
+      );
+    }
+  } catch {}
+}
+
 export const useKarmaStore = create<KarmaState>((set, get) => ({
   // Initial state
   token: typeof window !== 'undefined' ? localStorage.getItem('karma-token') || '' : '',
   isAuthenticated: false,
-  messages: [],
+  messages: readStoredMessages(),
   isStreaming: false,
   conversationId: typeof window !== 'undefined'
     ? localStorage.getItem('karma-conversation-id') || generateId()
@@ -202,11 +235,16 @@ export const useKarmaStore = create<KarmaState>((set, get) => ({
   },
 
   // Messages
-  addMessage: (msg) => set((s) => ({ messages: [...s.messages, msg] })),
+  addMessage: (msg) => set((s) => {
+    const messages = [...s.messages, msg];
+    persistMessages(messages, s.conversationId);
+    return { messages };
+  }),
   updateLastMessage: (content) =>
     set((s) => {
       const msgs = [...s.messages];
       if (msgs.length > 0) msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], content };
+      persistMessages(msgs, s.conversationId);
       return { messages: msgs };
     }),
   appendToLastMessage: (delta) =>
@@ -218,9 +256,13 @@ export const useKarmaStore = create<KarmaState>((set, get) => ({
           content: msgs[msgs.length - 1].content + delta,
         };
       }
+      persistMessages(msgs, s.conversationId);
       return { messages: msgs };
     }),
-  clearMessages: () => set({ messages: [] }),
+  clearMessages: () => set((s) => {
+    persistMessages([], s.conversationId);
+    return { messages: [] };
+  }),
 
   // Streaming
   setStreaming: (v) => set({ isStreaming: v }),

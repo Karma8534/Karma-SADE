@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useKarmaStore, type ChatMessage, isVisibleTool, getPillLabel } from '@/store/karma';
+import { detectCoworkArtifact } from '@/components/CoworkPanel';
 
 export function ChatFeed() {
   const messages = useKarmaStore((s) => s.messages);
@@ -101,6 +102,7 @@ function renderMarkdown(text: string): JSX.Element {
 
 function MessageBubble({ message }: { message: ChatMessage }) {
   const { role, content, timestamp, toolName, toolInput, toolOutput } = message;
+  const artifact = role === 'karma' ? detectCoworkArtifact(content, message.id, timestamp) : null;
 
   const time = new Date(timestamp).toLocaleTimeString('en-US', {
     hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
@@ -152,7 +154,11 @@ function MessageBubble({ message }: { message: ChatMessage }) {
       <div className="text-karma-accent text-[11px] font-bold">
         KARMA <span className="text-karma-muted font-normal text-[10px]">{time}</span>
       </div>
-      {content && (
+      {artifact ? (
+        <div className="bg-karma-surface border border-karma-border rounded px-4 py-2 text-[11px] text-karma-muted max-w-[85%]">
+          {artifact.title} captured in Cowork panel.
+        </div>
+      ) : content && (
         <div className="bg-karma-surface border border-karma-accent/30 rounded px-4 py-2.5 max-w-[85%] whitespace-pre-wrap">
           {renderMarkdown(content)}
         </div>

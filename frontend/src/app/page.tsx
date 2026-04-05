@@ -8,6 +8,8 @@ import { ChatFeed } from '@/components/ChatFeed';
 import { MessageInput } from '@/components/MessageInput';
 import { RoutingHints } from '@/components/RoutingHints';
 import { ContextPanel } from '@/components/ContextPanel';
+import { CodePanel } from '@/components/CodePanel';
+import { CoworkPanel } from '@/components/CoworkPanel';
 import { SelfEditBanner } from '@/components/SelfEditBanner';
 import { StatusBar } from '@/components/StatusBar';
 import { GlobalSearch } from '@/components/GlobalSearch';
@@ -52,8 +54,10 @@ export default function Home() {
           <MessageInput />
           <StatusBar />
         </div>
+        <CoworkPanel />
         <ContextPanel />
       </div>
+      <CodePanel />
       {showSearch && <GlobalSearch onClose={() => setShowSearch(false)} />}
     </div>
   );
