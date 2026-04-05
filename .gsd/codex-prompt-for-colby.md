@@ -46,6 +46,19 @@ Reverse-engineer from the Goal backward. Compare nexus.md plan against what actu
 - K2 Ollama: `http://172.22.240.1:11434` (Windows host gateway from WSL)
 - 3 P1 scheduled tasks are DISABLED (Sentinel, ProcessWatchdog, MemorySync) — re-enable after build stable
 
+## INSTALLED SKILLS (invoke with Skill("name"))
+- **self-improving-agent** — memory curation, pattern promotion, skill extraction (5 sub-skills)
+- **agent-designer** — multi-agent system architecture
+- **agenthub** — multi-agent spawning/evaluation/merge
+- **autoresearch-agent** — Karpathy-style autonomous experiment loop
+- **mcp-server-builder** — build MCP servers
+- **rag-architect** — RAG pipeline design
+- **security-pen-testing** — vulnerability scanning, OWASP
+- **llm-cost-optimizer** — cost analysis, model routing
+- **playwright-pro** — E2E browser testing (12 sub-skills)
+- **ci-cd-pipeline-builder** — CI/CD pipelines
+- **docker-development** — Dockerfile optimization, compose orchestration
+
 ## RULES
 - BUILD code, don't write documentation
 - Test every change, paste output as proof

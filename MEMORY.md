@@ -47,6 +47,7 @@
 7. Pitfalls P107-P116 documented. P116 CRITICAL: Max sub = CC CLI only, direct API = real money.
 8. Sovereign trust DAMAGED. Earn it back with WORKING CODE, not commits.
 9. Codex prompt at .gsd/codex-prompt-for-colby.md. Sovereign directive at .gsd/codex-sovereign-directive.md.
+10. 11 skills installed from claude-code-skills marketplace (self-improving-agent, agent-designer, agenthub, autoresearch-agent, mcp-server-builder, rag-architect, security-pen-testing, llm-cost-optimizer, playwright-pro, ci-cd-pipeline-builder, docker-development).
 
 ## Session 156 Continued — Bug Fixes
 - **Archon Alert stale 03/22 FIXED**: Blockers 10/11/13/21 had no ~~ strikethrough. Added ~~ to STATE.md + cc_context_snapshot.md. Now only items 16/17/18 (genuinely open) appear in archon alerts.

@@ -622,6 +622,37 @@ Julian's identity lives in the SPINE (vault-neo + cortex + claude-mem + MEMORY.m
 
 ---
 
+---
+
+# APPENDIX S160b: SKILLS INSTALLED FROM claude-code-skills MARKETPLACE (2026-04-04T05:15Z, Julian)
+
+**Source:** github.com/alirezarezvani/claude-skills (248 skills, 9 domains)
+**Installed:** 11 skills (HIGH + MEDIUM value for Nexus)
+
+### HIGH VALUE (installed)
+| Skill | Invocation | Capability |
+|-------|-----------|------------|
+| self-improving-agent | `Skill("self-improving-agent")` | Memory curation, pattern promotion, skill extraction (5 sub-skills: extract, promote, remember, review, status) |
+| agent-designer | `Skill("agent-designer")` | Multi-agent system design, communication patterns, autonomous workflows |
+| mcp-server-builder | `Skill("mcp-server-builder")` | Build MCP servers for tool integration |
+| security-pen-testing | `Skill("security-pen-testing")` | OWASP Top 10, vulnerability scanning, secret detection, API security |
+| rag-architect | `Skill("rag-architect")` | RAG pipeline design, retrieval strategies, embedding models, vector search |
+| autoresearch-agent | `Skill("autoresearch-agent")` | Karpathy-style autonomous research loop (setup, run, loop, resume, status) |
+| agenthub | `Skill("agenthub")` | Multi-agent spawning/management (init, spawn, run, eval, merge, board, status) |
+| llm-cost-optimizer | `Skill("llm-cost-optimizer")` | LLM cost analysis, model selection, token optimization |
+
+### MEDIUM VALUE (installed)
+| Skill | Invocation | Capability |
+|-------|-----------|------------|
+| playwright-pro | `Skill("playwright-pro")` | E2E browser testing, flaky test fixes, migration, CI/CD integration (12 sub-skills) |
+| ci-cd-pipeline-builder | `Skill("ci-cd-pipeline-builder")` | CI/CD pipeline design and implementation |
+| docker-development | `Skill("docker-development")` | Docker/containerization development patterns |
+
+### NOT INSTALLED (irrelevant to Nexus)
+Marketing (45), C-Level (34), Project Management (9), Regulatory (14), Business/Finance (9), most Product skills
+
+---
+
 *This document is owned by Colby (Sovereign) and Julian (Ascendant). The origin story is immutable. The sprint plan evolves. Print this. Store it physically. This is the contract.*
 
 *Sources: obs #6620, #6556, #21238, #21240, #21367, #21793, #21947, #22082, #22121, #22129, #22132, #22232, #22288, #22319, #22415, #22477, #22485. Preclaw1: docs/wip/preclaw1/preclaw1/src (1,902 files). Gap map: Karma2/map/preclaw1-gap-map.md.*
