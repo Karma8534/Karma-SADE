@@ -100,7 +100,7 @@ You may NOT say "done", "complete", "fixed", or "working" until all 4 conditions
 | `unified.html` | ✅ Live UI (chat, thumbs, AGORA, CASCADE) | `hub-bridge/app/public/unified.html` |
 | CC `--resume` | ✅ Wired, working, $0 | P1:7891 |
 | K2 | ✅ Available | 192.168.0.226 (RTX 4070, Playwright, Docker) |
-| Claude-mem | ✅ Available | P1:37777 |
+| Claude-mem | ✅ Available | P1:37778 |
 | AGORA | ✅ Working | `/agora` |
 
 ---
@@ -116,7 +116,7 @@ hub-bridge/app/public/unified.html → Live UI
 CC --resume on P1:7891          → Wired, working, $0
 K2 at 192.168.0.226             → Headless Chromium ready
 Coordination bus                → Active
-vault spine, claude-mem         → P1:37777
+vault spine, claude-mem         → P1:37778
 AGORA                           → /agora, working
 ```
 
@@ -136,7 +136,7 @@ curl -s -H "Authorization: Bearer $TOKEN" https://hub.arknexus.net/v1/status
 curl http://192.168.0.226:7892/health
 
 # Claude-mem connectivity
-curl http://localhost:37777/health 2>/dev/null && echo "OK" || echo "CLAUDE_MEM_OFFLINE"
+curl http://localhost:37778/health 2>/dev/null && echo "OK" || echo "CLAUDE_MEM_OFFLINE"
 ```
 
 ---
@@ -347,7 +347,7 @@ Every hub chat turn writes to claude-mem. Operator buttons show live data.
 
 | Component | Target | Method |
 |-----------|--------|--------|
-| Brain wire | Every `/v1/chat` turn → claude-mem | HTTP POST to P1:37777 |
+| Brain wire | Every `/v1/chat` turn → claude-mem | HTTP POST to P1:37778 |
 | Auto-indexer | `~/.claude/projects/*/*.jsonl` | FileSystemWatcher → claude-mem |
 | CASCADE button | `/v1/status` → compact panel | Models, spend, K2 blocks, uptime, spine version |
 | AGORA button | Verify token flow | No manual localStorage injection |
@@ -360,7 +360,7 @@ Every hub chat turn writes to claude-mem. Operator buttons show live data.
 │ TEST 1: Brain wire active                                        │
 ├─────────────────────────────────────────────────────────────────┤
 │ Action: Chat at hub.arknexus.net                                │
-│ Verify: curl http://localhost:37777/api/search?query=hub+chat+turn
+│ Verify: curl http://localhost:37778/api/search?query=hub+chat+turn
 │ Expected: Observation with timestamp from this session          │
 │ Actual: [paste query result]                                     │
 │ Result: ☐ PASS  ☐ FAIL                                          │
@@ -472,7 +472,7 @@ curl -s -H "Authorization: Bearer $TOKEN" https://hub.arknexus.net/v1/chat \
   -d '{"message":"who are you"}' | head -c 500
 
 # Brain wire check
-curl http://localhost:37777/api/search?query=nexus+chat
+curl http://localhost:37778/api/search?query=nexus+chat
 
 # Cost check
 curl -s -H "Authorization: Bearer $TOKEN" https://hub.arknexus.net/v1/status | grep cost
@@ -551,7 +551,7 @@ Return to build.
 |---------|---------|----------|
 | Proxy not responding | `curl hub.arknexus.net/health` fails | Check Docker container: `docker ps`, `docker logs` |
 | K2 unreachable | Tool calls timeout | SSH to vault-neo, ping 192.168.0.226 |
-| Claude-mem silent | Brain wire not writing | Check P1:37777 connectivity, verify token |
+| Claude-mem silent | Brain wire not writing | Check P1:37778 connectivity, verify token |
 | Tool blocks not rendering | SSE events missing | Check proxy.js emits `tool_call` events for VISIBLE_TOOLS |
 | CASCADE panel blank | `/v1/status` returns empty | Verify K2 health: `curl http://192.168.0.226:7892/health` |
 
@@ -561,7 +561,7 @@ Return to build.
 # Always run before starting a phase
 curl https://hub.arknexus.net/health && echo "HUB_OK"
 curl http://192.168.0.226:7892/health && echo "K2_OK"
-curl http://localhost:37777/health && echo "MEM_OK"
+curl http://localhost:37778/health && echo "MEM_OK"
 
 # Check git status
 git status --short

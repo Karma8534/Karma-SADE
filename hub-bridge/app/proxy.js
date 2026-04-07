@@ -14,7 +14,9 @@ import https from "https";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
-import { URL } from "url";
+import { URL, pathToFileURL } from "url";
+
+const _directRun = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
 
 // ── Config ───────────────────────────────────────────────────────────────────
 const PORT = Number(process.env.PORT || "18090");
@@ -110,6 +112,12 @@ async function checkHealth(url, cache, checkedAt) {
 // Shared constants
 const BUSY_MSG = "Karma is busy with another request. Please wait a moment and try again.";
 
+export function shouldBypassHarnessForV1Chat(_body = {}) {
+  // The browser Nexus is the merged workspace. Preserving one continual session
+  // is more important than shaving off a short-question RTT in the proxy.
+  return false;
+}
+
 // ── Trace log (G1/G7) — per-request cost/routing data ─────────────────────
 const _traceLog = [];
 const TRACE_MAX = 50;
@@ -125,7 +133,11 @@ function harnessNodes() {
 
 async function routeToHarness(message, sessionId) {
   const payload = JSON.stringify({ message, session_id: sessionId });
-  const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` };
+  const headers = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${HUB_CHAT_TOKEN}`,
+    "x-conversation-id": sessionId || "default",
+  };
   const errors = [];
   let busyCount = 0;
   for (const node of harnessNodes()) {
@@ -200,7 +212,11 @@ const BUSY_RETRY_DELAYS = [5000, 10000, 20000]; // 5s, 10s, 20s — total 35s ma
 async function executeStream(message, sessionId, effort, model, clientRes, files, budget) {
   _streamActive = true;
   const payload = JSON.stringify({ message, session_id: sessionId, effort, model, files, budget });
-  const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${HUB_CHAT_TOKEN}` };
+      const headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${HUB_CHAT_TOKEN}`,
+        "x-conversation-id": sessionId || "default",
+      };
 
   try {
   // Retry loop: if all nodes return 429 (CC busy externally), wait and retry
@@ -402,7 +418,9 @@ function autoApproveKarmaEntries() {
     }
   }
 }
-setInterval(autoApproveKarmaEntries, 30000); // Check every 30s
+if (_directRun) {
+  setInterval(autoApproveKarmaEntries, 30000); // Check every 30s
+}
 
 // ── Content-hash dedup (S155 Rule 36) ───────────────────────────────────────
 const _recentHashes = new Set();
@@ -907,96 +925,8 @@ const server = http.createServer(async (req, res) => {
       if (!message) return json(res, 400, { ok: false, error: "message required" });
       const sessionId = body.session_id || "";
 
-      // ── S160: Local pre-classification (LFM2 350M on P1, 0.1s) ──────
-      // Simple factual questions → K2 cortex ($0). Everything else → CC.
-      const K2_CORTEX = process.env.K2_CORTEX_URL || "http://100.75.109.92:7892";
-      const msgLower = message.toLowerCase();
-      const isShort = message.length < 200;
-      const isQuestion = /\?$/.test(message.trim()) || /^(what|who|when|where|how|why|is |are |do |does |can |could |tell me|show me|list|describe)/i.test(msgLower);
-      const needsTools = /\b(edit|write|create|deploy|commit|push|install|run|execute|build|fix|modify|delete|restart|read file|ssh|curl)\b/i.test(msgLower);
-      const isSlashCmd = message.startsWith("/");
-      const needsGroundedHarness = /\b(memory\.md|state\.md|whoami|dream|spine|transcript|conversation|heading|first line|top of|local file|workspace|repo|repository|this project|current state)\b/i.test(msgLower);
-
-      const isVeryShort = message.length < 80;
-
-      if (!body.stream && isVeryShort && isQuestion && !needsTools && !isSlashCmd && !body.files && !needsGroundedHarness) {
-        // Tier 1: K2 cortex for very short factual questions ($0, fast for lookups)
-        try {
-          const cortexRes = await fetch(`${K2_CORTEX}/query`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query: message, temperature: 0.3 }),
-            signal: AbortSignal.timeout(8000),  // 8s max — leaves room for Groq fallback
-          });
-          if (cortexRes.ok) {
-            const cortexData = await cortexRes.json();
-            const answer = cortexData.answer || "";
-            if (answer && !answer.includes("CORTEX ERROR") && answer.length > 20) {
-              // K2 cortex answered — skip CC entirely
-              const assistantText = answer;
-              postResponseSideEffects({ message, assistantText, sessionId, costUsd: 0, model: "k2-cortex" });
-
-              if (body.stream === true) {
-                // SSE format for streaming clients
-                res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive", "Access-Control-Allow-Origin": "*" });
-                res.write(`data: ${JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text: assistantText }], model: "k2-cortex" } })}\n\n`);
-                res.write(`data: ${JSON.stringify({ type: "message_stop" })}\n\n`);
-                res.end();
-                return;
-              }
-
-              return json(res, 200, {
-                ok: true, response: assistantText, assistant_text: assistantText,
-                model: "k2-cortex", routing: "local-first", cost_usd: 0,
-              });
-            }
-          }
-        } catch { /* K2 unreachable — try Groq */ }
-
-        // Tier 1.5: Try Groq for medium-complexity questions (free tier, <500ms)
-        let groqKey = "";
-        // Try multiple paths (container vs host)
-        for (const p of ["/karma/repo/.groq-api-key", "/home/neo/karma-sade/.groq-api-key"]) {
-          try { groqKey = require("fs").readFileSync(p, "utf-8").trim(); if (groqKey) break; } catch {}
-        }
-        if (!groqKey) try { groqKey = process.env.GROQ_API_KEY || ""; } catch {}
-
-        if (groqKey && isShort && isQuestion && !isSlashCmd && !body.files) {
-          try {
-            const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-              method: "POST",
-              headers: { "Authorization": `Bearer ${groqKey}`, "Content-Type": "application/json" },
-              body: JSON.stringify({
-                model: "llama-3.3-70b-versatile",
-                messages: [
-                  { role: "system", content: "You are Karma, a helpful AI assistant. Be concise." },
-                  { role: "user", content: message },
-                ],
-                max_tokens: 500,
-                temperature: 0.3,
-              }),
-              signal: AbortSignal.timeout(10000),
-            });
-            if (groqRes.ok) {
-              const groqData = await groqRes.json();
-              const groqAnswer = groqData.choices?.[0]?.message?.content || "";
-              if (groqAnswer && groqAnswer.length > 20) {
-                postResponseSideEffects({ message, assistantText: groqAnswer, sessionId, costUsd: 0, model: "groq-llama-70b" });
-                if (body.stream === true) {
-                  res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive", "Access-Control-Allow-Origin": "*" });
-                  res.write(`data: ${JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text: groqAnswer }], model: "groq-llama-70b" } })}\n\n`);
-                  res.write(`data: ${JSON.stringify({ type: "message_stop" })}\n\n`);
-                  res.end();
-                  return;
-                }
-                return json(res, 200, {
-                  ok: true, response: groqAnswer, assistant_text: groqAnswer,
-                  model: "groq-llama-70b", routing: "groq-tier", cost_usd: 0,
-                });
-              }
-            }
-          } catch { /* Groq failed — fall through to CC */ }
-        }
+      if (shouldBypassHarnessForV1Chat(body)) {
+        return json(res, 500, { ok: false, error: "proxy_harness_bypass_disabled" });
       }
 
       // ── Streaming path (SSE) ──────────────────────────────────────────
@@ -1008,7 +938,8 @@ const server = http.createServer(async (req, res) => {
       let result;
       try {
         const ccPromise = routeToHarness(message, sessionId);
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("CC_TIMEOUT")), 15000));
+        const batchHarnessTimeout = Math.min(HARNESS_TIMEOUT, 45000);
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("CC_TIMEOUT")), batchHarnessTimeout));
         result = await Promise.race([ccPromise, timeoutPromise]);
       } catch (ccErr) {
         // CC timed out or failed — try Groq as emergency fallback
@@ -1167,12 +1098,14 @@ const server = http.createServer(async (req, res) => {
 });
 
 // ── Startup ──────────────────────────────────────────────────────────────────
-loadCoordFromDisk();
-server.listen(PORT, () => {
-  console.log(`[SOVEREIGN-PROXY] Listening on port ${PORT}`);
-  console.log(`[SOVEREIGN-PROXY] Harness P1: ${HARNESS_P1}`);
-  console.log(`[SOVEREIGN-PROXY] Harness K2: ${HARNESS_K2}`);
-  console.log(`[SOVEREIGN-PROXY] Chat token: ${HUB_CHAT_TOKEN ? "loaded" : "MISSING"}`);
-  console.log(`[SOVEREIGN-PROXY] Vault bearer: ${VAULT_BEARER ? "loaded" : "MISSING"}`);
-  console.log(`[SOVEREIGN-PROXY] Cost per request: $0.00 (Max subscription)`);
-});
+if (_directRun) {
+  loadCoordFromDisk();
+  server.listen(PORT, () => {
+    console.log(`[SOVEREIGN-PROXY] Listening on port ${PORT}`);
+    console.log(`[SOVEREIGN-PROXY] Harness P1: ${HARNESS_P1}`);
+    console.log(`[SOVEREIGN-PROXY] Harness K2: ${HARNESS_K2}`);
+    console.log(`[SOVEREIGN-PROXY] Chat token: ${HUB_CHAT_TOKEN ? "loaded" : "MISSING"}`);
+    console.log(`[SOVEREIGN-PROXY] Vault bearer: ${VAULT_BEARER ? "loaded" : "MISSING"}`);
+    console.log(`[SOVEREIGN-PROXY] Cost per request: $0.00 (Max subscription)`);
+  });
+}

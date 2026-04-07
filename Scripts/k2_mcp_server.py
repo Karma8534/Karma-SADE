@@ -138,9 +138,9 @@ TOOLS = [
     },
     {
         "name": "k2_ollama_chat",
-        "description": "Run inference on K2 Ollama directly. Available models: qwen3:8b, nemotron-mini:optimized, qwen3.5:4b.",
+        "description": "Run inference on K2 Ollama directly. Available models depend on live K2 inventory; default is qwen3.5:4b.",
         "inputSchema": {"type": "object", "properties": {
-            "model": {"type": "string", "default": "qwen3:8b"},
+            "model": {"type": "string", "default": "qwen3.5:4b"},
             "messages": {"type": "array", "items": {"type": "object"}},
             "system": {"type": "string"}
         }, "required": ["messages"]}
@@ -172,7 +172,7 @@ _ARIA_MAP = {
 def handle_tool(name, arguments):
     if name == "k2_ollama_chat":
         return ollama_chat(
-            arguments.get("model", "qwen3:8b"),
+            arguments.get("model", "qwen3.5:4b"),
             arguments.get("messages", []),
             arguments.get("system")
         )

@@ -1,0 +1,41 @@
+# Web framework
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+websockets==13.1
+python-multipart==0.0.9
+
+# Database
+asyncpg==0.29.0
+sqlalchemy[asyncio]==2.0.35
+alembic==1.13.3
+pgvector==0.3.2
+
+# Cache
+redis[asyncio]==5.1.1
+
+# AI Providers
+anthropic==0.40.0
+openai==1.54.0
+google-generativeai==0.8.3
+groq==0.11.0
+
+# HTTP client (for z.ai, perplexity, minimax, openrouter)
+httpx==0.27.2
+aiohttp==3.10.10
+
+# Auth & security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.1
+
+# Utilities
+pydantic==2.9.2
+pydantic-settings==2.5.2
+tenacity==9.0.0
+structlog==24.4.0
+python-slugify==8.0.4
+tiktoken==0.8.0
+
+# Self-edit engine
+watchdog==5.0.3
+apscheduler==3.10.4

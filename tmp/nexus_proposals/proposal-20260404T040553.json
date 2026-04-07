@@ -1,0 +1,8 @@
+{
+  "section": "pending",
+  "text": "| # | Primitive | Source | Why |\n|---|---|---|---|\n| 18 | Dynamic permission rules (CC-as-OS) | Obs #22526 | Replace static PermissionDialog with runtime policy engine |\n\n**Reason:** This addresses the critical 'static vs. dynamic rules' bottleneck. Implementing dynamic permissions enables 'CC-as-OS' capability, allowing the system to enforce 78 context-aware rules without manual updates, directly supporting the #2 assimilation priority.",
+  "reason": "Fills the pending gap for dynamic permission management, solving the static rules limitation and enabling secure, context-aware execution.",
+  "id": "proposal-20260404T040553",
+  "created_at": "2026-04-04T04:05:53.388207Z",
+  "status": "pending"
+}

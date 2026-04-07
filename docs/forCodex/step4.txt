@@ -1,0 +1,36 @@
+karma@K2:~$ python3 /mnt/c/dev/Karma/k2/aria/vesper_watchdog.py
+[watchdog] 2026-04-05T21:55:09.906386Z — running
+[watchdog] candidate_dedupe_window_secs=3600
+[watchdog] brief written: 650 chars
+[watchdog] spine updated: resume_block refreshed (v1263, msgs=90065, grade=0.98)
+[watchdog] consolidation gated: count=0 threshold=10 min_hours=24.0
+[watchdog] candidates: 0 written (grade=0.60, n=50, local=0%, claude=2%)
+[watchdog] extra_patterns: P001_resurrect_skip already promoted or pending — skipping
+[watchdog] extra_patterns: P002_jsonl_python_repr already promoted or pending — skipping
+[watchdog] extra_patterns: P003_windows_encoding already promoted or pending — skipping
+[watchdog] extra_patterns: P004_sessions_not_indexeddb already promoted or pending — skipping
+[watchdog] extra_patterns: P005_k2_file_path_assumption already promoted or pending — skipping
+[watchdog] extra_patterns: P006_cc_session_brief_git_tracked already promoted or pending — skipping
+[watchdog] extra_patterns: P007_git_index_lock_worktree already promoted or pending — skipping
+[watchdog] extra_patterns: P008_unauthorized_model_routing already promoted or pending — skipping
+[watchdog] extra_patterns: P009_false_claims_without_verify already promoted or pending — skipping
+[watchdog] extra_patterns: P010_excessive_api_calls already promoted or pending — skipping
+[watchdog] extra_patterns: P011_router_returns_tuple already promoted or pending — skipping
+[watchdog] extra_patterns: P012_session_degradation_crossmachine already promoted or pending — skipping
+[watchdog] extra_patterns: P013_behavior_verified_not_code already promoted or pending — skipping
+[watchdog] extra_patterns: P014_sade_doctrine_absent_cold_start already promoted or pending — skipping
+[watchdog] extra_patterns: P047_proof_by_wiring already promoted or pending — skipping
+[watchdog] extra_patterns: P048_spine_field_name already promoted or pending — skipping
+[watchdog] extra_patterns: P049_research_card_loop already promoted or pending — skipping
+[watchdog] extra_patterns: P050_k1_stub_extraction already promoted or pending — skipping
+[watchdog] extra_patterns: P051_ghost_file_metrics already promoted or pending — skipping
+[watchdog] extra_patterns: P055_online_before_local already promoted or pending — skipping
+[watchdog] extra_patterns: P056_silent_privilege_degradation already promoted or pending — skipping
+[watchdog] extra_patterns: P022_ambient_endpoint_missing already promoted or pending — skipping
+[watchdog] extra_patterns: P023_k2_brief_unreliable already promoted or pending — skipping
+[watchdog] extra_patterns: P024_resurrect_b001 already promoted or pending — skipping
+[watchdog] extra_patterns: P025_memory_plan_drift already promoted or pending — skipping
+[watchdog] extra_patterns: P026_aria_crash_zombie_pid already promoted or pending — skipping
+[watchdog] extra_patterns: 0/26 new candidates emitted
+[watchdog] done. grade=0.98 cycles_threshold=263 option_c=ELIGIBLE
+karma@K2:~$

@@ -24,7 +24,7 @@ import requests as http_requests
 
 # ── Config ──────────────────────────────────────────────────────────────────
 PORT = int(os.environ.get("CORTEX_PORT", 7892))
-OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
+OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://host.docker.internal:11434")
 MODEL = os.environ.get("CORTEX_MODEL", "qwen3.5:4b")
 STATE_DIR = Path(os.environ.get("CORTEX_STATE_DIR", "/mnt/c/dev/Karma/k2/cache/cortex"))
 SAVE_INTERVAL = 300  # seconds between auto-saves
@@ -68,6 +68,18 @@ _ingest_count = 0
 app = Flask(__name__)
 
 
+def _normalize_block(block):
+    """Return (label, text) tuple from stored block formats."""
+    if isinstance(block, (list, tuple)):
+        if len(block) >= 2:
+            return str(block[0]), str(block[1])
+        if len(block) == 1:
+            return str(block[0]), ""
+    if isinstance(block, dict):
+        return str(block.get("label", "unknown")), str(block.get("text", ""))
+    return "unknown", ""
+
+
 # ── Persistence ─────────────────────────────────────────────────────────────
 
 def _ensure_state_dir():
@@ -104,7 +116,8 @@ def load_state():
         return
     try:
         state = json.loads(state_file.read_text(encoding="utf-8"))
-        _knowledge_blocks = state.get("knowledge_blocks", [])
+        raw_blocks = state.get("knowledge_blocks", [])
+        _knowledge_blocks = [_normalize_block(b) for b in raw_blocks if _normalize_block(b)[1] != "" or _normalize_block(b)[0] != ""]
         _conversation = state.get("conversation", [])
         _query_count = state.get("query_count", 0)
         _ingest_count = state.get("ingest_count", 0)
@@ -131,7 +144,7 @@ def _build_messages(extra_user_msg=None):
     # Knowledge context as a single user message
     if _knowledge_blocks:
         knowledge_text = "\n\n---\n\n".join(
-            f"[{label}]\n{text}" for label, text in _knowledge_blocks
+            f"[{_normalize_block(b)[0]}]\n{_normalize_block(b)[1]}" for b in _knowledge_blocks
         )
         # Trim if too large
         if len(knowledge_text) > MAX_KNOWLEDGE_CHARS:
@@ -278,7 +291,15 @@ def context():
 @app.route("/status", methods=["GET"])
 def status():
     """Return cortex metadata without calling the model."""
-    total_knowledge_chars = sum(len(t) for _, t in _knowledge_blocks)
+    def _block_text(block):
+        # Blocks are stored as lists/tuples: [label, text, tag, ts, source?] or dicts with "text"
+        if isinstance(block, (list, tuple)):
+            return block[1] if len(block) > 1 else ""
+        if isinstance(block, dict):
+            return block.get("text", "")
+        return ""
+
+    total_knowledge_chars = sum(len(_block_text(b)) for b in _knowledge_blocks)
     return jsonify({
         "ok": True,
         "model": MODEL,

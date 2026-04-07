@@ -1,0 +1,65 @@
+[
+  {
+    "model": "qwen3.5:4b",
+    "task": "exact_token",
+    "elapsed_s": 45.05,
+    "score": 0.0,
+    "error": "TimeoutError: timed out"
+  },
+  {
+    "model": "qwen3.5:4b",
+    "task": "structured_diff",
+    "elapsed_s": 7.19,
+    "score": 1.0,
+    "output": "{\"gap_id\":\"structured_diff_display\",\"verdict\":\"HAVE\"}"
+  },
+  {
+    "model": "qwen3.5:4b",
+    "task": "concise_reasoning",
+    "elapsed_s": 45.05,
+    "score": 0.0,
+    "error": "TimeoutError: timed out"
+  },
+  {
+    "model": "gemma4:e4b",
+    "task": "exact_token",
+    "elapsed_s": 45.01,
+    "score": 0.0,
+    "error": "TimeoutError: timed out"
+  },
+  {
+    "model": "gemma4:e4b",
+    "task": "structured_diff",
+    "elapsed_s": 45.02,
+    "score": 0.0,
+    "error": "TimeoutError: timed out"
+  },
+  {
+    "model": "gemma4:e4b",
+    "task": "concise_reasoning",
+    "elapsed_s": 45.02,
+    "score": 0.0,
+    "error": "TimeoutError: timed out"
+  },
+  {
+    "model": "nomic-embed-text:latest",
+    "task": "exact_token",
+    "elapsed_s": 0.09,
+    "score": 0.0,
+    "error": "HTTPError: HTTP Error 400: Bad Request"
+  },
+  {
+    "model": "nomic-embed-text:latest",
+    "task": "structured_diff",
+    "elapsed_s": 0.05,
+    "score": 0.0,
+    "error": "HTTPError: HTTP Error 400: Bad Request"
+  },
+  {
+    "model": "nomic-embed-text:latest",
+    "task": "concise_reasoning",
+    "elapsed_s": 0.04,
+    "score": 0.0,
+    "error": "HTTPError: HTTP Error 400: Bad Request"
+  }
+]

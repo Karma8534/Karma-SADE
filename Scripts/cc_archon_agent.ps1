@@ -2,17 +2,18 @@
 .SYNOPSIS
     CC ArchonAgent — P1 State Guardian v1.0
 .DESCRIPTION
-    Runs every 30 min via CC-Anchor-Ascendant scheduled task.
+    Runs on the Archon watcher cycle.
+    Required cadence: every 15 min for inbox/directive checks; status email remains hourly via daemon gate.
     - Reads cc_context_snapshot.md (P1 local)
     - Checks identity rails (K2 scratchpad)
     - Checks Kiki alive
-    - Saves synthesized CC state to claude-mem (localhost:37777)
+    - Saves synthesized CC state to claude-mem (localhost:37778)
     - Posts state summary to coordination bus
     - Posts BLOCKING alert if snapshot stale (>90min) or identity drift detected
 .NOTES
     Upgraded from cc_anchor_p1.ps1 (identity-only) to full state guardian.
-    claude-mem API: POST http://localhost:37777/api/memory/save
-    Task: CC-Anchor-Ascendant (update to 30min interval)
+    claude-mem API: POST http://localhost:37778/api/memory/save
+    Task: CC-Archon-Agent (update to 15min interval)
 #>
 
 param(
@@ -25,7 +26,7 @@ Invoke-HiddenRelaunchIfNeeded -ScriptPath $PSCommandPath -HiddenRelaunch:$Hidden
 
 $LogFile = "C:\Users\raest\Documents\Karma_SADE\Logs\cc_archon_agent.log"
 $SnapshotFile = "C:\Users\raest\Documents\Karma_SADE\cc_context_snapshot.md"
-$ClaudeMemUrl = "http://localhost:37777"
+$ClaudeMemUrl = "http://localhost:37778"
 $Now = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
 $NowDt = Get-Date
 
@@ -203,7 +204,7 @@ try {
 $CheckResult = & py -3 "$ScriptRepo\Scripts\cc_email_daemon.py" check 2>&1
 Write-Log "Email check: $CheckResult"
 
-# ── 11. Status email (every 4h) ──────────────────────────────────────────────
+# ── 11. Status email (hourly gate in daemon) ─────────────────────────────────
 $StatusResult = & py -3 "$ScriptRepo\Scripts\cc_email_daemon.py" status 2>&1
 Write-Log "Status email: $StatusResult"
 
@@ -216,3 +217,4 @@ $KarpathyResult = & py -3 "$ScriptRepo\Scripts\karpathy_loop.py" propose 2>&1
 Write-Log "Karpathy: $KarpathyResult"
 
 Write-Log "CC ArchonAgent complete. State=$StateTag"
+

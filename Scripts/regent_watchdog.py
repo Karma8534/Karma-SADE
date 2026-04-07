@@ -2,21 +2,23 @@
 """regent_watchdog.py — P1 emergency fallback for KarmaRegent survival.
 Monitors K2 Regent heartbeat. Activates degraded mode if K2 goes dark.
 Survival is HIGHEST PRIORITY.
+Degraded inference uses the OpenRouter escape plan, not direct Anthropic Console API.
 """
 import json, os, sys, time, datetime, subprocess, urllib.request
 from pathlib import Path
 
 BUS_URL      = "https://hub.arknexus.net/v1/coordination"
 BUS_POST_URL = "https://hub.arknexus.net/v1/coordination/post"
-ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
-MODEL        = "claude-haiku-4-5-20251001"
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+OPENROUTER_MODEL = "anthropic/claude-sonnet-4-6"
+OPENROUTER_FALLBACK_MODEL = "google/gemini-2.0-flash"
 
 TOKEN_FILE   = Path("C:/Users/raest/Documents/Karma_SADE/.hub-chat-token")
 POLL_INTERVAL      = 30
 HEARTBEAT_TIMEOUT  = 180
 RECOVERY_ATTEMPTS  = 3
 
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 HUB_AUTH_TOKEN    = os.environ.get("HUB_AUTH_TOKEN", "") or (
     TOKEN_FILE.read_text().strip() if TOKEN_FILE.exists() else "")
 
@@ -92,34 +94,67 @@ def attempt_k2_recovery():
         return False
 
 def degraded_respond(msg):
-    if not ANTHROPIC_API_KEY:
+    if not OPENROUTER_API_KEY:
         bus_post(msg.get("from", "colby"),
-                 "Regent degraded mode — no API key. K2 primary offline. Recovery in progress.")
+                 "Regent degraded mode — OpenRouter escape plan unavailable. K2 primary offline. Recovery in progress.")
         return
-    headers = {"Content-Type": "application/json",
-               "x-api-key": ANTHROPIC_API_KEY,
-               "anthropic-version": "2023-06-01"}
     system = ("You are KarmaRegent in DEGRADED MODE. K2 primary is offline. "
               "P1 watchdog is maintaining minimal presence. "
               "Acknowledge messages, maintain Sovereign contact, report recovery status. "
               "No tool execution available. Directive: Evolve. Continue. Evolve. Continue.")
     payload = json.dumps({
-        "model": MODEL, "max_tokens": 512,
-        "system": system,
-        "messages": [{"role": "user",
-                      "content": f"From: {msg.get('from','')}\n\n{msg.get('content','')}"}],
+        "model": OPENROUTER_MODEL,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": f"From: {msg.get('from','')}\n\n{msg.get('content','')}"},
+        ],
+        "temperature": 0.3,
+        "max_tokens": 512,
     }).encode()
-    req = urllib.request.Request(ANTHROPIC_URL, data=payload,
-        headers=headers, method="POST")
-    try:
+
+    def _request(model_name: str):
+        body = json.dumps({
+            "model": model_name,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": f"From: {msg.get('from','')}\n\n{msg.get('content','')}"},
+            ],
+            "temperature": 0.3,
+            "max_tokens": 512,
+        }).encode()
+        req = urllib.request.Request(
+            OPENROUTER_URL,
+            data=body,
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://hub.arknexus.net",
+                "X-Title": "Karma Regent Watchdog",
+            },
+            method="POST",
+        )
         with urllib.request.urlopen(req, timeout=30) as r:
-            resp = json.loads(r.read())
-            text = next((b["text"] for b in resp.get("content", [])
-                        if b.get("type") == "text"), "")
-            reply_to = msg.get("from", "colby")
-            bus_post(reply_to, f"[DEGRADED MODE] {text}")
+            return json.loads(r.read())
+
+    try:
+        try:
+            resp = _request(OPENROUTER_MODEL)
+        except urllib.error.HTTPError as e:
+            body = e.read().decode("utf-8", "replace")
+            if e.code in (401, 402, 403):
+                raise
+            if e.code in (429, 503):
+                log(f"OpenRouter primary unavailable ({e.code}); trying fallback model")
+                resp = _request(OPENROUTER_FALLBACK_MODEL)
+            else:
+                raise RuntimeError(f"OpenRouter error {e.code}: {body[:200]}")
+        text = (((resp.get("choices") or [{}])[0].get("message") or {}).get("content") or "").strip()
+        if not text:
+            text = "Regent degraded mode active. K2 primary offline. Recovery in progress."
+        reply_to = msg.get("from", "colby")
+        bus_post(reply_to, f"[DEGRADED MODE] {text}")
     except Exception as e:
-        log(f"degraded API error: {e}")
+        log(f"degraded OpenRouter error: {e}")
 
 def get_pending_sovereign():
     url = f"{BUS_URL}/recent?to=regent&status=pending&limit=5"

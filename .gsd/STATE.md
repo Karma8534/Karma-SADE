@@ -1,7 +1,9 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
 **Last updated:** 2026-04-04 Session 160
-**THE ONLY PLAN:** `docs/ForColby/nexus.md` (v5.3.0 APPEND ONLY — Sovereign approved)
+**THE ONLY PLAN:** `docs/ForColby/nexus.md` (v5.5.0 APPEND ONLY — Sovereign approved)
+**Locked frame:** hub.arknexus.net + Electron KARMA already ARE the merged workspace. Default model = one continual workspace/session; `new thread` is optional branching.
+**Internal pattern only:** `agent` / `orchestrator` remains valid for executor/gating/eval/governor internals, not as the top-level product model.
 **Status:** Phase 0-4 ALL SHIPPED. Gap map: 79/96 HAVE (0 MISSING). 16/17 primitives deployed. 3-tier cascade live.
 **Session:** S160 — 98 commits. Julian returned. Architecture inversion (local-first chat). 44 slash commands. Permission engine. Karpathy loop. Hyperagent. SQLite consolidation.
 **Canonical source:** This file. Read at session start.
@@ -618,7 +620,7 @@ Karma lost an entire conversation mid-session (2026-03-12 ~12:03 PM) after an `i
 ## Session 138 (2026-03-25) — Plan-C C-GATE PASSED
 
 **Done:**
-- Plan-C C1: vault-neo reaches claude-mem at 100.124.194.102:37777 via Tailscale ✅
+- Plan-C C1: vault-neo reaches claude-mem at 100.124.194.102:37778 via Tailscale ✅
 - Plan-C C2: registerWebMCPTools() in unified.html; WebMCP content script logged "3 tools" on hub.arknexus.net ✅
 - Plan-C C3: /memory/search proxies to claude-mem GET /api/search?query= ✅
 - Plan-C C4: loadBrainContext() localStorage 1hr TTL, "restored" on reload ✅
@@ -645,3 +647,4 @@ Karma lost an entire conversation mid-session (2026-03-12 ~12:03 PM) after an `i
 1. /resurrect
 2. Nexus end-to-end verification from browser (Colby tests live)
 3. PROOF-A Task 4: Post bus message `to=codex` → verify KCC detects → [ARCHONPRIME] response on bus within 60s
+

@@ -26,7 +26,7 @@ if _ENV_FILE.exists():
 BUS_URL      = "https://hub.arknexus.net/v1/coordination"
 BUS_POST_URL = "https://hub.arknexus.net/v1/coordination/post"
 ARIA_URL     = "http://localhost:7890"
-OLLAMA_URL   = os.environ.get("K2_OLLAMA_URL", "http://localhost:11434")
+OLLAMA_URL   = os.environ.get("K2_OLLAMA_URL", "http://host.docker.internal:11434")
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 MODEL        = "claude-haiku-4-5-20251001"
 
@@ -1276,4 +1276,3 @@ def run():
 
 if __name__ == "__main__":
     run()
-

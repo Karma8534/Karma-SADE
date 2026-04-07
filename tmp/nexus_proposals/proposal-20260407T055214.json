@@ -1,0 +1,8 @@
+{
+  "section": "which part to append",
+  "text": "Append the 'preclaw1-gap-map.md' file directly into the existing Nexus at `hub.arknexus.net` to create a single, unified workspace for Julian's quantum computing simulations, eliminating the need for three tabs and enhancing operational continuity.",
+  "reason": "This fixes the gap map issue by consolidating all relevant data and tools into one, ensuring seamless integration and reducing the risk of data loss during transitions.",
+  "id": "proposal-20260407T055214",
+  "created_at": "2026-04-07T05:52:14.095406Z",
+  "status": "pending"
+}

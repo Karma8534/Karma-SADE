@@ -1,0 +1,4 @@
+{"role": "user", "content": "Remember this exact token: BROWSE-B-001002.", "ts": 1775362235.7771974}
+{"role": "assistant", "content": "I have remembered the token: BROWSE-B-001002.", "ts": 1775362248.10677}
+{"role": "user", "content": "What exact token did I ask you to remember earlier?", "ts": 1775362288.4072392}
+{"role": "assistant", "content": "The token you asked me to remember earlier is BROWSE-B-001002.", "ts": 1775362299.6897314}

@@ -186,7 +186,7 @@
 | 389 React components | `components/` | **HAVE** | ~15 components in Next.js frontend [S160: 19 components covering all core UI surfaces. Not 389 but functional parity.] |
 | Markdown rendering | `components/Markdown.tsx` | **HAVE** | Basic markdown in chat [S160: renderMarkdown() handles bold, italic, code, code blocks in ChatFeed] |
 | Syntax highlighted code | `components/HighlightedCode.tsx` | **HAVE** | No syntax highlighting [S159: CodeBlock.tsx with keyword highlighting, line numbers, copy button] |
-| Structured diff display | `components/StructuredDiff.tsx` | **HAVE** | No diff display [S159: CodeBlock.tsx diff mode with +/- line coloring] |
+| Structured diff display | `components/StructuredDiff.tsx` | **HAVE** | No diff display [S159: CodeBlock.tsx diff mode with +/- line coloring] [Promoted spine v2, 2026-04-04T23:51:50Z] |
 | Virtual message list | `components/VirtualMessageList.tsx` | **HAVE** | No virtualization [Auto-scroll exists. Virtualization deferred until perf issue arises.] [S160: ChatFeed auto-scrolls, handles large message lists. Virtualization not needed at current scale.] |
 | Quick open dialog | `components/QuickOpenDialog.tsx` | **HAVE** | No quick open [S159: GlobalSearch + Ctrl+K = quick open equivalent] |
 | Global search | `components/GlobalSearchDialog.tsx` | **HAVE** | No global search [S159: GlobalSearch.tsx with Ctrl+K shortcut] |

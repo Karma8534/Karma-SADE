@@ -10,8 +10,8 @@ Usage:
   python3 Scripts/session_review.py [--source md|json|both] [--limit N] [--force]
 
 Env vars:
-  OLLAMA_URL    default: http://localhost:11434
-  REVIEW_MODEL  default: qwen3:8b
+  OLLAMA_URL    default: http://100.75.109.92:11434
+  REVIEW_MODEL  default: qwen3.5:4b
 """
 import argparse
 import json
@@ -26,8 +26,12 @@ RAW_DIR      = pathlib.Path("Logs/sessions_raw")
 CC_DIR       = pathlib.Path("docs/ccSessions")
 REVIEWED_DIR = pathlib.Path("Logs/sessions_reviewed")
 
-OLLAMA_URL   = os.environ.get("OLLAMA_URL", "http://localhost:11434")
-MODEL        = os.environ.get("REVIEW_MODEL", "qwen3:8b")
+OLLAMA_URL   = os.environ.get("OLLAMA_URL", "http://100.75.109.92:11434")
+MODEL        = os.environ.get("REVIEW_MODEL", "qwen3.5:4b")
+LOCAL_OLLAMA_URL = "http://localhost:11434"
+LOCAL_OLLAMA_MODEL = os.environ.get("REVIEW_FALLBACK_MODEL", "sam860/LFM2:350m")
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODEL = os.environ.get("REVIEW_GROQ_MODEL", "llama-3.3-70b-versatile")
 CHUNK_SIZE   = 25
 OVERLAP      = 2
 
@@ -53,15 +57,15 @@ Return ONLY valid JSON array, no preamble, no markdown fences.
 If no high-signal events: []"""
 
 
-def call_ollama(prompt: str) -> str:
+def call_ollama_once(prompt: str, url: str, model: str) -> str | None:
     payload = json.dumps({
-        "model": MODEL,
+        "model": model,
         "prompt": prompt,
         "stream": False,
         "options": {"temperature": 0.1, "num_predict": 2048}
     }).encode()
     req = urllib.request.Request(
-        f"{OLLAMA_URL}/api/generate",
+        f"{url}/api/generate",
         data=payload,
         headers={"Content-Type": "application/json"},
         method="POST"
@@ -70,11 +74,66 @@ def call_ollama(prompt: str) -> str:
         with urllib.request.urlopen(req, timeout=120) as r:
             return json.loads(r.read())["response"].strip()
     except urllib.error.URLError as e:
-        print(f"  [ollama] connection error: {e}", file=sys.stderr)
-        return "[]"
+        print(f"  [ollama] connection error ({url}, {model}): {e}", file=sys.stderr)
+        return None
     except Exception as e:
-        print(f"  [ollama] error: {e}", file=sys.stderr)
-        return "[]"
+        print(f"  [ollama] error ({url}, {model}): {e}", file=sys.stderr)
+        return None
+
+
+def groq_api_key() -> str:
+    api_key = os.environ.get("GROQ_API_KEY", "").strip()
+    if api_key:
+        return api_key
+    repo_key = pathlib.Path(".groq-api-key")
+    if repo_key.exists():
+        return repo_key.read_text(encoding="utf-8").strip()
+    raise RuntimeError("missing Groq API key")
+
+
+def call_groq(prompt: str) -> str | None:
+    payload = json.dumps({
+        "model": GROQ_MODEL,
+        "messages": [
+            {"role": "system", "content": "Return only valid JSON matching the user's extraction instructions."},
+            {"role": "user", "content": prompt},
+        ],
+        "temperature": 0,
+        "max_tokens": 2048,
+    }).encode()
+    req = urllib.request.Request(
+        GROQ_URL,
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {groq_api_key()}",
+            "User-Agent": "Karma-SessionReview/1.0",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            data = json.loads(r.read())
+            return data["choices"][0]["message"]["content"].strip()
+    except Exception as e:
+        print(f"  [groq] error: {e}", file=sys.stderr)
+        return None
+
+
+def call_review_model(prompt: str) -> str:
+    ollama_targets = [(OLLAMA_URL, MODEL)]
+    if (OLLAMA_URL, MODEL) != (LOCAL_OLLAMA_URL, LOCAL_OLLAMA_MODEL):
+        ollama_targets.append((LOCAL_OLLAMA_URL, LOCAL_OLLAMA_MODEL))
+
+    for url, model in ollama_targets:
+        response = call_ollama_once(prompt, url, model)
+        if response:
+            return response
+
+    response = call_groq(prompt)
+    if response:
+        return response
+    return "[]"
 
 
 def parse_events(raw: str) -> list:
@@ -116,7 +175,7 @@ def review_json_session(session: dict) -> list:
             role = (t.get("role") or t.get("sender") or "unknown").upper()
             text = (t.get("text") or t.get("content") or "").strip()[:2500]
             lines.append(f"[{role}]: {text}")
-        raw = call_ollama(REVIEW_PROMPT.format(turns="\n\n".join(lines)))
+        raw = call_review_model(REVIEW_PROMPT.format(turns="\n\n".join(lines)))
         events.extend(parse_events(raw))
     return events
 
@@ -149,7 +208,7 @@ def review_markdown_session(path: pathlib.Path) -> list:
     events = []
     for chunk in chunk_items(blocks, CHUNK_SIZE, OVERLAP):
         turns_text = "\n\n---\n\n".join(chunk)
-        raw = call_ollama(REVIEW_PROMPT.format(turns=turns_text[:12000]))
+        raw = call_review_model(REVIEW_PROMPT.format(turns=turns_text[:12000]))
         events.extend(parse_events(raw))
     return events
 
@@ -199,7 +258,7 @@ def main():
         result = process_json_file(path) if ftype == "json" else process_markdown_file(path)
         out_path.write_text(json.dumps(result, indent=2, ensure_ascii=False))
         total_events += result["event_count"]
-        print(f"{result['event_count']} events → {out_path.name}")
+        print(f"{result['event_count']} events -> {out_path.name}")
 
     print(f"\nDone. Total events extracted: {total_events}")
 

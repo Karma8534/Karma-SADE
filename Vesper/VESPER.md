@@ -33,8 +33,8 @@ She governs: Karma (Initiate), KCC (Archon), Codex (ArchonPrime), Kiki (executor
 |-----------|----------|--------|
 | Core daemon | K2: `/mnt/c/dev/Karma/k2/aria/karma_regent.py` | ✅ LIVE |
 | Systemd service | K2: `karma-regent.service` (Restart=always) | ✅ ACTIVE |
-| Primary LLM (P1) | P1 Ollama @ 100.124.194.102:11434 | ✅ available — nemotron-mini:latest loaded; llama3.1:8b, qwen3.5:9b, qwen3.5:27b available |
-| K2 Ollama | K2 localhost:11434 (Tailscale: 100.75.109.92:11434) | ✅ nemotron-mini:optimized loaded; qwen3:8b, qwen3.5:4b available |
+| Primary LLM (P1) | P1 Ollama @ localhost:11434 | ✅ available — `sam860/LFM2:350m` + `nomic-embed-text:latest` verified live |
+| K2 local model bridge | K2 `host.docker.internal:11434` (P1 reachability: `100.75.109.92:11434`) | ✅ `qwen3.5:4b` is the current loaded K2 floor; `gemma4:e4b` installed but underperformed in bounded runtime tests |
 | Claude (emergency) | Anthropic API | ❌ credits zero — path DEAD until recharged |
 | UI front door | hub.arknexus.net/regent | ✅ LIVE — chat input, send, display working |
 | Evolution log | K2: `/mnt/c/dev/Karma/k2/cache/regent_evolution.jsonl` | ✅ 89,754 entries |

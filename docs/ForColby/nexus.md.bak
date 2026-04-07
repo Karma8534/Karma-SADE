@@ -91,7 +91,7 @@ feedback.js, library_docs.js, deferred_intent.js — all deleted. CC replaced al
 | K2 cortex (julian_cortex.py) | LIVE | K2:7892, 107 blocks, /spine endpoint |
 | Vesper pipeline | RUNNING | watchdog/eval/governor, 1299 promotions, spine v1257 |
 | Kiki | RUNNING | 20,900+ cycles, 90% pass rate |
-| claude-mem | LIVE | P1:37777, unified brain |
+| claude-mem | LIVE | P1:37778, unified brain |
 | vault spine | LIVE | FalkorDB 4789+ nodes, FAISS 193K+ entries, ledger 209K+ |
 | Coordination bus | LIVE | proxy.js in-memory + disk, 24h TTL |
 | Electron scaffold | EXISTS | K2: /mnt/c/dev/Karma/k2/karma-browser/ (main.js, preload.js, IPC) |
@@ -458,7 +458,7 @@ You may NOT say "done" until:
 |---------|---------|----------|
 | Proxy down | curl hub.arknexus.net/health fails | docker ps, docker logs anr-hub-bridge |
 | K2 unreachable | Tool calls timeout | ping 192.168.0.226, check aria service |
-| Claude-mem silent | Brain wire not writing | Check P1:37777, verify Bearer token |
+| Claude-mem silent | Brain wire not writing | Check P1:37778, verify Bearer token |
 | Tool blocks not rendering | SSE events missing | Verify VISIBLE_TOOLS in unified.html |
 | AGORA Loading... | No token | Must navigate from hub.arknexus.net first |
 | CC busy | All requests 429 | Queue handles it; wait for current stream to finish |
@@ -999,7 +999,7 @@ Karma assessed the Nexus independently:
 | 25 | K2 dot actual health | DEPLOYED | Checks /v1/spine, not bus activity |
 | 26 | Auth on all GET endpoints | DEPLOYED | cc_server: only /health open |
 | 27 | Stream capture gap fixed | DEPLOYED | Stream path saves full response to claude-mem |
-| 28 | Port 37777→37778 in all hooks | DEPLOYED | fact_extractor + memory_extractor fixed |
+| 28 | Port 37778→37778 in all hooks | DEPLOYED | fact_extractor + memory_extractor fixed |
 | 29 | ARCHON spam fixed | DEPLOYED | Downgraded to informational |
 | 30 | Process watchdog | DEPLOYED | schtask every 5min, auto-restart |
 | 31 | CC + Karma heartbeats | DEPLOYED | 10min to bus + cortex |
@@ -1282,3 +1282,4 @@ Every sprint, task, and CP from this point forward MUST close at least one item 
 The nexus.md Sprint 6 (Memory Operating Discipline) addressed internal pipeline quality. Sprints 7+ MUST address user-facing feature parity with preclaw1. The gap map drives priority, not internal optimization.
 
 **PITFALL (P106): 39 hours of work that didn't reference preclaw1 capabilities. CC built plumbing (CP1-CP5, internal optimizations) while 69 user-facing features remained MISSING. The gap map and Liza loop exist to prevent this from recurring.**
+

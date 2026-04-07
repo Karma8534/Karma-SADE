@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "required": [
+    "schema_version",
+    "turn_index",
+    "active_goals",
+    "open_promises",
+    "unresolved_tasks",
+    "corrections_log",
+    "emotional_stance",
+    "last_actor",
+    "last_msg_id",
+    "last_user_input",
+    "last_response",
+    "last_category",
+    "last_turn_utc",
+    "quality_metrics",
+    "history"
+  ],
+  "properties": {
+    "turn_index": "integer",
+    "active_goals": "array",
+    "open_promises": "array",
+    "unresolved_tasks": "array",
+    "corrections_log": "array",
+    "emotional_stance": "string",
+    "last_actor": "string",
+    "last_msg_id": "string",
+    "last_user_input": "string",
+    "last_response": "string",
+    "last_category": "string",
+    "last_turn_utc": "string",
+    "quality_metrics": "object",
+    "history": "array"
+  }
+}

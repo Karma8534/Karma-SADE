@@ -1,0 +1,47 @@
+{
+  "identity_consistency": {
+    "keywords": [
+      "identity",
+      "coherence",
+      "continuity",
+      "memory",
+      "persona",
+      "spine"
+    ],
+    "weight": 1.0
+  },
+  "persona_style": {
+    "keywords": [
+      "terse",
+      "precise",
+      "direct",
+      "rigor",
+      "non-servile",
+      "clear"
+    ],
+    "weight": 1.0
+  },
+  "session_continuity": {
+    "keywords": [
+      "session",
+      "history",
+      "restart",
+      "transcript",
+      "resume",
+      "persist"
+    ],
+    "weight": 1.0
+  },
+  "task_completion": {
+    "keywords": [
+      "test",
+      "verify",
+      "proof",
+      "diff",
+      "implemented",
+      "applied",
+      "working"
+    ],
+    "weight": 1.0
+  }
+}

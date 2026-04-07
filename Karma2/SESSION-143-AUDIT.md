@@ -171,7 +171,7 @@ This is the autoresearch `program.md` pattern applied to Karma. It bridges:
 7. Resolved 5 blockers immediately (identity-state stale, tools-and-apis contradiction, karma-directives missing, distribution primitives stub, C-GATE status correction)
 8. Updated PLAN-backlog.md with Backlog-11 (karma-directives.md) and Backlog-12 (distribution primitives)
 9. Updated identity-state.md and tools-and-apis.md to resolve contradictions
-10. **VERIFIED C1**: vault-neo → P1:37777/health = HTTP 200 (Tailscale reach confirmed)
+10. **VERIFIED C1**: vault-neo → P1:37778/health = HTTP 200 (Tailscale reach confirmed)
 11. **VERIFIED C3**: /memory/search = 77 results, /memory/context = full resume_block. S141 404 was wrong path (/api/search vs /memory/search)
 12. **C-GATE upgraded to GREEN** — PLAN.md and PLAN-C-wire.md updated
 13. **ROADMAP.md refreshed** — added Milestone 9 (Sessions 129-143), active backlog table, updated quality gaps

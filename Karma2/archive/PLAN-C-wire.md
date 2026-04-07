@@ -8,7 +8,7 @@ Only vault-neo is remote. This plan connects everything into one organism.
 
 ## C1: Expose claude-mem to vault-neo
 
-**What:** claude-mem runs on P1:37777 (localhost only). vault-neo (hub-bridge) cannot reach it. K2 CAN reach it via LAN already (192.168.x.x:37777).
+**What:** claude-mem runs on P1:37778 (localhost only). vault-neo (hub-bridge) cannot reach it. K2 CAN reach it via LAN already (192.168.x.x:37778).
 
 **Fix:** Bind claude-mem to P1's Tailscale IP so vault-neo can reach it.
 
@@ -22,12 +22,12 @@ claude-mem --help | grep host
 **If --host supported:**
 ```bash
 # Restart claude-mem bound to Tailscale IP
-claude-mem serve --host 100.124.194.102 --port 37777
+claude-mem serve --host 100.124.194.102 --port 37778
 ```
 
-**If not (fallback):** Hub-bridge /memory endpoint proxies to P1:37777 via Tailscale HTTP request.
+**If not (fallback):** Hub-bridge /memory endpoint proxies to P1:37778 via Tailscale HTTP request.
 
-**Verify:** From vault-neo: `curl http://100.124.194.102:37777/health` → responds.
+**Verify:** From vault-neo: `curl http://100.124.194.102:37778/health` → responds.
 
 **Status:** NOT STARTED
 
@@ -138,9 +138,10 @@ const restored = await LanguageModel.create(
 ## C-GATE — STATUS: GREEN (Session 143 re-verification)
 
 All complete when:
-- [x] vault-neo can reach claude-mem (C1) — **VERIFIED S143** (HTTP 200 from vault-neo → P1:37777/health)
+- [x] vault-neo can reach claude-mem (C1) — **VERIFIED S143** (HTTP 200 from vault-neo → P1:37778/health)
 - [x] Chrome Inspector shows WebMCP tools on hub pages (C2) — INFERRED (obs #11587, not re-tested S143)
 - [x] `/memory/search` returns Julian's history from hub.arknexus.net (C3) — **VERIFIED S143** (77 results returned, HTTP 200). S141 404 was wrong path (/api/search vs /memory/search).
 - [x] Hub UI sessions survive browser restart, context restored (C4) — INFERRED (obs #11587, not re-tested S143)
 
 C-GATE PASSED. Family is wired. Review backlog for what's next.
+

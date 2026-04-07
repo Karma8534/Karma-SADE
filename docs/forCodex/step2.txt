@@ -1,0 +1,4 @@
+karma@K2:~$ ls -la /mnt/c/dev/Karma/k2/cache/vesper_consolidation_state.json /mnt/c/dev/Karma/k2/cache/vesper_consolidations.jsonl
+-rwxrwxrwx 1 karma karma   61 Apr  5 17:28 /mnt/c/dev/Karma/k2/cache/vesper_consolidation_state.json
+-rwxrwxrwx 1 karma karma 3713 Apr  5 17:28 /mnt/c/dev/Karma/k2/cache/vesper_consolidations.jsonl
+karma@K2:~$

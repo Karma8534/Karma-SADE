@@ -43,6 +43,10 @@ try {
         Write-Host "[cc-server] WARNING: No token file found at $TokenFile — auth disabled"
     }
 
+    # Max/OAuth auth should not be shadowed by stale Anthropic Console API keys.
+    Remove-Item Env:ANTHROPIC_API_KEY -ErrorAction SilentlyContinue
+    Remove-Item Env:CLAUDE_API_KEY -ErrorAction SilentlyContinue
+
     Write-Host "[cc-server] Starting cc_server_p1.py on port 7891 at $(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
 
     # Kill any existing processes on port 7891 before spawning new one
@@ -63,7 +67,8 @@ try {
             -WorkingDirectory $WorkDir `
             -RedirectStandardOutput $LogFile `
             -RedirectStandardError "$WorkDir\Logs\cc-server-err.log" `
-            -PassThru -NoNewWindow
+            -WindowStyle Hidden `
+            -PassThru
 
         # Write PID for monitoring
         $proc.Id | Out-File $PidFile -Encoding ascii

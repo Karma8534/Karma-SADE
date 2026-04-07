@@ -1,0 +1,8 @@
+{
+  "section": "which part to append",
+  "text": "Implement a **dynamic Importance Scoring** module within the Karpathy AutoResearch loop. This will automatically adjust the weight of recent, noisy memories based on their relevance to the current task, ensuring that only the most crucial information is retained and discarded, reducing computational overhead and improving efficiency.",
+  "reason": "This directly addresses the recent loss of source data by prioritizing recent, high-importance memories, optimizing resource usage and enhancing the agent's ability to learn effectively in dynamic environments.",
+  "id": "proposal-20260404T180552",
+  "created_at": "2026-04-04T18:05:52.136210Z",
+  "status": "pending"
+}

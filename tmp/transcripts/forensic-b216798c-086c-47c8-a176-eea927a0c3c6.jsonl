@@ -1,0 +1,6 @@
+{"role": "user", "content": "Remember this exact token for restart recovery: PERSIST-20260404224522.", "ts": 1775357122.5082948}
+{"role": "assistant", "content": "I've noted the token for restart recovery: PERSIST-20260404224522.", "ts": 1775357134.258171}
+{"role": "user", "content": "Acknowledge in five words or fewer.", "ts": 1775357134.3801355}
+{"role": "assistant", "content": "Restart token noted successfully", "ts": 1775357145.927162}
+{"role": "user", "content": "What exact token did I ask you to remember earlier?", "ts": 1775357158.9874635}
+{"role": "assistant", "content": "PERSIST-20260404224522", "ts": 1775357170.1812444}

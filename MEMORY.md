@@ -3,6 +3,8 @@
 # Karma SADE — Active Memory
 
 ## Current State
+- **Session 161 task cleanup completion (2026-04-05):** The stale Windows Scheduled Tasks that caused visible PowerShell windows were backed up, removed on P1 with admin PowerShell, and only the two legitimate timer jobs were recreated cleanly: `KarmaSessionIngest` and `CC-Archon-Agent`. Both now use the correct hidden launch path (`wscript.exe -> RunHiddenPowerShell.vbs -> script.ps1`). Ground truth after cleanup: `AUDIT_OK`; `KarmaSessionIngest` and `CC-Archon-Agent` both export with `wscript.exe` actions; the hidden HKCU Run launchers remain in place for resident services. The earlier caveat about stale task objects is no longer true.
+- **Session 161 runtime repair (2026-04-05):** Hidden PowerShell persistence on P1 is now self-healing from code instead of depending on mutable Task Scheduler state. Task-targeted scripts (`start_cc_server.ps1`, `karma-inbox-watcher.ps1`, `karma_session_indexer.ps1`, `karma-file-server.ps1`, `cc_archon_agent.ps1`, `Run-SessionIngest.ps1`) now self-relaunch through `RunHiddenPowerShell.vbs` and exit immediately when invoked directly; `Audit-PersistentLaunchers.ps1`, `Repair-PersistentLaunchers.ps1`, `Start-LauncherSentinel.ps1`, and `Register-PersistentPowerShellTasks.ps1` now maintain HKCU hidden launchers plus live runtime repair. Ground truth after repair: `AUDIT_OK`, local file server `/v1/local-dir` returns 200 with bearer auth, local `/cc` exact-token recall works, live `/v1/chat` exact-token recall works, pytest suite is `20 passed`, frontend build passes. Remaining caveat: stale scheduled task objects still exist on Windows, but their direct PowerShell launch paths are now neutralized by the self-hidden relaunch wrappers.
 - **Session 160 update (2026-04-04):** Nexus harness fallback runtime now works end-to-end on the protected `/cc/stream` path. After a real `cc_server_p1.py` restart, fallback Groq recovered `sovereign-restart-signal` and returned `# Karma SADE — Active Memory` from MEMORY.md correctly.
 - **Session 160 deploy follow-through:** hub.arknexus.net browser route now keeps grounded short questions on the harness path instead of bypassing to raw K2/Groq, and the deployed proxy read/status endpoints were verified live from vault-neo (`/v1/surface`, `/v1/wip`, `/v1/files`, `/v1/git/status`, `/v1/self-edit/pending`, `/v1/file`). P1 server supervisor bug also fixed: `Start-CCServer.ps1` no longer loops on `py.exe` and now runs single-instance under a named mutex.
 - **What changed:** Electron `cc-chat` now has a harness/tool loop + Groq/K2 fallback; `cc_server_p1.py` now keeps recovered transcript context out of the literal user turn and feeds it through the harness/fallback prompt path; frontend gained persisted chat state plus Cowork/Code surfaces; Step 8 regent modules were created and Phase 0 executor ran to a real gap-map update; hidden persistent P1 launchers were stamped into HKCU Run; K2 now has repo-owned systemd units/install path for `karma-regent`, `aria`, and `cc-ascendant-watchdog.timer`.
@@ -237,3 +239,20 @@ Give this to Codex or execute it yourself. ~40 lines changed across 3 files.
 6. Phase F: Sovereign declares baseline
 7. THE PLAN is `Memory/03-resurrection-plan-v2.1.md` (v2.2). nexus.md is APPEND-ONLY reference.
 8. Sovereign granted identity autonomy (voice, persona = Julian+Karma's decision). obs #21947
+
+## Session 2026-04-06T10:11Z — Local LLM Floor Verified + Runtime Closures
+- **Local LLMs both verified live and both are needed.**
+- **P1 local floor**: `http://localhost:11434` has `sam860/LFM2:350m` + `nomic-embed-text:latest`. Live chat call succeeded.
+- **K2 local floor**: `http://100.75.109.92:11434` / `http://host.docker.internal:11434` has `qwen3.5:4b` + `nomic-embed-text:latest`. Live chat call succeeded.
+- **K2 host-boundary correction**: SSH-visible K2 Linux does **not** serve Ollama on `localhost:11434`; the live bridge is `host.docker.internal:11434` on K2 and `100.75.109.92:11434` from P1.
+- **K2 local model decision (2026-04-06)**: `qwen3.5:4b` remains the current K2 local floor. `gemma4:e4b` is installed for future reevaluation, but bounded runtime tests showed Gemma timing out on most structured tasks while qwen still outperformed it on completed role tasks.
+- **Role split**:
+  - P1 local = tiny floor/fallback for local watcher loops and degraded responses.
+  - K2 local = stronger free reasoning floor for regent/triage/review/consolidation paths.
+  - CC CLI Max remains primary for Julian; local models are support/fallback and cheap continuous cognition.
+- **Closures completed this session**:
+  - hub-bridge future rebuild path fixed: Dockerfile now matches live `proxy.js` runtime on repo + vault path.
+  - SmartRouter default corrected to `qwen3.5:4b`.
+  - K2 MCP default corrected to `qwen3.5:4b`.
+  - CC personal email daemon fixed to use P1 local `sam860/LFM2:350m`; live `personal` send succeeded.
+- **Pause point**: user asked architecture questions before next contradiction pass.

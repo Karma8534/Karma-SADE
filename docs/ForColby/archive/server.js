@@ -30,7 +30,7 @@ const DEEP_MODE_HEADER = (process.env.DEEP_MODE_HEADER || "x-karma-deep").toLowe
 const HANDOFF_DIR = process.env.HANDOFF_DIR || "/data/handoff";
 const KARMA_CONTEXT_URL = process.env.KARMA_CONTEXT_URL || "http://karma-server:8340/raw-context";
 const CC_SERVER_URL     = process.env.CC_SERVER_URL     || "http://100.124.194.102:7891";
-const CLAUDEMEM_URL     = process.env.CLAUDEMEM_URL     || "http://100.124.194.102:37777";
+const CLAUDEMEM_URL     = process.env.CLAUDEMEM_URL     || "http://100.124.194.102:37778";
 
 // ── Within-session conversation history ──────────────────────────────────────
 // Keeps the last N exchange pairs in memory, keyed by a hash of the bearer token.
@@ -4736,3 +4736,4 @@ async function ccInitiativeTick() {
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`hub-bridge v2.12.0 listening on :${PORT}`);
 });
+

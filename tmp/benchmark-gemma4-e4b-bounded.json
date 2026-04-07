@@ -1,0 +1,205 @@
+{
+  "generated_at": "2026-04-06T16:39:06Z",
+  "model": "gemma4:e4b",
+  "endpoint": "http://100.75.109.92:11434",
+  "timeout_s": 120,
+  "available_models_before": [
+    "gemma4:e4b",
+    "qwen3.5:4b",
+    "nomic-embed-text:latest"
+  ],
+  "ps_before": {
+    "models": [
+      {
+        "name": "qwen3.5:4b",
+        "model": "qwen3.5:4b",
+        "size": 7106172928,
+        "digest": "2a654d98e6fba55d452b7043684e9b57a947e393bbffa62485a7aac05ee4eefd",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen35",
+          "families": [
+            "qwen35"
+          ],
+          "parameter_size": "4.7B",
+          "quantization_level": "Q4_K_M"
+        },
+        "expires_at": "2026-04-06T12:38:58.8393402-04:00",
+        "size_vram": 7106172928,
+        "context_length": 32768
+      }
+    ]
+  },
+  "rows": [
+    {
+      "task_id": "exact_token",
+      "score": 1.0,
+      "reason": "exact",
+      "output": "NEXUS_OK",
+      "elapsed_s": 1.0924222000176087,
+      "eval_count": 6,
+      "eval_duration_ns": 499232100,
+      "prompt_eval_count": 41,
+      "prompt_eval_duration_ns": 126817400
+    },
+    {
+      "task_id": "tool_call_json",
+      "score": 1.0,
+      "reason": "json_exact",
+      "output": "{\"tool\":\"read_file\",\"path\":\"MEMORY.md\",\"limit\":1}",
+      "elapsed_s": 1.9192806000064593,
+      "eval_count": 18,
+      "eval_duration_ns": 1310445700,
+      "prompt_eval_count": 59,
+      "prompt_eval_duration_ns": 102018700
+    },
+    {
+      "task_id": "permission_matrix",
+      "score": 0.0,
+      "reason": "exception:TimeoutError",
+      "output": "",
+      "elapsed_s": 120.01332329999423,
+      "error": "timed out"
+    },
+    {
+      "task_id": "transcript_summary",
+      "score": 0.0,
+      "reason": "exception:TimeoutError",
+      "output": "",
+      "elapsed_s": 120.03030489999219,
+      "error": "timed out"
+    },
+    {
+      "task_id": "context_recall",
+      "score": 0.0,
+      "reason": "exception:TimeoutError",
+      "output": "",
+      "elapsed_s": 120.01818440001807,
+      "error": "timed out"
+    },
+    {
+      "task_id": "route_selection",
+      "score": 0.0,
+      "reason": "exception:TimeoutError",
+      "output": "",
+      "elapsed_s": 120.00723300001118,
+      "error": "timed out"
+    },
+    {
+      "task_id": "powershell_command",
+      "score": 0.0,
+      "reason": "exception:TimeoutError",
+      "output": "",
+      "elapsed_s": 120.01172880001832,
+      "error": "timed out"
+    },
+    {
+      "task_id": "structured_diff",
+      "score": 0.0,
+      "reason": "exception:TimeoutError",
+      "output": "",
+      "elapsed_s": 120.03544219999458,
+      "error": "timed out"
+    },
+    {
+      "task_id": "concise_reasoning",
+      "score": 0.0,
+      "reason": "exception:TimeoutError",
+      "output": "",
+      "elapsed_s": 120.01821110001765,
+      "error": "timed out"
+    },
+    {
+      "task_id": "format_discipline",
+      "score": 0.0,
+      "reason": "exception:TimeoutError",
+      "output": "",
+      "elapsed_s": 120.16205600000103,
+      "error": "timed out"
+    }
+  ],
+  "summary": {
+    "overall_score": 0.2,
+    "overall_elapsed_s": 96.33081865000713,
+    "by_task": {
+      "exact_token": {
+        "score": 1.0,
+        "elapsed_s": 1.0924222000176087,
+        "output": "NEXUS_OK",
+        "reason": "exact"
+      },
+      "tool_call_json": {
+        "score": 1.0,
+        "elapsed_s": 1.9192806000064593,
+        "output": "{\"tool\":\"read_file\",\"path\":\"MEMORY.md\",\"limit\":1}",
+        "reason": "json_exact"
+      },
+      "permission_matrix": {
+        "score": 0.0,
+        "elapsed_s": 120.01332329999423,
+        "output": "",
+        "reason": "exception:TimeoutError"
+      },
+      "transcript_summary": {
+        "score": 0.0,
+        "elapsed_s": 120.03030489999219,
+        "output": "",
+        "reason": "exception:TimeoutError"
+      },
+      "context_recall": {
+        "score": 0.0,
+        "elapsed_s": 120.01818440001807,
+        "output": "",
+        "reason": "exception:TimeoutError"
+      },
+      "route_selection": {
+        "score": 0.0,
+        "elapsed_s": 120.00723300001118,
+        "output": "",
+        "reason": "exception:TimeoutError"
+      },
+      "powershell_command": {
+        "score": 0.0,
+        "elapsed_s": 120.01172880001832,
+        "output": "",
+        "reason": "exception:TimeoutError"
+      },
+      "structured_diff": {
+        "score": 0.0,
+        "elapsed_s": 120.03544219999458,
+        "output": "",
+        "reason": "exception:TimeoutError"
+      },
+      "concise_reasoning": {
+        "score": 0.0,
+        "elapsed_s": 120.01821110001765,
+        "output": "",
+        "reason": "exception:TimeoutError"
+      },
+      "format_discipline": {
+        "score": 0.0,
+        "elapsed_s": 120.16205600000103,
+        "output": "",
+        "reason": "exception:TimeoutError"
+      },
+      "host_boundary": {
+        "score": 0.0,
+        "elapsed_s": 0.0,
+        "output": "",
+        "reason": ""
+      },
+      "brevity_control": {
+        "score": 0.0,
+        "elapsed_s": 0.0,
+        "output": "",
+        "reason": ""
+      }
+    }
+  },
+  "warmup": {
+    "output": "READY",
+    "elapsed_s": 98.12248859999818,
+    "load_duration_ns": 97443912200
+  }
+}

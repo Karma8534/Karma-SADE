@@ -1,0 +1,6 @@
+WARN: no capture token: ENOENT: no such file or directory, open 'C:\run\secrets\hub.capture.token.txt'
+WARN: no vault bearer: ENOENT: no such file or directory, open 'C:\run\secrets\vault.bearer_token.txt'
+[CHATLOG] append failed: ENOENT: no such file or directory, open 'C:\run\state\nexus-chat.jsonl'
+[CHATLOG] append failed: ENOENT: no such file or directory, open 'C:\run\state\nexus-chat.jsonl'
+[VAULT] write failed: fetch failed
+[CHATLOG] append failed: ENOENT: no such file or directory, open 'C:\run\state\nexus-chat.jsonl'

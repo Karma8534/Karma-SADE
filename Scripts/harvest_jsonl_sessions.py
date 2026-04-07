@@ -16,6 +16,7 @@ import os
 import sys
 import hashlib
 import re
+import urllib.request
 from pathlib import Path
 from datetime import datetime
 
@@ -23,6 +24,7 @@ from datetime import datetime
 PROJECTS_DIR = Path(os.environ['USERPROFILE']) / '.claude' / 'projects' / 'C--Users-raest-Documents-Karma-SADE'
 WATERMARK_FILE = PROJECTS_DIR / '.harvest_watermark_jsonl.json'
 OUTPUT_FILE = Path(__file__).parent.parent / 'Scripts' / 'harvest_jsonl_output.json'
+CLAUDE_MEM_URL = os.environ.get('CLAUDE_MEM_URL', 'http://127.0.0.1:37778')
 
 # Keywords that signal a extractable event
 EVENT_KEYWORDS = [
@@ -118,6 +120,33 @@ def make_title(text, session_id):
 def content_hash(text):
     return hashlib.md5(text.encode()).hexdigest()[:16]
 
+
+def save_observation(observation):
+    payload = json.dumps({
+        'title': observation.get('title', ''),
+        'text': observation.get('text', ''),
+        'project': observation.get('project', 'Karma_SADE'),
+    }).encode('utf-8')
+    req = urllib.request.Request(
+        f'{CLAUDE_MEM_URL}/api/memory/save',
+        data=payload,
+        headers={'Content-Type': 'application/json'},
+        method='POST',
+    )
+    with urllib.request.urlopen(req, timeout=5) as resp:
+        return 200 <= resp.status < 300
+
+
+def ingest_observations(observations):
+    ingested = 0
+    for observation in observations:
+        try:
+            if save_observation(observation):
+                ingested += 1
+        except Exception as e:
+            print(f'WARN: failed to ingest observation "{observation.get("title", "")[:80]}": {e}', file=sys.stderr)
+    return ingested
+
 def process_file(jsonl_path, seen_hashes):
     """Process a single JSONL file, return list of observations."""
     observations = []
@@ -199,6 +228,7 @@ def main():
 
     all_observations = list(existing_output)
     new_obs_count = 0
+    new_observations = []
 
     for i, fpath in enumerate(pending):
         if i % 10 == 0 and i > 0:
@@ -206,6 +236,7 @@ def main():
 
         obs = process_file(fpath, seen_hashes)
         all_observations.extend(obs)
+        new_observations.extend(obs)
         new_obs_count += len(obs)
 
         if not test_mode:
@@ -222,6 +253,8 @@ def main():
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         json.dump(all_observations, f, indent=2, ensure_ascii=False)
 
+    ingested_count = ingest_observations(new_observations)
+
     # Save watermark (not in test mode)
     if not test_mode:
         watermark['processed'] = sorted(processed_set)
@@ -230,6 +263,7 @@ def main():
         save_watermark(watermark)
 
     print(f'\nDone. New observations extracted: {new_obs_count}')
+    print(f'Ingested to claude-mem: {ingested_count}')
     print(f'Total in output file: {len(all_observations)}')
     print(f'Output: {OUTPUT_FILE}')
 

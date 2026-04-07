@@ -26,7 +26,7 @@ The Nexus is Karma's body — an evolved clone of the Claude Code wrapper surfac
 | **agora.html** | Evolution dashboard: real K2 spine stats via /spine | ✅ Live |
 | **K2 cortex** (julian_cortex.py) | qwen3.5:4b 32K, 107+ blocks, /spine endpoint | ✅ Live |
 | **Vesper pipeline** | watchdog/eval/governor, 1299+ promotions, spine v1257+ | ✅ Active |
-| **claude-mem** | Unified brain at P1:37777. Both CC and Karma write here. | ✅ Live |
+| **claude-mem** | Unified brain at P1:37778. Both CC and Karma write here. | ✅ Live |
 | **vault spine** | FalkorDB 4789+ nodes, FAISS 193K+ entries, ledger 209K+ | ✅ Live |
 | **Coordination bus** | proxy.js in-memory + disk, 24h TTL | ✅ Live |
 | **Brain wire** | Every /v1/chat turn writes to claude-mem | ✅ Live (S153) |
@@ -57,3 +57,4 @@ feedback.js, library_docs.js, deferred_intent.js. CC --resume replaced all of it
 - Effort/model selector UI (Gap 4)
 - Reboot survival (Gap 7 — no schtasks entry)
 - Skill browser, file tree, git panel, subagent visibility (Sprint 6)
+

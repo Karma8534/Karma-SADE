@@ -39,7 +39,7 @@ EVAL_AUDIT = CONTROL_DIR / "eval_audit.jsonl"
 
 
 def iso_utc() -> str:
-    return _dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+    return _dt.datetime.now(_dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def stable_fingerprint(payload: Any) -> str:

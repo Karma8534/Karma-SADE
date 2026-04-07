@@ -1,0 +1,8 @@
+{
+  "section": "which part to append",
+  "text": "Append the `preclaw1-gap-map.md` file directly to the existing floor, ensuring it's integrated seamlessly with the current `new thread` model and `cc_server_p1.py`. This maintains the current workflow's flexibility and prevents disruptions to existing operations.",
+  "reason": "Directly appends the map to avoid re-architecting the floor, preserving the current operational structure while enhancing continuity and reducing potential conflicts.",
+  "id": "proposal-20260406T185213",
+  "created_at": "2026-04-06T18:52:13.846284Z",
+  "status": "pending"
+}

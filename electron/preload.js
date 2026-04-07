@@ -32,6 +32,7 @@ contextBridge.exposeInMainWorld("karma", {
   // Claude-mem (persistent memory)
   memorySearch: (query, limit) => ipcRenderer.invoke("memory-search", query, limit),
   memorySave: (text, title) => ipcRenderer.invoke("memory-save", text, title),
+  hubToken: () => ipcRenderer.invoke("hub-token"),
 
   // Evolution (Vesper pipeline)
   spineRead: () => ipcRenderer.invoke("spine-read"),

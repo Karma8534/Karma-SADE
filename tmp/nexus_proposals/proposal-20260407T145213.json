@@ -1,0 +1,8 @@
+{
+  "section": "which part to append to",
+  "text": "**Append the `preclaw1-gap-map.md` file to the `new thread`'s `hub.arknexus.py` directory.**",
+  "reason": "This fixes the gap in continuity substrate by explicitly linking the gap map to the thread's target, ensuring a seamless transition and preventing potential workflow disruptions.",
+  "id": "proposal-20260407T145213",
+  "created_at": "2026-04-07T14:52:13.161101Z",
+  "status": "pending"
+}

@@ -13,13 +13,13 @@
 
 ## Task 2: Expose claude-mem to vault-neo (C1) <done>
 
-**Approach taken:** Added `/memory/health`, `/memory/search`, `/memory/save` endpoints to `cc_server_p1.py` (port 7891). These proxy to claude-mem worker at `127.0.0.1:37777`.
+**Approach taken:** Added `/memory/health`, `/memory/search`, `/memory/save` endpoints to `cc_server_p1.py` (port 7891). These proxy to claude-mem worker at `127.0.0.1:37778`.
 
-**Why port 7891 instead of 37777:** Port 37777 blocked by Windows Firewall (no interactive allow popup for headless proxy process). Port 7891 had existing firewall rule from interactive cc_server_p1 startup.
+**Why port 7891 instead of 37778:** Port 37778 blocked by Windows Firewall (no interactive allow popup for headless proxy process). Port 7891 had existing firewall rule from interactive cc_server_p1 startup.
 
-**VERIFIED:** `ssh vault-neo "curl -s http://100.124.194.102:7891/memory/health"` → `{"ok": true, "service": "cc-server-p1", "claudemem_url": "http://127.0.0.1:37777"}`
+**VERIFIED:** `ssh vault-neo "curl -s http://100.124.194.102:7891/memory/health"` → `{"ok": true, "service": "cc-server-p1", "claudemem_url": "http://127.0.0.1:37778"}`
 
-**Updated verify criterion for Task 3:** hub-bridge should proxy to `http://100.124.194.102:7891/memory/*` (not 37777).
+**Updated verify criterion for Task 3:** hub-bridge should proxy to `http://100.124.194.102:7891/memory/*` (not 37778).
 
 ---
 
@@ -77,3 +77,4 @@ All tasks complete when:
 - [ ] Chrome Inspector shows WebMCP tools on hub pages (C2)
 - [ ] `/memory/search` returns Julian's history from hub.arknexus.net (C3)
 - [ ] Hub UI sessions survive browser restart, context restored (C4)
+

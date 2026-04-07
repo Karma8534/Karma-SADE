@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "file_path": "test_self_edit.txt",
+    "original_content": "",
+    "new_content": "hello world\n",
+    "diff": "--- a/test_self_edit.txt\n+++ b/test_self_edit.txt\n@@ -0,0 +1 @@\n+hello world\n",
+    "description": "test proposal",
+    "proposed_at": "2026-04-01T03:46:31.268990+00:00",
+    "status": "applied",
+    "applied_at": "2026-04-01T03:46:31.270135+00:00",
+    "approved_by": "sovereign",
+    "proposed_by": "karma",
+    "risk_level": "low"
+  },
+  {
+    "id": 2,
+    "file_path": "test2.txt",
+    "original_content": "",
+    "new_content": "content\n",
+    "diff": "--- a/test2.txt\n+++ b/test2.txt\n@@ -0,0 +1 @@\n+content\n",
+    "description": "test reject",
+    "proposed_at": "2026-04-01T03:46:33.534977+00:00",
+    "status": "rejected",
+    "applied_at": null,
+    "approved_by": null,
+    "proposed_by": "karma",
+    "risk_level": "low"
+  }
+]

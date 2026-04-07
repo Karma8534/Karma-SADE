@@ -11,6 +11,7 @@ declare global {
     karma?: {
       isElectron?: boolean;
       fileWrite?: (path: string, content: string) => Promise<unknown>;
+      memorySave?: (text: string, title?: string) => Promise<Record<string, unknown>>;
       chat: (message: string, options?: Record<string, unknown>) => Promise<Record<string, unknown>>;
       cancel: () => Promise<Record<string, unknown>>;
       onChatEvent?: (handler: (payload: Record<string, unknown>) => void) => (() => void);
@@ -78,12 +79,17 @@ export function useKarmaStream(options: StreamOptions = {}) {
         if (data?.ok === false) {
           store.setError((data.error as string) || 'Electron chat failed');
         } else {
+          const assistantText =
+            (data.result as string) || (data.response as string) || (data.content as string) || '';
           const state = useKarmaStore.getState();
           const lastMsg = state.messages[state.messages.length - 1];
           if (lastMsg?.role === 'karma' && !lastMsg.content) {
-            store.updateLastMessage(
-              (data.result as string) || (data.response as string) || (data.content as string) || ''
-            );
+            store.updateLastMessage(assistantText);
+          }
+          if (assistantText && window.karma?.memorySave) {
+            const memoryText = `[Nexus chat] user: ${displayText}\nassistant: ${assistantText}`;
+            const title = `Electron Nexus chat: ${displayText.slice(0, 80)}`;
+            window.karma.memorySave(memoryText, title).catch(() => {});
           }
         }
         return;

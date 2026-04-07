@@ -1,0 +1,28 @@
+session_id: 8fd9d0e9-b6c9-4db7-9b89-2e2026040501
+timestamp: 20260405T135600Z
+goal: remove the stale P1 scheduled-task layer, preserve hidden launchers, and keep the Nexus harness runtime stable
+now: P1 hidden-launch persistence is clean; stale visible-window tasks were removed and only the legitimate timer tasks were recreated through wscript plus RunHiddenPowerShell.vbs
+done_this_session:
+  - fixed the UTC deprecation warning source in Scripts/regent_pipeline.py
+  - backed up the stale Windows Scheduled Tasks on P1 to C:\Users\raest\Desktop\karma-task-backup-20260405-094927
+  - removed stale tasks KarmaSovereignHarness, KarmaInboxWatcher, KarmaFileServer, KarmaSessionIndexer, KarmaSessionIngest, and CC-Archon-Agent
+  - recreated KarmaSessionIngest and CC-Archon-Agent with hidden wscript launcher actions
+  - verified HKCU Run launchers remain in place for resident services
+  - verified Scripts/Audit-PersistentLaunchers.ps1 now returns AUDIT_OK
+  - saved the task-cleanup completion state into MEMORY.md
+decisions:
+  - resident/background services on P1 use HKCU Run hidden launchers, not Scheduled Task objects
+  - only true timer jobs remain as Scheduled Tasks: KarmaSessionIngest and CC-Archon-Agent
+  - task-targeted scripts keep self-hidden relaunch wrappers as defense in depth
+findings:
+  - the original visible PowerShell windows were caused by stale direct powershell.exe and pwsh.exe task actions
+  - the stale tasks were removable only from elevated PowerShell on P1
+  - after recreation, the timer tasks now export with wscript.exe actions and no direct PowerShell command
+files_changed:
+  - C:\Users\raest\Documents\Karma_SADE\MEMORY.md
+  - C:\Users\raest\Documents\Karma_SADE\Scripts\regent_pipeline.py
+blockers: []
+next:
+  - reboot P1 when convenient and confirm no PowerShell windows appear on startup
+  - after reboot, rerun Scripts/Audit-PersistentLaunchers.ps1
+  - continue forensic build work from the corrected hidden-launch baseline

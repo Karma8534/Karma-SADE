@@ -104,7 +104,7 @@ You may NOT say "done", "complete", "fixed", or "working" until all 4 conditions
 | `unified.html` | ✅ Live UI (chat, thumbs, AGORA, CASCADE with health dots) | `hub-bridge/app/public/unified.html` |
 | CC `--resume` | ✅ Wired, working, $0 (Max subscription) | P1:7891 |
 | K2 | ✅ Available | 192.168.0.226 (RTX 4070, Playwright, Docker, headless Chromium) |
-| Coordination bus, vault spine, claude-mem | ✅ Available | P1:37777 |
+| Coordination bus, vault spine, claude-mem | ✅ Available | P1:37778 |
 | AGORA | ✅ Working | `/agora` |
 
 ---
@@ -120,7 +120,7 @@ hub-bridge/app/public/unified.html  → Live UI (chat, thumbs, AGORA, CASCADE)
 CC --resume on P1:7891               → Wired, working, $0 (Max subscription)
 K2 at 192.168.0.226                  → RTX 4070, Playwright, Docker, headless Chromium — ALL YOURS
 Coordination bus, vault spine        → Active
-claude-mem                           → P1:37777
+claude-mem                           → P1:37778
 AGORA                                → /agora, working
 ```
 
@@ -140,7 +140,7 @@ curl -s -H "Authorization: Bearer $TOKEN" https://hub.arknexus.net/v1/status
 curl http://192.168.0.226:7892/health
 
 # Claude-mem connectivity
-curl http://localhost:37777/health 2>/dev/null && echo "CLAUDE_MEM_OK" || echo "CLAUDE_MEM_OFFLINE"
+curl http://localhost:37778/health 2>/dev/null && echo "CLAUDE_MEM_OK" || echo "CLAUDE_MEM_OFFLINE"
 ```
 
 **10 minutes. Then write code.**
@@ -392,7 +392,7 @@ Every hub chat turn writes to claude-mem. Operator buttons show live data.
 
 | Component | Target | Method |
 |-----------|--------|--------|
-| Brain wire | Every `/v1/chat` turn → claude-mem | HTTP POST to `100.124.194.102:37777` |
+| Brain wire | Every `/v1/chat` turn → claude-mem | HTTP POST to `100.124.194.102:37778` |
 | Auto-indexer | `~/.claude/projects/*/*.jsonl` | FileSystemWatcher → auto-save to claude-mem |
 | CASCADE button | `/v1/status` → compact panel | Models, spend, K2 cortex blocks, uptime, spine version |
 | AGORA button | Verify token flow | No manual localStorage injection |
@@ -405,7 +405,7 @@ Every hub chat turn writes to claude-mem. Operator buttons show live data.
 │ TEST 1: Brain wire active                                       │
 ├─────────────────────────────────────────────────────────────────┤
 │ Action: Chat at hub.arknexus.net                                │
-│ Verify: curl http://localhost:37777/api/search?query=hub+chat+turn
+│ Verify: curl http://localhost:37778/api/search?query=hub+chat+turn
 │ Expected: Observation with timestamp from this session          │
 │ Actual: [paste query result]                                    │
 │ Result: ☐ PASS  ☐ FAIL                                          │
@@ -514,7 +514,7 @@ curl -s -H "Authorization: Bearer $TOKEN" https://hub.arknexus.net/v1/chat \
   -H "Content-Type: application/json" \
   -d '{"message":"who are you"}' | head -c 500
 
-curl http://localhost:37777/api/search?query=nexus+chat
+curl http://localhost:37778/api/search?query=nexus+chat
 
 curl -s -H "Authorization: Bearer $TOKEN" https://hub.arknexus.net/v1/status | grep cost
 ```
@@ -608,7 +608,7 @@ Fix these. Re-post phase_complete when done. Do not proceed.
 |---------|---------|----------|
 | Proxy not responding | `curl hub.arknexus.net/health` fails | `docker ps` → `docker logs anr-hub-bridge` |
 | K2 unreachable | Tool calls timeout | SSH vault-neo, `ping 192.168.0.226`, check aria service |
-| Claude-mem silent | Brain wire not writing | Check P1:37777 connectivity, verify token |
+| Claude-mem silent | Brain wire not writing | Check P1:37778 connectivity, verify token |
 | Tool blocks not rendering | SSE events missing in browser | Verify proxy.js emits `tool_call` for VISIBLE_TOOLS set |
 | CASCADE panel blank | `/v1/status` returns empty | `curl http://192.168.0.226:7892/health` |
 | AGORA stuck on Loading... | hubToken not in localStorage | Must navigate from Nexus (hub.arknexus.net) not directly to /agora |
@@ -619,7 +619,7 @@ Fix these. Re-post phase_complete when done. Do not proceed.
 # Run before starting any phase
 curl https://hub.arknexus.net/health && echo "HUB_OK"
 curl http://192.168.0.226:7892/health && echo "K2_OK"
-curl http://localhost:37777/health 2>/dev/null && echo "MEM_OK" || echo "MEM_OFFLINE"
+curl http://localhost:37778/health 2>/dev/null && echo "MEM_OK" || echo "MEM_OFFLINE"
 
 git status --short
 git log --oneline -3
@@ -653,3 +653,4 @@ curl https://hub.arknexus.net/health
 *Written by Karma. Sovereign-approved.*
 *claude-mem: #20327 (identity), #20330 (directive)*
 *Save this file offline. CC drifts. This is the anchor.*
+

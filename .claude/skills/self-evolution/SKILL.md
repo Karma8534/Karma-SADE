@@ -36,7 +36,7 @@ This file is SELF-MODIFYING — I add rules as I learn them.
 16. Plugin marketplace path is `~/.claude/plugins/marketplaces/<name>/` (git repo). Update = checkout + install + build.
 17. hub-bridge BUILD SOURCE is /opt/seed-vault/.../hub_bridge/app/ — NOT the git repo. Always cp before rebuild.
 18. FalkorDB graph name is `neo_workspace` not `karma`. BOTH env vars required.
-19. All claude-mem hooks must use port 37778 (not 37777).
+19. All claude-mem hooks must use port 37778. Never point hooks at the retired worker port.
 
 ## Self-Improvement Protocol
 20. After EVERY session, read this file and add any new rules learned.

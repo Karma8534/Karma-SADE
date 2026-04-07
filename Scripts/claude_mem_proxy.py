@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""TCP proxy: 100.124.194.102:37777 → 127.0.0.1:37777
+"""TCP proxy: 100.124.194.102:37778 → 127.0.0.1:37778
 Exposes claude-mem on the Tailscale interface for vault-neo access.
 Started at login via KarmaClaudeMemProxy scheduled task."""
 
@@ -8,9 +8,9 @@ import logging
 import sys
 
 LISTEN_HOST = "100.124.194.102"   # P1 Tailscale IP
-LISTEN_PORT = 37777
+LISTEN_PORT = 37778
 TARGET_HOST = "127.0.0.1"         # claude-mem loopback binding
-TARGET_PORT = 37777
+TARGET_PORT = 37778
 
 logging.basicConfig(
     level=logging.INFO,
@@ -70,3 +70,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+

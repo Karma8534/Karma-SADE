@@ -25,11 +25,11 @@ Used `ssh 192.168.0.226` instead of `ssh karma@192.168.0.226`. Already documente
 **Rule:** K2 SSH is ALWAYS `karma@192.168.0.226`.
 
 ### P-S155-06: DIDN'T CHECK LOGS FIRST
-The worker log (`~/.claude-mem/logs/claude-mem-2026-04-01.log`) had "Failed to start server. Is port 37777 in use?" the ENTIRE TIME. I tried 8 different start commands before reading the log.
+The worker log (`~/.claude-mem/logs/claude-mem-2026-04-01.log`) had "Failed to start server. Is port in use?" the ENTIRE TIME. I tried 8 different start commands before reading the log.
 **Rule:** Phase 1 of systematic debugging is READ ERROR MESSAGES. Logs first, always.
 
 ### P-S155-07: WINDOWS ZOMBIE TCP SOCKETS
-PID 30424 died but TCP connections stayed in CloseWait holding port 37777. Stop-Process returned success but port was still blocked.
+PID 30424 died but TCP connections stayed in CloseWait holding the old worker port. Stop-Process returned success but the port was still blocked.
 **Rule:** On Windows, after killing a process, verify the port is FREE with `Get-NetTCPConnection` before starting a replacement. If zombie sockets exist, use an alternate port.
 
 ### P-S155-08: MULTIPLE FAILED APPROACHES WITHOUT ROOT CAUSE
@@ -68,7 +68,7 @@ The correct sequence was: `git checkout v10.6.3` in marketplace dir → `npm ins
 
 ```bash
 # 1. Check what's running (DO NOT KILL IT)
-curl -sf http://localhost:37777/health
+curl -sf http://localhost:37778/health
 
 # 2. Update the marketplace repo
 cd ~/.claude/plugins/marketplaces/thedotmack
@@ -83,10 +83,10 @@ npm run build
 npm run worker:restart
 
 # 5. Verify
-curl -sf http://localhost:37777/health
+curl -sf http://localhost:37778/health
 
 # 6. If port blocked (zombie sockets on Windows):
-#    a. Check: Get-NetTCPConnection -LocalPort 37777
+#    a. Check: Get-NetTCPConnection -LocalPort 37778
 #    b. If zombie: update settings.json CLAUDE_MEM_WORKER_PORT to 37778
 #    c. Restart worker with new port
 #    d. Tell user to restart Claude Code for MCP reconnection

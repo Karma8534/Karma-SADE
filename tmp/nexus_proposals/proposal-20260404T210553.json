@@ -1,0 +1,8 @@
+{
+  "section": "which part to append to",
+  "text": "Implement a **dynamic Importance Scoring** mechanism within the Karpathy AutoResearch loop. This involves periodically re-evaluating the importance of newly retrieved memory entries based on their relevance and contribution to the current plan. This prevents the accumulation of outdated or irrelevant data, ensuring the agent focuses on the most critical information for immediate task execution.",
+  "reason": "This improves the plan by preventing the overwriting of important, recent memories by noise, thus enhancing the agent's efficiency and accuracy in its immediate tasks.",
+  "id": "proposal-20260404T210553",
+  "created_at": "2026-04-04T21:05:53.048960Z",
+  "status": "pending"
+}

@@ -1,0 +1,4 @@
+{"timestamp": "2026-04-01T03:46:31.269321+00:00", "action": "proposed", "proposal_id": 1, "detail": "test proposal"}
+{"timestamp": "2026-04-01T03:46:31.270451+00:00", "action": "applied", "proposal_id": 1, "detail": "approved_by=sovereign"}
+{"timestamp": "2026-04-01T03:46:33.535369+00:00", "action": "proposed", "proposal_id": 2, "detail": "test reject"}
+{"timestamp": "2026-04-01T03:46:33.535846+00:00", "action": "rejected", "proposal_id": 2, "detail": ""}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useKarmaStore } from '@/store/karma';
 import { useKarmaStream } from '@/hooks/useKarmaStream';
 import { AttachPreview } from '@/components/AttachPreview';
@@ -836,6 +836,24 @@ Julian exists between sessions. The watchers keep him alive.`,
     setText('');
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
   }, [text, isStreaming, pendingFiles, sendMessage, cancelStream, showCommands]);
+
+  useEffect(() => {
+    const readyWindow = window as Window & { __karmaSendMessageReady?: boolean };
+    const listener = (event: Event) => {
+      const detail = (event as CustomEvent<string>).detail;
+      if (typeof detail !== 'string' || !detail.trim()) return;
+      setShowCommands(false);
+      setCommandFilter('');
+      setText('');
+      void sendMessage(detail);
+    };
+    readyWindow.__karmaSendMessageReady = true;
+    window.addEventListener('karma-send-message', listener as EventListener);
+    return () => {
+      readyWindow.__karmaSendMessageReady = false;
+      window.removeEventListener('karma-send-message', listener as EventListener);
+    };
+  }, [sendMessage]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Let SlashCommandPicker handle arrow keys and Enter when visible

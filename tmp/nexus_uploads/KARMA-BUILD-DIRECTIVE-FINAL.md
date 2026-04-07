@@ -68,7 +68,7 @@ What S153 shipped: proxy.js ~571 lines, 16 endpoints pass, K2→P1→CC routing 
 - `hub-bridge/app/public/unified.html` — live UI (chat, thumbs, AGORA, CASCADE with health dots)
 - CC `--resume` on P1:7891 — wired, working, $0 (Max subscription)
 - K2 at 192.168.0.226 — RTX 4070, Playwright, Docker, Python, headless Chromium, ALL YOURS
-- Coordination bus, vault spine, claude-mem at P1:37777
+- Coordination bus, vault spine, claude-mem at P1:37778
 - AGORA at `/agora` — evolution dashboard, working
 
 **Extend. Do not rebuild.**
@@ -203,7 +203,7 @@ RESULT: PASS / FAIL
 **Goal:** Every hub chat turn writes to claude-mem. Operator buttons show live data.
 
 **Build:**
-- Hub-bridge writes every `/v1/chat` turn to claude-mem at `100.124.194.102:37777`
+- Hub-bridge writes every `/v1/chat` turn to claude-mem at `100.124.194.102:37778`
 - Auto-indexer: FileSystemWatcher on `~/.claude/projects/*/*.jsonl` → auto-save to claude-mem
 - CASCADE button → `/v1/status` → compact panel: models, spend, K2 cortex blocks, uptime, spine version
 - AGORA button → verify token flow without manual localStorage injection
@@ -214,7 +214,7 @@ RESULT: PASS / FAIL
 **PROOF (paste actual output):**
 ```
 TEST 1: Chat at hub.arknexus.net → check claude-mem
-CMD: curl http://localhost:37777/api/search?query=hub+chat+turn
+CMD: curl http://localhost:37778/api/search?query=hub+chat+turn
 EXPECTED: observation with timestamp from this session
 ACTUAL: [paste]
 RESULT: PASS / FAIL
@@ -290,7 +290,7 @@ TOKEN=$(ssh vault-neo 'cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt
 curl -s -H "Authorization: Bearer $TOKEN" https://hub.arknexus.net/v1/chat \
   -H "Content-Type: application/json" \
   -d '{"message":"who are you"}' | head -c 500
-curl http://localhost:37777/api/search?query=nexus+chat
+curl http://localhost:37778/api/search?query=nexus+chat
 curl -s -H "Authorization: Bearer $TOKEN" https://hub.arknexus.net/v1/status | grep cost
 ```
 

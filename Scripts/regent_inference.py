@@ -107,6 +107,7 @@ def call_with_local_first(
     system_prompt: str,
     config: CascadeConfig,
     fallback_fn: Optional[FallbackFn] = None,
+    fallback_label: str = "claude",
     log_fn: Optional[LogFn] = None,
 ) -> Tuple[Optional[str], str]:
     """Cascade: K2 -> P1 -> z.ai -> Groq -> OpenRouter -> fallback (Claude)."""
@@ -190,7 +191,7 @@ def call_with_local_first(
             return response, "openrouter"
 
     if fallback_fn:
-        _log(log_fn, "escalating to Claude: all other tiers failed")
-        return fallback_fn(messages), "claude"
+        _log(log_fn, f"escalating to {fallback_label}: all other tiers failed")
+        return fallback_fn(messages), fallback_label
     _log(log_fn, "all cascade tiers failed (no fallback)")
     return None, "none"

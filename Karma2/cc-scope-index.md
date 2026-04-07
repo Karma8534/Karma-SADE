@@ -385,3 +385,43 @@ Why: Session 150 shipped Sovereign Harness but wrap-session did not replace PLAN
 P062 [code-tab-prompt-overflow]:
 Rule: "Prompt is too long" in Code tab = context overflow. Fix: /compact or /clear then /resurrect. Root cause is usually context7 loading library docs (can add 50K+ tokens) or long tool output history. Never load context7 in Code tab unless the session is fresh. Opus 4.6 1M context still has per-request limits in the old wrapper.
 Why: Session 152 -- Code tab showed "Prompt is too long" after context7 loaded docs. Old wrapper does not compress/compact automatically. Even 1M context models hit limits when wrapper injects accumulated tool outputs without pruning.
+
+P103 [hooks-service-registry-not-hooks]:
+Rule: HooksService stores hooks in `_registry` (dict[str, list[HookDef]]) — NOT `_hooks`. Iterate with double-loop: `for hook_list in _hooks._registry.values(): for h in hook_list:`. Always verify attribute names before using internal APIs.
+Why: Session 158 — cc_server used `_hooks._hooks` (nonexistent attribute). Crashed /v1/surface and /hooks endpoints. The /hooks endpoint had this bug since Sprint 3a — never caught because error was swallowed.
+
+P104 [hookdef-event-singular]:
+Rule: HookDef dataclass field is `event` (singular str, comma-separated for multi-event) — NOT `events` (plural). Always check dataclass field names in hooks_engine.py before referencing.
+Why: Session 158 — `h.events` raised AttributeError on every HookDef access. All hook listing code was wrong.
+
+P105 [pyc-cache-stale-code]:
+Rule: Always start cc_server with `python -B` flag (disables bytecode cache). After editing .py files, cached .pyc in __pycache__ serves stale code until explicitly cleared or bypassed with -B.
+Why: Session 158 — edited cc_server_p1.py to fix P103/P104. Restarted process. Old .pyc served stale code with the bug still present. Wasted 4 debug cycles (10+ minutes) before identifying root cause was bytecode cache.
+
+P106 [hard-gates-are-binary]:
+Rule: Every gate is binary: DONE or NOT DONE. Never use "complete enough," "good enough," "sufficient to proceed," or any softened equivalent. Sampled docs, inventories, or partial reads do NOT close a mandatory read gate.
+Why: Session 161 forensic restart — the mandatory read gate was falsely declared closed after only partial/inventory reads because early contradictions were already visible. That premature transition created immediate drift from the master prompt contract.
+
+P107 [no-phase-transition-without-itemized-closure]:
+Rule: Never announce movement to the next phase until the current phase is explicitly closed item-by-item. Insight does not close a gate. Early signal does not close a gate. A phase transition requires a checklist showing every required item as DONE.
+Why: Session 161 — after weakening the read gate, the workflow advanced into contradiction purge on a false premise. The root cause was replacing checklist closure with subjective readiness.
+
+P108 [core-endpoint-must-be-proved-live]:
+Rule: Never cite, patch, migrate, or normalize a core service endpoint from memory. For any load-bearing service URL/port, prove the live endpoint with current code plus a live health check first, then update references.
+Why: Session 161 — stale memory about `claude-mem` being on the retired port caused repeated drift until code and runtime were checked and `37778/health` was proven live.
+
+P109 [do-not-mitigate-user-owned-blockers]:
+Rule: If a blocker requires Sovereign action or OS-level intervention, do not bypass it with a mitigation and move on. Show the blocker, show the proof, give the exact user action, and stop until the blocker is resolved.
+Why: Session 161 — task/launcher drift and other environment issues were partially neutralized before the user explicitly directed that blockers should be handed to them instead of being side-stepped.
+
+P110 [all-files-means-all-relevant-text-files]:
+Rule: When instructed to update "all files" for a factual correction, sweep tracked and untracked relevant text corpora, not just active docs. Explicitly classify binaries/generated caches separately, and do not claim completion until the residue set is enumerated.
+Why: Session 161 — `37777` references were removed from active docs first, but stale endpoint references still existed in archives, uploads, `claude-mem-dev`, and auxiliary notes.
+
+P111 [endpoint-cleanup-must-be-semantic]:
+Rule: For endpoint cleanup, search semantic endpoint patterns (`localhost:port`, host:port, `port N`) rather than raw numeric grep alone. Raw port scans hit PDFs, xref tables, binaries, and unrelated numeric blobs, which creates false blocker noise.
+Why: Session 161 — broad `37777` scans surfaced binary PDF/xref hits and massive noise, obscuring the real remaining endpoint references.
+
+P112 [ledger-must-not-preserve-corrected-falsehoods]:
+Rule: When a factual correction changes a foundational assumption, immediately update the execution ledger and any active status docs so they do not continue asserting the old falsehood in normalized language.
+Why: Session 161 — a mechanical port replacement corrupted the execution ledger into stating false runtime facts, which would have re-seeded drift if left uncorrected.

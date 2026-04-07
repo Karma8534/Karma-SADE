@@ -3,10 +3,10 @@
 Hey Codex. CC failed to build the Nexus. I need YOU to clean up its mess and actually build it.
 
 ## YOUR TASK
-Build the Nexus harness — an independent AI application that replaces the Claude Code wrapper. It must have Chat + Cowork + Code in one surface, persistent memory, and self-improvement. It surfaces at hub.arknexus.net (browser) AND the Electron desktop app (electron/main.js).
+Build the Nexus harness — the existing merged workspace at hub.arknexus.net (browser) and the Electron desktop app (electron/main.js) — so it exceeds the Codex + Claude Code floor. It must operate as one continual Chat + Cowork + Code workspace by default, with persistent memory, persistent session continuity, self-editing, learning, and self-improvement as baseline capabilities.
 
 ## READ THESE FIRST (in order)
-1. `docs/ForColby/nexus.md` — THE PLAN (v5.3.0). Read ALL of it.
+1. `docs/ForColby/nexus.md` — THE PLAN (v5.5.0). Read ALL of it, including Appendix S161.
 2. `.gsd/codex-cascade-audit.md` — YOUR prior forensic audit with exact insertion points
 3. `.gsd/codex-sovereign-directive.md` — 10-step build contract with DONE WHEN criteria
 4. `Karma2/cc-scope-index.md` — 115 pitfalls (institutional memory of failures)

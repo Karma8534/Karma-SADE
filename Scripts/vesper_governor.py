@@ -96,6 +96,22 @@ def _find_eval_artifact(eval_id: str):
     return None
 
 
+def _update_candidate_artifact_from_promo(promo: dict, status: str, extra: dict | None = None):
+    eval_doc = _find_eval_artifact(promo.get("eval_id", ""))
+    if not eval_doc:
+        return None
+    candidate_path = eval_doc.get("candidate_path", "")
+    if not candidate_path:
+        return None
+    path = pipeline.Path(candidate_path)
+    if not path.exists():
+        return None
+    payload = dict(extra or {})
+    payload.setdefault("eval_ref", str(pipeline.EVAL_DIR / f"{eval_doc.get('eval_id', '')}.json"))
+    pipeline.update_candidate_status(path, status, payload)
+    return str(path)
+
+
 def _promotion_governance_ok(promo: dict):
     """Strict gate: apply only if eval gate passed with non-override approval."""
     eval_id = promo.get("eval_id", "")
@@ -884,8 +900,19 @@ def run_governor():
             promo["falkor_write"] = falkor_status
             promo["smoke_test"] = smoke_detail
 
-            pipeline.write_json(done_dir / path.name, promo)
+            applied_artifact = done_dir / path.name
+            pipeline.write_json(applied_artifact, promo)
             path.unlink(missing_ok=True)
+            _update_candidate_artifact_from_promo(
+                promo,
+                "applied",
+                {
+                    "promotion_ref": str(applied_artifact),
+                    "applied_ref": str(applied_artifact),
+                    "applied_at": promo["applied_at"],
+                    "smoke_test": smoke_detail,
+                },
+            )
             applied += 1
 
             spine_ver = pipeline.read_json(pipeline.SPINE_FILE, {}).get("evolution", {}).get("version", "?")

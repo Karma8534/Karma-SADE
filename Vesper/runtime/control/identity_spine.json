@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "updated_utc": "2026-04-04T23:48:26Z",
+  "evolution": {
+    "version": 2,
+    "stable_identity": [
+      {
+        "type": "gap_closure",
+        "candidate_id": "gap_structured_diff_display_phase0_20260404",
+        "promoted_at": "2026-04-04T23:51:49Z",
+        "evidence": {
+          "feature_name": "Structured diff display",
+          "category": "UI/Rendering",
+          "verification": "structured diff smoke script verifies CodePanel diff rendering, file IO wiring, ContextPanel open-code dispatch, and page integration",
+          "artifacts": [
+            "frontend/src/components/CodePanel.tsx",
+            "frontend/src/components/CodeBlock.tsx",
+            "frontend/src/app/page.tsx",
+            "frontend/src/components/ContextPanel.tsx"
+          ],
+          "keywords": [
+            "identity",
+            "coherence",
+            "continuity",
+            "memory",
+            "persona",
+            "spine",
+            "terse",
+            "precise",
+            "direct",
+            "non-servile",
+            "clear",
+            "session",
+            "history",
+            "restart",
+            "transcript",
+            "resume",
+            "persist",
+            "test",
+            "verify",
+            "proof",
+            "diff",
+            "implemented",
+            "applied",
+            "working"
+          ]
+        },
+        "proposed_change": {
+          "target": "gap_closure",
+          "description": "Mark the structured diff display feature as HAVE with promotion evidence after passing the structured diff smoke test and preserving identity, persona, session, transcript, and persist continuity.",
+          "target_files": [
+            "frontend/src/components/CodePanel.tsx",
+            "frontend/src/components/CodeBlock.tsx",
+            "frontend/src/app/page.tsx",
+            "frontend/src/components/ContextPanel.tsx",
+            "Karma2/map/preclaw1-gap-map.md"
+          ],
+          "test_command": "python .\\Scripts\\verify_structured_diff_gap.py",
+          "diff": "--- a/frontend/src/app/page.tsx\n+++ b/frontend/src/app/page.tsx\n@@\n+import { CodePanel } from '@/components/CodePanel';\n+import { CoworkPanel } from '@/components/CoworkPanel';\n@@\n+      <CoworkPanel />\n+      <CodePanel />\n--- a/frontend/src/components/ContextPanel.tsx\n+++ b/frontend/src/components/ContextPanel.tsx\n@@\n- onRead(node.path)\n+ window.dispatchEvent(new CustomEvent('karma-open-code', { detail: { path: node.path } }))\n--- a/frontend/src/components/CodePanel.tsx\n+++ b/frontend/src/components/CodePanel.tsx\n@@\n+ load file\n+ edit content\n+ save content\n+ render structured diff preview",
+          "patch": {
+            "feature_name": "Structured diff display",
+            "new_status": "HAVE"
+          }
+        },
+        "confidence": 0.96,
+        "momentum": 1.0
+      }
+    ],
+    "candidate_patterns": []
+  }
+}

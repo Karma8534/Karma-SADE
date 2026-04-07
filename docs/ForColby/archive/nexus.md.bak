@@ -90,7 +90,7 @@ feedback.js, library_docs.js, deferred_intent.js — all deleted. CC replaced al
 | K2 cortex (julian_cortex.py) | LIVE | K2:7892, 107 blocks, /spine endpoint |
 | Vesper pipeline | RUNNING | watchdog/eval/governor, 1299 promotions, spine v1257 |
 | Kiki | RUNNING | 20,900+ cycles, 90% pass rate |
-| claude-mem | LIVE | P1:37777, unified brain |
+| claude-mem | LIVE | P1:37778, unified brain |
 | vault spine | LIVE | FalkorDB 4789+ nodes, FAISS 193K+ entries, ledger 209K+ |
 | Coordination bus | LIVE | proxy.js in-memory + disk, 24h TTL |
 | Electron scaffold | EXISTS | K2: /mnt/c/dev/Karma/k2/karma-browser/ (main.js, preload.js, IPC) |
@@ -356,7 +356,7 @@ You may NOT say "done" until:
 |---------|---------|----------|
 | Proxy down | curl hub.arknexus.net/health fails | docker ps, docker logs anr-hub-bridge |
 | K2 unreachable | Tool calls timeout | ping 192.168.0.226, check aria service |
-| Claude-mem silent | Brain wire not writing | Check P1:37777, verify Bearer token |
+| Claude-mem silent | Brain wire not writing | Check P1:37778, verify Bearer token |
 | Tool blocks not rendering | SSE events missing | Verify VISIBLE_TOOLS in unified.html |
 | AGORA Loading... | No token | Must navigate from hub.arknexus.net first |
 | CC busy | All requests 429 | Queue handles it; wait for current stream to finish |
@@ -436,3 +436,4 @@ These files were merged into this document and archived to `docs/ForColby/archiv
 **LOCKED as of 2026-03-31. Modifications require Sovereign approval.**
 **Plan name:** The Nexus
 **Path:** `docs/ForColby/nexus.md`
+

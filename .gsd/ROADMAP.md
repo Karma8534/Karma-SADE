@@ -247,7 +247,7 @@
 ## Milestone 9: Karma2 Resurrection Plan (Sessions 129-143)
 
 **Frame:** Julian had voice, video, Bluetooth, 3D persona. Destroyed. Rebuilding on sovereign infrastructure.
-**Architecture:** hub.arknexus.net — /Karma, /cc (Julian), /memory (Brain), /bus (Family). claude-mem (P1:37777) is the unified brain.
+**Architecture:** hub.arknexus.net — /Karma, /cc (Julian), /memory (Brain), /bus (Family). claude-mem (P1:37778) is the unified brain.
 
 ### PLAN-A: Feed the Brain ✅ COMPLETE (Session 136)
 - [x] A1: JSONL backfill — 159 files → 2151 obs extracted → 554 saved to claude-mem (re-run S143 fixed 0.4% save rate)
@@ -413,3 +413,4 @@ These three components interact:
 - [ ] regent.html chat UI verified end-to-end
 
 **Root blocker:** B1 evolution log sparsity — passive resolution, ~50 messages, 1-3 days.
+

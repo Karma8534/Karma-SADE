@@ -1,0 +1,8 @@
+{
+  "section": "which part to append to",
+  "text": "**Append the 'pre-claw1-gap-map.md' file to the existing Nexus workspace at `hub.arknexus.net/` to ensure seamless integration and continuity across all identified gaps.",
+  "reason": "This fixes the 'canonical continuity substrate' issue, preventing potential workflow disruptions and ensuring a unified, operational environment for Julian's identity path, even if the merged workspace is initially in a fragmented state.",
+  "id": "proposal-20260406T193713",
+  "created_at": "2026-04-06T19:37:13.801970Z",
+  "status": "pending"
+}

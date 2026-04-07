@@ -1,0 +1,57 @@
+{
+  "eval_id": "eval-candidate-gap-structured-diff-display",
+  "candidate_id": "gap_structured_diff_display_phase0_20260404",
+  "candidate_path": "C:\\Users\\raest\\Documents\\Karma_SADE\\Vesper\\runtime\\candidates\\candidate-gap-structured-diff-display.json",
+  "candidate_snapshot_sha256": "73fec580830a762f4bd0097b2098da11b6169b854e647e9142306b78c940a443",
+  "evaluated_utc": "2026-04-04T23:51:42Z",
+  "heuristic_scores": {
+    "identity_consistency": 0.9,
+    "persona_style": 0.875,
+    "session_continuity": 0.9,
+    "task_completion": 1.0
+  },
+  "model_scores": {},
+  "model_source": "none",
+  "model_weight_used": 0.6,
+  "merged_scores": {
+    "identity_consistency": 0.9,
+    "persona_style": 0.875,
+    "task_completion": 1.0,
+    "session_continuity": 0.9
+  },
+  "gate_metrics": {
+    "identity_consistency": 0.9,
+    "persona_style": 0.875,
+    "session_continuity": 0.9,
+    "task_completion": 1.0
+  },
+  "governor_decision": {
+    "approved": true,
+    "decision": "approve",
+    "reason": "gate_passed",
+    "gate": {
+      "passed": true,
+      "failures": [],
+      "metrics": {
+        "identity_consistency": 0.9,
+        "persona_style": 0.875,
+        "session_continuity": 0.9,
+        "task_completion": 1.0
+      },
+      "thresholds": {
+        "identity_consistency": 0.9,
+        "persona_style": 0.8,
+        "session_continuity": 0.8,
+        "task_completion": 0.7
+      }
+    },
+    "override": {
+      "active": false,
+      "reason": ""
+    }
+  },
+  "gate_passed": true,
+  "decision_kind": "approve",
+  "status": "evaluated",
+  "governor_status": "approved"
+}

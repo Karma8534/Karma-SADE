@@ -1,0 +1,127 @@
+ollama launch claude --model gemma4:31b-cloud
+
+
+ollama pull llama3.1:8b
+
+You are performing a ruthless, forensic extraction pass over a local folder.
+
+OBJECTIVE:
+Read EVERY file in the folder below, line by line, with zero assumptions.
+Extract ALL primitives, patterns, mechanisms, data structures, algorithms,
+UI concepts, naming conventions, system behaviors, and ideas — regardless
+of how partial, experimental, or unfinished they appear.
+Synthesize everything into a structured proposal for incorporation into
+the Nexux project. Write the full output to the file specified.
+
+TARGET FOLDER:
+C:\Users\raest\Documents\Karma_SADE\docs\wip\leaks
+
+OUTPUT FILE:
+C:\Users\raest\Documents\Karma_SADE\docs\wip\nexux2proposal.md
+
+CONSTRAINTS:
+- Use local tools ONLY (Read, Write, List). No web search. No shell exec unless listing files.
+- Do NOT summarize or skip any file — every file is forensically relevant.
+- Do NOT infer intent beyond what the text literally states. Label inferences explicitly.
+- If a file is binary or unreadable, note the filename and skip with a reason.
+- Preserve exact terminology, variable names, type names, and schema field names encountered.
+- If a concept appears in multiple files, cross-reference explicitly.
+
+PROCESS (execute in order, one file at a time):
+
+1. List all files in the target folder (including subdirectories, recursively).
+2. For each file, in order:
+   a. Read the entire file, line by line.
+   b. Identify and record every extractable primitive (see taxonomy below).
+   c. Note the source filename and approximate line range for each finding.
+3. After all files are processed, synthesize into the output document.
+
+EXTRACTION TAXONOMY (capture ALL of these that appear in any file):
+
+  DATA STRUCTURES
+    - Types, schemas, interfaces, models, enums, union types
+    - Field names, field types, nullability, defaults
+    - Nested structures, recursive types
+
+  ALGORITHMS & LOGIC
+    - Sorting, ranking, scoring functions
+    - Filtering predicates, conditions, branching logic
+    - State machines, transitions, lifecycle hooks
+    - Retry logic, backoff strategies, circuit breakers
+
+  SYSTEM BEHAVIORS
+    - Caching strategies (TTL, invalidation, eviction)
+    - Queuing / batching patterns
+    - Polling, streaming, event-driven triggers
+    - Concurrency patterns (locks, semaphores, async patterns)
+
+  NAMING & CONVENTIONS
+    - Domain vocabulary (exact terms as written)
+    - Route/endpoint naming patterns
+    - File naming conventions, folder structures implied
+    - Config key naming patterns
+
+  API & INTEGRATION SURFACE
+    - Endpoints (routes, methods, payloads)
+    - Auth patterns (token types, header formats)
+    - Error formats, status codes, envelope shapes
+    - Versioning strategies
+
+  UI / UX PRIMITIVES
+    - Component names, layout patterns
+    - Interaction flows (click → state → render)
+    - Form schemas, validation rules
+    - Display states (loading, empty, error, success)
+
+  CONFIGURATION & ENVIRONMENT
+    - Env vars referenced (exact names)
+    - Feature flags, toggle mechanisms
+    - Build/deploy configuration hints
+
+  CROSS-CUTTING CONCERNS
+    - Logging patterns, log field names
+    - Observability hooks (metrics, traces, events)
+    - Security assertions, permission checks
+    - Rate limiting / throttling references
+
+OUTPUT FORMAT (write to nexux2proposal.md):
+
+---
+# Nexux2 Proposal — Forensic Extraction
+Generated: [date]
+Source: C:\Users\raest\Documents\Karma_SADE\docs\wip\leaks
+Files processed: [N]
+
+## File Index
+[table: filename | lines | status | primitive count]
+
+## Raw Findings (per file)
+### [filename]
+Lines: [range or "all"]
+[Finding type] | [exact term/value/structure] | [literal source line or paraphrase] | LITERAL or INFERRED
+
+## Synthesized Primitives
+### Data Structures
+### Algorithms & Logic
+### System Behaviors
+### Naming & Conventions
+### API & Integration Surface
+### UI / UX Primitives
+### Configuration & Environment
+### Cross-Cutting Concerns
+
+## Cross-File Relationships
+[Any concept appearing in 2+ files — list files and the shared concept]
+
+## Incorporation Recommendations
+[For each high-value primitive: what Nexux component or layer it maps to,
+and the single best way to incorporate it. One recommendation per primitive.
+Label each: HIGH / MEDIUM / LOW priority.]
+
+## Unresolved / Ambiguous
+[Anything that could not be categorized with confidence. Label: INFERRED.]
+---
+
+BEGIN NOW. List files first. Then process each one fully before moving to the next.
+Do not produce any output until you have read the complete file.
+Do not truncate findings. If the output file grows large, that is correct behavior.

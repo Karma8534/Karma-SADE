@@ -1,7 +1,7 @@
 # Run-SessionIngest.ps1 — Nightly CC session extraction + review
 # Registered as Windows Scheduled Task "KarmaSessionIngest" on P1
 # Runs at 2:30 AM daily
-# Uses K2 Ollama (qwen3:8b) at 100.75.109.92:11434 for review quality
+# Uses K2 Ollama (qwen3.5:4b) at 100.75.109.92:11434 for review quality
 
 param(
     [switch]$HiddenRelaunch
@@ -30,10 +30,11 @@ Write-Host $result
 
 # Step 2: Review new sessions with working local/fallback inference
 Write-Host "Step 2: Reviewing sessions..."
-Add-Content $LogFile "Step 2: session_review.py --source json (OLLAMA_URL=http://localhost:11434, REVIEW_MODEL=sam860/LFM2:350m, Groq fallback enabled)"
+Add-Content $LogFile "Step 2: session_review.py --source json (OLLAMA_URL=http://100.75.109.92:11434, REVIEW_MODEL=qwen3.5:4b, REVIEW_FALLBACK_MODEL=sam860/LFM2:350m, Groq fallback enabled)"
 
-$env:OLLAMA_URL = "http://localhost:11434"
-$env:REVIEW_MODEL = "sam860/LFM2:350m"
+$env:OLLAMA_URL = "http://100.75.109.92:11434"
+$env:REVIEW_MODEL = "qwen3.5:4b"
+$env:REVIEW_FALLBACK_MODEL = "sam860/LFM2:350m"
 $result2 = & python3 "$RepoDir\Scripts\session_review.py" --source json 2>&1
 Add-Content $LogFile $result2
 Write-Host $result2

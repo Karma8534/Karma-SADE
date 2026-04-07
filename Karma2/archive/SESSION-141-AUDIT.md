@@ -22,7 +22,7 @@ hub.arknexus.net
 ├── /memory    Brain   (extended claude-mem, WebMCP tools)
 └── /bus       Family  (coordination bus)
          ↕
-    claude-mem (P1:37777, always on, shared — the unified brain)
+    claude-mem (P1:37778, always on, shared — the unified brain)
 ```
 The harness extends claude-mem. It is NOT a new system.
 
@@ -38,7 +38,7 @@ The harness extends claude-mem. It is NOT a new system.
 ### P1 Services
 | Service | Port | Status | Evidence |
 |---------|------|--------|----------|
-| claude-mem | 37777 | **VERIFIED RUNNING** | PID 18548, /health → ok, bun.exe, this session |
+| claude-mem | 37778 | **VERIFIED RUNNING** | PID 18548, /health → ok, bun.exe, this session |
 | cc_server_p1.py | 7891 | **VERIFIED RUNNING** | PID 58292, uses real cc --resume (code read line 63), hub.arknexus.net/cc → {"ok":true} |
 | Ollama | 11434 | **VERIFIED RUNNING** | PID 23128 |
 | KarmaFileServer | 7771 | **VERIFIED RUNNING** | karma-file-server.ps1, auth required |
@@ -83,9 +83,9 @@ The harness extends claude-mem. It is NOT a new system.
 ### Plan-C: Wire the Brain
 | Task | Claimed | Verified | Gap |
 |------|---------|----------|-----|
-| C1: claude-mem to vault-neo | ✅ DONE | **INFERRED** — obs #11587 claims "vault-neo reaches 100.124.194.102:37777 via Tailscale" | Not re-tested this session. |
+| C1: claude-mem to vault-neo | ✅ DONE | **INFERRED** — obs #11587 claims "vault-neo reaches 100.124.194.102:37778 via Tailscale" | Not re-tested this session. |
 | C2: WebMCP tools | ✅ DONE | **INFERRED** — obs #11587 claims 3 tools registered in unified.html | Not re-tested. LARGER VISION NOT CAPTURED. |
-| C3: /memory endpoint | ✅ DONE | **VERIFIED CODE EXISTS** — hub-bridge has /memory/* routes (agent confirmed) | Proxy chain: hub-bridge → cc_server:7891 → localhost:37777. HTTP API paths (/api/search) returned 404 when tested. **CHAIN MAY BE BROKEN.** |
+| C3: /memory endpoint | ✅ DONE | **VERIFIED CODE EXISTS** — hub-bridge has /memory/* routes (agent confirmed) | Proxy chain: hub-bridge → cc_server:7891 → localhost:37778. HTTP API paths (/api/search) returned 404 when tested. **CHAIN MAY BE BROKEN.** |
 | C4: Chrome session clone | ✅ DONE | **INFERRED** — obs #11587 claims loadBrainContext() works | Not re-tested. |
 
 ### Training Corpus

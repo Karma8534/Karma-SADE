@@ -123,7 +123,11 @@ class SmartRouter:
         # Tier 0: Local Ollama (K2 primary, P1 fallback)
         k2_url = os.environ.get("K2_OLLAMA_URL", "http://100.75.109.92:11434")
         p1_url = os.environ.get("P1_OLLAMA_URL", "http://localhost:11434")
-        k2_model = os.environ.get("K2_OLLAMA_MODEL", "qwen3:8b")
+        k2_model = (
+            os.environ.get("K2_OLLAMA_MODEL")
+            or os.environ.get("K2_OLLAMA_PRIMARY_MODEL")
+            or "qwen3.5:4b"
+        )
         p1_model = os.environ.get("P1_OLLAMA_MODEL", "sam860/LFM2:350m")
 
         self.providers = [

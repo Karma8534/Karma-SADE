@@ -4,7 +4,7 @@
 
 ## Ground Truth (verified 2026-03-25)
 
-Proxy chain: `hub.arknexus.net/memory/* → hub-bridge (CLAUDEMEM_URL=P1:37777) → claude-mem`
+Proxy chain: `hub.arknexus.net/memory/* → hub-bridge (CLAUDEMEM_URL=P1:37778) → claude-mem`
 
 ### Status per tool
 | # | Tool | Route | Status |
@@ -67,3 +67,4 @@ Proxy chain: `hub.arknexus.net/memory/* → hub-bridge (CLAUDEMEM_URL=P1:37777) 
 ### Task 7 — Verify all 8 WebMCP tools e2e
 <verify>All 7 implemented tools return 200 from hub.arknexus.net/memory/* with valid auth</verify>
 <done>[ ] 7/8 tools verified (proactive_check is AC10 — deferred)</done>
+

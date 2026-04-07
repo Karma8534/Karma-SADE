@@ -1,0 +1,8 @@
+{"ts": "2026-04-04T23:50:48Z", "event": "run_started"}
+{"ts": "2026-04-04T23:50:51Z", "event": "smoke_test_failed", "candidate_id": "gap_structured_diff_display_phase0_20260404", "detail": "test_failed (exit 1): \n> Build error occurred\nError: spawn EPERM\n    at ChildProcess.spawn (node:internal/child_process:421:11)\n    at spawn (node:child_process:796:9)\n    at fork (node:child_process:174:10)\n    at ChildPr"}
+{"ts": "2026-04-04T23:50:51Z", "event": "run_completed", "applied": 0, "skipped": 1, "pending_count": 1, "total_promotions": 0}
+{"ts": "2026-04-04T23:51:49Z", "event": "run_started"}
+{"ts": "2026-04-04T23:51:50Z", "event": "applied", "candidate_id": "gap_structured_diff_display_phase0_20260404", "spine_version": 2, "checksum": "sha256:067d27eec0c9fc15ac067ebca4b3c19a8127fbbb2b56816c3bbd947e73a888f6", "falkor_write": {"attempted": true, "success": true, "channel": "ssh_tool", "endpoint": "ssh://neo@64.225.13.144 -> http://127.0.0.1:8340/v1/tools/execute", "http_attempts": [{"url": "https://hub.arknexus.net/v1/cypher", "mode": "cypher", "ok": false, "reason": "missing_token"}, {"url": "https://hub.arknexus.net/api/tools/execute", "mode": "tool", "ok": false, "reason": "missing_token"}]}, "smoke_test": "test_passed: python .\\Scripts\\verify_structured_diff_gap.py", "gap_map_update": {"updated": true, "feature": "Structured diff display", "old_status": "HAVE", "new_status": "HAVE", "category": "RENDERING / UI"}}
+{"ts": "2026-04-04T23:51:50Z", "event": "run_completed", "applied": 1, "skipped": 0, "pending_count": 1, "total_promotions": 2}
+{"ts": "2026-04-05T07:38:33Z", "event": "run_started"}
+{"ts": "2026-04-05T07:38:33Z", "event": "run_completed", "applied": 0, "skipped": 0, "pending_count": 0, "total_promotions": 2}

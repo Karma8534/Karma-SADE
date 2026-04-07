@@ -1,0 +1,13 @@
+[SOVEREIGN-PROXY] Listening on port 18091
+[SOVEREIGN-PROXY] Harness P1: http://localhost:7891
+[SOVEREIGN-PROXY] Harness K2: http://localhost:7891
+[SOVEREIGN-PROXY] Chat token: loaded
+[SOVEREIGN-PROXY] Vault bearer: MISSING
+[SOVEREIGN-PROXY] Cost per request: $0.00 (Max subscription)
+[REQUEST] GET /health
+[REQUEST] POST /v1/chat
+[HARNESS] P1 responded OK
+[REQUEST] POST /v1/chat
+[HARNESS] P1 responded OK
+[REQUEST] POST /v1/chat
+[HARNESS] P1 responded OK

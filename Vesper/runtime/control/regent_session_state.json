@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "turn_index": 0,
+  "active_goals": [],
+  "open_promises": [],
+  "unresolved_tasks": [],
+  "corrections_log": [],
+  "emotional_stance": "focused",
+  "last_actor": "",
+  "last_msg_id": "",
+  "last_user_input": "",
+  "last_response": "",
+  "last_category": "",
+  "last_turn_utc": "",
+  "quality_metrics": {
+    "identity_consistency": 1.0,
+    "persona_style": 1.0,
+    "session_continuity": 1.0,
+    "task_completion": 0.5
+  },
+  "history": []
+}

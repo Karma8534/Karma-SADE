@@ -33,7 +33,7 @@ PROJECTS_DIR = os.path.expanduser(
 WATERMARK_FILE = os.path.join(
     os.path.dirname(__file__), "..", ".harvest_watermark_jsonl.json"
 )
-CLAUDE_MEM_URL = "http://localhost:37777"
+CLAUDE_MEM_URL = "http://localhost:37778"
 PROJECT_NAME   = "Karma_SADE"
 
 # Tool names that represent save_observation calls
@@ -260,3 +260,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

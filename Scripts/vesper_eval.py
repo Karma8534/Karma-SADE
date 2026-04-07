@@ -33,11 +33,11 @@ def _load_env_file() -> dict:
 _ENV = _load_env_file()
 
 CASCADE_CFG = inference.CascadeConfig(
-    ollama_url=_ENV.get("K2_OLLAMA_URL", "http://host.docker.internal:11434"),
+    ollama_url=_ENV.get("K2_OLLAMA_URL", ""),
     p1_ollama_url=_ENV.get("P1_OLLAMA_URL", "http://100.124.194.102:11434"),
-    k2_primary_model=_ENV.get("K2_OLLAMA_PRIMARY_MODEL", "nemotron-mini:optimized"),
-    k2_fallback_model=_ENV.get("K2_OLLAMA_FALLBACK_MODEL", "nemotron-mini:latest"),
-    p1_model=_ENV.get("P1_OLLAMA_MODEL", "nemotron-mini:latest"),
+    k2_primary_model=_ENV.get("K2_OLLAMA_PRIMARY_MODEL", ""),
+    k2_fallback_model=_ENV.get("K2_OLLAMA_FALLBACK_MODEL", ""),
+    p1_model=_ENV.get("P1_OLLAMA_MODEL", "sam860/LFM2:350m"),
     groq_url="https://api.groq.com/openai/v1/chat/completions",
     groq_model="llama-3.3-70b-versatile",
     groq_api_key=_ENV.get("GROQ_API_KEY", ""),

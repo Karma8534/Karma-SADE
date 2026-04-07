@@ -1,0 +1,18 @@
+{
+  "conversationId": "mnor6h952s4rcx",
+  "savedAt": "2026-04-07T15:08:07.840Z",
+  "messages": [
+    {
+      "id": "mnor6zsy",
+      "role": "user",
+      "content": "Reply with exactly UI_MEM_mnor6zsu and nothing else.",
+      "timestamp": "2026-04-07T15:07:48.034Z"
+    },
+    {
+      "id": "mnor6zszk",
+      "role": "karma",
+      "content": "\n\nUI_MEM_mnor6zsu",
+      "timestamp": "2026-04-07T15:07:48.035Z"
+    }
+  ]
+}

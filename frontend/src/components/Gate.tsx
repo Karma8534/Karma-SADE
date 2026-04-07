@@ -1,12 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useKarmaStore } from '@/store/karma';
 
 export function Gate() {
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
   const setToken = useKarmaStore((s) => s.setToken);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (typeof window === 'undefined') return;
+      const electronWindow = window as Window & {
+        karma?: {
+          isElectron?: boolean;
+          hubToken?: () => Promise<{ ok?: boolean; token?: string }>;
+        };
+      };
+      if (!electronWindow.karma?.isElectron || !electronWindow.karma?.hubToken) return;
+      try {
+        const result = await electronWindow.karma.hubToken();
+        const token = typeof result?.token === 'string' ? result.token : '';
+        if (!active || !token.trim()) return;
+        setToken(token.trim());
+      } catch {}
+    })();
+    return () => {
+      active = false;
+    };
+  }, [setToken]);
 
   async function handleSubmit() {
     if (!input.trim()) return;

@@ -2,7 +2,8 @@
 """
 P0N-A: CC persistent server on P1.
 Accepts POST /cc with JSON {message, session_id?}
-Uses local Ollama for inference — Anthropic-independent, no MCP startup overhead (3-8s).
+Primary inference path is Claude Code CLI on the Max subscription.
+Groq, K2, and OpenRouter are degraded fallbacks when Claude is unavailable.
 Returns: {response, ok}
 Auth: Bearer token checked against HUB_CHAT_TOKEN env var.
 """
@@ -91,6 +92,26 @@ def _check_rate_limit(ip):
     _rate_buckets[ip].append(now)
     return True
 
+
+def _should_allow_smartrouter_precheck(path):
+    """CC routes stay on the Claude-primary path; SmartRouter may advise but not preempt them."""
+    return path not in ("/cc", "/cc/stream")
+
+
+def _normalize_local_route(path):
+    """Accept browser-style local aliases so Electron and browser surfaces share one contract."""
+    parsed = urllib.parse.urlparse(path)
+    route = parsed.path
+    aliases = {
+        "/v1/chat": "/cc",
+        "/v1/chat/stream": "/cc/stream",
+        "/v1/cancel": "/cancel",
+    }
+    normalized = aliases.get(route, route)
+    if normalized == route:
+        return path
+    return urllib.parse.urlunparse(parsed._replace(path=normalized))
+
 # H2: Latency measurement
 _last_latency = {"first_token_ms": None, "cancel_ms": None, "total_ms": None}
 
@@ -105,12 +126,13 @@ def _redact(s):
     return s
 WORK_DIR      = r"C:\Users\raest\Documents\Karma_SADE"
 SESSION_FILE  = pathlib.Path.home() / ".cc_nexus_session_id"  # Dedicated Nexus session — never shared with interactive CC
+SESSION_REGISTRY_FILE = pathlib.Path.home() / ".cc_nexus_session_registry.json"
 # Bypass .cmd wrapper — call node + cli.js directly (avoids PATH issues in background processes)
 NODE_EXE       = r"C:\Program Files\nodejs\node.exe"
 CLAUDE_CLI_JS  = r"C:\Users\raest\AppData\Roaming\npm\node_modules\@anthropic-ai\claude-code\cli.js"
 # ── Nexus Agent: Karma's own agentic loop (S157 — independence primitive) ─────
 try:
-    from nexus_agent import run_agent as nexus_run_agent, append_transcript, load_transcript, TRANSCRIPT_DIR
+    from nexus_agent import run_agent as nexus_run_agent, append_transcript, load_transcript, list_transcript_sessions, TRANSCRIPT_DIR
     NEXUS_AGENT_AVAILABLE = True
     print(f"[cc-server] NexusAgent: AVAILABLE")
 except ImportError as e:
@@ -136,6 +158,17 @@ TOOL_DEFS = [
     {"name": "glob", "description": "Find files matching pattern", "input_schema": {"type": "object", "properties": {"pattern": {"type": "string"}, "path": {"type": "string"}}, "required": ["pattern"]}},
     {"name": "grep", "description": "Search file contents with regex", "input_schema": {"type": "object", "properties": {"pattern": {"type": "string"}, "path": {"type": "string"}}, "required": ["pattern"]}},
     {"name": "git", "description": "Run git command", "input_schema": {"type": "object", "properties": {"command": {"type": "string"}}, "required": ["command"]}},
+]
+GROQ_TOOL_DEFS = [
+    {
+        "type": "function",
+        "function": {
+            "name": tool["name"],
+            "description": tool["description"],
+            "parameters": tool["input_schema"],
+        },
+    }
+    for tool in TOOL_DEFS
 ]
 TOOL_PROMPT = "\n".join([
     "You are Karma inside the Nexus harness.",
@@ -212,6 +245,41 @@ def _get_ro_conn():
         _ro_db_conn.row_factory = sqlite3.Row
     return _ro_db_conn
 
+def _ensure_palace_columns():
+    """Idempotently add palace tag columns to observations; create palace_graph view."""
+    conn = sqlite3.connect(CLAUDEMEM_DB, timeout=5)
+    try:
+        cur = conn.execute("PRAGMA table_info(observations)")
+        cols = {row[1] for row in cur.fetchall()}
+        for col in ("wing", "room", "hall", "tunnel"):
+            if col not in cols:
+                conn.execute(f"ALTER TABLE observations ADD COLUMN {col} TEXT")
+        # Palace graph view (simple projection)
+        conn.execute(
+            "CREATE VIEW IF NOT EXISTS palace_graph AS "
+            "SELECT id, title, project, wing, room, hall, tunnel, created_at "
+            "FROM observations"
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+def _tag_observation(obs_id, wing=None, room=None, hall=None, tunnel=None):
+    """Update observation row with palace tags."""
+    try:
+        _ensure_palace_columns()
+        conn = sqlite3.connect(CLAUDEMEM_DB, timeout=5)
+        try:
+            conn.execute(
+                "UPDATE observations SET wing=?, room=?, hall=?, tunnel=? WHERE id=?",
+                (wing, room, hall, tunnel, obs_id),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception as e:
+        print(f"[palace] tag update failed: {e}")
+
 def _auto_save_memory(user_msg, assistant_msg):
     """Auto-save FULL chat turns to claude-mem. Every word persists. S155: no more truncation."""
     def _save():
@@ -220,13 +288,15 @@ def _auto_save_memory(user_msg, assistant_msg):
                 "text": f"[Nexus chat] user: {user_msg}\nassistant: {assistant_msg}",
                 "title": f"Nexus chat: {user_msg[:80]}",
                 "project": "Karma_SADE",
+                "wing": "Karma_SADE",
+                "hall": "hall_events",
             }, timeout=10)
         except Exception:
             pass
     threading.Thread(target=_save, daemon=True).start()
 
 def claudemem_proxy(path, method="GET", body=None, timeout=10):
-    """Proxy a request to the local claude-mem worker at 127.0.0.1:37777."""
+    """Proxy a request to the local claude-mem worker at 127.0.0.1:37778."""
     if method == "GET" and body:
         # /api/search is GET-only — convert body dict to query string
         url = f"{CLAUDEMEM_URL}{path}?{urllib.parse.urlencode(body)}"
@@ -248,11 +318,101 @@ def claudemem_proxy(path, method="GET", body=None, timeout=10):
     except Exception as e:
         return 503, {"error": f"claude-mem unavailable: {str(e)}"}
 
-
-def load_session_id():
-    """Load persisted session ID for --resume continuity."""
+def _fetch_recent_memories(limit=20):
+    """Fetch recent observations from claude-mem; graceful on failure."""
     try:
-        return SESSION_FILE.read_text().strip() if SESSION_FILE.exists() else None
+        code, payload = claudemem_proxy("/api/search", "GET", {"query": "", "limit": limit, "order": "recent"}, timeout=5)
+        if code == 200 and isinstance(payload, dict):
+            return payload.get("content", []) or payload.get("results", []) or []
+    except Exception:
+        pass
+    return []
+
+def _build_wakeup_summary():
+    """Generate AAAK wake-up block from recent memories."""
+    memories = _fetch_recent_memories(limit=40)
+    facts = []
+    for m in memories:
+        if isinstance(m, dict):
+            text = m.get("text") or m.get("content") or ""
+            title = m.get("title") or ""
+            if title:
+                facts.append(f"{title}: {text}")
+            else:
+                facts.append(text)
+        elif isinstance(m, str):
+            facts.append(m)
+    if not facts:
+        facts.append("memory empty")
+    try:
+        from Scripts.aaak import build_wakeup_block
+        return build_wakeup_block(facts, header="AAAK WAKEUP | Nexus continuity")
+    except Exception:
+        return "\n".join(facts[:10])
+
+def _fetch_recent_memories(limit=20):
+    """Fetch recent observations from claude-mem; graceful on failure."""
+    try:
+        code, payload = claudemem_proxy("/api/search", "GET", {"query": "", "limit": limit, "order": "recent"}, timeout=5)
+        if code == 200 and isinstance(payload, dict):
+            return payload.get("content", []) or payload.get("results", []) or []
+    except Exception:
+        pass
+    return []
+
+def _build_wakeup_summary():
+    """Generate AAAK wake-up block from recent memories + titles."""
+    memories = _fetch_recent_memories(limit=40)
+    facts = []
+    for m in memories:
+        if isinstance(m, dict):
+            text = m.get("text") or m.get("content") or ""
+            title = m.get("title") or ""
+            if title:
+                facts.append(f"{title}: {text}")
+            else:
+                facts.append(text)
+        elif isinstance(m, str):
+            facts.append(m)
+    if not facts:
+        facts.append("memory empty")
+    try:
+        from Scripts.aaak import build_wakeup_block
+        return build_wakeup_block(facts, header="AAAK WAKEUP | Nexus continuity")
+    except Exception:
+        return "\n".join(facts[:10])
+
+
+def _normalize_conversation_id(conversation_id=None):
+    conv_id = str(conversation_id or "default").strip()
+    return conv_id or "default"
+
+
+def _load_session_registry():
+    try:
+        if SESSION_REGISTRY_FILE.exists():
+            data = json.loads(SESSION_REGISTRY_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return {str(k): str(v) for k, v in data.items() if v}
+    except Exception as e:
+        print(f"[cc-server] WARNING: could not load session registry: {e}")
+    return {}
+
+
+def _save_session_registry(registry):
+    try:
+        SESSION_REGISTRY_FILE.write_text(json.dumps(registry, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception as e:
+        print(f"[cc-server] WARNING: could not save session registry: {e}")
+
+
+def load_session_id(conversation_id=None):
+    """Load persisted session ID for --resume continuity."""
+    conv_id = _normalize_conversation_id(conversation_id)
+    try:
+        if conv_id == "default":
+            return SESSION_FILE.read_text().strip() if SESSION_FILE.exists() else None
+        return _load_session_registry().get(conv_id)
     except Exception:
         return None
 
@@ -279,10 +439,30 @@ def _call_ollama(message, provider_url, model):
         return None
 
 
-def save_session_id(session_id):
-    """Persist session ID for next call."""
+def clear_session_id(conversation_id=None):
+    conv_id = _normalize_conversation_id(conversation_id)
     try:
-        SESSION_FILE.write_text(session_id)
+        if conv_id == "default":
+            SESSION_FILE.unlink(missing_ok=True)
+            return
+        registry = _load_session_registry()
+        if conv_id in registry:
+            registry.pop(conv_id, None)
+            _save_session_registry(registry)
+    except Exception as e:
+        print(f"[cc-server] WARNING: could not clear session ID for {conv_id}: {e}")
+
+
+def save_session_id(session_id, conversation_id=None):
+    """Persist session ID for next call."""
+    conv_id = _normalize_conversation_id(conversation_id)
+    try:
+        if conv_id == "default":
+            SESSION_FILE.write_text(session_id)
+            return
+        registry = _load_session_registry()
+        registry[conv_id] = session_id
+        _save_session_registry(registry)
     except Exception as e:
         print(f"[cc-server] WARNING: could not save session ID: {e}")
 
@@ -292,6 +472,8 @@ KARMA_PERSONA_PREFIX = "[NEXUS] You are responding as Karma through the Nexus su
 CORTEX_URL = "http://192.168.0.226:7892"  # K2 cortex (LAN direct)
 _context_cache = {"text": "", "ts": 0}  # Cache cortex context (refresh every 60s)
 CONTEXT_CACHE_TTL = 60
+CORTEX_CONTEXT_TIMEOUT = 5
+K2_QUERY_TIMEOUT = 8
 
 _spine_cache = {"text": "", "ts": 0}
 SPINE_CACHE_TTL = 300  # 5 min — spine changes slowly (governor runs every 2min)
@@ -330,7 +512,7 @@ def _fetch_cortex_context(query_hint=None):
             headers={"Content-Type": "application/json"} if query_hint else {},
             method="POST" if query_hint else "GET",
         )
-        with urllib.request.urlopen(req, timeout=90) as resp:
+        with urllib.request.urlopen(req, timeout=CORTEX_CONTEXT_TIMEOUT) as resp:
             data = json.loads(resp.read().decode())
             ctx = data.get("context", "")
             if ctx:
@@ -412,6 +594,9 @@ def build_context_prefix(user_message):
     memories = _fetch_recent_memories(user_message[:200])
     if memories:
         parts.append(f"[RELEVANT MEMORIES — from claude-mem spine]\n{memories}\n\n")
+    wake = _build_wakeup_summary()
+    if wake:
+        parts.append(f"[AAAK WAKEUP]\n{wake}\n\n")
 
     # Layer 3: VESPER SPINE — behavioral patterns from self-improvement pipeline (S157)
     spine_patterns = _fetch_vesper_stable_patterns()
@@ -599,14 +784,21 @@ def _execute_tool_locally(tool_name, tool_input):
             limit = int(tool_input.get("limit") or 0)
             content = pathlib.Path(file_path).read_text(encoding="utf-8", errors="replace")
             if limit > 0:
-                content = content[:limit]
+                content = "\n".join(content.splitlines()[:limit])
             result = {"ok": True, "path": file_path, "size": os.path.getsize(file_path), "content": content}
         elif tool_name == "write_file":
-            from write_checkpoint import write_with_checkpoint
             file_path = _normalize_workspace_path(tool_input.get("path", ""))
             content = tool_input.get("content", "")
-            wr = write_with_checkpoint(file_path, content, actor="nexus-harness")
-            result = {"ok": bool(wr.get("ok")), "path": file_path, "checkpoint": wr.get("checkpoint"), "error": wr.get("error")}
+            checkpoint_dir = os.path.join(WORK_DIR, "tmp", "checkpoints")
+            os.makedirs(checkpoint_dir, exist_ok=True)
+            checkpoint_path = ""
+            if os.path.exists(file_path):
+                base = os.path.basename(file_path)
+                checkpoint_path = os.path.join(checkpoint_dir, f"{int(time.time() * 1000)}_{base}.bak")
+                pathlib.Path(checkpoint_path).write_text(pathlib.Path(file_path).read_text(encoding="utf-8", errors="replace"), encoding="utf-8")
+            pathlib.Path(file_path).parent.mkdir(parents=True, exist_ok=True)
+            pathlib.Path(file_path).write_text(content, encoding="utf-8")
+            result = {"ok": True, "path": file_path, "checkpoint": checkpoint_path or None}
         elif tool_name == "shell":
             command = tool_input.get("command", "").strip()
             if not command:
@@ -656,9 +848,17 @@ def _execute_tool_locally(tool_name, tool_input):
     _post_tool_hook(tool_name, tool_input, result)
     return result
 
-def _build_cc_cmd(message, effort=None, model=None, budget=None, stream=False, resume=True):
+
+def _sanitized_subprocess_env():
+    env = os.environ.copy()
+    # Claude Max/OAuth should not be shadowed by stale Console API keys.
+    env.pop("ANTHROPIC_API_KEY", None)
+    env.pop("CLAUDE_API_KEY", None)
+    return env
+
+def _build_cc_cmd(message, effort=None, model=None, budget=None, stream=False, resume=True, conversation_id=None):
     """Build the CC subprocess command list. Shared by run_cc and run_cc_stream."""
-    session_id = load_session_id() if resume else None
+    session_id = load_session_id(conversation_id) if resume else None
     full_message = build_context_prefix(message) + message
     cmd = [NODE_EXE, CLAUDE_CLI_JS, "-p", full_message, "--output-format", "stream-json", "--verbose"]
     if session_id:
@@ -672,12 +872,13 @@ def _build_cc_cmd(message, effort=None, model=None, budget=None, stream=False, r
     return cmd
 
 
-def _run_cc_attempt(message, effort=None, model=None, budget=None, resume=True):
-    cmd = _build_cc_cmd(message, effort=effort, model=model, budget=budget, stream=True, resume=resume)
+def _run_cc_attempt(message, effort=None, model=None, budget=None, resume=True, conversation_id=None):
+    cmd = _build_cc_cmd(message, effort=effort, model=model, budget=budget, stream=True, resume=resume, conversation_id=conversation_id)
     global _current_proc
     _current_proc = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         text=True, cwd=WORK_DIR, encoding='utf-8', errors='replace',
+        env=_sanitized_subprocess_env(),
     )
     lines, stderr_chunks = [], []
     try:
@@ -695,7 +896,7 @@ def _run_cc_attempt(message, effort=None, model=None, budget=None, resume=True):
                         if obj.get("type") == "result":
                             new_sid = obj.get("session_id", "")
                             if new_sid:
-                                save_session_id(new_sid)
+                                save_session_id(new_sid, conversation_id=conversation_id)
                     except Exception:
                         pass
             elif _current_proc.poll() is not None:
@@ -741,10 +942,81 @@ def _build_recovered_transcript_context(transcript):
     return "[RECOVERED TRANSCRIPT]\n" + "\n".join(lines) + "\n[END RECOVERED TRANSCRIPT]"
 
 
+def _deterministic_transcript_recall(message, transcript):
+    if not transcript:
+        return None
+    lower = message.lower()
+    latest_token = None
+    latest_phrase = None
+    for entry in transcript:
+        if entry.get("role") != "user":
+            continue
+        content = str(entry.get("content", ""))
+        token_match = re.search(r"remember this exact token:\s*([^\s`\"']+)", content, re.IGNORECASE)
+        if token_match:
+            latest_token = token_match.group(1).strip().rstrip(".")
+        token_match = re.search(r"remember exactly\s+([^\s`\"']+)", content, re.IGNORECASE)
+        if token_match:
+            latest_token = token_match.group(1).strip().rstrip(".")
+        phrase_match = re.search(r"remember this exact phrase(?: for [^:]+)?:\s*(.+)", content, re.IGNORECASE)
+        if phrase_match:
+            latest_phrase = phrase_match.group(1).strip().strip("`").rstrip(".")
+        phrase_match = re.search(r"remember exactly(?: this phrase)?\s+(.+)", content, re.IGNORECASE)
+        if phrase_match and "token" not in content.lower():
+            latest_phrase = phrase_match.group(1).strip().strip("`").rstrip(".")
+    if re.search(r"\bwhat exact token did i (ask you to remember|tell you)( earlier)?( in this conversation)?\b", lower):
+        return latest_token
+    if re.search(r"\bwhat exact phrase did i (ask you to remember|tell you)( earlier)?( in this conversation)?\b", lower):
+        return latest_phrase
+    return None
+
+
+def _deterministic_transcript_boundary_answer(message, transcript):
+    recall = _deterministic_transcript_recall(message, transcript)
+    if recall:
+        return recall
+    if _message_prefers_transcript_only(message):
+        return "I do not have anything earlier in this conversation to recall yet."
+    return None
+
+
+def _deterministic_workspace_answer(message):
+    heading_match = re.search(r"\bwhat exact heading is at the top of\s+([A-Za-z0-9_./\\-]+)", message, re.IGNORECASE)
+    if heading_match:
+        path = heading_match.group(1).strip().rstrip("?.!,")
+        result = _execute_tool_locally("read_file", {"path": path, "limit": 20})
+        if result.get("ok"):
+            for line in str(result.get("content", "")).splitlines():
+                stripped = line.strip()
+                if stripped.startswith("#"):
+                    return stripped
+            for line in str(result.get("content", "")).splitlines():
+                stripped = line.strip()
+                if stripped and not stripped.startswith("<!--"):
+                    return stripped
+    first_line_match = re.search(r"\b(?:read|what is)\s+the first line of\s+([A-Za-z0-9_./\\-]+)", message, re.IGNORECASE)
+    if first_line_match:
+        path = first_line_match.group(1).strip().rstrip("?.!,")
+        result = _execute_tool_locally("read_file", {"path": path, "limit": 1})
+        if result.get("ok"):
+            lines = str(result.get("content", "")).splitlines()
+            if lines:
+                return lines[0].strip()
+    return None
+
+
 def _compose_harness_message(message, transcript_context=""):
     if transcript_context:
         return f"{transcript_context}\n\n[USER]\n{message}"
     return message
+
+
+def _message_needs_grounding(message):
+    return bool(re.search(r"\b(memory\.md|state\.md|heading|first line|top of|local file|workspace|repo|repository|current state|read file|write file|create file|shell|git|glob|grep)\b", message, re.IGNORECASE))
+
+
+def _message_prefers_transcript_only(message):
+    return bool(re.search(r"\b(what exact .*remember earlier|what exact token .* earlier|what did i say earlier|what did i ask you to remember earlier)\b", message, re.IGNORECASE))
 
 
 def _build_harness_prompt(message, transcript, transcript_context=""):
@@ -759,53 +1031,103 @@ def _build_harness_prompt(message, transcript, transcript_context=""):
 
 def _contextualize_message(message, transcript_context=""):
     composed = _compose_harness_message(message, transcript_context=transcript_context)
+    if transcript_context and _message_prefers_transcript_only(message):
+        return composed
     return build_context_prefix(composed) + composed
 
 
-def _groq_fallback(message, transcript_context=""):
+def _groq_chat(messages, tools=None, tool_choice="auto", temperature=0.0, max_tokens=1024):
     groq_key = os.environ.get("GROQ_API_KEY", "") or _read_secret_file(os.path.join(WORK_DIR, ".groq-api-key"))
     if not groq_key:
         raise RuntimeError("missing Groq API key")
-    contextual_message = _contextualize_message(message, transcript_context=transcript_context)
-    payload = json.dumps({
+    payload = {
         "model": GROQ_MODEL,
-        "messages": [{"role": "user", "content": contextual_message}],
-        "max_tokens": 1024,
-        "temperature": 0.2,
-    }).encode()
-    req = urllib.request.Request(GROQ_URL, data=payload, headers={
+        "messages": messages,
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+    }
+    if tools:
+        payload["tools"] = tools
+        payload["tool_choice"] = tool_choice
+    req = urllib.request.Request(GROQ_URL, data=json.dumps(payload).encode(), headers={
         "Content-Type": "application/json",
         "Authorization": f"Bearer {groq_key}",
         "User-Agent": "Karma-Nexus/1.0",
     }, method="POST")
     with urllib.request.urlopen(req, timeout=30) as resp:
-        data = json.loads(resp.read().decode())
-    return data.get("choices", [{}])[0].get("message", {}).get("content", "").strip(), data.get("model", GROQ_MODEL)
+        return json.loads(resp.read().decode())
+
+
+def _groq_fallback(message, transcript_context="", event_sink=None):
+    contextual_message = message if _message_needs_grounding(message) else _compose_harness_message(message, transcript_context=transcript_context)
+    messages = [
+        {
+            "role": "system",
+            "content": "You are Karma inside the Nexus harness. Use the provided tools when you need grounded file, git, or shell data. Do not guess about workspace state. After tool results are returned, continue. When done, answer in plain text only.",
+        },
+        {"role": "user", "content": contextual_message},
+    ]
+    used_model = GROQ_MODEL
+    for turn in range(TOOL_LOOP_LIMIT):
+        data = _groq_chat(messages, tools=GROQ_TOOL_DEFS, tool_choice="auto", temperature=0)
+        used_model = data.get("model", GROQ_MODEL)
+        choice = data.get("choices", [{}])[0]
+        msg = choice.get("message", {}) or {}
+        tool_calls = msg.get("tool_calls") or []
+        content = (msg.get("content") or "").strip()
+        if not tool_calls:
+            if event_sink:
+                event_sink({"type": "assistant", "message": {"content": [{"type": "text", "text": content}], "model": used_model}})
+                event_sink({"type": "result", "result": content, "model": used_model, "total_cost_usd": 0, "provider": "groq"})
+            return content, used_model
+        messages.append({
+            "role": "assistant",
+            "content": msg.get("content"),
+            "tool_calls": tool_calls,
+        })
+        for idx, tool_call in enumerate(tool_calls):
+            fn = tool_call.get("function", {}) or {}
+            tool_name = fn.get("name", "")
+            raw_args = fn.get("arguments") or "{}"
+            try:
+                tool_input = json.loads(raw_args)
+            except Exception:
+                tool_input = {}
+            tool_id = tool_call.get("id") or f"{tool_name}-{int(time.time() * 1000)}-{turn}-{idx}"
+            if event_sink:
+                event_sink({"type": "assistant", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": tool_id, "name": tool_name, "input": tool_input}]}})
+            tool_output = _execute_tool_locally(tool_name, tool_input)
+            if event_sink:
+                event_sink({"type": "tool_result", "tool_use_id": tool_id, "content": _tool_result_content(tool_output)})
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_id,
+                "content": json.dumps(tool_output, ensure_ascii=False),
+            })
+    raise RuntimeError("Groq tool loop limit exceeded")
 
 
 def _k2_fallback(message, transcript_context=""):
     contextual_message = _contextualize_message(message, transcript_context=transcript_context)
     payload = json.dumps({"query": contextual_message}).encode()
     req = urllib.request.Request(f"{CORTEX_URL}/query", data=payload, headers={"Content-Type": "application/json"}, method="POST")
-    with urllib.request.urlopen(req, timeout=30) as resp:
+    with urllib.request.urlopen(req, timeout=K2_QUERY_TIMEOUT) as resp:
         data = json.loads(resp.read().decode())
     return (data.get("answer") or data.get("response") or "").strip(), "k2-cortex"
 
 
-def _run_cc_harness(message, effort=None, model=None, budget=None, event_sink=None, transcript_context=""):
+def _run_cc_harness(message, effort=None, model=None, budget=None, event_sink=None, transcript_context="", conversation_id=None):
     transcript = []
     used_fresh_session = False
     final_lines = []
+    conv_id = _normalize_conversation_id(conversation_id)
     for turn in range(TOOL_LOOP_LIMIT):
         prompt = _build_harness_prompt(message, transcript, transcript_context=transcript_context)
         try:
-            attempt = _run_cc_attempt(prompt, effort=effort, model=model, budget=budget, resume=not used_fresh_session)
+            attempt = _run_cc_attempt(prompt, effort=effort, model=model, budget=budget, resume=not used_fresh_session, conversation_id=conv_id)
         except Exception as e:
             if not used_fresh_session and _is_stale_resume_error(str(e)):
-                try:
-                    SESSION_FILE.unlink(missing_ok=True)
-                except Exception:
-                    pass
+                clear_session_id(conv_id)
                 used_fresh_session = True
                 continue
             raise
@@ -821,7 +1143,7 @@ def _run_cc_harness(message, effort=None, model=None, budget=None, event_sink=No
         parsed = _parse_json_object(attempt["text"])
         tool_use = parsed.get("tool_use") if isinstance(parsed, dict) else None
         if not tool_use or not tool_use.get("name"):
-            result_evt = {"type": "result", "result": attempt["text"], "session_id": load_session_id() or ""}
+            result_evt = {"type": "result", "result": attempt["text"], "session_id": load_session_id(conv_id) or ""}
             if event_sink:
                 event_sink(result_evt)
             return attempt["text"].strip(), final_lines
@@ -873,10 +1195,10 @@ def _openrouter_fallback(message, model=None, transcript_context=""):
             return _openrouter_fallback(message, model=OPENROUTER_FALLBACK_MODEL)
         raise
 
-def run_cc(message, effort=None, model=None, budget=None, transcript_context=""):
+def run_cc(message, effort=None, model=None, budget=None, transcript_context="", conversation_id=None):
     """Run the harness-managed CC loop with degraded fallback cascade."""
     try:
-        text, _lines = _run_cc_harness(message, effort=effort, model=model, budget=budget, transcript_context=transcript_context)
+        text, _lines = _run_cc_harness(message, effort=effort, model=model, budget=budget, transcript_context=transcript_context, conversation_id=conversation_id)
         return text
     except Exception as cc_err:
         print(f"[cc-server] Claude failed, trying Groq: {cc_err}")
@@ -895,13 +1217,13 @@ def run_cc(message, effort=None, model=None, budget=None, transcript_context="")
         text, _used_model = _openrouter_fallback(message, transcript_context=transcript_context)
         return text
 
-def run_cc_stream(message, effort=None, model=None, budget=None, transcript_context=""):
+def run_cc_stream(message, effort=None, model=None, budget=None, transcript_context="", conversation_id=None):
     """Yield harness-managed SSE events with permission-gated local tools and fallback cascade."""
     events = []
     def sink(evt):
         events.append(json.dumps(evt, ensure_ascii=False))
     try:
-        _run_cc_harness(message, effort=effort, model=model, budget=budget, event_sink=sink, transcript_context=transcript_context)
+        _run_cc_harness(message, effort=effort, model=model, budget=budget, event_sink=sink, transcript_context=transcript_context, conversation_id=conversation_id)
         for evt in events:
             yield evt
         return
@@ -959,12 +1281,13 @@ class CCHandler(BaseHTTPRequestHandler):
         return (not TOKEN) or (auth == f"Bearer {TOKEN}")
 
     def do_GET(self):
+        request_path = _normalize_local_route(self.path)
         # S155: auth on sensitive GET endpoints (was missing — security gap)
         _OPEN_PATHS = {"/health", "/memory/health"}
-        if self.path not in _OPEN_PATHS and not self._auth_ok():
+        if request_path not in _OPEN_PATHS and not self._auth_ok():
             self._json(401, {"ok": False, "error": "Unauthorized"})
             return
-        if self.path == "/cancel":
+        if request_path == "/cancel":
             global _current_proc
             t_cancel_start = time.time()
             proc = _current_proc  # H4: snapshot ref to avoid race
@@ -986,20 +1309,23 @@ class CCHandler(BaseHTTPRequestHandler):
             else:
                 self._json(200, {"ok": True, "cancelled": False, "reason": "no active request"})
             return
-        if self.path == "/health":
+        if request_path == "/health":
             self._json(200, {"ok": True, "service": "cc-server-p1", "gmail": GMAIL_AVAILABLE,
                              "latency": _last_latency})  # H2: expose latency measurements
-        elif self.path == "/memory/health":
+        elif request_path == "/memory/health":
             self._json(200, {"ok": True, "service": "cc-server-p1", "claudemem_url": CLAUDEMEM_URL})
-        elif self.path.startswith("/memory/session"):
+        elif request_path == "/memory/wakeup":
+            block = _build_wakeup_summary()
+            self._json(200, {"ok": True, "wakeup": block, "source": "claude-mem"})
+        elif request_path.startswith("/memory/session"):
             session_id = load_session_id()
             self._json(200, {"ok": True, "session_id": session_id or ""})
-        elif self.path == "/files":
+        elif request_path == "/files":
             # Sprint 4c: File tree endpoint for Context Panel
             tree = _build_file_tree(WORK_DIR, max_depth=3)
             self._json(200, {"ok": True, "root": os.path.basename(WORK_DIR), "tree": tree})
             return
-        elif self.path == "/git/status":
+        elif request_path == "/git/status":
             # R2: Git status for UI surface
             try:
                 r = subprocess.run(["git", "status", "--porcelain", "-b"], capture_output=True, text=True, cwd=WORK_DIR, timeout=5)
@@ -1012,12 +1338,12 @@ class CCHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 self._json(500, {"ok": False, "error": str(e)})
             return
-        elif self.path == "/agents-status":
+        elif request_path == "/agents-status":
             # Sprint 6 (#20-22): MCP/Skills/Hooks read-only status
             self._json(200, _get_agents_status())
             return
-        elif self.path.startswith("/file"):
-            parsed = urllib.parse.urlparse(self.path)
+        elif request_path.startswith("/file"):
+            parsed = urllib.parse.urlparse(request_path)
             params = urllib.parse.parse_qs(parsed.query)
             rel = params.get("path", [""])[0].strip()
             if not rel:
@@ -1036,7 +1362,7 @@ class CCHandler(BaseHTTPRequestHandler):
                 self._json(404, {"ok": False, "error": f"not found: {rel}"})
             except Exception as e:
                 self._json(500, {"ok": False, "error": str(e)})
-        elif self.path == "/v1/learnings":
+        elif request_path == "/v1/learnings":
             # Gate 6: What Karma has ACTUALLY learned — from claude-mem observations
             try:
                 conn = _get_ro_conn()
@@ -1076,8 +1402,8 @@ class CCHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 self._json(500, {"ok": False, "error": str(e)})
             return
-        elif self.path.startswith("/memory/observations"):
-            parsed = urllib.parse.urlparse(self.path)
+        elif request_path.startswith("/memory/observations"):
+            parsed = urllib.parse.urlparse(request_path)
             params = urllib.parse.parse_qs(parsed.query)
             raw_ids = params.get("ids", [""])[0]
             ids = [int(x.strip()) for x in raw_ids.split(",") if x.strip().isdigit()]
@@ -1095,7 +1421,7 @@ class CCHandler(BaseHTTPRequestHandler):
                 self._json(200, {"ok": True, "items": items})
             except Exception as e:
                 self._json(500, {"ok": False, "error": str(e)})
-        elif self.path == "/v1/surface":
+        elif request_path == "/v1/surface":
             # Codex CP2: Merged surface payload — chat+files+git+skills+memory in ONE call
             try:
                 surface = {"ok": True}
@@ -1141,15 +1467,19 @@ class CCHandler(BaseHTTPRequestHandler):
                 # Transcripts
                 if NEXUS_AGENT_AVAILABLE:
                     try:
-                        tfiles = [f.replace(".jsonl", "") for f in os.listdir(TRANSCRIPT_DIR) if f.endswith(".jsonl")]
-                        surface["transcripts"] = {"count": len(tfiles), "sessions": tfiles[:10]}
+                        summaries = list_transcript_sessions(limit=10)
+                        surface["transcripts"] = {
+                            "count": len([f for f in os.listdir(TRANSCRIPT_DIR) if f.endswith(".jsonl")]),
+                            "sessions": [item["session_id"] for item in summaries],
+                            "summaries": summaries,
+                        }
                     except Exception:
                         surface["transcripts"] = {"count": 0, "sessions": []}
                 self._json(200, surface)
             except Exception as e:
                 self._json(500, {"ok": False, "error": f"/v1/surface failed: {e}"})
             return
-        elif self.path == "/v1/wip":
+        elif request_path == "/v1/wip":
             # S160: WIP endpoint — serves todos + primitives for Sovereign review surface
             try:
                 wip = {"ok": True}
@@ -1196,11 +1526,11 @@ class CCHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 self._json(500, {"ok": False, "error": f"/v1/wip failed: {e}"})
             return
-        elif self.path == "/self-edit/pending":
+        elif request_path == "/self-edit/pending":
             # Sprint 4d: List pending self-edit proposals
             from Scripts.self_edit_service import list_pending
             self._json(200, {"ok": True, "proposals": list_pending()})
-        elif self.path == "/skills":
+        elif request_path == "/skills":
             # Baseline #21: Skills list for UI surface
             skills_dir = os.path.join(WORK_DIR, ".claude", "skills")
             skills = []
@@ -1220,7 +1550,7 @@ class CCHandler(BaseHTTPRequestHandler):
                             pass
                         skills.append({"name": name, "description": desc})
             self._json(200, {"ok": True, "count": len(skills), "skills": skills})
-        elif self.path == "/hooks":
+        elif request_path == "/hooks":
             # Baseline #22: Hooks status for UI surface
             hooks_list = []
             if HOOKS_AVAILABLE and _hooks:
@@ -1233,6 +1563,7 @@ class CCHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def do_POST(self):
+        request_path = _normalize_local_route(self.path)
         if not self._auth_ok():
             self._json(401, {"ok": False, "error": "Unauthorized"})
             return
@@ -1251,7 +1582,7 @@ class CCHandler(BaseHTTPRequestHandler):
         body = json.loads(self.rfile.read(length)) if length else {}
 
         # ── /file — project-scoped file write ─────────────────────────────
-        if self.path == "/file":
+        if request_path == "/file":
             rel = body.get("path", "").strip()
             content = body.get("content", "")
             if not rel:
@@ -1271,11 +1602,20 @@ class CCHandler(BaseHTTPRequestHandler):
             return
 
         # ── /memory/search — proxy to claude-mem ──────────────────────────
-        if self.path == "/memory/search":
+        if request_path == "/memory/search":
             query = body.get("query", "recent")
             limit = body.get("limit", 20)
+            wing = body.get("wing")
+            room = body.get("room")
+            hall = body.get("hall")
+            tunnel = body.get("tunnel")
+            params = {"query": query, "limit": limit}
+            if wing: params["wing"] = wing
+            if room: params["room"] = room
+            if hall: params["hall"] = hall
+            if tunnel: params["tunnel"] = tunnel
             code, payload = claudemem_proxy(
-                f"/api/search?query={query}&limit={limit}", "GET", {}, timeout=5
+                "/api/search", "GET", params, timeout=5
             )
             # Transform MCP content format to structured results for frontend
             if isinstance(payload, dict) and "content" in payload:
@@ -1291,13 +1631,81 @@ class CCHandler(BaseHTTPRequestHandler):
             return
 
         # ── /memory/save — proxy to claude-mem ────────────────────────────
-        if self.path == "/memory/save":
+        if request_path == "/memory/save":
+            # Pass through palace tags if present; default wing=Karma_SADE hall=hall_events
+            palace_tags = {
+                "wing": body.get("wing") or "Karma_SADE",
+                "room": body.get("room"),
+                "hall": body.get("hall") or "hall_events",
+                "tunnel": body.get("tunnel"),
+            }
+            body.update(palace_tags)
             code, payload = claudemem_proxy("/api/memory/save", "POST", body, timeout=5)
+            # Backfill palace tags into sqlite if id present
+            try:
+                obs_id = None
+                if isinstance(payload, dict):
+                    obs_id = payload.get("id") or payload.get("obs_id")
+                if obs_id:
+                    _tag_observation(obs_id, palace_tags["wing"], palace_tags["room"], palace_tags["hall"], palace_tags["tunnel"])
+            except Exception as e:
+                print(f"[palace] tag backfill failed: {e}")
             self._json(code, payload)
             return
 
+        # ── MCP façade: mempalace-compatible tool names ───────────────────
+        if request_path == "/mcp/mempalace_search":
+            q = body.get("query", "")
+            limit = body.get("limit", 20)
+            code, payload = claudemem_proxy("/api/search", "GET", {"query": q, "limit": limit}, timeout=5)
+            self._json(code, payload)
+            return
+        if request_path == "/mcp/mempalace_status":
+            code, payload = claudemem_proxy("/api/status", "GET", None, timeout=5)
+            self._json(code, payload)
+            return
+        if request_path == "/memory/search/palace":
+            # Direct sqlite search with palace tags
+            wing = body.get("wing")
+            room = body.get("room")
+            hall = body.get("hall")
+            tunnel = body.get("tunnel")
+            limit = int(body.get("limit") or 20)
+            try:
+                _ensure_palace_columns()
+                conn = sqlite3.connect(CLAUDEMEM_DB, timeout=5)
+                conn.row_factory = sqlite3.Row
+                where = []
+                args = []
+                for col, val in (("wing", wing), ("room", room), ("hall", hall), ("tunnel", tunnel)):
+                    if val:
+                        where.append(f"{col}=?")
+                        args.append(val)
+                wh = " WHERE " + " AND ".join(where) if where else ""
+                rows = conn.execute(
+                    f"SELECT id,title,narrative,text,wing,room,hall,tunnel,created_at FROM observations{wh} ORDER BY created_at DESC LIMIT ?",
+                    (*args, limit),
+                ).fetchall()
+                results = []
+                for r in rows:
+                    results.append({
+                        "id": r["id"],
+                        "title": r["title"],
+                        "text": r["text"] or r["narrative"] or "",
+                        "wing": r["wing"],
+                        "room": r["room"],
+                        "hall": r["hall"],
+                        "tunnel": r["tunnel"],
+                        "created_at": r["created_at"],
+                    })
+                conn.close()
+                self._json(200, {"ok": True, "results": results})
+            except Exception as e:
+                self._json(500, {"ok": False, "error": str(e)})
+            return
+
         # ── /self-edit/* — Self-Edit Engine (Sprint 4d) ──────────────────
-        if self.path == "/self-edit/propose":
+        if request_path == "/self-edit/propose":
             from Scripts.self_edit_service import propose
             result = propose(
                 body.get("file_path", ""), body.get("new_content", ""),
@@ -1305,21 +1713,21 @@ class CCHandler(BaseHTTPRequestHandler):
             )
             self._json(200 if result.get("ok") else 400, result)
             return
-        if self.path.startswith("/self-edit/approve/"):
+        if request_path.startswith("/self-edit/approve/"):
             from Scripts.self_edit_service import approve
-            pid = int(self.path.split("/")[-1])
+            pid = int(request_path.split("/")[-1])
             result = approve(pid)
             self._json(200 if result.get("ok") else 404, result)
             return
-        if self.path.startswith("/self-edit/reject/"):
+        if request_path.startswith("/self-edit/reject/"):
             from Scripts.self_edit_service import reject
-            pid = int(self.path.split("/")[-1])
+            pid = int(request_path.split("/")[-1])
             result = reject(pid)
             self._json(200 if result.get("ok") else 404, result)
             return
 
         # ── /shell — Execute shell command (R2: shell from UI) ──────────────
-        if self.path == "/shell":
+        if request_path == "/shell":
             cmd = body.get("command", "").strip()
             if not cmd:
                 self._json(422, {"ok": False, "error": "command required"})
@@ -1343,7 +1751,7 @@ class CCHandler(BaseHTTPRequestHandler):
             return
 
         # ── /email/send — CC sends email to Colby ──────────────────────────
-        if self.path == "/email/send":
+        if request_path == "/email/send":
             if not GMAIL_AVAILABLE:
                 self._json(503, {"ok": False, "error": "Gmail not available (cc_gmail.py missing or creds unreadable)"})
                 return
@@ -1357,7 +1765,7 @@ class CCHandler(BaseHTTPRequestHandler):
             return
 
         # ── /email/inbox — check CC inbox ──────────────────────────────────
-        if self.path == "/email/inbox":
+        if request_path == "/email/inbox":
             if not GMAIL_AVAILABLE:
                 self._json(503, {"ok": False, "error": "Gmail not available"})
                 return
@@ -1366,7 +1774,7 @@ class CCHandler(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, "messages": msgs})
             return
 
-        if self.path not in ("/cc", "/cc/stream"):
+        if request_path not in ("/cc", "/cc/stream"):
             self.send_response(404)
             self.end_headers()
             return
@@ -1413,40 +1821,11 @@ class CCHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 print(f"[hooks] UserPromptSubmit error: {e}")
 
-        # ── SmartRouter tier 0: route to Ollama for simple queries ────
-        if _routing_decision and _routing_decision.get("tier") == 0 and not files:
-            provider = next((p for p in _router.providers if p.name == _routing_decision["provider"]), None)
-            if provider:
-                ollama_response = _call_ollama(message, provider.url, provider.model)
-                if ollama_response:
-                    print(f"[router] Ollama responded ({len(ollama_response)} chars)")
-                    if self.path == "/cc/stream":
-                        self.send_response(200)
-                        self.send_header("Content-Type", "text/event-stream")
-                        self.send_header("Cache-Control", "no-cache")
-                        self._cors()
-                        self.end_headers()
-                        evt = json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": ollama_response}]}})
-                        self.wfile.write(f"data: {evt}\n\n".encode())
-                        result_evt = json.dumps({"type": "result", "result": ollama_response, "total_cost_usd": 0})
-                        self.wfile.write(f"data: {result_evt}\n\n".encode())
-                        self.wfile.flush()
-                    else:
-                        self._json(200, {"ok": True, "response": ollama_response})
-                    _auto_save_memory(message, ollama_response)
-                    if HOOKS_AVAILABLE:
-                        try: _hooks.fire("Stop", {"session_id": "", "message": message, "assistant_text": ollama_response})
-                        except: pass
-                    return
-                else:
-                    # Ollama failed — fall through to CC with routing_fallback
-                    _routing_decision["routing_fallback"] = True
-                    print(f"[router] Ollama failed, falling back to CC")
-
-        # Concurrency guard — reject if another request is active (with stale lock recovery)
-        global _lock_acquired_at
-        if not _proc_lock.acquire(blocking=False):
-            # Check for stale lock — auto-recover if held too long
+        def _acquire_cc_lock():
+            global _lock_acquired_at, _current_proc
+            if _proc_lock.acquire(blocking=False):
+                _lock_acquired_at = time.time()
+                return True
             if time.time() - _lock_acquired_at > LOCK_STALE_SECONDS:
                 print(f"[cc-server] STALE LOCK detected ({int(time.time() - _lock_acquired_at)}s). Killing orphan subprocess.")
                 proc = _current_proc
@@ -1457,51 +1836,63 @@ class CCHandler(BaseHTTPRequestHandler):
                     except Exception:
                         pass
                 _current_proc = None
-                # Force-release and re-acquire
                 try:
                     _proc_lock.release()
                 except RuntimeError:
-                    pass  # Already released
-                _proc_lock.acquire(blocking=False)
-                _lock_acquired_at = time.time()
-            else:
-                self._json(429, {"ok": False, "error": "Another request is in progress. Wait or cancel first."})
-                return
-        else:
-            _lock_acquired_at = time.time()
+                    pass
+                if _proc_lock.acquire(blocking=False):
+                    _lock_acquired_at = time.time()
+                    return True
+            self._json(429, {"ok": False, "error": "Another request is in progress. Wait or cancel first."})
+            return False
 
         try:
             # ── /cc/stream — SSE streaming endpoint ──────────────────────
-            if self.path == "/cc/stream":
+            if request_path == "/cc/stream":
+                lock_held = False
                 self.send_response(200)
                 self.send_header("Content-Type", "text/event-stream")
                 self.send_header("Cache-Control", "no-cache")
-                self.send_header("Connection", "keep-alive")
+                self.send_header("Connection", "close")
                 self._cors()  # H3: CORS on stream
                 self.end_headers()
                 stream_full_text = []  # S155: accumulate full response for memory capture
                 # P2: Crash-safe — write user message BEFORE API call
                 # Codex CP1: Wire load_transcript for resume after restart
-                _conv_id = self.headers.get("x-conversation-id", "default")
+                _conv_id = _normalize_conversation_id(self.headers.get("x-conversation-id", "default"))
                 transcript_context = ""
+                prior_transcript = []
                 if NEXUS_AGENT_AVAILABLE:
                     # Load prior conversation context for this conversation-id
-                    prior_transcript = load_transcript(_conv_id)
-                    # Cap transcript file at 100 entries to prevent unbounded growth
-                    if len(prior_transcript) > 100:
-                        _tp = os.path.join(TRANSCRIPT_DIR, f"{_conv_id}.jsonl") if NEXUS_AGENT_AVAILABLE else None
-                        if _tp and os.path.exists(_tp):
-                            trimmed = prior_transcript[-100:]
-                            with open(_tp, "w", encoding="utf-8") as _tf:
-                                for _te in trimmed:
-                                    _tf.write(json.dumps(_te, ensure_ascii=False) + "\n")
-                            prior_transcript = trimmed
+                    prior_transcript = load_transcript(_conv_id, limit=100)
                     transcript_context = _build_recovered_transcript_context(prior_transcript)
+                    recall_answer = _deterministic_transcript_boundary_answer(message, prior_transcript)
+                    if recall_answer:
+                        append_transcript(_conv_id, {"role": "user", "content": message, "ts": time.time()})
+                        append_transcript(_conv_id, {"role": "assistant", "content": recall_answer, "ts": time.time()})
+                        self.wfile.write(f"data: {json.dumps({'type': 'assistant', 'message': {'content': [{'type': 'text', 'text': recall_answer}], 'model': 'transcript-recall'}}, ensure_ascii=False)}\n\n".encode())
+                        self.wfile.write(f"data: {json.dumps({'type': 'result', 'result': recall_answer, 'model': 'transcript-recall', 'total_cost_usd': 0, 'provider': 'transcript'}, ensure_ascii=False)}\n\n".encode())
+                        self.wfile.flush()
+                        self.close_connection = True
+                        return
+                    workspace_answer = _deterministic_workspace_answer(message)
+                    if workspace_answer:
+                        append_transcript(_conv_id, {"role": "user", "content": message, "ts": time.time()})
+                        append_transcript(_conv_id, {"role": "assistant", "content": workspace_answer, "ts": time.time()})
+                        self.wfile.write(f"data: {json.dumps({'type': 'assistant', 'message': {'content': [{'type': 'text', 'text': workspace_answer}], 'model': 'workspace-shortcut'}}, ensure_ascii=False)}\n\n".encode())
+                        self.wfile.write(f"data: {json.dumps({'type': 'result', 'result': workspace_answer, 'model': 'workspace-shortcut', 'total_cost_usd': 0, 'provider': 'workspace'}, ensure_ascii=False)}\n\n".encode())
+                        self.wfile.flush()
+                        self.close_connection = True
+                        return
                     append_transcript(_conv_id, {"role": "user", "content": message, "ts": time.time()})
+                if not _acquire_cc_lock():
+                    self.close_connection = True
+                    return
+                lock_held = True
                 try:
                     t_start = time.time()
                     first_token_sent = False
-                    for line in run_cc_stream(message, effort=effort, model=model, budget=budget, transcript_context=transcript_context):
+                    for line in run_cc_stream(message, effort=effort, model=model, budget=budget, transcript_context=transcript_context, conversation_id=_conv_id):
                         if not first_token_sent:
                             _last_latency["first_token_ms"] = int((time.time() - t_start) * 1000)
                             first_token_sent = True
@@ -1586,19 +1977,42 @@ class CCHandler(BaseHTTPRequestHandler):
                 # ── Fire Stop hooks after stream completes (Sprint 3a) ───
                 if HOOKS_AVAILABLE:
                     try:
-                        _hooks.fire("Stop", {"session_id": load_session_id() or "", "message": message, "assistant_text": assistant_text})
+                        _hooks.fire("Stop", {"session_id": load_session_id(_conv_id) or "", "message": message, "assistant_text": assistant_text})
                     except Exception as e:
                         print(f"[hooks] Stop error: {e}")
+                if lock_held:
+                    try:
+                        _proc_lock.release()
+                    except RuntimeError:
+                        pass
+                self.close_connection = True
                 return
 
             # ── /cc — batch JSON endpoint (backward compat) ──────────────
             try:
+                batch_lock_held = False
                 batch_transcript_context = ""
-                batch_conv_id = self.headers.get("x-conversation-id", "default")
+                batch_conv_id = _normalize_conversation_id(self.headers.get("x-conversation-id", "default"))
                 if NEXUS_AGENT_AVAILABLE:
-                    batch_transcript_context = _build_recovered_transcript_context(load_transcript(batch_conv_id))
+                    batch_prior_transcript = load_transcript(batch_conv_id, limit=100)
+                    recall_answer = _deterministic_transcript_boundary_answer(message, batch_prior_transcript)
+                    if recall_answer:
+                        append_transcript(batch_conv_id, {"role": "user", "content": message, "ts": time.time()})
+                        append_transcript(batch_conv_id, {"role": "assistant", "content": recall_answer, "ts": time.time()})
+                        self._json(200, {"ok": True, "response": recall_answer})
+                        return
+                    workspace_answer = _deterministic_workspace_answer(message)
+                    if workspace_answer:
+                        append_transcript(batch_conv_id, {"role": "user", "content": message, "ts": time.time()})
+                        append_transcript(batch_conv_id, {"role": "assistant", "content": workspace_answer, "ts": time.time()})
+                        self._json(200, {"ok": True, "response": workspace_answer})
+                        return
+                    batch_transcript_context = _build_recovered_transcript_context(batch_prior_transcript)
                     append_transcript(batch_conv_id, {"role": "user", "content": message, "ts": time.time()})
-                response_text = run_cc(message, effort=effort, model=model, budget=budget, transcript_context=batch_transcript_context)
+                if not _acquire_cc_lock():
+                    return
+                batch_lock_held = True
+                response_text = run_cc(message, effort=effort, model=model, budget=budget, transcript_context=batch_transcript_context, conversation_id=batch_conv_id)
                 self._json(200, {"ok": True, "response": response_text})
                 # Gate 6: Auto-save chat turn to claude-mem (fire-and-forget)
                 _auto_save_memory(message, response_text)
@@ -1608,18 +2022,23 @@ class CCHandler(BaseHTTPRequestHandler):
                 if HOOKS_AVAILABLE:
                     try:
                         _hooks.fire("Stop", {
-                            "session_id": load_session_id() or "",
+                            "session_id": load_session_id(batch_conv_id) or "",
                             "message": message,
                             "assistant_text": response_text,
                         })
                     except Exception as e:
                         print(f"[hooks] Stop error: {e}")
+                if batch_lock_held:
+                    try:
+                        _proc_lock.release()
+                    except RuntimeError:
+                        pass
             except subprocess.TimeoutExpired:
                 self._json(504, {"ok": False, "error": f"CC subprocess timed out after {API_TIMEOUT}s"})
             except Exception as e:
                 self._json(500, {"ok": False, "error": str(e)})
         finally:
-            _proc_lock.release()
+            pass
 
 if __name__ == "__main__":
     print(f"[cc-server] Starting on port {PORT}")
@@ -1635,3 +2054,4 @@ if __name__ == "__main__":
         print(f"[cc-server] Heartbeat: FAILED ({e})")
     server = ThreadingHTTPServer(("0.0.0.0", PORT), CCHandler)
     server.serve_forever()
+

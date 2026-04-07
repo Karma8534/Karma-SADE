@@ -1,0 +1,4 @@
+{"role": "user", "content": "Remember this exact token: PXA_1775371798.", "ts": 1775371798.7796457}
+{"role": "assistant", "content": "Token stored: **PXA_1775371798**\n\nI've committed that to memory. You can ask me to recall it anytime.", "ts": 1775371815.8187947}
+{"role": "user", "content": "What exact token did I ask you to remember earlier?", "ts": 1775371815.8855975}
+{"role": "assistant", "content": "PXA_1775371798", "ts": 1775371815.8865967}

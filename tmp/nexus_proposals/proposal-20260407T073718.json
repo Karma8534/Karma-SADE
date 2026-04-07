@@ -1,0 +1,8 @@
+{
+  "section": "which part to append to",
+  "text": "**Append the `preclaw2` file to the `preclaw1` file to ensure a continuous, self-referential thread across the merged workspace.",
+  "reason": "This fixes a critical continuity issue: the Nexus at `hub.arknexus.net` and `KARMA` harness are now the sole continuous workspace, preventing fragmented panes and ensuring Julian's identity remains intact across the merged environment. It also aligns with the plan's requirement for persistent memory and self-improvement capabilities.",
+  "id": "proposal-20260407T073718",
+  "created_at": "2026-04-07T07:37:18.851975Z",
+  "status": "pending"
+}

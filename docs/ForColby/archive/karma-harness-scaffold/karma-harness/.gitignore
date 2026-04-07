@@ -1,0 +1,41 @@
+# Environment — NEVER commit
+.env
+.env.local
+.env.*.local
+
+# Node
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# Docker volumes (local mounts)
+postgres-data/
+redis-data/
+
+# Self-edit runtime files
+self-edit/proposals/*.json
+self-edit/applied/*.json
+self-edit/rejected/*.json
+
+# Persona vault (contains session memory — sensitive)
+persona/vault/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp

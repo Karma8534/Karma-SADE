@@ -9,7 +9,7 @@ This replaces CC subprocess for autonomous operation when CC is unavailable,
 rate-limited, or when Karma needs to act independently.
 """
 
-import json, os, subprocess, urllib.request, urllib.error, time, re, glob as globmod, shutil
+import json, os, subprocess, urllib.request, urllib.error, time, re, glob as globmod, shutil, uuid, datetime
 
 WORK_DIR = r"C:\Users\raest\Documents\Karma_SADE"
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
@@ -443,56 +443,147 @@ def run_agent(message, system_prompt="", model=None):
 
 TRANSCRIPT_DIR = os.path.join(WORK_DIR, "tmp", "transcripts")
 os.makedirs(TRANSCRIPT_DIR, exist_ok=True)
+TRANSCRIPT_MESSAGE_TYPES = {"user", "assistant", "system", "tool", "attachment"}
 
 def _transcript_path(session_id):
     return os.path.join(TRANSCRIPT_DIR, f"{session_id}.jsonl")
 
-def append_transcript(session_id, entry):
-    """Phase 1 Edit 4: Atomic append — write to .tmp then rename for crash-safety."""
-    path = _transcript_path(session_id)
-    line = json.dumps(entry, ensure_ascii=False) + "\n"
-    tmp_path = path + ".tmp"
-    try:
-        # Read existing content, append new line, write atomically
-        existing = ""
-        if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as f:
-                existing = f.read()
-        with open(tmp_path, "w", encoding="utf-8") as f:
-            f.write(existing + line)
-        os.replace(tmp_path, path)
-    except Exception:
-        # Fallback to simple append if atomic fails (better than losing data)
-        with open(path, "a", encoding="utf-8") as f:
-            f.write(line)
+def _iso_timestamp(ts=None):
+    if ts is None:
+        return datetime.datetime.now(datetime.UTC).isoformat().replace("+00:00", "Z")
+    return datetime.datetime.fromtimestamp(float(ts), datetime.UTC).isoformat().replace("+00:00", "Z")
 
-def load_transcript(session_id):
-    """Phase 1 Edit 4: Load transcript with corrupt-line recovery."""
+def _normalize_transcript_entry(session_id, entry):
+    role = str(entry.get("role", "")).strip().lower()
+    content = str(entry.get("content", ""))
+    ts = float(entry.get("ts", time.time()))
+    normalized = {
+        "type": role if role in TRANSCRIPT_MESSAGE_TYPES else "message",
+        "role": role,
+        "content": content,
+        "timestamp": entry.get("timestamp") or _iso_timestamp(ts),
+        "ts": ts,
+        "session_id": session_id,
+        "cwd": WORK_DIR,
+        "uuid": entry.get("uuid") or str(uuid.uuid4()),
+    }
+    parent_uuid = entry.get("parent_uuid")
+    if parent_uuid:
+        normalized["parent_uuid"] = str(parent_uuid)
+    return normalized
+
+def _coerce_loaded_transcript_entry(entry):
+    if not isinstance(entry, dict):
+        return None
+    if "role" in entry and "content" in entry and "type" not in entry:
+        role = str(entry.get("role", "")).strip().lower()
+        if role in TRANSCRIPT_MESSAGE_TYPES:
+            return {
+                "role": role,
+                "content": str(entry.get("content", "")),
+                "ts": float(entry.get("ts", time.time())),
+                "timestamp": entry.get("timestamp") or _iso_timestamp(entry.get("ts", time.time())),
+                "session_id": entry.get("session_id", ""),
+                "uuid": entry.get("uuid"),
+                "parent_uuid": entry.get("parent_uuid"),
+            }
+    entry_type = str(entry.get("type", "")).strip().lower()
+    if entry_type in TRANSCRIPT_MESSAGE_TYPES and "content" in entry:
+        return {
+            "role": entry_type,
+            "content": str(entry.get("content", "")),
+            "ts": float(entry.get("ts", time.time())),
+            "timestamp": entry.get("timestamp") or _iso_timestamp(entry.get("ts", time.time())),
+            "session_id": entry.get("session_id", ""),
+            "uuid": entry.get("uuid"),
+            "parent_uuid": entry.get("parent_uuid"),
+        }
+    return None
+
+def _tail_lines(path, max_bytes=8192):
+    try:
+        with open(path, "rb") as f:
+            f.seek(0, os.SEEK_END)
+            size = f.tell()
+            if size == 0:
+                return []
+            read_size = min(size, max_bytes)
+            f.seek(-read_size, os.SEEK_END)
+            chunk = f.read(read_size).decode("utf-8", errors="replace")
+        return [line for line in chunk.splitlines() if line.strip()]
+    except Exception:
+        return []
+
+def append_transcript(session_id, entry):
+    """Append a transcript message plus lightweight tail metadata."""
+    path = _transcript_path(session_id)
+    normalized = _normalize_transcript_entry(session_id, entry)
+    rows = [normalized]
+    if normalized["type"] == "user":
+        rows.append({
+            "type": "last-prompt",
+            "session_id": session_id,
+            "timestamp": normalized["timestamp"],
+            "last_prompt": normalized["content"],
+        })
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "a", encoding="utf-8", newline="\n") as f:
+        for row in rows:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+        f.flush()
+        try:
+            os.fsync(f.fileno())
+        except OSError:
+            pass
+
+def load_transcript(session_id, limit=None):
+    """Load transcript messages only, filtering metadata and corrupt lines."""
     path = _transcript_path(session_id)
     if not os.path.exists(path):
         return []
     entries = []
-    corrupt_lines = 0
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line:
                 try:
-                    entries.append(json.loads(line))
+                    parsed = json.loads(line)
+                    loaded = _coerce_loaded_transcript_entry(parsed)
+                    if loaded:
+                        entries.append(loaded)
                 except json.JSONDecodeError:
-                    corrupt_lines += 1
                     continue
-    if corrupt_lines > 0:
-        # Rewrite file with only valid entries (self-healing)
-        try:
-            tmp_path = path + ".tmp"
-            with open(tmp_path, "w", encoding="utf-8") as f:
-                for e in entries:
-                    f.write(json.dumps(e, ensure_ascii=False) + "\n")
-            os.replace(tmp_path, path)
-        except Exception:
-            pass
+    if limit and limit > 0:
+        return entries[-int(limit):]
     return entries
+
+def list_transcript_sessions(limit=10):
+    """List recent transcript sessions using tail metadata for fast summaries."""
+    sessions = []
+    if not os.path.isdir(TRANSCRIPT_DIR):
+        return sessions
+    for name in os.listdir(TRANSCRIPT_DIR):
+        if not name.endswith(".jsonl"):
+            continue
+        path = os.path.join(TRANSCRIPT_DIR, name)
+        session_id = name[:-6]
+        last_prompt = ""
+        for line in reversed(_tail_lines(path)):
+            try:
+                parsed = json.loads(line)
+            except Exception:
+                continue
+            if isinstance(parsed, dict) and parsed.get("type") == "last-prompt":
+                last_prompt = str(parsed.get("last_prompt", ""))
+                break
+        sessions.append({
+            "session_id": session_id,
+            "path": path,
+            "mtime": os.path.getmtime(path),
+            "last_prompt": last_prompt,
+        })
+    sessions.sort(key=lambda item: item["mtime"], reverse=True)
+    return sessions[:limit]
 
 
 # ── P3: Auto-Compaction ──────────────────────────────────────────────────────

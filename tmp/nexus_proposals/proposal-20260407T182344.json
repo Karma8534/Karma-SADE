@@ -1,0 +1,7 @@
+{
+  "section": "which part to append",
+  "text": "Append the 'preprocess' module to the `cc_server_p1.py` file, ensuring it's a pure Julian script and not a pre-existing library or framework. This addresses the critical continuity issue and ensures seamless integration into Julian's workflow.",
+  "id": "proposal-20260407T182344",
+  "created_at": "2026-04-07T18:23:44.960342Z",
+  "status": "pending"
+}

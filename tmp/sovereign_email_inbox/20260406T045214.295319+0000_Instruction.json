@@ -1,0 +1,10 @@
+{
+  "kind": "sovereign_email_directive",
+  "state": "pending",
+  "received_at": "2026-04-06T04:52:14.295319+00:00",
+  "from": "rae.steele76@gmail.com",
+  "subject": "Instruction",
+  "date": "Mon, 6 Apr 2026 00:44:47 -0400",
+  "body": "Optimally resolve all blockers and gaps that exist in the current, ground\r\ntruth, TDD verified system state vs the Nexus plan.\r\nReverse engineer as a Senior Systems architect goal ( sans SOVEREIGN\r\nwalk-through vs tdd verified ground truth only of current system state.\r\nOptimally resolve all gaps and all blockers.\r\nContinue until system state = fully deployed, fully TDD verified in ground\r\ntruth.\r\nYou must not rely on completion/passes/done/etc in any docs.\r\nDo not stop until you fully verify TDD actual system state meets and/or\r\nexceeds goal.\r\nBegin",
+  "source": "gmail"
+}

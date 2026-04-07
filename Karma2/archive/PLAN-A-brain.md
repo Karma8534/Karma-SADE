@@ -1,7 +1,7 @@
 # PLAN-A: Feed the Brain
 **Prerequisite for everything else. Do not start Plan-B until A3 is verified.**
 
-The brain exists. It's claude-mem on localhost:37777. It's always on.
+The brain exists. It's claude-mem on localhost:37778. It's always on.
 The problem: it has amnesia. 145 CC session .jsonl files sit on disk, unread.
 Every session starts from near-zero because the history was never ingested.
 
@@ -88,3 +88,4 @@ All three complete when:
 - [x] Cold start < 2 minutes ✅ (~30s verified Session 136)
 
 When A-GATE passes → start PLAN-B.
+

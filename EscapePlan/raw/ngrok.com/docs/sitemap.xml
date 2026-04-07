@@ -1,0 +1,3498 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+    
+  <url>
+    <loc>https://ngrok.com/docs/agent-sdks</loc>
+    <lastmod>2026-03-04T19:19:26.892Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/agent/agent-mutual-tls-termination</loc>
+    <lastmod>2026-01-28T13:34:43.491Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/agent/agent-tls-termination</loc>
+    <lastmod>2026-01-28T13:34:43.490Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/agent/api</loc>
+    <lastmod>2026-01-28T13:34:43.495Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/agent/changelog</loc>
+    <lastmod>2026-03-26T19:42:43.775Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/agent/cli</loc>
+    <lastmod>2026-04-01T16:58:08.214Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/agent/cli-api</loc>
+    <lastmod>2026-04-01T16:58:08.264Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/agent/config</loc>
+    <lastmod>2026-02-17T19:10:54.317Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/agent/config/v2</loc>
+    <lastmod>2026-03-27T15:30:42.103Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/agent/config/v3</loc>
+    <lastmod>2026-03-04T19:19:26.935Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/agent/connect-url</loc>
+    <lastmod>2026-02-25T13:20:37.860Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/agent/deprecation-notices</loc>
+    <lastmod>2026-03-06T17:12:10.673Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/agent/diagnose</loc>
+    <lastmod>2026-01-28T13:34:43.563Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/agent</loc>
+    <lastmod>2026-04-01T16:46:38.082Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/agent/overview</loc>
+    <lastmod>2026-04-01T16:44:50.586Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/agent/ssh-reverse-tunnel-agent</loc>
+    <lastmod>2026-01-28T13:34:43.569Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/agent/upgrade-v2-v3</loc>
+    <lastmod>2026-01-28T13:34:43.565Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/agent/version-support-policy</loc>
+    <lastmod>2026-03-26T19:42:43.776Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/agent/web-inspection-interface</loc>
+    <lastmod>2026-01-28T13:34:43.599Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/changelog</loc>
+    <lastmod>2026-03-09T19:40:00.429Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/concepts/api-keys</loc>
+    <lastmod>2026-03-09T19:40:00.426Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/concepts/bring-your-own-keys</loc>
+    <lastmod>2026-03-09T19:40:00.425Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/concepts/credits</loc>
+    <lastmod>2026-03-09T19:40:00.427Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/concepts/custom-providers</loc>
+    <lastmod>2026-03-09T19:40:00.424Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/concepts/models</loc>
+    <lastmod>2026-03-09T19:40:00.427Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/concepts/providers</loc>
+    <lastmod>2026-03-09T19:40:00.458Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/custom-providers/azure-openai</loc>
+    <lastmod>2026-03-09T19:40:00.459Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/custom-providers/lm-studio</loc>
+    <lastmod>2026-03-09T19:40:00.463Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/custom-providers/ollama</loc>
+    <lastmod>2026-03-09T19:40:00.462Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/custom-providers/vllm</loc>
+    <lastmod>2026-03-09T19:40:00.457Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/examples/model-filtering</loc>
+    <lastmod>2026-01-28T13:34:43.638Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/examples/multi-key-failover</loc>
+    <lastmod>2026-03-09T19:40:00.461Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/examples/multi-provider-failover</loc>
+    <lastmod>2026-03-09T19:40:00.463Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/faq</loc>
+    <lastmod>2026-03-09T19:40:00.465Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/guides/configuring-providers</loc>
+    <lastmod>2026-03-09T19:40:00.460Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/guides/creating-endpoints</loc>
+    <lastmod>2026-03-09T19:40:00.506Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/guides/debugging</loc>
+    <lastmod>2026-03-09T19:40:00.511Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/guides/error-handling</loc>
+    <lastmod>2026-03-09T19:40:00.504Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/guides/key-selection-failover</loc>
+    <lastmod>2026-03-09T19:40:00.505Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/guides/managing-provider-keys</loc>
+    <lastmod>2026-03-09T19:40:00.503Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/guides/model-selection-strategies</loc>
+    <lastmod>2026-01-28T13:34:43.635Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/guides/modifying-requests</loc>
+    <lastmod>2026-01-28T13:34:43.666Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/guides/modifying-responses</loc>
+    <lastmod>2026-03-02T18:14:45.546Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/guides/protecting-byok-endpoints</loc>
+    <lastmod>2026-03-09T19:40:00.508Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/guides/restricting-access</loc>
+    <lastmod>2026-03-09T19:40:00.507Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/guides/securing-endpoints</loc>
+    <lastmod>2026-03-09T19:40:00.539Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/how-it-works</loc>
+    <lastmod>2026-03-09T19:40:00.542Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/observability</loc>
+    <lastmod>2026-01-28T13:34:43.661Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/observability/log-exporting</loc>
+    <lastmod>2026-01-28T13:34:43.666Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/observability/metrics</loc>
+    <lastmod>2026-01-28T13:34:43.663Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/observability/traffic-inspector</loc>
+    <lastmod>2026-02-27T19:16:21.417Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/overview</loc>
+    <lastmod>2026-03-09T19:40:00.546Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/providers/anthropic</loc>
+    <lastmod>2026-03-09T20:36:03.667Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/providers/deepseek</loc>
+    <lastmod>2026-03-09T19:40:00.541Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/providers/google</loc>
+    <lastmod>2026-03-09T19:40:00.540Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/providers/groq</loc>
+    <lastmod>2026-03-09T19:40:00.594Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/providers/hyperbolic</loc>
+    <lastmod>2026-03-09T19:40:00.595Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/providers/inceptionlabs</loc>
+    <lastmod>2026-03-09T19:40:00.593Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/providers/inference-net</loc>
+    <lastmod>2026-03-09T19:40:00.591Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/providers/openai</loc>
+    <lastmod>2026-03-09T20:36:03.665Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/providers/openrouter</loc>
+    <lastmod>2026-03-09T19:40:00.593Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/quickstart</loc>
+    <lastmod>2026-03-09T20:36:03.666Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/reference/cel-functions</loc>
+    <lastmod>2026-01-28T13:34:43.702Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/reference/configuration-schema</loc>
+    <lastmod>2026-03-09T19:40:00.597Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/reference/error-codes</loc>
+    <lastmod>2026-03-09T19:40:00.592Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/reference/model-catalog</loc>
+    <lastmod>2026-03-10T18:11:50.216Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/sdks/anthropic</loc>
+    <lastmod>2026-03-09T19:40:00.629Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/sdks</loc>
+    <lastmod>2026-03-09T19:40:00.627Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/sdks/langchain</loc>
+    <lastmod>2026-03-09T19:40:00.632Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/sdks/openai</loc>
+    <lastmod>2026-03-09T19:40:00.635Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/sdks/other</loc>
+    <lastmod>2026-03-09T19:40:00.634Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/sdks/tanstack-ai</loc>
+    <lastmod>2026-03-09T19:40:00.630Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/ai-gateway/sdks/vercel-ai-sdk</loc>
+    <lastmod>2026-03-09T19:40:00.631Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/abusereports/create</loc>
+    <lastmod>2026-04-02T13:33:29.707Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/abusereports/get</loc>
+    <lastmod>2026-04-02T13:33:29.744Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/agentingresses/create</loc>
+    <lastmod>2026-04-02T13:33:29.843Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/agentingresses/delete</loc>
+    <lastmod>2026-04-02T13:33:29.960Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/agentingresses/get</loc>
+    <lastmod>2026-04-02T13:33:29.883Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/agentingresses/list</loc>
+    <lastmod>2026-04-02T13:33:29.788Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/agentingresses/update</loc>
+    <lastmod>2026-04-02T13:33:30.000Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/apikeys/create</loc>
+    <lastmod>2026-04-02T13:33:30.177Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/apikeys/delete</loc>
+    <lastmod>2026-04-02T13:33:30.255Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/apikeys/get</loc>
+    <lastmod>2026-04-02T13:33:30.222Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/apikeys/list</loc>
+    <lastmod>2026-04-02T13:33:30.080Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/apikeys/update</loc>
+    <lastmod>2026-04-02T13:33:30.287Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/applicationsessions/delete</loc>
+    <lastmod>2026-04-02T13:33:30.341Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/applicationsessions/get</loc>
+    <lastmod>2026-04-02T13:33:30.327Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/applicationsessions/list</loc>
+    <lastmod>2026-04-02T13:33:30.311Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/applicationusers/delete</loc>
+    <lastmod>2026-04-02T13:33:30.384Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/applicationusers/get</loc>
+    <lastmod>2026-04-02T13:33:30.367Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/applicationusers/list</loc>
+    <lastmod>2026-04-02T13:33:30.353Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/botusers/create</loc>
+    <lastmod>2026-04-02T13:33:30.857Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/botusers/delete</loc>
+    <lastmod>2026-04-02T13:33:30.883Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/botusers/get</loc>
+    <lastmod>2026-04-02T13:33:30.870Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/botusers/list</loc>
+    <lastmod>2026-04-02T13:33:30.843Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/botusers/update</loc>
+    <lastmod>2026-04-02T13:33:30.897Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/certificateauthorities/create</loc>
+    <lastmod>2026-04-02T13:33:30.925Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/certificateauthorities/delete</loc>
+    <lastmod>2026-04-02T13:33:30.951Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/certificateauthorities/get</loc>
+    <lastmod>2026-04-02T13:33:30.939Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/certificateauthorities/list</loc>
+    <lastmod>2026-04-02T13:33:30.911Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/certificateauthorities/update</loc>
+    <lastmod>2026-04-02T13:33:30.965Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/credentials/create</loc>
+    <lastmod>2026-04-02T13:33:30.992Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/credentials/delete</loc>
+    <lastmod>2026-04-02T13:33:31.019Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/credentials/get</loc>
+    <lastmod>2026-04-02T13:33:31.006Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/credentials/list</loc>
+    <lastmod>2026-04-02T13:33:30.977Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/credentials/update</loc>
+    <lastmod>2026-04-02T13:33:31.043Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutebackendmodule/delete</loc>
+    <lastmod>2026-04-02T13:33:31.303Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutebackendmodule/get</loc>
+    <lastmod>2026-04-02T13:33:31.276Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutebackendmodule/replace</loc>
+    <lastmod>2026-04-02T13:33:31.289Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutecircuitbreakermodule/delete</loc>
+    <lastmod>2026-04-02T13:33:31.509Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutecircuitbreakermodule/get</loc>
+    <lastmod>2026-04-02T13:33:31.485Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutecircuitbreakermodule/replace</loc>
+    <lastmod>2026-04-02T13:33:31.497Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutecompressionmodule/delete</loc>
+    <lastmod>2026-04-02T13:33:31.472Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutecompressionmodule/get</loc>
+    <lastmod>2026-04-02T13:33:31.444Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutecompressionmodule/replace</loc>
+    <lastmod>2026-04-02T13:33:31.458Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgerouteiprestrictionmodule/delete</loc>
+    <lastmod>2026-04-02T13:33:31.347Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgerouteiprestrictionmodule/get</loc>
+    <lastmod>2026-04-02T13:33:31.319Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgerouteiprestrictionmodule/replace</loc>
+    <lastmod>2026-04-02T13:33:31.333Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgerouteoauthmodule/delete</loc>
+    <lastmod>2026-04-02T13:33:31.594Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgerouteoauthmodule/get</loc>
+    <lastmod>2026-04-02T13:33:31.567Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgerouteoauthmodule/replace</loc>
+    <lastmod>2026-04-02T13:33:31.580Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgerouteoidcmodule/delete</loc>
+    <lastmod>2026-04-02T13:33:31.684Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgerouteoidcmodule/get</loc>
+    <lastmod>2026-04-02T13:33:31.657Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgerouteoidcmodule/replace</loc>
+    <lastmod>2026-04-02T13:33:31.671Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgerouterequestheadersmodule/delete</loc>
+    <lastmod>2026-04-02T13:33:31.392Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgerouterequestheadersmodule/get</loc>
+    <lastmod>2026-04-02T13:33:31.363Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgerouterequestheadersmodule/replace</loc>
+    <lastmod>2026-04-02T13:33:31.377Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgerouteresponseheadersmodule/delete</loc>
+    <lastmod>2026-04-02T13:33:31.431Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgerouteresponseheadersmodule/get</loc>
+    <lastmod>2026-04-02T13:33:31.406Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgerouteresponseheadersmodule/replace</loc>
+    <lastmod>2026-04-02T13:33:31.418Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutesamlmodule/delete</loc>
+    <lastmod>2026-04-02T13:33:31.644Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutesamlmodule/get</loc>
+    <lastmod>2026-04-02T13:33:31.616Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutesamlmodule/replace</loc>
+    <lastmod>2026-04-02T13:33:31.629Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutetrafficpolicymodule/delete</loc>
+    <lastmod>2026-04-02T13:33:31.805Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutetrafficpolicymodule/get</loc>
+    <lastmod>2026-04-02T13:33:31.778Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutetrafficpolicymodule/replace</loc>
+    <lastmod>2026-04-02T13:33:31.792Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgerouteuseragentfiltermodule/delete</loc>
+    <lastmod>2026-04-02T13:33:31.765Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgerouteuseragentfiltermodule/get</loc>
+    <lastmod>2026-04-02T13:33:31.739Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgerouteuseragentfiltermodule/replace</loc>
+    <lastmod>2026-04-02T13:33:31.752Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutewebhookverificationmodule/delete</loc>
+    <lastmod>2026-04-02T13:33:31.553Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutewebhookverificationmodule/get</loc>
+    <lastmod>2026-04-02T13:33:31.523Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutewebhookverificationmodule/replace</loc>
+    <lastmod>2026-04-02T13:33:31.537Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutewebsockettcpconvertermodule/delete</loc>
+    <lastmod>2026-04-02T13:33:31.726Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutewebsockettcpconvertermodule/get</loc>
+    <lastmod>2026-04-02T13:33:31.698Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeroutewebsockettcpconvertermodule/replace</loc>
+    <lastmod>2026-04-02T13:33:31.712Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeshttps/create</loc>
+    <lastmod>2026-04-02T13:33:31.128Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeshttps/delete</loc>
+    <lastmod>2026-04-02T13:33:31.156Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeshttps/get</loc>
+    <lastmod>2026-04-02T13:33:31.142Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeshttps/list</loc>
+    <lastmod>2026-04-02T13:33:31.115Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeshttps/update</loc>
+    <lastmod>2026-04-02T13:33:31.171Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeshttpsroutes/create</loc>
+    <lastmod>2026-04-02T13:33:31.061Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeshttpsroutes/delete</loc>
+    <lastmod>2026-04-02T13:33:31.089Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeshttpsroutes/get</loc>
+    <lastmod>2026-04-02T13:33:31.076Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgeshttpsroutes/update</loc>
+    <lastmod>2026-04-02T13:33:31.102Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgestcp/create</loc>
+    <lastmod>2026-04-02T13:33:31.831Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgestcp/delete</loc>
+    <lastmod>2026-04-02T13:33:31.858Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgestcp/get</loc>
+    <lastmod>2026-04-02T13:33:31.844Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgestcp/list</loc>
+    <lastmod>2026-04-02T13:33:31.819Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgestcp/update</loc>
+    <lastmod>2026-04-02T13:33:31.873Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgestls/create</loc>
+    <lastmod>2026-04-02T13:33:32.022Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgestls/delete</loc>
+    <lastmod>2026-04-02T13:33:32.059Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgestls/get</loc>
+    <lastmod>2026-04-02T13:33:32.044Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgestls/list</loc>
+    <lastmod>2026-04-02T13:33:32.006Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/edgestls/update</loc>
+    <lastmod>2026-04-02T13:33:32.072Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/endpoints/create</loc>
+    <lastmod>2026-04-02T13:33:32.308Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/endpoints/delete</loc>
+    <lastmod>2026-04-02T13:33:32.334Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/endpoints/get</loc>
+    <lastmod>2026-04-02T13:33:32.321Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/endpoints/list</loc>
+    <lastmod>2026-04-02T13:33:32.295Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/endpoints/update</loc>
+    <lastmod>2026-04-02T13:33:32.348Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/eventdestinations/create</loc>
+    <lastmod>2026-04-02T13:33:32.376Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/eventdestinations/delete</loc>
+    <lastmod>2026-04-02T13:33:32.406Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/eventdestinations/get</loc>
+    <lastmod>2026-04-02T13:33:32.391Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/eventdestinations/list</loc>
+    <lastmod>2026-04-02T13:33:32.361Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/eventdestinations/update</loc>
+    <lastmod>2026-04-02T13:33:32.421Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/eventsources/create</loc>
+    <lastmod>2026-04-02T13:33:32.519Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/eventsources/delete</loc>
+    <lastmod>2026-04-02T13:33:32.545Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/eventsources/get</loc>
+    <lastmod>2026-04-02T13:33:32.531Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/eventsources/list</loc>
+    <lastmod>2026-04-02T13:33:32.505Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/eventsources/update</loc>
+    <lastmod>2026-04-02T13:33:32.558Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/eventsubscriptions/create</loc>
+    <lastmod>2026-04-02T13:33:32.450Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/eventsubscriptions/delete</loc>
+    <lastmod>2026-04-02T13:33:32.478Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/eventsubscriptions/get</loc>
+    <lastmod>2026-04-02T13:33:32.464Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/eventsubscriptions/list</loc>
+    <lastmod>2026-04-02T13:33:32.436Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/eventsubscriptions/update</loc>
+    <lastmod>2026-04-02T13:33:32.491Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/failoverbackends/create</loc>
+    <lastmod>2026-04-02T13:33:30.498Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/failoverbackends/delete</loc>
+    <lastmod>2026-04-02T13:33:30.524Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/failoverbackends/get</loc>
+    <lastmod>2026-04-02T13:33:30.511Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/failoverbackends/list</loc>
+    <lastmod>2026-04-02T13:33:30.482Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/failoverbackends/update</loc>
+    <lastmod>2026-04-02T13:33:30.537Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/httpresponsebackends/create</loc>
+    <lastmod>2026-04-02T13:33:30.566Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/httpresponsebackends/delete</loc>
+    <lastmod>2026-04-02T13:33:30.592Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/httpresponsebackends/get</loc>
+    <lastmod>2026-04-02T13:33:30.579Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/httpresponsebackends/list</loc>
+    <lastmod>2026-04-02T13:33:30.553Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/httpresponsebackends/update</loc>
+    <lastmod>2026-04-02T13:33:30.619Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/httpsedgemutualtlsmodule/delete</loc>
+    <lastmod>2026-04-02T13:33:31.216Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/httpsedgemutualtlsmodule/get</loc>
+    <lastmod>2026-04-02T13:33:31.187Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/httpsedgemutualtlsmodule/replace</loc>
+    <lastmod>2026-04-02T13:33:31.202Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/httpsedgetlsterminationmodule/delete</loc>
+    <lastmod>2026-04-02T13:33:31.261Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/httpsedgetlsterminationmodule/get</loc>
+    <lastmod>2026-04-02T13:33:31.233Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/httpsedgetlsterminationmodule/replace</loc>
+    <lastmod>2026-04-02T13:33:31.247Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/ippolicies/create</loc>
+    <lastmod>2026-04-02T13:33:32.588Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/ippolicies/delete</loc>
+    <lastmod>2026-04-02T13:33:32.636Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/ippolicies/get</loc>
+    <lastmod>2026-04-02T13:33:32.622Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/ippolicies/list</loc>
+    <lastmod>2026-04-02T13:33:32.573Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/ippolicies/update</loc>
+    <lastmod>2026-04-02T13:33:32.649Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/ippolicyrules/create</loc>
+    <lastmod>2026-04-02T13:33:32.683Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/ippolicyrules/delete</loc>
+    <lastmod>2026-04-02T13:33:32.710Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/ippolicyrules/get</loc>
+    <lastmod>2026-04-02T13:33:32.696Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/ippolicyrules/list</loc>
+    <lastmod>2026-04-02T13:33:32.663Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/ippolicyrules/update</loc>
+    <lastmod>2026-04-02T13:33:32.723Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/iprestrictions/create</loc>
+    <lastmod>2026-04-02T13:33:32.752Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/iprestrictions/delete</loc>
+    <lastmod>2026-04-02T13:33:32.778Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/iprestrictions/get</loc>
+    <lastmod>2026-04-02T13:33:32.765Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/iprestrictions/list</loc>
+    <lastmod>2026-04-02T13:33:32.736Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/iprestrictions/update</loc>
+    <lastmod>2026-04-02T13:33:32.791Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/kubernetes-operators</loc>
+    <lastmod>2026-01-28T13:34:44.359Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/reservedaddrs/create</loc>
+    <lastmod>2026-04-02T13:33:32.817Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/reservedaddrs/delete</loc>
+    <lastmod>2026-04-02T13:33:32.844Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/reservedaddrs/get</loc>
+    <lastmod>2026-04-02T13:33:32.830Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/reservedaddrs/list</loc>
+    <lastmod>2026-04-02T13:33:32.804Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/reservedaddrs/update</loc>
+    <lastmod>2026-04-02T13:33:32.859Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/reserveddomains/create</loc>
+    <lastmod>2026-04-02T13:33:32.887Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/reserveddomains/delete</loc>
+    <lastmod>2026-04-02T13:33:32.914Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/reserveddomains/deletecertificate</loc>
+    <lastmod>2026-04-02T13:33:32.942Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/reserveddomains/deletecertificatemanagementpolicy</loc>
+    <lastmod>2026-04-02T13:33:32.955Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/reserveddomains/get</loc>
+    <lastmod>2026-04-02T13:33:32.900Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/reserveddomains/list</loc>
+    <lastmod>2026-04-02T13:33:32.874Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/reserveddomains/update</loc>
+    <lastmod>2026-04-02T13:33:32.929Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/secrets/create</loc>
+    <lastmod>2026-04-02T13:33:32.983Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/secrets/delete</loc>
+    <lastmod>2026-04-02T13:33:33.011Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/secrets/get</loc>
+    <lastmod>2026-04-02T13:33:32.997Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/secrets/list</loc>
+    <lastmod>2026-04-02T13:33:32.968Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/secrets/update</loc>
+    <lastmod>2026-04-02T13:33:33.035Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/service-users</loc>
+    <lastmod>2026-01-28T13:34:44.436Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshcertificateauthorities/create</loc>
+    <lastmod>2026-04-02T13:33:33.118Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshcertificateauthorities/delete</loc>
+    <lastmod>2026-04-02T13:33:33.156Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshcertificateauthorities/get</loc>
+    <lastmod>2026-04-02T13:33:33.139Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshcertificateauthorities/list</loc>
+    <lastmod>2026-04-02T13:33:33.098Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshcertificateauthorities/update</loc>
+    <lastmod>2026-04-02T13:33:33.172Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshcredentials/create</loc>
+    <lastmod>2026-04-02T13:33:33.207Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshcredentials/delete</loc>
+    <lastmod>2026-04-02T13:33:33.242Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshcredentials/get</loc>
+    <lastmod>2026-04-02T13:33:33.223Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshcredentials/list</loc>
+    <lastmod>2026-04-02T13:33:33.191Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshcredentials/update</loc>
+    <lastmod>2026-04-02T13:33:33.272Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshhostcertificates/create</loc>
+    <lastmod>2026-04-02T13:33:33.523Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshhostcertificates/delete</loc>
+    <lastmod>2026-04-02T13:33:33.555Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshhostcertificates/get</loc>
+    <lastmod>2026-04-02T13:33:33.539Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshhostcertificates/list</loc>
+    <lastmod>2026-04-02T13:33:33.509Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshhostcertificates/update</loc>
+    <lastmod>2026-04-02T13:33:33.575Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshusercertificates/create</loc>
+    <lastmod>2026-04-02T13:33:33.624Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshusercertificates/delete</loc>
+    <lastmod>2026-04-02T13:33:33.666Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshusercertificates/get</loc>
+    <lastmod>2026-04-02T13:33:33.643Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshusercertificates/list</loc>
+    <lastmod>2026-04-02T13:33:33.593Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/sshusercertificates/update</loc>
+    <lastmod>2026-04-02T13:33:33.685Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/staticbackends/create</loc>
+    <lastmod>2026-04-02T13:33:30.650Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/staticbackends/delete</loc>
+    <lastmod>2026-04-02T13:33:30.677Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/staticbackends/get</loc>
+    <lastmod>2026-04-02T13:33:30.664Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/staticbackends/list</loc>
+    <lastmod>2026-04-02T13:33:30.634Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/staticbackends/update</loc>
+    <lastmod>2026-04-02T13:33:30.690Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tcpedgebackendmodule/delete</loc>
+    <lastmod>2026-04-02T13:33:31.914Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tcpedgebackendmodule/get</loc>
+    <lastmod>2026-04-02T13:33:31.885Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tcpedgebackendmodule/replace</loc>
+    <lastmod>2026-04-02T13:33:31.900Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tcpedgeiprestrictionmodule/delete</loc>
+    <lastmod>2026-04-02T13:33:31.952Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tcpedgeiprestrictionmodule/get</loc>
+    <lastmod>2026-04-02T13:33:31.927Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tcpedgeiprestrictionmodule/replace</loc>
+    <lastmod>2026-04-02T13:33:31.939Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tcpedgetrafficpolicymodule/delete</loc>
+    <lastmod>2026-04-02T13:33:31.991Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tcpedgetrafficpolicymodule/get</loc>
+    <lastmod>2026-04-02T13:33:31.965Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tcpedgetrafficpolicymodule/replace</loc>
+    <lastmod>2026-04-02T13:33:31.978Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlscertificates/create</loc>
+    <lastmod>2026-04-02T13:33:33.722Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlscertificates/delete</loc>
+    <lastmod>2026-04-02T13:33:33.779Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlscertificates/get</loc>
+    <lastmod>2026-04-02T13:33:33.751Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlscertificates/list</loc>
+    <lastmod>2026-04-02T13:33:33.703Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlscertificates/update</loc>
+    <lastmod>2026-04-02T13:33:33.803Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlsedgebackendmodule/delete</loc>
+    <lastmod>2026-04-02T13:33:32.113Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlsedgebackendmodule/get</loc>
+    <lastmod>2026-04-02T13:33:32.085Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlsedgebackendmodule/replace</loc>
+    <lastmod>2026-04-02T13:33:32.100Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlsedgeiprestrictionmodule/delete</loc>
+    <lastmod>2026-04-02T13:33:32.156Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlsedgeiprestrictionmodule/get</loc>
+    <lastmod>2026-04-02T13:33:32.127Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlsedgeiprestrictionmodule/replace</loc>
+    <lastmod>2026-04-02T13:33:32.141Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlsedgemutualtlsmodule/delete</loc>
+    <lastmod>2026-04-02T13:33:32.197Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlsedgemutualtlsmodule/get</loc>
+    <lastmod>2026-04-02T13:33:32.170Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlsedgemutualtlsmodule/replace</loc>
+    <lastmod>2026-04-02T13:33:32.185Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlsedgetlsterminationmodule/delete</loc>
+    <lastmod>2026-04-02T13:33:32.238Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlsedgetlsterminationmodule/get</loc>
+    <lastmod>2026-04-02T13:33:32.210Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlsedgetlsterminationmodule/replace</loc>
+    <lastmod>2026-04-02T13:33:32.224Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlsedgetrafficpolicymodule/delete</loc>
+    <lastmod>2026-04-02T13:33:32.282Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlsedgetrafficpolicymodule/get</loc>
+    <lastmod>2026-04-02T13:33:32.254Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tlsedgetrafficpolicymodule/replace</loc>
+    <lastmod>2026-04-02T13:33:32.268Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tunnelgroupbackends/create</loc>
+    <lastmod>2026-04-02T13:33:30.719Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tunnelgroupbackends/delete</loc>
+    <lastmod>2026-04-02T13:33:30.746Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tunnelgroupbackends/get</loc>
+    <lastmod>2026-04-02T13:33:30.733Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tunnelgroupbackends/list</loc>
+    <lastmod>2026-04-02T13:33:30.706Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tunnelgroupbackends/update</loc>
+    <lastmod>2026-04-02T13:33:30.760Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tunnels/get</loc>
+    <lastmod>2026-04-02T13:33:33.839Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tunnels/list</loc>
+    <lastmod>2026-04-02T13:33:33.822Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tunnelsessions/get</loc>
+    <lastmod>2026-04-02T13:33:30.412Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tunnelsessions/list</loc>
+    <lastmod>2026-04-02T13:33:30.398Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tunnelsessions/restart</loc>
+    <lastmod>2026-04-02T13:33:30.437Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tunnelsessions/stop</loc>
+    <lastmod>2026-04-02T13:33:30.454Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/tunnelsessions/update</loc>
+    <lastmod>2026-04-02T13:33:30.468Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/vaults/create</loc>
+    <lastmod>2026-04-02T13:33:33.872Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/vaults/delete</loc>
+    <lastmod>2026-04-02T13:33:34.140Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/vaults/get</loc>
+    <lastmod>2026-04-02T13:33:33.892Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/vaults/list</loc>
+    <lastmod>2026-04-02T13:33:33.856Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/vaults/update</loc>
+    <lastmod>2026-04-02T13:33:34.155Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/weightedbackends/create</loc>
+    <lastmod>2026-04-02T13:33:30.787Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/weightedbackends/delete</loc>
+    <lastmod>2026-04-02T13:33:30.816Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/weightedbackends/get</loc>
+    <lastmod>2026-04-02T13:33:30.801Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/weightedbackends/list</loc>
+    <lastmod>2026-04-02T13:33:30.773Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api-reference/weightedbackends/update</loc>
+    <lastmod>2026-04-02T13:33:30.829Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api/api-filtering</loc>
+    <lastmod>2026-01-28T13:34:45.034Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/api</loc>
+    <lastmod>2026-01-28T13:34:45.040Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/errors</loc>
+    <lastmod>2026-04-01T16:58:16.073Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/errors/reference</loc>
+    <lastmod>2026-04-01T16:58:16.102Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/faq</loc>
+    <lastmod>2026-03-05T16:23:08.191Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/getting-started/cloud-endpoints-quickstart</loc>
+    <lastmod>2026-01-28T13:35:11.871Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/getting-started/go</loc>
+    <lastmod>2026-01-28T13:35:11.872Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/getting-started</loc>
+    <lastmod>2026-03-12T20:44:09.407Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/getting-started/javascript</loc>
+    <lastmod>2026-01-28T13:35:11.870Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/getting-started/kubernetes/crds</loc>
+    <lastmod>2026-03-27T15:30:46.973Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/getting-started/kubernetes/endpoints</loc>
+    <lastmod>2026-03-27T15:30:46.994Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/getting-started/kubernetes/gateway-api</loc>
+    <lastmod>2026-03-27T15:30:46.996Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/getting-started/kubernetes/ingress</loc>
+    <lastmod>2026-03-27T15:30:46.996Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/getting-started/python</loc>
+    <lastmod>2026-01-28T13:35:11.935Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/getting-started/rust</loc>
+    <lastmod>2026-01-28T13:35:11.940Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/glossary</loc>
+    <lastmod>2026-03-09T14:44:39.248Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/api-gateway/get-started</loc>
+    <lastmod>2026-03-27T15:30:46.997Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/api-gateway/monitor-ngrok</loc>
+    <lastmod>2026-02-27T19:16:21.424Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/api-gateway/multicloud</loc>
+    <lastmod>2026-01-28T13:35:11.943Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/device-gateway/agent</loc>
+    <lastmod>2026-01-28T13:35:11.941Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/device-gateway/arm64</loc>
+    <lastmod>2026-02-25T18:39:41.676Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/device-gateway/linux</loc>
+    <lastmod>2026-02-25T18:39:41.670Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/device-gateway/raspberry-pi</loc>
+    <lastmod>2026-02-25T18:39:41.671Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/device-gateway/raspbian</loc>
+    <lastmod>2026-02-25T18:39:41.673Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/device-gateway/sdk</loc>
+    <lastmod>2026-01-28T13:35:11.967Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/device-gateway/windows</loc>
+    <lastmod>2026-02-25T18:39:41.672Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/identity-aware-proxy/securing-with-oauth</loc>
+    <lastmod>2026-02-04T16:31:04.742Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides</loc>
+    <lastmod>2026-02-04T16:31:04.743Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/running-behind-firewalls</loc>
+    <lastmod>2026-02-25T18:39:41.706Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/security-dev-productivity/hipaa-compliance</loc>
+    <lastmod>2026-01-28T13:35:11.985Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/security-dev-productivity</loc>
+    <lastmod>2026-01-28T13:35:11.991Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/security-dev-productivity/securing-your-tunnels</loc>
+    <lastmod>2026-01-28T13:35:11.988Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/share-localhost/apis</loc>
+    <lastmod>2026-03-12T20:44:09.532Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/share-localhost/auth</loc>
+    <lastmod>2026-03-12T20:44:09.533Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/share-localhost/inspection</loc>
+    <lastmod>2026-03-12T20:44:09.531Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/share-localhost/mobile</loc>
+    <lastmod>2026-03-12T20:44:09.519Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/share-localhost/overview</loc>
+    <lastmod>2026-03-12T20:44:09.529Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/share-localhost/quickstart</loc>
+    <lastmod>2026-03-12T20:44:09.518Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/share-localhost/security</loc>
+    <lastmod>2026-03-12T20:44:09.520Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/share-localhost/tunnels</loc>
+    <lastmod>2026-03-12T20:44:09.530Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/share-localhost/webhooks</loc>
+    <lastmod>2026-03-12T20:44:09.532Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/site-to-site-connectivity/background-service</loc>
+    <lastmod>2026-02-18T20:33:41.219Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/site-to-site-connectivity/custom-connect-url</loc>
+    <lastmod>2026-02-18T20:33:41.225Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/site-to-site-connectivity/customer-networks</loc>
+    <lastmod>2026-02-18T20:33:41.227Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/site-to-site-connectivity/end-customers</loc>
+    <lastmod>2026-02-18T20:33:41.224Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/site-to-site-connectivity/faq</loc>
+    <lastmod>2026-02-18T20:33:41.216Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/site-to-site-connectivity</loc>
+    <lastmod>2026-02-27T16:36:41.035Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/site-to-site-connectivity/overview</loc>
+    <lastmod>2026-02-18T20:33:41.220Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/site-to-site-connectivity/quickstart</loc>
+    <lastmod>2026-02-18T20:33:41.217Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/site-to-site-connectivity/redundant-agents</loc>
+    <lastmod>2026-02-18T20:33:41.222Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/guides/ssh-rdp</loc>
+    <lastmod>2026-01-28T13:35:11.991Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/how-ngrok-works</loc>
+    <lastmod>2026-01-28T13:35:11.994Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/iam/domain-controls</loc>
+    <lastmod>2026-01-28T13:35:11.992Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/iam</loc>
+    <lastmod>2026-01-28T13:35:11.990Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/iam/rbac</loc>
+    <lastmod>2026-01-28T13:35:11.989Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/iam/service-users</loc>
+    <lastmod>2026-01-28T13:35:12.022Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/iam/sso</loc>
+    <lastmod>2026-01-28T13:35:12.016Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/iam/users</loc>
+    <lastmod>2026-03-09T20:41:22.072Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/cli-credentials/1password</loc>
+    <lastmod>2026-02-09T20:39:33.984Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/dashboard-sso/auth0-dashboard-sso-saml</loc>
+    <lastmod>2026-01-30T17:41:34.970Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/dashboard-sso/okta-dashboard-sso-oidc</loc>
+    <lastmod>2026-01-30T17:41:34.973Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/dashboard-sso/okta-dashboard-sso-scim</loc>
+    <lastmod>2026-01-30T17:41:34.969Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/dashboard-sso/salesforce-dashboard-sso-oidc</loc>
+    <lastmod>2026-01-30T17:41:34.969Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/endpoint-sso/auth0-sso-oidc</loc>
+    <lastmod>2026-01-30T17:53:04.040Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/endpoint-sso/azure-sso-saml</loc>
+    <lastmod>2026-01-30T17:53:04.041Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/endpoint-sso/curity-sso-oidc</loc>
+    <lastmod>2026-01-30T17:53:04.070Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/endpoint-sso/descope-sso-oidc</loc>
+    <lastmod>2026-01-30T17:53:04.070Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/endpoint-sso/descope-sso-saml</loc>
+    <lastmod>2026-01-30T17:53:04.071Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/endpoint-sso/frontegg-sso-oidc</loc>
+    <lastmod>2026-01-30T17:53:04.069Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/endpoint-sso/frontegg-sso-saml</loc>
+    <lastmod>2026-01-30T17:53:04.073Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/endpoint-sso/fusionauth-sso-oidc</loc>
+    <lastmod>2026-01-30T17:53:04.067Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/endpoint-sso/jumpcloud-sso-oidc</loc>
+    <lastmod>2026-01-30T17:53:04.072Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/endpoint-sso/jumpcloud-sso-saml</loc>
+    <lastmod>2026-01-30T17:53:04.076Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/endpoint-sso/microsoft-sso-saml</loc>
+    <lastmod>2026-01-30T17:53:04.068Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/endpoint-sso/miniorange-sso-oidc</loc>
+    <lastmod>2026-01-30T17:53:04.074Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/endpoint-sso/miniorange-sso-saml</loc>
+    <lastmod>2026-01-30T17:53:04.099Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/endpoint-sso/okta-sso-oidc</loc>
+    <lastmod>2026-01-30T17:53:04.100Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/endpoint-sso/okta-sso-saml</loc>
+    <lastmod>2026-01-30T17:53:04.100Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/endpoint-sso/salesforce-sso-oidc</loc>
+    <lastmod>2026-01-30T17:53:04.104Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/endpoint-sso/trustelem-sso-oidc</loc>
+    <lastmod>2026-01-30T17:53:04.102Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/endpoint-sso/trustelem-sso-saml</loc>
+    <lastmod>2026-01-30T17:53:04.101Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/event-destinations/amazon-cloudwatch-event-destination</loc>
+    <lastmod>2026-02-04T20:26:29.453Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/event-destinations/amazon-firehose-event-destination</loc>
+    <lastmod>2026-02-04T20:26:29.455Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/event-destinations/amazon-kinesis-event-destination</loc>
+    <lastmod>2026-02-04T20:26:29.448Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/event-destinations/azure-logs-event-destination</loc>
+    <lastmod>2026-02-04T20:26:29.495Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/event-destinations/datadog-event-destination</loc>
+    <lastmod>2026-02-04T20:26:29.454Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/guides/home-assistant-with-ngrok</loc>
+    <lastmod>2026-02-09T20:39:34.071Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/guides/mqtt</loc>
+    <lastmod>2026-02-09T20:39:34.074Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations</loc>
+    <lastmod>2026-02-04T20:26:29.442Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/jwt-validation/auth0</loc>
+    <lastmod>2026-02-04T20:26:29.532Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/kubernetes-ingress/apiops</loc>
+    <lastmod>2026-02-04T20:04:51.091Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/kubernetes-ingress/azure-ad-k8s</loc>
+    <lastmod>2026-02-04T20:04:51.090Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/kubernetes-ingress/azure-aks-k8s</loc>
+    <lastmod>2026-03-27T15:30:47.170Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/kubernetes-ingress/consul-k8s</loc>
+    <lastmod>2026-03-27T15:30:47.171Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/kubernetes-ingress/digitalocean-k8s</loc>
+    <lastmod>2026-03-27T15:30:47.171Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/kubernetes-ingress/eks</loc>
+    <lastmod>2026-03-27T15:30:47.162Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/kubernetes-ingress/external-secrets</loc>
+    <lastmod>2026-02-04T20:04:51.083Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/kubernetes-ingress/google-kubernetes-engine</loc>
+    <lastmod>2026-03-27T15:30:47.188Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/kubernetes-ingress/gslb</loc>
+    <lastmod>2026-02-04T20:04:51.089Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/kubernetes-ingress</loc>
+    <lastmod>2026-02-04T20:04:51.126Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/kubernetes-ingress/k8s</loc>
+    <lastmod>2026-02-04T20:04:51.130Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/kubernetes-ingress/microk8s-k8s</loc>
+    <lastmod>2026-02-04T20:04:51.127Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/kubernetes-ingress/rafay-k8s</loc>
+    <lastmod>2026-02-04T20:04:51.122Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/kubernetes-ingress/rancher-k8s</loc>
+    <lastmod>2026-02-04T20:04:51.123Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/kubernetes-ingress/spectro-cloud-k8s</loc>
+    <lastmod>2026-02-04T20:04:51.123Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/kubernetes-ingress/vcluster-k8s</loc>
+    <lastmod>2026-03-27T15:30:47.190Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/oauth/facebook-oauth</loc>
+    <lastmod>2026-02-18T19:02:34.940Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/oauth/github-oauth</loc>
+    <lastmod>2026-02-18T19:02:34.943Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/oauth/gitlab-oauth</loc>
+    <lastmod>2026-02-18T19:02:34.942Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/oauth/google-oauth</loc>
+    <lastmod>2026-02-18T19:02:34.941Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/oauth/linkedin-oauth</loc>
+    <lastmod>2026-02-18T19:02:34.938Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/oauth/microsoft-oauth</loc>
+    <lastmod>2026-02-18T19:02:34.976Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/oauth/oauth</loc>
+    <lastmod>2026-02-18T19:02:34.977Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/oauth/twitch-oauth</loc>
+    <lastmod>2026-02-18T19:02:34.974Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/aftership-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.171Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/airship-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.168Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/alchemy-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.170Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/amazon-sns-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.173Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/autodesk-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.175Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/bitbucket-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.169Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/box-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.174Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/brex-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.218Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/buildkite-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.212Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/calendly-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.211Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/castle-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.215Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/chargify-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.214Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/circleci-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.213Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/clearbit-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.214Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/clerk-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.218Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/coinbase-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.216Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/contentful-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.217Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/docusign-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.248Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/dropbox-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.249Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/facebook-messenger-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.249Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/facebook-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.251Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/frameio-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.252Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/github-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.255Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/gitlab-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.250Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/heroku-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.253Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/hostedhooks-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.254Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/hubspot-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.255Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/hygraph-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.288Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/instagram-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.302Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/intercom-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.284Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/jira-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.283Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/launchdarkly-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.287Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/linear-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.285Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/mailchimp-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.286Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/mailgun-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.300Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/modern-treasury-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.303Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/mongodb-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.301Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/mux-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.332Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/okta-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.329Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/orbit-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.328Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/pagerduty-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.330Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/pinwheel-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.334Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/plivo-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.335Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/pusher-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.332Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/sendgrid-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.331Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/sentry-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.336Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/shopify-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.333Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/signalsciences-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.368Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/slack-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.367Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/sonatype-nexus-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.365Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/square-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.364Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/stripe-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.372Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/svix-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.366Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/teams-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.371Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/terraform-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.366Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/tiktok-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.369Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/trendmicro-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.370Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/twilio-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.411Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/twitter-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.412Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/typeform-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.418Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/vmware-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.417Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/webex-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.413Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/whatsapp-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.414Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/worldline-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.413Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/xero-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.416Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/zendesk-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.410Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/integrations/webhooks/zoom-webhooks</loc>
+    <lastmod>2026-02-20T21:01:20.417Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/changelog</loc>
+    <lastmod>2026-03-23T13:03:45.925Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/crds/agentendpoint</loc>
+    <lastmod>2026-01-28T13:35:12.406Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/crds/boundendpoint</loc>
+    <lastmod>2026-03-18T21:04:05.321Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/crds/cloudendpoint</loc>
+    <lastmod>2026-01-28T13:35:12.427Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/crds/domain</loc>
+    <lastmod>2026-01-28T13:35:12.423Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/crds</loc>
+    <lastmod>2026-01-28T13:35:12.426Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/crds/ippolicy</loc>
+    <lastmod>2026-01-28T13:35:12.424Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/crds/kubernetesoperator</loc>
+    <lastmod>2026-02-24T20:50:52.320Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/crds/ngroktrafficpolicy</loc>
+    <lastmod>2026-01-28T13:35:12.430Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/annotations</loc>
+    <lastmod>2026-01-28T13:35:12.430Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/bindings</loc>
+    <lastmod>2026-03-18T21:04:05.352Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/custom-domain</loc>
+    <lastmod>2026-01-28T13:35:12.429Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/endpoint-types</loc>
+    <lastmod>2026-01-28T13:35:12.454Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/finalizers</loc>
+    <lastmod>2026-02-24T20:50:52.333Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/basic-auth</loc>
+    <lastmod>2026-01-28T13:35:12.450Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/circuit-breaking</loc>
+    <lastmod>2026-01-28T13:35:12.447Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/compress-response</loc>
+    <lastmod>2026-01-28T13:35:12.453Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/deny-requests</loc>
+    <lastmod>2026-01-28T13:35:12.451Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/jwt-validation</loc>
+    <lastmod>2026-01-28T13:35:12.450Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/manipulate-headers</loc>
+    <lastmod>2026-01-28T13:35:12.455Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/oauth</loc>
+    <lastmod>2026-01-28T13:35:12.454Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/oidc</loc>
+    <lastmod>2026-01-28T13:35:12.473Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/pod-identity</loc>
+    <lastmod>2026-03-09T20:34:05.965Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/rate-limiting</loc>
+    <lastmod>2026-01-28T13:35:12.472Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/redirects</loc>
+    <lastmod>2026-01-28T13:35:12.474Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/request-routing</loc>
+    <lastmod>2026-03-27T15:30:47.407Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/restrict-ips</loc>
+    <lastmod>2026-01-28T13:35:12.475Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/rewrite-url</loc>
+    <lastmod>2026-01-28T13:35:12.476Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/static-response</loc>
+    <lastmod>2026-01-28T13:35:12.478Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/tcp-routing</loc>
+    <lastmod>2026-01-28T13:35:12.479Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/terminate-tls</loc>
+    <lastmod>2026-01-28T13:35:12.479Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/tls-routing</loc>
+    <lastmod>2026-01-28T13:35:12.475Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/how-to/upstream-tls</loc>
+    <lastmod>2026-01-28T13:35:12.497Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/local-cluster</loc>
+    <lastmod>2026-01-28T13:35:12.504Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/local-projection</loc>
+    <lastmod>2026-01-28T13:35:12.500Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/managed-resources</loc>
+    <lastmod>2026-01-28T13:35:12.499Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/multiple-installs</loc>
+    <lastmod>2026-02-24T20:50:52.389Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/pooling</loc>
+    <lastmod>2026-01-28T13:35:12.498Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/troubleshooting</loc>
+    <lastmod>2026-02-24T20:50:52.412Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/using-crds</loc>
+    <lastmod>2026-01-28T13:35:12.501Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/using-gwapi</loc>
+    <lastmod>2026-01-28T13:35:12.502Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/using-ingresses</loc>
+    <lastmod>2026-01-28T13:35:12.503Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/guides/using-loadbalancers</loc>
+    <lastmod>2026-01-28T13:35:12.503Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/how-it-works</loc>
+    <lastmod>2026-01-28T13:35:12.531Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s</loc>
+    <lastmod>2026-01-28T13:35:12.529Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/installation/architecture</loc>
+    <lastmod>2026-03-12T18:49:08.931Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/installation/helm</loc>
+    <lastmod>2026-03-16T18:13:13.730Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/installation/observability</loc>
+    <lastmod>2026-01-28T13:35:12.535Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/installation/uninstall</loc>
+    <lastmod>2026-02-24T20:50:52.437Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/installation/update</loc>
+    <lastmod>2026-01-28T13:35:12.534Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/load-balancing/load-balancing-kubernetes</loc>
+    <lastmod>2026-01-28T13:35:12.536Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/load-balancing/load-balancing-kubernetes-clusters</loc>
+    <lastmod>2026-01-28T13:35:12.535Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/k8s/releasing</loc>
+    <lastmod>2026-01-28T13:35:12.537Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/obs/events</loc>
+    <lastmod>2026-01-28T13:35:12.555Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/obs/events/reference</loc>
+    <lastmod>2026-01-28T13:35:12.563Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/obs</loc>
+    <lastmod>2026-01-28T13:35:12.557Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/obs/traffic-inspection</loc>
+    <lastmod>2026-02-27T19:16:21.420Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/pricing-limits/free-plan-limits</loc>
+    <lastmod>2026-03-26T15:36:15.276Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/pricing-limits</loc>
+    <lastmod>2026-04-02T13:33:53.834Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/pricing-limits/pricing-glossary</loc>
+    <lastmod>2026-03-09T20:41:22.750Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/pricing-limits/traffic-policy-unit-pricing</loc>
+    <lastmod>2026-03-27T15:30:47.476Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/start</loc>
+    <lastmod>2026-03-12T20:44:10.031Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/add-headers</loc>
+    <lastmod>2026-02-25T21:00:02.845Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/ai-gateway</loc>
+    <lastmod>2026-01-28T13:35:12.585Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/basic-auth</loc>
+    <lastmod>2026-01-28T13:35:12.587Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/circuit-breaker</loc>
+    <lastmod>2026-01-28T13:35:12.583Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/close-connection</loc>
+    <lastmod>2026-01-28T13:35:12.589Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/compress-response</loc>
+    <lastmod>2026-01-28T13:35:12.585Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/custom-response</loc>
+    <lastmod>2026-01-28T13:35:12.584Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/deny</loc>
+    <lastmod>2026-01-28T13:35:12.586Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/forward-internal</loc>
+    <lastmod>2026-01-28T13:35:12.588Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/http-request</loc>
+    <lastmod>2026-01-28T13:35:12.589Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions</loc>
+    <lastmod>2026-03-27T15:30:47.534Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/jwt-validation</loc>
+    <lastmod>2026-01-28T13:35:12.617Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/log</loc>
+    <lastmod>2026-01-28T13:35:12.614Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/oauth</loc>
+    <lastmod>2026-02-24T20:50:52.505Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/oidc</loc>
+    <lastmod>2026-02-23T21:22:09.238Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/owasp-crs-request</loc>
+    <lastmod>2026-03-06T17:12:21.260Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/owasp-crs-response</loc>
+    <lastmod>2026-03-06T17:12:21.257Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/rate-limit</loc>
+    <lastmod>2026-01-28T13:35:12.615Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/redirect</loc>
+    <lastmod>2026-02-25T21:00:02.881Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/remove-headers</loc>
+    <lastmod>2026-01-28T13:35:12.618Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/request-body-find-replace</loc>
+    <lastmod>2026-01-28T13:35:12.644Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/response-body-find-replace</loc>
+    <lastmod>2026-01-28T13:35:12.645Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/restrict-ips</loc>
+    <lastmod>2026-03-12T18:49:09.036Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/saml</loc>
+    <lastmod>2026-01-28T13:35:12.647Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/set-vars</loc>
+    <lastmod>2026-01-28T13:35:12.651Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/sse-find-replace</loc>
+    <lastmod>2026-01-28T13:35:12.648Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/terminate-tls</loc>
+    <lastmod>2026-02-23T21:22:09.247Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/url-rewrite</loc>
+    <lastmod>2026-03-27T15:30:47.556Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/actions/verify-webhook</loc>
+    <lastmod>2026-03-27T15:30:47.554Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/concepts/expressions</loc>
+    <lastmod>2026-03-27T15:30:47.580Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/concepts/ip-policies</loc>
+    <lastmod>2026-03-26T15:36:15.393Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/examples/a-b-tests</loc>
+    <lastmod>2026-01-28T13:35:12.677Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/examples/add-and-remove-headers</loc>
+    <lastmod>2026-01-28T13:35:12.674Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/examples/add-authentication</loc>
+    <lastmod>2026-03-27T15:30:47.582Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/examples/block-unwanted-requests</loc>
+    <lastmod>2026-02-25T21:00:02.924Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/examples/compress-json-responses</loc>
+    <lastmod>2026-01-28T13:35:12.702Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/examples/enforce-tls</loc>
+    <lastmod>2026-01-28T13:35:12.693Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/examples/event-logging</loc>
+    <lastmod>2026-01-28T13:35:12.697Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/examples/filter-by-ip-category</loc>
+    <lastmod>2026-03-27T15:30:47.581Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/examples</loc>
+    <lastmod>2026-01-28T13:35:12.696Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/examples/oauth-protection</loc>
+    <lastmod>2026-01-28T13:35:12.695Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/examples/rate-limit-requests</loc>
+    <lastmod>2026-03-23T21:57:23.476Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/examples/route-requests</loc>
+    <lastmod>2026-03-27T15:30:47.605Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/examples/url-rewrites</loc>
+    <lastmod>2026-01-28T13:35:12.701Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/examples/user-agent-filtering</loc>
+    <lastmod>2026-01-28T13:35:12.703Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/getting-started/agent-endpoints</loc>
+    <lastmod>2026-03-27T15:30:47.602Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/getting-started/cloud-endpoints</loc>
+    <lastmod>2026-03-27T15:30:47.600Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/how-it-works</loc>
+    <lastmod>2026-03-27T15:30:47.599Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/identities</loc>
+    <lastmod>2026-01-28T13:35:12.733Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy</loc>
+    <lastmod>2026-03-27T15:30:47.625Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/macros</loc>
+    <lastmod>2026-03-27T15:30:47.628Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/secrets</loc>
+    <lastmod>2026-01-28T13:35:12.734Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/variables/action</loc>
+    <lastmod>2026-01-28T13:35:12.738Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/variables/connection</loc>
+    <lastmod>2026-03-09T20:49:14.070Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/variables/endpoint</loc>
+    <lastmod>2026-01-28T13:35:12.739Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/variables</loc>
+    <lastmod>2026-03-27T15:30:47.624Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/variables/ip-intel</loc>
+    <lastmod>2026-03-02T18:27:42.791Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/variables/req</loc>
+    <lastmod>2026-01-28T13:35:12.763Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/variables/res</loc>
+    <lastmod>2026-01-28T13:35:12.761Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/traffic-policy/variables/time</loc>
+    <lastmod>2026-01-28T13:35:12.759Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/agent-endpoints</loc>
+    <lastmod>2026-04-01T16:44:50.584Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/bindings</loc>
+    <lastmod>2026-02-06T21:14:27.078Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/cloud-endpoints/change-domain-endpoint</loc>
+    <lastmod>2026-01-28T13:35:12.767Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/cloud-endpoints/forwarding-and-load-balancing</loc>
+    <lastmod>2026-01-28T13:35:12.784Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/cloud-endpoints</loc>
+    <lastmod>2026-03-27T15:30:47.674Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/cloud-endpoints/routing-and-policy-decentralization</loc>
+    <lastmod>2026-02-25T21:00:03.637Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/custom-domains</loc>
+    <lastmod>2026-01-28T13:35:12.821Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/ddos-protection</loc>
+    <lastmod>2026-01-28T13:35:12.812Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/dedicated-ips</loc>
+    <lastmod>2026-03-12T18:49:09.188Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/domains</loc>
+    <lastmod>2026-03-23T21:58:21.302Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/endpoint-pooling</loc>
+    <lastmod>2026-02-13T15:37:15.997Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/endpoints</loc>
+    <lastmod>2026-01-28T13:35:12.816Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples</loc>
+    <lastmod>2026-01-28T13:35:12.818Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/agent-assisted-gateway</loc>
+    <lastmod>2026-01-28T13:35:12.817Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/blue-green-deployments</loc>
+    <lastmod>2026-02-25T21:00:03.666Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/canary-deployments</loc>
+    <lastmod>2026-02-25T21:00:03.667Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/custom-error-pages</loc>
+    <lastmod>2026-01-28T13:35:12.854Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/database-gateway</loc>
+    <lastmod>2026-01-28T13:35:12.852Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/ephemeral-workloads</loc>
+    <lastmod>2026-01-28T13:35:12.853Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/front-door-pattern</loc>
+    <lastmod>2026-01-28T13:35:12.848Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/ip-restrictions-basic-auth</loc>
+    <lastmod>2026-03-27T15:30:47.721Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/lock-admin-dashboards</loc>
+    <lastmod>2026-01-28T13:35:12.849Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/maintenance-mode</loc>
+    <lastmod>2026-01-28T13:35:12.855Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/microservices-gateway</loc>
+    <lastmod>2026-01-28T13:35:12.853Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/minecraft</loc>
+    <lastmod>2026-03-27T15:30:47.720Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/multiplex</loc>
+    <lastmod>2026-01-28T13:35:12.857Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/n8n</loc>
+    <lastmod>2026-03-27T15:30:47.741Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/offload-analytics</loc>
+    <lastmod>2026-01-28T13:35:12.882Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/ollama</loc>
+    <lastmod>2026-03-27T15:30:47.737Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/paas-alternative-gateway</loc>
+    <lastmod>2026-01-28T13:35:12.879Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/pre-tier-requests</loc>
+    <lastmod>2026-01-28T13:35:12.878Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/rewrite-headers-redirects</loc>
+    <lastmod>2026-03-27T15:30:47.739Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/route-api-app-traffic-user-agent</loc>
+    <lastmod>2026-01-28T13:35:12.880Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/route-by-geography</loc>
+    <lastmod>2026-01-28T13:35:12.905Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/route-by-oidc</loc>
+    <lastmod>2026-01-28T13:35:12.902Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/secure-developer-environments</loc>
+    <lastmod>2026-01-28T13:35:12.903Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/validate-requests-identity</loc>
+    <lastmod>2026-01-28T13:35:12.906Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/webhook-gateway</loc>
+    <lastmod>2026-01-28T13:35:12.907Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/examples/wordpress</loc>
+    <lastmod>2026-03-27T15:30:47.765Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/global-load-balancer</loc>
+    <lastmod>2026-02-18T20:33:42.160Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/http</loc>
+    <lastmod>2026-02-06T21:14:27.252Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/internal-endpoints</loc>
+    <lastmod>2026-02-06T21:14:27.236Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/ip-addresses</loc>
+    <lastmod>2026-03-12T18:49:09.274Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/kubernetes-endpoints</loc>
+    <lastmod>2026-01-28T13:35:12.934Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/load-balancing-multiple-clouds</loc>
+    <lastmod>2026-02-13T15:37:16.000Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/overview</loc>
+    <lastmod>2026-01-28T13:35:12.930Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/points-of-presence</loc>
+    <lastmod>2026-01-28T13:35:12.932Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/protocols</loc>
+    <lastmod>2026-01-28T13:35:12.933Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/public-endpoints</loc>
+    <lastmod>2026-01-28T13:35:12.937Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/region-pinning</loc>
+    <lastmod>2026-03-20T22:38:35.987Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/tcp</loc>
+    <lastmod>2026-03-18T21:04:05.817Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/tcp-addresses</loc>
+    <lastmod>2026-03-09T20:41:23.169Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/tls</loc>
+    <lastmod>2026-02-06T21:14:27.280Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/tls-certificates</loc>
+    <lastmod>2026-01-28T13:35:12.958Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/universal-gateway/tls-termination</loc>
+    <lastmod>2026-01-28T13:35:12.962Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/cgnat</loc>
+    <lastmod>2026-01-28T13:35:12.962Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/docker/compose</loc>
+    <lastmod>2026-01-28T13:35:12.960Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/docker/desktop</loc>
+    <lastmod>2026-01-28T13:35:12.959Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/docker</loc>
+    <lastmod>2026-01-28T13:35:12.992Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/fastAPI</loc>
+    <lastmod>2026-02-04T20:26:30.366Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/flask</loc>
+    <lastmod>2026-02-04T20:26:30.368Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/ftp</loc>
+    <lastmod>2026-02-18T19:02:35.976Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/gRPC</loc>
+    <lastmod>2026-01-28T13:35:12.988Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/godaddy</loc>
+    <lastmod>2026-02-09T20:39:35.481Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/googleColab</loc>
+    <lastmod>2026-02-09T20:39:35.502Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/java</loc>
+    <lastmod>2026-02-09T20:39:35.506Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/laravel</loc>
+    <lastmod>2026-02-04T20:26:30.389Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/minecraft</loc>
+    <lastmod>2026-02-09T20:39:35.501Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/mongodb</loc>
+    <lastmod>2026-01-30T17:41:35.738Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/mysql</loc>
+    <lastmod>2026-01-30T17:41:35.740Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/nginx</loc>
+    <lastmod>2026-01-28T13:35:13.016Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/openvpn</loc>
+    <lastmod>2026-02-09T20:39:35.504Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/outboundProxy</loc>
+    <lastmod>2026-01-28T13:35:13.023Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/postgresql</loc>
+    <lastmod>2026-01-30T17:41:35.740Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/puppet</loc>
+    <lastmod>2026-02-09T20:39:35.530Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/redis</loc>
+    <lastmod>2026-04-01T16:52:12.302Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/rtmp</loc>
+    <lastmod>2026-02-18T19:02:36.005Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/smtp</loc>
+    <lastmod>2026-01-28T13:35:13.021Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/ssh</loc>
+    <lastmod>2026-02-18T19:02:36.033Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/using-mcp</loc>
+    <lastmod>2026-01-28T13:35:13.054Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/virtualHosts</loc>
+    <lastmod>2026-01-28T13:35:13.053Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/visualStudio</loc>
+    <lastmod>2026-02-09T20:39:35.531Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/vsCode</loc>
+    <lastmod>2026-02-09T20:39:35.529Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/using-ngrok-with/websockets</loc>
+    <lastmod>2026-02-18T19:02:36.034Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/what-is-ngrok</loc>
+    <lastmod>2026-01-28T13:35:13.052Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://ngrok.com/docs/why-ngrok</loc>
+    <lastmod>2026-01-28T13:35:13.052Z</lastmod>
+  </url>
+</urlset>

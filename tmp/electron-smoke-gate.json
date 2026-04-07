@@ -1,0 +1,172 @@
+{
+  "ok": true,
+  "smoke": true,
+  "prompt": "Reply with exactly ELECTRON_GATE_OK and nothing else.",
+  "directResult": {
+    "ok": true,
+    "provider": "claude",
+    "result": "ELECTRON_GATE_OK",
+    "events": [
+      {
+        "type": "assistant",
+        "message": {
+          "model": "claude-opus-4-6",
+          "id": "msg_01E7CE1eykQL43PfTwwPqjGu",
+          "type": "message",
+          "role": "assistant",
+          "content": [
+            {
+              "type": "text",
+              "text": "ELECTRON_GATE_OK"
+            }
+          ],
+          "stop_reason": null,
+          "stop_sequence": null,
+          "stop_details": null,
+          "usage": {
+            "input_tokens": 3,
+            "cache_creation_input_tokens": 54066,
+            "cache_read_input_tokens": 0,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 54066,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "output_tokens": 9,
+            "service_tier": "standard",
+            "inference_geo": "not_available"
+          },
+          "context_management": null
+        },
+        "parent_tool_use_id": null,
+        "session_id": "1c9ae4b2-03b1-4e49-9355-74a1f9047a33",
+        "uuid": "734d6a45-f14f-4079-9626-a7a58d076509"
+      },
+      {
+        "type": "result",
+        "result": "ELECTRON_GATE_OK",
+        "session_id": "1c9ae4b2-03b1-4e49-9355-74a1f9047a33",
+        "provider": "claude"
+      }
+    ],
+    "session_id": "1c9ae4b2-03b1-4e49-9355-74a1f9047a33"
+  },
+  "isElectron": true,
+  "result": {
+    "ok": true,
+    "provider": "claude",
+    "result": "ELECTRON_GATE_OK",
+    "events": [
+      {
+        "type": "assistant",
+        "message": {
+          "model": "claude-opus-4-6",
+          "id": "msg_019ewX3RSkjbGJSEVu3ZHnRn",
+          "type": "message",
+          "role": "assistant",
+          "content": [
+            {
+              "type": "text",
+              "text": "ELECTRON_GATE_OK"
+            }
+          ],
+          "stop_reason": null,
+          "stop_sequence": null,
+          "stop_details": null,
+          "usage": {
+            "input_tokens": 3,
+            "cache_creation_input_tokens": 42684,
+            "cache_read_input_tokens": 11483,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 42684,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "output_tokens": 9,
+            "service_tier": "standard",
+            "inference_geo": "not_available"
+          },
+          "context_management": null
+        },
+        "parent_tool_use_id": null,
+        "session_id": "a2e36403-5e5f-4eb0-bf9a-f7d4a04e02bc",
+        "uuid": "4de24c2a-e645-4a97-a601-33ed7aa51188"
+      },
+      {
+        "type": "result",
+        "result": "ELECTRON_GATE_OK",
+        "session_id": "a2e36403-5e5f-4eb0-bf9a-f7d4a04e02bc",
+        "provider": "claude"
+      }
+    ],
+    "session_id": "a2e36403-5e5f-4eb0-bf9a-f7d4a04e02bc"
+  },
+  "events": [
+    {
+      "runId": "electron-smoke-run",
+      "type": "assistant",
+      "message": {
+        "model": "claude-opus-4-6",
+        "id": "msg_019ewX3RSkjbGJSEVu3ZHnRn",
+        "type": "message",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "ELECTRON_GATE_OK"
+          }
+        ],
+        "stop_reason": null,
+        "stop_sequence": null,
+        "stop_details": null,
+        "usage": {
+          "input_tokens": 3,
+          "cache_creation_input_tokens": 42684,
+          "cache_read_input_tokens": 11483,
+          "cache_creation": {
+            "ephemeral_5m_input_tokens": 42684,
+            "ephemeral_1h_input_tokens": 0
+          },
+          "output_tokens": 9,
+          "service_tier": "standard",
+          "inference_geo": "not_available"
+        },
+        "context_management": null
+      },
+      "parent_tool_use_id": null,
+      "session_id": "a2e36403-5e5f-4eb0-bf9a-f7d4a04e02bc",
+      "uuid": "4de24c2a-e645-4a97-a601-33ed7aa51188"
+    },
+    {
+      "runId": "electron-smoke-run",
+      "type": "result",
+      "result": "ELECTRON_GATE_OK",
+      "session_id": "a2e36403-5e5f-4eb0-bf9a-f7d4a04e02bc",
+      "provider": "claude"
+    }
+  ],
+  "uiResult": {
+    "ok": true,
+    "token": "UI_MEM_mnmaacey",
+    "lastKarma": {
+      "id": "mnmaacf4k",
+      "role": "karma",
+      "content": "UI_MEM_mnmaacey",
+      "timestamp": "2026-04-05T21:38:58.528Z"
+    },
+    "memory": {
+      "ok": true,
+      "results": [
+        {
+          "text": "Found 12 result(s) matching \"UI_MEM_mnmaacey\" (5 obs, 5 sessions, 2 prompts)\n\n### Apr 5, 2026\n\n**General**\n| ID | Time | T | Title | Read |\n|----|------|---|-------|------|\n| #23087 | 5:39 PM | 🔵 | Electron Nexus chat: Reply with exactly UI_MEM_mnmaacey and nothing else. | ~47 |\n| #23080 | 4:54 PM | 🔵 | Electron Nexus chat: Reply with exactly UI_MEM_mnm8oom0 and nothing else. | ~47 |\n| #23067 | 12:10 PM | 🔵 | Electron Nexus chat: Reply with exactly UI_MEM_mnlyjule and nothing else. | ~47 |\n| #23065 | 12:03 PM | 🔵 | Electron Nexus chat: Reply with exactly UI_MEM_mnlya8ob and nothing else. | ~47 |\n| #23054 | 11:02 AM | 🔵 | CC conversation: Reply with exactly UI_MEM_mnlw3o6f and nothing else. | ~48 |"
+        }
+      ],
+      "raw": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Found 12 result(s) matching \"UI_MEM_mnmaacey\" (5 obs, 5 sessions, 2 prompts)\n\n### Apr 5, 2026\n\n**General**\n| ID | Time | T | Title | Read |\n|----|------|---|-------|------|\n| #23087 | 5:39 PM | 🔵 | Electron Nexus chat: Reply with exactly UI_MEM_mnmaacey and nothing else. | ~47 |\n| #23080 | 4:54 PM | 🔵 | Electron Nexus chat: Reply with exactly UI_MEM_mnm8oom0 and nothing else. | ~47 |\n| #23067 | 12:10 PM | 🔵 | Electron Nexus chat: Reply with exactly UI_MEM_mnlyjule and nothing else. | ~47 |\n| #23065 | 12:03 PM | 🔵 | Electron Nexus chat: Reply with exactly UI_MEM_mnlya8ob and nothing else. | ~47 |\n| #23054 | 11:02 AM | 🔵 | CC conversation: Reply with exactly UI_MEM_mnlw3o6f and nothing else. | ~48 |\n"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -14,7 +14,7 @@ The harness MUST have:
 - Chat + Cowork + Code merged into ONE surface (not 3 tabs)
 - Persistent memory and persona across restarts
 - Self-improvement, self-editing, learning, growth, evolution
-- ZERO dependency on CC --resume subprocess
+- ZERO dependency on the Claude Code wrapper UI as the only interface or continuity substrate
 
 The harness MUST surface at:
 - hub.arknexus.net (browser, via proxy.js → cc_server_p1.py)
@@ -73,7 +73,7 @@ The harness MUST surface at:
 | 0 | LFM2 350M | P1 localhost:11434 | 0.1s |
 | 1 | qwen3.5:4b | K2 192.168.0.226:7892 | 2-15s |
 | 1.5 | llama-3.3-70b | Groq API (.groq-api-key) | <1s |
-| 2 | Claude | Anthropic API (Max subscription) | 2-5s |
+| 2 | Claude | CC CLI / `claude --resume` (Max subscription) | 2-5s |
 | 2b | Various | OpenRouter (EscapeHatch) | varies |
 | 3 | qwen3.5:4b | K2 Ollama 172.22.240.1:11434 | 2-60s |
 
@@ -126,6 +126,8 @@ The `cc-chat` handler already spawns CC --resume. KEEP IT. But enhance:
 - hub.arknexus.net: full browser harness, same cascade
 - CC is the ENGINE, harness is the VEHICLE. Vehicle works without engine (degraded), engine makes it fly.
 - All tools execute locally through existing handlers/endpoints regardless of which model answered
+- Browser Nexus + Electron KARMA are the same merged workspace, not separate future surfaces.
+- Any `agent` / `orchestrator` split is internal-only, for executor/eval/governor control flow rather than the top-level product model.
 
 ---
 
@@ -179,7 +181,7 @@ TOOLS = [
 Every tool execution goes through `permission_engine.check()` first.
 **DONE WHEN:** Multi-step tool loop works: "list Python files in Scripts/ then count them" → model uses glob, then shell with wc, returns correct count.
 
-### Step 5: Conversation persistence without CC --resume
+### Step 5: Conversation persistence beyond sole dependence on CC session state
 cc_server must maintain conversation history in memory + transcript JSONL.
 On restart: reload from transcript file (nexus_agent.py line 455 has load_transcript).
 Electron: save conversation to localStorage + file.
@@ -207,7 +209,7 @@ candidate → vesper_eval (hard gate) → vesper_governor (smoke test) → gap_m
 3. Restart cc_server: `python -B Scripts/cc_server_p1.py`
 4. Open hub.arknexus.net in browser
 5. Send a message
-**DONE WHEN:** Response arrives (from direct API, NOT CC --resume), context includes MEMORY.md content, prior conversation recoverable. Under 30 seconds total.
+**DONE WHEN:** Response arrives through the harness path, context includes MEMORY.md content, prior conversation is recoverable, and the provider is either CC-primary or a valid fallback. Under 30 seconds total.
 
 ### Step 10: Deploy and Sovereign verification
 ```bash

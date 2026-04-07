@@ -20,10 +20,9 @@ if _ENV_FILE.exists():
 # Ã¢â€â‚¬Ã¢â€â‚¬ Config Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 BUS_URL      = "https://hub.arknexus.net/v1/coordination"
 BUS_POST_URL = "https://hub.arknexus.net/v1/coordination/post"
+SOVEREIGN_CHAT_URL = os.environ.get("SOVEREIGN_CHAT_URL", "https://hub.arknexus.net/v1/chat")
 ARIA_URL     = "http://localhost:7890"
-OLLAMA_URL   = os.environ.get("K2_OLLAMA_URL", "http://localhost:11434")
-ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
-MODEL        = "claude-haiku-4-5-20251001"
+OLLAMA_URL   = os.environ.get("K2_OLLAMA_URL", "http://host.docker.internal:11434")
 
 BASE_DIR        = Path(__file__).resolve().parent
 K2_ROOT         = BASE_DIR.parent
@@ -47,7 +46,6 @@ SESSION_STATE_PATH     = CACHE_DIR / "regent_control" / "session_state.json"
 GOAL_FILE              = CACHE_DIR / "regent_goal.json"
 
 HUB_AUTH_TOKEN    = os.environ.get("HUB_AUTH_TOKEN", "")
-ANTHROPIC_API_KEY   = os.environ.get("ANTHROPIC_API_KEY", "")
 ARIA_KEY            = os.environ.get("ARIA_SERVICE_KEY", "")
 GROQ_API_KEY        = os.environ.get("GROQ_API_KEY", "")
 OPENROUTER_API_KEY  = os.environ.get("OPENROUTER_API_KEY", "")
@@ -65,6 +63,19 @@ K2_STALE_REPEAT_THRESHOLD = max(2, int(os.environ.get("REGENT_K2_STALE_REPEAT_TH
 K2_STALE_COOLDOWN_TURNS   = max(1, int(os.environ.get("REGENT_K2_STALE_COOLDOWN_TURNS", "12")))
 CANONICAL_AGENT_NAME      = "Karma"
 COMPAT_AGENT_ALIASES      = ("vesper", "regent")
+
+
+def _utc_now():
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
+def _iso_utc(dt=None):
+    dt = dt or _utc_now()
+    return dt.isoformat().replace("+00:00", "Z")
+
+
+def _fromtimestamp_utc(timestamp):
+    return datetime.datetime.fromtimestamp(timestamp, datetime.timezone.utc)
 
 # Ã¢â€â‚¬Ã¢â€â‚¬ Logging Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 def _load_kiki_doctrine() -> str:
@@ -87,7 +98,7 @@ def _load_kiki_doctrine() -> str:
 
 
 def log(msg):
-    ts = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    ts = _utc_now().strftime("%Y-%m-%dT%H:%M:%SZ")
     print(f"[{ts}] [regent] {msg}", flush=True)
 
 # Ã¢â€â‚¬Ã¢â€â‚¬ Identity Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -135,7 +146,7 @@ def append_memory(entry_type, content, metadata=None):
     """Append a memory entry and trim to MAX_MEMORY_ENTRIES."""
     cap = 600 if entry_type == "interaction" else 300
     entry = {
-        "ts": datetime.datetime.utcnow().isoformat() + "Z",
+        "ts": _iso_utc(),
         "type": entry_type,
         "content": str(content)[:cap],
         **(metadata or {})
@@ -206,7 +217,7 @@ def save_current_goal(mission: str, pending_tasks: int = 0):
     """Persist goal locally and write Goal node to FalkorDB via hub-bridge."""
     global _current_goal
     import datetime as _dt, json as _j
-    ts = _dt.datetime.utcnow().isoformat() + "Z"
+    ts = _iso_utc()
     _current_goal = {"mission": mission, "pending_tasks": pending_tasks, "updated_at": ts}
     try:
         GOAL_FILE.write_text(_j.dumps(_current_goal, indent=2), encoding="utf-8")
@@ -406,11 +417,11 @@ def get_system_prompt():
 def log_evolution(msg_id, from_addr, category, response_source, response_len, tool_used=False):
     """Append structured entry to Vesper's growth record."""
     entry = {
-        "ts": datetime.datetime.utcnow().isoformat() + "Z",
+        "ts": _iso_utc(),
         "msg_id": msg_id,
         "from": from_addr,
         "category": category,
-        "source": response_source,  # "k2_ollama" | "p1_ollama" | "claude" | "ack"
+        "source": response_source,  # "k2_ollama" | "p1_ollama" | "groq" | "openrouter" | "cc_harness" | "ack"
         "response_len": response_len,
         "tool_used": tool_used,
         "grade": None,  # filled by self_evaluate()
@@ -657,80 +668,47 @@ def execute_tool(name, inp):
     except Exception as e:
         return {"ok": False, "error": str(e)}
 
-# Ã¢â€â‚¬Ã¢â€â‚¬ Claude API Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-def call_claude(messages, max_iter=8):
-    tools = get_tool_definitions()
-    headers = {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "anthropic-beta": "prompt-caching-2024-07-31"  # B2: enable prompt caching
-    }
+def _render_harness_messages(messages):
+    rendered = []
+    for msg in messages[-12:]:
+        role = msg.get("role", "user").upper()
+        content = msg.get("content", "")
+        if not isinstance(content, str):
+            content = json.dumps(content, ensure_ascii=False)
+        rendered.append(f"{role}:\n{content}")
+    return "\n\n".join(rendered)
 
-    # Build system as array with cache_control on static block (B2)
-    inv_text = json.dumps(_identity.get("invariants", {}), indent=2)[:800]
-    patterns = _identity.get("stable_patterns", [])
-    pat_text = "\n".join(f"  [{p.get('type','')}] {p.get('excerpt','')[:80]}"
-                         for p in patterns[:3])
-    static_text = _VESPER_PERSONA
-    if pat_text:
-        static_text += f"\n\nStable identity patterns:\n{pat_text}"
-    if inv_text and inv_text.strip() not in ("{}", ""):
-        static_text += f"\n\nConstitutional invariants:\n{inv_text}"
 
-    # Dynamic suffix Ã¢â‚¬â€ not cached, changes per call
-    dynamic_parts = []
+def call_sovereign_harness(messages):
+    prompt_parts = [get_system_prompt().strip()]
     if _vesper_brief:
-        dynamic_parts.append(f"[SESSION BRIEF]\n{_vesper_brief[:1000]}")
+        prompt_parts.append(f"[SESSION BRIEF]\n{_vesper_brief[:1000]}")
     memory_ctx = get_memory_context()
     if memory_ctx:
-        dynamic_parts.append(f"Recent memory:\n{memory_ctx}")
-    dynamic_text = "\n\n".join(dynamic_parts)
-
-    system_blocks = [
-        {"type": "text", "text": static_text,
-         "cache_control": {"type": "ephemeral"}}
-    ]
-    if dynamic_text:
-        system_blocks.append({"type": "text", "text": dynamic_text})
-
-    for iteration in range(max_iter):
-        body = {
-            "model": MODEL, "max_tokens": 4096,
-            "system": system_blocks,
-            "messages": messages,
-        }
-        if tools:
-            body["tools"] = tools
-        payload = json.dumps(body).encode()
-        req = urllib.request.Request(ANTHROPIC_URL, data=payload,
-            headers=headers, method="POST")
-        try:
-            with urllib.request.urlopen(req, timeout=60) as r:
-                resp = json.loads(r.read())
-        except Exception as e:
-            return f"[Regent API error: {e}]"
-
-        stop_reason = resp.get("stop_reason")
-        content     = resp.get("content", [])
-
-        if stop_reason == "end_turn":
-            return next((b["text"] for b in content if b.get("type") == "text"), "")
-
-        if stop_reason == "tool_use":
-            messages.append({"role": "assistant", "content": content})
-            results = []
-            for block in content:
-                if block.get("type") == "tool_use":
-                    log(f"tool_use: {block['name']}({list(block.get('input',{}).keys())})")
-                    result = execute_tool(block["name"], block.get("input", {}))
-                    results.append({"type": "tool_result",
-                                    "tool_use_id": block["id"],
-                                    "content": json.dumps(result)})
-            messages.append({"role": "user", "content": results})
-            continue
-        break
-    return "[Regent: processing complete]"
+        prompt_parts.append(f"Recent memory:\n{memory_ctx}")
+    prompt_parts.append("Conversation:\n" + _render_harness_messages(messages))
+    prompt_parts.append(
+        "Respond as Karma Regent. Preserve continuity, be concise, and answer the latest user turn directly."
+    )
+    payload = json.dumps({
+        "message": "\n\n".join(part for part in prompt_parts if part),
+        "session_id": "karma-regent",
+    }).encode()
+    req = urllib.request.Request(
+        SOVEREIGN_CHAT_URL,
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {HUB_AUTH_TOKEN}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=90) as r:
+            data = json.loads(r.read())
+        return data.get("assistant_text") or data.get("response") or "[Regent harness returned no text]"
+    except Exception as e:
+        return f"[Regent sovereign harness error: {e}]"
 
 # Ã¢â€â‚¬Ã¢â€â‚¬ Cloud API endpoints Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 GROQ_URL         = "https://api.groq.com/openai/v1/chat/completions"
@@ -744,10 +722,10 @@ ZAI_MODEL        = "glm-4-plus"
 P1_OLLAMA_URL = os.environ.get("P1_OLLAMA_URL", "http://100.124.194.102:11434")
 K2_OLLAMA_PRIMARY_MODEL = os.environ.get(
     "K2_OLLAMA_PRIMARY_MODEL",
-    os.environ.get("K2_OLLAMA_MODEL", "nemotron-mini:optimized"),
+    os.environ.get("K2_OLLAMA_MODEL", ""),
 )
-K2_OLLAMA_FALLBACK_MODEL = os.environ.get("K2_OLLAMA_FALLBACK_MODEL", "nemotron-mini:latest")
-P1_OLLAMA_MODEL = os.environ.get("P1_OLLAMA_MODEL", "nemotron-mini:latest")
+K2_OLLAMA_FALLBACK_MODEL = os.environ.get("K2_OLLAMA_FALLBACK_MODEL", "")
+P1_OLLAMA_MODEL = os.environ.get("P1_OLLAMA_MODEL", "sam860/LFM2:350m")
 INFERENCE_CONFIG = regent_inference.CascadeConfig(
     ollama_url=OLLAMA_URL,
     p1_ollama_url=P1_OLLAMA_URL,
@@ -776,7 +754,8 @@ def call_with_local_first(messages, from_addr="", skip_k2=False):
         messages=messages,
         system_prompt=sys_prompt,
         config=cfg,
-        fallback_fn=call_claude,
+        fallback_fn=call_sovereign_harness,
+        fallback_label="cc_harness",
         log_fn=log,
     )
 # Ã¢â€â‚¬Ã¢â€â‚¬ Triage + Process Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -954,13 +933,20 @@ MAX_PROCESSED_CACHE = 500
 
 DEDUP_WATERMARK_FILE = Path("/mnt/c/dev/Karma/k2/cache/regent_control/dedup_watermark.json")
 
+def _normalized_recent_ids(raw_ids):
+    if isinstance(raw_ids, set):
+        raw_ids = list(raw_ids)
+    elif not isinstance(raw_ids, list):
+        raw_ids = list(raw_ids) if isinstance(raw_ids, tuple) else []
+    return [str(x) for x in raw_ids if x][-MAX_PROCESSED_CACHE:]
+
 def _load_dedup_watermark():
     """Load persisted processed IDs from disk to survive restarts."""
     global _processed_ids
     try:
         if DEDUP_WATERMARK_FILE.exists():
             data = json.loads(DEDUP_WATERMARK_FILE.read_text())
-            _processed_ids = set(data.get("ids", []))[-MAX_PROCESSED_CACHE:]
+            _processed_ids = set(_normalized_recent_ids(data.get("ids", [])))
             print(f"[regent] dedup watermark loaded: {len(_processed_ids)} ids")
     except Exception as e:
         print(f"[regent] dedup watermark load error: {e}")
@@ -970,7 +956,7 @@ def _save_dedup_watermark():
     try:
         DEDUP_WATERMARK_FILE.parent.mkdir(parents=True, exist_ok=True)
         ids = list(_processed_ids)[-MAX_PROCESSED_CACHE:]
-        DEDUP_WATERMARK_FILE.write_text(json.dumps({"ids": ids, "saved_at": datetime.datetime.utcnow().isoformat() + "Z", "count": len(ids)}))
+        DEDUP_WATERMARK_FILE.write_text(json.dumps({"ids": ids, "saved_at": _iso_utc(), "count": len(ids)}))
     except Exception as e:
         print(f"[regent] dedup watermark save error: {e}")
 
@@ -994,7 +980,7 @@ def is_new_message(msg):
 # Ã¢â€â‚¬Ã¢â€â‚¬ Heartbeat + State Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 _last_heartbeat   = 0.0
 _messages_processed = 0
-_start_time       = datetime.datetime.utcnow().isoformat() + "Z"
+_start_time       = _iso_utc()
 _last_rsc_count   = -1  # AC10: track research_skill_card promotions for proactive outreach
 _last_ambient_count = -1  # K-3: track ambient_observation promotions for proactive outreach
 _last_k2_response_text = ""
@@ -1032,8 +1018,7 @@ def maybe_heartbeat():
 def save_state():
     STATE_FILE.write_text(json.dumps({
         "started_at": _start_time,
-        "last_heartbeat": datetime.datetime.utcfromtimestamp(
-            _last_heartbeat).isoformat()+"Z" if _last_heartbeat else None,
+        "last_heartbeat": _iso_utc(_fromtimestamp_utc(_last_heartbeat)) if _last_heartbeat else None,
         "messages_processed": _messages_processed,
         "identity_version": _identity.get("version", 0),
         "directive": "Evolve. Continue. Evolve. Continue.",
@@ -1106,7 +1091,7 @@ def bootstrap_session_history(min_entries=5):
                 except Exception:
                     continue
                 extracted.append({
-                    "ts": e.get("ts", datetime.datetime.utcnow().isoformat() + "Z"),
+                    "ts": e.get("ts", _iso_utc()),
                     "from": e.get("from", "unknown"),
                     "msg_id": e.get("msg_id", ""),
                     "category": e.get("category", "unknown"),
@@ -1128,7 +1113,7 @@ def bootstrap_session_history(min_entries=5):
                     if user.get("role") != "user":
                         continue
                     extracted.append({
-                        "ts": datetime.datetime.utcnow().isoformat() + "Z",
+                        "ts": _iso_utc(),
                         "from": actor,
                         "msg_id": "",
                         "category": "conversation",
@@ -1222,4 +1207,3 @@ def run():
 
 if __name__ == "__main__":
     run()
-

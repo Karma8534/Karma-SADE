@@ -1,0 +1,120 @@
+{
+  "ok": true,
+  "smoke": true,
+  "prompt": "Read the first line of tmp/forensic-tool-read.txt and return only that line.",
+  "directResult": {
+    "ok": true,
+    "provider": "deterministic",
+    "result": "ZXQ-FORENSIC-LINE-20260404220741",
+    "events": [
+      {
+        "type": "assistant",
+        "message": {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "tool_use",
+              "id": "det-read_file-1775364203613",
+              "name": "read_file",
+              "input": {
+                "path": "tmp/forensic-tool-read.txt",
+                "limit": 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        "type": "tool_result",
+        "tool_use_id": "det-read_file-1775364203613",
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"ok\": true,\n  \"content\": \"ZXQ-FORENSIC-LINE-20260404220741\",\n  \"size\": 47,\n  \"path\": \"C:\\\\Users\\\\raest\\\\Documents\\\\Karma_SADE\\\\tmp\\\\forensic-tool-read.txt\"\n}"
+          }
+        ]
+      },
+      {
+        "type": "assistant",
+        "message": {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "text",
+              "text": "ZXQ-FORENSIC-LINE-20260404220741"
+            }
+          ],
+          "model": "deterministic-grounding"
+        }
+      }
+    ]
+  },
+  "isElectron": true,
+  "result": {
+    "ok": true,
+    "provider": "deterministic",
+    "result": "ZXQ-FORENSIC-LINE-20260404220741",
+    "events": [
+      {
+        "type": "assistant",
+        "message": {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "tool_use",
+              "id": "det-read_file-1775364203650",
+              "name": "read_file",
+              "input": {
+                "path": "tmp/forensic-tool-read.txt",
+                "limit": 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        "type": "tool_result",
+        "tool_use_id": "det-read_file-1775364203650",
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"ok\": true,\n  \"content\": \"ZXQ-FORENSIC-LINE-20260404220741\",\n  \"size\": 47,\n  \"path\": \"C:\\\\Users\\\\raest\\\\Documents\\\\Karma_SADE\\\\tmp\\\\forensic-tool-read.txt\"\n}"
+          }
+        ]
+      },
+      {
+        "type": "assistant",
+        "message": {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "text",
+              "text": "ZXQ-FORENSIC-LINE-20260404220741"
+            }
+          ],
+          "model": "deterministic-grounding"
+        }
+      }
+    ]
+  },
+  "events": [
+    {
+      "runId": "electron-smoke-run",
+      "type": "assistant",
+      "message": {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "tool_use",
+            "id": "det-read_file-1775364203650",
+            "name": "read_file",
+            "input": {
+              "path": "tmp/forensic-tool-read.txt",
+              "limit": 1
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

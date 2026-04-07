@@ -1,0 +1,8 @@
+{
+  "section": "which part to append to",
+  "text": "Append the existing `importance_scoring` rule to the `Importance scoring per memory` section. This improves the plan by preventing recent noise from overwhelming the system, as the rule now has a higher priority based on its importance score, ensuring more critical data is retained.",
+  "reason": "This directly addresses the issue of recent noise affecting the system's ability to accurately score and prioritize important memories, enhancing the overall robustness and efficiency of the model's learning process.",
+  "id": "proposal-20260404T173552",
+  "created_at": "2026-04-04T17:35:52.261325Z",
+  "status": "pending"
+}

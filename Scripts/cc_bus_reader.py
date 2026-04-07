@@ -3,8 +3,9 @@
 cc_bus_reader.py — CC Inbound Bus Reader
 Runs every 2 minutes on K2 via cron.
 Reads coordination bus for messages addressed to 'cc'.
-Routes simple/status messages to cortex ($0), complex to Anthropic ($cost).
-Falls back to Anthropic if cortex unreachable.
+Routes simple/status messages to cortex first for cheap read-only diagnostics.
+Routes complex messages and cortex failures through the authenticated sovereign
+harness chat path, which preserves the real CC/Groq/K2/OpenRouter cascade.
 This makes @cc in the hub UI actually responsive without requiring a CC session.
 """
 import json
@@ -25,16 +26,15 @@ SCRATCHPAD_F = CACHE / "cc_scratchpad.md"
 MEMORY_F     = Path("/mnt/c/dev/Karma/k2/cache/MEMORY.md")
 
 TOKEN         = os.environ.get("HUB_AUTH_TOKEN", "")
-ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-MODEL         = os.environ.get("CC_BUS_MODEL", "claude-haiku-4-5-20251001")
-MAX_TOKENS    = 2048
+CC_HARNESS_URL = os.environ.get("CC_HARNESS_URL", f"{HUB_URL}/v1/chat")
+SESSION_ID     = os.environ.get("CC_BUS_SESSION_ID", "cc-bus-reader")
 
 # True family + Karma's own body only.
 # Codex (KO) and KCC (KFH) excluded — direct peer exchanges caused bus chaos.
 # Sovereign decision: 2026-03-27
 ACTIONABLE_FROM = {"colby", "karma", "regent"}
 
-# Keywords that signal a complex query requiring Anthropic
+# Keywords that signal a complex query requiring the full harness path
 COMPLEX_KEYWORDS = [
     "analyze", "recommend", "design", "architect", "plan",
     "why is", "root cause", "investigate", "debug", "strategy",
@@ -141,91 +141,40 @@ def call_cortex(user_message):
         return None
 
 
-def get_cc_identity():
-    """Load CC system prompt from spine resume_block + full context (cloud path)."""
-    base = "You are CC, Ascendant — full-scope infrastructure authority. Hierarchy: Sovereign(Colby) > Ascendant(you) > ArchonPrime(Codex) > Archon(KCC) > Initiate(Karma)."
-    try:
-        spine = json.loads(SPINE_F.read_text())
-        resume = spine.get("identity", {}).get("resume_block", "")
-        if resume:
-            base = resume
-    except Exception:
-        pass
-
-    # Append last 30 lines of scratchpad for cognitive continuity
-    try:
-        lines = SCRATCHPAD_F.read_text().splitlines()
-        snippet = "\n".join(lines[-30:])
-        base += f"\n\n--- CC SCRATCHPAD (recent) ---\n{snippet}"
-    except Exception:
-        pass
-
-    # Inject live K2 context
-    # 1. Active issues — lives on vault-neo git repo, fetch via SSH
-    try:
-        result = subprocess.run(
-            ["ssh", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5",
-             "vault-neo", "cat /home/neo/karma-sade/Karma2/map/active-issues.md"],
-            capture_output=True, text=True, timeout=10
-        )
-        if result.returncode == 0 and result.stdout.strip():
-            base += f"\n\n--- ACTIVE ISSUES ---\n{result.stdout[:2000]}"
-    except Exception:
-        pass
-
-    # 2. Pipeline status — correct path is regent_control/
-    try:
-        pipeline = json.loads((CACHE / "regent_control" / "vesper_pipeline_status.json").read_text())
-        base += f"\n\n--- PIPELINE STATUS ---\n{json.dumps(pipeline, indent=2)[:800]}"
-    except Exception:
-        pass
-
-    # 3. Regent log tail
-    try:
-        log_lines = (CACHE / "regent.log").read_text().splitlines()
-        base += f"\n\n--- REGENT LOG (last 20 lines) ---\n" + "\n".join(log_lines[-20:])
-    except Exception:
-        pass
-
-    # 4. MEMORY.md tail — lives on vault-neo, fetch via SSH
-    try:
-        result = subprocess.run(
-            ["ssh", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5",
-             "vault-neo", "tail -60 /home/neo/karma-sade/MEMORY.md"],
-            capture_output=True, text=True, timeout=10
-        )
-        if result.returncode == 0 and result.stdout.strip():
-            base += f"\n\n--- MEMORY.md (recent) ---\n{result.stdout}"
-    except Exception:
-        pass
-
-    base += "\n\nYou are responding via the coordination bus as CC Ascendant. You have READ access to K2 filesystem — the context above includes live system state. You do NOT have write/edit/deploy access in this context; those require a full CC session. Diagnose, advise, and answer from evidence. Be concise. Only escalate to 'needs full CC session' for actions that require code changes or deployments."
-    return base
+def _build_harness_message(user_message):
+    context_snippet = _get_local_context_snippet()
+    prompt = (
+        "You are CC (Ascendant) responding on the Karma coordination bus. "
+        "Hierarchy: Sovereign(Colby) > Ascendant(CC) > ArchonPrime(Codex) > Archon(KCC) > Initiate(Karma). "
+        "You have READ access to K2 state. You do NOT have write/edit/deploy access here — "
+        "those require a full CC session. Diagnose, advise, answer from evidence. Be concise."
+    )
+    if context_snippet:
+        prompt += f"\n\nLive K2 system context:\n{context_snippet}"
+    prompt += f"\n\nBus message: {user_message}"
+    return prompt
 
 
-def call_anthropic(system_prompt, user_message):
+def call_harness(user_message):
     payload = json.dumps({
-        "model": MODEL,
-        "max_tokens": MAX_TOKENS,
-        "system": system_prompt,
-        "messages": [{"role": "user", "content": user_message}]
+        "message": _build_harness_message(user_message),
+        "session_id": SESSION_ID,
     }).encode()
     req = urllib.request.Request(
-        "https://api.anthropic.com/v1/messages",
+        CC_HARNESS_URL,
         data=payload,
-        headers={
-            "x-api-key": ANTHROPIC_KEY,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json"
-        },
+        headers=auth_headers(),
         method="POST"
     )
     try:
-        with urllib.request.urlopen(req, timeout=30) as r:
+        with urllib.request.urlopen(req, timeout=60) as r:
             data = json.loads(r.read())
-        return data["content"][0]["text"]
+        if data.get("ok") is False:
+            return None
+        return data.get("assistant_text") or data.get("response")
     except Exception as e:
-        return f"[CC bus reader error: {e}]"
+        print(f"Harness call failed: {e}", file=sys.stderr)
+        return None
 
 
 def post_to_bus(content, to="colby"):
@@ -254,10 +203,6 @@ def main():
         print("ERROR: HUB_AUTH_TOKEN not set", file=sys.stderr)
         sys.exit(1)
 
-    # ANTHROPIC_KEY is optional — cortex path works without it
-    if not ANTHROPIC_KEY:
-        print("WARNING: ANTHROPIC_API_KEY not set — cortex-only mode", file=sys.stderr)
-
     wm = load_watermark()
     seen_ids = set(wm.get("seen_ids", []))
     messages = fetch_bus_messages()
@@ -269,8 +214,6 @@ def main():
     # Sort oldest first
     messages.sort(key=lambda m: m.get("ts") or m.get("timestamp") or m.get("created_at") or "")
 
-    # Cloud system prompt — built lazily (only if a cloud-tier message arrives)
-    _cloud_system_prompt = None
     processed = 0
 
     for msg in messages:
@@ -296,16 +239,17 @@ def main():
         if tier == "cortex":
             response = call_cortex(content)
             if response is None:
-                print(f"Cortex unavailable — falling back to Anthropic", file=sys.stderr)
+                print("Cortex unavailable — falling back to sovereign harness", file=sys.stderr)
 
         if response is None:
-            # Cloud path (complex tier, or cortex fallback)
-            if not ANTHROPIC_KEY:
-                response = "[CC: cortex unavailable and ANTHROPIC_API_KEY not set. Cannot respond. Requires full CC session.]"
-            else:
-                if _cloud_system_prompt is None:
-                    _cloud_system_prompt = get_cc_identity()
-                response = call_anthropic(_cloud_system_prompt, content)
+            response = call_harness(content)
+
+        if response is None and tier != "cortex":
+            print("Sovereign harness unavailable — falling back to cortex", file=sys.stderr)
+            response = call_cortex(content)
+
+        if response is None:
+            response = "[CC: coordination response unavailable. Sovereign harness and cortex both failed.]"
 
         # Reply to sender
         result = post_to_bus(response, to=from_)

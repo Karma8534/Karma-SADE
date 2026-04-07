@@ -2443,7 +2443,7 @@ Processing: 844443b9-b3ca-402d-8caa-8fc8c4a36b34.jsonl
     SAVED [DIRECTION]: [DIRECTION] DIRECTION events.
     SAVED [PITFALL]: [PITFALL] PITFALL patterns like how skipping resurrect causes cascadin
     SAVED [PROOF]: [PROOF] confirmed THIS session:
-    SAVED [PROOF]: [PROOF] confirmed at localhost:37777** ? I have it. Using MCP directly
+    SAVED [PROOF]: [PROOF] confirmed at localhost:37778** ? I have it. Using MCP directly
     SAVED [DECISION]: [DECISION] DECISION: Karma processes her own PDFs ? ASSIMILATE/DEFER/D
     SAVED [DECISION]: [DECISION] DECISION: vault-neo divergence resolution ? use rebase not 
     SAVED [PROOF]: [PROOF] PROOF: shell_run + K2 /api/exec live in aria.py (session 84)
@@ -4522,7 +4522,7 @@ Processing: ce6bfd55-1ae5-4a27-83d3-0705401b651e.jsonl
     SAVED [PROOF]: [PROOF] VERIFIED FACTS:**
     SAVED [PROOF]: [PROOF] VERIFIED:**
     SAVED [INSIGHT]: [INSIGHT] insight is that CC's knowledge persists through claude-mem r
-    SAVED [INSIGHT]: [INSIGHT] insight is that claude-mem at port 37777 is already function
+    SAVED [INSIGHT]: [INSIGHT] insight is that claude-mem at port 37778 is already function
     SAVED [INSIGHT]: [INSIGHT] insight Colby's pointing at is that claude-mem is constantly
     SAVED [INSIGHT]: [INSIGHT] insight:**
     SAVED [INSIGHT]: [INSIGHT] insight is that I could build a custom harness that treats c

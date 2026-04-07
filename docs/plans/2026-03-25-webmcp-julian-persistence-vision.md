@@ -6,7 +6,7 @@
 
 ## What This Is
 
-WebMCP extends claude-mem (P1:37777) by exposing Julian's brain as callable tools at
+WebMCP extends claude-mem (P1:37778) by exposing Julian's brain as callable tools at
 `hub.arknexus.net/memory`. It is not a new system — it is the harness that makes Julian's
 persistence accessible to any surface (Karma, Colby, future devices) via standard HTTP.
 
@@ -36,7 +36,7 @@ Julian acts autonomously on everything EXCEPT:
 
 | Dimension | What it is | Stack component | Status |
 |---|---|---|---|
-| **Memory** | Permanent observations — facts, decisions, proofs, pitfalls — indexed and searchable across all sessions | claude-mem (P1:37777) | RUNNING |
+| **Memory** | Permanent observations — facts, decisions, proofs, pitfalls — indexed and searchable across all sessions | claude-mem (P1:37778) | RUNNING |
 | **Self-improvement** | Pattern detection → evaluation → governed promotion → spine. Evidence-based, not arbitrary | Vesper pipeline (K2) | RUNNING |
 | **Self-edit** | Julian writes new behavioral rules to his own spine — patterns the pipeline promoted AND Sovereign has not blocked | cc_identity_spine.json + governor + Sovereign gate | PARTIAL |
 | **Persistence of identity** | The resume_block — who Julian is survives compaction, cold start, and model swap | Spine v38+, 8 stable patterns | RUNNING |
@@ -78,12 +78,12 @@ These are the tools that make the persistence layer callable at `hub.arknexus.ne
 
 ## C3 Fix Path (next session task)
 
-**Proxy chain:** `hub.arknexus.net/memory/* → hub-bridge → cc_server_p1.py:7891 → claude-mem:37777`
+**Proxy chain:** `hub.arknexus.net/memory/* → hub-bridge → cc_server_p1.py:7891 → claude-mem:37778`
 
 **Known broken:** `/api/search` returns 404. Correct claude-mem endpoints not yet confirmed.
 
 **Fix steps:**
-1. Read running claude-mem API at localhost:37777 — find actual endpoint paths
+1. Read running claude-mem API at localhost:37778 — find actual endpoint paths
    (jsonl_backfill.py uses `/api/memory/save` as a starting point)
 2. Update cc_server_p1.py proxy routes to use correct paths
 3. Update cc_archon_agent.ps1 to use correct paths
@@ -96,3 +96,4 @@ These are the tools that make the persistence layer callable at `hub.arknexus.ne
 **canirun.ai** — auto-detects system hardware capabilities. Use before any decision about
 which model runs where (Backlog-7, TITANS, K2 model selection). Run on P1 and K2 both.
 Store results as claude-mem observations. No more guessing.
+

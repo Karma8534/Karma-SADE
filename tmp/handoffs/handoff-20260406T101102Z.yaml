@@ -1,0 +1,37 @@
+timestamp_utc: "2026-04-06T10:11:02Z"
+repo: "C:\\Users\\raest\\Documents\\Karma_SADE"
+status: "paused_for_questions"
+current_pause_point:
+  summary: "Local LLM floors re-verified; runtime closures saved; waiting on user questions."
+verified_runtime:
+  p1_ollama:
+    url: "http://localhost:11434"
+    models:
+      - "sam860/LFM2:350m"
+      - "nomic-embed-text:latest"
+    proof: "chat call succeeded"
+  k2_ollama:
+    urls:
+      - "http://100.75.109.92:11434"
+      - "http://host.docker.internal:11434"
+    models:
+      - "qwen3.5:4b"
+      - "nomic-embed-text:latest"
+    proof: "chat call succeeded"
+architecture_clarification:
+  primary_inference: "Claude CLI / CC --resume on P1"
+  p1_local_role: "tiny local floor and fallback for local watcher loops, degraded responses, and cheap autonomous tasks"
+  k2_local_role: "stronger free reasoning floor for regent, triage, review, consolidation, and K2-side cognition"
+  why_both: "P1 keeps local autonomy alive even if K2 or CC is unavailable; K2 provides better free reasoning than P1's tiny floor"
+closed_slices_this_session:
+  - "vault future rebuild Dockerfile path fixed to proxy.js runtime"
+  - "SmartRouter K2 default fixed to qwen3.5:4b"
+  - "K2 MCP default fixed to qwen3.5:4b"
+  - "cc_email_daemon personal path fixed to sam860/LFM2:350m; live send succeeded"
+tests_and_proofs:
+  - "python -m pytest -q tests\\test_hub_bridge_dockerfile.py -> 1 passed"
+  - "python -m pytest -q tests\\test_local_inference_defaults.py -> 6 passed"
+  - "python -m pytest -q tests\\test_cc_email_daemon.py -> 9 passed"
+  - "py -3 Scripts\\cc_email_daemon.py personal -> sent"
+next_candidate_path:
+  summary: "Resume contradiction scan across active runtime files after user questions."

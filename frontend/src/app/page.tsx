@@ -19,6 +19,45 @@ export default function Home() {
   const token = useKarmaStore((s) => s.token);
   const fetchSurface = useKarmaStore((s) => s.fetchSurface);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const electronWindow = window as Window & {
+      karma?: { isElectron?: boolean };
+      __karmaPatchedFetch?: boolean;
+    };
+    if (!electronWindow.karma?.isElectron) return;
+    if (window.location.protocol !== 'file:') return;
+    if (electronWindow.__karmaPatchedFetch) return;
+
+    const baseUrl = 'http://127.0.0.1:7891';
+    const originalFetch = window.fetch.bind(window);
+    const rewriteUrl = (url: string) => (
+      url.startsWith('/v1/') || url === '/health' ? `${baseUrl}${url}` : url
+    );
+
+    window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+      if (typeof input === 'string') {
+        return originalFetch(rewriteUrl(input), init);
+      }
+      if (input instanceof URL) {
+        const next = input.pathname.startsWith('/v1/') || input.pathname === '/health'
+          ? new URL(`${baseUrl}${input.pathname}${input.search}`)
+          : input;
+        return originalFetch(next, init);
+      }
+      if (input instanceof Request) {
+        const source = new URL(input.url, window.location.href);
+        if (source.pathname.startsWith('/v1/') || source.pathname === '/health') {
+          const nextUrl = `${baseUrl}${source.pathname}${source.search}`;
+          return originalFetch(new Request(nextUrl, input), init);
+        }
+      }
+      return originalFetch(input, init);
+    }) as typeof window.fetch;
+
+    electronWindow.__karmaPatchedFetch = true;
+  }, []);
+
   // Auto-authenticate if token exists from localStorage
   if (token && !isAuthenticated) {
     useKarmaStore.getState().setToken(token);

@@ -3,13 +3,13 @@
 # Date: 2026-04-04T05:30Z | Supersedes: codex-sovereign-directive.md, codex-prompt-for-colby.md
 
 ## GOAL
-Build the Nexus harness — an independent AI application at hub.arknexus.net (browser) AND Electron desktop (electron/main.js) — that replaces the Claude Code wrapper with AT LEAST all its capabilities: Chat + Cowork + Code in one surface, persistent memory, self-improvement.
+Build the Nexus harness — the existing merged workspace at hub.arknexus.net (browser) AND Electron desktop (electron/main.js) — so it exceeds the Codex + Claude Code floor with Chat + Cowork + Code in one continual workspace, persistent memory/session continuity, self-editing, learning, and self-improvement as baseline capabilities.
 
 ## CRITICAL CONSTRAINT
 Max subscription = CC CLI only ($0). Direct api.anthropic.com calls cost REAL MONEY. KEEP CC --resume. Enhance it with tool_use parsing + fallback cascade.
 
 ## READ THESE FIRST
-1. `docs/ForColby/nexus.md` — THE PLAN v5.3.0 (read ALL including appendices S160 + S160b)
+1. `docs/ForColby/nexus.md` — THE PLAN v5.5.0 (read ALL including appendices S160, S160b, and S161)
 2. `.gsd/codex-cascade-audit.md` — YOUR prior forensic audit
 3. `Karma2/cc-scope-index.md` — 115 pitfalls
 4. `docs/anthropic-docs/` — LOCAL Anthropic docs (API, tool_use, agent SDK)
@@ -17,6 +17,9 @@ Max subscription = CC CLI only ($0). Direct api.anthropic.com calls cost REAL MO
 6. `docs/wip/preclaw1/preclaw1/src/` — 1902 files, CC wrapper source (THE BLUEPRINT)
 
 ## WHAT EXISTS (TSS verified)
+
+The browser Nexus and Electron Karma already are the merged workspace. Default behavior is one continual workspace/session; `new thread` is optional branching, not the main architecture.
+The older `agent` / `orchestrator` split is internal-only: useful for executor/gating/eval/governor behavior, but not the top-level product model.
 
 ### Electron (electron/main.js) — 13 IPC handlers, 12 INDEPENDENT:
 file-read, file-write (checkpointed), shell-exec, cortex-query, cortex-context, ollama-query, memory-search, memory-save, spine-read, git-status, show-open-dialog, cc-cancel — ALL WORK WITHOUT CC.
@@ -59,7 +62,7 @@ Only `cc-chat` (line 45) spawns CC --resume. Enhance this ONE handler.
 Step 2: Enhance Electron cc-chat with tool_use loop + Groq/K2 fallback
 Step 3: Enhance cc_server run_cc with tool_use loop + fallback (PARTIALLY DONE — Groq fallback exists)
 Step 4: Test multi-step tool loop end-to-end from browser
-Step 5: Conversation persistence without CC --resume (transcript reload)
+Step 5: Conversation persistence beyond sole dependence on CC session state (transcript reload)
 Step 6: Cowork mode UI (structured artifacts panel)
 Step 7: Code mode UI (file editor with diffs)
 Step 8: Phase 0 executor end-to-end (one real gap closed)

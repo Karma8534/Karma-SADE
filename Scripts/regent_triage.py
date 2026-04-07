@@ -1,8 +1,8 @@
 # regent_triage.py — Ollama triage for KarmaRegent
 import json, os, urllib.request
 
-OLLAMA_URL = os.environ.get("K2_OLLAMA_URL", "http://localhost:11434")
-MODEL = os.environ.get("REGENT_TRIAGE_MODEL", "nemotron-mini:latest")
+OLLAMA_URL = os.environ.get("K2_OLLAMA_URL", "http://host.docker.internal:11434")
+MODEL = os.environ.get("REGENT_TRIAGE_MODEL", "qwen3.5:4b")
 CATEGORIES = ("ack", "route", "reason", "action", "sovereign")
 
 PROMPT = """Classify this message into exactly one category:

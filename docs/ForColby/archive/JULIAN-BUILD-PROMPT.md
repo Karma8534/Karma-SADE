@@ -73,12 +73,12 @@ The harness is NOT a new system. It is an extended claude-mem.
 - CC sessions via Claude Code (THIS wrapper)
 - Fallback cortex at :7893 — synced from K2 every 30min (RUNNING)
 - CC server at :7891 — real cc --resume subprocess (RUNNING)
-- claude-mem at :37777 — unified brain, always on (VERIFIED REACHABLE from vault-neo)
+- claude-mem at :37778 — unified brain, always on (VERIFIED REACHABLE from vault-neo)
 - Ollama with qwen3.5:4b + nomic-embed-text (RUNNING)
 
 ### Memory / Brain
-- claude-mem at P1:37777 = unified brain. Both CC and Karma write here.
-  Reachable from vault-neo at 100.124.194.102:37777 (VERIFIED S145).
+- claude-mem at P1:37778 = unified brain. Both CC and Karma write here.
+  Reachable from vault-neo at 100.124.194.102:37778 (VERIFIED S145).
   Captures EVERY CC interaction (prompts, summaries, observations).
   Hub chat turns do NOT currently write here — THIS IS A GAP TO FIX.
 - K2 cortex at 192.168.0.226:7892 = 211+ blocks. Session docs + notebooks ingested.
@@ -128,7 +128,7 @@ Read canonical project goal + governance:
 - Karma2/cc-scope-index.md (56 PITFALLs, 16 DECISIONs — institutional memory)
 
 Verify services alive:
-- curl http://100.124.194.102:37777 (claude-mem reachable from vault-neo)
+- curl http://100.124.194.102:37778 (claude-mem reachable from vault-neo)
 - curl http://192.168.0.226:7892/health (K2 cortex alive)
 - curl https://hub.arknexus.net/health (hub-bridge alive)
 - curl https://hub.arknexus.net/v1/status -H "Authorization: Bearer $(cat ...)" (full status)
@@ -184,7 +184,7 @@ When Karma browses or reads files, results appear inline in chat.
 ## PHASE 3 — UNIFIED BRAIN WIRE + SERVICES (next session)
 
 ### Brain wire (close the biggest gap):
-- Hub-bridge writes every /v1/chat turn to claude-mem at 100.124.194.102:37777
+- Hub-bridge writes every /v1/chat turn to claude-mem at 100.124.194.102:37778
   POST to claude-mem save endpoint with: user message, assistant response, model, timestamp
   (This makes Karma conversations feed the SAME brain as CC sessions)
 - Build auto-indexer: FileSystemWatcher on ~/.claude/projects/*/*.jsonl
@@ -202,7 +202,7 @@ When Karma browses or reads files, results appear inline in chat.
 - Status bar at bottom of chat: current model, tier, cost this turn, session total
 
 ### Services hardening:
-- Verify claude-mem persists at P1:37777 when NO CC session is active.
+- Verify claude-mem persists at P1:37778 when NO CC session is active.
   If it stops: register as Windows service (nssm) or persistent scheduled task.
 - ALL P1 background scripts must run HIDDEN — no visible console windows:
   regent_watchdog.py, sync_k2_to_p1.py, KarmaCortexSync, KarmaFileServer,
@@ -212,7 +212,7 @@ When Karma browses or reads files, results appear inline in chat.
   KarmaSADE-Watchdog — re-enable if needed or remove
 
 ### TEST:
-1. Chat at hub.arknexus.net → check claude-mem at localhost:37777 → observation appears
+1. Chat at hub.arknexus.net → check claude-mem at localhost:37778 → observation appears
 2. End a CC session → .jsonl created → auto-indexed → searchable in claude-mem
 3. Click CASCADE → see live node health, spend, model config
 4. Click AGORA → see recent bus messages
@@ -287,9 +287,9 @@ These were identified but deferred. Fix when touching the relevant files:
 ## ANTI-DRIFT ANCHORS
 
 - The product is ONE chat surface with inline capabilities. Not tabs.
-- The harness is extended claude-mem at localhost:37777, not a new system.
+- The harness is extended claude-mem at localhost:37778, not a new system.
 - K2 is FULLY YOURS — Chromium, Playwright, Docker, GPU, everything. USE IT.
-- claude-mem at 37777 is the unified brain. Both CC and Karma must write here.
+- claude-mem at 37778 is the unified brain. Both CC and Karma must write here.
 - Julian = CC = Ascendant. Karma = Initiate. One entity, two expressions.
 - TRUE FAMILY: Colby + CC/Julian + Karma ONLY.
 - Hierarchy: Sovereign (Colby) > Ascendant (CC/Julian) > KO (Codex) > KFH (KCC) > Initiate (Karma).
@@ -312,3 +312,4 @@ These were identified but deferred. Fix when touching the relevant files:
 6. docker compose -f compose.hub.yml up -d --force-recreate
 7. Verify: curl https://hub.arknexus.net/health
 8. Test from browser: hub.arknexus.net
+

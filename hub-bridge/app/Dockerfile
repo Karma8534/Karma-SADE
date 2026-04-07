@@ -2,16 +2,16 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install required dependencies
-RUN npm install openai @anthropic-ai/sdk pdf-parse@1.1.1
+# Sovereign proxy needs zero npm deps — Node 20 has fetch built-in
+# No npm install — proxy.js uses only Node built-ins (http, fs, path, URL, fetch)
 
-# Copy application
-COPY app/server.js ./
+# Copy ONLY the sovereign proxy + public assets — nothing else
+COPY app/proxy.js ./
 COPY app/public/ ./public/
-COPY lib/ ./lib/
 
 ENV NODE_ENV=production
 
 EXPOSE 18090
 
-CMD ["node", "server.js"]
+# Sovereign proxy — thin door, CC is the brain
+CMD ["node", "proxy.js"]

@@ -18,7 +18,7 @@ Three sub-tasks:
 
 ## Key Constraints
 
-- claude-mem is at localhost:37777 on P1 — accessible via `mcp__plugin_claude-mem_mcp-search__` MCP tools directly from this session. No SSH needed for the ingestion itself.
+- claude-mem is at localhost:37778 on P1 — accessible via `mcp__plugin_claude-mem_mcp-search__` MCP tools directly from this session. No SSH needed for the ingestion itself.
 - Session files are `.jsonl` format — each line is a JSON event (tool_use, tool_result, assistant, user messages)
 - Watermark file: `.harvest_watermark_jsonl.json` (separate from existing `.harvest_watermark.json` which tracks .md files)
 - Extract bar: same as /harvest — only DECISION/PROOF/PITFALL/DIRECTION/INSIGHT events worth saving. Not every line.
@@ -43,3 +43,4 @@ Three sub-tasks:
 - [ ] New session auto-appears in claude-mem within 60s of completion
 - [ ] `/resurrect` reads from K2 MCP directly (no PowerShell brief)
 - [ ] Cold start < 2 minutes
+

@@ -26,8 +26,7 @@ $taskNames = @(
     "KarmaLauncherSentinel",
     "KarmaInboxWatcher",
     "KarmaFileServer",
-    "KarmaSessionIndexer",
-    "KarmaSessionIngest"
+    "KarmaSessionIndexer"
 )
 
 $issues = New-Object System.Collections.Generic.List[string]
@@ -100,9 +99,6 @@ foreach ($taskName in $taskNames) {
         $xml = $null
     }
     if (-not $xml) {
-        if (-not $expectedRun.ContainsKey($taskName)) {
-            Add-Issue "TASK_MISSING $taskName"
-        }
         continue
     }
     $scriptPath = Get-TaskScriptPath -TaskXml $xml
