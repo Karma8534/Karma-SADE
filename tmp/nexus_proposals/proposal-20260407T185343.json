@@ -1,0 +1,8 @@
+{
+  "section": "which part to append",
+  "text": "**Append the 'k2_continuity_extension.py' module directly into the existing `cc_server_p1.py` file. This addresses the critical issue of persistent memory, persistent session continuity, and self-edit capability within the merged workspace, ensuring seamless integration and functionality.",
+  "reason": "This append directly addresses the core functionality gaps identified in the plan, providing a foundational layer of continuity that supports all other enhancements and fixes.",
+  "id": "proposal-20260407T185343",
+  "created_at": "2026-04-07T18:53:43.021580Z",
+  "status": "pending"
+}

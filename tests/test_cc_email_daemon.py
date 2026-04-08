@@ -12,10 +12,10 @@ def load_module():
     return module
 
 
-def test_status_interval_is_hourly_and_check_interval_is_15_minutes():
+def test_status_interval_is_30_minutes_and_check_interval_is_15_minutes():
     mod = load_module()
     assert mod.CHECK_INTERVAL_MIN == 15
-    assert mod.STATUS_INTERVAL_MIN == 60
+    assert mod.STATUS_INTERVAL_MIN == 30
 
 
 def test_email_ollama_defaults_match_live_p1_floor():
@@ -128,13 +128,13 @@ def test_cmd_check_is_time_gated(tmp_path):
     assert "threshold=15m" in result
 
 
-def test_cmd_status_is_time_gated_hourly(tmp_path):
+def test_cmd_status_is_time_gated_every_30_minutes(tmp_path):
     mod = load_module()
     mod.STATUS_SENT_FILE = tmp_path / "cc_email_status_last.txt"
     mod.STATUS_SENT_FILE.write_text(datetime_now_iso())
     result = mod.cmd_status()
     assert "skipped (" in result
-    assert "threshold=60m" in result
+    assert "threshold=30m" in result
 
 
 def datetime_now_iso():

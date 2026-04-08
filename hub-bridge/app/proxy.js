@@ -515,7 +515,14 @@ const PUBLIC_DIR = path.join(path.dirname(new URL(import.meta.url).pathname), "p
 const server = http.createServer(async (req, res) => {
   setCors(res);
   if (req.method === "OPTIONS") { res.writeHead(204); return res.end(); }
-  console.log(`[REQUEST] ${req.method} ${req.url}`);
+  const originalUrl = req.url || "/";
+  // /cc is the anchored Julian surface; normalize /cc/* API/UI paths to root routes.
+  if (originalUrl === "/cc" || originalUrl === "/cc/") {
+    req.url = "/";
+  } else if (originalUrl.startsWith("/cc/")) {
+    req.url = originalUrl.slice(3);
+  }
+  console.log(`[REQUEST] ${req.method} ${originalUrl} -> ${req.url}`);
 
   try {
     // ── Static files ───────────────────────────────────────────────────

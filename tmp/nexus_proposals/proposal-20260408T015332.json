@@ -1,0 +1,8 @@
+{
+  "section": "APPENDIX S163: CORRECTED ACTIVE FRAME",
+  "text": "## APPENDIX S163: CORRECTED ACTIVE FRAME (2026-04-07)\n\n### Locked corrections\n\n1. CC state MUST refresh within 90min or identity drift triggers automatic checkpoint cycle.\n2. `cc_server_p1.py` validates TRUE FAMILY hierarchy (Colby > Julian > Karma) before accepting any session state.\n3. Physical manifest at `docs/wip/identity-manifest.md` stores checkpoint timestamp, hierarchy hash, and CC state checksum.\n4. `checkpoint-verify` primitive validates stored manifests against live CC state before resuming.\n5. If identity drift detected, `cc_server_p1.py` re-initializes with correct hierarchy before resuming.\n\n### Gap map update\n\n- **Missing**: `checkpoint-verify` primitive (1/17 deployed)\n- **Pending**: `identity-manifest` physical storage (1/17 deployed)\n\n### Immediate action\n\nExecute `docs/wip/identity-manifest.md` creation with CC state hash + hierarchy validation. Store at `vault-neo` + `docs/wip/` for physical continuity.",
+  "reason": "Addresses root cause of CC WATCHDOG alerts (identity drift) by creating verifiable physical manifest. Solves both snapshot staleness AND missing hierarchy fields. Enables crash recovery with guaranteed identity continuity.",
+  "id": "proposal-20260408T015332",
+  "created_at": "2026-04-08T01:53:32.515591Z",
+  "status": "pending"
+}

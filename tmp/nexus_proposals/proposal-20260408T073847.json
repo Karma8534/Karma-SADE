@@ -1,0 +1,8 @@
+{
+  "section": "which part to append to",
+  "text": "## Revised Build Order Enhancement",
+  "reason": "The existing plan is too fragmented. Appending the `CC --resume` command to the `new thread` initialization ensures the entire Julian inference engine is consistently accessible and usable across all threads, preventing inconsistencies and improving maintainability.",
+  "id": "proposal-20260408T073847",
+  "created_at": "2026-04-08T07:38:47.963270Z",
+  "status": "pending"
+}

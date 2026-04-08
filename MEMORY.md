@@ -39,15 +39,34 @@
 - **Sprint 8 PARTIAL**: 8-D MemoryPanel + 8-F GlobalSearch shipped.
 - **nexus v5.2.0**: Merged Julian + Codex plans. 4-layer architecture. Phase 0 executor corrections. Non-negotiables adopted. Old sprints replaced with phases.
 - **FUTURE**: Clean up PowerShell profile (ArkNexus SADE v7 banner). Install Rust for claudelytics.
+## Session 162 (2026-04-07) — MemPalace Primitives Extraction + nexus.md v5.6.0
+
+**Done:**
+- Forensic extraction of MemPalace v3.0.0 (~3500 LOC Python): 18 primitives (7 HIGH, 6 MEDIUM, 5 LOW)
+- nexus.md updated v5.5.0 → v5.6.0: Phase 1 (Persistent Memory) and Phase 3 (Retrieval + Planning) enhanced with MemPalace patterns
+- Full extraction report written: `docs/wip/nexux2proposal.md`
+- Execution prompt written: `docs/ForColby/nexus560-execute.md` (19 tasks, 3 phases, TDD-gated, 10-point recursive verification gate)
+- claude-mem: obs #25022 (7 HIGH primitives)
+- All docs updated: STATE.md, PLAN.md, data-map.md, MEMORY.md
+
+**7 HIGH primitives adopted into nexus.md:**
+1. 4-Layer Memory Stack (L0-L3 tiered retrieval) → Phase 1, buildSystemText() refactor
+2. AAAK 30x Compression Dialect → Phase 3, K2 cortex compression
+3. Palace Structure (wing/room/hall/tunnel, +34% retrieval) → Phase 3, FalkorDB ontology
+4. Temporal Knowledge Graph (valid_from/valid_to, invalidate()) → Phase 1, FalkorDB Entity nodes
+5. PreCompact Hook (emergency save before compaction) → Phase 1, .claude/hooks/
+6. Periodic Save Hook (auto-PROMOTE every 15 messages) → Phase 1, .claude/hooks/
+7. General Extractor (5-type regex classifier, no LLM) → Phase 1, consciousness loop
+
+**Key finding:** MemPalace alone or claude-mem alone < merged version. MemPalace has architecture claude-mem lacks (hierarchy, temporal validity, 30x compression, auto-save hooks). claude-mem has integration MemPalace lacks (CC workflow, brain wire, multi-model orchestration). Merging MemPalace patterns INTO existing spine = strictly superior.
+
+**Execution prompt covers Phases 0+1+3 only.** Missing: Phase 2 (workspace hardening), Phases 4-7, S160 shipped feature verification, S160 primitives #8-17.
+
 ## Next Session Starts Here
 1. /resurrect
-2. READ `.gsd/codex-final-directive.md` — THE consolidated Codex directive. Supersedes all prior prompts.
-3. Check `git log --oneline -20` — Codex already modified cc_server_p1.py (TOOL_DEFS, _groq_fallback, _execute_tool_locally). Build on that work.
-4. Convert 7 inbox PDFs: `python Scripts/batch_pdf_to_md.py --execute --wip`
-5. THE REAL WORK: Enhance cc-chat (electron/main.js:45) with tool_use loop + Groq/K2 fallback. CC --resume stays ($0 Max sub). Do NOT call Anthropic API directly (costs money — P116).
-6. Gates: 5/6 PASS. /v1/learnings 502 (needs cc_server restart).
-7. 46 skills installed (TSS verified). Use /codex:adversarial-review before shipping.
-8. P107-P116 documented. Sovereign trust DAMAGED.
+2. READ `docs/ForColby/nexus560-execute.md` — paste to execute full build
+3. Or continue with manual Phase 0+1+3 implementation
+4. P107-P116 documented. Sovereign trust recovery in progress.
 9. Settings panel completely reworked (7 tabs, provider dropdown, no Anthropic lock-in).
 10. S160 HONEST: ~100 commits of mostly decoration. Engine never ran end-to-end. 7 inbox PDFs still unprocessed.
 

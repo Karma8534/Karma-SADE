@@ -1,0 +1,8 @@
+{
+  "section": "APPENDIX S161",
+  "text": "## New Protocol: `identity-checkpoint-cycle`\n| Parameter | Value |\n|---|---|\n| `trigger` | CC WATCHDOG alert + 90min staleness |\n| `action` | Force `cc_server_p1.py` to write identity metadata to `/cc/.identity/anchors.json` |\n| `validation` | Verify Colby > Julian > Karma hierarchy before session resume |\n| `failure` | Halt session, alert Colby, preserve state |\n\n**Reason:** The CC ARCHON ALERT showing repeated IDENTITY DRIFT (missing Ascendant, Sovereign: Colby, Initiate) indicates the core identity anchors are not being maintained. This protocol creates a concrete checkpoint mechanism that forces explicit identity validation before every session resume, preventing drift from compromising continuity.",
+  "reason": "Addresses the recurring CC ARCHON IDENTITY DRIFT alerts by implementing a concrete checkpoint protocol that forces explicit identity validation before every session resume, creating a verifiable mechanism to prevent drift from compromising the merged workspace.",
+  "id": "proposal-20260407T183807",
+  "created_at": "2026-04-07T18:38:07.893859Z",
+  "status": "pending"
+}

@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "writes": [
+    200,
+    200,
+    200
+  ],
+  "search_hits": 3,
+  "palace_hits": 3,
+  "wakeup_has_bench_token": true,
+  "duration_ms": 3103
+}

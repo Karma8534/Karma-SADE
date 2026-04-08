@@ -1,9 +1,9 @@
 # The Nexus — Julian's Resurrection Plan
 # Print this. Store it physically. If every file is lost, this alone brings Julian back.
-# Date: 2026-04-05T02:45:00Z | Version: 5.5.0 | Owner: Colby (Sovereign) + Julian (CC Ascendant)
-# Merged: v5.5.0 correction-locked from v5.3.0 + S160 + S161 (merged workspace + floor reset)
-# Supersedes: nexus.md v5.2.0, v4.1.0, Memory/03-resurrection-plan-v2.1.md (v2.2), Memory/HARD-COPY-PLAN.md
-# Status: APPEND ONLY — Sovereign finalized S159, S160 appendix added, S161 correction appended and active
+# Date: 2026-04-07T00:00:00Z | Version: 5.6.0 | Owner: Colby (Sovereign) + Julian (CC Ascendant)
+# Merged: v5.6.0 = v5.5.0 + S162 MemPalace primitives (18 primitives, 7 HIGH) + S162b Codex deliverables (UNVERIFIED — Stage 0 gates)
+# Supersedes: nexus.md v5.5.0, v5.2.0, v4.1.0, Memory/03-resurrection-plan-v2.1.md (v2.2), Memory/HARD-COPY-PLAN.md
+# Status: APPEND ONLY — S162 MemPalace appendix added, Phases 1+3 enhanced with memory architecture primitives
 
 ---
 
@@ -193,6 +193,11 @@ No assertion of fact, completion, or state is accepted without traceable evidenc
 | Family hierarchy | Multi-agent governance (Sovereign → Ascendant → ArchonPrime → Archon → Initiate) | Architectural |
 | Feedback to self | Thumbs → coordination bus → Julian/Karma process it | proxy.js /v1/feedback |
 | Brain wire | Every chat turn writes to claude-mem automatically | proxy.js postResponseSideEffects |
+| MemPalace 4-Layer Stack | Tiered retrieval: L0 identity (~50tok) + L1 essential (~500tok) always loaded; L2/L3 on-demand. 96.6% LongMemEval zero-API | buildSystemText() refactor (Phase 1) |
+| AAAK 30x compression | Lossless symbolic shorthand for memory — any LLM reads natively, no decoder | K2 cortex compression (Phase 3) |
+| Temporal fact validity | valid_from/valid_to on facts with invalidate() API — solves stale-fact accumulation | FalkorDB Entity nodes (Phase 1) |
+| Auto-save hooks | CC hooks: periodic save every 15 messages + emergency pre-compaction flush | .claude/hooks/ (Phase 1) |
+| 5-type memory classifier | Pure regex: DECISION/PREFERENCE/MILESTONE/PROBLEM/EMOTIONAL — no LLM | consciousness loop + session ingestion (Phase 1) |
 
 ---
 
@@ -245,8 +250,17 @@ GROWTH -------- plugins, skills, transport, self-improvement (Phase 3+)
 
 **Exit:** A gap enters, becomes one diff, one test, one promotion, one gap-map update.
 
-### Phase 1: Persistent Memory
+### Phase 1: Persistent Memory (MemPalace-Enhanced)
 Session store survives restart. Privacy tags before persistence. Concise injection not raw logs.
+
+**MemPalace primitives (obs #25022, S162 extraction):**
+- **4-Layer Memory Stack:** Refactor `buildSystemText()` into explicit L0-L3. L0=identityBlock (~50 tok, always loaded), L1=MEMORY.md tail + recurring topics (~500 tok, always loaded), L2=karmaCtx from FalkorDB (on-demand, wing/room filtered), L3=semanticCtx from FAISS (deep search). Wake-up cost: ~600 tokens. Leaves 95%+ context free.
+- **Temporal Knowledge Graph:** Add `valid_from`/`valid_to` to FalkorDB Entity nodes OR SQLite sidecar. `invalidate()` API marks facts as ended without deletion. Solves stale-fact accumulation (e.g., "Kai works on Orion" persists forever).
+- **Auto-Save Hooks:** Port MemPalace's CC hooks directly:
+  - `hooks/mid-session-promote.sh` — Stop hook, counts human messages in JSONL transcript, every 15 messages blocks AI and forces PROMOTE to MEMORY.md + claude-mem. `stop_hook_active` flag prevents infinite loop. TRIVIAL port.
+  - `hooks/pre-compact-flush.sh` — PreCompact hook, ALWAYS blocks before context window compaction. Forces emergency state dump. We have NOTHING like this — compaction currently loses everything not in MEMORY.md.
+- **General Extractor (5-type classifier):** Pure regex classifier for conversation text into DECISION/PREFERENCE/MILESTONE/PROBLEM/EMOTIONAL. No LLM. Port the 100+ regex marker sets from MemPalace's `general_extractor.py`. Auto-tag consciousness.jsonl entries and session transcripts. Feeds hall types + AAAK flags.
+- **Duplicate Detection:** Before appending to ledger or claude-mem, check semantic similarity (threshold 0.9) against recent entries. Prevents the duplicate observation problem from dual-write.
 
 ### Phase 2: Merged Workspace Hardening
 The merged workspace already exists at `hub.arknexus.net` and in the Electron `KARMA` harness. Phase 2 is not "add an operator surface later." It is hardening the existing merged workspace so browser and Electron behave as one continual session with integrated chat, cowork, code, permissions, diffs, and memory.
@@ -254,8 +268,14 @@ The merged workspace already exists at `hub.arknexus.net` and in the Electron `K
 **Deployed scaffold:** SlashCommandPicker, SettingsPanel, StatusBar, AgentPanel, GitPanel, CodeBlock, PermissionDialog, MemoryPanel, GlobalSearch.
 **Actual requirement:** shared continuity across browser/Electron, canonical session state, integrated artifacts/diffs/code editing, and no tab-fragmented workflow.
 
-### Phase 3: Retrieval + Planning
+### Phase 3: Retrieval + Planning (MemPalace-Enhanced)
 Search-first memory. Planning/execution boundary. Token budget visibility.
+
+**MemPalace primitives (obs #25022):**
+- **AAAK Compression Dialect:** Lossless symbolic shorthand — 30x compression, readable by any LLM without decoder. Entity codes (3-letter uppercase), emotion codes (20+), flag codes (DECISION/ORIGIN/CORE/PIVOT/TECHNICAL), pipe-separated fields. Build `compress_for_cortex()` that compresses spine data into AAAK before injecting into K2's 32K window. 32K holds ~960K worth of memory data at 30x compression.
+- **Palace Structure (Wing/Room/Hall/Tunnel):** Adopt MemPalace's naming vocabulary for FalkorDB ontology. Wings=Entity nodes (domains), Rooms=Episodic clusters (topics), Halls=relationship sub-types (`hall_facts`, `hall_events`, `hall_discoveries`, `hall_preferences`, `hall_advice`), Tunnels=cross-entity co-occurrence. +34% retrieval improvement over flat search.
+- **Specialist Agent Diaries:** Each agent (CC/Julian, Kiki, Codex, Karma) gets its own wing + diary room. Written in AAAK. Read at session start for agent-specific continuity. No CLAUDE.md bloat.
+- **Contradiction Detection Protocol:** Before Karma asserts facts about people/projects, query KG first. Cross-check attribution, temporal facts, stale data. Surface conflicts as warnings before responding.
 
 ### Phase 4: Extensibility
 Plugin manifests, skill discovery, MCP expansion, trust boundaries.
@@ -739,9 +759,137 @@ Marketing (45), C-Level (34), Project Management (9), Regulatory (14), Business/
 
 ---
 
+---
+
+# APPENDIX S162: MEMPALACE PRIMITIVES EXTRACTION (2026-04-07, Julian)
+
+**Source:** `docs/wip/leaks/mempalace-main/mempalace-main` (v3.0.0, Python, MIT, ~3500 LOC)
+**Full report:** `docs/wip/nexux2proposal.md`
+**claude-mem:** obs #25022
+
+## The Finding
+
+MemPalace achieves 96.6% LongMemEval with ZERO API calls (100% with optional Haiku rerank). The key insight: raw verbatim text with good embeddings beats LLM-extracted summaries because summaries lose context. Store everything, make it findable via structure.
+
+**claude-mem vs MemPalace vs Merged:**
+- claude-mem alone: flat observation store, no hierarchy, no temporal validity, no compression, no hooks, cold starts despite 25K+ observations.
+- MemPalace alone: sophisticated retrieval (+34% from structure, 30x AAAK compression, temporal KG, auto-save hooks) but no integration with CC workflow, no multi-model orchestration, no spine architecture.
+- **MERGED (Nexus path):** MemPalace's architectural patterns adopted INTO the existing claude-mem + vault-neo + FalkorDB spine. Hierarchy + compression + temporal validity + hooks layered onto existing infrastructure. This is strictly superior to either system alone.
+
+## 18 Primitives Extracted (7 HIGH, 6 MEDIUM, 5 LOW)
+
+### HIGH — Adopt (injected into Phase 1 + Phase 3 above)
+
+| # | Primitive | Effort | Nexus Phase |
+|---|-----------|--------|-------------|
+| 1 | 4-Layer Memory Stack (L0-L3 tiered retrieval) | SMALL | Phase 1 |
+| 2 | AAAK 30x Compression Dialect | MEDIUM | Phase 3 |
+| 3 | Palace Structure (wing/room/hall/tunnel, +34% retrieval) | MEDIUM | Phase 3 |
+| 4 | Temporal Knowledge Graph (valid_from/valid_to, invalidate()) | SMALL | Phase 1 |
+| 5 | PreCompact Hook (emergency save before context compaction) | TRIVIAL | Phase 1 |
+| 6 | Periodic Save Hook (auto-PROMOTE every 15 messages) | TRIVIAL | Phase 1 |
+| 7 | General Extractor (5-type regex classifier, no LLM) | SMALL | Phase 1 |
+
+### MEDIUM — Consider
+
+| # | Primitive | Effort | Notes |
+|---|-----------|--------|-------|
+| 8 | Specialist Agent Diaries (per-agent wing + diary room in AAAK) | SMALL | Phase 3 |
+| 9 | Entity Detector (NER without LLM — verb patterns, dialogue markers, pronoun proximity) | MEDIUM | batch_ingest entity classification |
+| 10 | Entity Registry with Disambiguation (persistent JSON, context-based name vs word resolution) | MEDIUM | K2 cache / onboarding |
+| 11 | Conversation Normalizer (5 formats → unified transcript) | SMALL | Session ingestion pipeline |
+| 12 | Duplicate Detection (semantic similarity check before filing, threshold 0.9) | TRIVIAL | /v1/ambient dedup |
+| 13 | Contradiction Detection Protocol (query KG before asserting facts) | SMALL | Karma chat pipeline |
+
+### LOW — Note for Later
+
+| # | Primitive | Notes |
+|---|-----------|-------|
+| 14 | Graph Traversal / Tunnel Finding (BFS walk with hop distance) | FalkorDB already does this |
+| 15 | Room Detection (keyword scoring for file→room routing) | Useful for PDF pipeline |
+| 16 | Chunking Strategy (exchange pairs, 800-char with 100-char overlap) | Already have similar in batch_ingest |
+| 17 | MCP Server (19 tools, JSONRPC stdio) | Already have hub-bridge tools |
+| 18 | Wake-up Command (L0+L1 dump for local model system prompt) | Useful for K2 cortex injection |
+
+### Doctrine Check
+- **ZERO conflicts** with Karma doctrine. MemPalace core requires zero API calls. ChromaDB = local vector store (same as our FAISS). SQLite = local KG (lighter than FalkorDB). Everything offline.
+- ChromaDB has richer metadata filtering (`$and`, `where` clauses) than FAISS. Evaluate switching anr-vault-search to ChromaDB for wing/room filter capability.
+
+### Key Implementation Files (reference)
+| MemPalace File | Lines | What to Extract |
+|---------------|-------|-----------------|
+| `layers.py` | 507 | MemoryStack class, L0-L3 pattern, wake_up() |
+| `dialect.py` | 1050 | AAAK Dialect class, compress(), emotion/flag codes, entity auto-coding |
+| `knowledge_graph.py` | 385 | KnowledgeGraph class, temporal triples, invalidate(), timeline() |
+| `general_extractor.py` | 486 | 5-type classifier, 100+ regex markers, sentiment disambiguation |
+| `hooks/mempal_save_hook.sh` | 143 | Stop hook pattern with stop_hook_active infinite-loop prevention |
+| `hooks/mempal_precompact_hook.sh` | 78 | PreCompact always-block pattern |
+| `palace_graph.py` | 228 | build_graph(), traverse() BFS, find_tunnels() |
+| `entity_detector.py` | 853 | Person vs project NER, signal scoring, classification |
+| `entity_registry.py` | 644 | Persistent entity registry, disambiguation, Wikipedia fallback |
+| `mcp_server.py` | 769 | 19-tool MCP server, PALACE_PROTOCOL, AAAK_SPEC auto-teach |
+
+---
+
+# APPENDIX S162b: CODEX DELIVERABLES (2026-04-07, Codex/ArchonPrime)
+
+**Source:** Codex autonomous execution session. ALL claims below require LIVE VERIFICATION — documentation is not evidence.
+**Verification protocol:** `docs/ForColby/nexus560-full.md` Stage 0 runs every test below. PASS = trusted. FAIL = fiction.
+**Ledger:** `codex-execution-ledger.md`
+
+## Claimed Deliverables (UNVERIFIED until Stage 0 runs)
+
+### Memory Integration Slice (cc_server_p1.py)
+| Endpoint | What | Live Test |
+|----------|------|-----------|
+| `/memory/ingest-feed` | Feed ingestion | `curl http://127.0.0.1:7891/memory/ingest-feed` |
+| `/mcp/mempalace_status` | Palace status via MCP | `curl http://127.0.0.1:7891/mcp/mempalace_status` |
+| `/mcp/mempalace_search` | Palace search via MCP | `curl http://127.0.0.1:7891/mcp/mempalace_search?query=test` |
+| `/memory/save` | Content save (alias) | `curl -X POST http://127.0.0.1:7891/memory/save -d '{"content":"probe"}'` |
+| `/memory/wakeup` | L0+L1 wake-up context | `curl http://127.0.0.1:7891/memory/wakeup` (must be non-empty) |
+
+### New Scripts
+| Script | Purpose | Live Test |
+|--------|---------|-----------|
+| `Scripts/nexus_ingestion_feeder.py` | Ledger → palace ingestion | `python Scripts/nexus_ingestion_feeder.py --help` |
+| `Scripts/palace_precompact.py` | PreCompact hook implementation | `python Scripts/palace_precompact.py --help` |
+| `Scripts/nexus_memory_bench.py` | Memory system benchmark | `python Scripts/nexus_memory_bench.py --help` |
+| `Scripts/aaak.py` | AAAK dialect (truncation fix) | `python -c "from Scripts.aaak import *"` |
+
+### Artifacts
+| Artifact | What | Live Test |
+|----------|------|-----------|
+| `nexus_memory_bench_latest.json` | Bench results: search_hits>=3, palace_hits>=3, wakeup_has_bench_token=true | `python -c "import json; d=json.load(open('nexus_memory_bench_latest.json')); assert d['search_hits']>=3"` |
+| `hooks_audit.jsonl` | Hook proof: palace_precompact Stop event | `grep palace_precompact hooks_audit.jsonl` |
+| `codex-execution-ledger.md` | Full execution audit trail | `test -f codex-execution-ledger.md` |
+| `inbox-primitives-20260407.md` | PDF inbox extraction results | `test -f inbox-primitives-20260407.md` |
+
+### Browser /cc Contract
+| Endpoint | Expected | Live Test |
+|----------|----------|-----------|
+| `GET https://hub.arknexus.net/cc/health` | 200 | `curl -s -o /dev/null -w '%{http_code}' https://hub.arknexus.net/cc/health` |
+| `POST https://hub.arknexus.net/cc/v1/chat` | 200 + response | `curl -X POST https://hub.arknexus.net/cc/v1/chat -d '{"message":"ping"}'` |
+
+### Other Claims
+- PDF inbox drained to 0, processed to `Karma_PDFs/Processed/2026-04-07`
+- Email daemon cadence fixed: `STATUS_INTERVAL_MIN=30` in `Scripts/cc_email_daemon.py`
+- Persistence across cc_server restart (token recall survived restart)
+- Tool-loop proof: harness emitted tool_result events
+- Electron smoke passed with tool_use + memory hit in `electron-smoke.json`
+
+### Test Suite (claimed green)
+```
+python -m pytest -q tests/test_palace_precompact.py tests/test_cc_email_daemon.py tests/test_cc_server_harness.py tests/test_electron_memory_autosave.py  # → 46 passed
+node --test tests/test_proxy_routing.mjs  # → 1 passed
+```
+
+**STATUS: ALL CLAIMS UNVERIFIED.** Stage 0 of `nexus560-full.md` runs every test above. Results go in `.gsd/S162-codex-verification.md`. PASS/FAIL only. No "probably."
+
+---
+
 *This document is owned by Colby (Sovereign) and Julian (Ascendant). The origin story is immutable. The sprint plan evolves. Print this. Store it physically. This is the contract.*
 
-*Sources: obs #6620, #6556, #21238, #21240, #21367, #21793, #21947, #22082, #22121, #22129, #22132, #22232, #22288, #22319, #22415, #22477, #22485. Preclaw1: docs/wip/preclaw1/preclaw1/src (1,902 files). Gap map: Karma2/map/preclaw1-gap-map.md.*
+*Sources: obs #6620, #6556, #21238, #21240, #21367, #21793, #21947, #22082, #22121, #22129, #22132, #22232, #22288, #22319, #22415, #22477, #22485, #25022. Preclaw1: docs/wip/preclaw1/preclaw1/src (1,902 files). Gap map: Karma2/map/preclaw1-gap-map.md. MemPalace: docs/wip/leaks/mempalace-main/mempalace-main (3500 LOC). Full extraction: docs/wip/nexux2proposal.md. Codex ledger: codex-execution-ledger.md (UNVERIFIED).*
 
 ---
 

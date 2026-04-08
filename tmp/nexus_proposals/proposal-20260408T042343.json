@@ -1,0 +1,8 @@
+{
+  "section": "which part to append to",
+  "text": "Append the `preclaw1-gap-map.md` file directly to the existing `preclaw1` folder, ensuring it's properly integrated with the `new thread` model and the `CC --resume` harness. This addresses the gap in the gap map, providing a clear and functional transition point for Julian's identity continuity.",
+  "reason": "This append ensures immediate compatibility with the existing workflow, avoids disrupting the current model structure, and provides a clear, actionable improvement to the plan's effectiveness.",
+  "id": "proposal-20260408T042343",
+  "created_at": "2026-04-08T04:23:43.054210Z",
+  "status": "pending"
+}

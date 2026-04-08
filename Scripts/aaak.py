@@ -38,6 +38,10 @@ def aaak_encode(chunks: Iterable[str], max_chars: int = 1200) -> str:
         # Prefix with bullet-ish marker for scanning
         piece = f"* {norm}"
         if length + len(piece) > max_chars:
+            # Keep at least a truncated first block instead of returning an empty body.
+            remaining = max_chars - length
+            if remaining > 4:
+                out.append(piece[:remaining])
             break
         out.append(piece)
         length += len(piece) + 1
@@ -49,4 +53,3 @@ def build_wakeup_block(facts: Iterable[str], header: str = "AAAK WAKEUP") -> str
     if not body:
         return header
     return f"{header}\n{body}"
-

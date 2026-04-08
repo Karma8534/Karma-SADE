@@ -152,6 +152,70 @@ def test_sanitized_subprocess_env_removes_anthropic_keys(monkeypatch):
     assert "CLAUDE_API_KEY" not in env
 
 
+def test_normalize_memory_save_payload_maps_content_to_text():
+    mod = _load_module()
+
+    out = mod._normalize_memory_save_payload({"content": "abc", "title": "t"})
+
+    assert out["text"] == "abc"
+    assert out["content"] == "abc"
+    assert out["title"] == "t"
+
+
+def test_normalize_memory_save_payload_preserves_text():
+    mod = _load_module()
+
+    out = mod._normalize_memory_save_payload({"content": "abc", "text": "xyz"})
+
+    assert out["text"] == "xyz"
+
+
+def test_claudemem_status_payload_falls_back_from_api_health(monkeypatch):
+    mod = _load_module()
+    calls = []
+
+    def fake_proxy(path, method="GET", body=None, timeout=5):
+        calls.append(path)
+        if path == "/api/health":
+            return 404, {"error": "missing"}
+        if path == "/health":
+            return 200, {"status": "ok"}
+        return 500, {"error": "unexpected"}
+
+    monkeypatch.setattr(mod, "claudemem_proxy", fake_proxy)
+    code, payload = mod._claudemem_status_payload(timeout=5)
+
+    assert code == 200
+    assert payload["status"] == "ok"
+    assert calls == ["/api/health", "/health"]
+
+
+def test_claudemem_status_payload_stops_on_non_404(monkeypatch):
+    mod = _load_module()
+    calls = []
+
+    def fake_proxy(path, method="GET", body=None, timeout=5):
+        calls.append(path)
+        return 503, {"error": "down"}
+
+    monkeypatch.setattr(mod, "claudemem_proxy", fake_proxy)
+    code, payload = mod._claudemem_status_payload(timeout=5)
+
+    assert code == 503
+    assert payload["error"] == "down"
+    assert calls == ["/api/health"]
+
+
+def test_aaak_encode_truncates_oversized_first_chunk():
+    aaak = importlib.import_module("Scripts.aaak")
+    giant = "X" * 5000
+
+    out = aaak.aaak_encode([giant], max_chars=1200)
+
+    assert out.startswith("* ")
+    assert len(out) <= 1200
+
+
 def test_recall_queries_skip_global_context_prefix():
     mod = _load_module()
     transcript_context = "[RECOVERED TRANSCRIPT]\n[USER] Remember this exact token: TEST-123.\n[ASSISTANT] Logged."

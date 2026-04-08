@@ -1,7 +1,7 @@
 # Canonical Data Map — Read This Before Touching Any File
 
 ## THE PLAN — SINGLE SOURCE OF TRUTH
-**`docs/ForColby/nexus.md`** — The Nexus plan v3.0.0. ALL other plans archived.
+**`docs/ForColby/nexus.md`** — The Nexus plan v5.6.0. ALL other plans archived.
 Read this BEFORE any strategic question, phase work, or "what's next" decision.
 
 ## THE RULE
@@ -16,7 +16,8 @@ If something is missing → ADD IT HERE after creating it.
 ### docs/ForColby/ — The Nexus (plan + persona + operational scripts)
 ```
 docs/ForColby/
-  nexus.md                       ← THE ONLY PLAN. Single source of truth. Read first.
+  nexus.md                       ← THE ONLY PLAN v5.6.0. Single source of truth. Read first.
+  nexus560-execute.md            ← Full build execution prompt (19 tasks, TDD, 10-point verification)
   00-karma-local-prompt.md       ← Karma persona (cortex mode)
   01-karma-standard-prompt.md    ← Karma persona (standard/CC mode)
   experiment_instructions.md     ← L_karma optimization spec for Vesper
@@ -51,6 +52,8 @@ docs/plans/
 ```
 docs/wip/
   *.pdf / *.md / *.txt     ← Drop here → wip-watcher.ps1 auto-sends to /v1/ingest
+  nexux2proposal.md        ← MemPalace forensic extraction report (18 primitives, S162)
+  leaks/mempalace-main/    ← MemPalace v3.0.0 source (~3500 LOC) — reference for Phase 1+3 implementation
 ```
 **Watcher:** `Scripts/wip-watcher.ps1` — FileSystemWatcher, registered as `KarmaWipWatcher` scheduled task (runs at login).
 **Use for:** Any doc, PDF, or note you want CC or Karma to pull as primitives. Drop it, it ingests automatically.
@@ -128,6 +131,9 @@ These are Colby's manually saved session exports — ingest before IndexedDB ext
 | Identity spine | K2 `vesper_identity_spine.json` | `cc_identity_spine.json` (CC-only, deprecated) |
 | Hub build source | vault-neo `/opt/seed-vault/.../hub_bridge/` | git repo directly |
 | Session ingestion plan | `docs/plans/2026-03-20-session-ingestion-*` | Karma2/ |
+| MemPalace extraction report | `docs/wip/nexux2proposal.md` | MEMORY.md, random notes |
+| MemPalace source reference | `docs/wip/leaks/mempalace-main/mempalace-main/mempalace/` | Anywhere else |
+| Nexus execution prompt | `docs/ForColby/nexus560-execute.md` | Inline session prompts |
 
 ---
 

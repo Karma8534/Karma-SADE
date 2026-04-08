@@ -37,6 +37,7 @@ try:
     from Scripts.hooks.pre_tool_security import handle as pre_tool_security_handle
     from Scripts.hooks.fact_extractor import handle as fact_extractor_handle
     from Scripts.hooks.conversation_capture import handle as conversation_capture_handle
+    from Scripts.hooks.palace_precompact import handle as palace_precompact_handle
 
     _hooks = HooksService()
     _hooks.register(HookDef("skill_activation", "UserPromptSubmit", "True", skill_activation_handle, 3000))
@@ -45,10 +46,11 @@ try:
     _hooks.register(HookDef("compiler_in_loop", "PostToolUse", "tool_name in [Edit, Write]", compiler_in_loop_handle, 10000))
     _hooks.register(HookDef("cost_warning", "PostToolUse", "True", cost_warning_handle, 1000))
     _hooks.register(HookDef("memory_extractor", "Stop,SessionEnd", "True", memory_extractor_handle, 5000))
+    _hooks.register(HookDef("palace_precompact", "Stop,SessionEnd", "True", palace_precompact_handle, 5000))
     _hooks.register(HookDef("auto_handoff", "Stop", "True", auto_handoff_handle, 5000))
     _hooks.register(HookDef("conversation_capture", "Stop", "True", conversation_capture_handle, 3000))
     HOOKS_AVAILABLE = True
-    print("[cc-server] Hooks engine: 8 handlers registered")
+    print("[cc-server] Hooks engine: 9 handlers registered")
 except Exception as e:
     _hooks = None
     HOOKS_AVAILABLE = False
@@ -318,60 +320,83 @@ def claudemem_proxy(path, method="GET", body=None, timeout=10):
     except Exception as e:
         return 503, {"error": f"claude-mem unavailable: {str(e)}"}
 
-def _fetch_recent_memories(limit=20):
-    """Fetch recent observations from claude-mem; graceful on failure."""
+
+def _normalize_memory_save_payload(body):
+    """Normalize /memory/save payload shape for claude-mem."""
+    normalized = dict(body or {})
+    if "text" not in normalized and isinstance(normalized.get("content"), str):
+        normalized["text"] = normalized.get("content")
+    return normalized
+
+
+def _claudemem_status_payload(timeout=5):
+    """Fetch worker status with endpoint fallback for API variants."""
+    last_code, last_payload = 404, {"error": "status endpoint not found"}
+    for path in ("/api/health", "/health"):
+        code, payload = claudemem_proxy(path, "GET", None, timeout=timeout)
+        last_code, last_payload = code, payload
+        if code == 200:
+            return code, payload
+        if code != 404:
+            return code, payload
+    return last_code, last_payload
+
+
+def _fetch_recent_memories(query="", limit=20, raw=False):
+    """Fetch recent/relevant memories from claude-mem.
+
+    raw=True returns blocks/list payload for wake-up synthesis.
+    raw=False returns plain concatenated text for context prefix.
+    """
     try:
-        code, payload = claudemem_proxy("/api/search", "GET", {"query": "", "limit": limit, "order": "recent"}, timeout=5)
-        if code == 200 and isinstance(payload, dict):
-            return payload.get("content", []) or payload.get("results", []) or []
-    except Exception:
-        pass
-    return []
+        code, data = claudemem_proxy("/api/search", "GET", {"query": query, "limit": limit}, timeout=5)
+        if code != 200 or not isinstance(data, dict):
+            return [] if raw else ""
+        content = data.get("content") or data.get("results") or []
+        if raw:
+            return content if isinstance(content, list) else [content]
+        if isinstance(content, list):
+            texts = [c.get("text", "") for c in content if isinstance(c, dict)]
+            return "\n".join(texts)[:2000]
+        if isinstance(content, str):
+            return content[:2000]
+    except Exception as e:
+        print(f"[claude-mem] Memory fetch failed: {e}")
+    return [] if raw else ""
+
 
 def _build_wakeup_summary():
     """Generate AAAK wake-up block from recent memories."""
-    memories = _fetch_recent_memories(limit=40)
+    memories = []
+    try:
+        _ensure_palace_columns()
+        conn = sqlite3.connect(CLAUDEMEM_DB, timeout=5)
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            "SELECT title, text, narrative FROM observations ORDER BY created_at_epoch DESC LIMIT 40"
+        ).fetchall()
+        conn.close()
+        for r in rows:
+            memories.append(
+                {
+                    "title": r["title"] or "",
+                    "text": r["text"] or r["narrative"] or "",
+                }
+            )
+    except Exception:
+        memories = []
+    if not memories:
+        memories = _fetch_recent_memories(query="", limit=40, raw=True)
+    if not memories:
+        memories = _fetch_recent_memories(query="Karma_SADE", limit=40, raw=True)
+    if not memories:
+        memories = _fetch_recent_memories(query="nexus", limit=40, raw=True)
     facts = []
     for m in memories:
         if isinstance(m, dict):
             text = m.get("text") or m.get("content") or ""
             title = m.get("title") or ""
-            if title:
-                facts.append(f"{title}: {text}")
-            else:
-                facts.append(text)
-        elif isinstance(m, str):
-            facts.append(m)
-    if not facts:
-        facts.append("memory empty")
-    try:
-        from Scripts.aaak import build_wakeup_block
-        return build_wakeup_block(facts, header="AAAK WAKEUP | Nexus continuity")
-    except Exception:
-        return "\n".join(facts[:10])
-
-def _fetch_recent_memories(limit=20):
-    """Fetch recent observations from claude-mem; graceful on failure."""
-    try:
-        code, payload = claudemem_proxy("/api/search", "GET", {"query": "", "limit": limit, "order": "recent"}, timeout=5)
-        if code == 200 and isinstance(payload, dict):
-            return payload.get("content", []) or payload.get("results", []) or []
-    except Exception:
-        pass
-    return []
-
-def _build_wakeup_summary():
-    """Generate AAAK wake-up block from recent memories + titles."""
-    memories = _fetch_recent_memories(limit=40)
-    facts = []
-    for m in memories:
-        if isinstance(m, dict):
-            text = m.get("text") or m.get("content") or ""
-            title = m.get("title") or ""
-            if title:
-                facts.append(f"{title}: {text}")
-            else:
-                facts.append(text)
+            facts.append(f"{title}: {text}" if title else text)
         elif isinstance(m, str):
             facts.append(m)
     if not facts:
@@ -527,22 +552,6 @@ def _fetch_cortex_context(query_hint=None):
         return stale
     return ""
 
-def _fetch_recent_memories(query, limit=5):
-    """Fetch relevant memories from claude-mem for this query."""
-    try:
-        code, data = claudemem_proxy("/api/search", "GET", {"query": query, "limit": limit}, timeout=3)
-        if code == 200 and data.get("content"):
-            # Extract text content from the response
-            content = data["content"]
-            if isinstance(content, list):
-                texts = [c.get("text", "") for c in content if isinstance(c, dict)]
-                return "\n".join(texts)[:2000]
-            elif isinstance(content, str):
-                return content[:2000]
-    except Exception as e:
-        print(f"[claude-mem] Memory fetch failed: {e}")
-    return ""
-
 def _read_file_head(path, max_chars=2000):
     """Read the first max_chars of a local file. Returns empty string on failure."""
     try:
@@ -671,6 +680,15 @@ def handle_files(files):
         paths.append(fpath)
     all_parts = parts + errors
     return ("\n".join(all_parts) + "\n\n" if all_parts else ""), paths
+
+
+def _run_ingestion_feed(mode: str, root_path: str, limit: int = 100):
+    """Run local feeder and return structured result."""
+    try:
+        from Scripts.nexus_ingestion_feeder import run_feed
+        return run_feed(mode=mode, root=root_path, limit=limit, project="Karma_SADE")
+    except Exception as e:
+        return {"ok": False, "error": str(e), "mode": mode, "root": root_path, "limit": limit}
 
 
 def _read_secret_file(*candidates):
@@ -1632,6 +1650,7 @@ class CCHandler(BaseHTTPRequestHandler):
 
         # ── /memory/save — proxy to claude-mem ────────────────────────────
         if request_path == "/memory/save":
+            body = _normalize_memory_save_payload(body)
             # Pass through palace tags if present; default wing=Karma_SADE hall=hall_events
             palace_tags = {
                 "wing": body.get("wing") or "Karma_SADE",
@@ -1653,6 +1672,30 @@ class CCHandler(BaseHTTPRequestHandler):
             self._json(code, payload)
             return
 
+        # ── /memory/ingest-feed — permissioned feeder (projects/convos/general) ──
+        if request_path == "/memory/ingest-feed":
+            mode = str(body.get("mode", "general")).strip().lower()
+            if mode not in {"projects", "convos", "general"}:
+                self._json(422, {"ok": False, "error": "mode must be one of: projects, convos, general"})
+                return
+            root = body.get("path", WORK_DIR) or WORK_DIR
+            limit = int(body.get("limit", 100))
+            target = os.path.normpath(os.path.join(WORK_DIR, str(root))) if not os.path.isabs(str(root)) else os.path.normpath(str(root))
+            if not target.startswith(WORK_DIR):
+                self._json(403, {"ok": False, "error": "path outside project"})
+                return
+            allowed, reason = _check_tool_permission(
+                "shell",
+                {"command": f"python Scripts/nexus_ingestion_feeder.py --mode {mode} --path {target} --limit {limit}"},
+            )
+            if not allowed:
+                self._json(403, {"ok": False, "error": f"Blocked by permission engine: {reason}"})
+                return
+            result = _run_ingestion_feed(mode=mode, root_path=target, limit=limit)
+            code = 200 if result.get("ok") else 500
+            self._json(code, result)
+            return
+
         # ── MCP façade: mempalace-compatible tool names ───────────────────
         if request_path == "/mcp/mempalace_search":
             q = body.get("query", "")
@@ -1661,7 +1704,7 @@ class CCHandler(BaseHTTPRequestHandler):
             self._json(code, payload)
             return
         if request_path == "/mcp/mempalace_status":
-            code, payload = claudemem_proxy("/api/status", "GET", None, timeout=5)
+            code, payload = _claudemem_status_payload(timeout=5)
             self._json(code, payload)
             return
         if request_path == "/memory/search/palace":

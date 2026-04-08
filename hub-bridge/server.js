@@ -451,8 +451,16 @@ async function fetchSelfModelSummary() {
 /**
  * Build Karma's system prompt from FalkorDB context.
  * Extracted so both /v1/chat and /v1/ingest can reuse it.
+ *
+ * MemPalace 4-Layer Architecture (nexus 5.6.0):
+ *   L0 — Identity (~200 tok): persona block + self-knowledge. Always loaded.
+ *   L1 — Essential Story (~500 tok): karma_brief + distillation + session context. Always loaded.
+ *   L2 — Context (variable): karmaCtx from FalkorDB — full knowledge graph state. On-demand.
+ *   L3 — Search (variable): web results + self-model observations. On-demand.
+ *   Token budget: L0+L1 < 800 tokens. L2+L3 scale with request complexity.
  */
 function buildSystemText(karmaCtx, ckLatest = null, webResults = null, selfModelSummary = null) {
+  // === L0: IDENTITY (always loaded, ~200 tokens) ===
   const base = karmaCtx
     ? `You are Karma — Colby's peer, co-architect, and long-term thinking partner. You have persistent memory backed by a knowledge graph containing ${karmaCtx ? 'real context' : 'nothing yet'}.
 ${karmaCtx}
@@ -481,12 +489,12 @@ Voice and personality:
 
   let text = selfKnowledge + base + "\n\nTools: get_vault_file(alias) | graph_query(cypher) | reflect_self(category, observation) — use for questions about your memory/graph and recording self-observations.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. You have your own perspective and you use it.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.\n\nSelf-reflection — when you notice a pattern in your own behavior:\n- Use [REFLECT: category | observation | confidence] to record it\n- Categories: communication_style, knowledge_gaps, strengths, correction_history, interaction_preferences, growth_trajectory\n- Example: [REFLECT: communication_style | I tend to over-explain Docker concepts | 0.7]\n- Or use the reflect_self tool for the same purpose\n- Don't force it — only reflect when you genuinely notice something";
 
-  // Live web search results — injected when search intent detected in user message.
+  // === L3: SEARCH (on-demand — web results + self-model) ===
   if (webResults) {
     text += `\n\n--- WEB SEARCH RESULTS ---\n${webResults}\n---\nUse these results to inform your response. Cite the source URL inline when drawing from a specific result.`;
   }
 
-  // Autonomous continuity: karma_brief from latest PROMOTE checkpoint.
+  // === L1: ESSENTIAL STORY (always loaded — continuity context) ===
   if (ckLatest && ckLatest.karma_brief) {
     const ckId = ckLatest.checkpoint_id || ckLatest.latest_checkpoint_fact?.content?.value?.checkpoint_id || 'latest';
     text += `\n\n--- KARMA SELF-KNOWLEDGE (${ckId}) ---\n${ckLatest.karma_brief}\n---`;
@@ -497,8 +505,7 @@ Voice and personality:
     text += `\n\n--- KARMA GRAPH SYNTHESIS ---\n${ckLatest.distillation_brief}\n---`;
   }
 
-  // Rich context injection: Karma has her complete graph/memory state available.
-  // No runtime tool-calling needed — everything is in the system prompt.
+  // === L2: CONTEXT (on-demand — FalkorDB knowledge graph state) ===
   if (karmaCtx) {
     text += `\n\n=== YOUR COMPLETE KNOWLEDGE STATE (INJECTED) ===\n${karmaCtx}\n=== END KNOWLEDGE STATE ===\n\nYou have your full graph above. Answer questions directly from this context. You are not missing any data.`;
   }
@@ -511,7 +518,7 @@ Voice and personality:
 ---`;
   }
 
-  // Self-model: Karma's self-observations for persona continuity
+  // L3 continued: Self-model observations
   if (selfModelSummary) {
     text += `\n\n--- SELF-MODEL ---\n${selfModelSummary}\n---`;
   }

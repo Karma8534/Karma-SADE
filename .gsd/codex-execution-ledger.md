@@ -573,3 +573,86 @@ Authority: `docs/ForColby/CODEX MASTER FORENSIC BUILD PROMP.md`
   - Live proof: remote file inspection now shows `host.docker.internal:11434` in both deployed files.
   - Live proof: direct qwen probe after restart returned `NEXUS_OK` from `http://100.75.109.92:11434/api/chat` in `14.76s`.
   - Decision: keep `qwen3.5:4b` as the current K2 local floor. `gemma4:e4b` remains installed for future reevaluation, but it is not the current operational choice.
+
+- 2026-04-07T19:50Z — Closed memory integration execution slice (ingestion feeders + MCP facade + bench + retention hook + tool-loop proof).
+  - RED before fix:
+    - `http://127.0.0.1:7891/mcp/mempalace_status` returned 404 because cc_server used `/api/status`, but live claude-mem exposes `/api/health`.
+    - `POST /memory/save` failed for callers sending `content` (claude-mem requires `text`).
+    - `/memory/wakeup` frequently returned empty/placeholder despite live memory rows.
+    - `Scripts/nexus_memory_bench.py` failed with `HTTP 401` (missing hub token auth header).
+  - Repo fixes:
+    - `Scripts/cc_server_p1.py`
+      - added `_normalize_memory_save_payload(...)` (`content` -> `text` compatibility).
+      - added `_claudemem_status_payload(...)` with endpoint fallback (`/api/health` then `/health`).
+      - updated `/memory/save` and `/mcp/mempalace_status` routes to use those helpers.
+      - upgraded `_build_wakeup_summary()` to pull latest rows from sqlite first, then search fallbacks.
+    - `Scripts/aaak.py`
+      - fixed truncation behavior so oversized first chunk is truncated instead of dropped.
+    - `Scripts/nexus_memory_bench.py`
+      - added token-aware auth headers (env or `.hub-chat-token`) for all requests.
+    - added runtime components:
+      - `Scripts/nexus_ingestion_feeder.py`
+      - `Scripts/hooks/palace_precompact.py`
+      - `tests/test_palace_precompact.py`
+  - Test proof:
+    - `python -m pytest -q tests/test_palace_precompact.py tests/test_cc_server_harness.py tests/test_electron_memory_autosave.py tests/test_cc_email_daemon.py` -> `46 passed in 0.26s`.
+    - `python -m py_compile Scripts/cc_server_p1.py Scripts/aaak.py Scripts/nexus_ingestion_feeder.py Scripts/nexus_memory_bench.py Scripts/hooks/palace_precompact.py` -> pass.
+  - Live endpoint proof (P1):
+    - `GET /health` -> `ok:true`.
+    - `GET /memory/wakeup` -> non-empty AAAK block with live tokens.
+    - `POST /memory/save` with `content` alias -> `200 success` (`id: 25037`).
+    - `POST /memory/ingest-feed` -> `ok:true` and ingested rows.
+    - `POST /mcp/mempalace_status` -> `status:"ok"` from worker (`version: 10.6.3`).
+    - `POST /mcp/mempalace_search` -> returned content hits.
+  - Bench proof:
+    - `python Scripts/nexus_memory_bench.py` -> `{"ok": true, "writes": [200,200,200], "search_hits": 3, "palace_hits": 3, "wakeup_has_bench_token": true}`.
+    - artifact: `tmp/nexus_memory_bench_latest.json`.
+  - Retention hook proof:
+    - unit behavior proof on temp sqlite DB: removed 3 old `hall_events`, preserved newest 2.
+    - live Stop-event proof via `POST /v1/chat` + `tmp/hooks_audit.jsonl` contains:
+      - `{"hook_name":"palace_precompact","event":"Stop",...,"error":null}`.
+  - Tool-loop proof:
+    - direct harness runtime (`_run_cc_harness`) emitted:
+      - `["assistant","assistant","assistant","tool_result","assistant","result"]`
+      - `has_tool_result: true`
+      - grounded first-line output from `MEMORY.md`.
+    - Electron smoke runtime proof:
+      - artifact `tmp/electron-smoke.json`
+      - `ok:true`, `isElectron:true`, provider `claude`
+      - event stream includes `tool_use` (`Read`) and terminal result
+      - UI path returned token and confirmed memory hit via `window.karma.memorySearch(...)`.
+
+- 2026-04-07T19:56Z — Closed PDF Inbox gate and restored email status cadence to 30m.
+  - PDF inbox gate:
+    - `python Scripts/batch_pdf_to_md.py --execute --wip` converted new inbox files (`12 converted, 0 errors`).
+    - moved verified converted PDFs from `Karma_PDFs/Inbox` to `Karma_PDFs/Processed/2026-04-07/`.
+    - proof: `INBOX_REMAINING=0`.
+    - extraction artifact written: `.gsd/inbox-primitives-20260407.md` (merge candidates + per-file primitive lines).
+  - Email cadence drift:
+    - RED: `py -3 Scripts/cc_email_daemon.py status` showed `threshold=60m`.
+    - fix: `Scripts/cc_email_daemon.py` `STATUS_INTERVAL_MIN` restored to `30`.
+    - tests updated in `tests/test_cc_email_daemon.py`.
+    - GREEN: `python -m pytest -q tests/test_cc_email_daemon.py tests/test_cc_server_harness.py tests/test_electron_memory_autosave.py tests/test_palace_precompact.py` -> `46 passed in 0.30s`.
+    - live proof: `py -3 Scripts/cc_email_daemon.py status` -> `sent: [CC STATUS] 2026-04-07 19:56 UTC`.
+
+- 2026-04-07T20:01Z — Closed browser `/cc` API contract gap on live hub deployment.
+  - RED:
+    - `https://hub.arknexus.net/v1/chat` worked.
+    - `https://hub.arknexus.net/cc/v1/chat` returned `404`.
+    - `https://hub.arknexus.net/cc/health` returned `404`.
+  - Fix:
+    - `hub-bridge/app/proxy.js` now normalizes anchored Julian paths:
+      - `/cc` -> `/`
+      - `/cc/*` -> `/*` (API/UI alias normalization)
+  - Validation:
+    - `node --test tests/test_proxy_routing.mjs` -> pass.
+  - Deploy:
+    - synced `proxy.js` to:
+      - `/home/neo/karma-sade/hub-bridge/app/proxy.js`
+      - `/opt/seed-vault/memory_v1/hub_bridge/app/proxy.js`
+    - rebuilt/restarted service:
+      - `sudo docker compose -f compose.hub.yml build hub-bridge`
+      - `sudo docker compose -f compose.hub.yml up -d hub-bridge`
+  - Live proof after deploy:
+    - `GET https://hub.arknexus.net/cc/health` -> `{"ok":true,"service":"sovereign-proxy",...}`
+    - `POST https://hub.arknexus.net/cc/v1/chat` -> `ok:true` with exact grounded response `HUBCC_OK_20260407`.

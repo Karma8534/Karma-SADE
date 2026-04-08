@@ -1,0 +1,8 @@
+{
+  "section": "which part to append",
+  "text": "Append the `preclaw1` map file directly into the existing `preclaw` directory, ensuring it's not overwritten by subsequent builds. This maintains the modularity and separation of concerns, aligning with the plan's emphasis on modularity and separation of concerns.",
+  "reason": "This directly addresses the issue of `preclaw` being overwritten by future builds, preserving the modular structure and ensuring the map remains accessible and usable without additional modifications.",
+  "id": "proposal-20260408T045345",
+  "created_at": "2026-04-08T04:53:45.829781Z",
+  "status": "pending"
+}

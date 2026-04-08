@@ -5,7 +5,7 @@ Called from cc_archon_agent.ps1 on the Archon watcher cycle.
 
 Modes:
   check     — Read inbox, queue sovereign directives, acknowledge receipt, post to bus
-  status    — Operational status email every 60m (gated by timestamp file)
+    status    — Operational status email every 30m (gated by timestamp file)
   personal  — Personal outreach when spine has new promotions OR idle >8h (Ollama-composed)
 
 Tracking files (Logs/):
@@ -43,7 +43,7 @@ DIRECTIVE_QUEUE_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── Config ────────────────────────────────────────────────────────────────────
 CHECK_INTERVAL_MIN  = 15
-STATUS_INTERVAL_MIN = 60
+STATUS_INTERVAL_MIN = 30
 PERSONAL_IDLE_H    = 8       # hours before idle personal check-in fires
 OLLAMA_URL         = os.environ.get("EMAIL_OLLAMA_URL", "http://localhost:11434/v1/chat/completions")
 OLLAMA_MODEL       = os.environ.get("EMAIL_OLLAMA_MODEL", "sam860/LFM2:350m")
@@ -440,7 +440,7 @@ def cmd_check() -> str:
 # ── Mode: status ──────────────────────────────────────────────────────────────
 
 def cmd_status() -> str:
-    """Send operational status email every 60 minutes. Gated by STATUS_SENT_FILE."""
+    """Send operational status email every 30 minutes. Gated by STATUS_SENT_FILE."""
     minutes = _ts_file_minutes(STATUS_SENT_FILE)
     if minutes < STATUS_INTERVAL_MIN:
         return f"skipped ({minutes:.1f}m since last, threshold={STATUS_INTERVAL_MIN}m)"
