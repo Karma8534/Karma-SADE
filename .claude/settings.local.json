@@ -542,6 +542,23 @@
           {
             "type": "command",
             "command": "C:\\Python314\\python.exe C:\\Users\\raest\\Documents\\Karma_SADE\\.claude\\hooks\\cc-chat-logger.py"
+          },
+          {
+            "type": "command",
+            "command": "bash C:\\Users\\raest\\Documents\\Karma_SADE\\.claude\\hooks\\mid-session-promote.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash C:\\Users\\raest\\Documents\\Karma_SADE\\.claude\\hooks\\pre-compact-flush.sh",
+            "timeout": 30
           }
         ]
       }

@@ -275,3 +275,4 @@ Give this to Codex or execute it yourself. ~40 lines changed across 3 files.
   - K2 MCP default corrected to `qwen3.5:4b`.
   - CC personal email daemon fixed to use P1 local `sam860/LFM2:350m`; live `personal` send succeeded.
 - **Pause point**: user asked architecture questions before next contradiction pass.
+S162 build checkpoint: 7/13 tasks done. hooks+aaak+extractor+diary+L0-L3 committed.

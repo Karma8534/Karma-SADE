@@ -8,7 +8,7 @@
 - [x] 0-4. karma_persistent.py gap_closure (EXISTS at Scripts/karma_persistent.py, 1 ref)
 
 ## Phase 1: Persistent Memory — MemPalace Enhanced
-- [ ] 1-1. 4-Layer Memory Stack — rename buildSystemText sections to L0-L3
+- [x] 1-1. 4-Layer Memory Stack — rename buildSystemText sections to L0-L3
   - <verify> grep -c 'L0\|L1\|L2\|L3' hub-bridge/app/server.js >= 4
   - <done> All 4 layers labeled in buildSystemText. Existing behavior unchanged.
 
@@ -16,19 +16,19 @@
   - <verify> FalkorDB Entity with valid_from property exists after batch_ingest change
   - <done> invalidate_entity function in karma-core/server.py + TOOL_DEFINITIONS + ALLOWED_TOOLS
 
-- [ ] 1-3. mid-session-promote.sh hook
+- [x] 1-3. mid-session-promote.sh hook
   - <verify> echo '{"session_id":"t","stop_hook_active":false,"transcript_path":"/dev/null"}' | bash .claude/hooks/mid-session-promote.sh returns block decision
   - <done> Hook executable, returns block at threshold, pass-through on re-entry
 
-- [ ] 1-4. pre-compact-flush.sh hook
+- [x] 1-4. pre-compact-flush.sh hook
   - <verify> echo '{"session_id":"t"}' | bash .claude/hooks/pre-compact-flush.sh returns block
   - <done> Hook executable, always blocks
 
-- [ ] 1-5. Register hooks in settings.local.json
+- [x] 1-5. Register hooks in settings.local.json
   - <verify> python -c "import json; d=json.load(open('.claude/settings.local.json')); print('Stop' in d.get('hooks',{}) and 'PreCompact' in d.get('hooks',{}))"
   - <done> Both hooks registered, JSON valid
 
-- [ ] 1-6. General Extractor (5-type classifier)
+- [x] 1-6. General Extractor (5-type classifier)
   - <verify> python Scripts/general_extractor.py test → classifies text into 5 types
   - <done> All 5 marker sets ported. 7 test cases pass.
 
@@ -41,7 +41,7 @@
   - <done> git push → pull → rebuild → health check
 
 ## Phase 3: Retrieval + Planning — MemPalace Enhanced
-- [ ] 3-1. AAAK Compression Dialect
+- [x] 3-1. AAAK Compression Dialect
   - <verify> python Scripts/aaak_dialect.py "test text" → compressed output, ratio >= 10x
   - <done> Dialect class with Karma entity codes. compress_for_cortex() wrapper.
 
@@ -49,7 +49,7 @@
   - <verify> grep -c 'Wing\|Room\|Hall' karma-core/server.py >= 3
   - <done> karmaCtx output uses Wing/Room/Hall vocabulary
 
-- [ ] 3-3. Agent Diaries
+- [x] 3-3. Agent Diaries
   - <verify> python Scripts/agent_diary.py write julian "test" && python Scripts/agent_diary.py read julian 1
   - <done> Write + read round-trip. Agent isolation. AAAK format.
 
