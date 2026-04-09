@@ -57,9 +57,9 @@
   - <verify> grep -c 'valid_to\|EXPIRED' hub-bridge/app/server.js >= 2
   - <done> Expired facts labeled. Current facts unlabeled.
 
-- [ ] 3-5. AAAK in K2 cortex injection — DEFERRED (K2 cortex DOWN, file on K2 only)
-  - <verify> K2 karma_regent.py references compress_for_cortex
-  - <done> MEMORY.md compressed before injection into 32K window
+- [x] 3-5. AAAK in K2 cortex injection
+  - <verify> K2 karma_regent.py references compress_for_cortex ✓ (grep confirmed line 12 + 322 + 445)
+  - <done> Live proof: 9095→127 chars = 71x compression. karma-regent running. Obs #25972.
 
 - [x] 3-6. Deploy Phase 3 to vault-neo (combined with 1-8)
   - <verify> karma-server + hub-bridge healthy

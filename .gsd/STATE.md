@@ -1,11 +1,11 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-04-09 Session 162
+**Last updated:** 2026-04-09 Session 163
 **THE ONLY PLAN:** `docs/ForColby/nexus.md` (v5.6.0 APPEND ONLY — Sovereign approved)
 **Locked frame:** hub.arknexus.net + Electron KARMA already ARE the merged workspace. Default model = one continual workspace/session; `new thread` is optional branching.
 **Internal pattern only:** `agent` / `orchestrator` remains valid for executor/gating/eval/governor internals, not as the top-level product model.
 **Status:** Phase 0-4 ALL SHIPPED. Gap map: 79/96 HAVE (0 MISSING). 16/17 primitives deployed. 3-tier cascade live. Phase 1+3 enhanced with MemPalace primitives (7 HIGH, 6 MEDIUM — obs #25022).
-**Session:** S162 — MemPalace forensic extraction (18 primitives from mempalace-main v3.0.0). nexus.md v5.6.0: Phases 1+3 enhanced with 4-Layer Stack, AAAK compression, temporal KG, auto-save hooks, general extractor, palace structure, agent diaries, contradiction detection.
+**Session:** S163 — Nexus 5.6.0 ALL 19 TASKS DONE. Task 3-5 shipped: AAAK K2 cortex injection (71x compression live, obs #25972). Also fixed: /v1/learnings 502 (proxy.js missing auth headers), FalkorDB unless-stopped + health cron. Active: PROOF-A (blocker 18).
 **Canonical source:** This file. Read at session start.
 
 ---
