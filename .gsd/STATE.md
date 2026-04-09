@@ -1,6 +1,6 @@
 # STATE: Karma Peer — Decisions, Blockers, Progress
 
-**Last updated:** 2026-04-07 Session 162
+**Last updated:** 2026-04-09 Session 162
 **THE ONLY PLAN:** `docs/ForColby/nexus.md` (v5.6.0 APPEND ONLY — Sovereign approved)
 **Locked frame:** hub.arknexus.net + Electron KARMA already ARE the merged workspace. Default model = one continual workspace/session; `new thread` is optional branching.
 **Internal pattern only:** `agent` / `orchestrator` remains valid for executor/gating/eval/governor internals, not as the top-level product model.

@@ -36,7 +36,7 @@
   - <verify> Same content sent to /v1/ambient twice → second returns duplicate warning
   - <done> Dedup check before ledger append, bypass header works
 
-- [ ] 1-8. Deploy Phase 1 to vault-neo
+- [x] 1-8. Deploy Phase 1 to vault-neo
   - <verify> hub-bridge + karma-server healthy after deploy
   - <done> git push → pull → rebuild → health check
 
@@ -61,6 +61,6 @@
   - <verify> K2 karma_regent.py references compress_for_cortex
   - <done> MEMORY.md compressed before injection into 32K window
 
-- [ ] 3-6. Deploy Phase 3 to vault-neo
+- [x] 3-6. Deploy Phase 3 to vault-neo (combined with 1-8)
   - <verify> karma-server + hub-bridge healthy
   - <done> All Phase 3 changes deployed and verified

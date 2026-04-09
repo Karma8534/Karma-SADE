@@ -2,6 +2,26 @@
 
 # Karma SADE — Active Memory
 
+## Session 162 (2026-04-09) — Nexus 5.6.0 Build DEPLOYED
+
+- **12/13 tasks PASS**, 1 DEFERRED (K2 cortex down)
+- **Codex claims audit:** 11 PASS / 6 FAIL / 3 DEGRADED / 1 DEFERRED (`.gsd/S162-codex-verification.md`)
+- **Infrastructure fixed:** FalkorDB was DOWN 31h (restarted), vesper-watchdog.timer was INACTIVE (started)
+- **Phase 0:** Verified existing from S160 (gap_map.py, vesper_eval, vesper_governor, karma_persistent)
+- **Phase 1 built+deployed:** L0-L3 labels (server.js, 10 refs), invalidate_entity tool (server.py+hooks.py+server.js), mid-session-promote.sh + pre-compact-flush.sh hooks (executable+registered), general_extractor.py (6/6 tests), checkDuplicate() dedup (server.js, 5 refs)
+- **Phase 3 built+deployed:** aaak_dialect.py (Karma entity codes, PITFALL flag), palace vocabulary (Wings/Rooms/Halls/Tunnels, 10 refs), agent_diary.py (obs #25827), contradiction detection ([EXPIRED] labels, 9 refs)
+- **Commits:** 7b9a5259, 41bb7e7e | **Deployed:** hub-bridge + karma-server rebuilt --no-cache
+- **Karma responds:** "I'm alive on the Nexus surface"
+- **DEFERRED:** 3-5 AAAK K2 cortex injection (julian_cortex.py:7892 DOWN, file on K2 only)
+- **OPEN GATE:** /v1/learnings returns 502 (pre-existing, not caused by this session)
+- **Obs:** #25022 (primitives), #25827 (diary), #25866 (proof), #25871 (decision), #25872 (pitfall)
+
+## Next Session Starts Here
+1. /resurrect
+2. Fix /v1/learnings 502 gate (pre-existing, check cc_server_p1.py learnings endpoint)
+3. Task 3-5: AAAK K2 cortex injection — SSH to K2, edit karma_regent.py to import compress_for_cortex, pipe MEMORY.md through it before 32K injection
+4. Investigate FalkorDB silent exit — add health check alert or auto-restart
+
 ## Current State
 - **Session 161 task cleanup completion (2026-04-05):** The stale Windows Scheduled Tasks that caused visible PowerShell windows were backed up, removed on P1 with admin PowerShell, and only the two legitimate timer jobs were recreated cleanly: `KarmaSessionIngest` and `CC-Archon-Agent`. Both now use the correct hidden launch path (`wscript.exe -> RunHiddenPowerShell.vbs -> script.ps1`). Ground truth after cleanup: `AUDIT_OK`; `KarmaSessionIngest` and `CC-Archon-Agent` both export with `wscript.exe` actions; the hidden HKCU Run launchers remain in place for resident services. The earlier caveat about stale task objects is no longer true.
 - **Session 161 runtime repair (2026-04-05):** Hidden PowerShell persistence on P1 is now self-healing from code instead of depending on mutable Task Scheduler state. Task-targeted scripts (`start_cc_server.ps1`, `karma-inbox-watcher.ps1`, `karma_session_indexer.ps1`, `karma-file-server.ps1`, `cc_archon_agent.ps1`, `Run-SessionIngest.ps1`) now self-relaunch through `RunHiddenPowerShell.vbs` and exit immediately when invoked directly; `Audit-PersistentLaunchers.ps1`, `Repair-PersistentLaunchers.ps1`, `Start-LauncherSentinel.ps1`, and `Register-PersistentPowerShellTasks.ps1` now maintain HKCU hidden launchers plus live runtime repair. Ground truth after repair: `AUDIT_OK`, local file server `/v1/local-dir` returns 200 with bearer auth, local `/cc` exact-token recall works, live `/v1/chat` exact-token recall works, pytest suite is `20 passed`, frontend build passes. Remaining caveat: stale scheduled task objects still exist on Windows, but their direct PowerShell launch paths are now neutralized by the self-hidden relaunch wrappers.

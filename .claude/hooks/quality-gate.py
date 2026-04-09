@@ -26,6 +26,7 @@ SAFE_SUBSTRINGS = [
     ".txt", "read_text", "readFileSync", "fromFile", "from_file",
     "your-actual", "your-api-key", "your_api_key", "actual-api-key",
     "SETUP_GUIDE", "setup-guide", "setup_guide",
+    "sk-...", "sk-ant-...",
 ]
 
 # Patterns to detect hardcoded secrets
