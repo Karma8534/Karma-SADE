@@ -14,6 +14,7 @@
 - **Karma responds:** "I'm alive on the Nexus surface"
 - **DEFERRED:** 3-5 AAAK K2 cortex injection (julian_cortex.py:7892 DOWN, file on K2 only)
 - **FIXED (S163):** /v1/learnings 502 — root cause: proxy.js fetched HARNESS_P1/v1/learnings without auth headers. P1 cc_server returned 401→proxy returned 502. Fix: added harnessHeaders() to learnings/skills/hooks fetches. Deployed to hub-bridge.
+- **FIXED (S163):** FalkorDB silent-exit — restart policy changed to `unless-stopped` (was `no`). Health-check cron installed on vault-neo (*/5 * * * *), posts bus alert if container is DOWN. Script: /opt/seed-vault/scripts/falkordb-health-check.sh. Obs #25884.
 - **Obs:** #25022 (primitives), #25827 (diary), #25866 (proof), #25871 (decision), #25872 (pitfall)
 
 ## Next Session Starts Here
