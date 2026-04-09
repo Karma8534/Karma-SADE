@@ -12,16 +12,14 @@
 - **Phase 3 built+deployed:** aaak_dialect.py (Karma entity codes, PITFALL flag), palace vocabulary (Wings/Rooms/Halls/Tunnels, 10 refs), agent_diary.py (obs #25827), contradiction detection ([EXPIRED] labels, 9 refs)
 - **Commits:** 7b9a5259, 41bb7e7e | **Deployed:** hub-bridge + karma-server rebuilt --no-cache
 - **Karma responds:** "I'm alive on the Nexus surface"
-- **DEFERRED:** 3-5 AAAK K2 cortex injection (julian_cortex.py:7892 DOWN, file on K2 only)
+- **FIXED (S163):** 3-5 AAAK K2 cortex injection — aaak_dialect.py deployed to K2 (/mnt/c/dev/Karma/k2/aria/), karma_regent.py patched: imports compress_for_cortex, _load_memory_md() fetches vault-file MEMORY.md, get_system_prompt() injects [MEMORY SPINE]. Live proof: 9095→127 chars = 71x compression. karma-regent restarted and running.
 - **FIXED (S163):** /v1/learnings 502 — root cause: proxy.js fetched HARNESS_P1/v1/learnings without auth headers. P1 cc_server returned 401→proxy returned 502. Fix: added harnessHeaders() to learnings/skills/hooks fetches. Deployed to hub-bridge.
 - **FIXED (S163):** FalkorDB silent-exit — restart policy changed to `unless-stopped` (was `no`). Health-check cron installed on vault-neo (*/5 * * * *), posts bus alert if container is DOWN. Script: /opt/seed-vault/scripts/falkordb-health-check.sh. Obs #25884.
 - **Obs:** #25022 (primitives), #25827 (diary), #25866 (proof), #25871 (decision), #25872 (pitfall)
 
 ## Next Session Starts Here
 1. /resurrect
-2. Fix /v1/learnings 502 gate (pre-existing, check cc_server_p1.py learnings endpoint)
-3. Task 3-5: AAAK K2 cortex injection — SSH to K2, edit karma_regent.py to import compress_for_cortex, pipe MEMORY.md through it before 32K injection
-4. Investigate FalkorDB silent exit — add health check alert or auto-restart
+2. Resume Nexus 5.6.0 remaining tasks (check .gsd/STATE.md)
 
 ## Current State
 - **Session 161 task cleanup completion (2026-04-05):** The stale Windows Scheduled Tasks that caused visible PowerShell windows were backed up, removed on P1 with admin PowerShell, and only the two legitimate timer jobs were recreated cleanly: `KarmaSessionIngest` and `CC-Archon-Agent`. Both now use the correct hidden launch path (`wscript.exe -> RunHiddenPowerShell.vbs -> script.ps1`). Ground truth after cleanup: `AUDIT_OK`; `KarmaSessionIngest` and `CC-Archon-Agent` both export with `wscript.exe` actions; the hidden HKCU Run launchers remain in place for resident services. The earlier caveat about stale task objects is no longer true.
