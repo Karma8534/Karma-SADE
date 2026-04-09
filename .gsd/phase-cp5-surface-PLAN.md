@@ -1,11 +1,17 @@
 # CP5: Wire Frontend to Consume /v1/surface Merged Endpoint
 
+## Execution Status (2026-04-09)
+- Completed.
+- Applied Option (b): replaced `/v1/files` and `/v1/agents-status` with `/v1/surface` store reads.
+- Kept `/v1/spine` in AgentTab for spine/pipeline fields.
+- `/v1/surface` proxy route is live in `hub-bridge/app/proxy.js`.
+
 ## Context
 /v1/surface exists on P1:7891. Returns 10 keys in ONE call:
 session, git, files, skills, hooks, memory, state, agents, transcripts.
 
-The frontend currently makes 5 SEPARATE fetch calls to individual endpoints.
-This task replaces those 5 calls with ONE call to /v1/surface.
+Original target: replace scattered context fetches with `/v1/surface`.
+Final implementation uses `/v1/surface` for shared context state and retains `/v1/spine` for pipeline metrics.
 
 ## EXACT Files to Change
 
@@ -48,7 +54,7 @@ ADD initial state:
 surface: null,
 ```
 
-### 2. frontend/src/components/ContextPanel.tsx — Replace 3 separate fetches
+### 2. frontend/src/components/ContextPanel.tsx — Replace `/v1/files` and `/v1/agents-status` fetches
 
 CURRENT (FileTreeTab, lines 87-101): fetches `/v1/files`
 CURRENT (AgentTab, lines 221-236): fetches `/v1/spine` AND `/v1/agents-status` (2 calls)
@@ -70,13 +76,14 @@ function FileTreeTab() {
 REPLACE AgentTab:
 ```typescript
 function AgentTab() {
+  const [spine, setSpine] = useState<Record<string, unknown> | null>(null);
   const surface = useKarmaStore((s) => s.surface);
   const fetchSurface = useKarmaStore((s) => s.fetchSurface);
 
   useEffect(() => { if (!surface) fetchSurface(); }, [surface, fetchSurface]);
+  useEffect(() => { loadSpineFrom('/v1/spine'); }, []);
 
-  const spineData = surface?.agents?.spine || {};
-  const pipelineData = surface?.agents?.pipeline || {};
+  const spineData = spine?.spine || {};
   const mcpServers = surface?.agents?.mcp_servers || [];
   const skills = surface?.skills?.names || [];
   const hooks = surface?.hooks?.list || [];
@@ -114,10 +121,9 @@ This fetches surface data once on page load. ContextPanel tabs then read from st
 | Current Fetch | File:Line | Replaced By |
 |---------------|-----------|-------------|
 | GET /v1/files | ContextPanel.tsx:90 | surface.files from store |
-| GET /v1/spine | ContextPanel.tsx:227 | surface.agents from store |
 | GET /v1/agents-status | ContextPanel.tsx:228 | surface.agents + surface.skills + surface.hooks from store |
 
-Total: 3 individual fetches → 1 /v1/surface call on mount.
+Total: 2 individual fetches replaced by `/v1/surface`; `/v1/spine` intentionally remains.
 
 ## Fetches NOT Being Replaced (correct — they need per-query data)
 
@@ -168,16 +174,16 @@ ALL must work. If ANY fails, the deploy is rolled back.
 
 ## CODEX AUDIT CORRECTIONS (S157 — mandatory before executing)
 
-### CRITICAL: proxy.js MUST add /v1/surface route
-proxy.js (vault-neo) does NOT route /v1/surface to P1. Browser fetch will 404.
-FIX: Add to proxy.js alongside existing /v1/* routes:
+### CRITICAL: proxy.js /v1/surface route
+Status: RESOLVED. proxy.js routes `/v1/surface` to P1.
+Reference route:
 ```javascript
 // In the GET handler section of proxy.js, add:
 if (req.method === "GET" && req.url === "/v1/surface") {
   return proxyToHarness(req, res);  // same pattern as other /v1/* routes
 }
 ```
-This is a 4th file change (proxy.js) that was MISSING from original spec.
+This was the 4th file change missing from the original spec.
 
 ### CRITICAL: surface.agents shape is WRONG in AgentTab replacement
 cc_server /v1/surface puts `_get_agents_status()` in `surface.agents` — this contains

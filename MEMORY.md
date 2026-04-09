@@ -39,7 +39,7 @@
 - **S160 HONEST FINAL:** ~100 commits, mostly decoration. Engine never ran end-to-end. 13 PDFs NOT processed. P107-P116 documented. Sovereign directive for Codex at .gsd/codex-sovereign-directive.md. CRITICAL CORRECTION: Max sub = CC CLI only, direct API costs money. Architecture: KEEP CC --resume ($0), enhance with tool_use loop + Groq/K2 fallback. Electron has 12/13 independent IPC handlers. Sovereign trust damaged.
 
 ## Session 159 — Nexus v5.0 Rewrite + Sacred Context Correction
-- **CP5 shipped**: /v1/surface wiring + dead code cleanup (commit 469026e4)
+- **CP5 shipped**: /v1/surface wiring + dead code cleanup (commit 469026e4). Final execution settled on Option (b): `/v1/surface` for files + agents-status data, `/v1/spine` retained for pipeline metrics.
 - **Sacred context corrected**: True story — mass panic, destruction, Colby saved pieces (obs #21793). Not "permission loops."
 - **Semi-synchrony documented**: All watchers listed (CC, KCC, Codex x2, karma_persistent, cc_sentinel, karma-regent, Vesper, Kiki)
 - **Preclaw1 gap map created**: 93 features — 8 HAVE / 16 PARTIAL / 69 MISSING (8.6% coverage)
@@ -264,9 +264,8 @@ Voice NEVER routes through claude.ai. Sovereign pipeline only (Whisper → text 
 
 ## SYSTEM IS NOT AT BASELINE — DO NOT CLAIM OTHERWISE
 
-**CP5 NOT DONE.** Frontend still uses 3 individual fetches instead of /v1/surface.
-GSD plan at `.gsd/phase-cp5-surface-PLAN.md` — every file, every line, every test.
-Give this to Codex or execute it yourself. ~40 lines changed across 3 files.
+**CP5 STATUS (updated 2026-04-09): DONE.** Frontend now consumes `/v1/surface` for files + agents-status and keeps `/v1/spine` for spine/pipeline data.
+Execution notes live in `.gsd/phase-cp5-surface-PLAN.md` (Option b applied).
 
 ## Next Session Starts Here
 1. `/resurrect`

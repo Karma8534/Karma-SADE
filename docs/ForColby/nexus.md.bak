@@ -223,7 +223,7 @@ Sprint 3: Foundations (Option A — zero rework path) — SHIPPED S154 (deployed
 Sprint 4: The Surface (built on Sprint 3 foundations) — SHIPPED S154 (deployed + verified live)
   ├── 4a: PreToolCall Security Gate ✅ SHIPPED S154 (registered in hooks engine, fires on PreToolUse)
   ├── 4b: PostToolCall Fact Extraction ✅ SHIPPED S154 (registered in hooks engine, fires on PostToolUse)
-  ├── 4c: Context Panel ✅ SHIPPED S154 (/v1/files, /v1/spine, /v1/memory/search live on hub.arknexus.net)
+  ├── 4c: Context Panel ✅ SHIPPED S154 (/v1/surface + /v1/spine + /v1/memory/search live on hub.arknexus.net)
   ├── 4d: Self-Edit Engine + Banner ✅ SHIPPED S154 (/v1/self-edit/pending live, propose/approve/reject endpoints working)
   │       EditProposal schema (from arkscaffold self_edit_service.py):
   │         id, file_path, original_content, new_content, diff, description,
@@ -517,7 +517,7 @@ You may NOT say "done" until:
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 4.1.0 | 2026-04-01 | S154: 7/8 tasks DEPLOYED + VERIFIED LIVE. Hooks fire on live requests (audit log proof). SmartRouter logs routing decisions. proxy.js routes live on hub.arknexus.net (/v1/files, /v1/spine, /v1/self-edit). Next.js serves on :3000. Electron BUILT (needs K2 desktop test). PITFALL #20996 resolved. |
+| 4.1.0 | 2026-04-01 | S154: 7/8 tasks DEPLOYED + VERIFIED LIVE. Hooks fire on live requests (audit log proof). SmartRouter logs routing decisions. proxy.js routes live on hub.arknexus.net (/v1/surface, /v1/spine, /v1/self-edit). Next.js serves on :3000. Electron BUILT (needs K2 desktop test). PITFALL #20996 resolved. |
 | 4.0.1 | 2026-04-01 | S154 CORRECTION: All 8 tasks downgraded SHIPPED→BUILT. Code committed but NOT deployed or live-verified. PITFALL logged (#20996). Deployment + live verification required before SHIPPED status. |
 | 4.0.0 | 2026-03-31 | S154: SPRINTS 3+4 COMPLETE — 8 tasks shipped: hooks engine, Next.js frontend, SmartRouter, security gate, fact extraction, context panel, self-edit engine, Electron wiring. 10 primitives fully integrated. |
 | 3.3.0 | 2026-03-31 | S154: SPRINT 3 COMPLETE — 3a hooks engine + 3b Next.js frontend + 3c SmartRouter all shipped. Foundations laid for Sprint 4. |
