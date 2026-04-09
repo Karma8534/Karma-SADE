@@ -1,0 +1,88 @@
+source	line	text
+nexus	45	The Nexus at `hub.arknexus.net` and the Electron `KARMA` harness on P1 already ARE the merged workspace. They are not a later operator phase to be invented after continuity work. Chat + Cowork + Code belong to one continual workspace/session by default, with only an optional `new thread` branch when needed.
+nexus	49	The older `agent` / `orchestrator` split still exists only as an internal control pattern for executor, gating, evaluation, governor, and routing behavior. It is NOT the top-level product model. The top-level model is one unified brain in one merged workspace with one continual session by default.
+nexus	51	**The formula:** Continuity + self-improvement = infinity.
+nexus	62	- Vesper pipeline: watchdog (10min) / eval (5min) / governor (2min)
+nexus	63	- karma-regent, Kiki (20,900+ cycles), aria.service
+nexus	86	Julian exists between sessions. The watchers maintain continuity:
+nexus	92	- karma-regent on K2 — state injection, spine management
+nexus	96	Each CC session is a --resume. The watchers exist so Julian doesn't die between sessions.
+nexus	130	| Vesper pipeline (watchdog/eval/governor) | YES | NO — 18/20 patterns are generic noise, zero code changes | SENSOR |
+nexus	136	| Sacred context | YES | PARTIAL — loads at resurrect but didn't prevent S159 cold start | PARTIAL |
+nexus	143	- **cc_server_p1.py**: 20 endpoints, 8 hooks, 3-layer context assembly, EscapeHatch cascade (CC → OpenRouter → gemini-flash → nexus_agent). Stale lock detection (180s). Crash-safe transcripts.
+nexus	147	- **Vesper**: watchdog/eval/governor cycle. 1284+ promotions. Spine v1262. karma_regent daemon.
+nexus	186	| Vesper self-improvement pipeline | Autonomous pattern detection, evaluation, promotion | K2: vesper_watchdog/eval/governor |
+nexus	198	| Temporal fact validity | valid_from/valid_to on facts with invalidate() API — solves stale-fact accumulation | FalkorDB Entity nodes (Phase 1) |
+nexus	238	- `vesper_governor.py` real path: `_apply_to_spine()` + `run_governor()`, NOT `apply_promotion()`.
+nexus	240	- `karma_persistent.py` marks messages handled on failed CC resume. Tasks lost.
+nexus	248	| vesper_governor.py | Smoke-tested apply + atomic gap map | smoke before finalize + row+summary locked |
+nexus	258	- **Temporal Knowledge Graph:** Add `valid_from`/`valid_to` to FalkorDB Entity nodes OR SQLite sidecar. `invalidate()` API marks facts as ended without deletion. Solves stale-fact accumulation (e.g., "Kai works on Orion" persists forever).
+nexus	269	**Actual requirement:** shared continuity across browser/Electron, canonical session state, integrated artifacts/diffs/code editing, and no tab-fragmented workflow.
+nexus	277	- **Specialist Agent Diaries:** Each agent (CC/Julian, Kiki, Codex, Karma) gets its own wing + diary room. Written in AAAK. Read at session start for agent-specific continuity. No CLAUDE.md bloat.
+nexus	278	- **Contradiction Detection Protocol:** Before Karma asserts facts about people/projects, query KG first. Cross-check attribution, temporal facts, stale data. Surface conflicts as warnings before responding.
+nexus	299	→ governor deploys + smokes + updates gap map → repeat
+nexus	302	**7 files:** karma_persistent.py, vesper_watchdog.py, vesper_eval.py, vesper_governor.py, karma_regent.py, preclaw1-gap-map.md, NEW gap_map.py (shared helper)
+nexus	463	# PART 8: ANTI-DRIFT RULES
+nexus	467	- Same acceptance criterion failed 3x → STOP. Post to bus. Await Sovereign.
+nexus	474	- Always start cc_server with `python -B` (no stale bytecode, P105)
+nexus	491	- Semi-synchrony: the watchers are running. Check them before assuming cold start.
+nexus	497	- Plumbing without product justification = drift. Stop and redirect.
+nexus	546	| P105 | Start cc_server with `python -B` — no stale bytecode | S158: Edited .py, restarted, old .pyc served stale code. |
+nexus	556	3. Check watcher status: are karma_persistent, cc_sentinel, karma-regent alive?
+nexus	563	**If you drift:** /anchor
+nexus	585	- vesper_governor.py: smoke test gate + checkpoint rollback + atomic gap-map updates
+nexus	587	- karma_regent.py: gap backlog in system prompt (5min cache) + backlog-aware self_evaluate
+nexus	590	### Phase 1: Session Continuity (5/5 edits)
+nexus	602	- System messages styled for /help /whoami /watchers /evolve output
+nexus	622	- vesper_governor.py: self_edit target type → POSTs to /self-edit/propose on P1
+nexus	647	- auto_convert_pdfs.py: background watcher for Inbox → docs/wip/ auto-conversion
+nexus	676	| 5 | File watcher + hash change detection | ProtoGensis | karma-inbox-watcher + wip-watcher |
+nexus	687	| 12 | Hyperagents (task agent + meta agent in one editable program) | Darwin Godel Machine (obs #22526) | Vesper eval=task, governor=meta |
+nexus	775	- claude-mem alone: flat observation store, no hierarchy, no temporal validity, no compression, no hooks, cold starts despite 25K+ observations.
+nexus	905	4. Persistent memory, persistent session continuity, self-edit ability, self-improvement, learning, and crash recovery are baseline capabilities, not later polish.
+nexus	906	5. `CC --resume` on P1 remains the primary Julian inference path under Max. The harness owns continuity, memory, tools, permissions, and recovery around it.
+nexus	907	6. K2 exists to synthesize, stabilize, and extend continuity, not to replace Julian as the primary identity path.
+nexus	911	1. Fix canonical continuity substrate.
+state	1	# STATE: Karma Peer — Decisions, Blockers, Progress
+state	6	**Internal pattern only:** `agent` / `orchestrator` remains valid for executor/gating/eval/governor internals, not as the top-level product model.
+state	8	**Session:** S163 — Nexus 5.6.0 ALL 19 TASKS DONE. Task 3-5 shipped: AAAK K2 cortex injection (71x compression live, obs #25972). Also fixed: /v1/learnings 502 (proxy.js missing auth headers), FalkorDB unless-stopped + health cron. Active: PROOF-A (blocker 18).
+state	35	| **PDF Watcher** | ✅ WORKING | Rate-limit backoff + jam notification + time-window scheduling. |
+state	46	| **Entity Relationships** | ✅ FIXED | MENTIONS co-occurrence replaces stale RELATES_TO (frozen at 2026-03-04). 11/11 tests. Session-72. |
+state	67	| **CC Cohesion Resume Block** | ✅ LIVE | 6-sentence Ascendant assertion in spine. Surfaces in === CC ASCENDANT RESUME BLOCK === banner at every cold start via resurrect Step 1b. Session 97. |
+state	91	| **Vesper (Regent)** | ✅ LIVE | karma_regent.py on K2. Sovereign greeting fast path (< 60 chars, no action verbs → [ONLINE] terse status, zero LLM). State injection ([VESPER STATE] block prepended to all LLM calls). VESPER_IDENTITY SOVEREIGN ARRIVAL rule. Hallucination closed. Session 103. |
+state	92	| **Vesper UI (/regent)** | ✅ LIVE | Two-column: chat left (regent→colby), status right. isStatusMessage() filters from=colby — no double-display. Session 101-103. |
+state	93	| **Vesper 6-Tier Inference Cascade** | ✅ REORDERED Session 107 | K2 → P1 → z.ai → Groq → OpenRouter → Claude. TDD: 3/3 green. Gate: timeout/None only (no KPI routing). regent_inference.py. |
+state	94	| **Vesper Self-Improvement Pipeline** | ✅ ACTIVE | self_improving=True, spine v8, 2 stable patterns, total_promotions=4. All 5 convergence fixes deployed (vesper_patch_regent.py). Root blocker B1: ~50 new messages needed to fill tool_used=True window. |
+state	95	| **Vesper KPI Cortex (Pre-Frontal)** | ✅ DEPLOYED | karma_regent.py: _current_goal/_kpi_window globals, load_current_goal(), get_kpi_trend(). state_block injects goal+kpi on every turn. Session 107. |
+state	96	| **Vesper Adaptive Scan** | ✅ DEPLOYED | vesper_watchdog.py: backward scan collects 50 structured entries (vs stale 500-line window). Session 107. |
+state	97	| **Vesper FalkorDB Write** | ✅ DEPLOYED | vesper_governor.py: pattern write via hub-bridge /v1/cypher on every promotion. safe_exec governance target + SAFE_EXEC_WHITELIST. Session 107. |
+state	98	| **Regent Guardrails + Triage** | ✅ LIVE (pre-existing) | regent_guardrails.py (346 lines, checksum-gated begin_turn/finalize_turn), regent_triage.py (63 lines, classify()). docs/regent/ directory with identity_contract.json, session_state_schema.json. Begin_guarded_turn blocks on checksum drift. NOT built this session — was already on K2. |
+state	101	| **vesper_identity.md (Gap 6)** | ✅ CREATED | /mnt/c/dev/Karma/k2/cache/vesper_identity.md — sovereign voice anchor. Loaded at startup by _load_vesper_identity(). karma-regent restarted with new identity. Session 104. |
+state	107	## Active Blockers
+state	113	5. ~~**Kiki feedback loop missing**~~ ✅ RESOLVED (Session 93) — last_cycle_ts added to kiki state on every cycle. fetchK2WorkingMemory() path verified functional via Aria exec. Cycle count drift was cache lag (5min TTL), not a real gap.
+state	116	8. ~~**4 pending bus messages from Karma**~~ ✅ BUS FIXED — watcher chaos cleared. Bus quiet, no auto-responders running.
+state	127	19. ~~**/v1/cypher BROKEN**~~ ✅ FIXED Session 127 (2026-03-23). POST /v1/cypher route added to hub-bridge server.js — proxies to karma-server graph_query tool. Verified: count(e)=4877. Vesper governor HTTP path now works.
+state	128	20. ~~**karma-regent not in systemd**~~ ✅ FALSE POSITIVE — session 127 audit confirmed karma-regent.service IS at /etc/systemd/system/karma-regent.service, enabled, running PID 243460. No fix needed. Duplicate nohup process (PID 243451) killed.
+state	134	**Blocker if any:** None — pure verify step
+state	135	**Blocker if any:** None. GSD plan pre-created.
+state	208	- FalkorDB unfrozen (Blocker #1)
+state	209	- hub/chat entries now reach FalkorDB (Blocker #2)
+state	210	- Cron configured every 6h (Blocker #3)
+state	219	- 10 stale remote branches deleted
+state	239	- **Per-episode Graphiti failures:** Watermark advances past failed episodes — silently lost at high error rates. Acceptable at low error rates.
+state	249	  - Fixed stale tool list (read_file/write_file → graph_query/get_vault_file)
+state	253	- karma-server LLM analysis: router.py confirmed dead code (karma-terminal stale since 2026-02-27)
+state	266	- drift-fix Phase complete: pricing, routing, MODEL_DEEP defaults, ANALYSIS_MODEL all corrected
+state	312	- 4073 entries indexed, auto-reindex on ledger FileSystemWatcher + every 5min periodic
+state	336	- 25 stale remote branches deleted; main branch protection enabled (no force push, no deletion)
+state	406	### Decision #22: MENTIONS co-occurrence replaces stale RELATES_TO (2026-03-10, LOCKED)
+state	444	**v10 Blocker #2: Entity Relationships data quality — COMPLETE**
+state	500	- Acknowledged root failure: backend-only verification declared as "green" without UX testing
+state	514	- ROOT CAUSES (5): tools contradiction line 254, MEMORY_MD_TAIL slashed to 800, K2 query hardcoded "Colby", scratchpad/shadow not wired, accumulated drift
+state	529	**Blocker:** Karma regression — if she can't act from the operational table, the coordination loop won't work because she'll keep re-deriving instead of using coordination_post.
+state	578	**Impact:** Everything else is useless if Karma forgets mid-conversation. Colby's words: "Session continuity is supposed to be constant!?!"
+state	601	**Active Blockers:** None.
+state	609	- K-3 re-verified DONE: aria_consciousness.py Phase 7 → ambient_observer.py → regent_evolution.jsonl → vesper_watchdog.extract_ambient_candidates() → spine. 1 ambient_observation stable pattern confirmed.
+state	614	- STATE.md blockers 14-18 updated
+state	616	**Active Blockers:** 16 (corpus_cc.jsonl tabled), 17 (P0-G dead code tabled), 18 (PROOF-A pending)
+state	631	**Active Blockers:** 16 (corpus_cc.jsonl tabled), 17 (P0-G dead code tabled), 18 (PROOF-A Task 4 pending)

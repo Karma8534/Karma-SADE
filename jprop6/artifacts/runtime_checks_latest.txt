@@ -1,0 +1,6 @@
+RUN_UTC=2026-04-09T19:07:16.3729545Z
+URL: https://hub.arknexus.net/health
+STATUS: 200
+BODY: {"ok":true,"service":"sovereign-proxy","ts":"2026-04-09T19:07:17.412Z"}
+URL: https://hub.arknexus.net/v1/spine
+ERROR: Response status code does not indicate success: 502 (Bad Gateway).

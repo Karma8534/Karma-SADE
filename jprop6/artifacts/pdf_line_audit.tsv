@@ -1,0 +1,1510 @@
+source`tline`ttext
+ccManagedAgents.PDF.txt	1	
+ccManagedAgents.PDF.txt	2	
+ccManagedAgents.PDF.txt	3	===== PAGE 1/25 =====
+ccManagedAgents.PDF.txt	4	AI Software Engi…
+ccManagedAgents.PDF.txt	5	Member-only story
+ccManagedAgents.PDF.txt	6	Anthropic Launches
+ccManagedAgents.PDF.txt	7	Claude Managed
+ccManagedAgents.PDF.txt	8	Agents (That Make
+ccManagedAgents.PDF.txt	9	Agentic AI Workflows
+ccManagedAgents.PDF.txt	10	Real)
+ccManagedAgents.PDF.txt	11	Joe Njenga Following 7 min read · Just now
+ccManagedAgents.PDF.txt	12	57
+ccManagedAgents.PDF.txt	13	Open in app
+ccManagedAgents.PDF.txt	14	Search Write
+ccManagedAgents.PDF.txt	15	
+ccManagedAgents.PDF.txt	16	
+ccManagedAgents.PDF.txt	17	===== PAGE 2/25 =====
+ccManagedAgents.PDF.txt	18	Claude Managed Agents stops you from wasting
+ccManagedAgents.PDF.txt	19	time trying to string scripts together to make your
+ccManagedAgents.PDF.txt	20	agents work.
+ccManagedAgents.PDF.txt	21	I just tested the new Claude Managed Agents and
+ccManagedAgents.PDF.txt	22	discovered the missing link in AI agent workflows.
+ccManagedAgents.PDF.txt	23	First, if you have been working with AI agents or
+ccManagedAgents.PDF.txt	24	building them, you know the common problem.
+ccManagedAgents.PDF.txt	25	You spend more time working on the logic than on
+ccManagedAgents.PDF.txt	26	the product.
+ccManagedAgents.PDF.txt	27	
+ccManagedAgents.PDF.txt	28	
+ccManagedAgents.PDF.txt	29	===== PAGE 3/25 =====
+ccManagedAgents.PDF.txt	30	The agent loop, tool execution, context management,
+ccManagedAgents.PDF.txt	31	sandboxing, and session handling; all of it falls on
+ccManagedAgents.PDF.txt	32	you to wire up from scratch before a single line of
+ccManagedAgents.PDF.txt	33	real logic gets written.
+ccManagedAgents.PDF.txt	34	When something breaks mid-task, you are back to
+ccManagedAgents.PDF.txt	35	debugging infrastructure instead of shipping.
+ccManagedAgents.PDF.txt	36	That is the problem Claude Managed Agents
+ccManagedAgents.PDF.txt	37	promises to solve. Instead of giving us another API to
+ccManagedAgents.PDF.txt	38	wrap your loop around, Anthropic is now handing us
+ccManagedAgents.PDF.txt	39	the runtime.
+ccManagedAgents.PDF.txt	40	This is a fully managed cloud environment where
+ccManagedAgents.PDF.txt	41	Claude reads files, runs commands, browses the
+ccManagedAgents.PDF.txt	42	web, and executes code on its own.
+ccManagedAgents.PDF.txt	43	Session continuity and context management are
+ccManagedAgents.PDF.txt	44	already handled. I took my time to fully review and
+ccManagedAgents.PDF.txt	45	see if it lives up to the promise.
+ccManagedAgents.PDF.txt	46	Claude Managed Agents
+ccManagedAgents.PDF.txt	47	
+ccManagedAgents.PDF.txt	48	===== PAGE 4/25 =====
+ccManagedAgents.PDF.txt	49	Anthropic shipped two things :
+ccManagedAgents.PDF.txt	50	First is Claude Managed Agents — a fully hosted
+ccManagedAgents.PDF.txt	51	agent harness running on Anthropic’s
+ccManagedAgents.PDF.txt	52	infrastructure. You define the agent, fire off a task,
+ccManagedAgents.PDF.txt	53	and Anthropic’s cloud handles everything else: the
+ccManagedAgents.PDF.txt	54	container, the tools, the execution, the session.
+ccManagedAgents.PDF.txt	55	Second is the Claude Agent SDK (formerly the
+ccManagedAgents.PDF.txt	56	Claude Code SDK) — a Python and TypeScript
+ccManagedAgents.PDF.txt	57	library that embeds the same agent loop powering
+ccManagedAgents.PDF.txt	58	Claude Code into your own application. You host it
+ccManagedAgents.PDF.txt	59	yourself, but all the hard parts come pre-built.
+ccManagedAgents.PDF.txt	60	
+ccManagedAgents.PDF.txt	61	
+ccManagedAgents.PDF.txt	62	===== PAGE 5/25 =====
+ccManagedAgents.PDF.txt	63	Both solve the same problem, but the difference is
+ccManagedAgents.PDF.txt	64	where the agent runs.
+ccManagedAgents.PDF.txt	65	SDK — agent runs inside your own infrastructure
+ccManagedAgents.PDF.txt	66	Managed Agents — agent runs on Anthropic’s
+ccManagedAgents.PDF.txt	67	cloud, fully managed
+ccManagedAgents.PDF.txt	68	For most developers reading this, Managed Agents is
+ccManagedAgents.PDF.txt	69	the more significant release, and for this article, we
+ccManagedAgents.PDF.txt	70	will focus on Clause Managed Agents.
+ccManagedAgents.PDF.txt	71	Four Building Blocks
+ccManagedAgents.PDF.txt	72	Managed Agents is built around four concepts.
+ccManagedAgents.PDF.txt	73	Once you understand these, the whole system
+ccManagedAgents.PDF.txt	74	clicks:
+ccManagedAgents.PDF.txt	75	
+ccManagedAgents.PDF.txt	76	===== PAGE 6/25 =====
+ccManagedAgents.PDF.txt	77	Your application sends events to a session running inside Anthropic’s
+ccManagedAgents.PDF.txt	78	cloud, where the agent and environment are already configured
+ccManagedAgents.PDF.txt	79	Agent — your configuration: model, system prompt,
+ccManagedAgents.PDF.txt	80	tools, MCP servers, and skills. Define it once,
+ccManagedAgents.PDF.txt	81	reference it by ID across every session.
+ccManagedAgents.PDF.txt	82	Environment — a cloud container with pre-installed
+ccManagedAgents.PDF.txt	83	packages (Python, Node.js, Go, and more), network
+ccManagedAgents.PDF.txt	84	access rules, and mounted files. This is the
+ccManagedAgents.PDF.txt	85	workspace your agent operates in.
+ccManagedAgents.PDF.txt	86	
+ccManagedAgents.PDF.txt	87	===== PAGE 7/25 =====
+ccManagedAgents.PDF.txt	88	Session — a running instance of your agent inside
+ccManagedAgents.PDF.txt	89	an environment, executing a specific task. Files,
+ccManagedAgents.PDF.txt	90	conversation history, and context all persist across
+ccManagedAgents.PDF.txt	91	its lifetime.
+ccManagedAgents.PDF.txt	92	Events — the messages flowing between your
+ccManagedAgents.PDF.txt	93	application and the agent: user turns, tool results,
+ccManagedAgents.PDF.txt	94	status updates, and streamed responses.
+ccManagedAgents.PDF.txt	95	Here’s how it looks in code. You create an agent once:
+ccManagedAgents.PDF.txt	96	import anthropic
+ccManagedAgents.PDF.txt	97	client = anthropic.Anthropic()
+ccManagedAgents.PDF.txt	98	# Create the agent — do this once, reuse by ID
+ccManagedAgents.PDF.txt	99	agent = client.beta.agents.create(
+ccManagedAgents.PDF.txt	100	    model="claude-sonnet-4-6",
+ccManagedAgents.PDF.txt	101	    system="You are a software engineer. Fix bugs, ru
+ccManagedAgents.PDF.txt	102	    tools=[{"type": "bash"}, {"type": "file_operation
+ccManagedAgents.PDF.txt	103	    name="bug-fixer"
+ccManagedAgents.PDF.txt	104	)
+ccManagedAgents.PDF.txt	105	print(agent.id)  # Save this — you'll reference it ac
+ccManagedAgents.PDF.txt	106	Then start a session and send a task:
+ccManagedAgents.PDF.txt	107	
+ccManagedAgents.PDF.txt	108	===== PAGE 8/25 =====
+ccManagedAgents.PDF.txt	109	# Create an environment with the packages your agent 
+ccManagedAgents.PDF.txt	110	environment = client.beta.environments.create(
+ccManagedAgents.PDF.txt	111	    packages=["pytest", "requests"]
+ccManagedAgents.PDF.txt	112	)
+ccManagedAgents.PDF.txt	113	# Start a session referencing your agent and environm
+ccManagedAgents.PDF.txt	114	session = client.beta.sessions.create(
+ccManagedAgents.PDF.txt	115	    agent_id=agent.id,
+ccManagedAgents.PDF.txt	116	    environment_id=environment.id
+ccManagedAgents.PDF.txt	117	)
+ccManagedAgents.PDF.txt	118	# Send your task as an event
+ccManagedAgents.PDF.txt	119	response = client.beta.sessions.events.create(
+ccManagedAgents.PDF.txt	120	    session_id=session.id,
+ccManagedAgents.PDF.txt	121	    content="Find and fix the failing tests in auth.p
+ccManagedAgents.PDF.txt	122	)
+ccManagedAgents.PDF.txt	123	That’s the complete setup, which includes one agent
+ccManagedAgents.PDF.txt	124	definition, the environment, and the session; then
+ccManagedAgents.PDF.txt	125	Claude takes it from there.
+ccManagedAgents.PDF.txt	126	How the Agent Loop Works
+ccManagedAgents.PDF.txt	127	When you start a session, Claude doesn’t respond
+ccManagedAgents.PDF.txt	128	once and wait.
+ccManagedAgents.PDF.txt	129	
+ccManagedAgents.PDF.txt	130	===== PAGE 9/25 =====
+ccManagedAgents.PDF.txt	131	It runs a continuous loop that goes like this: receive
+ccManagedAgents.PDF.txt	132	prompt, evaluate the task, call tools, process results,
+ccManagedAgents.PDF.txt	133	repeat; until the job is done. Each full round trip is
+ccManagedAgents.PDF.txt	134	one turn.
+ccManagedAgents.PDF.txt	135	Claude evaluates, calls tools, processes results, and repeats each turn
+ccManagedAgents.PDF.txt	136	autonomously until the task is complete or a limit is reached
+ccManagedAgents.PDF.txt	137	Here’s what that looks like for a real task: “find and
+ccManagedAgents.PDF.txt	138	fix the failing tests in auth.py.”
+ccManagedAgents.PDF.txt	139	
+ccManagedAgents.PDF.txt	140	===== PAGE 10/25 =====
+ccManagedAgents.PDF.txt	141	Turn 1 — Claude runs the test suite via Bash. Three
+ccManagedAgents.PDF.txt	142	failures come back.
+ccManagedAgents.PDF.txt	143	Turn 2 — Claude reads auth.py the test file to
+ccManagedAgents.PDF.txt	144	understand the problem.
+ccManagedAgents.PDF.txt	145	Turn 3 — Claude edits the file and re-runs the tests.
+ccManagedAgents.PDF.txt	146	All three pass.
+ccManagedAgents.PDF.txt	147	Final turn — Claude returns a text response with no
+ccManagedAgents.PDF.txt	148	tool calls. Task complete.
+ccManagedAgents.PDF.txt	149	Here’s how that session looks in code:
+ccManagedAgents.PDF.txt	150	import anthropic
+ccManagedAgents.PDF.txt	151	client = anthropic.Anthropic()
+ccManagedAgents.PDF.txt	152	async for event in client.beta.sessions.stream(
+ccManagedAgents.PDF.txt	153	    session_id=session.id,
+ccManagedAgents.PDF.txt	154	    event={
+ccManagedAgents.PDF.txt	155	        "type": "user",
+ccManagedAgents.PDF.txt	156	        "content": "Find and fix the failing tests in
+ccManagedAgents.PDF.txt	157	    }
+ccManagedAgents.PDF.txt	158	):
+ccManagedAgents.PDF.txt	159	    # See what Claude is doing each turn
+ccManagedAgents.PDF.txt	160	    if event.type == "assistant_message":
+ccManagedAgents.PDF.txt	161	        print(event.content)
+ccManagedAgents.PDF.txt	162	    # Capture the final result
+ccManagedAgents.PDF.txt	163	
+ccManagedAgents.PDF.txt	164	===== PAGE 11/25 =====
+ccManagedAgents.PDF.txt	165	    if event.type == "result":
+ccManagedAgents.PDF.txt	166	        print(f"Done: {event.result}")
+ccManagedAgents.PDF.txt	167	        print(f"Turns used: {event.num_turns}")
+ccManagedAgents.PDF.txt	168	        print(f"Cost: ${event.total_cost_usd:.4f}")
+ccManagedAgents.PDF.txt	169	        session_id = event.session_id  # save to resu
+ccManagedAgents.PDF.txt	170	This stream gives you full visibility: every tool call,
+ccManagedAgents.PDF.txt	171	result, and turn as it happens in real time.
+ccManagedAgents.PDF.txt	172	Context Management
+ccManagedAgents.PDF.txt	173	One thing that breaks most DIY agent setups is
+ccManagedAgents.PDF.txt	174	context.
+ccManagedAgents.PDF.txt	175	Every turn adds to the context window: the prompt,
+ccManagedAgents.PDF.txt	176	tool definitions, file reads, command outputs, and
+ccManagedAgents.PDF.txt	177	conversation history. Once you hit the limit, the
+ccManagedAgents.PDF.txt	178	session dies.
+ccManagedAgents.PDF.txt	179	Managed Agents handles this automatically.
+ccManagedAgents.PDF.txt	180	When the context window approaches its limit, the
+ccManagedAgents.PDF.txt	181	system compacts the conversation by summarizing
+ccManagedAgents.PDF.txt	182	
+ccManagedAgents.PDF.txt	183	===== PAGE 12/25 =====
+ccManagedAgents.PDF.txt	184	older history to free up space while keeping recent
+ccManagedAgents.PDF.txt	185	exchanges and key decisions intact.
+ccManagedAgents.PDF.txt	186	This approach allows the session to continue
+ccManagedAgents.PDF.txt	187	without interruption.
+ccManagedAgents.PDF.txt	188	Three Controls
+ccManagedAgents.PDF.txt	189	Effort level — controls how deeply Claude reasons
+ccManagedAgents.PDF.txt	190	on each turn.
+ccManagedAgents.PDF.txt	191	Set it deliberately since it affects token usage and
+ccManagedAgents.PDF.txt	192	cost.
+ccManagedAgents.PDF.txt	193	Max turns and budget — cap the loop before it
+ccManagedAgents.PDF.txt	194	runs away.
+ccManagedAgents.PDF.txt	195	session = client.beta.sessions.create(
+ccManagedAgents.PDF.txt	196	    agent_id=agent.id,
+ccManagedAgents.PDF.txt	197	
+ccManagedAgents.PDF.txt	198	===== PAGE 13/25 =====
+ccManagedAgents.PDF.txt	199	    environment_id=environment.id,
+ccManagedAgents.PDF.txt	200	    max_turns=20,           # stop after 20 tool-use 
+ccManagedAgents.PDF.txt	201	    max_budget_usd=0.50     # or when spend hits $0.5
+ccManagedAgents.PDF.txt	202	)
+ccManagedAgents.PDF.txt	203	When either limit is hit, the session returns a clear
+ccManagedAgents.PDF.txt	204	result subtype so you know why it stopped, and
+ccManagedAgents.PDF.txt	205	you can resume with the session ID if needed.
+ccManagedAgents.PDF.txt	206	Permission mode — controls what Claude can do
+ccManagedAgents.PDF.txt	207	without asking.
+ccManagedAgents.PDF.txt	208	default — gates anything not pre-approved through
+ccManagedAgents.PDF.txt	209	your callback
+ccManagedAgents.PDF.txt	210	acceptEdits — auto-approves file edits, still gates
+ccManagedAgents.PDF.txt	211	shell commands
+ccManagedAgents.PDF.txt	212	bypassPermissions — runs everything without
+ccManagedAgents.PDF.txt	213	prompting, for isolated containers and CI only
+ccManagedAgents.PDF.txt	214	You Can Steer It Mid-Task
+ccManagedAgents.PDF.txt	215	While a session is running, you can send
+ccManagedAgents.PDF.txt	216	additional events to redirect it, add context, or stop
+ccManagedAgents.PDF.txt	217	
+ccManagedAgents.PDF.txt	218	===== PAGE 14/25 =====
+ccManagedAgents.PDF.txt	219	it.
+ccManagedAgents.PDF.txt	220	# Send a mid-session correction
+ccManagedAgents.PDF.txt	221	client.beta.sessions.events.create(
+ccManagedAgents.PDF.txt	222	    session_id=session.id,
+ccManagedAgents.PDF.txt	223	    content="Actually, only fix the auth_token tests 
+ccManagedAgents.PDF.txt	224	)
+ccManagedAgents.PDF.txt	225	If Claude is heading the wrong direction, you don’t
+ccManagedAgents.PDF.txt	226	wait for it to finish.
+ccManagedAgents.PDF.txt	227	Sessions are also persistent; you can capture the
+ccManagedAgents.PDF.txt	228	session ID, and you can resume where you left off.
+ccManagedAgents.PDF.txt	229	# Resume a previous session
+ccManagedAgents.PDF.txt	230	async for event in client.beta.sessions.stream(
+ccManagedAgents.PDF.txt	231	    session_id="sess_abc123",   # from a previous run
+ccManagedAgents.PDF.txt	232	    event={"type": "user", "content": "Continue — now
+ccManagedAgents.PDF.txt	233	):
+ccManagedAgents.PDF.txt	234	    if event.type == "result":
+ccManagedAgents.PDF.txt	235	        print(event.result)
+ccManagedAgents.PDF.txt	236	Claude Managed Agent Tools
+ccManagedAgents.PDF.txt	237	
+ccManagedAgents.PDF.txt	238	===== PAGE 15/25 =====
+ccManagedAgents.PDF.txt	239	One of the biggest time-wasters when building
+ccManagedAgents.PDF.txt	240	agents manually is tool execution.
+ccManagedAgents.PDF.txt	241	Writing the wrappers, handling errors, and
+ccManagedAgents.PDF.txt	242	managing results back into context. With Managed
+ccManagedAgents.PDF.txt	243	Agents, that work is already done.
+ccManagedAgents.PDF.txt	244	Here’s the full toolset:
+ccManagedAgents.PDF.txt	245	All built-in tools available in Claude Managed Agents, grouped by
+ccManagedAgents.PDF.txt	246	category
+ccManagedAgents.PDF.txt	247	File operations
+ccManagedAgents.PDF.txt	248	
+ccManagedAgents.PDF.txt	249	===== PAGE 16/25 =====
+ccManagedAgents.PDF.txt	250	Read — Read any file in the container
+ccManagedAgents.PDF.txt	251	Write — create new files
+ccManagedAgents.PDF.txt	252	Edit — modify existing files
+ccManagedAgents.PDF.txt	253	Search
+ccManagedAgents.PDF.txt	254	Glob — find files by pattern
+ccManagedAgents.PDF.txt	255	Grep — search content with regex
+ccManagedAgents.PDF.txt	256	Execution
+ccManagedAgents.PDF.txt	257	Bash — run shell commands, scripts, git operations,
+ccManagedAgents.PDF.txt	258	install packages, run tests
+ccManagedAgents.PDF.txt	259	Web
+ccManagedAgents.PDF.txt	260	WebSearch — search the internet
+ccManagedAgents.PDF.txt	261	WebFetch — fetch and parse full page content from
+ccManagedAgents.PDF.txt	262	any URL
+ccManagedAgents.PDF.txt	263	Orchestration
+ccManagedAgents.PDF.txt	264	Task — spawn subagents for isolated work
+ccManagedAgents.PDF.txt	265	
+ccManagedAgents.PDF.txt	266	===== PAGE 17/25 =====
+ccManagedAgents.PDF.txt	267	Skill — invoke reusable workflows
+ccManagedAgents.PDF.txt	268	AskUserQuestion — pause and request human input
+ccManagedAgents.PDF.txt	269	TodoWrite — track multi-step work across a session
+ccManagedAgents.PDF.txt	270	Beyond the built-ins, you connect external services
+ccManagedAgents.PDF.txt	271	via MCP servers and define custom tools with your
+ccManagedAgents.PDF.txt	272	own handlers.
+ccManagedAgents.PDF.txt	273	Getting Started
+ccManagedAgents.PDF.txt	274	Claude Managed Agents is currently in beta.
+ccManagedAgents.PDF.txt	275	Access is enabled by default for all API accounts; if
+ccManagedAgents.PDF.txt	276	you already have a Claude API key, you can start.
+ccManagedAgents.PDF.txt	277	Here’s what you need:
+ccManagedAgents.PDF.txt	278	A Claude API key from platform.claude.com
+ccManagedAgents.PDF.txt	279	The managed-agents-2026-04-01 beta header on all
+ccManagedAgents.PDF.txt	280	requests
+ccManagedAgents.PDF.txt	281	
+ccManagedAgents.PDF.txt	282	===== PAGE 18/25 =====
+ccManagedAgents.PDF.txt	283	Python or TypeScript SDK — the SDK sets the header
+ccManagedAgents.PDF.txt	284	automatically
+ccManagedAgents.PDF.txt	285	Install the SDK:
+ccManagedAgents.PDF.txt	286	pip install anthropic
+ccManagedAgents.PDF.txt	287	Set your API key:
+ccManagedAgents.PDF.txt	288	export ANTHROPIC_API_KEY=your-api-key
+ccManagedAgents.PDF.txt	289	Your first working agent in under 20 lines:
+ccManagedAgents.PDF.txt	290	import anthropic
+ccManagedAgents.PDF.txt	291	import asyncio
+ccManagedAgents.PDF.txt	292	client = anthropic.Anthropic()
+ccManagedAgents.PDF.txt	293	async def main():
+ccManagedAgents.PDF.txt	294	    agent = client.beta.agents.create(
+ccManagedAgents.PDF.txt	295	        model="claude-sonnet-4-6",
+ccManagedAgents.PDF.txt	296	        system="You are a helpful engineering assista
+ccManagedAgents.PDF.txt	297	        tools=[{"type": "bash"}, {"type": "file_opera
+ccManagedAgents.PDF.txt	298	        name="my-first-agent"
+ccManagedAgents.PDF.txt	299	
+ccManagedAgents.PDF.txt	300	===== PAGE 19/25 =====
+ccManagedAgents.PDF.txt	301	    )
+ccManagedAgents.PDF.txt	302	    environment = client.beta.environments.create(
+ccManagedAgents.PDF.txt	303	        packages=["pytest"]
+ccManagedAgents.PDF.txt	304	    )
+ccManagedAgents.PDF.txt	305	    session = client.beta.sessions.create(
+ccManagedAgents.PDF.txt	306	        agent_id=agent.id,
+ccManagedAgents.PDF.txt	307	        environment_id=environment.id,
+ccManagedAgents.PDF.txt	308	        max_turns=10,
+ccManagedAgents.PDF.txt	309	        max_budget_usd=0.25
+ccManagedAgents.PDF.txt	310	    )
+ccManagedAgents.PDF.txt	311	    async for event in client.beta.sessions.stream(
+ccManagedAgents.PDF.txt	312	        session_id=session.id,
+ccManagedAgents.PDF.txt	313	        event={"type": "user", "content": "List all P
+ccManagedAgents.PDF.txt	314	    ):
+ccManagedAgents.PDF.txt	315	        if event.type == "result":
+ccManagedAgents.PDF.txt	316	            print(event.result)
+ccManagedAgents.PDF.txt	317	            print(f"Cost: ${event.total_cost_usd:.4f}
+ccManagedAgents.PDF.txt	318	asyncio.run(main())
+ccManagedAgents.PDF.txt	319	Three features
+ccManagedAgents.PDF.txt	320	Outcomes
+ccManagedAgents.PDF.txt	321	Multi-agent coordination,
+ccManagedAgents.PDF.txt	322	Persistent memory
+ccManagedAgents.PDF.txt	323	
+ccManagedAgents.PDF.txt	324	===== PAGE 20/25 =====
+ccManagedAgents.PDF.txt	325	All are in research preview and require a separate
+ccManagedAgents.PDF.txt	326	access request at claude.com/form/claude-managed-
+ccManagedAgents.PDF.txt	327	agents.
+ccManagedAgents.PDF.txt	328	Final Thoughts
+ccManagedAgents.PDF.txt	329	Claude Managed Agents is a brilliant idea; the
+ccManagedAgents.PDF.txt	330	agent loop, context management, tool execution,
+ccManagedAgents.PDF.txt	331	and session continuity.
+ccManagedAgents.PDF.txt	332	What used to be weeks of infrastructure work is now
+ccManagedAgents.PDF.txt	333	a configuration file and an API call. That’s a great
+ccManagedAgents.PDF.txt	334	step in building production agents fast.
+ccManagedAgents.PDF.txt	335	The trade-off is that the quality of your output still
+ccManagedAgents.PDF.txt	336	depends on the quality of your input.
+ccManagedAgents.PDF.txt	337	Have you tried Claude Managed Agents, and what’s
+ccManagedAgents.PDF.txt	338	your experience? Let me know your thoughts in the
+ccManagedAgents.PDF.txt	339	comments below.
+ccManagedAgents.PDF.txt	340	
+ccManagedAgents.PDF.txt	341	===== PAGE 21/25 =====
+ccManagedAgents.PDF.txt	342	Published in AI Software Engineer
+ccManagedAgents.PDF.txt	343	3.5K followers · Last published just now
+ccManagedAgents.PDF.txt	344	Sharing ideas about using AI for software
+ccManagedAgents.PDF.txt	345	development and integrating AI systems into existing
+ccManagedAgents.PDF.txt	346	software workflows. We explores practical
+ccManagedAgents.PDF.txt	347	approaches for developers and teams who want to
+ccManagedAgents.PDF.txt	348	use AI tools in their coding process.
+ccManagedAgents.PDF.txt	349	Following
+ccManagedAgents.PDF.txt	350	Written by Joe Njenga
+ccManagedAgents.PDF.txt	351	21K followers · 98 following
+ccManagedAgents.PDF.txt	352	Software & AI Automation Engineer, Tech Writer
+ccManagedAgents.PDF.txt	353	& Educator. Vision: Enlighten, Educate, Entertain.
+ccManagedAgents.PDF.txt	354	One story at a time. Work with me:
+ccManagedAgents.PDF.txt	355	mail.njengah@gmail.com
+ccManagedAgents.PDF.txt	356	Following
+ccManagedAgents.PDF.txt	357	No responses yet
+ccManagedAgents.PDF.txt	358	To respond to this story,
+ccManagedAgents.PDF.txt	359	get the free Medium app.
+ccManagedAgents.PDF.txt	360	Claude Anthropic Claude AI Agent Agentic Ai
+ccManagedAgents.PDF.txt	361	Llm Agent
+ccManagedAgents.PDF.txt	362	
+ccManagedAgents.PDF.txt	363	
+ccManagedAgents.PDF.txt	364	===== PAGE 22/25 =====
+ccManagedAgents.PDF.txt	365	More from Joe Njenga and AI Software
+ccManagedAgents.PDF.txt	366	Engineer
+ccManagedAgents.PDF.txt	367	In by
+ccManagedAgents.PDF.txt	368	9 Agent Skills Repos I
+ccManagedAgents.PDF.txt	369	Ti d(A dN IC ’Agent skills are becoming the
+ccManagedAgents.PDF.txt	370	 ld t d df b ildi
+ccManagedAgents.PDF.txt	371	2d ago
+ccManagedAgents.PDF.txt	372	In by
+ccManagedAgents.PDF.txt	373	Why Claude Weekly
+ccManagedAgents.PDF.txt	374	Li it A M kiYesterday, I finally hit my
+ccManagedAgents.PDF.txt	375	 kl Cl d li it dI
+ccManagedAgents.PDF.txt	376	Oct 19, 2025
+ccManagedAgents.PDF.txt	377	AISoftwareEngi… JoeNje…
+ccManagedAgents.PDF.txt	378	 AISoftwareEngi… JoeNje…
+ccManagedAgents.PDF.txt	379	
+ccManagedAgents.PDF.txt	380	===== PAGE 23/25 =====
+ccManagedAgents.PDF.txt	381	See all from Joe Njenga See all from AI Software Engineer
+ccManagedAgents.PDF.txt	382	Recommended from Medium
+ccManagedAgents.PDF.txt	383	Everything Claude
+ccManagedAgents.PDF.txt	384	C d Th R Th tIf you slept through this or
+ccManagedAgents.PDF.txt	385	 i d t E thi Cl d
+ccManagedAgents.PDF.txt	386	Jan 22
+ccManagedAgents.PDF.txt	387	Anthropic Adds (New)
+ccManagedAgents.PDF.txt	388	Cl d C d A tOk, we had YOLO mode, but
+ccManagedAgents.PDF.txt	389	 Cl d C d A t d
+ccManagedAgents.PDF.txt	390	Mar 25
+ccManagedAgents.PDF.txt	391	In by
+ccManagedAgents.PDF.txt	392	JoeNjenga
+ccManagedAgents.PDF.txt	393	 JoeNjenga
+ccManagedAgents.PDF.txt	394	BaluKosuri
+ccManagedAgents.PDF.txt	395	 LevelUpCodi… FareedKh…
+ccManagedAgents.PDF.txt	396	
+ccManagedAgents.PDF.txt	397	===== PAGE 24/25 =====
+ccManagedAgents.PDF.txt	398	I Turned Andrej
+ccManagedAgents.PDF.txt	399	K th ’By Balasubramanyam Kosuri
+ccManagedAgents.PDF.txt	400	Mar 21
+ccManagedAgents.PDF.txt	401	Building Claude Code
+ccManagedAgents.PDF.txt	402	 ithHMulti-agents, MCP, skills
+ccManagedAgents.PDF.txt	403	 t t t i li
+ccManagedAgents.PDF.txt	404	2d ago
+ccManagedAgents.PDF.txt	405	Cursor 3 Is Not an IDE
+ccManagedAgents.PDF.txt	406	U d t It’ B tTh tWhy Cursor built a new
+ccManagedAgents.PDF.txt	407	i t f f t h h t
+ccManagedAgents.PDF.txt	408	6d ago
+ccManagedAgents.PDF.txt	409	In by
+ccManagedAgents.PDF.txt	410	The TL;DR of Claude
+ccManagedAgents.PDF.txt	411	C d I id Ob idiIf you’ve not been keeping up
+ccManagedAgents.PDF.txt	412	 ithth j bl f i
+ccManagedAgents.PDF.txt	413	Mar 29
+ccManagedAgents.PDF.txt	414	HanHELOIRYAN,Ph.D. ☕
+ccManagedAgents.PDF.txt	415	 ObsidianObser… TheoSto…
+ccManagedAgents.PDF.txt	416	
+ccManagedAgents.PDF.txt	417	===== PAGE 25/25 =====
+ccManagedAgents.PDF.txt	418	See more recommendations
+ccManagedAgents.PDF.txt	419	10 Must-have CLIs for
+ccManagedAgents.PDF.txt	420	 AIA t i 2026MCP or CLIs. Your coding
+ccManagedAgents.PDF.txt	421	 t l d li i th
+ccManagedAgents.PDF.txt	422	Apr 1
+ccManagedAgents.PDF.txt	423	SDLC for Agentic AI
+ccManagedAgents.PDF.txt	424	E i iWhat a wild month it’s been. I
+ccManagedAgents.PDF.txt	425	 t t d i ti ith
+ccManagedAgents.PDF.txt	426	Mar 31
+ccManagedAgents.PDF.txt	427	unicodeveloper
+ccManagedAgents.PDF.txt	428	 BrettLuelling
+oAOHarnessEng.PDF.txt	1	
+oAOHarnessEng.PDF.txt	2	
+oAOHarnessEng.PDF.txt	3	===== PAGE 1/60 =====
+oAOHarnessEng.PDF.txt	4	OpenAI harness engineering: AI agents generating pull requests with
+oAOHarnessEng.PDF.txt	5	zero human-written code, progressive disclosure architecture
+oAOHarnessEng.PDF.txt	6	Member-only story
+oAOHarnessEng.PDF.txt	7	OpenAI’s Harness
+oAOHarnessEng.PDF.txt	8	Engineering
+oAOHarnessEng.PDF.txt	9	Experiment: Zero
+oAOHarnessEng.PDF.txt	10	Manually-Written Code
+oAOHarnessEng.PDF.txt	11	Open in app
+oAOHarnessEng.PDF.txt	12	Search Write
+oAOHarnessEng.PDF.txt	13	
+oAOHarnessEng.PDF.txt	14	
+oAOHarnessEng.PDF.txt	15	===== PAGE 2/60 =====
+oAOHarnessEng.PDF.txt	16	Based on OpenAI’s “Harness engineering:
+oAOHarnessEng.PDF.txt	17	leveraging Codex in an agent-first world” and
+oAOHarnessEng.PDF.txt	18	Rohit’s harness framework
+oAOHarnessEng.PDF.txt	19	Rick Hightower Following 22 min read · 4 days ago
+oAOHarnessEng.PDF.txt	20	136
+oAOHarnessEng.PDF.txt	21	Part 5 of the Harness Engineering Series
+oAOHarnessEng.PDF.txt	22	What if you could ship over a million lines of code
+oAOHarnessEng.PDF.txt	23	without writing a single line yourself? Discover how
+oAOHarnessEng.PDF.txt	24	OpenAI’s groundbreaking “zero manual code”
+oAOHarnessEng.PDF.txt	25	experiment transformed engineers into harness
+oAOHarnessEng.PDF.txt	26	architects, revolutionizing the approach to software
+oAOHarnessEng.PDF.txt	27	development! 🚀  #HarnessEngineering
+oAOHarnessEng.PDF.txt	28	#AIEngineering
+oAOHarnessEng.PDF.txt	29	Summary: OpenAI conducted an experiment
+oAOHarnessEng.PDF.txt	30	where over one million lines of code were
+oAOHarnessEng.PDF.txt	31	generated entirely by AI agents without any
+oAOHarnessEng.PDF.txt	32	human-written code. This was achieved through
+oAOHarnessEng.PDF.txt	33	harness engineering, which involved creating a
+oAOHarnessEng.PDF.txt	34	
+oAOHarnessEng.PDF.txt	35	
+oAOHarnessEng.PDF.txt	36	===== PAGE 3/60 =====
+oAOHarnessEng.PDF.txt	37	structured repository, ensuring application
+oAOHarnessEng.PDF.txt	38	legibility, and implementing mechanical
+oAOHarnessEng.PDF.txt	39	architecture enforcement. The engineers shifted
+oAOHarnessEng.PDF.txt	40	their role from coding to designing the
+oAOHarnessEng.PDF.txt	41	environment that allows agents to produce code,
+oAOHarnessEng.PDF.txt	42	resulting in a significant increase in productivity
+oAOHarnessEng.PDF.txt	43	and quality of output.
+oAOHarnessEng.PDF.txt	44	Note on sources: This article is my synthesis of
+oAOHarnessEng.PDF.txt	45	OpenAI’s internal Codex experiment and Rohit’s
+oAOHarnessEng.PDF.txt	46	harness engineering framework. The patterns
+oAOHarnessEng.PDF.txt	47	below are extrapolated from Ryan Lopopolo’s
+oAOHarnessEng.PDF.txt	48	public writeup, not official OpenAI terminology.
+oAOHarnessEng.PDF.txt	49	OpenAI harness engineering: AI agents generating
+oAOHarnessEng.PDF.txt	50	pull requests with zero human-written code,
+oAOHarnessEng.PDF.txt	51	progressive disclosure architecture
+oAOHarnessEng.PDF.txt	52	What happens when you tell a team of engineers to
+oAOHarnessEng.PDF.txt	53	stop writing code?
+oAOHarnessEng.PDF.txt	54	
+oAOHarnessEng.PDF.txt	55	===== PAGE 4/60 =====
+oAOHarnessEng.PDF.txt	56	Not “write less code.” Not “let agents handle the
+oAOHarnessEng.PDF.txt	57	boilerplate.” Stop writing code. Completely. Every
+oAOHarnessEng.PDF.txt	58	single line comes from an AI agent, or it does not
+oAOHarnessEng.PDF.txt	59	ship.
+oAOHarnessEng.PDF.txt	60	OpenAI ran exactly that experiment in agentic
+oAOHarnessEng.PDF.txt	61	development. Five months later, the repository
+oAOHarnessEng.PDF.txt	62	contained “on the order of a million lines of code” -
+oAOHarnessEng.PDF.txt	63	across app logic, infra, docs, and tooling - all
+oAOHarnessEng.PDF.txt	64	written by Codex agents, with OpenAI reporting 0
+oAOHarnessEng.PDF.txt	65	lines of manually-written code. The engineers
+oAOHarnessEng.PDF.txt	66	never stopped working. They worked harder than
+oAOHarnessEng.PDF.txt	67	ever. But the nature of the work changed
+oAOHarnessEng.PDF.txt	68	completely.
+oAOHarnessEng.PDF.txt	69	They stopped being programmers. They became
+oAOHarnessEng.PDF.txt	70	harness engineers.
+oAOHarnessEng.PDF.txt	71	
+oAOHarnessEng.PDF.txt	72	===== PAGE 5/60 =====
+oAOHarnessEng.PDF.txt	73	OpenAI harness engineering
+oAOHarnessEng.PDF.txt	74	If you have been following Rohit’s harness
+oAOHarnessEng.PDF.txt	75	engineering framework guide, this is the most
+oAOHarnessEng.PDF.txt	76	extreme validation of the thesis you will find
+oAOHarnessEng.PDF.txt	77	anywhere. The model did not change during the
+oAOHarnessEng.PDF.txt	78	experiment. What changed was everything around
+oAOHarnessEng.PDF.txt	79	it. And that everything is what made a million lines
+oAOHarnessEng.PDF.txt	80	of agent-written code actually work.
+oAOHarnessEng.PDF.txt	81	This is the story of how they did it. More
+oAOHarnessEng.PDF.txt	82	importantly, it is a playbook for the five specific
+oAOHarnessEng.PDF.txt	83	harness engineering patterns that made it
+oAOHarnessEng.PDF.txt	84	possible.
+oAOHarnessEng.PDF.txt	85	
+oAOHarnessEng.PDF.txt	86	
+oAOHarnessEng.PDF.txt	87	===== PAGE 6/60 =====
+oAOHarnessEng.PDF.txt	88	The Experiment: What “Zero Manual
+oAOHarnessEng.PDF.txt	89	Code” Actually Means in Numbers
+oAOHarnessEng.PDF.txt	90	Let us be precise about what OpenAI actually did,
+oAOHarnessEng.PDF.txt	91	because the headline invites misunderstanding.
+oAOHarnessEng.PDF.txt	92	OpenAI harness engineering: Evolution of an Engineer
+oAOHarnessEng.PDF.txt	93	The scope of the claim: Over five months, a small
+oAOHarnessEng.PDF.txt	94	OpenAI team built an internal beta product used
+oAOHarnessEng.PDF.txt	95	daily inside OpenAI, with roughly a million lines
+oAOHarnessEng.PDF.txt	96	of code; all generated by Codex agents, with
+oAOHarnessEng.PDF.txt	97	OpenAI reporting 0 lines of manually-written
+oAOHarnessEng.PDF.txt	98	
+oAOHarnessEng.PDF.txt	99	
+oAOHarnessEng.PDF.txt	100	===== PAGE 7/60 =====
+oAOHarnessEng.PDF.txt	101	code for the app and its supporting systems.
+oAOHarnessEng.PDF.txt	102	Humans never directly contributed code; they
+oAOHarnessEng.PDF.txt	103	steered through prompts, repository structure,
+oAOHarnessEng.PDF.txt	104	and feedback loops.
+oAOHarnessEng.PDF.txt	105	What that rate implies: OpenAI estimates this
+oAOHarnessEng.PDF.txt	106	approach was about 10x faster than writing the
+oAOHarnessEng.PDF.txt	107	code by hand, roughly one-tenth the time of
+oAOHarnessEng.PDF.txt	108	manual development, not an incremental
+oAOHarnessEng.PDF.txt	109	improvement, but a categorical change in output.
+oAOHarnessEng.PDF.txt	110	What the engineers were doing instead: Designing
+oAOHarnessEng.PDF.txt	111	the harness. Maintaining it. Fixing it when it
+oAOHarnessEng.PDF.txt	112	broke. The harness did not build itself. It required
+oAOHarnessEng.PDF.txt	113	continuous investment.
+oAOHarnessEng.PDF.txt	114	The team did not eliminate human involvement.
+oAOHarnessEng.PDF.txt	115	They eliminated human authorship of code.
+oAOHarnessEng.PDF.txt	116	Engineers still reviewed pull requests. They still
+oAOHarnessEng.PDF.txt	117	designed systems. They still debugged failures.
+oAOHarnessEng.PDF.txt	118	They still made architectural decisions every
+oAOHarnessEng.PDF.txt	119	single day.
+oAOHarnessEng.PDF.txt	120	
+oAOHarnessEng.PDF.txt	121	===== PAGE 8/60 =====
+oAOHarnessEng.PDF.txt	122	What they stopped doing was typing code into
+oAOHarnessEng.PDF.txt	123	editors.
+oAOHarnessEng.PDF.txt	124	Every function, every class, every configuration
+oAOHarnessEng.PDF.txt	125	file, every test was generated by AI agents. The
+oAOHarnessEng.PDF.txt	126	humans specified what to build, how to structure
+oAOHarnessEng.PDF.txt	127	it, and where it should live. The agents wrote it.
+oAOHarnessEng.PDF.txt	128	OpenAI harness engineering: Engineering roles
+oAOHarnessEng.PDF.txt	129	Look at that table carefully. Six of seven activities
+oAOHarnessEng.PDF.txt	130	still involve engineers. The one activity that
+oAOHarnessEng.PDF.txt	131	shifted, writing code, was historically where
+oAOHarnessEng.PDF.txt	132	engineers spent 60 to 70 percent of their time. That
+oAOHarnessEng.PDF.txt	133	
+oAOHarnessEng.PDF.txt	134	===== PAGE 9/60 =====
+oAOHarnessEng.PDF.txt	135	time got reinvested into design, review, and
+oAOHarnessEng.PDF.txt	136	harness engineering.
+oAOHarnessEng.PDF.txt	137	What each role covers (and how it changes in
+oAOHarnessEng.PDF.txt	138	“Zero Manual Code”)
+oAOHarnessEng.PDF.txt	139	System design
+oAOHarnessEng.PDF.txt	140	Before (Engineers): Engineers define the core
+oAOHarnessEng.PDF.txt	141	system shape: major components, data flows,
+oAOHarnessEng.PDF.txt	142	reliability goals, and how the system meets
+oAOHarnessEng.PDF.txt	143	product requirements.
+oAOHarnessEng.PDF.txt	144	After (Engineers): Still engineer-led, but with
+oAOHarnessEng.PDF.txt	145	extra emphasis on designing for agent
+oAOHarnessEng.PDF.txt	146	execution: clear module boundaries, explicit
+oAOHarnessEng.PDF.txt	147	interfaces, and “agent-friendly” specs that can
+oAOHarnessEng.PDF.txt	148	be mechanically verified.
+oAOHarnessEng.PDF.txt	149	Architecture decisions
+oAOHarnessEng.PDF.txt	150	Before (Engineers): Engineers decide patterns and
+oAOHarnessEng.PDF.txt	151	constraints: service boundaries, dependency
+oAOHarnessEng.PDF.txt	152	direction, persistence choices, performance
+oAOHarnessEng.PDF.txt	153	budgets, and security posture.
+oAOHarnessEng.PDF.txt	154	
+oAOHarnessEng.PDF.txt	155	===== PAGE 10/60 =====
+oAOHarnessEng.PDF.txt	156	After (Engineers): Still engineer-led, but more
+oAOHarnessEng.PDF.txt	157	decisions are encoded as enforceable rules: repo
+oAOHarnessEng.PDF.txt	158	documentation, lint rules, contract tests, and
+oAOHarnessEng.PDF.txt	159	scaffolding that prevents agents from drifting.
+oAOHarnessEng.PDF.txt	160	Writing code
+oAOHarnessEng.PDF.txt	161	Before (Engineers): Engineers implement features
+oAOHarnessEng.PDF.txt	162	and fixes directly: creating files, editing
+oAOHarnessEng.PDF.txt	163	functions, wiring dependencies, and making
+oAOHarnessEng.PDF.txt	164	incremental changes.
+oAOHarnessEng.PDF.txt	165	After (Agents): Agents generate implementation
+oAOHarnessEng.PDF.txt	166	code from specs and repo context. Engineers
+oAOHarnessEng.PDF.txt	167	focus on prompts, task decomposition, harness
+oAOHarnessEng.PDF.txt	168	updates, and ensuring the repo contains the
+oAOHarnessEng.PDF.txt	169	“source of truth” the agents need.
+oAOHarnessEng.PDF.txt	170	Code review
+oAOHarnessEng.PDF.txt	171	Before (Engineers): Engineers review logic, style,
+oAOHarnessEng.PDF.txt	172	correctness, and maintainability, and then
+oAOHarnessEng.PDF.txt	173	request changes.
+oAOHarnessEng.PDF.txt	174	
+oAOHarnessEng.PDF.txt	175	===== PAGE 11/60 =====
+oAOHarnessEng.PDF.txt	176	After (Engineers): Engineers still review, but
+oAOHarnessEng.PDF.txt	177	review shifts toward verifying intent, spotting
+oAOHarnessEng.PDF.txt	178	systemic failure modes, and improving the
+oAOHarnessEng.PDF.txt	179	harness. Many “style and convention” concerns
+oAOHarnessEng.PDF.txt	180	are pushed into automated checks and
+oAOHarnessEng.PDF.txt	181	remediation instructions.
+oAOHarnessEng.PDF.txt	182	Debugging failures
+oAOHarnessEng.PDF.txt	183	Before (Engineers): Engineers reproduce issues,
+oAOHarnessEng.PDF.txt	184	inspect logs and traces, isolate root causes, and
+oAOHarnessEng.PDF.txt	185	patch code.
+oAOHarnessEng.PDF.txt	186	After (Engineers + Agents): Engineers and agents
+oAOHarnessEng.PDF.txt	187	collaborate. Agents run tests, read stack traces,
+oAOHarnessEng.PDF.txt	188	and iterate on fixes. Engineers handle
+oAOHarnessEng.PDF.txt	189	ambiguous failures, design-level issues, and
+oAOHarnessEng.PDF.txt	190	harness gaps that cause repeated agent
+oAOHarnessEng.PDF.txt	191	mistakes.
+oAOHarnessEng.PDF.txt	192	Writing tests
+oAOHarnessEng.PDF.txt	193	
+oAOHarnessEng.PDF.txt	194	===== PAGE 12/60 =====
+oAOHarnessEng.PDF.txt	195	Before (Engineers): Engineers author unit,
+oAOHarnessEng.PDF.txt	196	integration, and end-to-end tests, decide what to
+oAOHarnessEng.PDF.txt	197	test, and maintain suites over time.
+oAOHarnessEng.PDF.txt	198	After (Agents): Agents generate and update tests,
+oAOHarnessEng.PDF.txt	199	especially for well-specified behavior and
+oAOHarnessEng.PDF.txt	200	regression coverage. Engineers set the testing
+oAOHarnessEng.PDF.txt	201	strategy, coverage thresholds, and contract
+oAOHarnessEng.PDF.txt	202	boundaries that tests must enforce.
+oAOHarnessEng.PDF.txt	203	Refactoring
+oAOHarnessEng.PDF.txt	204	Before (Engineers): Engineers restructure code for
+oAOHarnessEng.PDF.txt	205	readability, performance, and maintainability,
+oAOHarnessEng.PDF.txt	206	including migrations and large-scale changes.
+oAOHarnessEng.PDF.txt	207	After (Agents): Agents perform much of the
+oAOHarnessEng.PDF.txt	208	mechanical refactor work under constraints.
+oAOHarnessEng.PDF.txt	209	Engineers define the target architecture, write
+oAOHarnessEng.PDF.txt	210	migration plans, ensure safety rails exist (tests,
+oAOHarnessEng.PDF.txt	211	linters, CI), and review for correctness and risk.
+oAOHarnessEng.PDF.txt	212	The engineers did not become less valuable. They
+oAOHarnessEng.PDF.txt	213	became differently valuable. The harness is what
+oAOHarnessEng.PDF.txt	214	
+oAOHarnessEng.PDF.txt	215	===== PAGE 13/60 =====
+oAOHarnessEng.PDF.txt	216	made the difference.
+oAOHarnessEng.PDF.txt	217	Why One Million Lines of Agent-Written
+oAOHarnessEng.PDF.txt	218	Code Is Meaningful
+oAOHarnessEng.PDF.txt	219	Before we get into the patterns, it is worth sitting
+oAOHarnessEng.PDF.txt	220	with what that number actually represents.
+oAOHarnessEng.PDF.txt	221	On the order of a million lines of code in an
+oAOHarnessEng.PDF.txt	222	internal beta product used daily inside OpenAI
+oAOHarnessEng.PDF.txt	223	that is not blog post demos. It is not toy tooling. It
+oAOHarnessEng.PDF.txt	224	is not auto-generated boilerplate that inflates line
+oAOHarnessEng.PDF.txt	225	counts.
+oAOHarnessEng.PDF.txt	226	For context: the Linux kernel contains roughly 30
+oAOHarnessEng.PDF.txt	227	million lines of code accumulated over three
+oAOHarnessEng.PDF.txt	228	decades of contributions from thousands of
+oAOHarnessEng.PDF.txt	229	developers. A mature enterprise backend might
+oAOHarnessEng.PDF.txt	230	have 500,000 to 2 million lines across its services. A
+oAOHarnessEng.PDF.txt	231	production mobile application runs 100,000 to
+oAOHarnessEng.PDF.txt	232	500,000 lines.
+oAOHarnessEng.PDF.txt	233	
+oAOHarnessEng.PDF.txt	234	===== PAGE 14/60 =====
+oAOHarnessEng.PDF.txt	235	One million lines, generated in five months, by a
+oAOHarnessEng.PDF.txt	236	relatively small team that wrote zero of those lines
+oAOHarnessEng.PDF.txt	237	themselves, represents a production system at real
+oAOHarnessEng.PDF.txt	238	scale. It means:
+oAOHarnessEng.PDF.txt	239	Agents handled genuine complexity, not toy
+oAOHarnessEng.PDF.txt	240	tasks
+oAOHarnessEng.PDF.txt	241	The code passed human review (because
+oAOHarnessEng.PDF.txt	242	humans still reviewed PRs)
+oAOHarnessEng.PDF.txt	243	The system actually ran and shipped, not just
+oAOHarnessEng.PDF.txt	244	compiled
+oAOHarnessEng.PDF.txt	245	Quality was maintained at a level acceptable for
+oAOHarnessEng.PDF.txt	246	production use
+oAOHarnessEng.PDF.txt	247	The claim is not “agents can produce output
+oAOHarnessEng.PDF.txt	248	quickly.” The claim is “agents can produce
+oAOHarnessEng.PDF.txt	249	reviewed, production-quality output at about 10x
+oAOHarnessEng.PDF.txt	250	the rate of writing code by hand, according to
+oAOHarnessEng.PDF.txt	251	OpenAI’s estimate - if you build the harness
+oAOHarnessEng.PDF.txt	252	correctly.”
+oAOHarnessEng.PDF.txt	253	
+oAOHarnessEng.PDF.txt	254	===== PAGE 15/60 =====
+oAOHarnessEng.PDF.txt	255	That is what the five harness engineering patterns
+oAOHarnessEng.PDF.txt	256	enable.
+oAOHarnessEng.PDF.txt	257	OpenAI harness engineering: Production Outputs
+oAOHarnessEng.PDF.txt	258	Harness Engineering Pattern 1 (from
+oAOHarnessEng.PDF.txt	259	OpenAI’s experiment): Repository as Sole
+oAOHarnessEng.PDF.txt	260	Source of Truth
+oAOHarnessEng.PDF.txt	261	Here is the first principle that makes zero-manual-
+oAOHarnessEng.PDF.txt	262	code possible, and it is brutally simple.
+oAOHarnessEng.PDF.txt	263	If it is not in the repository, the agent does not
+oAOHarnessEng.PDF.txt	264	know it exists.
+oAOHarnessEng.PDF.txt	265	
+oAOHarnessEng.PDF.txt	266	
+oAOHarnessEng.PDF.txt	267	===== PAGE 16/60 =====
+oAOHarnessEng.PDF.txt	268	As Ryan Lopopolo wrote in OpenAI’s “Harness
+oAOHarnessEng.PDF.txt	269	engineering” post: “From the agent’s point of view,
+oAOHarnessEng.PDF.txt	270	anything it can’t access in-repo effectively doesn’t
+oAOHarnessEng.PDF.txt	271	exist, so OpenAI pushed more and more context
+oAOHarnessEng.PDF.txt	272	into the repository over time.”
+oAOHarnessEng.PDF.txt	273	This sounds obvious. It is not. Think about how
+oAOHarnessEng.PDF.txt	274	much knowledge lives outside your codebase right
+oAOHarnessEng.PDF.txt	275	now. Architecture decisions in Confluence pages.
+oAOHarnessEng.PDF.txt	276	API contracts in Notion docs. Deployment
+oAOHarnessEng.PDF.txt	277	procedures in Slack threads. Onboarding
+oAOHarnessEng.PDF.txt	278	knowledge in someone’s head.
+oAOHarnessEng.PDF.txt	279	An agent cannot read your Slack. An agent cannot
+oAOHarnessEng.PDF.txt	280	attend your standup. An agent cannot absorb the
+oAOHarnessEng.PDF.txt	281	tribal knowledge that your senior engineer carries
+oAOHarnessEng.PDF.txt	282	around. The only reality an agent experiences is
+oAOHarnessEng.PDF.txt	283	the repository it operates in.
+oAOHarnessEng.PDF.txt	284	OpenAI made this explicit and absolute. Every
+oAOHarnessEng.PDF.txt	285	piece of information an agent could possibly need
+oAOHarnessEng.PDF.txt	286	to write correct code had to exist inside the
+oAOHarnessEng.PDF.txt	287	
+oAOHarnessEng.PDF.txt	288	===== PAGE 17/60 =====
+oAOHarnessEng.PDF.txt	289	repository. If a convention was not documented in
+oAOHarnessEng.PDF.txt	290	the repo, the agent would violate it. If an API
+oAOHarnessEng.PDF.txt	291	contract was not specified in the repo, the agent
+oAOHarnessEng.PDF.txt	292	would guess wrong. If an architectural boundary
+oAOHarnessEng.PDF.txt	293	was not encoded in the repo, the agent would cross
+oAOHarnessEng.PDF.txt	294	it.
+oAOHarnessEng.PDF.txt	295	This is not a documentation initiative. This is a
+oAOHarnessEng.PDF.txt	296	survival requirement.
+oAOHarnessEng.PDF.txt	297	Why This Harness Pattern Matters at
+oAOHarnessEng.PDF.txt	298	Scale
+oAOHarnessEng.PDF.txt	299	Consider the failure mode without this pattern. At
+oAOHarnessEng.PDF.txt	300	200,000 lines per month, an agent that consistently
+oAOHarnessEng.PDF.txt	301	applies the wrong naming convention will apply it
+oAOHarnessEng.PDF.txt	302	thousands of times before anyone catches it. An
+oAOHarnessEng.PDF.txt	303	agent that misunderstands a module boundary will
+oAOHarnessEng.PDF.txt	304	cross it in dozens of files. The damage scales with
+oAOHarnessEng.PDF.txt	305	the throughput.
+oAOHarnessEng.PDF.txt	306	The repository-as-truth pattern converts
+oAOHarnessEng.PDF.txt	307	documentation from “nice to have” to “load-
+oAOHarnessEng.PDF.txt	308	
+oAOHarnessEng.PDF.txt	309	===== PAGE 18/60 =====
+oAOHarnessEng.PDF.txt	310	bearing structure.” Every missing convention is a
+oAOHarnessEng.PDF.txt	311	defect multiplier. Every undocumented boundary
+oAOHarnessEng.PDF.txt	312	is a source of compounding errors.
+oAOHarnessEng.PDF.txt	313	OpenAI found, predictably, that the first two
+oAOHarnessEng.PDF.txt	314	months of the experiment required heavy
+oAOHarnessEng.PDF.txt	315	documentation investment before throughput
+oAOHarnessEng.PDF.txt	316	could scale. The harness had to be built before the
+oAOHarnessEng.PDF.txt	317	agents could run.
+oAOHarnessEng.PDF.txt	318	What Goes Into the Repo
+oAOHarnessEng.PDF.txt	319	The team categorized repository knowledge into
+oAOHarnessEng.PDF.txt	320	three tiers:
+oAOHarnessEng.PDF.txt	321	
+oAOHarnessEng.PDF.txt	322	
+oAOHarnessEng.PDF.txt	323	===== PAGE 19/60 =====
+oAOHarnessEng.PDF.txt	324	Foundational (monthly): Architecture decisions,
+oAOHarnessEng.PDF.txt	325	module boundaries, coding standards, naming
+oAOHarnessEng.PDF.txt	326	conventions
+oAOHarnessEng.PDF.txt	327	Operational (weekly): API contracts, data
+oAOHarnessEng.PDF.txt	328	schemas, deployment configs, environment
+oAOHarnessEng.PDF.txt	329	setup
+oAOHarnessEng.PDF.txt	330	Tactical (daily): Task-specific context, current
+oAOHarnessEng.PDF.txt	331	sprint goals, known issues, workarounds
+oAOHarnessEng.PDF.txt	332	Traditional teams can get away with sloppy
+oAOHarnessEng.PDF.txt	333	documentation because humans fill in the gaps
+oAOHarnessEng.PDF.txt	334	with institutional knowledge. Agent teams cannot.
+oAOHarnessEng.PDF.txt	335	Every gap in repository documentation becomes a
+oAOHarnessEng.PDF.txt	336	gap in agent capability.
+oAOHarnessEng.PDF.txt	337	If you have ever onboarded a new hire and thought
+oAOHarnessEng.PDF.txt	338	“they will just pick this up from the team,”
+oAOHarnessEng.PDF.txt	339	congratulations: you have identified exactly the
+oAOHarnessEng.PDF.txt	340	kind of knowledge that will break your agents.
+oAOHarnessEng.PDF.txt	341	The boundary between agent-visible and agent-
+oAOHarnessEng.PDF.txt	342	invisible knowledge is absolute. There is no “well,
+oAOHarnessEng.PDF.txt	343	
+oAOHarnessEng.PDF.txt	344	===== PAGE 20/60 =====
+oAOHarnessEng.PDF.txt	345	the agent can probably figure it out.” Either the
+oAOHarnessEng.PDF.txt	346	knowledge is in the repo or it does not exist.
+oAOHarnessEng.PDF.txt	347	Source: OpenAI’s “Harness engineering: leveraging
+oAOHarnessEng.PDF.txt	348	Codex in an agent-first world” (Ryan Lopopolo) -
+oAOHarnessEng.PDF.txt	349	structured docs, AGENTS.md as table of contents,
+oAOHarnessEng.PDF.txt	350	and mechanical enforcement. Also informed by
+oAOHarnessEng.PDF.txt	351	Rohit’s harness engineering thread.
+oAOHarnessEng.PDF.txt	352	OpenAI harness engineering: The harness
+oAOHarnessEng.PDF.txt	353	Harness Engineering Pattern 2 (from
+oAOHarnessEng.PDF.txt	354	OpenAI’s experiment): Progressive
+oAOHarnessEng.PDF.txt	355	
+oAOHarnessEng.PDF.txt	356	
+oAOHarnessEng.PDF.txt	357	===== PAGE 21/60 =====
+oAOHarnessEng.PDF.txt	358	Disclosure via Structured Directories
+oAOHarnessEng.PDF.txt	359	Repository-as-truth creates a new problem. If you
+oAOHarnessEng.PDF.txt	360	dump every piece of knowledge into a flat
+oAOHarnessEng.PDF.txt	361	documentation folder, the agent drowns. Context
+oAOHarnessEng.PDF.txt	362	windows are large but not infinite. Relevance
+oAOHarnessEng.PDF.txt	363	matters.
+oAOHarnessEng.PDF.txt	364	OpenAI solved this with what Ryan’s post calls
+oAOHarnessEng.PDF.txt	365	progressive disclosure: agents start with a small,
+oAOHarnessEng.PDF.txt	366	stable entry point and are taught where to look
+oAOHarnessEng.PDF.txt	367	next, rather than being overwhelmed up front.
+oAOHarnessEng.PDF.txt	368	Mechanically, this means a structured directory
+oAOHarnessEng.PDF.txt	369	layout paired with a brief map file (AGENTS.md in
+oAOHarnessEng.PDF.txt	370	OpenAI’s case) that acts as a table of contents.
+oAOHarnessEng.PDF.txt	371	The directory structure is not arbitrary. It follows a
+oAOHarnessEng.PDF.txt	372	deliberate hierarchy that mirrors how agents
+oAOHarnessEng.PDF.txt	373	navigate codebases. Agents start broad and go
+oAOHarnessEng.PDF.txt	374	deep. The structure enables that navigation.
+oAOHarnessEng.PDF.txt	375	What Progressive Disclosure Looks Like
+oAOHarnessEng.PDF.txt	376	in Practice
+oAOHarnessEng.PDF.txt	377	
+oAOHarnessEng.PDF.txt	378	===== PAGE 22/60 =====
+oAOHarnessEng.PDF.txt	379	Here is an example layout inspired by OpenAI’s
+oAOHarnessEng.PDF.txt	380	approach (OpenAI uses AGENTS.md as the entry
+oAOHarnessEng.PDF.txt	381	point and a docs/ directory as system of record; the
+oAOHarnessEng.PDF.txt	382	following is a generalized version):
+oAOHarnessEng.PDF.txt	383	repo/
+oAOHarnessEng.PDF.txt	384	├──  BRIEF.md                    # Map file: what thi
+oAOHarnessEng.PDF.txt	385	├──  ARCHITECTURE.md             # High-level system 
+oAOHarnessEng.PDF.txt	386	├──  modules/
+oAOHarnessEng.PDF.txt	387	│    ├──  auth/
+oAOHarnessEng.PDF.txt	388	│    │    ├──  README.md           # Module-level conte
+oAOHarnessEng.PDF.txt	389	│    │    ├──  CONVENTIONS.md      # Module-specific pa
+oAOHarnessEng.PDF.txt	390	│    │    ├──  src/
+oAOHarnessEng.PDF.txt	391	│    │    └──  tests/
+oAOHarnessEng.PDF.txt	392	│    ├──  billing/
+oAOHarnessEng.PDF.txt	393	│    │    ├──  README.md
+oAOHarnessEng.PDF.txt	394	│    │    ├──  CONVENTIONS.md
+oAOHarnessEng.PDF.txt	395	│    │    ├──  src/
+oAOHarnessEng.PDF.txt	396	│    │    └──  tests/
+oAOHarnessEng.PDF.txt	397	│    └──  notifications/
+oAOHarnessEng.PDF.txt	398	│        ├──  README.md
+oAOHarnessEng.PDF.txt	399	│        ├──  CONVENTIONS.md
+oAOHarnessEng.PDF.txt	400	│        ├──  src/
+oAOHarnessEng.PDF.txt	401	│        └──  tests/
+oAOHarnessEng.PDF.txt	402	└──  .linters/
+oAOHarnessEng.PDF.txt	403	    ├──  architecture_rules.py
+oAOHarnessEng.PDF.txt	404	    └──  naming_conventions.py
+oAOHarnessEng.PDF.txt	405	
+oAOHarnessEng.PDF.txt	406	===== PAGE 23/60 =====
+oAOHarnessEng.PDF.txt	407	OpenAI treats their AGENTS.md as a table of
+oAOHarnessEng.PDF.txt	408	contents, not a 1,000-page manual, and keeps most
+oAOHarnessEng.PDF.txt	409	knowledge in a structured docs/ directory as the
+oAOHarnessEng.PDF.txt	410	system of record. In this generalized example,
+oAOHarnessEng.PDF.txt	411	BRIEF.md plays the same role. It does not contain
+oAOHarnessEng.PDF.txt	412	exhaustive documentation. It contains just enough
+oAOHarnessEng.PDF.txt	413	context for an agent to understand the shape of the
+oAOHarnessEng.PDF.txt	414	codebase and know where to look for deeper
+oAOHarnessEng.PDF.txt	415	information. Think of it as a table of contents with
+oAOHarnessEng.PDF.txt	416	annotations.
+oAOHarnessEng.PDF.txt	417	OpenAI harness engineering: Repository as truth
+oAOHarnessEng.PDF.txt	418	What Makes a Good Brief Map
+oAOHarnessEng.PDF.txt	419	
+oAOHarnessEng.PDF.txt	420	
+oAOHarnessEng.PDF.txt	421	===== PAGE 24/60 =====
+oAOHarnessEng.PDF.txt	422	A good brief map tells the agent three things: what
+oAOHarnessEng.PDF.txt	423	the system does, where things live, and what the
+oAOHarnessEng.PDF.txt	424	current state of each component is.
+oAOHarnessEng.PDF.txt	425	# Project Brief
+oAOHarnessEng.PDF.txt	426	This is a billing platform with three core modules.
+oAOHarnessEng.PDF.txt	427	## Modules
+oAOHarnessEng.PDF.txt	428	- `modules/auth/` - Authentication and authorization.
+oAOHarnessEng.PDF.txt	429	- `modules/billing/` - Subscription management, invoi
+oAOHarnessEng.PDF.txt	430	- `modules/notifications/` - Email, SMS, and webhook 
+oAOHarnessEng.PDF.txt	431	## Key Conventions
+oAOHarnessEng.PDF.txt	432	- All API endpoints follow REST conventions in ARCHIT
+oAOHarnessEng.PDF.txt	433	- Each module has its own CONVENTIONS.md for module-s
+oAOHarnessEng.PDF.txt	434	- Tests live alongside source code in each module's t
+oAOHarnessEng.PDF.txt	435	## Current State
+oAOHarnessEng.PDF.txt	436	- Auth module: stable, v2.1
+oAOHarnessEng.PDF.txt	437	- Billing module: active development, migrating from 
+oAOHarnessEng.PDF.txt	438	- Notifications module: stable, v1.4
+oAOHarnessEng.PDF.txt	439	The agent reads this file first, understands the
+oAOHarnessEng.PDF.txt	440	landscape, then dives into the specific module it
+oAOHarnessEng.PDF.txt	441	needs to work in. It never needs to load the entire
+oAOHarnessEng.PDF.txt	442	codebase into context. It navigates progressively.
+oAOHarnessEng.PDF.txt	443	
+oAOHarnessEng.PDF.txt	444	===== PAGE 25/60 =====
+oAOHarnessEng.PDF.txt	445	Why Progressive Disclosure Reduces Token
+oAOHarnessEng.PDF.txt	446	Waste
+oAOHarnessEng.PDF.txt	447	An agent working on a billing bug does not need to
+oAOHarnessEng.PDF.txt	448	load the auth module’s implementation into its
+oAOHarnessEng.PDF.txt	449	context window. With progressive disclosure, it
+oAOHarnessEng.PDF.txt	450	reads BRIEF.md, determines the billing module is
+oAOHarnessEng.PDF.txt	451	relevant, reads modules/billing/README.md and
+oAOHarnessEng.PDF.txt	452	CONVENTIONS.md, then reads only the specific
+oAOHarnessEng.PDF.txt	453	source files it needs.
+oAOHarnessEng.PDF.txt	454	OpenAI harness engineering - Progessive Disclosure Architeture PDA
+oAOHarnessEng.PDF.txt	455	Compare that to an agent that loads the entire
+oAOHarnessEng.PDF.txt	456	codebase hoping the relevant context will surface.
+oAOHarnessEng.PDF.txt	457	At 200,000 lines per month, context waste is not an
+oAOHarnessEng.PDF.txt	458	
+oAOHarnessEng.PDF.txt	459	
+oAOHarnessEng.PDF.txt	460	===== PAGE 26/60 =====
+oAOHarnessEng.PDF.txt	461	abstract concern. It is a throughput tax.
+oAOHarnessEng.PDF.txt	462	Progressive disclosure eliminates it.
+oAOHarnessEng.PDF.txt	463	This is not clever. This is just good information
+oAOHarnessEng.PDF.txt	464	architecture. But most teams do not do it because
+oAOHarnessEng.PDF.txt	465	humans can navigate messy repos through
+oAOHarnessEng.PDF.txt	466	familiarity. Agents cannot. Agents need the mess
+oAOHarnessEng.PDF.txt	467	cleaned up.
+oAOHarnessEng.PDF.txt	468	Source: OpenAI’s “Harness engineering” post on
+oAOHarnessEng.PDF.txt	469	AGENTS.md as table of contents and a structured
+oAOHarnessEng.PDF.txt	470	docs/ directory as system of record. The BRIEF.md
+oAOHarnessEng.PDF.txt	471	layout shown above is an example layout inspired
+oAOHarnessEng.PDF.txt	472	by OpenAI’s approach and Rohit’s framework, not
+oAOHarnessEng.PDF.txt	473	the exact structure OpenAI used.
+oAOHarnessEng.PDF.txt	474	Harness Engineering Pattern 3 (from
+oAOHarnessEng.PDF.txt	475	OpenAI’s experiment): Application
+oAOHarnessEng.PDF.txt	476	Legibility
+oAOHarnessEng.PDF.txt	477	Here is where OpenAI’s harness engineering gets
+oAOHarnessEng.PDF.txt	478	genuinely interesting.
+oAOHarnessEng.PDF.txt	479	
+oAOHarnessEng.PDF.txt	480	===== PAGE 27/60 =====
+oAOHarnessEng.PDF.txt	481	Application legibility means that every running
+oAOHarnessEng.PDF.txt	482	instance of the application is fully inspectable,
+oAOHarnessEng.PDF.txt	483	fully observable, and fully isolated. The agent does
+oAOHarnessEng.PDF.txt	484	not just write code. It boots the application, tests it,
+oAOHarnessEng.PDF.txt	485	observes it, and diagnoses it.
+oAOHarnessEng.PDF.txt	486	OpenAI harness engineering - Application Legibility
+oAOHarnessEng.PDF.txt	487	This required three capabilities that most
+oAOHarnessEng.PDF.txt	488	development environments do not have.
+oAOHarnessEng.PDF.txt	489	Isolated Bootable Instances
+oAOHarnessEng.PDF.txt	490	OpenAI made the application bootable per git
+oAOHarnessEng.PDF.txt	491	worktree, so Codex could launch one instance per
+oAOHarnessEng.PDF.txt	492	
+oAOHarnessEng.PDF.txt	493	
+oAOHarnessEng.PDF.txt	494	===== PAGE 28/60 =====
+oAOHarnessEng.PDF.txt	495	change, each with its own logs and metrics. Every
+oAOHarnessEng.PDF.txt	496	agent session gets its own complete instance of the
+oAOHarnessEng.PDF.txt	497	application. Not a shared staging environment. Not
+oAOHarnessEng.PDF.txt	498	a mock. A real, running instance that the agent
+oAOHarnessEng.PDF.txt	499	controls entirely.
+oAOHarnessEng.PDF.txt	500	Why does isolation matter at this scale? Consider a
+oAOHarnessEng.PDF.txt	501	scenario where 10 agents work simultaneously on
+oAOHarnessEng.PDF.txt	502	10 different features. Without isolation, Agent A’s
+oAOHarnessEng.PDF.txt	503	half-complete database migration breaks Agent B’s
+oAOHarnessEng.PDF.txt	504	test run. Agent C’s configuration change causes
+oAOHarnessEng.PDF.txt	505	Agent D’s service to fail in a way that has nothing
+oAOHarnessEng.PDF.txt	506	to do with Agent D’s code. Every agent wastes
+oAOHarnessEng.PDF.txt	507	cycles debugging problems created by other
+oAOHarnessEng.PDF.txt	508	agents.
+oAOHarnessEng.PDF.txt	509	With isolated instances, each agent operates in a
+oAOHarnessEng.PDF.txt	510	clean environment. Its failures are its own. Its
+oAOHarnessEng.PDF.txt	511	successes are reproducible. The agents can run in
+oAOHarnessEng.PDF.txt	512	parallel without interference.
+oAOHarnessEng.PDF.txt	513	Browser Tools
+oAOHarnessEng.PDF.txt	514	
+oAOHarnessEng.PDF.txt	515	===== PAGE 29/60 =====
+oAOHarnessEng.PDF.txt	516	Agents do not just compile and run tests. They
+oAOHarnessEng.PDF.txt	517	interact with the application the way a user would.
+oAOHarnessEng.PDF.txt	518	OpenAI wired the Chrome DevTools Protocol into
+oAOHarnessEng.PDF.txt	519	the agent runtime so Codex could drive the UI and
+oAOHarnessEng.PDF.txt	520	reason about DOM snapshots and screenshots -
+oAOHarnessEng.PDF.txt	521	navigating the UI, clicking buttons, filling forms,
+oAOHarnessEng.PDF.txt	522	and observing visual output.
+oAOHarnessEng.PDF.txt	523	This matters because many bugs are invisible to
+oAOHarnessEng.PDF.txt	524	unit tests. A function that returns correct data but
+oAOHarnessEng.PDF.txt	525	renders it in the wrong place will pass every
+oAOHarnessEng.PDF.txt	526	integration test but fail every user interaction.
+oAOHarnessEng.PDF.txt	527	Agents with browser tools catch these failures
+oAOHarnessEng.PDF.txt	528	before merge, not after deployment.
+oAOHarnessEng.PDF.txt	529	The practical implication: browser tool access
+oAOHarnessEng.PDF.txt	530	transformed agents from “code writers that hope
+oAOHarnessEng.PDF.txt	531	the code works” to “code writers that verify the
+oAOHarnessEng.PDF.txt	532	code works from the user’s perspective.”
+oAOHarnessEng.PDF.txt	533	Full Observability Stack
+oAOHarnessEng.PDF.txt	534	OpenAI set up a local observability stack per
+oAOHarnessEng.PDF.txt	535	worktree, with LogQL/PromQL access for logs and
+oAOHarnessEng.PDF.txt	536	
+oAOHarnessEng.PDF.txt	537	===== PAGE 30/60 =====
+oAOHarnessEng.PDF.txt	538	metrics. Every agent session included structured
+oAOHarnessEng.PDF.txt	539	logging, metrics collection, and trace visualization.
+oAOHarnessEng.PDF.txt	540	When an agent’s code caused an error, the agent
+oAOHarnessEng.PDF.txt	541	could read the stack trace, examine the logs, and
+oAOHarnessEng.PDF.txt	542	trace the request through the system.
+oAOHarnessEng.PDF.txt	543	This is not luxury infrastructure. Without
+oAOHarnessEng.PDF.txt	544	observability, an agent that generates buggy code
+oAOHarnessEng.PDF.txt	545	enters a debugging loop without information. It
+oAOHarnessEng.PDF.txt	546	guesses, modifies, reruns, and guesses again. With
+oAOHarnessEng.PDF.txt	547	observability, it reads the error trace, identifies the
+oAOHarnessEng.PDF.txt	548	line, understands the cause, and fixes the right
+oAOHarnessEng.PDF.txt	549	thing.
+oAOHarnessEng.PDF.txt	550	The combination of these three capabilities means
+oAOHarnessEng.PDF.txt	551	that agents operate in an environment as rich as
+oAOHarnessEng.PDF.txt	552	what a human developer experiences. They can
+oAOHarnessEng.PDF.txt	553	write code, run it, see what happens, read the
+oAOHarnessEng.PDF.txt	554	errors, and fix the problems. That tight feedback
+oAOHarnessEng.PDF.txt	555	loop is what makes autonomous code generation
+oAOHarnessEng.PDF.txt	556	viable at production scale.
+oAOHarnessEng.PDF.txt	557	
+oAOHarnessEng.PDF.txt	558	===== PAGE 31/60 =====
+oAOHarnessEng.PDF.txt	559	Without application legibility, agents write code
+oAOHarnessEng.PDF.txt	560	blind. With legibility, they write, test, observe, and
+oAOHarnessEng.PDF.txt	561	iterate, just like a human developer would.
+oAOHarnessEng.PDF.txt	562	Source: OpenAI’s “Harness engineering” post:
+oAOHarnessEng.PDF.txt	563	bootable instances per git worktree so Codex can
+oAOHarnessEng.PDF.txt	564	launch one per change with its own logs and
+oAOHarnessEng.PDF.txt	565	metrics; Chrome DevTools Protocol wired into the
+oAOHarnessEng.PDF.txt	566	agent runtime so Codex can drive the UI and
+oAOHarnessEng.PDF.txt	567	reason about DOM snapshots/screenshots; local
+oAOHarnessEng.PDF.txt	568	observability stack per worktree with
+oAOHarnessEng.PDF.txt	569	LogQL/PromQL access for logs and metrics.
+oAOHarnessEng.PDF.txt	570	Harness Engineering Pattern 4 (from
+oAOHarnessEng.PDF.txt	571	OpenAI’s experiment): Mechanical
+oAOHarnessEng.PDF.txt	572	Architecture Enforcement
+oAOHarnessEng.PDF.txt	573	Trust but verify is good advice for hiring. It is
+oAOHarnessEng.PDF.txt	574	terrible advice for agents.
+oAOHarnessEng.PDF.txt	575	OpenAI’s fourth harness engineering pattern is
+oAOHarnessEng.PDF.txt	576	mechanical enforcement of architectural
+oAOHarnessEng.PDF.txt	577	
+oAOHarnessEng.PDF.txt	578	===== PAGE 32/60 =====
+oAOHarnessEng.PDF.txt	579	constraints - a rigid architectural model per
+oAOHarnessEng.PDF.txt	580	business domain with strictly validated
+oAOHarnessEng.PDF.txt	581	dependency directions, enforced via custom
+oAOHarnessEng.PDF.txt	582	linters and structural tests. Not guidelines. Not
+oAOHarnessEng.PDF.txt	583	suggestions. Not comments in a
+oAOHarnessEng.PDF.txt	584	CONVENTIONS.md file that agents might read and
+oAOHarnessEng.PDF.txt	585	might follow. Actual linters that run automatically
+oAOHarnessEng.PDF.txt	586	and block merges when violated.
+oAOHarnessEng.PDF.txt	587	OpenAI harness engineering: Mechanical Enforcement
+oAOHarnessEng.PDF.txt	588	Here is the key insight: linters must include
+oAOHarnessEng.PDF.txt	589	remediation instructions.
+oAOHarnessEng.PDF.txt	590	
+oAOHarnessEng.PDF.txt	591	
+oAOHarnessEng.PDF.txt	592	===== PAGE 33/60 =====
+oAOHarnessEng.PDF.txt	593	A traditional linter says “naming convention
+oAOHarnessEng.PDF.txt	594	violated on line 47.” That is useful for a human who
+oAOHarnessEng.PDF.txt	595	knows the naming convention and just made a
+oAOHarnessEng.PDF.txt	596	typo. It is useless for an agent that has never seen
+oAOHarnessEng.PDF.txt	597	the convention and does not know what the
+oAOHarnessEng.PDF.txt	598	correct name should be.
+oAOHarnessEng.PDF.txt	599	What Actionable Linter Output Looks Like
+oAOHarnessEng.PDF.txt	600	OpenAI’s custom linters output structured
+oAOHarnessEng.PDF.txt	601	feedback designed for agent consumption:
+oAOHarnessEng.PDF.txt	602	ERROR: Naming convention violation
+oAOHarnessEng.PDF.txt	603	  File: modules/billing/src/invoice_handler.py
+oAOHarnessEng.PDF.txt	604	  Line: 47
+oAOHarnessEng.PDF.txt	605	  Found: `processInvoice`
+oAOHarnessEng.PDF.txt	606	  Expected pattern: snake_case function names
+oAOHarnessEng.PDF.txt	607	  Fix: Rename to `process_invoice`
+oAOHarnessEng.PDF.txt	608	  Reference: See modules/billing/CONVENTIONS.md#namin
+oAOHarnessEng.PDF.txt	609	That structured error message is not just
+oAOHarnessEng.PDF.txt	610	informative. It is actionable. The agent reads it,
+oAOHarnessEng.PDF.txt	611	understands exactly what went wrong, and fixes it
+oAOHarnessEng.PDF.txt	612	without human intervention. The linter becomes a
+oAOHarnessEng.PDF.txt	613	feedback loop, not just a gate.
+oAOHarnessEng.PDF.txt	614	
+oAOHarnessEng.PDF.txt	615	===== PAGE 34/60 =====
+oAOHarnessEng.PDF.txt	616	Without the “Fix” line, the agent knows something
+oAOHarnessEng.PDF.txt	617	is wrong but must infer the correction. With the
+oAOHarnessEng.PDF.txt	618	“Fix” line, the agent has an instruction. The
+oAOHarnessEng.PDF.txt	619	difference in first-try success rates is significant.
+oAOHarnessEng.PDF.txt	620	What Gets Mechanically Enforced
+oAOHarnessEng.PDF.txt	621	OpenAI used four categories of automated
+oAOHarnessEng.PDF.txt	622	enforcement:
+oAOHarnessEng.PDF.txt	623	Naming conventions
+oAOHarnessEng.PDF.txt	624	What it checks: Function, class, variable names
+oAOHarnessEng.PDF.txt	625	match module patterns
+oAOHarnessEng.PDF.txt	626	Agent response: Auto-rename
+oAOHarnessEng.PDF.txt	627	Architecture boundaries
+oAOHarnessEng.PDF.txt	628	What it checks: No cross-module imports that
+oAOHarnessEng.PDF.txt	629	violate dependency rules
+oAOHarnessEng.PDF.txt	630	Agent response: Restructure imports
+oAOHarnessEng.PDF.txt	631	API contract compliance
+oAOHarnessEng.PDF.txt	632	
+oAOHarnessEng.PDF.txt	633	===== PAGE 35/60 =====
+oAOHarnessEng.PDF.txt	634	What it checks: Endpoints match OpenAPI spec,
+oAOHarnessEng.PDF.txt	635	request/response schemas validated
+oAOHarnessEng.PDF.txt	636	Agent response: Fix schemas
+oAOHarnessEng.PDF.txt	637	Test coverage thresholds
+oAOHarnessEng.PDF.txt	638	What it checks: New code must include tests,
+oAOHarnessEng.PDF.txt	639	minimum coverage per module
+oAOHarnessEng.PDF.txt	640	Agent response: Generate missing tests
+oAOHarnessEng.PDF.txt	641	OpenAI harness engineering: Automated Enforcement
+oAOHarnessEng.PDF.txt	642	Each category includes machine-readable
+oAOHarnessEng.PDF.txt	643	remediation instructions. The agent runs the
+oAOHarnessEng.PDF.txt	644	
+oAOHarnessEng.PDF.txt	645	
+oAOHarnessEng.PDF.txt	646	===== PAGE 36/60 =====
+oAOHarnessEng.PDF.txt	647	linter, reads the failures, applies the fixes, and
+oAOHarnessEng.PDF.txt	648	runs the linter again. This loop continues until all
+oAOHarnessEng.PDF.txt	649	checks pass.
+oAOHarnessEng.PDF.txt	650	The humans never see the violations. They only
+oAOHarnessEng.PDF.txt	651	see the clean result. That is the whole point.
+oAOHarnessEng.PDF.txt	652	This is CI/CD principles applied to agentic
+oAOHarnessEng.PDF.txt	653	development workflows. The same logic that
+oAOHarnessEng.PDF.txt	654	makes automated test suites valuable for humans
+oAOHarnessEng.PDF.txt	655	makes automated linters with remediation
+oAOHarnessEng.PDF.txt	656	instructions valuable for agents. The mechanism is
+oAOHarnessEng.PDF.txt	657	the same. The consumer of the feedback is
+oAOHarnessEng.PDF.txt	658	different.
+oAOHarnessEng.PDF.txt	659	Source: OpenAI’s “Harness engineering” post -
+oAOHarnessEng.PDF.txt	660	rigid architectural model per business domain
+oAOHarnessEng.PDF.txt	661	with strictly validated dependency directions,
+oAOHarnessEng.PDF.txt	662	enforced via custom linters and structural tests.
+oAOHarnessEng.PDF.txt	663	The specific linter examples above are consistent
+oAOHarnessEng.PDF.txt	664	with OpenAI’s description of custom lints with
+oAOHarnessEng.PDF.txt	665	
+oAOHarnessEng.PDF.txt	666	===== PAGE 37/60 =====
+oAOHarnessEng.PDF.txt	667	remediation instructions, generalized here as a
+oAOHarnessEng.PDF.txt	668	pattern.
+oAOHarnessEng.PDF.txt	669	OpenAI harness engineering: Dependency Stack requires constraints
+oAOHarnessEng.PDF.txt	670	Harness Engineering Pattern 5 (from
+oAOHarnessEng.PDF.txt	671	OpenAI’s experiment): Throughput
+oAOHarnessEng.PDF.txt	672	Changes Merge Philosophy
+oAOHarnessEng.PDF.txt	673	This is the pattern that surprised me most, and it is
+oAOHarnessEng.PDF.txt	674	the one most teams will resist.
+oAOHarnessEng.PDF.txt	675	
+oAOHarnessEng.PDF.txt	676	
+oAOHarnessEng.PDF.txt	677	===== PAGE 38/60 =====
+oAOHarnessEng.PDF.txt	678	OpenAI harness engineering: Througput Merge Philosophy
+oAOHarnessEng.PDF.txt	679	In traditional development, blocking quality gates
+oAOHarnessEng.PDF.txt	680	make sense. You have a finite number of
+oAOHarnessEng.PDF.txt	681	developers. Each pull request gets careful review.
+oAOHarnessEng.PDF.txt	682	Merging is a deliberate, gated act. Speed matters,
+oAOHarnessEng.PDF.txt	683	but correctness matters more, because fixing a bad
+oAOHarnessEng.PDF.txt	684	merge is expensive.
+oAOHarnessEng.PDF.txt	685	When you have dozens of agents producing
+oAOHarnessEng.PDF.txt	686	hundreds of pull requests per day, that math
+oAOHarnessEng.PDF.txt	687	changes completely.
+oAOHarnessEng.PDF.txt	688	The Throughput Problem at Agentic Scale
+oAOHarnessEng.PDF.txt	689	
+oAOHarnessEng.PDF.txt	690	
+oAOHarnessEng.PDF.txt	691	===== PAGE 39/60 =====
+oAOHarnessEng.PDF.txt	692	Consider the arithmetic. A team of 5 developers
+oAOHarnessEng.PDF.txt	693	can review approximately 15 to 25 PRs per day with
+oAOHarnessEng.PDF.txt	694	reasonable thoroughness. That is the human
+oAOHarnessEng.PDF.txt	695	review ceiling.
+oAOHarnessEng.PDF.txt	696	An agentic workflow with 20 concurrent agents
+oAOHarnessEng.PDF.txt	697	can produce 40 to 80 PRs per day. You cannot scale
+oAOHarnessEng.PDF.txt	698	human review to match that rate. If every PR waits
+oAOHarnessEng.PDF.txt	699	for a human reviewer, you have recreated the exact
+oAOHarnessEng.PDF.txt	700	constraint you were trying to eliminate. The agents
+oAOHarnessEng.PDF.txt	701	can write code in parallel all day long, but if merge
+oAOHarnessEng.PDF.txt	702	is sequential and human-gated, your throughput is
+oAOHarnessEng.PDF.txt	703	limited by the speed of human review.
+oAOHarnessEng.PDF.txt	704	The New Merge Philosophy
+oAOHarnessEng.PDF.txt	705	OpenAI shifted to a fundamentally different
+oAOHarnessEng.PDF.txt	706	approach.
+oAOHarnessEng.PDF.txt	707	Merge fast. Detect fast. Fix fast.
+oAOHarnessEng.PDF.txt	708	OpenAI describes minimal blocking merge gates
+oAOHarnessEng.PDF.txt	709	and short-lived PRs. This article generalizes that
+oAOHarnessEng.PDF.txt	710	
+oAOHarnessEng.PDF.txt	711	===== PAGE 40/60 =====
+oAOHarnessEng.PDF.txt	712	into a “merge fast, detect fast, fix fast” philosophy
+oAOHarnessEng.PDF.txt	713	for high-throughput agent workflows.
+oAOHarnessEng.PDF.txt	714	Instead of trying to prevent every possible problem
+oAOHarnessEng.PDF.txt	715	before merge, they built systems to detect and
+oAOHarnessEng.PDF.txt	716	remediate problems after merge. The linters still
+oAOHarnessEng.PDF.txt	717	run pre-merge. The tests still run pre-merge. But
+oAOHarnessEng.PDF.txt	718	the review process changed from “block until a
+oAOHarnessEng.PDF.txt	719	human approves” to “merge if all automated
+oAOHarnessEng.PDF.txt	720	checks pass, flag for human review async.”
+oAOHarnessEng.PDF.txt	721	Why This Works (and Why It Only Works with the
+oAOHarnessEng.PDF.txt	722	Other Harness Patterns)
+oAOHarnessEng.PDF.txt	723	This philosophy only holds because of the previous
+oAOHarnessEng.PDF.txt	724	four patterns. The repo has complete
+oAOHarnessEng.PDF.txt	725	documentation (Pattern 1). The structure is
+oAOHarnessEng.PDF.txt	726	navigable (Pattern 2). The application is fully
+oAOHarnessEng.PDF.txt	727	observable (Pattern 3). Architectural constraints
+oAOHarnessEng.PDF.txt	728	are mechanically enforced (Pattern 4). With all
+oAOHarnessEng.PDF.txt	729	four in place, the risk of a bad automated merge is
+oAOHarnessEng.PDF.txt	730	low enough that speed wins over caution.
+oAOHarnessEng.PDF.txt	731	
+oAOHarnessEng.PDF.txt	732	===== PAGE 41/60 =====
+oAOHarnessEng.PDF.txt	733	Remove any one of those patterns and the fast-
+oAOHarnessEng.PDF.txt	734	merge philosophy becomes a liability. Agents
+oAOHarnessEng.PDF.txt	735	merging fast without observability means bad code
+oAOHarnessEng.PDF.txt	736	reaches production before anyone knows it is bad.
+oAOHarnessEng.PDF.txt	737	Agents merging fast without architectural
+oAOHarnessEng.PDF.txt	738	enforcement means module boundaries erode at
+oAOHarnessEng.PDF.txt	739	high speed.
+oAOHarnessEng.PDF.txt	740	The patterns are interdependent. They are a
+oAOHarnessEng.PDF.txt	741	system.
+oAOHarnessEng.PDF.txt	742	This does not mean abandoning quality. It means
+oAOHarnessEng.PDF.txt	743	moving quality enforcement from human gates to
+oAOHarnessEng.PDF.txt	744	automated systems. The standards do not drop.
+oAOHarnessEng.PDF.txt	745	The mechanism for enforcing them changes.
+oAOHarnessEng.PDF.txt	746	Source: OpenAI describes minimal blocking merge
+oAOHarnessEng.PDF.txt	747	gates and short-lived PRs. This article generalizes
+oAOHarnessEng.PDF.txt	748	that into a “merge fast, detect fast, fix fast”
+oAOHarnessEng.PDF.txt	749	philosophy for high-throughput agent workflows.
+oAOHarnessEng.PDF.txt	750	Also informed by Rohit’s harness engineering
+oAOHarnessEng.PDF.txt	751	
+oAOHarnessEng.PDF.txt	752	===== PAGE 42/60 =====
+oAOHarnessEng.PDF.txt	753	thread on context engineering, constraints, and
+oAOHarnessEng.PDF.txt	754	feedback loops.
+oAOHarnessEng.PDF.txt	755	The Engineering Role Transformation
+oAOHarnessEng.PDF.txt	756	Let me be direct about what I think this means for
+oAOHarnessEng.PDF.txt	757	engineering teams, because too many articles
+oAOHarnessEng.PDF.txt	758	dance around it. Based on OpenAI’s experiment
+oAOHarnessEng.PDF.txt	759	and similar agentic setups, I argue the engineer’s
+oAOHarnessEng.PDF.txt	760	role shifts from code production to harness design
+oAOHarnessEng.PDF.txt	761	and environment engineering - but this is my
+oAOHarnessEng.PDF.txt	762	interpretation, not official OpenAI guidance.
+oAOHarnessEng.PDF.txt	763	The engineers at OpenAI did not become less
+oAOHarnessEng.PDF.txt	764	skilled during this experiment. They became
+oAOHarnessEng.PDF.txt	765	differently skilled. The role shifted from
+oAOHarnessEng.PDF.txt	766	producing code to producing environments that
+oAOHarnessEng.PDF.txt	767	produce code.
+oAOHarnessEng.PDF.txt	768	
+oAOHarnessEng.PDF.txt	769	===== PAGE 43/60 =====
+oAOHarnessEng.PDF.txt	770	OpenAI harness engineering: Harness Engineer’s Clock
+oAOHarnessEng.PDF.txt	771	Here is what that looks like day to day.
+oAOHarnessEng.PDF.txt	772	Morning: Review overnight agent PRs. Check
+oAOHarnessEng.PDF.txt	773	monitoring dashboards for drift. Update the brief
+oAOHarnessEng.PDF.txt	774	map file with new context about today’s priorities.
+oAOHarnessEng.PDF.txt	775	Midday: Design a new module. Write the README,
+oAOHarnessEng.PDF.txt	776	CONVENTIONS.md, and API spec. Define the
+oAOHarnessEng.PDF.txt	777	linter rules. Set up the isolated test environment.
+oAOHarnessEng.PDF.txt	778	The agent will do the implementation.
+oAOHarnessEng.PDF.txt	779	Afternoon: Investigate a failure pattern. Three
+oAOHarnessEng.PDF.txt	780	agents hit the same error. Trace it to a missing
+oAOHarnessEng.PDF.txt	781	
+oAOHarnessEng.PDF.txt	782	
+oAOHarnessEng.PDF.txt	783	===== PAGE 44/60 =====
+oAOHarnessEng.PDF.txt	784	convention in the billing module’s documentation.
+oAOHarnessEng.PDF.txt	785	Add the convention. Write a linter rule to catch it.
+oAOHarnessEng.PDF.txt	786	Watch agents self-correct on the next run.
+oAOHarnessEng.PDF.txt	787	End of day: Review metrics. How many PRs passed
+oAOHarnessEng.PDF.txt	788	first try? How many needed linter iterations?
+oAOHarnessEng.PDF.txt	789	Where are agents spending the most cycles? What
+oAOHarnessEng.PDF.txt	790	documentation gaps are causing the most failures?
+oAOHarnessEng.PDF.txt	791	OpenAI harness engineering: Activities
+oAOHarnessEng.PDF.txt	792	Notice what is missing from that schedule. Coding.
+oAOHarnessEng.PDF.txt	793	The engineers are designing, reviewing,
+oAOHarnessEng.PDF.txt	794	investigating, and improving, but they are not
+oAOHarnessEng.PDF.txt	795	writing code. They are building and maintaining
+oAOHarnessEng.PDF.txt	796	the harness.
+oAOHarnessEng.PDF.txt	797	
+oAOHarnessEng.PDF.txt	798	
+oAOHarnessEng.PDF.txt	799	===== PAGE 45/60 =====
+oAOHarnessEng.PDF.txt	800	This is not a theoretical future. OpenAI
+oAOHarnessEng.PDF.txt	801	demonstrated it at scale. Over five months. With
+oAOHarnessEng.PDF.txt	802	more than a million lines of working code.
+oAOHarnessEng.PDF.txt	803	What This Means for the Harness
+oAOHarnessEng.PDF.txt	804	Engineering Framework
+oAOHarnessEng.PDF.txt	805	Rohit’s harness engineering framework maps to
+oAOHarnessEng.PDF.txt	806	the OpenAI experiment almost perfectly. Each of
+oAOHarnessEng.PDF.txt	807	his layers has a direct analog:
+oAOHarnessEng.PDF.txt	808	Context Engineering: Repository-as-truth + brief
+oAOHarnessEng.PDF.txt	809	map files
+oAOHarnessEng.PDF.txt	810	Architectural Constraints: Custom linters with
+oAOHarnessEng.PDF.txt	811	remediation instructions
+oAOHarnessEng.PDF.txt	812	Garbage Collection: Post-merge monitoring +
+oAOHarnessEng.PDF.txt	813	agent auto-fix
+oAOHarnessEng.PDF.txt	814	Feedback Loops: Linter iteration cycles +
+oAOHarnessEng.PDF.txt	815	observability stack
+oAOHarnessEng.PDF.txt	816	
+oAOHarnessEng.PDF.txt	817	===== PAGE 46/60 =====
+oAOHarnessEng.PDF.txt	818	Observability: Full traces, structured logs,
+oAOHarnessEng.PDF.txt	819	metrics dashboards
+oAOHarnessEng.PDF.txt	820	The OpenAI experiment validates the framework
+oAOHarnessEng.PDF.txt	821	empirically. You do not need to guess whether
+oAOHarnessEng.PDF.txt	822	harness engineering works at scale. You can point
+oAOHarnessEng.PDF.txt	823	to a million lines of agent-written code and say:
+oAOHarnessEng.PDF.txt	824	this is what happens when you take the harness
+oAOHarnessEng.PDF.txt	825	seriously.
+oAOHarnessEng.PDF.txt	826	OpenAI harness engineering: How does this map to Rohit’s Harness
+oAOHarnessEng.PDF.txt	827	Framework
+oAOHarnessEng.PDF.txt	828	
+oAOHarnessEng.PDF.txt	829	
+oAOHarnessEng.PDF.txt	830	===== PAGE 47/60 =====
+oAOHarnessEng.PDF.txt	831	Practical Takeaways
+oAOHarnessEng.PDF.txt	832	If you are building agentic development
+oAOHarnessEng.PDF.txt	833	workflows, here are five concrete actions to take
+oAOHarnessEng.PDF.txt	834	this week.
+oAOHarnessEng.PDF.txt	835	1. Audit your repo for invisible knowledge. Walk
+oAOHarnessEng.PDF.txt	836	through your onboarding docs. Everything a new
+oAOHarnessEng.PDF.txt	837	hire needs to learn should be in the repository. If it
+oAOHarnessEng.PDF.txt	838	is in Slack, Confluence, or someone’s head, move it
+oAOHarnessEng.PDF.txt	839	to the repo. Quantify the gap: how many things
+oAOHarnessEng.PDF.txt	840	would break if you hired an agent today with only
+oAOHarnessEng.PDF.txt	841	your repo as context?
+oAOHarnessEng.PDF.txt	842	2. Create a brief map file. Start with a single
+oAOHarnessEng.PDF.txt	843	BRIEF.md at the root. List every module, its
+oAOHarnessEng.PDF.txt	844	purpose, its current state, and where to find
+oAOHarnessEng.PDF.txt	845	deeper documentation. Keep it under 200 lines. If
+oAOHarnessEng.PDF.txt	846	you cannot summarize your codebase in 200 lines,
+oAOHarnessEng.PDF.txt	847	the problem is not the line limit.
+oAOHarnessEng.PDF.txt	848	3. Add remediation instructions to your linters.
+oAOHarnessEng.PDF.txt	849	For every lint rule, add a “Fix” line that tells the
+oAOHarnessEng.PDF.txt	850	
+oAOHarnessEng.PDF.txt	851	===== PAGE 48/60 =====
+oAOHarnessEng.PDF.txt	852	agent exactly what to do. “Naming violation” is not
+oAOHarnessEng.PDF.txt	853	enough. “Rename processInvoice to
+oAOHarnessEng.PDF.txt	854	process_invoice per
+oAOHarnessEng.PDF.txt	855	modules/billing/CONVENTIONS.md#naming" is
+oAOHarnessEng.PDF.txt	856	what agents need. The time investment here pays
+oAOHarnessEng.PDF.txt	857	back immediately in reduced linter iteration
+oAOHarnessEng.PDF.txt	858	cycles.
+oAOHarnessEng.PDF.txt	859	4. Set up isolated dev instances. Even if you start
+oAOHarnessEng.PDF.txt	860	with Docker Compose, give each agent session its
+oAOHarnessEng.PDF.txt	861	own environment. Shared environments create
+oAOHarnessEng.PDF.txt	862	race conditions that waste agent cycles and
+oAOHarnessEng.PDF.txt	863	produce confusing failures. Isolation is table stakes
+oAOHarnessEng.PDF.txt	864	for parallel agent work.
+oAOHarnessEng.PDF.txt	865	5. Rethink your merge gates. If automated checks
+oAOHarnessEng.PDF.txt	866	are comprehensive enough, consider reducing
+oAOHarnessEng.PDF.txt	867	blocking human review to high-risk changes only.
+oAOHarnessEng.PDF.txt	868	Let agents merge low-risk, well-tested changes
+oAOHarnessEng.PDF.txt	869	automatically. Track the percentage of agent PRs
+oAOHarnessEng.PDF.txt	870	that require human intervention. Drive that
+oAOHarnessEng.PDF.txt	871	
+oAOHarnessEng.PDF.txt	872	===== PAGE 49/60 =====
+oAOHarnessEng.PDF.txt	873	number down by improving the harness, not by
+oAOHarnessEng.PDF.txt	874	adding more human review.
+oAOHarnessEng.PDF.txt	875	Discussion Questions
+oAOHarnessEng.PDF.txt	876	If your team adopted zero-manual-code
+oAOHarnessEng.PDF.txt	877	tomorrow, which of the five harness engineering
+oAOHarnessEng.PDF.txt	878	patterns would be the hardest to implement, and
+oAOHarnessEng.PDF.txt	879	why?
+oAOHarnessEng.PDF.txt	880	What knowledge currently lives outside your
+oAOHarnessEng.PDF.txt	881	repository that would break agents if they had to
+oAOHarnessEng.PDF.txt	882	rely only on your codebase?
+oAOHarnessEng.PDF.txt	883	Does moving quality enforcement from human
+oAOHarnessEng.PDF.txt	884	gates to mechanical linters raise the floor, lower
+oAOHarnessEng.PDF.txt	885	the ceiling, or both, for code quality in your
+oAOHarnessEng.PDF.txt	886	organization?
+oAOHarnessEng.PDF.txt	887	
+oAOHarnessEng.PDF.txt	888	===== PAGE 50/60 =====
+oAOHarnessEng.PDF.txt	889	OpenAI harness engineering: Moving from coding to engineering
+oAOHarnessEng.PDF.txt	890	factories
+oAOHarnessEng.PDF.txt	891	What Comes Next
+oAOHarnessEng.PDF.txt	892	In , we zoom out from individual implementations
+oAOHarnessEng.PDF.txt	893	to the full ecosystem. The agent harness space has
+oAOHarnessEng.PDF.txt	894	organized itself into a seven-layer taxonomy, from
+oAOHarnessEng.PDF.txt	895	human oversight platforms down to individual
+oAOHarnessEng.PDF.txt	896	coding agents. Understanding where each tool fits
+oAOHarnessEng.PDF.txt	897	in that taxonomy is the difference between
+oAOHarnessEng.PDF.txt	898	assembling a coherent stack and buying seven
+oAOHarnessEng.PDF.txt	899	
+oAOHarnessEng.PDF.txt	900	
+oAOHarnessEng.PDF.txt	901	===== PAGE 51/60 =====
+oAOHarnessEng.PDF.txt	902	tools that all do the same thing while leaving
+oAOHarnessEng.PDF.txt	903	critical gaps in your pipeline.
+oAOHarnessEng.PDF.txt	904	Rick Hightower is a software architect and technical
+oAOHarnessEng.PDF.txt	905	writer who has been building production systems since
+oAOHarnessEng.PDF.txt	906	before “AI engineering” was a job title. He writes about
+oAOHarnessEng.PDF.txt	907	agent engineering, harness design, and the tooling that
+oAOHarnessEng.PDF.txt	908	makes autonomous software development actually
+oAOHarnessEng.PDF.txt	909	work.
+oAOHarnessEng.PDF.txt	910	Sources and Further Reading
+oAOHarnessEng.PDF.txt	911	Primary source - OpenAI: Ryan Lopopolo,
+oAOHarnessEng.PDF.txt	912	“Harness engineering: leveraging Codex in an
+oAOHarnessEng.PDF.txt	913	agent-first world” (Feb 2026). The core source for
+oAOHarnessEng.PDF.txt	914	the experiment, numbers, and patterns.
+oAOHarnessEng.PDF.txt	915	https://openai.com/index/harness-engineering/
+oAOHarnessEng.PDF.txt	916	OpenAI talk: Bill Chen and Brian Fioca, “Future-
+oAOHarnessEng.PDF.txt	917	Proof Coding Agents” - agentic coding workflows
+oAOHarnessEng.PDF.txt	918	
+oAOHarnessEng.PDF.txt	919	===== PAGE 52/60 =====
+oAOHarnessEng.PDF.txt	920	and infra for coding agents.
+oAOHarnessEng.PDF.txt	921	https://www.youtube.com/watch?v=wVl6ZjELpBk
+oAOHarnessEng.PDF.txt	922	Rohit’s harness engineering thread - context
+oAOHarnessEng.PDF.txt	923	engineering, constraints, garbage-collection, and
+oAOHarnessEng.PDF.txt	924	feedback loops (the framework this series is based
+oAOHarnessEng.PDF.txt	925	on).
+oAOHarnessEng.PDF.txt	926	https://x.com/rohit4verse/status/2033945654377283
+oAOHarnessEng.PDF.txt	927	643
+oAOHarnessEng.PDF.txt	928	Rohit’s earlier thread on 100x engineer / agent
+oAOHarnessEng.PDF.txt	929	workflows (additional context).
+oAOHarnessEng.PDF.txt	930	https://x.com/rohit4verse/status/2020501497377968
+oAOHarnessEng.PDF.txt	931	397
+oAOHarnessEng.PDF.txt	932	Secondary explainer - Tecyfy: “Harness
+oAOHarnessEng.PDF.txt	933	Engineering: Building with Zero Manual Code” -
+oAOHarnessEng.PDF.txt	934	walks through patterns similar to this article and
+oAOHarnessEng.PDF.txt	935	references the OpenAI post.
+oAOHarnessEng.PDF.txt	936	Deep dive: “Beyond Prompts and Context: Harness
+oAOHarnessEng.PDF.txt	937	Engineering for AI Agents” - deeper exploration of
+oAOHarnessEng.PDF.txt	938	
+oAOHarnessEng.PDF.txt	939	===== PAGE 53/60 =====
+oAOHarnessEng.PDF.txt	940	harness engineering concepts mapped to OpenAI’s
+oAOHarnessEng.PDF.txt	941	writeup.
+oAOHarnessEng.PDF.txt	942	GTCode: “Harness Engineering: The Discipline of
+oAOHarnessEng.PDF.txt	943	Building Systems That…” - solid breakdown of per-
+oAOHarnessEng.PDF.txt	944	worktree booting and legibility patterns drawn
+oAOHarnessEng.PDF.txt	945	directly from the OpenAI post.
+oAOHarnessEng.PDF.txt	946	https://gtcode.com/articles/harness-engineering/
+oAOHarnessEng.PDF.txt	947	Codenote: “Harness Engineering - The New
+oAOHarnessEng.PDF.txt	948	Discipline Powering Software in the AI Agent Era” -
+oAOHarnessEng.PDF.txt	949	close match to the three Application Legibility
+oAOHarnessEng.PDF.txt	950	bullets (CDP, per-worktree, LogQL/PromQL), useful
+oAOHarnessEng.PDF.txt	951	corroboration for those specifics.
+oAOHarnessEng.PDF.txt	952	https://codenote.net/en/posts/harness-
+oAOHarnessEng.PDF.txt	953	engineering-ai-agent-era/
+oAOHarnessEng.PDF.txt	954	Related Harness Engineering Articles
+oAOHarnessEng.PDF.txt	955	2026 – 04 – 04 — OpenAI’s Harness Engineering
+oAOHarnessEng.PDF.txt	956	Experiment: Zero Manually-Written Code
+oAOHarnessEng.PDF.txt	957	2026 – 03 – 29 — Anthropic’s Harness Engineering:
+oAOHarnessEng.PDF.txt	958	Two Agents, One Feature List, Zero Context
+oAOHarnessEng.PDF.txt	959	
+oAOHarnessEng.PDF.txt	960	===== PAGE 54/60 =====
+oAOHarnessEng.PDF.txt	961	Overflow
+oAOHarnessEng.PDF.txt	962	2026 – 03 – 27 — The $9 Disaster: What Anthropic’s
+oAOHarnessEng.PDF.txt	963	Harness Design Paper Teaches Us About
+oAOHarnessEng.PDF.txt	964	Building Autonomous AI Applications
+oAOHarnessEng.PDF.txt	965	2026 – 03 – 20 — LangChain’s Harness Engineering:
+oAOHarnessEng.PDF.txt	966	From Top 30 to Top 5 on Terminal Bench 2.0
+oAOHarnessEng.PDF.txt	967	2026 – 03 – 19 — Beyond the AI Coding Hangover:
+oAOHarnessEng.PDF.txt	968	How Harness Engineering Prevents the Next
+oAOHarnessEng.PDF.txt	969	Outage
+oAOHarnessEng.PDF.txt	970	2026 – 03 – 18 — LangChain Deep Agents: Harness
+oAOHarnessEng.PDF.txt	971	and Context Engineering: Memory, Skills, and
+oAOHarnessEng.PDF.txt	972	Security
+oAOHarnessEng.PDF.txt	973	2026 – 03 – 17 — Harness Engineering vs Context
+oAOHarnessEng.PDF.txt	974	Engineering: The Model is the CPU, the Harness
+oAOHarnessEng.PDF.txt	975	is the OS
+oAOHarnessEng.PDF.txt	976	HarnessEngineering #AgenticDevelopment
+oAOHarnessEng.PDF.txt	977	#CodingAgents #AIEngineering
+oAOHarnessEng.PDF.txt	978	#SoftwareEngineering #OpenAI #DevOps
+oAOHarnessEng.PDF.txt	979	
+oAOHarnessEng.PDF.txt	980	===== PAGE 55/60 =====
+oAOHarnessEng.PDF.txt	981	Rick Hightower is a hands-on agent architect, AI agent
+oAOHarnessEng.PDF.txt	982	engineer and technical writer who builds with
+oAOHarnessEng.PDF.txt	983	LangGraph, Claude Agent SDK, CrewAI, and more. He
+oAOHarnessEng.PDF.txt	984	was once wrote the fastest JSON parser for the JVM
+oAOHarnessEng.PDF.txt	985	because a co-worker bet him $100 dollars that he
+oAOHarnessEng.PDF.txt	986	couldn’t. He loves computer science and building
+oAOHarnessEng.PDF.txt	987	systems.
+oAOHarnessEng.PDF.txt	988	He created skilz, the universal agent skill installer,
+oAOHarnessEng.PDF.txt	989	supporting 30+ coding agents including Claude
+oAOHarnessEng.PDF.txt	990	Code, Gemini, Copilot, and Cursor, and co-founded
+oAOHarnessEng.PDF.txt	991	the world’s largest agentic skill marketplace.
+oAOHarnessEng.PDF.txt	992	Connect with Rick Hightower on LinkedIn or
+oAOHarnessEng.PDF.txt	993	Medium. Check out SpillWave, your source for AI
+oAOHarnessEng.PDF.txt	994	expertise.
+oAOHarnessEng.PDF.txt	995	Rick has been actively developing generative AI
+oAOHarnessEng.PDF.txt	996	systems, agents, and agentic workflows for years.
+oAOHarnessEng.PDF.txt	997	He is the author of numerous agentic frameworks
+oAOHarnessEng.PDF.txt	998	and developer tools and brings deep practical
+oAOHarnessEng.PDF.txt	999	
+oAOHarnessEng.PDF.txt	1000	===== PAGE 56/60 =====
+oAOHarnessEng.PDF.txt	1001	expertise to teams looking to adopt AI. He enjoys
+oAOHarnessEng.PDF.txt	1002	writing about himself in the 3rd person.
+oAOHarnessEng.PDF.txt	1003	Written by Rick Hightower
+oAOHarnessEng.PDF.txt	1004	2.5K followers · 75 following
+oAOHarnessEng.PDF.txt	1005	2026 Agent Reliability Playbook –  Free Download DM
+oAOHarnessEng.PDF.txt	1006	me 'PLAYBOOK' for the full version + personalized 15-
+oAOHarnessEng.PDF.txt	1007	minute audit of your current agent setup (no pitch).
+oAOHarnessEng.PDF.txt	1008	Following
+oAOHarnessEng.PDF.txt	1009	No responses yet
+oAOHarnessEng.PDF.txt	1010	To respond to this story,
+oAOHarnessEng.PDF.txt	1011	get the free Medium app.
+oAOHarnessEng.PDF.txt	1012	Harness Engineering AI Ai Engineering OpenAI
+oAOHarnessEng.PDF.txt	1013	
+oAOHarnessEng.PDF.txt	1014	
+oAOHarnessEng.PDF.txt	1015	===== PAGE 57/60 =====
+oAOHarnessEng.PDF.txt	1016	More from Rick Hightower
+oAOHarnessEng.PDF.txt	1017	Claude Certified
+oAOHarnessEng.PDF.txt	1018	A hit tP tiA full-length CCA practice
+oAOHarnessEng.PDF.txt	1019	 i ll5d i
+oAOHarnessEng.PDF.txt	1020	6d ago
+oAOHarnessEng.PDF.txt	1021	In by
+oAOHarnessEng.PDF.txt	1022	Is MCP Dead? The
+oAOHarnessEng.PDF.txt	1023	C t tC i i Th tNavigating the Challenges of
+oAOHarnessEng.PDF.txt	1024	MCP F Ad ti t
+oAOHarnessEng.PDF.txt	1025	6d ago
+oAOHarnessEng.PDF.txt	1026	RickHightower
+oAOHarnessEng.PDF.txt	1027	 TowardsAI RickHightower
+oAOHarnessEng.PDF.txt	1028	
+oAOHarnessEng.PDF.txt	1029	===== PAGE 58/60 =====
+oAOHarnessEng.PDF.txt	1030	See all from Rick Hightower
+oAOHarnessEng.PDF.txt	1031	Recommended from Medium
+oAOHarnessEng.PDF.txt	1032	Claude Code 2026: The
+oAOHarnessEng.PDF.txt	1033	D il O ti S tThe exact 5-part model, 10-
+oAOHarnessEng.PDF.txt	1034	 i t ti l h
+oAOHarnessEng.PDF.txt	1035	1d ago
+oAOHarnessEng.PDF.txt	1036	In by
+oAOHarnessEng.PDF.txt	1037	OpenCode Agents:
+oAOHarnessEng.PDF.txt	1038	A th P tht S lfRemember my morning hike
+oAOHarnessEng.PDF.txt	1039	 h Idi t t dCl d C d
+oAOHarnessEng.PDF.txt	1040	Sep 17, 2025
+oAOHarnessEng.PDF.txt	1041	In by
+oAOHarnessEng.PDF.txt	1042	RickHightower
+oAOHarnessEng.PDF.txt	1043	 SpillwaveSolu… RickHight…
+oAOHarnessEng.PDF.txt	1044	LevelUpCodi… FareedKh…
+oAOHarnessEng.PDF.txt	1045	 BaluKosuri
+oAOHarnessEng.PDF.txt	1046	
+oAOHarnessEng.PDF.txt	1047	===== PAGE 59/60 =====
+oAOHarnessEng.PDF.txt	1048	Building Claude Code
+oAOHarnessEng.PDF.txt	1049	 ithHMulti-agents, MCP, skills
+oAOHarnessEng.PDF.txt	1050	 t t t i li
+oAOHarnessEng.PDF.txt	1051	3d ago
+oAOHarnessEng.PDF.txt	1052	I Turned Andrej
+oAOHarnessEng.PDF.txt	1053	K th ’By Balasubramanyam Kosuri
+oAOHarnessEng.PDF.txt	1054	Mar 21
+oAOHarnessEng.PDF.txt	1055	Cursor 3 Is Not an IDE
+oAOHarnessEng.PDF.txt	1056	U d t It’ B tTh tWhy Cursor built a new
+oAOHarnessEng.PDF.txt	1057	i t f f t h h t
+oAOHarnessEng.PDF.txt	1058	6d ago
+oAOHarnessEng.PDF.txt	1059	In by
+oAOHarnessEng.PDF.txt	1060	Google’s Gemma 4
+oAOHarnessEng.PDF.txt	1061	Ch E thi fSameApache 2.0. Runs on
+oAOHarnessEng.PDF.txt	1062	 l t B t d l 20
+oAOHarnessEng.PDF.txt	1063	6d ago
+oAOHarnessEng.PDF.txt	1064	HanHELOIRYAN,Ph.D. ☕
+oAOHarnessEng.PDF.txt	1065	 TowardsDeepL… SumitPa…
+oAOHarnessEng.PDF.txt	1066	
+oAOHarnessEng.PDF.txt	1067	===== PAGE 60/60 =====
+oAOHarnessEng.PDF.txt	1068	See more recommendations
+oAOHarnessEng.PDF.txt	1069	In by
+oAOHarnessEng.PDF.txt	1070	9 Agent Skills Repos I
+oAOHarnessEng.PDF.txt	1071	Ti d(A dN IC ’Agent skills are becoming the
+oAOHarnessEng.PDF.txt	1072	 ld t d df b ildi
+oAOHarnessEng.PDF.txt	1073	3d ago
+oAOHarnessEng.PDF.txt	1074	What is Claw Code?
+oAOHarnessEng.PDF.txt	1075	The star counter is not the
+oAOHarnessEng.PDF.txt	1076	 t Th t i h tthi
+oAOHarnessEng.PDF.txt	1077	4d ago
+oAOHarnessEng.PDF.txt	1078	AISoftwareEngi… JoeNje…
+oAOHarnessEng.PDF.txt	1079	 RezaRezvani
+ccManagedAgents.PDF.error.txt	1	Unable to write data to the transport connection: An existing connection was forcibly closed by the remote host..
+oAOHarnessEng.PDF.error.txt	1	Unable to write data to the transport connection: An existing connection was forcibly closed by the remote host..

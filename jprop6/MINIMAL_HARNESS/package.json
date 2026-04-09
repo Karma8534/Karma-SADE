@@ -1,0 +1,17 @@
+{
+  "name": "jprop6-minimal-harness",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Foundation-only Electron harness scaffold for jprop6",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "check:syntax": "node --check main.js && node --check preload.js && node --check scripts/proof_check.js && node --check tests/contract_check.js && node --check tests/break_check.js",
+    "check:proof": "node scripts/proof_check.js",
+    "check:contract": "node tests/contract_check.js",
+    "check:break": "node tests/break_check.js"
+  },
+  "devDependencies": {
+    "electron": "31.7.7"
+  }
+}

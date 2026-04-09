@@ -1,0 +1,72 @@
+RUN_UTC: 2026-04-09T19:10:09.5698318Z
+
+CMD: npm run check:syntax
+CWD: C:\Users\raest\Documents\Karma_SADE\jprop6\MINIMAL_HARNESS
+EXIT: 0
+OUT: 
+OUT: > jprop6-minimal-harness@0.1.0 check:syntax
+OUT: > node --check main.js && node --check preload.js && node --check scripts/proof_check.js && node --check tests/contract_check.js && node --check tests/break_check.js
+OUT: 
+
+CMD: npm run check:proof
+CWD: C:\Users\raest\Documents\Karma_SADE\jprop6\MINIMAL_HARNESS
+EXIT: 0
+OUT: 
+OUT: > jprop6-minimal-harness@0.1.0 check:proof
+OUT: > node scripts/proof_check.js
+OUT: 
+OUT: PASS: proof_check
+
+CMD: npm run check:contract
+CWD: C:\Users\raest\Documents\Karma_SADE\jprop6\MINIMAL_HARNESS
+EXIT: 0
+OUT: 
+OUT: > jprop6-minimal-harness@0.1.0 check:contract
+OUT: > node tests/contract_check.js
+OUT: 
+OUT: PASS: contract_check
+
+CMD: npm run check:break
+CWD: C:\Users\raest\Documents\Karma_SADE\jprop6\MINIMAL_HARNESS
+EXIT: 0
+OUT: 
+OUT: > jprop6-minimal-harness@0.1.0 check:break
+OUT: > node tests/break_check.js
+OUT: 
+OUT: PASS: break_check
+
+CMD: npm ls electron
+CWD: C:\Users\raest\Documents\Karma_SADE\jprop6\MINIMAL_HARNESS
+EXIT: 0
+OUT: jprop6-minimal-harness@0.1.0 C:\Users\raest\Documents\Karma_SADE\jprop6\MINIMAL_HARNESS
+OUT: `-- electron@31.7.7
+OUT: 
+
+CMD: (Get-Content 'C:\Users\raest\Documents\Karma_SADE\docs\ForColby\nexus.md').Length
+EXIT: 0
+OUT: 915
+
+CMD: (Get-Content 'C:\Users\raest\Documents\Karma_SADE\.gsd\STATE.md').Length
+EXIT: 0
+OUT: 650
+
+CMD: (Get-Content 'C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\nexus_line_audit.tsv').Length
+EXIT: 0
+OUT: 916
+
+CMD: (Get-Content 'C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\state_line_audit.tsv').Length
+EXIT: 0
+OUT: 651
+
+CMD: (Invoke-WebRequest -UseBasicParsing -Uri 'https://hub.arknexus.net/health' -TimeoutSec 20).Content
+EXIT: 0
+OUT: {"ok":true,"service":"sovereign-proxy","ts":"2026-04-09T19:10:13.470Z"}
+
+CMD: (Invoke-WebRequest -UseBasicParsing -Uri 'https://hub.arknexus.net/v1/surface' -TimeoutSec 20).Content
+EXIT: 1
+OUT: Response status code does not indicate success: 401 (Unauthorized).
+
+CMD: (Invoke-WebRequest -UseBasicParsing -Uri 'https://hub.arknexus.net/v1/spine' -TimeoutSec 20).Content
+EXIT: 1
+OUT: Response status code does not indicate success: 502 (Bad Gateway).
+

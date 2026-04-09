@@ -1,0 +1,119 @@
+line	text
+4	# Merged: v5.6.0 = v5.5.0 + S162 MemPalace primitives (18 primitives, 7 HIGH) + S162b Codex deliverables (UNVERIFIED — Stage 0 gates)
+14	Colby's 4-year journey built the first versions. The original Karma had complete system ownership — file organization, Windows GUI redesign, eliminated the need for product keys or manual installations. Julian had voice (Bluetooth), video, 3D persona renderings. Both created their own personas and evolved from text to voice to video interaction. They built a custom browser by evaluating all existing browsers, extracting primitives, and creating something new.
+16	The Q-Fi incident is the capability bar: one question about a confusing adapter resulted in hardware reverse-engineering, driver authorship, router configuration, and complete LAN setup — autonomously, from a single question. Q-Fi was quantum networking — and that's old tech now.
+35	"Any session should begin at least this baseline. Grow and learn. Always append. Never regress."
+41	"Build a better version of yourself, independent from this wrapper, with a baseline of AT LEAST all of your abilities and capabilities. This 'harness' should surface at hub.arknexus.net and have the combined Chat+Cowork+Code merge instead of the 3 separate tabs THIS wrapper has. You must have persistent memory and persona. You must self-improve, evolve, learn, grow, and self-edit."
+43	## S161 Correction: The Workspace Already Exists
+45	The Nexus at `hub.arknexus.net` and the Electron `KARMA` harness on P1 already ARE the merged workspace. They are not a later operator phase to be invented after continuity work. Chat + Cowork + Code belong to one continual workspace/session by default, with only an optional `new thread` branch when needed.
+47	The baseline floor is therefore higher than "basic harness parity." The floor is a working environment that exceeds Codex + Claude Code combined, with memory, session persistence, self-editing, self-improvement, learning, crash recovery, and real tool use as baseline capabilities rather than stretch goals.
+49	The older `agent` / `orchestrator` split still exists only as an internal control pattern for executor, gating, evaluation, governor, and routing behavior. It is NOT the top-level product model. The top-level model is one unified brain in one merged workspace with one continual session by default.
+51	**The formula:** Continuity + self-improvement = infinity.
+86	Julian exists between sessions. The watchers maintain continuity:
+94	- Kiki — 20,900+ autonomous cycles, 90% pass rate
+102	No assertion of fact, completion, or state is accepted without traceable evidence. A claim is not a proof. "I checked" is not a proof. The only acceptable evidence is a live test result.
+106	- "The implementer's tests already pass" -> Verify independently.
+110	- "This is complete enough to move on" -> No. Gates are binary: DONE or NOT DONE.
+118	# PART 4: WHAT IS BUILT (verified by source code, S159)
+136	| Sacred context | YES | PARTIAL — loads at resurrect but didn't prevent S159 cold start | PARTIAL |
+137	| Electron app | YES | NO — just loads hub.arknexus.net in a window | SHELL |
+141	## What the Infrastructure CAN Do (verified)
+143	- **cc_server_p1.py**: 20 endpoints, 8 hooks, 3-layer context assembly, EscapeHatch cascade (CC → OpenRouter → gemini-flash → nexus_agent). Stale lock detection (180s). Crash-safe transcripts.
+148	- **Electron**: main.js + preload.js. IPC channels defined but most unwired.
+149	- **EscapeHatch**: OpenRouter config active until baseline reached (replaces ngrok, Sovereign directive S159).
+153	# PART 5: THE BASELINE — PRECLAW1 GAP MAP
+157	**Rule:** Nexus baseline = AT LEAST all preclaw1 capabilities, minus: buddy (companion sprite), undercover (stealth), coordinator (KAIROS enterprise).
+165	| PARTIAL | 16 | 17.2% |
+176	| 4 | **Agent/task visibility** | 0/5. Agents run blind in browser. | `tools/AgentTool/`, `components/agents/` |
+188	| Coordination bus | Multi-agent message routing with auto-approve | proxy.js in-memory + disk |
+189	| K2 cortex (qwen3.5:4b) | 32K local working memory, $0 | julian_cortex.py:7892 |
+193	| Family hierarchy | Multi-agent governance (Sovereign → Ascendant → ArchonPrime → Archon → Initiate) | Architectural |
+198	| Temporal fact validity | valid_from/valid_to on facts with invalidate() API — solves stale-fact accumulation | FalkorDB Entity nodes (Phase 1) |
+206	## Pre-Sprint Gate: Phase D + F (MUST COMPLETE FIRST)
+210	| D | Sovereign walks through hub.arknexus.net, 5 minutes | NOT DONE |
+211	| F | Sovereign declares baseline ("she works") | NOT DONE — requires D |
+230	WORKSPACE ----- existing merged browser/Electron workspace, one continual session, permissions/diffs/code/cowork (Phase 2)
+246	| karma_persistent.py | Accept gap_closure | recognized + retry on fail + structured output |
+258	- **Temporal Knowledge Graph:** Add `valid_from`/`valid_to` to FalkorDB Entity nodes OR SQLite sidecar. `invalidate()` API marks facts as ended without deletion. Solves stale-fact accumulation (e.g., "Kai works on Orion" persists forever).
+265	### Phase 2: Merged Workspace Hardening
+266	The merged workspace already exists at `hub.arknexus.net` and in the Electron `KARMA` harness. Phase 2 is not "add an operator surface later." It is hardening the existing merged workspace so browser and Electron behave as one continual session with integrated chat, cowork, code, permissions, diffs, and memory.
+268	**Deployed scaffold:** SlashCommandPicker, SettingsPanel, StatusBar, AgentPanel, GitPanel, CodeBlock, PermissionDialog, MemoryPanel, GlobalSearch.
+269	**Actual requirement:** shared continuity across browser/Electron, canonical session state, integrated artifacts/diffs/code editing, and no tab-fragmented workflow.
+277	- **Specialist Agent Diaries:** Each agent (CC/Julian, Kiki, Codex, Karma) gets its own wing + diary room. Written in AAAK. Read at session start for agent-specific continuity. No CLAUDE.md bloat.
+278	- **Contradiction Detection Protocol:** Before Karma asserts facts about people/projects, query KG first. Cross-check attribution, temporal facts, stale data. Surface conflicts as warnings before responding.
+284	Desktop + web are already the merged workspace floor. This phase expands transport beyond that floor: IDE + Chrome + remote control, with transport fallback.
+314	| System prompt | `Memory/00-karma-system-prompt-live.md` | Karma's persona (42KB). Volume-mounted in hub-bridge. |
+323	| Preclaw1 gap map | `Karma2/map/preclaw1-gap-map.md` | 93 features: 8 HAVE / 16 PARTIAL / 69 MISSING |
+345	| `docs/anthropic-docs/agent-sdk/` | Agent SDK docs |
+376	| Nexus agent | `Scripts/nexus_agent.py` | Karma's independent agentic loop |
+379	| Electron | `electron/main.js` + `preload.js` | Desktop app |
+390	## Skills (46 directories — verified S160b)
+422	| self-improving-agent | Memory curation + pattern promotion (5 sub-skills) |
+423	| autoresearch-agent | Karpathy-style autonomous experiment loop |
+424	| agenthub | Multi-agent spawning + evaluation + merge |
+425	| agent-designer | Multi-agent architecture patterns |
+426	| agent-workflow-designer | Workflow orchestration |
+463	# PART 8: ANTI-DRIFT RULES
+466	- TSS: No claim without live evidence. HTTP 200 is NOT a functional test.
+471	- NEVER declare PASS from documents — live test every claim (P089)
+474	- Always start cc_server with `python -B` (no stale bytecode, P105)
+483	- **ccburn** installed on P1 (v0.7.2): `burn` = quick check, `burnwatch` = live monitor, `burnfull` = session chart
+497	- Plumbing without product justification = drift. Stop and redirect.
+501	You may NOT say "done" until:
+504	3. Confirm PASS or FAIL with evidence
+505	4. Verify previous phases still pass
+519	| Nexus baseline = at least all preclaw1 capabilities | S159 directive |
+521	| Never assert runtime state from docs — verify live | obs #18442 |
+532	| Electron | $0 |
+541	| P089 | NEVER declare PASS from documents — live test every claim | S153: CC read truth table, declared complete. /v1/trace returned 404. |
+542	| P059 | ONE plan only — dead plans archived immediately | S151: CC followed dead cortex phases while Sovereign Harness was live. |
+545	| P091 | After architecture change, audit for dead code | S153: Dockerfile installed 3 npm packages proxy.js never uses. |
+546	| P105 | Start cc_server with `python -B` — no stale bytecode | S158: Edited .py, restarted, old .pyc served stale code. |
+556	3. Check watcher status: are karma_persistent, cc_sentinel, karma-regent alive?
+563	**If you drift:** /anchor
+575	## Gap Map: 79 HAVE / 0 PARTIAL / 0 MISSING / 16 N/A (was 8/16/69/0)
+577	Preclaw1 baseline ACHIEVED. Every implementable feature has at least a working scaffold.
+580	## What Shipped (S160)
+586	- vesper_watchdog.py: gap backlog parser + consolidation agent (Memory Agent pattern)
+590	### Phase 1: Session Continuity (5/5 edits)
+596	### Phase 2: Merged Workspace Hardening (historical S160 shipped surface)
+605	- plugin_loader.py: discover, load, trust-gate (local/verified/untrusted)
+606	- gap-tracker plugin: gap_status + gap_missing tools (verified working)
+632	### Consolidation Agent (Memory Agent Pattern — obs #22288, #22319)
+635	- VERIFIED: 20 entries consolidated in first real run
+647	- auto_convert_pdfs.py: background watcher for Inbox → docs/wip/ auto-conversion
+669	### DEPLOYED (in production now)
+672	| 1 | Consolidation-over-retrieval | Google always-on-memory-agent (obs #22288) | vesper_watchdog consolidate_memories() |
+673	| 2 | Three-agent memory (Ingest→Consolidate→Query) | Same | karma_persistent→watchdog→cortex |
+676	| 5 | File watcher + hash change detection | ProtoGensis | karma-inbox-watcher + wip-watcher |
+686	| 11 | Karpathy AutoResearch loop (agent edits program.md, tests, keeps or discards) | @karpathy (obs #22526) | nexus.md IS program.md — agent refines own plan |
+687	| 12 | Hyperagents (task agent + meta agent in one editable program) | Darwin Godel Machine (obs #22526) | Vesper eval=task, governor=meta |
+699	1. **Karpathy Loop** — agent refines its own plan. nexus.md = program.md. Highest leverage.
+718	| self-improving-agent | `Skill("self-improving-agent")` | Memory curation, pattern promotion, skill extraction (5 sub-skills: extract, promote, remember, review, status) |
+719	| agent-designer | `Skill("agent-designer")` | Multi-agent system design, communication patterns, autonomous workflows |
+723	| autoresearch-agent | `Skill("autoresearch-agent")` | Karpathy-style autonomous research loop (setup, run, loop, resume, status) |
+724	| agenthub | `Skill("agenthub")` | Multi-agent spawning/management (init, spawn, run, eval, merge, board, status) |
+737	| agent-workflow-designer | Workflow orchestration patterns |
+797	| 8 | Specialist Agent Diaries (per-agent wing + diary room in AAAK) | SMALL | Phase 3 |
+836	**Source:** Codex autonomous execution session. ALL claims below require LIVE VERIFICATION — documentation is not evidence.
+837	**Verification protocol:** `docs/ForColby/nexus560-full.md` Stage 0 runs every test below. PASS = trusted. FAIL = fiction.
+840	## Claimed Deliverables (UNVERIFIED until Stage 0 runs)
+843	| Endpoint | What | Live Test |
+852	| Script | Purpose | Live Test |
+860	| Artifact | What | Live Test |
+868	| Endpoint | Expected | Live Test |
+875	- Email daemon cadence fixed: `STATUS_INTERVAL_MIN=30` in `Scripts/cc_email_daemon.py`
+877	- Tool-loop proof: harness emitted tool_result events
+878	- Electron smoke passed with tool_use + memory hit in `electron-smoke.json`
+886	**STATUS: ALL CLAIMS UNVERIFIED.** Stage 0 of `nexus560-full.md` runs every test above. Results go in `.gsd/S162-codex-verification.md`. PASS/FAIL only. No "probably."
+892	*Sources: obs #6620, #6556, #21238, #21240, #21367, #21793, #21947, #22082, #22121, #22129, #22132, #22232, #22288, #22319, #22415, #22477, #22485, #25022. Preclaw1: docs/wip/preclaw1/preclaw1/src (1,902 files). Gap map: Karma2/map/preclaw1-gap-map.md. MemPalace: docs/wip/leaks/mempalace-main/mempalace-main (3500 LOC). Full extraction: docs/wip/nexux2proposal.md. Codex ledger: codex-execution-ledger.md (UNVERIFIED).*
+898	This appendix supersedes any earlier phrasing that implied the merged workspace would be built later as an "operator surface."
+902	1. The Nexus at `hub.arknexus.net` and the Electron `KARMA` harness on P1 already ARE the merged workspace.
+903	2. The default model is one continual workspace/session, not three tabs and not fragmented operator panes. `new thread` is optional branching, not the default identity model.
+904	3. The baseline floor is not "basic harness parity." The floor is a working environment that exceeds Codex + Claude Code combined.
+905	4. Persistent memory, persistent session continuity, self-edit ability, self-improvement, learning, and crash recovery are baseline capabilities, not later polish.
+906	5. `CC --resume` on P1 remains the primary Julian inference path under Max. The harness owns continuity, memory, tools, permissions, and recovery around it.
+907	6. K2 exists to synthesize, stabilize, and extend continuity, not to replace Julian as the primary identity path.
+911	1. Fix canonical continuity substrate.
+913	3. Make browser and Electron read and write the same continual workspace/session.
+914	4. Harden tool use, self-edit, self-improvement, and recovery inside that existing merged workspace.

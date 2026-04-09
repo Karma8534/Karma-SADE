@@ -1,0 +1,7 @@
+file=C:\Users\raest\Documents\Karma_SADE\Karma_PDFs\Inbox\oAOHarnessEng.PDF
+pages=60
+meta:/CreationDate=D:20260409173950+00'00'
+meta:/Creator=Chromium
+meta:/ModDate=D:20260409173950+00'00'
+meta:/Producer=Skia/PDF m146
+meta:/Title=OpenAI’s Harness Engineering Experiment: Zero Manually-Written Code | by Rick Hightower | Apr, 2026 | Medium

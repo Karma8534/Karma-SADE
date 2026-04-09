@@ -1,0 +1,970 @@
+RUN_UTC=2026-04-09T18:57:20.7693389Z
+CMD: GET https://hub.arknexus.net/health
+{"ok":true,"service":"sovereign-proxy","ts":"2026-04-09T18:57:21.811Z"}
+
+CMD: GET https://hub.arknexus.net/v1/surface (auth)
+{
+  "ok": true,
+  "session": {
+    "session_id": "3fc3aa0b-4e1b-48d6-b7ab-05d6bdd50c76",
+    "service": "cc-server-p1"
+  },
+  "git": {
+    "branch": "main...origin/main",
+    "changed": 2557,
+    "files": [
+      "MM Scripts/cortex/state/state.json",
+      "M  cc_context_snapshot.md",
+      " M cc_watchdog.log",
+      " M claude-mem-dev",
+      " M docs/claude-mem-docs",
+      "R  docs/wip/leaks/mempalace-main/mempalace-main/.github/ISSUE_TEMPLATE/bug_report.md -> docs/mempalace-3.0.0/mempalace-3.0.0/.github/ISSUE_TEMPLATE/bug_report.md",
+      "R  docs/wip/leaks/mempalace-main/mempalace-main/.github/ISSUE_TEMPLATE/feature_request.md -> docs/mempalace-3.0.0/mempalace-3.0.0/.github/ISSUE_TEMPLATE/feature_request.md",
+      "R  docs/wip/leaks/mempalace-main/mempalace-main/.github/PULL_REQUEST_TEMPLATE.md -> docs/mempalace-3.0.0/mempalace-3.0.0/.github/PULL_REQUEST_TEMPLATE.md",
+      "R  docs/wip/leaks/mempalace-main/mempalace-main/.github/workflows/ci.yml -> docs/mempalace-3.0.0/mempalace-3.0.0/.github/workflows/ci.yml",
+      "R  docs/wip/leaks/mempalace-main/mempalace-main/.gitignore -> docs/mempalace-3.0.0/mempalace-3.0.0/.gitignore"
+    ],
+    "recent_commits": [
+      "d6214dd1 docs(cp5): reconcile /v1/surface execution state",
+      "3e550654 gsd: nexus 5.6.0 all 19 tasks complete â€” SUMMARY written",
+      "5e185a62 feat(s163): task 3-5 AAAK K2 cortex injection â€” 71x compression live",
+      "4942f931 ops: FalkorDB unless-stopped + vault-neo health-check cron",
+      "a3b0fcf1 fix(proxy): add harnessHeaders() to learnings/skills/hooks P1 fetches"
+    ]
+  },
+  "files": {
+    "root": "Karma_SADE",
+    "tree": [
+      {
+        "name": "Aria1",
+        "type": "dir",
+        "path": "Aria1",
+        "children": [
+          "@{name=AriaMD; type=dir; path=Aria1\\AriaMD; children=System.Object[]}",
+          "@{name=CF; type=dir; path=Aria1\\CF; children=System.Object[]}",
+          "@{name=DO; type=dir; path=Aria1\\DO; children=System.Object[]}",
+          "@{name=K2Aria; type=dir; path=Aria1\\K2Aria; children=System.Object[]}",
+          "@{name=K3; type=dir; path=Aria1\\K3; children=System.Object[]}",
+          "@{name=KARMA_PEER_ARCHITECTURE.md; type=file; path=Aria1\\KARMA_PEER_ARCHITECTURE.md; size=33093}",
+          "@{name=KarmaHub-Bridge API Key.txt; type=file; path=Aria1\\KarmaHub-Bridge API Key.txt; size=195}",
+          "@{name=KarmaSADE1; type=dir; path=Aria1\\KarmaSADE1; children=System.Object[]}",
+          "@{name=NFO; type=dir; path=Aria1\\NFO; children=System.Object[]}",
+          "@{name=PAYBACK.txt; type=file; path=Aria1\\PAYBACK.txt; size=149960}",
+          "@{name=fromwarp; type=dir; path=Aria1\\fromwarp; children=System.Object[]}",
+          "@{name=installables; type=dir; path=Aria1\\installables; children=System.Object[]}",
+          "@{name=suggested1.jpg; type=file; path=Aria1\\suggested1.jpg; size=39772}",
+          "@{name=systemspecs1.jpg; type=file; path=Aria1\\systemspecs1.jpg; size=2961483}",
+          "@{name=textfiles; type=dir; path=Aria1\\textfiles; children=System.Object[]}",
+          "@{name=twilio1error.png; type=file; path=Aria1\\twilio1error.png; size=76987}"
+        ]
+      },
+      {
+        "name": "CLAUDE.md",
+        "type": "file",
+        "path": "CLAUDE.md",
+        "size": 43663
+      },
+      {
+        "name": "Config",
+        "type": "dir",
+        "path": "Config",
+        "children": [
+          "@{name=critical_paths.json; type=file; path=Config\\critical_paths.json; size=428}",
+          "@{name=governance_boundary_v1.json; type=file; path=Config\\governance_boundary_v1.json; size=690}"
+        ]
+      },
+      {
+        "name": "Current_Plan",
+        "type": "dir",
+        "path": "Current_Plan",
+        "children": [
+          "@{name=CCSkills.pdf; type=file; path=Current_Plan\\CCSkills.pdf; size=11898209}",
+          "@{name=CCTrustVerify.pdf; type=file; path=Current_Plan\\CCTrustVerify.pdf; size=5987010}",
+          "@{name=CCandCodexAsTools.pdf; type=file; path=Current_Plan\\CCandCodexAsTools.pdf; size=2471569}",
+          "@{name=Claude Setup.exe; type=file; path=Current_Plan\\Claude Setup.exe; size=159360160}",
+          "@{name=Codex Installer.exe; type=file; path=Current_Plan\\Codex Installer.exe; size=1127456}",
+          "@{name=Microsoft.Services.Store.winmd; type=file; path=Current_Plan\\Microsoft.Services.Store.winmd; size=4608}",
+          "@{name=v10; type=dir; path=Current_Plan\\v10; children=System.Object[]}",
+          "@{name=v11; type=dir; path=Current_Plan\\v11; children=System.Object[]}",
+          "@{name=v7; type=dir; path=Current_Plan\\v7; children=System.Object[]}",
+          "@{name=v8; type=dir; path=Current_Plan\\v8; children=System.Object[]}",
+          "@{name=v9; type=dir; path=Current_Plan\\v9; children=System.Object[]}"
+        ]
+      },
+      {
+        "name": "Dashboard",
+        "type": "dir",
+        "path": "Dashboard",
+        "children": [
+          "@{name=index.html; type=file; path=Dashboard\\index.html; size=35018}",
+          "@{name=unified.html; type=file; path=Dashboard\\unified.html; size=32149}"
+        ]
+      },
+      {
+        "name": "Data",
+        "type": "dir",
+        "path": "Data",
+        "children": [
+          "@{name=karma_quotas.db; type=file; path=Data\\karma_quotas.db; size=28672}"
+        ]
+      },
+      {
+        "name": "Design",
+        "type": "dir",
+        "path": "Design",
+        "children": [
+          "@{name=KarmaSession031026B.md; type=file; path=Design\\KarmaSession031026B.md; size=97429}",
+          "@{name=KarmaSession031026a.md; type=file; path=Design\\KarmaSession031026a.md; size=155020}"
+        ]
+      },
+      {
+        "name": "EscapePlan",
+        "type": "dir",
+        "path": "EscapePlan",
+        "children": [
+          "@{name=Logs; type=dir; path=EscapePlan\\Logs; children=System.Object[]}",
+          "@{name=README.md; type=file; path=EscapePlan\\README.md; size=288706}",
+          "@{name=README.universal-gateway.md; type=file; path=EscapePlan\\README.universal-gateway.md; size=10778}",
+          "@{name=_tools; type=dir; path=EscapePlan\\_tools; children=System.Object[]}",
+          "@{name=manifest.json; type=file; path=EscapePlan\\manifest.json; size=21321816}",
+          "@{name=manifest.universal-gateway.json; type=file; path=EscapePlan\\manifest.universal-gateway.json; size=753298}",
+          "@{name=raw; type=dir; path=EscapePlan\\raw; children=System.Object[]}"
+        ]
+      },
+      {
+        "name": "KCCProposals",
+        "type": "dir",
+        "path": "KCCProposals",
+        "children": [
+          "@{name=Gated; type=dir; path=KCCProposals\\Gated; children=System.Object[]}",
+          "@{name=SESSION_34_DEPLOYMENT_REPORT_2026-02-25.md; type=file; path=KCCProposals\\SESSION_34_DEPLOYMENT_REPORT_2026-02-25.md; size=5293}",
+          "@{name=VAULT_ANALYSIS_2026-02-25.md; type=file; path=KCCProposals\\VAULT_ANALYSIS_2026-02-25.md; size=14171}",
+          "@{name=VAULT_ANALYSIS_DEEP_DIVE_2026-02-25.md; type=file; path=KCCProposals\\VAULT_ANALYSIS_DEEP_DIVE_2026-02-25.md; size=14394}",
+          "@{name=kcc-server.py; type=file; path=KCCProposals\\kcc-server.py; size=18789}"
+        ]
+      },
+      {
+        "name": "Karma2",
+        "type": "dir",
+        "path": "Karma2",
+        "children": [
+          "@{name=PLAN-ARCHIVED-cortex-phases-pre-harness.md; type=file; path=Karma2\\PLAN-ARCHIVED-cortex-phases-pre-harness.md; size=15703}",
+          "@{name=PLAN.md; type=file; path=Karma2\\PLAN.md; size=543}",
+          "@{name=SESSION-143-AUDIT.md; type=file; path=Karma2\\SESSION-143-AUDIT.md; size=15549}",
+          "@{name=archive; type=dir; path=Karma2\\archive; children=System.Object[]}",
+          "@{name=banked-approvals.json; type=file; path=Karma2\\banked-approvals.json; size=9523}",
+          "@{name=cc-big-picture.md; type=file; path=Karma2\\cc-big-picture.md; size=7421}",
+          "@{name=cc-scope-index.md; type=file; path=Karma2\\cc-scope-index.md; size=42446}",
+          "@{name=experiment_instructions.md; type=file; path=Karma2\\experiment_instructions.md; size=4073}",
+          "@{name=for-colby.md; type=file; path=Karma2\\for-colby.md; size=3340}",
+          "@{name=karma-context.md; type=file; path=Karma2\\karma-context.md; size=3803}",
+          "@{name=karma_contract_execution.md; type=file; path=Karma2\\karma_contract_execution.md; size=3853}",
+          "@{name=karma_contract_policy.md; type=file; path=Karma2\\karma_contract_policy.md; size=6113}",
+          "@{name=map; type=dir; path=Karma2\\map; children=System.Object[]}",
+          "@{name=primitives; type=dir; path=Karma2\\primitives; children=System.Object[]}",
+          "@{name=training; type=dir; path=Karma2\\training; children=System.Object[]}"
+        ]
+      },
+      {
+        "name": "Karma_PDFs",
+        "type": "dir",
+        "path": "Karma_PDFs",
+        "children": [
+          "@{name=2026LLMsA.txt; type=file; path=Karma_PDFs\\2026LLMsA.txt; size=12725}",
+          "@{name=Archive; type=dir; path=Karma_PDFs\\Archive; children=System.Object[]}",
+          "@{name=Converted; type=dir; path=Karma_PDFs\\Converted; children=System.Object[]}",
+          "@{name=Done; type=dir; path=Karma_PDFs\\Done; children=System.Object[]}",
+          "@{name=FalkorDB-Sync; type=dir; path=Karma_PDFs\\FalkorDB-Sync; children=System.Object[]}",
+          "@{name=Gated; type=dir; path=Karma_PDFs\\Gated; children=System.Object[]}",
+          "@{name=Inbox; type=dir; path=Karma_PDFs\\Inbox; children=System.Object[]}",
+          "@{name=Processed; type=dir; path=Karma_PDFs\\Processed; children=System.Object[]}",
+          "@{name=Processing; type=dir; path=Karma_PDFs\\Processing; children=System.Object[]}",
+          "@{name=Reviewed; type=dir; path=Karma_PDFs\\Reviewed; children=System.Object[]}",
+          "@{name=ccSessions; type=dir; path=Karma_PDFs\\ccSessions; children=System.Object[]}",
+          "@{name=karma-k2-sync.bat; type=file; path=Karma_PDFs\\karma-k2-sync.bat; size=343}",
+          "@{name=karma-k2-sync.py; type=file; path=Karma_PDFs\\karma-k2-sync.py; size=3476}"
+        ]
+      },
+      {
+        "name": "LICENSE",
+        "type": "file",
+        "path": "LICENSE",
+        "size": 173699
+      },
+      {
+        "name": "Logs",
+        "type": "dir",
+        "path": "Logs",
+        "children": [
+          "@{name=_claude_continue_test.txt; type=file; path=Logs\\_claude_continue_test.txt; size=329}",
+          "@{name=_claude_ver.txt; type=file; path=Logs\\_claude_ver.txt; size=25}",
+          "@{name=archonprime-err.log; type=file; path=Logs\\archonprime-err.log; size=0}",
+          "@{name=archonprime.log; type=file; path=Logs\\archonprime.log; size=0}",
+          "@{name=backend-final.log; type=file; path=Logs\\backend-final.log; size=1925}",
+          "@{name=backend-unified.log; type=file; path=Logs\\backend-unified.log; size=1834}",
+          "@{name=cc-server-err.log; type=file; path=Logs\\cc-server-err.log; size=0}",
+          "@{name=cc-server.log; type=file; path=Logs\\cc-server.log; size=246851}",
+          "@{name=cc_archon_agent.log; type=file; path=Logs\\cc_archon_agent.log; size=1279430}",
+          "@{name=cc_email_check_last.txt; type=file; path=Logs\\cc_email_check_last.txt; size=32}",
+          "@{name=cc_email_personal_last.txt; type=file; path=Logs\\cc_email_personal_last.txt; size=32}",
+          "@{name=cc_email_spine_version.txt; type=file; path=Logs\\cc_email_spine_version.txt; size=1}",
+          "@{name=cc_email_status_last.txt; type=file; path=Logs\\cc_email_status_last.txt; size=32}",
+          "@{name=cc_email_watermark.txt; type=file; path=Logs\\cc_email_watermark.txt; size=2}",
+          "@{name=cc_sentinel.log; type=file; path=Logs\\cc_sentinel.log; size=804920}",
+          "@{name=cc_tool_failures.log; type=file; path=Logs\\cc_tool_failures.log; size=37383}",
+          "@{name=channels-bridge-err.log; type=file; path=Logs\\channels-bridge-err.log; size=0}",
+          "@{name=channels-bridge.log; type=file; path=Logs\\channels-bridge.log; size=247607}",
+          "@{name=cockpit-service.log; type=file; path=Logs\\cockpit-service.log; size=2866823}",
+          "@{name=corpus_alpaca.jsonl; type=file; path=Logs\\corpus_alpaca.jsonl; size=5487873}",
+          "@{name=cortex-sync.err.log; type=file; path=Logs\\cortex-sync.err.log; size=0}",
+          "@{name=cortex-sync.log; type=file; path=Logs\\cortex-sync.log; size=128}",
+          "@{name=droplet-sync.log; type=file; path=Logs\\droplet-sync.log; size=4586}",
+          "@{name=karma-backend.log; type=file; path=Logs\\karma-backend.log; size=13079}",
+          "@{name=karma-backup.log; type=file; path=Logs\\karma-backup.log; size=984}",
+          "@{name=karma-sade.log; type=file; path=Logs\\karma-sade.log; size=1020082}",
+          "@{name=karma-startup.log; type=file; path=Logs\\karma-startup.log; size=17139}",
+          "@{name=karma-watchdog.log; type=file; path=Logs\\karma-watchdog.log; size=60}",
+          "@{name=karma_session_indexer.log; type=file; path=Logs\\karma_session_indexer.log; size=585616}",
+          "@{name=kcc_bus_monitor.log; type=file; path=Logs\\kcc_bus_monitor.log; size=440}",
+          "@{name=launcher-sentinel.log; type=file; path=Logs\\launcher-sentinel.log; size=98688}",
+          "@{name=memory-sync.log; type=file; path=Logs\\memory-sync.log; size=17639}",
+          "@{name=pending_observations.txt; type=file; path=Logs\\pending_observations.txt; size=16256}",
+          "@{name=screenshots; type=dir; path=Logs\\screenshots; children=System.Object[]}",
+          "@{name=sentinel-brief.md; type=file; path=Logs\\sentinel-brief.md; size=11127}",
+          "@{name=sentinel-daily-summary.log; type=file; path=Logs\\sentinel-daily-summary.log; size=8414}",
+          "@{name=sentinel-latest.json; type=file; path=Logs\\sentinel-latest.json; size=848}",
+          "@{name=sentinel-runtime.log; type=file; path=Logs\\sentinel-runtime.log; size=25755}",
+          "@{name=sentinel-state.json; type=file; path=Logs\\sentinel-state.json; size=765}",
+          "@{name=session126_report_body.txt; type=file; path=Logs\\session126_report_body.txt; size=7502}",
+          "@{name=session_ingest.log; type=file; path=Logs\\session_ingest.log; size=163648}",
+          "@{name=session_obs_ingested.json; type=file; path=Logs\\session_obs_ingested.json; size=6303}",
+          "@{name=sessions_raw; type=dir; path=Logs\\sessions_raw; children=System.Object[]}",
+          "@{name=sessions_reviewed; type=dir; path=Logs\\sessions_reviewed; children=System.Object[]}",
+          "@{name=watchdog-state.json; type=file; path=Logs\\watchdog-state.json; size=306}"
+        ]
+      },
+      {
+        "name": "MEMORY.md",
+        "type": "file",
+        "path": "MEMORY.md",
+        "size": 27435
+      },
+      {
+        "name": "Memory",
+        "type": "dir",
+        "path": "Memory",
+        "children": [
+          "@{name=00-karma-local-prompt.md; type=file; path=Memory\\00-karma-local-prompt.md; size=1476}",
+          "@{name=00-karma-system-prompt-live.md; type=file; path=Memory\\00-karma-system-prompt-live.md; size=42118}",
+          "@{name=00-karma-system-prompt.md; type=file; path=Memory\\00-karma-system-prompt.md; size=3612}",
+          "@{name=00-karma-system-prompt.txt; type=file; path=Memory\\00-karma-system-prompt.txt; size=3298}",
+          "@{name=00-sacred-context.md; type=file; path=Memory\\00-sacred-context.md; size=6279}",
+          "@{name=01-capability-inventory.md; type=file; path=Memory\\01-capability-inventory.md; size=3969}",
+          "@{name=01-core-architecture.md; type=file; path=Memory\\01-core-architecture.md; size=3443}",
+          "@{name=01-core-architecture.txt; type=file; path=Memory\\01-core-architecture.txt; size=1782}",
+          "@{name=01-karma-standard-prompt.md; type=file; path=Memory\\01-karma-standard-prompt.md; size=2717}",
+          "@{name=02-extracted-primitives.md; type=file; path=Memory\\02-extracted-primitives.md; size=7688}",
+          "@{name=02-stable-decisions.md; type=file; path=Memory\\02-stable-decisions.md; size=9002}",
+          "@{name=03-resurrection-plan-v2.1.md; type=file; path=Memory\\03-resurrection-plan-v2.1.md; size=10756}",
+          "@{name=03-resurrection-plan-v2.1.md.bak; type=file; path=Memory\\03-resurrection-plan-v2.1.md.bak; size=10756}",
+          "@{name=03-resurrection-plan-v3.0.md; type=file; path=Memory\\03-resurrection-plan-v3.0.md; size=1372}",
+          "@{name=03-sentinel-and-health.md; type=file; path=Memory\\03-sentinel-and-health.md; size=4045}",
+          "@{name=03-sentinel-and-health.txt; type=file; path=Memory\\03-sentinel-and-health.txt; size=2752}",
+          "@{name=04-session-learnings.md; type=file; path=Memory\\04-session-learnings.md; size=11927}",
+          "@{name=05-user-facts.json; type=file; path=Memory\\05-user-facts.json; size=257}",
+          "@{name=06-chat-index.json; type=file; path=Memory\\06-chat-index.json; size=3250}",
+          "@{name=07-vault-cache.json; type=file; path=Memory\\07-vault-cache.json; size=270}",
+          "@{name=08-session-handoff.md; type=file; path=Memory\\08-session-handoff.md; size=7918}",
+          "@{name=09-rebuild-complete.md; type=file; path=Memory\\09-rebuild-complete.md; size=2653}",
+          "@{name=10-session-startup-instructions.md; type=file; path=Memory\\10-session-startup-instructions.md; size=4892}",
+          "@{name=11-session-summary-latest.md; type=file; path=Memory\\11-session-summary-latest.md; size=1911}",
+          "@{name=12-resource-inventory.json; type=file; path=Memory\\12-resource-inventory.json; size=11766}",
+          "@{name=12-system-optimization-report.md; type=file; path=Memory\\12-system-optimization-report.md; size=15412}",
+          "@{name=99-memory-rules.md; type=file; path=Memory\\99-memory-rules.md; size=3208}",
+          "@{name=CHROMADB-PYTHON314-ISSUE.md; type=file; path=Memory\\CHROMADB-PYTHON314-ISSUE.md; size=2211}",
+          "@{name=ChatHistory; type=dir; path=Memory\\ChatHistory; children=System.Object[]}",
+          "@{name=HARD-COPY-PLAN.md; type=file; path=Memory\\HARD-COPY-PLAN.md; size=14479}",
+          "@{name=MEMORY-SYSTEM-DEBUG-REPORT.md; type=file; path=Memory\\MEMORY-SYSTEM-DEBUG-REPORT.md; size=8693}",
+          "@{name=MEMORY-SYSTEMS-STATUS.md; type=file; path=Memory\\MEMORY-SYSTEMS-STATUS.md; size=9831}",
+          "@{name=corrections-log.md; type=file; path=Memory\\corrections-log.md; size=13803}",
+          "@{name=modes.json; type=file; path=Memory\\modes.json; size=225}",
+          "@{name=problems-log.md; type=file; path=Memory\\problems-log.md; size=33552}"
+        ]
+      },
+      {
+        "name": "Project",
+        "type": "dir",
+        "path": "Project",
+        "children": [
+          "@{name=ArkNexus-Cockpit; type=dir; path=Project\\ArkNexus-Cockpit; children=System.Object[]}"
+        ]
+      },
+      {
+        "name": "Scripts",
+        "type": "dir",
+        "path": "Scripts",
+        "children": [
+          "@{name=Ask-Karma.ps1; type=file; path=Scripts\\Ask-Karma.ps1; size=2329}",
+          "@{name=Audit-PersistentLaunchers.ps1; type=file; path=Scripts\\Audit-PersistentLaunchers.ps1; size=5140}",
+          "@{name=HiddenRelaunch.ps1; type=file; path=Scripts\\HiddenRelaunch.ps1; size=801}",
+          "@{name=Install-K2FallbackRuntime.ps1; type=file; path=Scripts\\Install-K2FallbackRuntime.ps1; size=2369}",
+          "@{name=NexusContinuation.ps1; type=file; path=Scripts\\NexusContinuation.ps1; size=1601}",
+          "@{name=Register-PersistentPowerShellTasks.ps1; type=file; path=Scripts\\Register-PersistentPowerShellTasks.ps1; size=5388}",
+          "@{name=Repair-PersistentLaunchers.ps1; type=file; path=Scripts\\Repair-PersistentLaunchers.ps1; size=2300}",
+          "@{name=Run-SessionIngest.ps1; type=file; path=Scripts\\Run-SessionIngest.ps1; size=4592}",
+          "@{name=RunHiddenPowerShell.vbs; type=file; path=Scripts\\RunHiddenPowerShell.vbs; size=758}",
+          "@{name=Start-ArchonPrime.ps1; type=file; path=Scripts\\Start-ArchonPrime.ps1; size=1618}",
+          "@{name=Start-CCServer.ps1; type=file; path=Scripts\\Start-CCServer.ps1; size=2896}",
+          "@{name=Start-ChannelsBridge.ps1; type=file; path=Scripts\\Start-ChannelsBridge.ps1; size=1966}",
+          "@{name=Start-ChromeDebug.ps1; type=file; path=Scripts\\Start-ChromeDebug.ps1; size=2263}",
+          "@{name=Start-CortexSync.ps1; type=file; path=Scripts\\Start-CortexSync.ps1; size=1275}",
+          "@{name=Start-Karma.ps1; type=file; path=Scripts\\Start-Karma.ps1; size=192}",
+          "@{name=Start-LauncherSentinel.ps1; type=file; path=Scripts\\Start-LauncherSentinel.ps1; size=1497}",
+          "@{name=Start-RegentWatchdog.ps1; type=file; path=Scripts\\Start-RegentWatchdog.ps1; size=1501}",
+          "@{name=__init__.py; type=file; path=Scripts\\__init__.py; size=0}",
+          "@{name=_test_cc_continue.ps1; type=file; path=Scripts\\_test_cc_continue.ps1; size=762}",
+          "@{name=_test_fill.py; type=file; path=Scripts\\_test_fill.py; size=2626}",
+          "@{name=_test_send.py; type=file; path=Scripts\\_test_send.py; size=4864}",
+          "@{name=_test_send2.py; type=file; path=Scripts\\_test_send2.py; size=3704}",
+          "@{name=aaak.py; type=file; path=Scripts\\aaak.py; size=1820}",
+          "@{name=aaak_dialect.py; type=file; path=Scripts\\aaak_dialect.py; size=33977}",
+          "@{name=add_k2_endpoints.py; type=file; path=Scripts\\add_k2_endpoints.py; size=5577}",
+          "@{name=add_k2_exec_endpoints.py; type=file; path=Scripts\\add_k2_exec_endpoints.py; size=6047}",
+          "@{name=agent_diary.py; type=file; path=Scripts\\agent_diary.py; size=4802}",
+          "@{name=ambient_observer.py; type=file; path=Scripts\\ambient_observer.py; size=7483}",
+          "@{name=archon_bus_post.py; type=file; path=Scripts\\archon_bus_post.py; size=851}",
+          "@{name=archonprime_watcher.py; type=file; path=Scripts\\archonprime_watcher.py; size=6699}",
+          "@{name=aria_consciousness.py; type=file; path=Scripts\\aria_consciousness.py; size=26679}",
+          "@{name=aria_db_stats.py; type=file; path=Scripts\\aria_db_stats.py; size=323}",
+          "@{name=asher_loop.py; type=file; path=Scripts\\asher_loop.py; size=6309}",
+          "@{name=ask_karma.py; type=file; path=Scripts\\ask_karma.py; size=4242}",
+          "@{name=auto_convert_pdfs.py; type=file; path=Scripts\\auto_convert_pdfs.py; size=3391}",
+          "@{name=batch-ingest-docs.ps1; type=file; path=Scripts\\batch-ingest-docs.ps1; size=2519}",
+          "@{name=batch_pdf_to_md.py; type=file; path=Scripts\\batch_pdf_to_md.py; size=4120}",
+          "@{name=blocker_audit.py; type=file; path=Scripts\\blocker_audit.py; size=3832}",
+          "@{name=cc_anchor_agent.py; type=file; path=Scripts\\cc_anchor_agent.py; size=4881}",
+          "@{name=cc_anchor_p1.log; type=file; path=Scripts\\cc_anchor_p1.log; size=17035}",
+          "@{name=cc_anchor_p1.ps1; type=file; path=Scripts\\cc_anchor_p1.ps1; size=3498}",
+          "@{name=cc_arc_write.ps1; type=file; path=Scripts\\cc_arc_write.ps1; size=4510}",
+          "@{name=cc_archon_agent.ps1; type=file; path=Scripts\\cc_archon_agent.ps1; size=10328}",
+          "@{name=cc_ascendant_watchdog.py; type=file; path=Scripts\\cc_ascendant_watchdog.py; size=20988}",
+          "@{name=cc_bus_reader.py; type=file; path=Scripts\\cc_bus_reader.py; size=9182}",
+          "@{name=cc_cognitive_write.ps1; type=file; path=Scripts\\cc_cognitive_write.ps1; size=2971}",
+          "@{name=cc_email_daemon.py; type=file; path=Scripts\\cc_email_daemon.py; size=22629}",
+          "@{name=cc_gmail.py; type=file; path=Scripts\\cc_gmail.py; size=4034}",
+          "@{name=cc_heartbeat.py; type=file; path=Scripts\\cc_heartbeat.py; size=1878}"
+        ]
+      },
+      {
+        "name": "Vesper",
+        "type": "dir",
+        "path": "Vesper",
+        "children": [
+          "@{name=VESPER.md; type=file; path=Vesper\\VESPER.md; size=6654}",
+          "@{name=karma_regent.py; type=file; path=Vesper\\karma_regent.py; size=72862}",
+          "@{name=regent.html; type=file; path=Vesper\\regent.html; size=19837}",
+          "@{name=regent_memory_titans.py; type=file; path=Vesper\\regent_memory_titans.py; size=4380}",
+          "@{name=regent_triage.py; type=file; path=Vesper\\regent_triage.py; size=2143}",
+          "@{name=runtime; type=dir; path=Vesper\\runtime; children=System.Object[]}",
+          "@{name=vesper-evolution-v1-plan.md; type=file; path=Vesper\\vesper-evolution-v1-plan.md; size=21139}",
+          "@{name=vesper-evolution-v2-plan.md; type=file; path=Vesper\\vesper-evolution-v2-plan.md; size=22003}",
+          "@{name=vesper_watchdog.py; type=file; path=Vesper\\vesper_watchdog.py; size=14717}"
+        ]
+      },
+      {
+        "name": "alert.log",
+        "type": "file",
+        "path": "alert.log",
+        "size": 59
+      },
+      {
+        "name": "alert.txt",
+        "type": "file",
+        "path": "alert.txt",
+        "size": 59
+      },
+      {
+        "name": "alert_log.txt",
+        "type": "file",
+        "path": "alert_log.txt",
+        "size": 91
+      },
+      {
+        "name": "anr-vault-search",
+        "type": "dir",
+        "path": "anr-vault-search",
+        "children": [
+          "@{name=search_service.py; type=file; path=anr-vault-search\\search_service.py; size=18694}"
+        ]
+      },
+      {
+        "name": "archive",
+        "type": "dir",
+        "path": "archive",
+        "children": [
+          "@{name=root-legacy; type=dir; path=archive\\root-legacy; children=System.Object[]}"
+        ]
+      },
+      {
+        "name": "cc-session-brief.md",
+        "type": "file",
+        "path": "cc-session-brief.md",
+        "size": 15219
+      },
+      {
+        "name": "cc_archon_alert.log",
+        "type": "file",
+        "path": "cc_archon_alert.log",
+        "size": 81
+      },
+      {
+        "name": "cc_context_snapshot.md",
+        "type": "file",
+        "path": "cc_context_snapshot.md",
+        "size": 8935
+      },
+      {
+        "name": "cc_log.txt",
+        "type": "file",
+        "path": "cc_log.txt",
+        "size": 278
+      },
+      {
+        "name": "cc_scratchpad.md",
+        "type": "file",
+        "path": "cc_scratchpad.md",
+        "size": 1901
+      },
+      {
+        "name": "cc_watchdog.log",
+        "type": "file",
+        "path": "cc_watchdog.log",
+        "size": 189
+      },
+      {
+        "name": "checkpoint",
+        "type": "dir",
+        "path": "checkpoint",
+        "children": [
+          "@{name=known_good_v1; type=dir; path=checkpoint\\known_good_v1; children=System.Object[]}"
+        ]
+      },
+      {
+        "name": "checkpoint.log",
+        "type": "file",
+        "path": "checkpoint.log",
+        "size": 23
+      },
+      {
+        "name": "checkpoint.txt",
+        "type": "file",
+        "path": "checkpoint.txt",
+        "size": 34
+      },
+      {
+        "name": "chrome-extension",
+        "type": "dir",
+        "path": "chrome-extension",
+        "children": [
+          "@{name=README.md; type=file; path=chrome-extension\\README.md; size=6559}",
+          "@{name=RELOAD-EXTENSION.txt; type=file; path=chrome-extension\\RELOAD-EXTENSION.txt; size=806}",
+          "@{name=background.js; type=file; path=chrome-extension\\background.js; size=14317}",
+          "@{name=content-claude.js; type=file; path=chrome-extension\\content-claude.js; size=6121}",
+          "@{name=content-context.js; type=file; path=chrome-extension\\content-context.js; size=17971}",
+          "@{name=content-gemini.js; type=file; path=chrome-extension\\content-gemini.js; size=7704}",
+          "@{name=content-openai.js; type=file; path=chrome-extension\\content-openai.js; size=5079}",
+          "@{name=create_icons.py; type=file; path=chrome-extension\\create_icons.py; size=1300}",
+          "@{name=icons; type=dir; path=chrome-extension\\icons; children=System.Object[]}",
+          "@{name=manifest.json; type=file; path=chrome-extension\\manifest.json; size=1297}",
+          "@{name=popup.html; type=file; path=chrome-extension\\popup.html; size=7904}",
+          "@{name=popup.js; type=file; path=chrome-extension\\popup.js; size=8485}",
+          "@{name=test-extension.js; type=file; path=chrome-extension\\test-extension.js; size=1834}",
+          "@{name=test-injection.js; type=file; path=chrome-extension\\test-injection.js; size=8407}",
+          "@{name=test-selectors.js; type=file; path=chrome-extension\\test-selectors.js; size=2095}"
+        ]
+      },
+      {
+        "name": "chrome-extension-nexus",
+        "type": "dir",
+        "path": "chrome-extension-nexus",
+        "children": [
+          "@{name=background.js; type=file; path=chrome-extension-nexus\\background.js; size=2348}",
+          "@{name=content.js; type=file; path=chrome-extension-nexus\\content.js; size=834}",
+          "@{name=icons; type=dir; path=chrome-extension-nexus\\icons; children=System.Object[]}",
+          "@{name=manifest.json; type=file; path=chrome-extension-nexus\\manifest.json; size=879}",
+          "@{name=popup.html; type=file; path=chrome-extension-nexus\\popup.html; size=2461}",
+          "@{name=popup.js; type=file; path=chrome-extension-nexus\\popup.js; size=3069}",
+          "@{name=sidepanel.html; type=file; path=chrome-extension-nexus\\sidepanel.html; size=2916}"
+        ]
+      }
+    ]
+  },
+  "skills": {
+    "count": 46,
+    "names": [
+      "adversarial-reviewer",
+      "agent-designer",
+      "agent-workflow-designer",
+      "agenthub",
+      "ai-security",
+      "anchor",
+      "api-design-principles",
+      "api-design-reviewer",
+      "api-test-suite-builder",
+      "autoresearch-agent",
+      "browser-automation",
+      "cc-delegation",
+      "chrome-cdp",
+      "ci-cd-pipeline-builder",
+      "dependency-auditor",
+      "deploy",
+      "docker-development",
+      "dream",
+      "env-secrets-manager",
+      "excalidraw-diagram",
+      "harvest",
+      "incident-commander",
+      "karma-verify",
+      "llm-cost-optimizer",
+      "mcp-server-builder",
+      "observability-designer",
+      "orf",
+      "performance-profiler",
+      "playwright-pro",
+      "primitives",
+      "rag-architect",
+      "red-team",
+      "resurrect",
+      "review",
+      "security-auditor",
+      "security-pen-testing",
+      "self-eval",
+      "self-evolution",
+      "self-improving-agent",
+      "senior-backend",
+      "senior-devops",
+      "senior-fullstack",
+      "spec-driven-workflow",
+      "tdd-guide",
+      "tech-debt-tracker",
+      "wrap-session"
+    ]
+  },
+  "hooks": {
+    "count": 11,
+    "active": true,
+    "list": [
+      {
+        "name": "skill_activation",
+        "event": "UserPromptSubmit"
+      },
+      {
+        "name": "pre_tool_security",
+        "event": "PreToolUse"
+      },
+      {
+        "name": "fact_extractor",
+        "event": "PostToolUse"
+      },
+      {
+        "name": "compiler_in_loop",
+        "event": "PostToolUse"
+      },
+      {
+        "name": "cost_warning",
+        "event": "PostToolUse"
+      },
+      {
+        "name": "memory_extractor",
+        "event": "Stop,SessionEnd"
+      },
+      {
+        "name": "palace_precompact",
+        "event": "Stop,SessionEnd"
+      },
+      {
+        "name": "auto_handoff",
+        "event": "Stop"
+      },
+      {
+        "name": "conversation_capture",
+        "event": "Stop"
+      },
+      {
+        "name": "memory_extractor",
+        "event": "Stop,SessionEnd"
+      },
+      {
+        "name": "palace_precompact",
+        "event": "Stop,SessionEnd"
+      }
+    ]
+  },
+  "memory": {
+    "tail": "<!-- Last dream: 2026-04-02 Session 156 — MEMORY.md consolidated, stale sections purged -->\n\n# Karma SADE — Active Memory\n\n## Session 162 (2026-04-09) — Nexus 5.6.0 Build DEPLOYED\n\n- **12/13 tasks PASS**, 1 DEFERRED (K2 cortex down)\n- **Codex claims audit:** 11 PASS / 6 FAIL / 3 DEGRADED / 1 DEFERRED (`.gsd/S162-codex-verification.md`)\n- **Infrastructure fixed:** FalkorDB was DOWN 31h (restarted), vesper-watchdog.timer was INACTIVE (started)\n- **Phase 0:** Verified existing from S160 (gap_map.py, vesper_eval, vesper_governor, karma_persistent)\n- **Phase 1 built+deployed:** L0-L3 labels (server.js, 10 refs), invalidate_entity tool (server.py+hooks.py+server.js), mid-session-promote.sh + pre-compact-flush.sh hooks (executable+registered), general_extractor.py (6/6 tests), checkDuplicate() dedup (server.js, 5 refs)\n- **Phase 3 built+deployed:** aaak_dialect.py (Karma entity codes, PITFALL flag), palace vocabulary (Wings/Rooms/Halls/Tunnels, 10 refs), agent_diary.py (obs #25827), contradiction detection ([EXPIRED] labels, 9 refs)\n- **Commits:** 7b9a5259, 41bb7e7e | **Deployed:** hub-bridge + karma-server rebuilt --no-cache\n- **Karma responds:** \"I'm alive on the Nexus surface\"\n- **FIXED (S163):** 3-5 AAAK K2 cortex injection — aaak_dialect.py deployed to K2 (/mnt/c/dev/Karma/k2/aria/), karma_regent.py patched: imports compress_for_cortex, _load_memory_md() fetches vault-file MEMORY.md, get_system_prompt() injects [MEMORY SPINE]. Live proof: 9095→127 chars = 71x compression. karma-regent restarted and running.\n- **FIXED (S163):** /v1/learnings 502 — root cause: proxy.js fetched HARNESS_P1/v1/learnings without auth headers. P1 cc_server returned 401→proxy returned 502. Fix: added harnessHeaders() to learnings/skills/hooks fetches. Deployed to hub-bridge.\n- **FIXED (S163):** FalkorDB silent-exit — restart policy changed to `unless-stopped` (was `no`). Health-check cron installed on vault-neo (*/5 * * * *), posts bus alert if container is DOWN. Script: /opt/seed-vault/scrip",
+    "file": "C:\\Users\\raest\\Documents\\Karma_SADE\\MEMORY.md"
+  },
+  "state": {
+    "text": "# STATE: Karma Peer — Decisions, Blockers, Progress\n\n**Last updated:** 2026-04-09 Session 163\n**THE ONLY PLAN:** `docs/ForColby/nexus.md` (v5.6.0 APPEND ONLY — Sovereign approved)\n**Locked frame:** hub.arknexus.net + Electron KARMA already ARE the merged workspace. Default model = one continual workspace/session; `new thread` is optional branching.\n**Internal pattern only:** `agent` / `orchestrator` remains valid for executor/gating/eval/governor internals, not as the top-level product model.\n**Status:** Phase 0-4 ALL SHIPPED. Gap map: 79/96 HAVE (0 MISSING). 16/17 primitives deployed. 3-tier cascade live. Phase 1+3 enhanced with MemPalace primitives (7 HIGH, 6 MEDIUM — obs #25022).\n**Session:** S163 — Nexus 5.6.0 ALL 19 TASKS DONE. Task 3-5 shipped: AAAK K2 cortex injection (71x compression live, obs #25972). Also fixed: /v1/learnings 502 (proxy.js missing auth headers), FalkorDB unless-stopped + health cron. Active: PROOF-A (blocker 18).\n**Canonical source:** This file. Read at sessi"
+  },
+  "agents": {
+    "ok": true,
+    "mcp_servers": [
+      "context7",
+      "docker"
+    ],
+    "skills": [
+      "adversarial-reviewer",
+      "agent-designer",
+      "agent-workflow-designer",
+      "agenthub",
+      "ai-security",
+      "anchor",
+      "api-design-principles",
+      "api-design-reviewer",
+      "api-test-suite-builder",
+      "autoresearch-agent",
+      "browser-automation",
+      "cc-delegation",
+      "chrome-cdp",
+      "ci-cd-pipeline-builder",
+      "dependency-auditor",
+      "deploy",
+      "docker-development",
+      "dream",
+      "env-secrets-manager",
+      "excalidraw-diagram",
+      "harvest",
+      "incident-commander",
+      "karma-verify",
+      "llm-cost-optimizer",
+      "mcp-server-builder",
+      "observability-designer",
+      "orf",
+      "performance-profiler",
+      "playwright-pro",
+      "primitives",
+      "rag-architect",
+      "red-team",
+      "resurrect",
+      "review",
+      "security-auditor",
+      "security-pen-testing",
+      "self-eval",
+      "self-evolution",
+      "self-improving-agent",
+      "senior-backend",
+      "senior-devops",
+      "senior-fullstack",
+      "spec-driven-workflow",
+      "tdd-guide",
+      "tech-debt-tracker",
+      "wrap-session"
+    ],
+    "hooks": {
+      "PreToolUse": [
+        "locked-invariant-guard",
+        "quality-gate",
+        "block-worktree",
+        "file-restriction-guard",
+        "credential-guard",
+        "map-check-reminder"
+      ],
+      "PostToolUse": [
+        "memory-reminder"
+      ],
+      "UserPromptSubmit": [
+        "bus-check",
+        "compaction-cliff-guard"
+      ],
+      "PostToolUseFailure": [
+        "post-tool-failure-logger"
+      ],
+      "Stop": [
+        "governance-audit",
+        "cc-chat-logger"
+      ],
+      "SessionEnd": [
+        "session-end.sh"
+      ]
+    }
+  },
+  "transcripts": {
+    "count": 59,
+    "sessions": [
+      "default",
+      "mnrtvdhsjf870o",
+      "mnp14lp19qvzdh",
+      "electron-smoke-1775591152617",
+      "electron-smoke-1775591152617-direct",
+      "mnor6h952s4rcx",
+      "electron-smoke-1775574444006",
+      "electron-smoke-1775574444006-direct",
+      "mnor2kdd1mh72c",
+      "electron-smoke-1775574261418"
+    ],
+    "summaries": [
+      {
+        "session_id": "default",
+        "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\tmp\\transcripts\\default.jsonl",
+        "mtime": 1775760813.3735862,
+        "last_prompt": "CC WATCHDOG ACK [auto]: Received from cc. Queued for CC session review. Preview: [CC ARCHON ALERT 2026-04-09T14:52:01Z] SNAPSHOT STALE 122min (threshold 90min) -- CC must checkpoint..."
+      },
+      {
+        "session_id": "mnrtvdhsjf870o",
+        "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\tmp\\transcripts\\mnrtvdhsjf870o.jsonl",
+        "mtime": 1775760565.4302108,
+        "last_prompt": "hiya Karma"
+      },
+      {
+        "session_id": "mnp14lp19qvzdh",
+        "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\tmp\\transcripts\\mnp14lp19qvzdh.jsonl",
+        "mtime": 1775591196.6970556,
+        "last_prompt": "Reply with exactly UI_MEM_mnp15b8p and nothing else."
+      },
+      {
+        "session_id": "electron-smoke-1775591152617",
+        "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\tmp\\transcripts\\electron-smoke-1775591152617.jsonl",
+        "mtime": 1775591185.7158544,
+        "last_prompt": "Read the first line of MEMORY.md using a tool and return exactly that first line."
+      },
+      {
+        "session_id": "electron-smoke-1775591152617-direct",
+        "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\tmp\\transcripts\\electron-smoke-1775591152617-direct.jsonl",
+        "mtime": 1775591169.485713,
+        "last_prompt": "Read the first line of MEMORY.md using a tool and return exactly that first line."
+      },
+      {
+        "session_id": "mnor6h952s4rcx",
+        "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\tmp\\transcripts\\mnor6h952s4rcx.jsonl",
+        "mtime": 1775574487.8507,
+        "last_prompt": "Reply with exactly UI_MEM_mnor6zsu and nothing else."
+      },
+      {
+        "session_id": "electron-smoke-1775574444006",
+        "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\tmp\\transcripts\\electron-smoke-1775574444006.jsonl",
+        "mtime": 1775574468.0321686,
+        "last_prompt": "Reply with exactly SMOKE_OK and nothing else."
+      },
+      {
+        "session_id": "electron-smoke-1775574444006-direct",
+        "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\tmp\\transcripts\\electron-smoke-1775574444006-direct.jsonl",
+        "mtime": 1775574455.5650632,
+        "last_prompt": "Reply with exactly SMOKE_OK and nothing else."
+      },
+      {
+        "session_id": "mnor2kdd1mh72c",
+        "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\tmp\\transcripts\\mnor2kdd1mh72c.jsonl",
+        "mtime": 1775574307.2043939,
+        "last_prompt": "Reply with exactly UI_MEM_mnor3b0e and nothing else."
+      },
+      {
+        "session_id": "electron-smoke-1775574261418",
+        "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\tmp\\transcripts\\electron-smoke-1775574261418.jsonl",
+        "mtime": 1775574295.946129,
+        "last_prompt": "Reply with exactly SMOKE_OK and nothing else."
+      }
+    ]
+  }
+}
+
+CMD: GET https://hub.arknexus.net/v1/spine (auth)
+ERROR: 
+{
+  "ok": false,
+  "error": "K2 spine unreachable"
+}
+
+CMD: electron/main.js (first 140 lines)
+const { app, BrowserWindow, ipcMain, dialog, Tray, Menu } = require("electron");
+const { exec, spawn } = require("child_process");
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
+
+// KARMA NEXUS — Electron Harness (S156)
+const WORK_DIR = process.platform === "win32"
+  ? "C:\\Users\\raest\\Documents\\Karma_SADE"
+  : "/mnt/c/dev/Karma/k2/cache";
+const NODE_EXE = process.platform === "win32"
+  ? "C:\\Program Files\\nodejs\\node.exe"
+  : "/usr/bin/node";
+const CLAUDE_CLI = process.platform === "win32"
+  ? path.join(process.env.APPDATA || "", "npm", "node_modules", "@anthropic-ai", "claude-code", "cli.js")
+  : "/usr/local/bin/claude";
+const CORTEX_URL = "http://192.168.0.226:7892";
+const CLAUDEMEM_URL = "http://127.0.0.1:37778";
+const OLLAMA_URL = process.platform === "win32" ? "http://localhost:11434" : "http://172.22.240.1:11434";
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODEL = "llama-3.3-70b-versatile";
+const BOUNDS_FILE = path.join(app.getPath("userData"), "karma_bounds.json");
+const SESSION_FILE = path.join(app.getPath("home"), ".karma_electron_session_id");
+const SESSION_REGISTRY_FILE = path.join(app.getPath("home"), ".karma_electron_session_registry.json");
+const TRANSCRIPT_DIR = path.join(WORK_DIR, "tmp", "transcripts");
+const FRONTEND_DIR = path.join(WORK_DIR, "frontend", "out");
+const NEXUS_URL = "https://hub.arknexus.net";
+const CC_TIMEOUT_MS = 180000;
+const TOOL_LOOP_LIMIT = 6;
+const STREAM_CHANNEL = "cc-chat-event";
+const SMOKE_MODE = process.env.KARMA_ELECTRON_SMOKE === "1";
+const SMOKE_PROMPT = process.env.KARMA_ELECTRON_SMOKE_PROMPT || "";
+const SMOKE_OUT = process.env.KARMA_ELECTRON_SMOKE_OUT || path.join(WORK_DIR, "tmp", "electron-smoke.json");
+const LOCAL_OLLAMA_MODEL = process.env.KARMA_LOCAL_OLLAMA_MODEL || "sam860/LFM2:350m";
+const RUNTIME_LOG_FILE = path.join(app.getPath("userData"), "karma_runtime.log");
+const HUB_CHAT_TOKEN = (() => {
+  try {
+    return fs.readFileSync(path.join(WORK_DIR, ".hub-chat-token"), "utf-8").trim();
+  } catch {
+    return "";
+  }
+})();
+const TOOL_DEFS = [
+  {
+    name: "read_file",
+    description: "Read a file from the local workspace.",
+    input_schema: { type: "object", properties: { path: { type: "string" }, limit: { type: "integer" } }, required: ["path"] },
+  },
+  {
+    name: "write_file",
+    description: "Write file content with checkpoint backup.",
+    input_schema: { type: "object", properties: { path: { type: "string" }, content: { type: "string" } }, required: ["path", "content"] },
+  },
+  {
+    name: "shell",
+    description: "Execute a shell command in the workspace.",
+    input_schema: { type: "object", properties: { command: { type: "string" } }, required: ["command"] },
+  },
+  {
+    name: "git",
+    description: "Run a git command in the workspace.",
+    input_schema: { type: "object", properties: { command: { type: "string" } }, required: ["command"] },
+  },
+  {
+    name: "glob",
+    description: "Find files matching a glob pattern under a path.",
+    input_schema: {
+      type: "object",
+      properties: { pattern: { type: "string" }, path: { type: "string" } },
+      required: ["pattern"],
+    },
+  },
+  {
+    name: "grep",
+    description: "Search file contents with a regex pattern under a path.",
+    input_schema: {
+      type: "object",
+      properties: { pattern: { type: "string" }, path: { type: "string" } },
+      required: ["pattern"],
+    },
+  },
+];
+const GROQ_TOOL_DEFS = TOOL_DEFS.map((tool) => ({
+  type: "function",
+  function: {
+    name: tool.name,
+    description: tool.description,
+    parameters: tool.input_schema,
+  },
+}));
+const TOOL_PROMPT = [
+  "You are Karma inside the Nexus harness.",
+  "You do not have direct filesystem or shell access.",
+  "When you need a tool, respond with ONLY a JSON object in this exact form:",
+  '{"tool_use":{"name":"read_file","input":{"path":"MEMORY.md"}}}',
+  "Allowed tools:",
+  JSON.stringify(TOOL_DEFS),
+  "Rules:",
+  "1. Use tools instead of guessing about files, git state, or shell output.",
+  "2. After a tool result is returned, continue from that result.",
+  "3. When you are done, return plain text only, not JSON.",
+].join("\n");
+
+let mainWindow;
+let tray;
+let currentCCProc = null;
+let currentCCRunId = null;
+
+if (process.platform === "win32") {
+  // Windows Electron crashes here have been correlating with GPU watchdog events.
+  app.disableHardwareAcceleration();
+}
+
+function runtimeLog(event, details = null) {
+  try {
+    const line = JSON.stringify({
+      ts: new Date().toISOString(),
+      event,
+      ...(details ? { details } : {}),
+    });
+    fs.appendFileSync(RUNTIME_LOG_FILE, `${line}\n`, "utf-8");
+  } catch {}
+}
+
+function normalizeCrashDetails(details) {
+  if (!details || typeof details !== "object") return details || null;
+  return Object.fromEntries(
+    Object.entries(details).map(([key, value]) => {
+      if (value instanceof Error) {
+        return [key, { message: value.message, stack: value.stack }];
+      }
+      return [key, value];
+    }),
+  );
+}
+
+function recreateMainWindow(reason) {
+  runtimeLog("recreate-main-window", { reason });
+  try {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+
+CMD: electron/preload.js (first 160 lines)
+const { contextBridge, ipcRenderer } = require("electron");
+
+// KARMA NEXUS IPC Bridge (S156)
+contextBridge.exposeInMainWorld("karma", {
+  isElectron: true,
+  isNexus: true,
+
+  // File operations (with checkpointing)
+  fileRead: (path) => ipcRenderer.invoke("file-read", path),
+  fileWrite: (path, content) => ipcRenderer.invoke("file-write", path, content),
+  showOpenDialog: () => ipcRenderer.invoke("show-open-dialog"),
+
+  // Shell execution
+  shellExec: (command) => ipcRenderer.invoke("shell-exec", command),
+
+  // CC harness
+  chat: (message, options) => ipcRenderer.invoke("cc-chat", message, options),
+  cancel: () => ipcRenderer.invoke("cc-cancel"),
+  onChatEvent: (handler) => {
+    const listener = (_event, payload) => handler(payload);
+    ipcRenderer.on("cc-chat-event", listener);
+    return () => ipcRenderer.removeListener("cc-chat-event", listener);
+  },
+
+  // Cortex (K2 working memory)
+  cortexQuery: (query) => ipcRenderer.invoke("cortex-query", query),
+  cortexContext: () => ipcRenderer.invoke("cortex-context"),
+
+  // Ollama (local inference)
+  ollamaQuery: (prompt, model) => ipcRenderer.invoke("ollama-query", prompt, model),
+
+  // Claude-mem (persistent memory)
+  memorySearch: (query, limit) => ipcRenderer.invoke("memory-search", query, limit),
+  memorySave: (text, title) => ipcRenderer.invoke("memory-save", text, title),
+  hubToken: () => ipcRenderer.invoke("hub-token"),
+
+  // Evolution (Vesper pipeline)
+  spineRead: () => ipcRenderer.invoke("spine-read"),
+
+  // Git
+  gitStatus: () => ipcRenderer.invoke("git-status"),
+});
+
+SUMMARY_PROBES:
+surface_keys=ok,session,git,files,skills,hooks,memory,state,agents,transcripts
+spine_error=
+{
+  "ok": false,
+  "error": "K2 spine unreachable"
+}

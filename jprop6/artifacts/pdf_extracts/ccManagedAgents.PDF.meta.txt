@@ -1,0 +1,7 @@
+file=C:\Users\raest\Documents\Karma_SADE\Karma_PDFs\Inbox\ccManagedAgents.PDF
+pages=25
+meta:/CreationDate=D:20260409163922+00'00'
+meta:/Creator=Chromium
+meta:/ModDate=D:20260409163922+00'00'
+meta:/Producer=Skia/PDF m146
+meta:/Title=Anthropic Launches Claude Managed Agents (That Make Agentic AI Workflows Real) | by Joe Njenga | AI Software Engineer | Apr, 2026 | Medium

@@ -1,0 +1,651 @@
+line\ttext
+1	# STATE: Karma Peer — Decisions, Blockers, Progress
+2	
+3	**Last updated:** 2026-04-09 Session 163
+4	**THE ONLY PLAN:** `docs/ForColby/nexus.md` (v5.6.0 APPEND ONLY — Sovereign approved)
+5	**Locked frame:** hub.arknexus.net + Electron KARMA already ARE the merged workspace. Default model = one continual workspace/session; `new thread` is optional branching.
+6	**Internal pattern only:** `agent` / `orchestrator` remains valid for executor/gating/eval/governor internals, not as the top-level product model.
+7	**Status:** Phase 0-4 ALL SHIPPED. Gap map: 79/96 HAVE (0 MISSING). 16/17 primitives deployed. 3-tier cascade live. Phase 1+3 enhanced with MemPalace primitives (7 HIGH, 6 MEDIUM — obs #25022).
+8	**Session:** S163 — Nexus 5.6.0 ALL 19 TASKS DONE. Task 3-5 shipped: AAAK K2 cortex injection (71x compression live, obs #25972). Also fixed: /v1/learnings 502 (proxy.js missing auth headers), FalkorDB unless-stopped + health cron. Active: PROOF-A (blocker 18).
+9	**Canonical source:** This file. Read at session start.
+10	
+11	---
+12	
+13	## Current Status (Verified 2026-03-10)
+14	
+15	| Component | Status | Notes |
+16	|-----------|--------|-------|
+17	| **Consciousness Loop** | ✅ WORKING | 60s OBSERVE-only cycles. Zero LLM calls confirmed in source. RestartCount=0. |
+18	| **Hub Bridge API** | ✅ WORKING | /v1/chat, /v1/ambient, /v1/context, /v1/ingest, /v1/cypher all operational. /v1/cypher added session 127 — verified count(e)=4877. |
+19	| **Voice & Persona** | ✅ DEPLOYED | Peer-level voice via claude-haiku-4-5-20251001 (Session 76: haiku-20241022 was RETIRED, migrated). Both modes. |
+20	| **FalkorDB Graph** | ✅ FULLY CAUGHT UP | 3877 nodes (3305 Episodic + 571 Entity + 1 Decision). batch_ingest cron every 6h. Last run: 305 eps/s, 0 errors. |
+21	| **Ledger** | ✅ GROWING | 200,445 entries (verified 2026-03-22 live check). STATE.md was 30x understated (6,571). Git commits + session-end hooks capturing actively. |
+22	| **Work-Loss Prevention** | ✅ GATES LIVE | Pre-commit hook + session-end hook both active and verified. |
+23	| **Ambient Tier 1 Hooks** | ✅ WORKING | Git + session-end captures verified in ledger. |
+24	| **Ambient Tier 2 Endpoint** | ✅ DEPLOYED | /v1/context endpoint working. |
+25	| **GSD File Structure** | ✅ ADOPTED | All .gsd/ files in place and being used. |
+26	| **Chrome Extension** | ❌ SHELVED | Never worked reliably. Legacy data only. |
+27	| **Conversation Capture** | ✅ WORKING | All 3049 hub/chat episodes ingested via --skip-dedup. |
+28	| **batch_ingest Schedule** | ✅ CONFIGURED | Cron every 6h on vault-neo. --skip-dedup mode. |
+29	| **karma-server image** | ✅ REBUILT | Session-66: graph_query handler + hooks.py whitelist fix. |
+30	| **Primary Model (Decision #29)** | ✅ LIVE — Haiku 4.5 | claude-haiku-4-5-20251001 for both MODEL_DEFAULT + MODEL_DEEP. Session 76 emergency migration. |
+31	| **Routing/Pricing (Decision #29)** | ✅ UPDATED | Haiku 4.5 pricing: $1.00/$5.00 per 1M. routing.js allow-list updated. |
+32	| **GLM Rate Limiter** | ✅ KEPT (compat) | 40 RPM class kept in routing.js for compat; not invoked for claude- models. |
+33	| **Config Validation Gate** | ✅ LIVE | MODEL_DEFAULT + MODEL_DEEP allow-lists. [CONFIG ERROR] + exit(1) on bad config. 27/27 tests. |
+34	| **OpenAI API key** | ✅ SECURED | File-based read (mounted volume), not env var (docker inspect clean). |
+35	| **PDF Watcher** | ✅ WORKING | Rate-limit backoff + jam notification + time-window scheduling. |
+36	| **System Prompt Accuracy** | ✅ FIXED Session 85 | Tools contradiction removed (line 254). K2 ownership directive added. Tool list updated (shell_run, defer_intent, get_active_intents). "deep-mode only" confusion eliminated. 24,594 chars. |
+37	| **Deep-Mode Tool Gate** | ⚠️ CLARIFIED | Session-85: deep_mode only switches Haiku↔Sonnet model. Tools available in ALL modes (line 1894: all routes through callLLMWithTools). "deep-mode only" labels removed from system prompt. |
+38	| **v9 Phase 3 Persona Coaching** | ✅ DEPLOYED | Session-67: "How to Use Your Context Data" section in system prompt. KARMA_IDENTITY_PROMPT: 10,415 → 11,850 chars. docker restart only. |
+39	| **FAISS Semantic Retrieval** | ✅ LIVE | fetchSemanticContext() in hub-bridge. karmaCtx + semanticCtx via Promise.all. 4073 entries indexed. Session-62. |
+40	| **Correction Capture Protocol** | ✅ LIVE | Memory/corrections-log.md + CC Session End step 2. Session-62. |
+41	| **FalkorDB lane backfill** | ✅ DONE | 3040 Episodic nodes with lane=NULL → lane="episodic". 0 remaining. Session-62. |
+42	| **anr-vault-search** | ✅ FAISS | Custom search_service.py (NOT ChromaDB). FAISS + text-embedding-3-small. Auto-reindex on ledger change. |
+43	| **MEMORY.md Spine Injection** | ✅ LIVE | `_memoryMdCache` (tail 2000 chars, 5min refresh) injected as "KARMA MEMORY SPINE (recent)" in buildSystemText(). Session-85: fixed from 800→2000. |
+44	| **Universal Thumbs (turn_id)** | ✅ LIVE | All Karma messages show 👍/👎 via turn_id fallback. /v1/feedback accepts turn_id OR write_id. 11/11 tests. Session-72. |
+45	| **Confidence Levels** | ✅ LIVE | [HIGH]/[MEDIUM]/[LOW] mandatory on technical claims. Anti-hallucination hard stop before [LOW] assertions. System prompt 12,524→14,601 chars. Session-72. |
+46	| **Entity Relationships** | ✅ FIXED | MENTIONS co-occurrence replaces stale RELATES_TO (frozen at 2026-03-04). 11/11 tests. Session-72. |
+47	| **Recurring Topics** | ✅ LIVE | Top-10 entities by episode count. _pattern_cache refreshed every 30min at startup. Session-64. |
+48	| **Graphiti Watermark** | ✅ LIVE | batch_ingest watermark mode (Session 63). New episodes get entity extraction. :MENTIONS edges grow. |
+49	| **batch_ingest cron** | ✅ --skip-dedup FIXED | Session-70: cron now uses --skip-dedup permanently. Graphiti mode silently fails at scale. |
+50	| **GLM Tool-Calling** | ✅ LIVE | callGPTWithTools() now handles all non-Anthropic models (line 868 fix). Session-66. |
+51	| **graph_query tool** | ✅ LIVE | Karma can run Cypher against FalkorDB neo_workspace in standard GLM mode. End-to-end verified. Session-66. |
+52	| **get_vault_file tool** | ✅ LIVE | Karma can read canonical files by alias (MEMORY.md, system-prompt, etc.). Handled in hub-bridge. Session-66. |
+53	| **hooks.py whitelist** | ✅ UPDATED | graph_query + get_vault_file added to ALLOWED_TOOLS. Session-66. |
+54	| **TOOL_NAME_MAP** | ✅ FIXED | Pre-existing bug: was mapping read_file→file_read (wrong names). Now empty dict = identity passthrough. Session-66. |
+55	| **K2_PASSWORD secret** | ✅ SECURED | Removed plaintext from docker-compose.karma.yml → ${K2_PASSWORD} env var. Value in hub.env. Session-66. |
+56	| **Main branch protection** | ✅ ENABLED | allow_force_pushes=false, allow_deletions=false. Session-66. |
+57	| **Deferred Intent Engine (Phase 4)** | ✅ LIVE | defer_intent tool, get_active_intents tool, /v1/feedback intent approval, active intent injection in buildSystemText |
+58	| **MODEL_DEEP** | ✅ LIVE — sonnet-4-6 | Switched from haiku-4-5. ALLOWED_DEEP_MODELS updated. Monthly cap $60. Verified $0.0252/request. |
+59	| **File Upload** | ✅ LIVE | Upload button working. Vision pipeline: JPG/PNG → base64 → Anthropic multimodal (deep mode). Verified with KarmaSession031026a.md. |
+60	| **Thumbs ✓ saved confirmation** | ✅ LIVE | 👍 on write_id shows fade-out "✓ saved" in UI. Session 81. |
+61	| **Aria Integration — Memory Writes** | ✅ LIVE | X-Aria-Delegated removed from aria_local_call. Service key auth only. Aria now writes observations. |
+62	| **Aria Integration — vault-neo sync** | ✅ LIVE | After each aria_local_call, Aria observations POST to /v1/ambient → canonical ledger. Single spine preserved. |
+63	| **Aria Integration — session_id** | ✅ LIVE | UUID per page load (window.karmaSessionId in unified.html). Passed with every aria_local_call. Coherent Aria thread. |
+64	| **K2 Redundancy Cache** | ✅ LIVE | k2/sync-from-vault.sh pull/push/status. Cron: pull every 6h, push every 1h. Cache: /mnt/c/dev/Karma/k2/cache/. aria.service loads identity from cache at startup. Session 84c. |
+65	| **CC Ascendant Watchdog** | ✅ LIVE | K2 systemd timer 60s. run #73 HEALTHY. Scripts/cc_ascendant_watchdog.py. Zero Anthropic tokens. Session 96. |
+66	| **CC Identity Spine** | ✅ LIVE | cc_identity_spine.json on K2. identity.resume_block seeded. Governance tiers (candidate/stable) initialized. Session 96-97. |
+67	| **CC Cohesion Resume Block** | ✅ LIVE | 6-sentence Ascendant assertion in spine. Surfaces in === CC ASCENDANT RESUME BLOCK === banner at every cold start via resurrect Step 1b. Session 97. |
+68	| **Resurrect Step 1b** | ✅ UPDATED | Reads resume_block + stable_identity from K2 spine. Banner shown before brief. /anchor emergency-only. Session 96-97. |
+69	| **CC Evolution Loop** | ✅ ACTIVE | Watchdog sender fixed (cc-watchdog). Phase 12 HEALTHY 0.60. Evolution log has 42 entries. Session 99. |
+70	| **MANDATORY State-Write Protocol** | ✅ IN SYSTEM PROMPT | Section added to 00-karma-system-prompt-live.md: Karma MUST call aria_local_call after any DECISION/PROOF/PITFALL/DIRECTION/INSIGHT. Session 84b. |
+71	| **shell_run tool** | ✅ LIVE | Karma can execute shell commands on K2 via aria /api/exec. Gated by X-Aria-Service-Key. hub-bridge v2.11.0. Session 84d. |
+72	| **K2 /api/exec endpoint** | ✅ LIVE | Added to aria.py on K2. POST :7890/api/exec with command + service key. Returns stdout/stderr/exit_code. Session 84d. |
+73	| **vault-neo → K2 SSH auth** | ✅ LIVE | vault-neo public key in K2 authorized_keys. Reverse tunnel works as karma@localhost:2223. Session 84d. |
+74	| **K2 Structured Tools (k2_*)** | ✅ LIVE | 9 tools: k2_file_read, k2_file_write, k2_file_list, k2_file_search, k2_python_exec, k2_service_status, k2_service_restart, k2_scratchpad_read, k2_scratchpad_write. Hub-bridge routes k2_* → K2 /api/tools/execute. Session 86. |
+75	| **K2 Tool Registry** | ✅ LIVE | k2_tools.py on K2 (9 tools, 23 TDD tests). aria.py endpoints: GET /api/tools/list, POST /api/tools/execute. Session 86. |
+76	| **MAX_TOOL_ITERATIONS** | ✅ FIXED | Raised from 5→12 across Anthropic, OpenAI/ZAI, K2-Ollama providers. Session 86. |
+77	| **Conversation Persistence** | ✅ LIVE | localStorage persistence: saveMessages/loadSavedMessages/clearConversation. New Chat button. Messages survive refresh. Session 87b. |
+78	| **Context Fix (3 changes)** | ✅ DEPLOYED | KARMA_CTX_MAX_CHARS 3500, recent episodes 10, direction.md in buildSystemText. Session 86b. |
+79	| **Coordination Bus v1** | ✅ LIVE | Endpoints + tool + context injection + UI panel + compose input + disk persistence (JSONL). Colby can see and send messages. Session 87b. |
+80	| **K2 Working Memory Injection** | ✅ LIVE | fetchK2WorkingMemory() reads scratchpad.md + shadow.md via /api/exec. 4015 chars injected. 8th param to buildSystemText(). Session 85. |
+81	| **K2 Memory Query (dynamic)** | ✅ FIXED | fetchK2MemoryGraph(userMessage) instead of hardcoded "Colby". 1200 chars, 3 hits. Session 85. |
+82	| **K2 Ownership Directive** | ✅ IN SYSTEM PROMPT | K2 = Karma's resource (Chromium, Codex, KCC). Delegate heavy work to K2. Anthropic model = persona only. Session 85. |
+83	| **Coordination Disk Persistence** | ✅ LIVE | /run/state/coordination.jsonl (bind-mounted). Messages survive rebuilds. loadCoordinationFromDisk() at startup. Session 87b. |
+84	| **Context Tier Routing** | ✅ LIVE | 3-tier context routing: LIGHT (~11K), STANDARD (~20K), DEEP (~47K). Tier selection by message complexity. Session 99. |
+85	| **Prompt Caching (Anthropic)** | ✅ LIVE | 3 cache breakpoints: session history, tool loop, tool definitions. 45-46% cache hit rate. Session 99. |
+86	| **Karma Hard Rule (state claims)** | ✅ LIVE | Must cite K2 WORKING MEMORY before claiming infra state. Added to behavioral contract. Session 99. |
+87	| **Ascendent Folder Protocol** | ✅ LIVE | for-karma/Ascendent/ — Inbox/ (drops), Read/ (processed), ForColby/ (CC→Colby). Session 99. |
+88	| **Family Cohesion Layer** | ✅ LIVE | All 3 agents emit EVOLUTION_TAGS to bus: CC (SESSION CHECKPOINT), Karma (karma_bus_observer/10min), KCC (kcc_enhanced_watchdog/10 runs). Session 99. |
+89	| **KCC Cognitive Bus Posts** | ✅ LIVE | kcc_enhanced_watchdog.py _emit_cognitive_posts(). INSIGHT every 10 runs, DECISION on alerts. TDD PASS. Session 99. |
+90	| **CC Cognitive Checkpoint** | ✅ LIVE | cc_cognitive_write.ps1 writes cc_cognitive_checkpoint.json to K2 at session end. wrap-session mandatory. First run Session 99. |
+91	| **Vesper (Regent)** | ✅ LIVE | karma_regent.py on K2. Sovereign greeting fast path (< 60 chars, no action verbs → [ONLINE] terse status, zero LLM). State injection ([VESPER STATE] block prepended to all LLM calls). VESPER_IDENTITY SOVEREIGN ARRIVAL rule. Hallucination closed. Session 103. |
+92	| **Vesper UI (/regent)** | ✅ LIVE | Two-column: chat left (regent→colby), status right. isStatusMessage() filters from=colby — no double-display. Session 101-103. |
+93	| **Vesper 6-Tier Inference Cascade** | ✅ REORDERED Session 107 | K2 → P1 → z.ai → Groq → OpenRouter → Claude. TDD: 3/3 green. Gate: timeout/None only (no KPI routing). regent_inference.py. |
+94	| **Vesper Self-Improvement Pipeline** | ✅ ACTIVE | self_improving=True, spine v8, 2 stable patterns, total_promotions=4. All 5 convergence fixes deployed (vesper_patch_regent.py). Root blocker B1: ~50 new messages needed to fill tool_used=True window. |
+95	| **Vesper KPI Cortex (Pre-Frontal)** | ✅ DEPLOYED | karma_regent.py: _current_goal/_kpi_window globals, load_current_goal(), get_kpi_trend(). state_block injects goal+kpi on every turn. Session 107. |
+96	| **Vesper Adaptive Scan** | ✅ DEPLOYED | vesper_watchdog.py: backward scan collects 50 structured entries (vs stale 500-line window). Session 107. |
+97	| **Vesper FalkorDB Write** | ✅ DEPLOYED | vesper_governor.py: pattern write via hub-bridge /v1/cypher on every promotion. safe_exec governance target + SAFE_EXEC_WHITELIST. Session 107. |
+98	| **Regent Guardrails + Triage** | ✅ LIVE (pre-existing) | regent_guardrails.py (346 lines, checksum-gated begin_turn/finalize_turn), regent_triage.py (63 lines, classify()). docs/regent/ directory with identity_contract.json, session_state_schema.json. Begin_guarded_turn blocks on checksum drift. NOT built this session — was already on K2. |
+99	| **Vesper Memory Quality (Gap 3)** | ✅ FIXED | Memory now stores Q&A interaction summaries (not raw log noise). get_memory_context() returns last 5 interactions. append_memory("interaction", ...) called at line 680. Session 104. |
+100	| **vesper-watchdog.timer (Gap 4)** | ✅ LIVE | systemd timer: OnBootSec=2min, OnUnitActiveSec=10min. vesper-watchdog.service + .timer enabled on K2. Session 104. |
+101	| **vesper_identity.md (Gap 6)** | ✅ CREATED | /mnt/c/dev/Karma/k2/cache/vesper_identity.md — sovereign voice anchor. Loaded at startup by _load_vesper_identity(). karma-regent restarted with new identity. Session 104. |
+102	| **K2 MCP Server** | ✅ LIVE | Scripts/k2_mcp_server.py — 14 tools (file_read/write/list/search, python_exec, service_status/restart, scratchpad_read/write, bus_post, kiki_status/inject, ollama_chat, vesper_state). Registered in ~/.claude/mcp.json. Session 104. |
+103	| **Operational Status Block** | ✅ IN SYSTEM PROMPT | "What Is Wired and Working RIGHT NOW" table + anti-pattern list in 00-karma-system-prompt-live.md. Fixes 2-year rediscovery cycle. Session 87b. |
+104	
+105	---
+106	
+107	## Active Blockers
+108	
+109	1. ~~Coordination bus has no UI visibility~~ ✅ RESOLVED (Session 87b) — Panel + compose input deployed.
+110	2. ~~Conversation thread UI clears on refresh~~ ✅ RESOLVED (Session 87b) — localStorage persistence deployed.
+111	3. ~~**KIKI BRIDGE BROKEN**~~ ✅ RESOLVED (Session 90) — kiki_ filenames correct. Bridge reads real data.
+112	4. ~~**P0: vault-neo cannot run tests**~~ ✅ RESOLVED (Session 92) — pytest installed, 27/27 pass. Artifact at docs/supervisor/artifacts/P0-vault-neo-pytest-evidence.txt. Commit 792ef95.
+113	5. ~~**Kiki feedback loop missing**~~ ✅ RESOLVED (Session 93) — last_cycle_ts added to kiki state on every cycle. fetchK2WorkingMemory() path verified functional via Aria exec. Cycle count drift was cache lag (5min TTL), not a real gap.
+114	6. ~~**Coordination bus REST API returns 404**~~ ✅ RESOLVED (Session 93) — /v1/coordination aliased to /v1/coordination/recent in hub-bridge. Returns 200.
+115	7. ~~**Arbiter config path gap**~~ ✅ RESOLVED (Session 93) — Config/ dir created at /mnt/c/dev/Karma/k2/Config/, governance_boundary_v1.json + critical_paths.json copied from tmp/p0-proof/Config/. PolicyArbiter loads correctly.
+116	8. ~~**4 pending bus messages from Karma**~~ ✅ BUS FIXED — watcher chaos cleared. Bus quiet, no auto-responders running.
+117	9. ~~**CC cohesion test pending**~~ — resume_block confirmed working in Session 97+.
+118	10. ~~**B1: Evolution log sparsity**~~ ✅ RESOLVED — 10 stable patterns (4 PITFALL + 5 research_skill_card + 1 ambient_observation). K-3 ambient_observer.py WIRED. Pipeline active.
+119	11. ~~**B2: Synthetic stable patterns**~~ ✅ RESOLVED — 10 diverse stable patterns present (research_skill_card + PITFALL types confirmed).
+120	12. ~~**P0N-A URGENT**~~ ✅ LIVE (Session 111) — hub.arknexus.net/cc working, CC Ascendant responds with identity + state.
+121	22. ~~**PLAN-B — Make Julian Real**~~ ✅ COMPLETE (Session 137, 2026-03-23). cc_server_p1.py now uses claude.cmd --resume subprocess. ZEPHYR99 context retention verified. /cc route pre-wired. KarmaCCServer HKCU Run key crash recovery 15s.
+122	13. ~~**P3-D**~~ ✅ LIVE (Session 109) — Hooks deployed + committed.
+123	14. ~~**K2 aria.service**~~ ✅ FIXED Session 127 (2026-03-23). Root cause: zombie python3 PID 278533 (Session 123 process never killed) holding port 7890, blocking systemd restarts. Fix: stop service + pkill -9 -f aria.py + recreated drop-in /etc/systemd/system/aria.service.d/10-aria-env.conf (HOME=/home/karma) + restart. PROOF: service active PID 423990, /api/exec → {exit_code:0,output:"aria-exec-ok"}.
+124	16. **E-1-A corpus_cc.jsonl pending** -- Karma2/training/ created (2026-03-22). corpus_karma.jsonl written (2817 pairs). corpus_cc.jsonl needs separate ledger pass with CC session tag filter. TABLED with PHASE EVOLVE.
+125	17. **P0-G dead code** -- callWithK2Fallback() exists in server.js (~10 refs) but K2_INFERENCE_ENABLED flag NOT in hub.env. Wiring incomplete. Tabled until P0-G resumes.
+126	18. **PROOF-A pending** -- Codex as automated ArchonPrime service. GSD docs created (phase-proof-a-CONTEXT.md + phase-proof-a-PLAN.md). Task 1: verify `codex exec --sandbox` non-interactive from KCC context.
+127	19. ~~**/v1/cypher BROKEN**~~ ✅ FIXED Session 127 (2026-03-23). POST /v1/cypher route added to hub-bridge server.js — proxies to karma-server graph_query tool. Verified: count(e)=4877. Vesper governor HTTP path now works.
+128	20. ~~**karma-regent not in systemd**~~ ✅ FALSE POSITIVE — session 127 audit confirmed karma-regent.service IS at /etc/systemd/system/karma-regent.service, enabled, running PID 243460. No fix needed. Duplicate nohup process (PID 243451) killed.
+129	21. ~~**P049 researcher loop**~~ ✅ FIXED Session 127 — vesper_researcher.py: 24h dedup + 0.05 improvement gate added.
+130	
+131	## Next Session Starts Here
+132	1. /resurrect
+133	2. Plan-C verify: `TOKEN=$(ssh vault-neo 'cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt'); curl -s -X POST https://hub.arknexus.net/memory/search -H "Authorization: Bearer $TOKEN" -d '{"query":"zombie processes cc_server"}'` — if returns obs, C3 unblocked (zombie socket cleared by CC restart). Then continue phase-plan-c-wire-PLAN.md Task 4 (WebMCP tools).
+134	**Blocker if any:** None — pure verify step
+135	**Blocker if any:** None. GSD plan pre-created.
+136	
+137	---
+138	
+139	## Key Decisions (Locked)
+140	
+141	### Decision #1: Droplet Primacy (2026-02-23, LOCKED)
+142	Droplet (vault-neo) is Karma's permanent home. K2 is a worker that syncs back. All state on droplet.
+143	
+144	### Decision #2: Dual-Model Routing (2026-02-27, LOCKED)
+145	GLM-4.7-Flash (primary, ~80%) + gpt-4o-mini fallback (~20%). Verified MODEL_DEEP=gpt-4o-mini on 2026-03-04.
+146	
+147	### Decision #3: Consciousness Loop OBSERVE-Only (2026-02-28, LOCKED)
+148	K2 consciousness loop does NOT autonomously call LLM. OBSERVE → rule-based DECIDE → LOG only.
+149	
+150	### Decision #4: GSD Workflow Adoption (2026-03-03, LOCKED)
+151	GSD file structure adopted: PROJECT.md, REQUIREMENTS.md, STATE.md, ROADMAP.md, phase-CONTEXT/PLAN/SUMMARY per major feature.
+152	
+153	### Decision #5: Honesty Contract (2026-03-03, RENEWED)
+154	Brutal honesty always. Evidence before assertions. Never claim done without proof.
+155	
+156	### Decision #6: Chrome Extension Shelved (2026-03-03, LOCKED)
+157	Chrome extension never worked reliably. Removed from all documentation.
+158	
+159	### Decision #7: PowerShell for Git Ops (2026-03-03, LOCKED)
+160	Git Bash has persistent index.lock issue on Windows. All git operations via PowerShell.
+161	
+162	### Decision #8: --skip-dedup is Standard batch_ingest Mode (2026-03-03, LOCKED)
+163	Graphiti dedup queries time out at scale (85% error rate). Direct Cypher write via --skip-dedup: 899 eps/s, 0 errors. Cron uses --skip-dedup by default.
+164	
+165	### Decision #9: OpenAI API Key File-Based (2026-03-03, LOCKED)
+166	API key read from mounted volume file, not injected as env var. docker inspect stays clean.
+167	
+168	### Decision #10: KARMA_IDENTITY_PROMPT file-loaded at startup (2026-03-04, LOCKED)
+169	Hub-bridge reads Memory/00-karma-system-prompt-live.md via KARMA_SYSTEM_PROMPT_PATH env var at startup.
+170	Injected as identityBlock at top of buildSystemText(). File is volume-mounted read-only.
+171	Future persona changes require only: git pull on vault-neo + docker restart anr-hub-bridge. No rebuild.
+172	
+173	### Decision #11: anr-vault-search is FAISS (confirmed 2026-03-04)
+174	anr-vault-search container runs custom search_service.py — FAISS + OpenAI text-embedding-3-small.
+175	NOT ChromaDB. Endpoint: POST localhost:8081/v1/search. All ChromaDB references removed from all docs.
+176	
+177	### Decision #12: Semantic context injected in parallel (2026-03-04, LOCKED)
+178	karmaCtx (FalkorDB recency) + semanticCtx (FAISS top-5) fetched via Promise.all before every /v1/chat.
+179	4s timeout on FAISS call — graceful null if service unavailable. No serial dependency.
+180	
+181	### Decision #13: callGPTWithTools routes ALL non-Anthropic models (2026-03-05, LOCKED)
+182	Line 868 in server.js changed from `return callLLM()` → `return callGPTWithTools()`. GLM-4.7-Flash
+183	natively supports function calling via Z.ai OpenAI-compatible API. No provider switch needed.
+184	
+185	### Decision #14: TOOL_NAME_MAP is identity passthrough (2026-03-05, LOCKED)
+186	Pre-existing bug found: TOOL_NAME_MAP had file_read/file_write/file_edit/shell_exec (wrong names —
+187	karma-server uses read_file/write_file/edit_file/bash). Fixed to empty dict `{}` which falls through to
+188	`|| toolName` in the mapping code. Empty dict = correct. Any non-empty mapping = likely wrong.
+189	
+190	### Decision #15: get_vault_file handled in hub-bridge, not karma-server (2026-03-05, LOCKED)
+191	Hub-bridge has /karma/ volume mount access (read-only). karma-server ALLOWED_PATHS doesn't cover /karma/ paths.
+192	graph_query stays proxied to karma-server (needs FalkorDB access). Architecture split by access path.
+193	
+194	### Decision #16: Tool-calling gated to deep-mode only (2026-03-05, LOCKED)
+195	Standard GLM requests (deep_mode=false) route to callLLM() — no tools. Deep requests (x-karma-deep: true header) route to callLLMWithTools(). Security fix deployed in Session 67 (commit 41b2c06). Prevents unauthorized tool access in standard chat mode.
+196	
+197	### Decision #17: v9 Phase 4 — Karma write agency via thumbs up/down gate (2026-03-05, APPROVED)
+198	Design validated with user. Three-in-one mechanism: (1) thumbs up/down gates Karma's memory writes; (2) accumulates DPO preference pairs; (3) 👎 + text feeds corrections pipeline.
+199	API: POST /v1/feedback {turn_id, rating: +1/-1, note?: string}. turn_id already in every /v1/chat response.
+200	New tools: write_memory(content), annotate_entity(name, note), flag_pattern(description).
+201	Safe target: PATCH /v1/vault-file/MEMORY.md (append-only). Web UI thumbs up/down already present. NOT YET IMPLEMENTED — design only.
+202	
+203	---
+204	
+205	## Session History
+206	
+207	### Session 57 Accomplishments
+208	- FalkorDB unfrozen (Blocker #1)
+209	- hub/chat entries now reach FalkorDB (Blocker #2)
+210	- Cron configured every 6h (Blocker #3)
+211	- GSD docs updated
+212	
+213	### Session 58 Accomplishments
+214	- OpenAI API key secured (file-based, not env var)
+215	- karma-server restart loop fixed (gpt-5-mini → gpt-4o-mini)
+216	- GLM rate-limit handling redesigned (throttle, never paid fallback)
+217	- karma-server image rebuilt with all fixes
+218	- K2 sync worker deprecated
+219	- 10 stale remote branches deleted
+220	- compose credentials externalized
+221	
+222	### Session 59 Accomplishments
+223	- --skip-dedup added to batch_ingest (899 eps/s, 0 errors)
+224	- FalkorDB datetime() fix (ISO strings only, no datetime() function)
+225	- OPENAI_API_KEY env propagation fixed (os.environ.setdefault())
+226	- Full backfill complete: 3049 episodes ingested (was 1749)
+227	- karma-server image rebuilt with all fixes
+228	- Cron updated to --skip-dedup
+229	
+230	---
+231	
+232	## Known Limitations
+233	- ~~Conversation persistence~~ ✅ RESOLVED Session 87b — localStorage persistence deployed.
+234	- **Chrome extension:** Shelved permanently
+235	- **K2 not online:** Consciousness loop runs on droplet only
+236	- **No fine-tuning yet:** Need 20+ DPO preference pairs (accumulation in progress)
+237	- **Ambient Tier 3:** Screen capture daemon not built
+238	- **Entity graph growth lag:** Graphiti runs every 6h via cron. New episodes take up to 6h before entity nodes appear in FalkorDB.
+239	- **Per-episode Graphiti failures:** Watermark advances past failed episodes — silently lost at high error rates. Acceptable at low error rates.
+240	- **graph_query 100-row cap:** query_relevant_relationships() returns max 100 rows. Dense graphs may miss edges. Acceptable for now.
+241	- **get_vault_file 20KB cap:** Large files truncated at 20,000 chars. Acceptable for current vault files.
+242	- **hooks.py legacy aliases:** file_read, shell_exec still in ALLOWED_TOOLS but unused (pre-existing, harmless).
+243	
+244	---
+245	
+246	### Session 67 Accomplishments (2026-03-05)
+247	- Security fix: deep-mode tool gate — standard GLM no longer gets tool execution (commit 41b2c06)
+248	- v9 Phase 3 persona coaching deployed: "How to Use Your Context Data" section in system prompt (commit f90cea7)
+249	  - Fixed stale tool list (read_file/write_file → graph_query/get_vault_file)
+250	  - Entity Relationships behavioral coaching: weave connections unprompted
+251	  - Recurring Topics behavioral coaching: calibrate depth to top topics
+252	  - Deep mode proactivity: call graph_query before answering strategic questions
+253	- karma-server LLM analysis: router.py confirmed dead code (karma-terminal stale since 2026-02-27)
+254	- v9 Phase 4 design approved: Karma write agency via thumbs up/down gate (obs #4032)
+255	- karma-verify smoke test false alarm documented (obs #4035) — checks "reply" but hub returns "assistant_text"
+256	
+257	## Next Session Agenda (Session 68)
+258	
+259	1. **Acceptance test for v9 Phase 3**: Ask Karma about a Recurring Topic — verify she references relationship data unprompted. This validates persona coaching actually changed behavior.
+260	2. **v9 Phase 4 kickoff**: Brainstorming skill → design doc → implementation plan for write_memory tool + POST /v1/feedback endpoint.
+261	3. **Fix karma-verify skill**: Update smoke test to check "assistant_text" instead of "reply".
+262	
+263	---
+264	
+265	### Session 60 Accomplishments
+266	- drift-fix Phase complete: pricing, routing, MODEL_DEEP defaults, ANALYSIS_MODEL all corrected
+267	- Stage 3 build_hub.sh: safeguarded build script, app/ guard verified
+268	- Phase F GLM Rate Limiter: GlmRateLimiter class, 25/25 tests GREEN, wired into server.js
+269	- F4 deployed + V1-V5 all verified in production: 429 on burst, deep unaffected, ingest normal, $0 delta
+270	- Two injection attempts caught + flagged (security posture verified)
+271	
+272	---
+273	
+274	### Session 61 Accomplishments
+275	- Phase G Config Validation Gate: MODEL_DEFAULT allow-list + [CONFIG ERROR] structured log + process.exit(1)
+276	- 27/27 tests GREEN (up from 25/25); two commits RED→GREEN per TDD discipline
+277	- Production verified: docker exit_code=1 on bad MODEL_DEFAULT confirmed
+278	- hub.env inline allowed-value comments added on vault-neo
+279	
+280	---
+281	
+282	### Session 64 Accomplishments (2026-03-05)
+283	- Entity Relationships: query_relevant_relationships() — bulk RELATES_TO edge query using r.fact
+284	- Recurring Topics: _pattern_cache + _refresh_pattern_cache() — top-10 by episode count, 30min refresh
+285	- Both wired into build_karma_context() + startup loop; 9 new tests, 27/28 suite (1 pre-existing)
+286	- Deployed + verified: 20 edges for Karma query; Karma:357, User:315, Colby:138 in recurring topics
+287	- v9 direction set: persona iteration first (cheap + highest leverage)
+288	- Corrected: Session 63 Graphiti watermark WAS deployed (cc-session-brief only showed top-5 commits)
+289	
+290	### Session 63 Accomplishments (2026-03-04)
+291	- Graphiti watermark deployed to vault-neo: entity extraction enabled for new episodes
+292	- batch_ingest.py: watermark logic + Graphiti as default + 200 episode cap
+293	- Cron: --skip-dedup removed, WATERMARK_PATH=/ledger/.batch_watermark set
+294	- corrections-log.md updated
+295	
+296	### Session 62 Accomplishments (v8 — 2026-03-04)
+297	
+298	**v8 Phase 1: Fix self-knowledge**
+299	- Audited live system prompt — confirmed it was describing Open WebUI/Ollama from Feb 2026, not actual hub-bridge system
+300	- Rewrote Memory/00-karma-system-prompt-live.md: accurate arch, Brave Search, FAISS, 5 data model corrections
+301	- Discovered: hub-bridge was NOT loading the system prompt file — buildSystemText() was fully hardcoded
+302	- Wired KARMA_IDENTITY_PROMPT via fs.readFileSync at startup, injected as identityBlock in buildSystemText()
+303	- Future system prompt updates: git pull + docker restart only (no rebuild needed)
+304	- 4/4 acceptance tests pass: tools list, .verdict.txt location, batch_ingest direction, GLM-4.7-Flash identity
+305	
+306	**v8 Phase 3: Correction capture**
+307	- Memory/corrections-log.md created with format template + 6 backlog corrections (all INCORPORATED)
+308	- CLAUDE.md Session End Protocol step 2 added: scan session for Karma errors → corrections-log.md
+309	
+310	**v8 Phase 2: Semantic retrieval**
+311	- Discovered: anr-vault-search is NOT ChromaDB — it is custom search_service.py using FAISS + OpenAI text-embedding-3-small
+312	- 4073 entries indexed, auto-reindex on ledger FileSystemWatcher + every 5min periodic
+313	- Added fetchSemanticContext() to hub-bridge (4s timeout, POST localhost:8081/v1/search, top-5)
+314	- karmaCtx + semanticCtx now fetched in parallel via Promise.all before each /v1/chat response
+315	- Tasks 2.2 (new indexer) and 2.4 (cron sync) NOT NEEDED — service already handles these
+316	- All architecture.md, system prompt, MEMORY.md references corrected from ChromaDB → FAISS
+317	
+318	**v8 Phase 4: v7 cleanup**
+319	- MONTHLY_USD_CAP=35.00 — already in hub.env (no change needed)
+320	- x-karma-deep capability gate — already in server.js (no change needed)
+321	- lane=NULL backfill: 3040 Episodic nodes set to lane="episodic" via Cypher. 0 remaining.
+322	
+323	### Session 66 Accomplishments (2026-03-05)
+324	
+325	**Promise Loop Fix — Phases 1 & 2:**
+326	- RC1 fix: Line 413 (buildSystemText) false tool declaration corrected — accurate tool list with deep-mode gate
+327	- RC2 fix: Line 868 `callLLMWithTools()` — changed `callLLM()` → `callGPTWithTools()` for all non-Anthropic models
+328	- RC3 fix: System prompt context size corrected "~1800 chars" → "~12,000 chars (KARMA_CTX_MAX_CHARS)"
+329	- RC4 fix: GLM_RPM_LIMIT raised from 20 → 40 in hub.env; honest 429 behavior documented in system prompt
+330	- graph_query + get_vault_file added to TOOL_DEFINITIONS + TOOL_NAME_MAP + executeToolCall() in server.js
+331	- graph_query handler added to karma-core/server.py execute_tool_action()
+332	- graph_query + get_vault_file added to hooks.py ALLOWED_TOOLS whitelist (pre-existing pitfall: whitelist gates ALL tools)
+333	- TOOL_NAME_MAP pre-existing bug fixed: file_read/file_write/file_edit/shell_exec → empty dict (identity passthrough)
+334	- K2_PASSWORD moved from plaintext in docker-compose.karma.yml → ${K2_PASSWORD} env var + hub.env on vault-neo
+335	- End-to-end verified: hub-bridge logs show callGPTWithTools → finish_reason=tool_calls → execute → finish_reason=stop
+336	- 25 stale remote branches deleted; main branch protection enabled (no force push, no deletion)
+337	- PR #14 squash-merged to main (squash commit: 357bcb9)
+338	
+339	### Decision #10: KARMA_IDENTITY_PROMPT file-loaded at startup (2026-03-04, LOCKED)
+340	Hub-bridge reads Memory/00-karma-system-prompt-live.md via KARMA_SYSTEM_PROMPT_PATH env var at startup.
+341	Injected as identityBlock at top of buildSystemText(). File is volume-mounted read-only.
+342	Future persona changes require only: git pull on vault-neo + docker restart anr-hub-bridge. No rebuild.
+343	
+344	### Decision #11: anr-vault-search is FAISS (confirmed 2026-03-04)
+345	anr-vault-search container runs custom search_service.py — FAISS + OpenAI text-embedding-3-small.
+346	NOT ChromaDB. Endpoint: POST localhost:8081/v1/search. All ChromaDB references removed from all docs.
+347	
+348	### Decision #12: Semantic context injected in parallel (2026-03-04, LOCKED)
+349	karmaCtx (FalkorDB recency) + semanticCtx (FAISS top-5) fetched via Promise.all before every /v1/chat.
+350	4s timeout on FAISS call — graceful null if service unavailable. No serial dependency.
+351	
+352	---
+353	
+354	**Last updated:** 2026-03-10T22:30:00Z (Session 75 — Model switch to Haiku 3.5 + lib/*.js into git)
+355	**Owner:** Claude Code (writes on Colby approval)
+356	**Canonical location:** C:\Users\raest\Documents\Karma_SADE\.gsd\STATE.md
+357	
+358	### Session 68 Accomplishments (2026-03-05)
+359	
+360	**v9 Phase 4 — Karma Write Agency: ALL 10 TASKS COMPLETE**
+361	
+362	- Task 1: `hub-bridge/lib/feedback.js` — processFeedback + prunePendingWrites, 7 tests green (commit a17ce54)
+363	- Task 2: `write_memory` tool in server.js — pending_writes Map + tool def + writeId threading through callLLMWithTools→callGPTWithTools (commits 57ce894, 268bd08)
+364	- Task 3: `POST /v1/feedback` endpoint — auth + processFeedback + MEMORY.md fs.appendFileSync + DPO vault write (commits fe8a3b8, 722c05a, b002b5b)
+365	- Task 4: `karma-core/hooks.py` — `"write_memory"` added to ALLOWED_TOOLS (commit 362de7e)
+366	- Task 5: karma-server deployed — hooks.py synced to build context, image rebuilt, container healthy (RestartCount=0)
+367	- Task 6: hub-bridge deployed — server.js + lib/feedback.js synced, `lib/` created in parent build context, image rebuilt
+368	- Task 7: `unified.html` — write_id threading + thumbs-down textarea + quality fixes (no 400s, fresh token, double-submit guard) (commits 0618fbb, 314d301)
+369	- Task 8: system prompt — write_memory coaching paragraph in "How to Use Your Context Data" (commit 6f078e7); prompt: 11850→12366 chars
+370	- Task 9: hub-bridge redeployed with all UI changes; RestartCount=0; prompt length confirmed 12366
+371	- Task 10: End-to-end acceptance test PASSED — all 5 tests green:
+372	  1. Standard mode: no write_id ✅
+373	  2. Deep mode: write_id returned ✅
+374	  3. 👍 → `{wrote:true}` + MEMORY.md [KARMA-WRITE] line ✅
+375	  4. 👎 → `{wrote:false}` + MEMORY.md unchanged ✅
+376	  5. DPO pair in ledger: `type:"log", tags:["dpo-pair"]`, ledger 4118→4119 ✅
+377	
+378	**DPO bug fixes (2 iterations):**
+379	- Fix 1 (69f061b): bare object → `buildVaultRecord()` (vault requires type/confidence/verification/content as object)
+380	- Fix 2 (cf63957): `type:"dpo-pair"` → `type:"log"` (vault only allows ["fact","preference","project","artifact","log","contact"]); added status check
+381	
+382	### Decision #19: write_memory gate uses in-process pending_writes Map (2026-03-05, LOCKED)
+383	Approach A selected: `pending_writes` is a module-level Map in server.js. Key = `req_write_id` (generated pre-LLM). No vault round-trip for pending state. Entries removed on /v1/feedback approval/rejection or on TTL expiry (prunePendingWrites). No Redis or external state needed. Simpler, faster, sufficient for single-process hub-bridge.
+384	
+385	### Decision #20: DPO vault records use type:"log" with tags:["dpo-pair"] (2026-03-05, LOCKED)
+386	Vault-api schema only allows types: ["fact","preference","project","artifact","log","contact"]. "dpo-pair" is not a valid type. Correct pattern: `type:"log"`, `tags:["dpo-pair"]`. buildVaultRecord() required — bare objects fail schema validation (missing type/confidence/verification/content-as-object). Always check response status after vaultPost() — fire-and-forget swallows 422 errors silently.
+387	
+388	### Decision #21: hub-bridge lib/ files belong in build context parent, not app/ (2026-03-05, LOCKED)
+389	Build context is `/opt/seed-vault/memory_v1/hub_bridge/` (the parent). Dockerfile COPY commands are relative to this parent. `COPY lib/ ./lib/` requires `lib/feedback.js` at `/opt/seed-vault/memory_v1/hub_bridge/lib/` — NOT under `app/`. Must `mkdir -p` this directory first, then `cp`. Easy to get wrong because server.js lives under `app/`.
+390	
+391	**Last updated:** 2026-03-09T23:00:00Z (Session 70 — system prompt trim + cron fix + FalkorDB catchup)
+392	
+393	### Session 70 Accomplishments (2026-03-09)
+394	- System prompt trimmed: 16,519 → 11,674 chars (-29%) — reduces per-request input from 67K → 57K chars, fixes recurring 429s
+395	- "Resurrection spine" language banned in system prompt — old design doc artifact, not live behavior
+396	- Context lag explained: "0-6h FalkorDB lag is normal and expected"
+397	- **CRON BUG FIXED**: vault-neo crontab was using Graphiti mode (no --skip-dedup). Graphiti silently fails at scale: watermark advances, 0 FalkorDB nodes created, no error in logs. Fixed: `--skip-dedup` added permanently to cron.
+398	- Manual FalkorDB catchup: reset watermark to 4100, ran --skip-dedup: 118 entries, 0 errors, 879 eps/s. March 5+9 entries now in FalkorDB.
+399	- **Thumbs up/down UI feature**: brainstorming started (not complete) — DRL article connection noted, session ended before code exploration.
+400	
+401	### Next Session Agenda (Session 71)
+402	1. **Thumbs up/down UI feature**: Resume brainstorming — explore hub-bridge/app/server.js for existing /v1/feedback + unified.html for current UI state. Then writing-plans → implement.
+403	
+404	**Last updated:** 2026-03-05T21:30:00Z (Session 68 — v9 Phase 4 complete)
+405	
+406	### Decision #22: MENTIONS co-occurrence replaces stale RELATES_TO (2026-03-10, LOCKED)
+407	RELATES_TO edges (1,423) are permanently frozen at 2026-03-04 — all from Chrome extension + Graphiti dedup era.
+408	--skip-dedup mode (active since Session 59) never creates RELATES_TO; only creates MENTIONS.
+409	query_relevant_relationships() now uses Episodic→Entity MENTIONS co-occurrence cross-join, cocount >= 2.
+410	Live data: Karma/Colby=123, Karma/User=100, User/Universal AI Memory=44. 11/11 TDD tests GREEN.
+411	
+412	### Decision #23: Confidence level tags mandatory in system prompt (2026-03-10, LOCKED)
+413	[HIGH]/[MEDIUM]/[LOW] tags on all technical claims. [HIGH] = verified in current context this session.
+414	[MEDIUM] = reasonable inference from pattern/adjacent evidence. [LOW] = unverified.
+415	Placement: on specific claims only, not every sentence. Reserve [HIGH] strictly — value comes from rarity.
+416	
+417	### Decision #24: Anti-hallucination hard stop before [LOW] claims (2026-03-10, LOCKED)
+418	Before asserting unverified API behavior, function signatures, or endpoint paths: Karma must STOP and write:
+419	"[LOW] I haven't verified this. Should I fetch_url or graph_query to confirm first?"
+420	Do not proceed with the unverified claim. Propose verification instead.
+421	In standard mode: "[LOW] This isn't in my current context — you'd need to check docs or run a query via CC."
+422	
+423	### Decision #25: Context7 rejected — DIY get_library_docs with URL map (2026-03-10, LOCKED)
+424	Context7 free tier (1,000 calls/month) covers estimated usage (60-750/month) but adds external dependency.
+425	Decision: build get_library_docs(library) as hub-bridge deep-mode tool using hardcoded URL map + existing fetch_url logic.
+426	Target libraries: redis-py, falkordb, falkordb-py, fastapi. ~30min implementation. No external account required.
+427	Status: DECIDED, not yet implemented (v10 priority #5).
+428	
+429	### Decision #26: Universal thumbs via turn_id (2026-03-10, LOCKED)
+430	Every Karma response now carries 👍/👎 UI regardless of write_memory presence.
+431	/v1/feedback accepts turn_id as alternative to write_id. write_id takes priority when both present.
+432	General quality signal + DPO pair accumulation even in standard mode.
+433	Thumbs-down + note feeds correction pipeline. Backward compatible — existing write_memory gate unchanged.
+434	
+435	### Session 72 Accomplishments (2026-03-10)
+436	
+437	**v10 Priority #1: Universal Thumbs via turn_id — COMPLETE**
+438	- hub-bridge/lib/feedback.js: processFeedback() extended with turn_id 5th param; stored in dpo_pair
+439	- hub-bridge/app/server.js: /v1/feedback validation updated — turn_id OR write_id required; turn_id passed through
+440	- hub-bridge/app/public/unified.html: gate changed from writeId-only to (writeId || turnId); buildFeedbackPayload sends write_id first, falls back to turn_id; all 3 signal paths send correct payload
+441	- 4 new TDD tests (11/11 GREEN); deployed + smoke test verified {wrote:false} on turn_id-only POST
+442	- PITFALL: All changed hub-bridge files (server.js, lib/feedback.js, app/public/unified.html) must be synced to build context — not just server.js. Session-72 caught: unified.html + feedback.js were not synced on prior deploy.
+443	
+444	**v10 Blocker #2: Entity Relationships data quality — COMPLETE**
+445	- ROOT CAUSE: query_relevant_relationships() queried RELATES_TO — 1,423 edges frozen at 2026-03-04 (Chrome ext era). --skip-dedup mode never creates RELATES_TO; Graphiti dedup (disabled Session 59) was sole creator.
+446	- FIX: MENTIONS co-occurrence query — Episodic→Entity cross-join, cocount >= 2, ORDER BY cocount DESC LIMIT 20
+447	- Relationship label format: "co-occurs in N episodes" (human-readable, not raw edge fact)
+448	- LIVE data confirmed: Karma/Colby=123, Karma/User=100, User/Universal AI Memory=44
+449	- TDD: 2 new tests (test_query_relevant_relationships_uses_mentions_not_relates_to, test_query_relevant_relationships_formats_cooccurrence_label); 11/11 GREEN
+450	- Deployed: git pull → cp server.py to build context → --no-cache rebuild → docker compose up -d → RestartCount=0
+451	
+452	**v10 Priority #3+#4: Confidence Levels + Anti-Hallucination Gate — COMPLETE**
+453	- Added "Confidence Levels — Mandatory for Technical Claims" section to Memory/00-karma-system-prompt-live.md
+454	- [HIGH]/[MEDIUM]/[LOW] tag definitions + placement rule + calibration rules
+455	- Anti-hallucination gate: hard stop + propose verification before proceeding with [LOW] claims
+456	- KARMA_IDENTITY_PROMPT: 12,524 → 14,601 chars
+457	- Deployed via docker restart anr-hub-bridge (no rebuild needed); acceptance tests: [LOW] on unverified redis-py signature; [HIGH] on known system facts — both passed
+458	- Covers v10 priority #3 (confidence levels) AND #4 (anti-hallucination pre-check) in single section
+459	
+460	**v10 Context Blindness Fix (Session 72 Root Bug)**
+461	- ROOT CAUSE: buildSystemText() had no path for MEMORY.md injection — Karma never saw MEMORY.md content
+462	- FIX: _memoryMdCache module-level cache (tail 3000 chars), loaded at startup + refreshed every 5min
+463	- Injected as "--- KARMA MEMORY SPINE (recent) ---" section in buildSystemText()
+464	- hub-bridge now auto-injects last 3000 chars of MEMORY.md into every /v1/chat request
+465	- 6/6 TDD tests (test_system_text.js) GREEN; deployed + verified Karma can see v10 plan details
+466	
+467	### Decision #28: claude-3-5-haiku-20241022 as primary model (2026-03-10, SUPERSEDED by #29)
+468	Previously set as primary in Session 75. Model was already RETIRED as of 2026-02-19 — this was an error.
+469	
+470	### Decision #29: claude-haiku-4-5-20251001 as primary model (2026-03-10, LOCKED)
+471	haiku-20241022 RETIRED 2026-02-19 — was producing `Error: internal_error` in Karma UI.
+472	Official Anthropic replacement: claude-haiku-4-5-20251001 (Active, retirement not before Oct 2026).
+473	MODEL_DEFAULT=claude-haiku-4-5-20251001, MODEL_DEEP=claude-haiku-4-5-20251001. Pricing: $1.00/$5.00 per 1M.
+474	routing.js ALLOWED_DEFAULT_MODELS + ALLOWED_DEEP_MODELS updated. hub.env on vault-neo updated. Container rebuilt --no-cache.
+475	Verified: `model: claude-haiku-4-5-20251001, debug_provider: anthropic` in live API response.
+476	
+477	### Decision #30: Cognitive Architecture Layer is the next major milestone (2026-03-10, LOCKED)
+478	Colby identified that Karma's original purpose was cognitive architecture — never built. 75+ sessions of plumbing without the core layer. Three missing components:
+479	- **Self-Model Kernel**: A dynamic, per-request phase where Karma maintains an explicit model of herself (capabilities, current state, recent patterns) — NOT the static system prompt.
+480	- **Metacognitive Trace**: Real-time capture of Karma's reasoning about her own reasoning — WHY she said what she said, what alternatives she considered, confidence trajectory. The consciousness loop was supposed to be this. It stalled at OBSERVE-only.
+481	- **Deferred Intent Engine**: A mechanism to carry forward behavioral intentions across turns and sessions. "When X comes up, also do Y." "Next session: remember to mention Z." Not approval-gating (that's write_memory) — intent scheduling.
+482	These three together form the Cognitive Architecture Layer — what makes Karma cognizant rather than merely contextually rich. This is Milestone 8.
+483	
+484	### Session 74 Accomplishments (2026-03-10) — v11 Karma Full Read Access
+485	- get_vault_file extended: repo/<path> + vault/<path> prefixes + traversal protection (path.resolve + startsWith)
+486	- /opt/seed-vault:/karma/vault:ro volume mount added to compose.hub.yml
+487	- get_local_file(path) tool: hub-bridge calls PowerShell HTTP server on Payback (Tailscale 100.124.194.102:7771)
+488	- karma-file-server.ps1: PowerShell HttpListener, bearer token auth, 40KB cap, traversal protection
+489	- KarmaFileServer Windows Task Scheduler task registered (always-on, AtBoot+AtLogon)
+490	- System prompt updated: repo/<path> + vault/<path> + get_local_file concrete examples (16,511 chars)
+491	- 7/7 end-to-end tests passed; all 8 plan tasks complete
+492	
+493	### Session 75 Accomplishments (2026-03-10) — Model Switch to Haiku 3.5
+494	- Diagnosed: DPO pairs ARE working (log evidence); prior "0 pairs" was outdated
+495	- MODEL_DEFAULT + MODEL_DEEP switched from GLM/gpt-4o-mini → claude-3-5-haiku-20241022
+496	- routing.js: updated ALLOWED_DEFAULT_MODELS + ALLOWED_DEEP_MODELS + default constants (Decision #28)
+497	- hub.env on vault-neo: MODEL_DEFAULT + MODEL_DEEP updated; PRICE_CLAUDE updated to Haiku rates
+498	- lib/*.js (feedback.js, routing.js, pricing.js, library_docs.js) committed to git — were missing from repo
+499	- Container rebuilt --no-cache and deployed; RestartCount=0; env verified inside container
+500	- Acknowledged root failure: backend-only verification declared as "green" without UX testing
+501	
+502	### Session 84 Accomplishments (2026-03-11)
+503	- MANDATORY K2 state-write protocol added to system prompt: Karma must call aria_local_call after DECISION/PROOF/PITFALL/DIRECTION/INSIGHT (Session 84b)
+504	- K2 redundancy cache built: sync-from-vault.sh pull/push/status, 6h pull cron, 1h push cron, aria.service starts with identity cached (Session 84c)
+505	- /health endpoint added to aria.py on K2 — returns vault_reachable, cache_age_hours, last_sync (Session 84c)
+506	- vault-neo public key added to K2 authorized_keys; reverse tunnel verified: karma@localhost:2223 → K2:22 (Session 84d)
+507	- shell_run tool added to hub-bridge TOOL_DEFINITIONS + handler: calls K2:7890/api/exec (Session 84d)
+508	- /api/exec endpoint added to aria.py: subprocess.run gated by X-Aria-Service-Key, 30s timeout (Session 84d)
+509	- hub-bridge v2.11.0 deployed, RestartCount=0 (Session 84d)
+510	- Decision #34: shell_run routes through aria /api/exec, not direct SSH (locked Session 84d)
+511	
+512	### Session 85 (2026-03-12) — Emergency Fix: Karma Broken Memory + System Prompt
+513	- EMERGENCY: Karma forgot most of week, couldn't use tools (fetch_url), contradictory system prompt
+514	- ROOT CAUSES (5): tools contradiction line 254, MEMORY_MD_TAIL slashed to 800, K2 query hardcoded "Colby", scratchpad/shadow not wired, accumulated drift
+515	- System prompt: removed tools contradiction, added K2 ownership directive, updated tool list, eliminated "deep-mode only" confusion
+516	- server.js: MEMORY_MD_TAIL_CHARS 800→2000, fetchK2MemoryGraph("Colby")→fetchK2MemoryGraph(userMessage)
+517	- NEW: fetchK2WorkingMemory() — reads scratchpad.md + shadow.md via /api/exec, injected as 8th param to buildSystemText
+518	- BUGFIX: /api/exec returns {ok:true} not {success:true} — fetchK2WorkingMemory initially checked wrong field
+519	- VERIFIED: K2 working memory 4015 chars loaded, K2 memory graph 1200 chars/3 hits, fetch_url working, shell_run working
+520	- Decision #35: K2 is Karma's resource — delegate heavy work (browse/code/compute) to K2, Anthropic model = persona only
+521	- Claude-mem observations: #5325 (root causes), #5326 (plan), #5337 (bugfix), #5338 (verification)
+522	
+523	## Next Session Starts Here
+524	
+525	1. **Fix Karma regression** — She's still giving status dumps instead of acting from the operational table. The prompt update wasn't enough. Investigate: is the updated system prompt actually loaded? Check docker logs for prompt length.
+526	2. **Karma↔CC behavioral test** — Have Karma POST to CC via coordination_post. CC reads and responds. First real exchange without Colby relaying.
+527	3. **If JSON truncation recurs** — Increase HUB_MAX_OUTPUT_TOKENS_DEFAULT from 3000 to 4096 in hub.env.
+528	
+529	**Blocker:** Karma regression — if she can't act from the operational table, the coordination loop won't work because she'll keep re-deriving instead of using coordination_post.
+530	
+531	### Decision #31: "Aria" unified into Karma — one peer, two compute paths (2026-03-11, LOCKED)
+532	"Aria" was a working name for K2's local Karma instance built in isolation. Confirmed by Colby: no separate entity. One peer (Karma), two compute paths: cloud (vault-neo + Anthropic API) and local (K2 + qwen3-coder:30b). One memory spine. All code built for "Aria" on K2 is Karma's local half. aria_local_call = Karma calling herself on local hardware.
+533	
+534	### Decision #32: MODEL_DEEP = claude-sonnet-4-6 (2026-03-11, LOCKED)
+535	MODEL_DEFAULT stays claude-haiku-4-5-20251001 (cheap, fast, standard queries).
+536	MODEL_DEEP changed to claude-sonnet-4-6 (stronger reasoning, peer-quality conversation, better tool-calling).
+537	hub.env updated on vault-neo. routing.js allow-list must be verified to include claude-sonnet-4-6.
+538	
+539	### Decision #33: Subscription cleanup — target $30-35/mo (2026-03-11, LOCKED)
+540	Cut (auto-top-up disabled): GLM/z.ai, MiniMax, Perplexity API, Groq, Twilio, Postmark.
+541	Keep: DigitalOcean ($24), Anthropic API (~$5-15), OpenAI API (<$1 embeddings), Brave Search, Cloudflare, Porkbun.
+542	Evaluate: OpenRouter (unified model API, could replace direct Anthropic+OpenAI), Google Workspace (user doesn't use it — Cloudflare email routing is free alternative).
+543	
+544	### Session 81 Accomplishments (2026-03-11)
+545	- Context amnesia root cause diagnosed from KarmaSession031026a.md: MAX_SESSION_TURNS=8 (deployed Session 80)
+546	- File upload fix deployed and verified: KarmaSession031026a.md successfully uploaded and analyzed by Karma
+547	- vault-neo → K2 Tailscale confirmed: Ollama at :11434, Aria/Karma-local service at :7890 both operational
+548	- qwen3-coder:30b confirmed MoE architecture: ~3.3B active per token, ~0.26s warm latency
+549	- ARCHITECTURAL CLARITY: "Aria" = Karma's local compute half. Not a separate entity.
+550	- MODEL_DEEP switched to claude-sonnet-4-6 in hub.env
+551	- Subscription cleanup plan established — 6 services cut, target $30-35/mo
+552	- PITFALL: `cp -r source/ dest/` does not overwrite existing files — always explicit file copy for individual files
+553	
+554	### Session 81 Complete Accomplishments (2026-03-11)
+555	- Context amnesia root cause diagnosed: MAX_SESSION_TURNS=8 (Session 80 deploy)
+556	- File upload button fixed and verified: cp -r pitfall documented
+557	- vault-neo → K2 Tailscale confirmed: Ollama :11434, Aria :7890 both operational
+558	- qwen3-coder:30b: confirmed MoE ~3.3B active/token, ~0.26s warm latency
+559	- ARCH CLARITY: "Aria" = Karma's local compute half (not separate entity)
+560	- MODEL_DEEP=claude-sonnet-4-6 deployed + verified ($0.0252/req, cites episode IDs)
+561	- routing.js ALLOWED_DEEP_MODELS updated to include claude-sonnet-4-6
+562	- Monthly cap raised to $60 in hub.env; compose up -d to apply
+563	- Subscription cleanup: 6 services cut (GLM, MiniMax, Perplexity API, Groq, Twilio, Postmark)
+564	- Thumbs ✓ saved UI confirmation deployed
+565	- Codex Aria API inventory complete: 80 endpoints, memory subsystems, auth paths documented
+566	- X-Aria-Delegated header removed from aria_local_call — Aria now writes observations
+567	- Aria → vault-neo sync: observations POST to /v1/ambient after each chat call
+568	- session_id threading wired: UUID per page load → coherent Aria conversation thread
+569	- Decisions #29-#33 locked and promoted to 02-stable-decisions.md
+570	
+571	## Next Session Starts Here
+572	
+573	### 🔴 PRIORITY #1: Conversation Thread Persistence (EMERGENCY)
+574	Karma lost an entire conversation mid-session (2026-03-12 ~12:03 PM) after an `internal_error` killed one API call. Browser JS conversation array was wiped. Karma introduced herself fresh — zero recall of the thread about PDF processing, directory questions, etc.
+575	
+576	**Root cause:** No server-side conversation storage. Thread lives only in `unified.html` JS array.
+577	**Evidence:** Vault ledger has ALL turns (`[hub,chat,default]` entries with user_message + assistant_text) but no mechanism to reload them into a conversation.
+578	**Impact:** Everything else is useless if Karma forgets mid-conversation. Colby's words: "Session continuity is supposed to be constant!?!"
+579	
+580	**Fix needed:**
+581	1. Server-side conversation storage keyed by session_id (already exists — `window.karmaSessionId` UUID per page load)
+582	2. On error/reconnect, client requests conversation history from server
+583	3. Server returns stored turns, client rebuilds conversation array
+584	4. K2 MCP Phase 3 is **PAUSED** until this is fixed.
+585	
+586	### Other items (PAUSED pending conversation persistence fix)
+587	- K2 MCP Phase 3: dynamic tool discovery at hub-bridge startup
+588	- Prompt caching (Anthropic ephemeral cache_control)
+589	- Colby has a PDF to share — waiting after doc updates
+590	
+591	**Active models:** MODEL_DEFAULT=claude-haiku-4-5-20251001, MODEL_DEEP=claude-sonnet-4-6 (both LIVE)
+592	**hub-bridge:** v2.11.0, RestartCount=0, 2026-03-12
+593	**K2 tools:** 9 k2_* structured tools LIVE via /api/tools/execute
+594	
+595	---
+596	
+597	## Session 122 (2026-03-22) — E-1-A Complete
+598	
+599	**Done:** E-1-A corpus builder — Scripts/corpus_builder.py (146 lines), 2817 Alpaca pairs from 3191 vault ledger hub+chat entries. Logs/corpus_alpaca.jsonl (5.2MB, gitignored, local).
+600	
+601	**Active Blockers:** None.
+602	
+603	---
+604	
+605	## Session 123 (2026-03-22) — Plan Audit: PHASE EVOLVE Tabled, Gaps Resolved
+606	
+607	**Done:**
+608	- PHASE EVOLVE (Unsloth/training) tabled with explicit gate conditions in PLAN.md
+609	- K-3 re-verified DONE: aria_consciousness.py Phase 7 → ambient_observer.py → regent_evolution.jsonl → vesper_watchdog.extract_ambient_candidates() → spine. 1 ambient_observation stable pattern confirmed.
+610	- E-1-A: Karma2/training/ created. corpus_karma.jsonl written (2817 pairs). corpus_cc.jsonl tabled.
+611	- aria.service fixed: zombie PID 278124 killed, service active PID 278533.
+612	- PROOF-A GSD docs created: phase-proof-a-CONTEXT.md + phase-proof-a-PLAN.md (4 tasks)
+613	- P045: K-3 audit pitfall added to cc-scope-index.md
+614	- STATE.md blockers 14-18 updated
+615	
+616	**Active Blockers:** 16 (corpus_cc.jsonl tabled), 17 (P0-G dead code tabled), 18 (PROOF-A pending)
+617	
+618	---
+619	
+620	## Session 138 (2026-03-25) — Plan-C C-GATE PASSED
+621	
+622	**Done:**
+623	- Plan-C C1: vault-neo reaches claude-mem at 100.124.194.102:37778 via Tailscale ✅
+624	- Plan-C C2: registerWebMCPTools() in unified.html; WebMCP content script logged "3 tools" on hub.arknexus.net ✅
+625	- Plan-C C3: /memory/search proxies to claude-mem GET /api/search?query= ✅
+626	- Plan-C C4: loadBrainContext() localStorage 1hr TTL, "restored" on reload ✅
+627	- C-GATE PASSED: family is wired
+628	- Gemini Nano: LanguageModel.availability()="available" on localhost Chrome 146
+629	- PITFALL captured (obs #11594): Chrome DevTools MCP uses isolated profile — always test Chrome APIs in user's browser
+630	
+631	**Active Blockers:** 16 (corpus_cc.jsonl tabled), 17 (P0-G dead code tabled), 18 (PROOF-A Task 4 pending)
+632	
+633	## Known Issues — Resolve After Nexus Stable (Session 149)
+634	
+635	| # | Issue | Severity | Context |
+636	|---|-------|----------|---------|
+637	| KI-1 | `buildSystemText` has 11 positional params — refactor to single `opts` object | Medium | Touches every call site (3+). Defer to avoid breakage during Nexus stabilization. |
+638	| KI-2 | `appendToolEvidence()` does not call `saveMessages()` — tool evidence lost on refresh | Low | Tool evidence is ephemeral by design (reconstructed from `tool_log` on next response). If persistence desired, add save call + serialization format for tool blocks. |
+639	| KI-3 | Section names in buildSystemText are unvalidated strings | Low | Typo in any of the 15 section names silently drops that section. Fix: validate names at startup against `SECTION_ORDER` array, or use constants. n=15 makes this low risk. |
+640	| KI-4 | `tierToMode()` is a vestigial function (always returns "nexus") | Low | Kept as the mode entry point. If modes are never re-added, delete and inline "nexus" at call sites. |
+641	| KI-5 | `getIdentityForTier(tier)` still branches on tier values | Low | With single nexus mode, tier distinctions in identity selection are dead. Simplify to always return `KARMA_IDENTITY_PROMPT`. |
+642	| KI-6 | `chooseModel(tier, env)` may have dead tier-based branches | Low | Verify whether model selection still varies by tier. If not, simplify. |
+643	| KI-7 | `appendToolEvidence` uses fragile DOM sibling navigation in inline onclick | Low | `this.previousElementSibling.textContent=...` breaks if DOM structure changes. Refactor to use data attributes + event delegation. |
+644	| KI-8 | Cascade dots in unified.html reference models (5.4-mini, 5.4, Sonnet) but MODEL_DEFAULT is now Haiku | Low | Cascade should reflect actual live routing chain. Update dots after model stack stabilizes. |
+645	
+646	## Next Session Starts Here
+647	1. /resurrect
+648	2. Nexus end-to-end verification from browser (Colby tests live)
+649	3. PROOF-A Task 4: Post bus message `to=codex` → verify KCC detects → [ARCHONPRIME] response on bus within 60s
+650	

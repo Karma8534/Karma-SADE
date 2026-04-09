@@ -1,0 +1,58 @@
+CANONICAL INPUTS
+C:\Users\raest\Documents\Karma_SADE\docs\ForColby\nexus.md
+C:\Users\raest\Documents\Karma_SADE\.gsd\STATE.md
+
+INBOX INPUTS
+C:\Users\raest\Documents\Karma_SADE\Karma_PDFs\Inbox\ccManagedAgents.PDF
+C:\Users\raest\Documents\Karma_SADE\Karma_PDFs\Inbox\ccManagedAgents.PDF.error.txt
+C:\Users\raest\Documents\Karma_SADE\Karma_PDFs\Inbox\oAOHarnessEng.PDF
+C:\Users\raest\Documents\Karma_SADE\Karma_PDFs\Inbox\oAOHarnessEng.PDF.error.txt
+
+PDF EXTRACTIONS READ
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\pdf_extracts\ccManagedAgents.PDF.meta.txt
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\pdf_extracts\ccManagedAgents.PDF.txt
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\pdf_extracts\oAOHarnessEng.PDF.meta.txt
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\pdf_extracts\oAOHarnessEng.PDF.txt
+
+AUDIT ARTIFACTS READ
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\nexus_lines.tsv
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\state_lines.tsv
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\nexus_line_audit.tsv
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\state_line_audit.tsv
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\nexus_claim_lines.tsv
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\state_claim_lines.tsv
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\referenced_paths.tsv
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\inbox_manifest.tsv
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\pdf_primitive_candidates.tsv
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\pdf_line_audit.tsv
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\runtime_checks.txt
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\runtime_checks_latest.txt
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\watcher_failure_evidence.tsv
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\command_log.txt
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\command_log_full.txt
+C:\Users\raest\Documents\Karma_SADE\jprop6\artifacts\npm_audit.json
+
+JPROP6 DOCUMENTS READ
+C:\Users\raest\Documents\Karma_SADE\jprop6\BREAK_REPORT.md
+C:\Users\raest\Documents\Karma_SADE\jprop6\EXECUTION_GATES.md
+C:\Users\raest\Documents\Karma_SADE\jprop6\FORENSIC_AUDIT.md
+C:\Users\raest\Documents\Karma_SADE\jprop6\FOUNDATION_DECISION.md
+C:\Users\raest\Documents\Karma_SADE\jprop6\futurework.md
+C:\Users\raest\Documents\Karma_SADE\jprop6\jprop6.md
+C:\Users\raest\Documents\Karma_SADE\jprop6\PHASE_SIMULATIONS.md
+C:\Users\raest\Documents\Karma_SADE\jprop6\PRIMITIVES.md
+C:\Users\raest\Documents\Karma_SADE\jprop6\PROOF.md
+C:\Users\raest\Documents\Karma_SADE\jprop6\README.md
+C:\Users\raest\Documents\Karma_SADE\jprop6\TEST_STRATEGY.md
+
+MINIMAL_HARNESS SOURCE READ
+C:\Users\raest\Documents\Karma_SADE\jprop6\MINIMAL_HARNESS\main.js
+C:\Users\raest\Documents\Karma_SADE\jprop6\MINIMAL_HARNESS\preload.js
+C:\Users\raest\Documents\Karma_SADE\jprop6\MINIMAL_HARNESS\package.json
+C:\Users\raest\Documents\Karma_SADE\jprop6\MINIMAL_HARNESS\package-lock.json
+C:\Users\raest\Documents\Karma_SADE\jprop6\MINIMAL_HARNESS\session_contract.schema.json
+C:\Users\raest\Documents\Karma_SADE\jprop6\MINIMAL_HARNESS\README.md
+C:\Users\raest\Documents\Karma_SADE\jprop6\MINIMAL_HARNESS\renderer\fallback.html
+C:\Users\raest\Documents\Karma_SADE\jprop6\MINIMAL_HARNESS\scripts\proof_check.js
+C:\Users\raest\Documents\Karma_SADE\jprop6\MINIMAL_HARNESS\tests\contract_check.js
+C:\Users\raest\Documents\Karma_SADE\jprop6\MINIMAL_HARNESS\tests\break_check.js

@@ -1,0 +1,304 @@
+file	page	keyword	excerpt
+ccManagedAgents.PDF.txt	2/25	agent	discovered the missing link in AI agent workflows.
+ccManagedAgents.PDF.txt	3/25	agent	The agent loop, tool execution, context management,
+ccManagedAgents.PDF.txt	3/25	session	sandboxing, and session handling; all of it falls on
+ccManagedAgents.PDF.txt	3/25	loop	wrap your loop around, Anthropic is now handing us
+ccManagedAgents.PDF.txt	3/25	runtime	the runtime.
+ccManagedAgents.PDF.txt	3/25	session	Session continuity and context management are
+ccManagedAgents.PDF.txt	4/25	agent	agent harness running on Anthropic’s
+ccManagedAgents.PDF.txt	4/25	agent	infrastructure. You define the agent, fire off a task,
+ccManagedAgents.PDF.txt	4/25	session	container, the tools, the execution, the session.
+ccManagedAgents.PDF.txt	4/25	agent	Second is the Claude Agent SDK (formerly the
+ccManagedAgents.PDF.txt	4/25	agent	library that embeds the same agent loop powering
+ccManagedAgents.PDF.txt	5/25	agent	where the agent runs.
+ccManagedAgents.PDF.txt	5/25	agent	SDK — agent runs inside your own infrastructure
+ccManagedAgents.PDF.txt	5/25	agent	Managed Agents — agent runs on Anthropic’s
+ccManagedAgents.PDF.txt	6/25	session	Your application sends events to a session running inside Anthropic’s
+ccManagedAgents.PDF.txt	6/25	agent	cloud, where the agent and environment are already configured
+ccManagedAgents.PDF.txt	6/25	agent	Agent — your configuration: model, system prompt,
+ccManagedAgents.PDF.txt	6/25	session	reference it by ID across every session.
+ccManagedAgents.PDF.txt	6/25	agent	workspace your agent operates in.
+ccManagedAgents.PDF.txt	7/25	session	Session — a running instance of your agent inside
+ccManagedAgents.PDF.txt	7/25	context	conversation history, and context all persist across
+ccManagedAgents.PDF.txt	7/25	agent	application and the agent: user turns, tool results,
+ccManagedAgents.PDF.txt	7/25	agent	Here’s how it looks in code. You create an agent once:
+ccManagedAgents.PDF.txt	7/25	agent	# Create the agent — do this once, reuse by ID
+ccManagedAgents.PDF.txt	7/25	agent	agent = client.beta.agents.create(
+ccManagedAgents.PDF.txt	7/25	agent	print(agent.id)  # Save this — you'll reference it ac
+ccManagedAgents.PDF.txt	7/25	session	Then start a session and send a task:
+ccManagedAgents.PDF.txt	8/25	agent	# Create an environment with the packages your agent
+ccManagedAgents.PDF.txt	8/25	session	# Start a session referencing your agent and environm
+ccManagedAgents.PDF.txt	8/25	session	session = client.beta.sessions.create(
+ccManagedAgents.PDF.txt	8/25	agent	agent_id=agent.id,
+ccManagedAgents.PDF.txt	8/25	session	session_id=session.id,
+ccManagedAgents.PDF.txt	8/25	agent	That’s the complete setup, which includes one agent
+ccManagedAgents.PDF.txt	8/25	session	definition, the environment, and the session; then
+ccManagedAgents.PDF.txt	8/25	agent	How the Agent Loop Works
+ccManagedAgents.PDF.txt	8/25	session	When you start a session, Claude doesn’t respond
+ccManagedAgents.PDF.txt	9/25	loop	It runs a continuous loop that goes like this: receive
+ccManagedAgents.PDF.txt	10/25	test	Turn 1 — Claude runs the test suite via Bash. Three
+ccManagedAgents.PDF.txt	10/25	test	Turn 2 — Claude reads auth.py the test file to
+ccManagedAgents.PDF.txt	10/25	tool	tool calls. Task complete.
+ccManagedAgents.PDF.txt	10/25	session	Here’s how that session looks in code:
+ccManagedAgents.PDF.txt	10/25	session	session_id=session.id,
+ccManagedAgents.PDF.txt	11/25	tool	This stream gives you full visibility: every tool call,
+ccManagedAgents.PDF.txt	11/25	context	Context Management
+ccManagedAgents.PDF.txt	11/25	agent	One thing that breaks most DIY agent setups is
+ccManagedAgents.PDF.txt	11/25	context	context.
+ccManagedAgents.PDF.txt	11/25	context	Every turn adds to the context window: the prompt,
+ccManagedAgents.PDF.txt	11/25	tool	tool definitions, file reads, command outputs, and
+ccManagedAgents.PDF.txt	11/25	session	session dies.
+ccManagedAgents.PDF.txt	11/25	context	When the context window approaches its limit, the
+ccManagedAgents.PDF.txt	12/25	session	This approach allows the session to continue
+ccManagedAgents.PDF.txt	12/25	loop	Max turns and budget — cap the loop before it
+ccManagedAgents.PDF.txt	12/25	session	session = client.beta.sessions.create(
+ccManagedAgents.PDF.txt	12/25	agent	agent_id=agent.id,
+ccManagedAgents.PDF.txt	13/25	tool	max_turns=20,           # stop after 20 tool-use
+ccManagedAgents.PDF.txt	13/25	session	When either limit is hit, the session returns a clear
+ccManagedAgents.PDF.txt	13/25	session	you can resume with the session ID if needed.
+ccManagedAgents.PDF.txt	13/25	permission	Permission mode — controls what Claude can do
+ccManagedAgents.PDF.txt	13/25	session	While a session is running, you can send
+ccManagedAgents.PDF.txt	13/25	context	additional events to redirect it, add context, or stop
+ccManagedAgents.PDF.txt	14/25	session	# Send a mid-session correction
+ccManagedAgents.PDF.txt	14/25	session	session_id=session.id,
+ccManagedAgents.PDF.txt	14/25	session	session ID, and you can resume where you left off.
+ccManagedAgents.PDF.txt	14/25	session	# Resume a previous session
+ccManagedAgents.PDF.txt	14/25	agent	Claude Managed Agent Tools
+ccManagedAgents.PDF.txt	15/25	tool	agents manually is tool execution.
+ccManagedAgents.PDF.txt	15/25	context	managing results back into context. With Managed
+ccManagedAgents.PDF.txt	17/25	session	TodoWrite — track multi-step work across a session
+ccManagedAgents.PDF.txt	18/25	agent	Your first working agent in under 20 lines:
+ccManagedAgents.PDF.txt	18/25	agent	agent = client.beta.agents.create(
+ccManagedAgents.PDF.txt	18/25	agent	name="my-first-agent"
+ccManagedAgents.PDF.txt	19/25	session	session = client.beta.sessions.create(
+ccManagedAgents.PDF.txt	19/25	agent	agent_id=agent.id,
+ccManagedAgents.PDF.txt	19/25	session	session_id=session.id,
+ccManagedAgents.PDF.txt	19/25	agent	Multi-agent coordination,
+ccManagedAgents.PDF.txt	20/25	agent	agent loop, context management, tool execution,
+ccManagedAgents.PDF.txt	20/25	session	and session continuity.
+ccManagedAgents.PDF.txt	21/25	agent	Claude Anthropic Claude AI Agent Agentic Ai
+ccManagedAgents.PDF.txt	21/25	agent	Llm Agent
+ccManagedAgents.PDF.txt	22/25	agent	9 Agent Skills Repos I
+ccManagedAgents.PDF.txt	22/25	agent	Ti d(A dN IC ’Agent skills are becoming the
+oAOHarnessEng.PDF.meta.txt	file=C:\Users\raest\Documents\Karma_SADE\Karma_PDFs\Inbox\oAOHarnessEng.PDF	harness	meta:/Title=OpenAI’s Harness Engineering Experiment: Zero Manually-Written Code | by Rick Hightower | Apr, 2026 | Medium
+oAOHarnessEng.PDF.txt	1/60	harness	OpenAI harness engineering: AI agents generating pull requests with
+oAOHarnessEng.PDF.txt	1/60	architecture	zero human-written code, progressive disclosure architecture
+oAOHarnessEng.PDF.txt	1/60	harness	OpenAI’s Harness
+oAOHarnessEng.PDF.txt	2/60	harness	Based on OpenAI’s “Harness engineering:
+oAOHarnessEng.PDF.txt	2/60	agent	leveraging Codex in an agent-first world” and
+oAOHarnessEng.PDF.txt	2/60	harness	Rohit’s harness framework
+oAOHarnessEng.PDF.txt	2/60	harness	Part 5 of the Harness Engineering Series
+oAOHarnessEng.PDF.txt	2/60	harness	experiment transformed engineers into harness
+oAOHarnessEng.PDF.txt	2/60	harness	harness engineering, which involved creating a
+oAOHarnessEng.PDF.txt	3/60	architecture	architecture enforcement. The engineers shifted
+oAOHarnessEng.PDF.txt	3/60	harness	harness engineering framework. The patterns
+oAOHarnessEng.PDF.txt	3/60	harness	OpenAI harness engineering: AI agents generating
+oAOHarnessEng.PDF.txt	3/60	architecture	progressive disclosure architecture
+oAOHarnessEng.PDF.txt	4/60	agent	single line comes from an AI agent, or it does not
+oAOHarnessEng.PDF.txt	4/60	harness	harness engineers.
+oAOHarnessEng.PDF.txt	5/60	harness	OpenAI harness engineering
+oAOHarnessEng.PDF.txt	5/60	harness	If you have been following Rohit’s harness
+oAOHarnessEng.PDF.txt	5/60	agent	of agent-written code actually work.
+oAOHarnessEng.PDF.txt	5/60	harness	harness engineering patterns that made it
+oAOHarnessEng.PDF.txt	6/60	harness	OpenAI harness engineering: Evolution of an Engineer
+oAOHarnessEng.PDF.txt	7/60	harness	the harness. Maintaining it. Fixing it when it
+oAOHarnessEng.PDF.txt	7/60	harness	broke. The harness did not build itself. It required
+oAOHarnessEng.PDF.txt	8/60	test	file, every test was generated by AI agents. The
+oAOHarnessEng.PDF.txt	8/60	harness	OpenAI harness engineering: Engineering roles
+oAOHarnessEng.PDF.txt	9/60	harness	harness engineering.
+oAOHarnessEng.PDF.txt	9/60	agent	extra emphasis on designing for agent
+oAOHarnessEng.PDF.txt	9/60	agent	interfaces, and “agent-friendly” specs that can
+oAOHarnessEng.PDF.txt	9/60	architecture	Architecture decisions
+oAOHarnessEng.PDF.txt	9/60	dependency	constraints: service boundaries, dependency
+oAOHarnessEng.PDF.txt	10/60	contract	documentation, lint rules, contract tests, and
+oAOHarnessEng.PDF.txt	10/60	context	code from specs and repo context. Engineers
+oAOHarnessEng.PDF.txt	10/60	harness	focus on prompts, task decomposition, harness
+oAOHarnessEng.PDF.txt	10/60	truth	“source of truth” the agents need.
+oAOHarnessEng.PDF.txt	11/60	failure	systemic failure modes, and improving the
+oAOHarnessEng.PDF.txt	11/60	harness	harness. Many “style and convention” concerns
+oAOHarnessEng.PDF.txt	11/60	harness	harness gaps that cause repeated agent
+oAOHarnessEng.PDF.txt	12/60	test	test, and maintain suites over time.
+oAOHarnessEng.PDF.txt	12/60	contract	strategy, coverage thresholds, and contract
+oAOHarnessEng.PDF.txt	12/60	architecture	Engineers define the target architecture, write
+oAOHarnessEng.PDF.txt	12/60	harness	became differently valuable. The harness is what
+oAOHarnessEng.PDF.txt	13/60	agent	Why One Million Lines of Agent-Written
+oAOHarnessEng.PDF.txt	13/60	context	For context: the Linux kernel contains roughly 30
+oAOHarnessEng.PDF.txt	14/60	harness	OpenAI’s estimate - if you build the harness
+oAOHarnessEng.PDF.txt	15/60	harness	That is what the five harness engineering patterns
+oAOHarnessEng.PDF.txt	15/60	harness	OpenAI harness engineering: Production Outputs
+oAOHarnessEng.PDF.txt	15/60	harness	Harness Engineering Pattern 1 (from
+oAOHarnessEng.PDF.txt	15/60	truth	Source of Truth
+oAOHarnessEng.PDF.txt	15/60	agent	If it is not in the repository, the agent does not
+oAOHarnessEng.PDF.txt	16/60	harness	As Ryan Lopopolo wrote in OpenAI’s “Harness
+oAOHarnessEng.PDF.txt	16/60	agent	engineering” post: “From the agent’s point of view,
+oAOHarnessEng.PDF.txt	16/60	context	exist, so OpenAI pushed more and more context
+oAOHarnessEng.PDF.txt	16/60	architecture	now. Architecture decisions in Confluence pages.
+oAOHarnessEng.PDF.txt	16/60	agent	An agent cannot read your Slack. An agent cannot
+oAOHarnessEng.PDF.txt	16/60	agent	attend your standup. An agent cannot absorb the
+oAOHarnessEng.PDF.txt	16/60	agent	around. The only reality an agent experiences is
+oAOHarnessEng.PDF.txt	16/60	agent	piece of information an agent could possibly need
+oAOHarnessEng.PDF.txt	17/60	agent	the repo, the agent would violate it. If an API
+oAOHarnessEng.PDF.txt	17/60	contract	contract was not specified in the repo, the agent
+oAOHarnessEng.PDF.txt	17/60	agent	was not encoded in the repo, the agent would cross
+oAOHarnessEng.PDF.txt	17/60	harness	Why This Harness Pattern Matters at
+oAOHarnessEng.PDF.txt	17/60	failure	Consider the failure mode without this pattern. At
+oAOHarnessEng.PDF.txt	17/60	agent	200,000 lines per month, an agent that consistently
+oAOHarnessEng.PDF.txt	17/60	agent	agent that misunderstands a module boundary will
+oAOHarnessEng.PDF.txt	17/60	truth	The repository-as-truth pattern converts
+oAOHarnessEng.PDF.txt	18/60	harness	could scale. The harness had to be built before the
+oAOHarnessEng.PDF.txt	19/60	architecture	Foundational (monthly): Architecture decisions,
+oAOHarnessEng.PDF.txt	19/60	context	Tactical (daily): Task-specific context, current
+oAOHarnessEng.PDF.txt	19/60	agent	with institutional knowledge. Agent teams cannot.
+oAOHarnessEng.PDF.txt	19/60	agent	gap in agent capability.
+oAOHarnessEng.PDF.txt	19/60	break	kind of knowledge that will break your agents.
+oAOHarnessEng.PDF.txt	19/60	agent	The boundary between agent-visible and agent-
+oAOHarnessEng.PDF.txt	20/60	agent	the agent can probably figure it out.” Either the
+oAOHarnessEng.PDF.txt	20/60	harness	Source: OpenAI’s “Harness engineering: leveraging
+oAOHarnessEng.PDF.txt	20/60	agent	Codex in an agent-first world” (Ryan Lopopolo) -
+oAOHarnessEng.PDF.txt	20/60	harness	Rohit’s harness engineering thread.
+oAOHarnessEng.PDF.txt	20/60	harness	OpenAI harness engineering: The harness
+oAOHarnessEng.PDF.txt	20/60	harness	Harness Engineering Pattern 2 (from
+oAOHarnessEng.PDF.txt	21/60	truth	Repository-as-truth creates a new problem. If you
+oAOHarnessEng.PDF.txt	21/60	agent	documentation folder, the agent drowns. Context
+oAOHarnessEng.PDF.txt	22/60	architecture	├──  ARCHITECTURE.md             # High-level system
+oAOHarnessEng.PDF.txt	23/60	context	context for an agent to understand the shape of the
+oAOHarnessEng.PDF.txt	23/60	harness	OpenAI harness engineering: Repository as truth
+oAOHarnessEng.PDF.txt	24/60	agent	A good brief map tells the agent three things: what
+oAOHarnessEng.PDF.txt	24/60	state	current state of each component is.
+oAOHarnessEng.PDF.txt	24/60	state	## Current State
+oAOHarnessEng.PDF.txt	24/60	agent	The agent reads this file first, understands the
+oAOHarnessEng.PDF.txt	24/60	context	codebase into context. It navigates progressively.
+oAOHarnessEng.PDF.txt	25/60	agent	An agent working on a billing bug does not need to
+oAOHarnessEng.PDF.txt	25/60	context	context window. With progressive disclosure, it
+oAOHarnessEng.PDF.txt	25/60	harness	OpenAI harness engineering - Progessive Disclosure Architeture PDA
+oAOHarnessEng.PDF.txt	25/60	agent	Compare that to an agent that loads the entire
+oAOHarnessEng.PDF.txt	25/60	context	codebase hoping the relevant context will surface.
+oAOHarnessEng.PDF.txt	25/60	context	At 200,000 lines per month, context waste is not an
+oAOHarnessEng.PDF.txt	26/60	architecture	architecture. But most teams do not do it because
+oAOHarnessEng.PDF.txt	26/60	harness	Source: OpenAI’s “Harness engineering” post on
+oAOHarnessEng.PDF.txt	26/60	harness	Harness Engineering Pattern 3 (from
+oAOHarnessEng.PDF.txt	26/60	harness	Here is where OpenAI’s harness engineering gets
+oAOHarnessEng.PDF.txt	27/60	agent	fully observable, and fully isolated. The agent does
+oAOHarnessEng.PDF.txt	27/60	harness	OpenAI harness engineering - Application Legibility
+oAOHarnessEng.PDF.txt	28/60	agent	agent session gets its own complete instance of the
+oAOHarnessEng.PDF.txt	28/60	agent	a mock. A real, running instance that the agent
+oAOHarnessEng.PDF.txt	28/60	agent	10 different features. Without isolation, Agent A’s
+oAOHarnessEng.PDF.txt	28/60	agent	half-complete database migration breaks Agent B’s
+oAOHarnessEng.PDF.txt	28/60	test	test run. Agent C’s configuration change causes
+oAOHarnessEng.PDF.txt	28/60	agent	Agent D’s service to fail in a way that has nothing
+oAOHarnessEng.PDF.txt	28/60	agent	to do with Agent D’s code. Every agent wastes
+oAOHarnessEng.PDF.txt	28/60	agent	With isolated instances, each agent operates in a
+oAOHarnessEng.PDF.txt	29/60	agent	the agent runtime so Codex could drive the UI and
+oAOHarnessEng.PDF.txt	29/60	test	integration test but fail every user interaction.
+oAOHarnessEng.PDF.txt	29/60	tool	The practical implication: browser tool access
+oAOHarnessEng.PDF.txt	30/60	agent	metrics. Every agent session included structured
+oAOHarnessEng.PDF.txt	30/60	agent	When an agent’s code caused an error, the agent
+oAOHarnessEng.PDF.txt	30/60	agent	observability, an agent that generates buggy code
+oAOHarnessEng.PDF.txt	30/60	loop	enters a debugging loop without information. It
+oAOHarnessEng.PDF.txt	30/60	loop	loop is what makes autonomous code generation
+oAOHarnessEng.PDF.txt	31/60	test	blind. With legibility, they write, test, observe, and
+oAOHarnessEng.PDF.txt	31/60	harness	Source: OpenAI’s “Harness engineering” post:
+oAOHarnessEng.PDF.txt	31/60	agent	agent runtime so Codex can drive the UI and
+oAOHarnessEng.PDF.txt	31/60	harness	Harness Engineering Pattern 4 (from
+oAOHarnessEng.PDF.txt	31/60	architecture	Architecture Enforcement
+oAOHarnessEng.PDF.txt	31/60	harness	OpenAI’s fourth harness engineering pattern is
+oAOHarnessEng.PDF.txt	32/60	dependency	dependency directions, enforced via custom
+oAOHarnessEng.PDF.txt	32/60	harness	OpenAI harness engineering: Mechanical Enforcement
+oAOHarnessEng.PDF.txt	33/60	agent	typo. It is useless for an agent that has never seen
+oAOHarnessEng.PDF.txt	33/60	agent	feedback designed for agent consumption:
+oAOHarnessEng.PDF.txt	33/60	agent	informative. It is actionable. The agent reads it,
+oAOHarnessEng.PDF.txt	33/60	loop	feedback loop, not just a gate.
+oAOHarnessEng.PDF.txt	34/60	agent	Without the “Fix” line, the agent knows something
+oAOHarnessEng.PDF.txt	34/60	agent	“Fix” line, the agent has an instruction. The
+oAOHarnessEng.PDF.txt	34/60	agent	Agent response: Auto-rename
+oAOHarnessEng.PDF.txt	34/60	architecture	Architecture boundaries
+oAOHarnessEng.PDF.txt	34/60	dependency	violate dependency rules
+oAOHarnessEng.PDF.txt	34/60	agent	Agent response: Restructure imports
+oAOHarnessEng.PDF.txt	34/60	contract	API contract compliance
+oAOHarnessEng.PDF.txt	35/60	agent	Agent response: Fix schemas
+oAOHarnessEng.PDF.txt	35/60	test	Test coverage thresholds
+oAOHarnessEng.PDF.txt	35/60	agent	Agent response: Generate missing tests
+oAOHarnessEng.PDF.txt	35/60	harness	OpenAI harness engineering: Automated Enforcement
+oAOHarnessEng.PDF.txt	35/60	agent	remediation instructions. The agent runs the
+oAOHarnessEng.PDF.txt	36/60	loop	runs the linter again. This loop continues until all
+oAOHarnessEng.PDF.txt	36/60	test	makes automated test suites valuable for humans
+oAOHarnessEng.PDF.txt	36/60	harness	Source: OpenAI’s “Harness engineering” post -
+oAOHarnessEng.PDF.txt	36/60	dependency	with strictly validated dependency directions,
+oAOHarnessEng.PDF.txt	37/60	harness	OpenAI harness engineering: Dependency Stack requires constraints
+oAOHarnessEng.PDF.txt	37/60	harness	Harness Engineering Pattern 5 (from
+oAOHarnessEng.PDF.txt	38/60	harness	OpenAI harness engineering: Througput Merge Philosophy
+oAOHarnessEng.PDF.txt	39/60	minimal	OpenAI describes minimal blocking merge gates
+oAOHarnessEng.PDF.txt	40/60	agent	for high-throughput agent workflows.
+oAOHarnessEng.PDF.txt	40/60	harness	Other Harness Patterns)
+oAOHarnessEng.PDF.txt	41/60	minimal	Source: OpenAI describes minimal blocking merge
+oAOHarnessEng.PDF.txt	41/60	agent	philosophy for high-throughput agent workflows.
+oAOHarnessEng.PDF.txt	41/60	harness	Also informed by Rohit’s harness engineering
+oAOHarnessEng.PDF.txt	42/60	context	thread on context engineering, constraints, and
+oAOHarnessEng.PDF.txt	42/60	harness	role shifts from code production to harness design
+oAOHarnessEng.PDF.txt	43/60	harness	OpenAI harness engineering: Harness Engineer’s Clock
+oAOHarnessEng.PDF.txt	43/60	agent	Morning: Review overnight agent PRs. Check
+oAOHarnessEng.PDF.txt	43/60	drift	monitoring dashboards for drift. Update the brief
+oAOHarnessEng.PDF.txt	43/60	context	map file with new context about today’s priorities.
+oAOHarnessEng.PDF.txt	43/60	test	linter rules. Set up the isolated test environment.
+oAOHarnessEng.PDF.txt	43/60	agent	The agent will do the implementation.
+oAOHarnessEng.PDF.txt	43/60	failure	Afternoon: Investigate a failure pattern. Three
+oAOHarnessEng.PDF.txt	44/60	harness	OpenAI harness engineering: Activities
+oAOHarnessEng.PDF.txt	44/60	harness	the harness.
+oAOHarnessEng.PDF.txt	45/60	harness	What This Means for the Harness
+oAOHarnessEng.PDF.txt	45/60	harness	Rohit’s harness engineering framework maps to
+oAOHarnessEng.PDF.txt	45/60	context	Context Engineering: Repository-as-truth + brief
+oAOHarnessEng.PDF.txt	45/60	agent	agent auto-fix
+oAOHarnessEng.PDF.txt	46/60	harness	harness engineering works at scale. You can point
+oAOHarnessEng.PDF.txt	46/60	agent	to a million lines of agent-written code and say:
+oAOHarnessEng.PDF.txt	46/60	harness	this is what happens when you take the harness
+oAOHarnessEng.PDF.txt	46/60	harness	OpenAI harness engineering: How does this map to Rohit’s Harness
+oAOHarnessEng.PDF.txt	47/60	break	would break if you hired an agent today with only
+oAOHarnessEng.PDF.txt	47/60	context	your repo as context?
+oAOHarnessEng.PDF.txt	47/60	state	purpose, its current state, and where to find
+oAOHarnessEng.PDF.txt	48/60	agent	agent exactly what to do. “Naming violation” is not
+oAOHarnessEng.PDF.txt	48/60	agent	with Docker Compose, give each agent session its
+oAOHarnessEng.PDF.txt	48/60	agent	race conditions that waste agent cycles and
+oAOHarnessEng.PDF.txt	48/60	agent	for parallel agent work.
+oAOHarnessEng.PDF.txt	48/60	agent	automatically. Track the percentage of agent PRs
+oAOHarnessEng.PDF.txt	49/60	harness	number down by improving the harness, not by
+oAOHarnessEng.PDF.txt	49/60	harness	tomorrow, which of the five harness engineering
+oAOHarnessEng.PDF.txt	49/60	break	repository that would break agents if they had to
+oAOHarnessEng.PDF.txt	50/60	harness	OpenAI harness engineering: Moving from coding to engineering
+oAOHarnessEng.PDF.txt	50/60	agent	to the full ecosystem. The agent harness space has
+oAOHarnessEng.PDF.txt	50/60	tool	coding agents. Understanding where each tool fits
+oAOHarnessEng.PDF.txt	51/60	agent	agent engineering, harness design, and the tooling that
+oAOHarnessEng.PDF.txt	51/60	harness	“Harness engineering: leveraging Codex in an
+oAOHarnessEng.PDF.txt	51/60	agent	agent-first world” (Feb 2026). The core source for
+oAOHarnessEng.PDF.txt	51/60	harness	https://openai.com/index/harness-engineering/
+oAOHarnessEng.PDF.txt	51/60	proof	Proof Coding Agents” - agentic coding workflows
+oAOHarnessEng.PDF.txt	52/60	harness	Rohit’s harness engineering thread - context
+oAOHarnessEng.PDF.txt	52/60	agent	Rohit’s earlier thread on 100x engineer / agent
+oAOHarnessEng.PDF.txt	52/60	context	workflows (additional context).
+oAOHarnessEng.PDF.txt	52/60	harness	Secondary explainer - Tecyfy: “Harness
+oAOHarnessEng.PDF.txt	52/60	context	Deep dive: “Beyond Prompts and Context: Harness
+oAOHarnessEng.PDF.txt	53/60	harness	harness engineering concepts mapped to OpenAI’s
+oAOHarnessEng.PDF.txt	53/60	harness	GTCode: “Harness Engineering: The Discipline of
+oAOHarnessEng.PDF.txt	53/60	harness	https://gtcode.com/articles/harness-engineering/
+oAOHarnessEng.PDF.txt	53/60	harness	Codenote: “Harness Engineering - The New
+oAOHarnessEng.PDF.txt	53/60	agent	Discipline Powering Software in the AI Agent Era” -
+oAOHarnessEng.PDF.txt	53/60	harness	https://codenote.net/en/posts/harness-
+oAOHarnessEng.PDF.txt	53/60	agent	engineering-ai-agent-era/
+oAOHarnessEng.PDF.txt	53/60	harness	Related Harness Engineering Articles
+oAOHarnessEng.PDF.txt	53/60	harness	2026 – 04 – 04 — OpenAI’s Harness Engineering
+oAOHarnessEng.PDF.txt	53/60	harness	2026 – 03 – 29 — Anthropic’s Harness Engineering:
+oAOHarnessEng.PDF.txt	53/60	context	Two Agents, One Feature List, Zero Context
+oAOHarnessEng.PDF.txt	54/60	harness	Harness Design Paper Teaches Us About
+oAOHarnessEng.PDF.txt	54/60	harness	2026 – 03 – 20 — LangChain’s Harness Engineering:
+oAOHarnessEng.PDF.txt	54/60	harness	How Harness Engineering Prevents the Next
+oAOHarnessEng.PDF.txt	54/60	harness	2026 – 03 – 18 — LangChain Deep Agents: Harness
+oAOHarnessEng.PDF.txt	54/60	context	and Context Engineering: Memory, Skills, and
+oAOHarnessEng.PDF.txt	54/60	harness	2026 – 03 – 17 — Harness Engineering vs Context
+oAOHarnessEng.PDF.txt	54/60	harness	Engineering: The Model is the CPU, the Harness
+oAOHarnessEng.PDF.txt	55/60	agent	Rick Hightower is a hands-on agent architect, AI agent
+oAOHarnessEng.PDF.txt	55/60	agent	LangGraph, Claude Agent SDK, CrewAI, and more. He
+oAOHarnessEng.PDF.txt	55/60	agent	He created skilz, the universal agent skill installer,
+oAOHarnessEng.PDF.txt	56/60	agent	2026 Agent Reliability Playbook –  Free Download DM
+oAOHarnessEng.PDF.txt	56/60	agent	minute audit of your current agent setup (no pitch).
+oAOHarnessEng.PDF.txt	56/60	harness	Harness Engineering AI Ai Engineering OpenAI
+oAOHarnessEng.PDF.txt	60/60	agent	9 Agent Skills Repos I
+oAOHarnessEng.PDF.txt	60/60	agent	Ti d(A dN IC ’Agent skills are becoming the
