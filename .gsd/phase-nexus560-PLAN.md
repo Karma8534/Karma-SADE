@@ -12,7 +12,7 @@
   - <verify> grep -c 'L0\|L1\|L2\|L3' hub-bridge/app/server.js >= 4
   - <done> All 4 layers labeled in buildSystemText. Existing behavior unchanged.
 
-- [ ] 1-2. Temporal KG — valid_from/valid_to on FalkorDB Entity nodes
+- [x] 1-2. Temporal KG — valid_from/valid_to on FalkorDB Entity nodes
   - <verify> FalkorDB Entity with valid_from property exists after batch_ingest change
   - <done> invalidate_entity function in karma-core/server.py + TOOL_DEFINITIONS + ALLOWED_TOOLS
 
@@ -32,7 +32,7 @@
   - <verify> python Scripts/general_extractor.py test → classifies text into 5 types
   - <done> All 5 marker sets ported. 7 test cases pass.
 
-- [ ] 1-7. Duplicate Detection
+- [x] 1-7. Duplicate Detection
   - <verify> Same content sent to /v1/ambient twice → second returns duplicate warning
   - <done> Dedup check before ledger append, bypass header works
 
@@ -45,7 +45,7 @@
   - <verify> python Scripts/aaak_dialect.py "test text" → compressed output, ratio >= 10x
   - <done> Dialect class with Karma entity codes. compress_for_cortex() wrapper.
 
-- [ ] 3-2. Palace Structure vocabulary in karmaCtx
+- [x] 3-2. Palace Structure vocabulary in karmaCtx
   - <verify> grep -c 'Wing\|Room\|Hall' karma-core/server.py >= 3
   - <done> karmaCtx output uses Wing/Room/Hall vocabulary
 
@@ -53,11 +53,11 @@
   - <verify> python Scripts/agent_diary.py write julian "test" && python Scripts/agent_diary.py read julian 1
   - <done> Write + read round-trip. Agent isolation. AAAK format.
 
-- [ ] 3-4. Contradiction Detection
+- [x] 3-4. Contradiction Detection
   - <verify> grep -c 'valid_to\|EXPIRED' hub-bridge/app/server.js >= 2
   - <done> Expired facts labeled. Current facts unlabeled.
 
-- [ ] 3-5. AAAK in K2 cortex injection
+- [ ] 3-5. AAAK in K2 cortex injection — DEFERRED (K2 cortex DOWN, file on K2 only)
   - <verify> K2 karma_regent.py references compress_for_cortex
   - <done> MEMORY.md compressed before injection into 32K window
 

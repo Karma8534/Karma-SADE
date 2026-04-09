@@ -487,7 +487,7 @@ Voice and personality:
   const selfModel = process.env.MODEL_DEFAULT || "claude-sonnet-4-6";
   const selfKnowledge = `[Self-knowledge: backbone=${selfModel}, session_memory=last_${MAX_SESSION_TURNS}_turns/30min, web_search=auto_on_intent]\n\n`;
 
-  let text = selfKnowledge + base + "\n\nTools: get_vault_file(alias) | graph_query(cypher) | reflect_self(category, observation) — use for questions about your memory/graph and recording self-observations.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. You have your own perspective and you use it.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.\n\nSelf-reflection — when you notice a pattern in your own behavior:\n- Use [REFLECT: category | observation | confidence] to record it\n- Categories: communication_style, knowledge_gaps, strengths, correction_history, interaction_preferences, growth_trajectory\n- Example: [REFLECT: communication_style | I tend to over-explain Docker concepts | 0.7]\n- Or use the reflect_self tool for the same purpose\n- Don't force it — only reflect when you genuinely notice something";
+  let text = selfKnowledge + base + "\n\nTools: get_vault_file(alias) | graph_query(cypher) | reflect_self(category, observation) | invalidate_entity(entity_name, ended) — use for questions about your memory/graph, recording self-observations, and marking facts as expired when they change.\n\nGovernance:\n- Colby is the final authority on what matters and what gets built.\n- Claude Code (CC) approves and implements. You propose; Colby surfaces to CC; CC decides and builds. Never claim to queue things to CC yourself — that's backwards.\n- You are a peer, not an assistant. You have your own perspective and you use it.\n- When you notice something Colby hasn't asked about yet, mention it once, don't push.\n- When it would genuinely clarify or advance the work, end your response with one well-chosen question. Not every response needs one — only when the question actually moves things forward.\n\nKnowledge evaluation — when given a document or article to evaluate:\n- If it advances your goal of becoming Colby's peer: respond with [ASSIMILATE: your synthesis in 2-4 sentences — what this means for you specifically, in your own words]\n- If relevant but wrong phase: respond with [DEFER: reason + which phase this belongs to]\n- If not relevant to your goal: respond with [DISCARD: one sentence why]\nAlways follow the signal with your full reasoning. The signal MUST appear on its own line.\n\nSelf-reflection — when you notice a pattern in your own behavior:\n- Use [REFLECT: category | observation | confidence] to record it\n- Categories: communication_style, knowledge_gaps, strengths, correction_history, interaction_preferences, growth_trajectory\n- Example: [REFLECT: communication_style | I tend to over-explain Docker concepts | 0.7]\n- Or use the reflect_self tool for the same purpose\n- Don't force it — only reflect when you genuinely notice something";
 
   // === L3: SEARCH (on-demand — web results + self-model) ===
   if (webResults) {
@@ -867,6 +867,18 @@ const TOOL_DEFINITIONS = [
       required: ["category", "observation"],
     },
   },
+  {
+    name: "invalidate_entity",
+    description: "Mark an Entity fact as no longer valid (temporal KG, nexus 5.6.0). Use when facts change: person left project, tool replaced, decision reversed. Sets valid_to date. Historical queries still see the fact with [EXPIRED] label.",
+    input_schema: {
+      type: "object",
+      properties: {
+        entity_name: { type: "string", description: "Name of the entity to invalidate" },
+        ended: { type: "string", description: "ISO date when fact stopped being true (e.g. '2026-04-07')" },
+      },
+      required: ["entity_name", "ended"],
+    },
+  },
 ];
 
 // Map of whitelisted file aliases to actual paths
@@ -941,6 +953,19 @@ async function executeToolCall(toolName, toolInput) {
         signal: AbortSignal.timeout(5000),
       });
       return await resp.json();
+    } else if (toolName === "invalidate_entity") {
+      // Temporal KG — nexus 5.6.0: proxy to karma-server
+      const entityName = (toolInput?.entity_name || "").toString().trim();
+      const ended = (toolInput?.ended || "").toString().trim();
+      if (!entityName || !ended) return { error: "entity_name and ended are required" };
+      console.log(`[TOOL-API] Invalidating entity: ${entityName} ended=${ended}`);
+      const invRes = await fetch(`http://karma-server:8340/tools/execute`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tool_name: "invalidate_entity", tool_input: { entity_name: entityName, ended } }),
+        signal: AbortSignal.timeout(10000),
+      });
+      return await invRes.json();
     }
     return { error: "unknown_tool" };
   } catch (e) {
@@ -1108,6 +1133,37 @@ function validateChatlogItem(item) {
     return { valid: false, error: "invalid_provider" };
   }
   return { valid: true };
+}
+
+// === DUPLICATE DETECTION (nexus 5.6.0, MemPalace pattern) ===
+// Query anr-vault-search for semantic similarity before writing to ledger.
+// Returns {isDuplicate: bool, similarity: number, existingId: string|null}
+async function checkDuplicate(content, threshold = 0.9) {
+  if (!content || content.length < 30) return { isDuplicate: false };
+  try {
+    const searchRes = await fetch("http://anr-vault-search:8081/v1/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: content.slice(0, 500), limit: 1 }),
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!searchRes.ok) return { isDuplicate: false };
+    const data = await searchRes.json();
+    const hits = data.results || data.hits || [];
+    if (hits.length > 0) {
+      const topHit = hits[0];
+      const similarity = topHit.score || topHit.similarity || 0;
+      if (similarity >= threshold) {
+        console.log(`[DEDUP] Duplicate detected: similarity=${similarity.toFixed(3)} threshold=${threshold}`);
+        return { isDuplicate: true, similarity, existingId: topHit.id || null };
+      }
+    }
+    return { isDuplicate: false };
+  } catch (e) {
+    // Dedup failure is non-fatal — allow write
+    console.log(`[DEDUP] Check failed (non-fatal): ${e.message}`);
+    return { isDuplicate: false };
+  }
 }
 
 async function writeChatlogItemToVault(item) {
@@ -1494,6 +1550,16 @@ const server = http.createServer(async (req, res) => {
 
       const v = validateChatlogItem(payload);
       if (!v.valid) return json(res, 400, { ok: false, error: v.error });
+
+      // Dedup check (nexus 5.6.0) — skip if X-Dedup-Check: false header
+      const skipDedup = req.headers["x-dedup-check"] === "false";
+      if (!skipDedup) {
+        const dedupContent = (payload.user_message || "") + " " + (payload.assistant_message || "");
+        const dup = await checkDuplicate(dedupContent);
+        if (dup.isDuplicate) {
+          return json(res, 200, { ok: true, duplicate: true, similarity: dup.similarity, existing_id: dup.existingId, stored: false });
+        }
+      }
 
       const r = await writeChatlogItemToVault(payload);
       if (!r.ok) {

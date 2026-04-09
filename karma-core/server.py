@@ -115,6 +115,8 @@ TOOL_DEFINITIONS = [
      "input_schema": {"type": "object", "properties": {"command": {"type": "string"}}, "required": ["command"]}},
     {"name": "graph_query", "description": "Run a raw Cypher query against FalkorDB neo_workspace graph. Returns results as formatted text. Use for memory retrieval, entity lookup, relationship exploration.",
      "input_schema": {"type": "object", "properties": {"cypher": {"type": "string", "description": "Cypher query to run against neo_workspace. No datetime() function — use string comparisons for dates."}}, "required": ["cypher"]}},
+    {"name": "invalidate_entity", "description": "Mark an Entity fact as no longer valid by setting valid_to date. Use when facts change: person left project, tool replaced, decision reversed. Historical queries still see the fact with [EXPIRED] label.",
+     "input_schema": {"type": "object", "properties": {"entity_name": {"type": "string", "description": "Name of the entity to invalidate (exact match on n.name)"}, "ended": {"type": "string", "description": "ISO date when the fact stopped being true (e.g. '2026-04-07')"}}, "required": ["entity_name", "ended"]}},
 ]
 
 AVAILABLE_TOOLS = {t["name"]: t for t in TOOL_DEFINITIONS}
@@ -194,6 +196,25 @@ async def execute_tool_action(tool_name: str, tool_input: dict) -> dict:
             for row in rows[:100]:  # cap at 100 rows
                 lines.append(" | ".join(str(v) if v is not None else "null" for v in row))
             return {"ok": True, "result": "\n".join(lines), "row_count": len(rows)}
+
+        elif tool_name == "invalidate_entity":
+            # Temporal KG: mark entity as no longer valid (nexus 5.6.0, MemPalace pattern)
+            entity_name = tool_input.get("entity_name", "").strip()
+            ended = tool_input.get("ended", "").strip()
+            if not entity_name or not ended:
+                return {"ok": False, "error": "entity_name and ended are required"}
+            r = get_falkor()
+            # Set valid_to on entity nodes matching the name
+            cypher = (
+                f"MATCH (n:Entity) WHERE toLower(n.name) = toLower('{entity_name.replace(chr(39), '')}') "
+                f"SET n.valid_to = '{ended}' "
+                f"RETURN n.name AS name, n.valid_to AS valid_to"
+            )
+            result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
+            if len(result) >= 2 and result[1]:
+                updated = [{"name": str(row[0]), "valid_to": str(row[1])} for row in result[1]]
+                return {"ok": True, "invalidated": updated, "count": len(updated)}
+            return {"ok": True, "invalidated": [], "count": 0, "note": f"No entity found: {entity_name}"}
 
         else:
             return {"ok": False, "error": f"Unknown tool: {tool_name}"}
@@ -580,6 +601,9 @@ def query_relevant_relationships(entity_names: list[str]) -> list[dict]:
     all from Chrome extension captures). MENTIONS co-occurrence reflects actual
     conversation history and grows with every batch_ingest run (every 6h).
 
+    Nexus 5.6.0: Temporal validity filtering. Entities with valid_to set and
+    in the past are labeled [EXPIRED]. Current entities are unlabeled.
+
     Returns entities that co-appear in >= 2 episodes with any of the given entities,
     sorted by co-occurrence count descending.
     Returns [{"from": str, "relationship": str, "to": str}].
@@ -589,28 +613,37 @@ def query_relevant_relationships(entity_names: list[str]) -> list[dict]:
         return []
     try:
         r = get_falkor()
+        from datetime import date as _date
+        today = _date.today().isoformat()
         safe_names = [n.replace("'", "") for n in entity_names]
         names_str = ", ".join(f"'{n}'" for n in safe_names)
         cypher = (
             f"MATCH (ep:Episodic)-[:MENTIONS]->(e1:Entity), "
             f"(ep)-[:MENTIONS]->(e2:Entity) "
             f"WHERE e1.name IN [{names_str}] AND e1.name <> e2.name "
-            f"WITH e1.name AS from_entity, e2.name AS to_entity, count(ep) AS cocount "
+            f"WITH e1.name AS from_entity, e2.name AS to_entity, count(ep) AS cocount, "
+            f"e2.valid_to AS vto "
             f"WHERE cocount >= 2 "
-            f"RETURN from_entity, to_entity, cocount "
+            f"RETURN from_entity, to_entity, cocount, vto "
             f"ORDER BY cocount DESC LIMIT 20"
         )
         result = r.execute_command("GRAPH.QUERY", config.GRAPHITI_GROUP_ID, cypher)
         if len(result) >= 2 and result[1]:
-            return [
-                {
+            rels = []
+            for row in result[1]:
+                if not (row[0] and row[1] and row[2]):
+                    continue
+                vto = row[3] if len(row) > 3 else None
+                expired = vto is not None and str(vto) != "None" and str(vto) < today
+                label = f"co-occurs in {row[2]} episodes"
+                if expired:
+                    label = f"[EXPIRED {vto}] {label}"
+                rels.append({
                     "from": row[0],
-                    "relationship": f"co-occurs in {row[2]} episodes",
+                    "relationship": label,
                     "to": row[1],
-                }
-                for row in result[1]
-                if row[0] and row[1] and row[2]
-            ]
+                })
+            return rels
         return []
     except Exception as e:
         print(f"[RELATIONSHIPS] edge query failed (non-fatal): {e}")
@@ -866,7 +899,15 @@ def query_identity_facts() -> str:
 def build_karma_context(user_message: str, episode_lane: str = "canonical") -> str:
     """Build context from knowledge graph + preferences + consciousness insights for the LLM.
     episode_lane: filter for Episodic nodes. 'canonical' = only promoted (default).
-    None = all lanes (backward compat)."""
+    None = all lanes (backward compat).
+
+    Nexus 5.6.0 Palace Structure (MemPalace pattern):
+    - Wings = Entity nodes (people, projects, concepts)
+    - Rooms = Episodic clusters (topics within a wing)
+    - Halls = Relationship types: hall_facts (decisions), hall_events (sessions),
+              hall_discoveries (insights), hall_preferences (user prefs), hall_advice (recommendations)
+    - Tunnels = Cross-wing co-occurrence (entities appearing together)
+    """
     parts = []
 
     # Inject consciousness insights (things Karma noticed on its own)
@@ -907,22 +948,22 @@ def build_karma_context(user_message: str, episode_lane: str = "canonical") -> s
     # Get relevant entities from knowledge graph based on message keywords
     entities = query_knowledge_graph(user_message, limit=5)
     if entities:
-        parts.append("\n## Relevant Knowledge")
+        parts.append("\n## Wings (Relevant Knowledge)")
         for e in entities:
             summary = (e["summary"] or "")[:200]
             parts.append(f"- **{e['name']}**: {summary}")
 
-        # Entity relationships — RELATES_TO edges between relevant entities
+        # Tunnels — cross-wing co-occurrence (entities that appear together)
         entity_names = [e["name"] for e in entities]
         relationships = query_relevant_relationships(entity_names)
         if relationships:
-            parts.append("\n## Entity Relationships")
+            parts.append("\n## Tunnels (Cross-Wing Connections)")
             for rel in relationships:
                 parts.append(f"- {rel['from']} → {rel['relationship']} → {rel['to']}")
 
     # Recurring topics — top entities by episode count (cached, 30min refresh)
     if _pattern_cache:
-        parts.append("\n## Recurring Topics")
+        parts.append("\n## Halls (Recurring Topics)")
         for i, entry in enumerate(_pattern_cache, 1):
             parts.append(f"{i}. {entry['entity']} ({entry['mentions']} episodes)")
 
@@ -930,7 +971,7 @@ def build_karma_context(user_message: str, episode_lane: str = "canonical") -> s
     recent = query_recent_episodes(limit=10, lane=episode_lane)
     recent_names = {ep["name"] for ep in recent}
     if recent:
-        parts.append("\n## Recent Memories")
+        parts.append("\n## Rooms (Recent Memories)")
         for ep in recent:
             content = ep["content"][:200] if ep["content"] else ""
             if content:
@@ -963,7 +1004,7 @@ def build_karma_context(user_message: str, episode_lane: str = "canonical") -> s
     # Get key preferences about the user
     prefs = query_preferences(limit=15)
     if prefs:
-        parts.append("\n## What I Know About The User")
+        parts.append("\n## Hall: Preferences (What I Know About The User)")
         for p in prefs:
             val = p["value"]
             if isinstance(val, str):
