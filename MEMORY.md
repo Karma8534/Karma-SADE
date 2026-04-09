@@ -13,7 +13,7 @@
 - **Commits:** 7b9a5259, 41bb7e7e | **Deployed:** hub-bridge + karma-server rebuilt --no-cache
 - **Karma responds:** "I'm alive on the Nexus surface"
 - **DEFERRED:** 3-5 AAAK K2 cortex injection (julian_cortex.py:7892 DOWN, file on K2 only)
-- **OPEN GATE:** /v1/learnings returns 502 (pre-existing, not caused by this session)
+- **FIXED (S163):** /v1/learnings 502 — root cause: proxy.js fetched HARNESS_P1/v1/learnings without auth headers. P1 cc_server returned 401→proxy returned 502. Fix: added harnessHeaders() to learnings/skills/hooks fetches. Deployed to hub-bridge.
 - **Obs:** #25022 (primitives), #25827 (diary), #25866 (proof), #25871 (decision), #25872 (pitfall)
 
 ## Next Session Starts Here

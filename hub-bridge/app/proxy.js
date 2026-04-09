@@ -609,7 +609,7 @@ const server = http.createServer(async (req, res) => {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
       try {
         // Fetch from P1 cc_server (has direct claude-mem access)
-        const r = await fetch(`${HARNESS_P1}/v1/learnings`, { signal: AbortSignal.timeout(10000) });
+        const r = await fetch(`${HARNESS_P1}/v1/learnings`, { headers: harnessHeaders(), signal: AbortSignal.timeout(10000) });
         const data = await r.json();
         return json(res, r.ok ? 200 : 502, data);
       } catch (e) {
@@ -621,7 +621,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "GET" && req.url === "/v1/skills") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
       try {
-        const r = await fetch(`${HARNESS_P1}/skills`, { signal: AbortSignal.timeout(5000) });
+        const r = await fetch(`${HARNESS_P1}/skills`, { headers: harnessHeaders(), signal: AbortSignal.timeout(5000) });
         const data = await r.json();
         return json(res, r.ok ? 200 : 502, data);
       } catch (e) { return json(res, 502, { ok: false, error: `Skills unavailable: ${e.message}` }); }
@@ -631,7 +631,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "GET" && req.url === "/v1/hooks") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
       try {
-        const r = await fetch(`${HARNESS_P1}/hooks`, { signal: AbortSignal.timeout(5000) });
+        const r = await fetch(`${HARNESS_P1}/hooks`, { headers: harnessHeaders(), signal: AbortSignal.timeout(5000) });
         const data = await r.json();
         return json(res, r.ok ? 200 : 502, data);
       } catch (e) { return json(res, 502, { ok: false, error: `Hooks unavailable: ${e.message}` }); }
