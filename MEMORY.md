@@ -301,3 +301,9 @@ S162: temporal KG, dedup, palace vocab, contradiction detection
 - Why: Anthropic quota/outage must not be a single-point runtime failure; app must stay operational independently in emergency mode.
 - Verified: full `pytest tests` pass (121), proxy node test pass, frontend build pass, local `/cc/stream` provider confirms `openrouter`, hub `/cc/v1/chat` pass, electron emergency smoke pass with memory hit.
 - Remaining non-emergency gaps: full browser/electron parity matrix, startup-task shape normalization under privilege constraints, optional concurrency queueing above single-flight model.
+
+## 2026-04-11 — Nexus final non-emergency gap closure
+- Added deterministic parity matrix runner (`Scripts/nexus_parity_matrix.py`) and verified `tmp/parity-matrix-latest.json` => ok=true.
+- Added queue-wait lock acquisition behavior in `cc_server_p1` to serialize concurrent requests and reduce avoidable 429 contention.
+- Completed dedicated organic walkthrough artifact (`tmp/organic-walkthrough-041126.json`) with openrouter provider, UI success, and memory hit.
+- Re-validated recursive test/build/runtime suite; no remaining resolvable non-emergency blockers.

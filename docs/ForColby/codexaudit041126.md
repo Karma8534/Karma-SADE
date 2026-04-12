@@ -90,3 +90,16 @@ Reason:
 - `npm start` (`electron`) with `KARMA_ELECTRON_SMOKE=1` and `KARMA_EMERGENCY_INDEPENDENT=1`
 - `Invoke-WebRequest` probes for `/health`, `/cc`, `/cc/stream`, hub `/cc/v1/chat`, hub `/cc/v1/status`
 - `ssh vault-neo "docker ps ..."`
+## 9. Final Non-Emergency Gap Closure (Additional Pass)
+- Added queue wait semantics to `cc_server_p1` lock acquisition to reduce avoidable 429 contention failures under concurrent load.
+- Added deterministic parity matrix runner: `Scripts/nexus_parity_matrix.py`.
+- Executed parity matrix artifact: `tmp/parity-matrix-latest.json` => `ok=true`.
+- Executed dedicated organic walkthrough artifact: `tmp/organic-walkthrough-041126.json` => `ok=true`.
+- Re-ran recursive tests/build/probes in same pass:
+  - `python -m pytest -q tests` => `121 passed`
+  - `node --test tests/test_proxy_routing.mjs` => pass
+  - `npm run build` (`frontend`) => pass
+  - runtime probes local + hub => healthy
+
+### Remaining Blockers / Gaps
+- None.

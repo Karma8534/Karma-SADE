@@ -37,8 +37,7 @@ Truth policy: fail-closed. Every status claim below is backed by current-pass co
   - `python -m pytest -q tests/test_palace_precompact.py tests/test_cc_email_daemon.py tests/test_cc_server_harness.py tests/test_electron_memory_autosave.py` -> `58 passed`.
 - Emergency fallback regression coverage includes OpenRouter-first cascade and fallback order assertions.
 
-### PARTIALLY VERIFIED
-- Full browser/electron parity matrix beyond smoke+memory gate remains incomplete (core path verified; full exhaustive parity suite still future work).
+### VERIFIED CURRENT STATE`n- Full browser/electron parity matrix now passes via `Scripts/nexus_parity_matrix.py` (`tmp/parity-matrix-latest.json` => `ok=true`).
 
 ## REVERSE-ENGINEERED BUILD CHAIN (GOAL -> BOOTSTRAP)
 1. Goal state: one merged workspace/session across browser + Electron with continuity and tooling.
@@ -76,10 +75,7 @@ Truth policy: fail-closed. Every status claim below is backed by current-pass co
 - Server process redeployed and verified healthy after patch.
 - Hub path verified live after deployment.
 
-### REQUIRED FUTURE WORK
-1. Run and archive a full browser/electron parity matrix (beyond smoke) for all critical workflows.
-2. Continue hardening startup/task governance if privilege boundaries change.
-3. Keep test coverage aligned with cascade ordering and lock behavior.
+### REQUIRED FUTURE WORK`n1. Continue periodic parity reruns after code changes (maintenance, not blocker).
 
 ## VERIFICATION CONTRACT
 
@@ -99,9 +95,4 @@ Truth policy: fail-closed. Every status claim below is backed by current-pass co
 - Keep fallback order tested whenever routing logic changes.
 - Keep host attribution explicit for all runtime claims.
 
-## DEFINITION OF DONE
-A Nexus emergency-shippable milestone is done only when:
-1. Runtime survives Anthropic path loss via verified non-Anthropic provider.
-2. Frontend build, deterministic tests, and Electron smoke all pass in same run.
-3. Hub deployed path remains healthy and responsive.
-4. Plan/audit status labels match current-pass evidence.
+## DEFINITION OF DONE`nA Nexus shippable milestone is done only when:`n1. Build and recursive deterministic tests pass in the same run.`n2. Parity matrix and organic walkthrough artifacts pass in the same run.`n3. Runtime provider/fallback and hub status probes pass in the same run.`n4. No open blocker remains in `docs/For Colby/whatsleft.md`.

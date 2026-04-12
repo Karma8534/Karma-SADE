@@ -72,6 +72,8 @@ _current_proc = None  # Track running CC subprocess for cancel
 _proc_lock    = threading.Lock()  # Concurrency guard — one CC subprocess at a time
 _lock_acquired_at = 0  # timestamp when lock was acquired (for stale detection)
 LOCK_STALE_SECONDS = 180  # auto-release lock after 3 minutes (covers API_TIMEOUT + overhead)
+CC_QUEUE_ENABLED = os.environ.get("KARMA_CC_QUEUE", "1").strip().lower() in ("1", "true", "yes", "on")
+CC_QUEUE_WAIT_SECONDS = float(os.environ.get("KARMA_CC_QUEUE_WAIT_SECONDS", "45"))
 TOKEN         = os.environ.get("HUB_CHAT_TOKEN", "")
 
 # H3: Rate limiting — per-IP sliding window
@@ -1600,7 +1602,9 @@ class CCHandler(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, "service": "cc-server-p1", "gmail": GMAIL_AVAILABLE,
                              "latency": _last_latency,
                              "lock_held": _proc_lock.locked(),
-                             "current_proc_pid": getattr(_current_proc, "pid", None) if _current_proc else None})  # H2: expose latency measurements
+                             "current_proc_pid": getattr(_current_proc, "pid", None) if _current_proc else None,
+                             "queue_enabled": CC_QUEUE_ENABLED,
+                             "queue_wait_seconds": CC_QUEUE_WAIT_SECONDS})  # H2: expose latency measurements
         elif request_path == "/memory/health":
             self._json(200, {"ok": True, "service": "cc-server-p1", "claudemem_url": CLAUDEMEM_URL})
         elif request_path == "/memory/wakeup":
@@ -2153,6 +2157,25 @@ class CCHandler(BaseHTTPRequestHandler):
                 if _proc_lock.acquire(blocking=False):
                     _lock_acquired_at = time.time()
                     return True
+            if CC_QUEUE_ENABLED and CC_QUEUE_WAIT_SECONDS > 0:
+                wait_started = time.time()
+                while (time.time() - wait_started) < CC_QUEUE_WAIT_SECONDS:
+                    time.sleep(0.05)
+                    if _proc_lock.acquire(blocking=False):
+                        _lock_acquired_at = time.time()
+                        return True
+                    if time.time() - _lock_acquired_at > LOCK_STALE_SECONDS:
+                        proc = _current_proc
+                        if proc and proc.poll() is None:
+                            try:
+                                proc.kill()
+                                proc.wait(timeout=3)
+                            except Exception:
+                                pass
+                        _release_cc_lock(force=True)
+                        if _proc_lock.acquire(blocking=False):
+                            _lock_acquired_at = time.time()
+                            return True
             self._json(429, {"ok": False, "error": "Another request is in progress. Wait or cancel first."})
             return False
 
