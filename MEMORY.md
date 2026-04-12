@@ -295,3 +295,9 @@ Execution notes live in `.gsd/phase-cp5-surface-PLAN.md` (Option b applied).
 - **Pause point**: user asked architecture questions before next contradiction pass.
 S162 build checkpoint: 7/13 tasks done. hooks+aaak+extractor+diary+L0-L3 committed.
 S162: temporal KG, dedup, palace vocab, contradiction detection
+
+## 2026-04-11 — Nexus emergency independence + closeout
+- Changed: deployed OpenRouter-first emergency fallback across `Scripts/cc_server_p1.py` and `electron/main.js`; hardened `Scripts/Start-CCServer.ps1` key/env startup handling; updated harness tests and Nexus audit/plan docs; added forensic remaining-work report.
+- Why: Anthropic quota/outage must not be a single-point runtime failure; app must stay operational independently in emergency mode.
+- Verified: full `pytest tests` pass (121), proxy node test pass, frontend build pass, local `/cc/stream` provider confirms `openrouter`, hub `/cc/v1/chat` pass, electron emergency smoke pass with memory hit.
+- Remaining non-emergency gaps: full browser/electron parity matrix, startup-task shape normalization under privilege constraints, optional concurrency queueing above single-flight model.

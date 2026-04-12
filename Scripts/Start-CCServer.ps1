@@ -6,6 +6,7 @@ $Script    = "$WorkDir\Scripts\cc_server_p1.py"
 $LogFile   = "$WorkDir\Logs\cc-server.log"
 $ErrFile   = "$WorkDir\Logs\cc-server-err.log"
 $TokenFile = "$WorkDir\.hub-chat-token"
+$OpenRouterKeyFile = "$WorkDir\.openrouter-api-key"
 $PidFile   = "$WorkDir\Scripts\cc_server.pid"
 $MutexName = "Global\KarmaSovereignHarnessCCServer"
 
@@ -40,6 +41,23 @@ try {
     } else {
         Write-Host "[cc-server] WARNING: token file missing at $TokenFile (auth disabled)"
     }
+
+    if (Test-Path $OpenRouterKeyFile) {
+        $env:OPENROUTER_API_KEY = (Get-Content $OpenRouterKeyFile -Raw).Trim()
+    } elseif ($env:OPENROUTER_API_KEY) {
+        try {
+            $env:OPENROUTER_API_KEY | Out-File -FilePath $OpenRouterKeyFile -Encoding ascii -NoNewline
+            Write-Host "[cc-server] persisted OPENROUTER_API_KEY to $OpenRouterKeyFile"
+        } catch {
+            Write-Host "[cc-server] WARNING: could not persist OPENROUTER_API_KEY ($($_.Exception.Message))"
+        }
+    } else {
+        Write-Host "[cc-server] WARNING: OpenRouter key not available (.openrouter-api-key missing and env empty)"
+    }
+
+    # Emergency hardening: allow Anthropic-independent survival mode.
+    if (-not $env:KARMA_EMERGENCY_INDEPENDENT) { $env:KARMA_EMERGENCY_INDEPENDENT = "1" }
+    if (-not $env:KARMA_DISABLE_ANTHROPIC) { $env:KARMA_DISABLE_ANTHROPIC = "1" }
 
     Remove-Item Env:ANTHROPIC_API_KEY -ErrorAction SilentlyContinue
     Remove-Item Env:CLAUDE_API_KEY -ErrorAction SilentlyContinue
@@ -79,4 +97,3 @@ finally {
     }
     $mutex.Dispose()
 }
-

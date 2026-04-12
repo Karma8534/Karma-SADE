@@ -108,11 +108,38 @@ def _normalize_local_route(path):
         "/v1/chat": "/cc",
         "/v1/chat/stream": "/cc/stream",
         "/v1/cancel": "/cancel",
+        "/v1/file": "/file",
+        "/v1/files": "/files",
+        "/v1/agents-status": "/agents-status",
+        "/v1/memory/search": "/memory/search",
+        "/v1/memory/save": "/memory/save",
     }
     normalized = aliases.get(route, route)
     if normalized == route:
         return path
     return urllib.parse.urlunparse(parsed._replace(path=normalized))
+
+
+def _release_cc_lock(force=False):
+    """Release the single-flight CC lock.
+
+    force=True is used for stale-lock repair and cancel paths where the tracked
+    subprocess is already gone or was just killed.
+    """
+    global _lock_acquired_at, _current_proc
+    if not force and _current_proc is not None and _current_proc.poll() is None:
+        return False
+    if force:
+        _current_proc = None
+    released = False
+    try:
+        _proc_lock.release()
+        released = True
+    except RuntimeError:
+        released = False
+    if released or force:
+        _lock_acquired_at = 0
+    return released
 
 # H2: Latency measurement
 _last_latency = {"first_token_ms": None, "cancel_ms": None, "total_ms": None}
@@ -149,6 +176,10 @@ OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 OPENROUTER_MODEL = "anthropic/claude-sonnet-4-6"  # Same model name on OR, different rate limit pool
 OPENROUTER_FALLBACK_MODEL = "google/gemini-2.0-flash"  # Tier 2: if OR Anthropic also rate-limited
+OPENROUTER_THIRD_MODEL = "meta-llama/llama-3.3-70b-instruct"  # Tier 3: non-Anthropic OpenRouter fallback
+OPENROUTER_TIMEOUT = int(os.environ.get("OPENROUTER_TIMEOUT", "45"))
+EMERGENCY_INDEPENDENT = os.environ.get("KARMA_EMERGENCY_INDEPENDENT", "0").strip().lower() in ("1", "true", "yes", "on")
+DISABLE_ANTHROPIC = os.environ.get("KARMA_DISABLE_ANTHROPIC", "0").strip().lower() in ("1", "true", "yes", "on")
 CLAUDEMEM_DB   = pathlib.Path.home() / ".claude-mem" / "claude-mem.db"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama-3.3-70b-versatile"
@@ -464,6 +495,50 @@ def _call_ollama(message, provider_url, model):
         return None
 
 
+def _ollama_chat(messages, provider_url, model, tools=None):
+    payload = {
+        "model": model,
+        "messages": messages,
+        "stream": False,
+        "options": {"num_predict": 512},
+    }
+    if tools:
+        payload["tools"] = tools
+    req = urllib.request.Request(
+        f"{provider_url}/api/chat",
+        data=json.dumps(payload).encode(),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        return json.loads(resp.read().decode())
+
+
+def _list_ollama_models(provider_url):
+    req = urllib.request.Request(f"{provider_url}/api/tags", method="GET")
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        data = json.loads(resp.read().decode())
+    return [str(item.get("name", "")).strip() for item in data.get("models", []) if item.get("name")]
+
+
+def _select_p1_ollama_model():
+    global _p1_ollama_model_cache
+    if P1_OLLAMA_MODEL:
+        return P1_OLLAMA_MODEL
+    if _p1_ollama_model_cache:
+        return _p1_ollama_model_cache
+    try:
+        available = set(_list_ollama_models(P1_OLLAMA_URL))
+        for candidate in P1_OLLAMA_FALLBACK_MODELS:
+            if candidate in available:
+                _p1_ollama_model_cache = candidate
+                return candidate
+    except Exception as e:
+        print(f"[cc-server] Ollama model discovery failed: {e}")
+    _p1_ollama_model_cache = P1_OLLAMA_FALLBACK_MODELS[-1]
+    return _p1_ollama_model_cache
+
+
 def clear_session_id(conversation_id=None):
     conv_id = _normalize_conversation_id(conversation_id)
     try:
@@ -497,8 +572,13 @@ KARMA_PERSONA_PREFIX = "[NEXUS] You are responding as Karma through the Nexus su
 CORTEX_URL = "http://192.168.0.226:7892"  # K2 cortex (LAN direct)
 _context_cache = {"text": "", "ts": 0}  # Cache cortex context (refresh every 60s)
 CONTEXT_CACHE_TTL = 60
-CORTEX_CONTEXT_TIMEOUT = 5
-K2_QUERY_TIMEOUT = 8
+CORTEX_CONTEXT_TIMEOUT = int(os.environ.get("CORTEX_CONTEXT_TIMEOUT", "3"))
+K2_QUERY_TIMEOUT = int(os.environ.get("K2_QUERY_TIMEOUT", "50"))
+K2_QUERY_RETRIES = int(os.environ.get("K2_QUERY_RETRIES", "2"))
+P1_OLLAMA_URL = "http://127.0.0.1:11434"
+P1_OLLAMA_MODEL = os.environ.get("KARMA_LOCAL_OLLAMA_MODEL", "")
+P1_OLLAMA_FALLBACK_MODELS = ("gemma4:31b-cloud", "sam860/LFM2:350m")
+_p1_ollama_model_cache = None
 
 _spine_cache = {"text": "", "ts": 0}
 SPINE_CACHE_TTL = 300  # 5 min — spine changes slowly (governor runs every 2min)
@@ -704,6 +784,25 @@ def _read_secret_file(*candidates):
     return ""
 
 
+def _openrouter_api_key():
+    # Resolve on demand so hot-reload/restart can pick up new secret locations.
+    return (
+        os.environ.get("OPENROUTER_API_KEY", "").strip()
+        or OPENROUTER_API_KEY
+        or _read_secret_file(
+            os.path.join(WORK_DIR, ".openrouter-api-key"),
+            os.path.join(WORK_DIR, ".openrouter-api-key.txt"),
+            os.path.join(os.path.expanduser("~"), ".openrouter-api-key"),
+            os.path.join(os.path.expanduser("~"), ".config", "openrouter", "api_key"),
+        )
+    )
+
+
+def _should_force_non_anthropic():
+    # Emergency mode: keep harness alive without Anthropic dependency.
+    return EMERGENCY_INDEPENDENT or DISABLE_ANTHROPIC
+
+
 def _normalize_workspace_path(target_path=""):
     resolved = os.path.abspath(os.path.join(WORK_DIR, target_path))
     root = os.path.abspath(WORK_DIR)
@@ -793,6 +892,9 @@ def _post_tool_hook(tool_name, tool_input, tool_output):
 
 
 def _execute_tool_locally(tool_name, tool_input):
+    tool_name = str(tool_name or "").strip()
+    if ":" in tool_name:
+        tool_name = tool_name.split(":")[-1].strip()
     allowed, reason = _check_tool_permission(tool_name, tool_input)
     if not allowed:
         return {"ok": False, "error": f"Blocked by permission engine: {reason}"}
@@ -1030,7 +1132,12 @@ def _compose_harness_message(message, transcript_context=""):
 
 
 def _message_needs_grounding(message):
-    return bool(re.search(r"\b(memory\.md|state\.md|heading|first line|top of|local file|workspace|repo|repository|current state|read file|write file|create file|shell|git|glob|grep)\b", message, re.IGNORECASE))
+    patterns = [
+        r"\b(memory\.md|state\.md|heading|first line|top of|local file|workspace|repo|repository|current state|read file|write file|create file|shell|git|glob|grep)\b",
+        r"\b(?:read|write|create)\s+[A-Za-z0-9_./\\-]+\.[A-Za-z0-9]+\b",
+        r"\btmp/[A-Za-z0-9_./\\-]+\b",
+    ]
+    return any(re.search(pattern, message, re.IGNORECASE) for pattern in patterns)
 
 
 def _message_prefers_transcript_only(message):
@@ -1077,7 +1184,8 @@ def _groq_chat(messages, tools=None, tool_choice="auto", temperature=0.0, max_to
 
 
 def _groq_fallback(message, transcript_context="", event_sink=None):
-    contextual_message = message if _message_needs_grounding(message) else _compose_harness_message(message, transcript_context=transcript_context)
+    needs_grounding = _message_needs_grounding(message)
+    contextual_message = message if needs_grounding else _compose_harness_message(message, transcript_context=transcript_context)
     messages = [
         {
             "role": "system",
@@ -1087,7 +1195,12 @@ def _groq_fallback(message, transcript_context="", event_sink=None):
     ]
     used_model = GROQ_MODEL
     for turn in range(TOOL_LOOP_LIMIT):
-        data = _groq_chat(messages, tools=GROQ_TOOL_DEFS, tool_choice="auto", temperature=0)
+        data = _groq_chat(
+            messages,
+            tools=GROQ_TOOL_DEFS if needs_grounding else None,
+            tool_choice="auto",
+            temperature=0,
+        )
         used_model = data.get("model", GROQ_MODEL)
         choice = data.get("choices", [{}])[0]
         msg = choice.get("message", {}) or {}
@@ -1125,13 +1238,80 @@ def _groq_fallback(message, transcript_context="", event_sink=None):
     raise RuntimeError("Groq tool loop limit exceeded")
 
 
+def _local_ollama_fallback(message, transcript_context="", event_sink=None):
+    model = _select_p1_ollama_model()
+    needs_grounding = _message_needs_grounding(message)
+    contextual_message = message if needs_grounding else _compose_harness_message(message, transcript_context=transcript_context)
+    messages = [
+        {
+            "role": "system",
+            "content": "You are Karma inside the Nexus harness. Use the provided tools when you need grounded file, git, or shell data. Do not guess about workspace state. After tool results are returned, continue. When done, answer in plain text only.",
+        },
+        {"role": "user", "content": contextual_message},
+    ]
+    used_model = model
+    for turn in range(TOOL_LOOP_LIMIT):
+        data = _ollama_chat(messages, P1_OLLAMA_URL, model, tools=GROQ_TOOL_DEFS if needs_grounding else None)
+        used_model = data.get("model", model)
+        msg = data.get("message", {}) or {}
+        tool_calls = msg.get("tool_calls") or []
+        content = (msg.get("content") or "").strip()
+        if needs_grounding and not tool_calls and not content and turn < (TOOL_LOOP_LIMIT - 1):
+            messages.append({
+                "role": "user",
+                "content": "Your previous response was empty. If grounding is needed, emit one of the allowed tool calls. Otherwise answer in plain text only.",
+            })
+            continue
+        if not tool_calls:
+            if event_sink:
+                event_sink({"type": "assistant", "message": {"content": [{"type": "text", "text": content}], "model": used_model}})
+                event_sink({"type": "result", "result": content, "model": used_model, "total_cost_usd": 0, "provider": "ollama"})
+            if not content:
+                raise RuntimeError("local Ollama returned no content")
+            return content, used_model
+        messages.append({
+            "role": "assistant",
+            "content": msg.get("content"),
+            "tool_calls": tool_calls,
+        })
+        for idx, tool_call in enumerate(tool_calls):
+            fn = tool_call.get("function", {}) or {}
+            tool_name = fn.get("name", "")
+            tool_input = fn.get("arguments") or {}
+            if isinstance(tool_input, str):
+                try:
+                    tool_input = json.loads(tool_input)
+                except Exception:
+                    tool_input = {}
+            tool_id = tool_call.get("id") or f"{tool_name}-{int(time.time() * 1000)}-{turn}-{idx}"
+            if event_sink:
+                event_sink({"type": "assistant", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": tool_id, "name": tool_name, "input": tool_input}]}})
+            tool_output = _execute_tool_locally(tool_name, tool_input)
+            if event_sink:
+                event_sink({"type": "tool_result", "tool_use_id": tool_id, "content": _tool_result_content(tool_output)})
+            messages.append({
+                "role": "tool",
+                "content": json.dumps(tool_output, ensure_ascii=False),
+            })
+    raise RuntimeError("Local Ollama tool loop limit exceeded")
+
+
 def _k2_fallback(message, transcript_context=""):
-    contextual_message = _contextualize_message(message, transcript_context=transcript_context)
-    payload = json.dumps({"query": contextual_message}).encode()
+    contextual_message = _compose_harness_message(message, transcript_context=transcript_context)
+    payload = json.dumps({"query": contextual_message, "temperature": 0.0}).encode()
     req = urllib.request.Request(f"{CORTEX_URL}/query", data=payload, headers={"Content-Type": "application/json"}, method="POST")
-    with urllib.request.urlopen(req, timeout=K2_QUERY_TIMEOUT) as resp:
-        data = json.loads(resp.read().decode())
-    return (data.get("answer") or data.get("response") or "").strip(), "k2-cortex"
+    last_error = None
+    for attempt in range(max(1, K2_QUERY_RETRIES)):
+        try:
+            with urllib.request.urlopen(req, timeout=K2_QUERY_TIMEOUT) as resp:
+                data = json.loads(resp.read().decode())
+            return (data.get("answer") or data.get("response") or "").strip(), "k2-cortex"
+        except Exception as exc:
+            last_error = exc
+            if attempt + 1 >= max(1, K2_QUERY_RETRIES):
+                raise
+            time.sleep(min(2.0, 0.5 * (attempt + 1)))
+    raise last_error
 
 
 def _run_cc_harness(message, effort=None, model=None, budget=None, event_sink=None, transcript_context="", conversation_id=None):
@@ -1182,7 +1362,8 @@ def _run_cc_harness(message, effort=None, model=None, budget=None, event_sink=No
 def _openrouter_fallback(message, model=None, transcript_context=""):
     """EscapeHatch: Direct OpenRouter API call when CC/Anthropic is rate-limited.
     Returns (response_text, model_used) or raises on failure."""
-    if not OPENROUTER_API_KEY:
+    openrouter_key = _openrouter_api_key()
+    if not openrouter_key:
         raise RuntimeError("OPENROUTER_API_KEY not set — fallback unavailable")
     or_model = model or OPENROUTER_MODEL
     contextual_message = _contextualize_message(message, transcript_context=transcript_context)
@@ -1192,7 +1373,7 @@ def _openrouter_fallback(message, model=None, transcript_context=""):
         "max_tokens": 4096,
     }).encode()
     headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Authorization": f"Bearer {openrouter_key}",
         "Content-Type": "application/json",
         "HTTP-Referer": "https://hub.arknexus.net",
         "X-Title": "Karma Nexus",
@@ -1200,7 +1381,7 @@ def _openrouter_fallback(message, model=None, transcript_context=""):
     req = urllib.request.Request(f"{OPENROUTER_BASE_URL}/chat/completions",
                                 data=payload, headers=headers, method="POST")
     try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
+        with urllib.request.urlopen(req, timeout=OPENROUTER_TIMEOUT) as resp:
             data = json.loads(resp.read())
             text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
             used = data.get("model", or_model)
@@ -1211,32 +1392,97 @@ def _openrouter_fallback(message, model=None, transcript_context=""):
             # Tier 2: try Gemini Flash
             print(f"[escapehatch] OpenRouter {or_model} also rate-limited, trying {OPENROUTER_FALLBACK_MODEL}")
             return _openrouter_fallback(message, model=OPENROUTER_FALLBACK_MODEL)
+        if e.code == 429 and or_model == OPENROUTER_FALLBACK_MODEL:
+            # Tier 3: non-Anthropic model on OpenRouter
+            print(f"[escapehatch] OpenRouter {or_model} also rate-limited, trying {OPENROUTER_THIRD_MODEL}")
+            return _openrouter_fallback(message, model=OPENROUTER_THIRD_MODEL)
         raise
 
 def run_cc(message, effort=None, model=None, budget=None, transcript_context="", conversation_id=None):
     """Run the harness-managed CC loop with degraded fallback cascade."""
-    try:
-        text, _lines = _run_cc_harness(message, effort=effort, model=model, budget=budget, transcript_context=transcript_context, conversation_id=conversation_id)
-        return text
-    except Exception as cc_err:
-        print(f"[cc-server] Claude failed, trying Groq: {cc_err}")
+    if _should_force_non_anthropic():
+        print("[cc-server] Emergency independent mode active: skipping Anthropic primary and using OpenRouter-first cascade")
+        try:
+            text, _used_model = _openrouter_fallback(message, transcript_context=transcript_context)
+            if text:
+                return text
+        except Exception as or_err:
+            print(f"[cc-server] OpenRouter failed in emergency mode, trying Groq: {or_err}")
         try:
             text, _used_model = _groq_fallback(message, transcript_context=transcript_context)
             if text:
                 return text
         except Exception as groq_err:
-            print(f"[cc-server] Groq failed, trying K2: {groq_err}")
+            print(f"[cc-server] Groq failed in emergency mode, trying local Ollama: {groq_err}")
+        try:
+            text, _used_model = _local_ollama_fallback(message, transcript_context=transcript_context)
+            if text:
+                return text
+        except Exception as ollama_err:
+            print(f"[cc-server] Local Ollama failed in emergency mode, trying K2: {ollama_err}")
+        text, _used_model = _k2_fallback(message, transcript_context=transcript_context)
+        return text
+    try:
+        text, _lines = _run_cc_harness(message, effort=effort, model=model, budget=budget, transcript_context=transcript_context, conversation_id=conversation_id)
+        return text
+    except Exception as cc_err:
+        print(f"[cc-server] Claude failed, trying OpenRouter: {cc_err}")
+        try:
+            text, _used_model = _openrouter_fallback(message, transcript_context=transcript_context)
+            if text:
+                return text
+        except Exception as or_err:
+            print(f"[cc-server] OpenRouter failed, trying Groq: {or_err}")
+        try:
+            text, _used_model = _groq_fallback(message, transcript_context=transcript_context)
+            if text:
+                return text
+        except Exception as groq_err:
+            print(f"[cc-server] Groq failed, trying local Ollama: {groq_err}")
+        try:
+            text, _used_model = _local_ollama_fallback(message, transcript_context=transcript_context)
+            if text:
+                return text
+        except Exception as ollama_err:
+            print(f"[cc-server] Local Ollama failed, trying K2: {ollama_err}")
         try:
             text, _used_model = _k2_fallback(message, transcript_context=transcript_context)
             if text:
                 return text
         except Exception as k2_err:
-            print(f"[cc-server] K2 failed, trying OpenRouter: {k2_err}")
+            print(f"[cc-server] K2 failed, final OpenRouter retry: {k2_err}")
         text, _used_model = _openrouter_fallback(message, transcript_context=transcript_context)
         return text
 
 def run_cc_stream(message, effort=None, model=None, budget=None, transcript_context="", conversation_id=None):
     """Yield harness-managed SSE events with permission-gated local tools and fallback cascade."""
+    if _should_force_non_anthropic():
+        print("[cc-server] Emergency independent mode active (stream): OpenRouter-first cascade")
+        try:
+            text, used_model = _openrouter_fallback(message, transcript_context=transcript_context)
+            yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+            yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "openrouter"})
+            return
+        except Exception as or_err:
+            yield json.dumps({"type": "error", "error": f"OpenRouter fallback failed: {or_err}"})
+        try:
+            text, used_model = _groq_fallback(message, transcript_context=transcript_context)
+            yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+            yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "groq"})
+            return
+        except Exception as groq_err:
+            yield json.dumps({"type": "error", "error": f"Groq fallback failed: {groq_err}"})
+        try:
+            text, used_model = _local_ollama_fallback(message, transcript_context=transcript_context)
+            yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+            yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "ollama"})
+            return
+        except Exception as ollama_err:
+            yield json.dumps({"type": "error", "error": f"Local Ollama fallback failed: {ollama_err}"})
+        text, used_model = _k2_fallback(message, transcript_context=transcript_context)
+        yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+        yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "k2"})
+        return
     events = []
     def sink(evt):
         events.append(json.dumps(evt, ensure_ascii=False))
@@ -1246,9 +1492,16 @@ def run_cc_stream(message, effort=None, model=None, budget=None, transcript_cont
             yield evt
         return
     except Exception as cc_err:
-        print(f"[cc-server] Claude stream failed, trying Groq: {cc_err}")
+        print(f"[cc-server] Claude stream failed, trying OpenRouter: {cc_err}")
         for evt in events:
             yield evt
+        try:
+            text, used_model = _openrouter_fallback(message, transcript_context=transcript_context)
+            yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+            yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "openrouter"})
+            return
+        except Exception as or_err:
+            yield json.dumps({"type": "error", "error": f"OpenRouter fallback failed: {or_err}"})
         try:
             text, used_model = _groq_fallback(message, transcript_context=transcript_context)
             yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
@@ -1256,6 +1509,21 @@ def run_cc_stream(message, effort=None, model=None, budget=None, transcript_cont
             return
         except Exception as groq_err:
             yield json.dumps({"type": "error", "error": f"Groq fallback failed: {groq_err}"})
+        try:
+            ollama_events = []
+            text, used_model = _local_ollama_fallback(
+                message,
+                transcript_context=transcript_context,
+                event_sink=lambda evt: ollama_events.append(json.dumps(evt, ensure_ascii=False)),
+            )
+            for evt in ollama_events:
+                yield evt
+            if not ollama_events:
+                yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+                yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "ollama"})
+            return
+        except Exception as ollama_err:
+            yield json.dumps({"type": "error", "error": f"Local Ollama fallback failed: {ollama_err}"})
         try:
             text, used_model = _k2_fallback(message, transcript_context=transcript_context)
             yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
@@ -1315,21 +1583,24 @@ class CCHandler(BaseHTTPRequestHandler):
                     proc.wait(timeout=3)  # H4: wait for actual exit
                 except Exception:
                     pass
-                _current_proc = None
-                # Release lock so next request can proceed
-                try:
-                    _proc_lock.release()
-                except RuntimeError:
-                    pass  # Lock not held (race with normal completion)
+                _release_cc_lock(force=True)
                 cancel_ms = int((time.time() - t_cancel_start) * 1000)
                 _last_latency["cancel_ms"] = cancel_ms  # H2: measure cancel time
                 self._json(200, {"ok": True, "cancelled": True, "cancel_ms": cancel_ms})
             else:
-                self._json(200, {"ok": True, "cancelled": False, "reason": "no active request"})
+                released = _release_cc_lock(force=True)
+                payload = {"ok": True, "cancelled": released}
+                if released:
+                    payload["reason"] = "released stale lock"
+                else:
+                    payload["reason"] = "no active request"
+                self._json(200, payload)
             return
         if request_path == "/health":
             self._json(200, {"ok": True, "service": "cc-server-p1", "gmail": GMAIL_AVAILABLE,
-                             "latency": _last_latency})  # H2: expose latency measurements
+                             "latency": _last_latency,
+                             "lock_held": _proc_lock.locked(),
+                             "current_proc_pid": getattr(_current_proc, "pid", None) if _current_proc else None})  # H2: expose latency measurements
         elif request_path == "/memory/health":
             self._json(200, {"ok": True, "service": "cc-server-p1", "claudemem_url": CLAUDEMEM_URL})
         elif request_path == "/memory/wakeup":
@@ -1878,11 +2149,7 @@ class CCHandler(BaseHTTPRequestHandler):
                         proc.wait(timeout=3)
                     except Exception:
                         pass
-                _current_proc = None
-                try:
-                    _proc_lock.release()
-                except RuntimeError:
-                    pass
+                _release_cc_lock(force=True)
                 if _proc_lock.acquire(blocking=False):
                     _lock_acquired_at = time.time()
                     return True
@@ -2024,10 +2291,7 @@ class CCHandler(BaseHTTPRequestHandler):
                     except Exception as e:
                         print(f"[hooks] Stop error: {e}")
                 if lock_held:
-                    try:
-                        _proc_lock.release()
-                    except RuntimeError:
-                        pass
+                    _release_cc_lock()
                 self.close_connection = True
                 return
 
@@ -2071,15 +2335,16 @@ class CCHandler(BaseHTTPRequestHandler):
                         })
                     except Exception as e:
                         print(f"[hooks] Stop error: {e}")
-                if batch_lock_held:
-                    try:
-                        _proc_lock.release()
-                    except RuntimeError:
-                        pass
             except subprocess.TimeoutExpired:
                 self._json(504, {"ok": False, "error": f"CC subprocess timed out after {API_TIMEOUT}s"})
+            except (BrokenPipeError, ConnectionResetError):
+                # Client disconnected after request submission; keep server healthy and release lock.
+                pass
             except Exception as e:
                 self._json(500, {"ok": False, "error": str(e)})
+            finally:
+                if batch_lock_held:
+                    _release_cc_lock()
         finally:
             pass
 

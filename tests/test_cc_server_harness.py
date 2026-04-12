@@ -1,5 +1,7 @@
 import importlib
 import json
+import urllib.error
+import urllib.parse
 
 
 def _load_module():
@@ -45,6 +47,15 @@ def test_shell_tool_respects_permission_engine():
     assert "permission engine" in blocked["error"].lower()
     assert allowed["ok"] is True
     assert allowed["content"]
+
+
+def test_execute_tool_locally_normalizes_namespaced_tool_names():
+    mod = _load_module()
+
+    result = mod._execute_tool_locally("nexus:read_file", {"path": "MEMORY.md", "limit": 1})
+
+    assert result["ok"] is True
+    assert result["content"]
 
 
 def test_read_file_limit_is_line_based():
@@ -206,6 +217,195 @@ def test_claudemem_status_payload_stops_on_non_404(monkeypatch):
     assert calls == ["/api/health"]
 
 
+def test_normalize_local_route_maps_memory_save_alias():
+    mod = _load_module()
+
+    out = mod._normalize_local_route("/v1/memory/save")
+
+    assert out == "/memory/save"
+
+
+def test_groq_fallback_skips_tool_schema_for_simple_prompts(monkeypatch):
+    mod = _load_module()
+    captured = {}
+
+    def fake_groq_chat(messages, tools=None, tool_choice="auto", temperature=0.0, max_tokens=1024):
+        captured["tools"] = tools
+        return {
+            "model": "llama-3.3-70b-versatile",
+            "choices": [{"message": {"role": "assistant", "content": "OK"}}],
+        }
+
+    monkeypatch.setattr(mod, "_groq_chat", fake_groq_chat)
+
+    text, model = mod._groq_fallback("Answer with only OK.")
+
+    assert text == "OK"
+    assert model == "llama-3.3-70b-versatile"
+    assert captured["tools"] is None
+
+
+def test_run_cc_prefers_openrouter_before_groq(monkeypatch):
+    mod = _load_module()
+
+    monkeypatch.setattr(mod, "_run_cc_harness", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("claude down")))
+    monkeypatch.setattr(mod, "_openrouter_fallback", lambda *args, **kwargs: ("OPENROUTER_OK", "anthropic/claude-sonnet-4.6"))
+    monkeypatch.setattr(mod, "_groq_fallback", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("groq should not run")))
+    monkeypatch.setattr(mod, "_local_ollama_fallback", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("ollama should not run")))
+    monkeypatch.setattr(mod, "_k2_fallback", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("k2 should not run")))
+
+    text = mod.run_cc("Answer with only OK.")
+
+    assert text == "OPENROUTER_OK"
+
+
+def test_run_cc_falls_back_to_local_ollama_before_k2_when_openrouter_and_groq_fail(monkeypatch):
+    mod = _load_module()
+
+    monkeypatch.setattr(mod, "_run_cc_harness", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("claude down")))
+    monkeypatch.setattr(mod, "_openrouter_fallback", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("openrouter down")))
+    monkeypatch.setattr(mod, "_groq_fallback", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("groq down")))
+    monkeypatch.setattr(mod, "_local_ollama_fallback", lambda *args, **kwargs: ("OLLAMA_OK", "sam860/LFM2:350m"))
+
+    text = mod.run_cc("Answer with only OK.")
+
+    assert text == "OLLAMA_OK"
+
+
+def test_message_needs_grounding_detects_direct_file_targets():
+    mod = _load_module()
+
+    assert mod._message_needs_grounding("Create tmp/example.txt with exactly the content alive.")
+    assert mod._message_needs_grounding("Write docs/output.md with the final summary.")
+
+
+def test_select_p1_ollama_model_prefers_stronger_available_model(monkeypatch):
+    mod = _load_module()
+    monkeypatch.setattr(mod, "P1_OLLAMA_MODEL", "")
+    monkeypatch.setattr(mod, "_p1_ollama_model_cache", None)
+    monkeypatch.setattr(mod, "_list_ollama_models", lambda _url: ["sam860/LFM2:350m", "gemma4:31b-cloud"])
+
+    out = mod._select_p1_ollama_model()
+
+    assert out == "gemma4:31b-cloud"
+
+
+def test_local_ollama_fallback_executes_tool_loop(monkeypatch):
+    mod = _load_module()
+    monkeypatch.setattr(mod, "_select_p1_ollama_model", lambda: "gemma4:31b-cloud")
+    responses = [
+        {
+            "model": "gemma4:31b",
+            "message": {
+                "role": "assistant",
+                "content": "",
+                "tool_calls": [
+                    {
+                        "id": "call-1",
+                        "function": {
+                            "name": "read_file",
+                            "arguments": {"path": "MEMORY.md", "limit": 1},
+                        },
+                    }
+                ],
+            },
+        },
+        {
+            "model": "gemma4:31b",
+            "message": {"role": "assistant", "content": "# MEMORY"},
+        },
+    ]
+    monkeypatch.setattr(mod, "_ollama_chat", lambda *args, **kwargs: responses.pop(0))
+
+    seen = []
+    text, model = mod._local_ollama_fallback(
+        "Read the first line of MEMORY.md using a tool and answer with only that line.",
+        event_sink=lambda evt: seen.append(evt),
+    )
+
+    assert text == "# MEMORY"
+    assert model == "gemma4:31b"
+    assert [evt["type"] for evt in seen] == ["assistant", "tool_result", "assistant", "result"]
+
+
+def test_local_ollama_fallback_retries_empty_grounded_turn(monkeypatch):
+    mod = _load_module()
+    monkeypatch.setattr(mod, "_select_p1_ollama_model", lambda: "gemma4:31b-cloud")
+    responses = [
+        {"model": "gemma4:31b", "message": {"role": "assistant", "content": ""}},
+        {"model": "gemma4:31b", "message": {"role": "assistant", "content": "DONE"}},
+    ]
+    monkeypatch.setattr(mod, "_ollama_chat", lambda *args, **kwargs: responses.pop(0))
+
+    text, model = mod._local_ollama_fallback(
+        "Create tmp/example.txt with exactly the content alive and then answer with only DONE."
+    )
+
+    assert text == "DONE"
+    assert model == "gemma4:31b"
+
+
+def test_k2_fallback_uses_direct_query_payload_without_global_context(monkeypatch):
+    mod = _load_module()
+    captured = {}
+
+    class _Resp:
+        def __enter__(self):
+            return self
+        def __exit__(self, exc_type, exc, tb):
+            return False
+        def read(self):
+            return json.dumps({"answer": "K2_OK"}).encode()
+
+    def fake_urlopen(req, timeout=0):
+        captured["url"] = req.full_url
+        captured["timeout"] = timeout
+        captured["payload"] = json.loads(req.data.decode())
+        return _Resp()
+
+    monkeypatch.setattr(mod, "_compose_harness_message", lambda message, transcript_context="": f"{transcript_context}::{message}")
+    monkeypatch.setattr(mod.urllib.request, "urlopen", fake_urlopen)
+
+    text, model = mod._k2_fallback("Answer with only OK.", transcript_context="RECOVERED")
+
+    assert text == "K2_OK"
+    assert model == "k2-cortex"
+    assert captured["url"].endswith("/query")
+    assert captured["timeout"] == mod.K2_QUERY_TIMEOUT
+    assert captured["payload"] == {"query": "RECOVERED::Answer with only OK.", "temperature": 0.0}
+
+
+def test_k2_fallback_retries_once_before_success(monkeypatch):
+    mod = _load_module()
+    calls = {"count": 0}
+
+    class _Resp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self):
+            return json.dumps({"answer": "K2_OK"}).encode()
+
+    def fake_urlopen(req, timeout=0):
+        calls["count"] += 1
+        if calls["count"] == 1:
+            raise urllib.error.URLError("temporary timeout")
+        return _Resp()
+
+    monkeypatch.setattr(mod.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(mod.time, "sleep", lambda _secs: None)
+    monkeypatch.setattr(mod, "K2_QUERY_RETRIES", 2)
+
+    text, model = mod._k2_fallback("Answer with only OK.")
+
+    assert calls["count"] == 2
+    assert text == "K2_OK"
+    assert model == "k2-cortex"
+
+
 def test_aaak_encode_truncates_oversized_first_chunk():
     aaak = importlib.import_module("Scripts.aaak")
     giant = "X" * 5000
@@ -360,4 +560,25 @@ def test_browser_route_aliases_map_to_local_cc_contract():
 
     assert mod._normalize_local_route("/v1/chat") == "/cc"
     assert mod._normalize_local_route("/v1/chat/stream") == "/cc/stream"
+    assert mod._normalize_local_route("/v1/file?path=MEMORY.md") == "/file?path=MEMORY.md"
+    assert mod._normalize_local_route("/v1/files") == "/files"
+    assert mod._normalize_local_route("/v1/agents-status") == "/agents-status"
+    assert mod._normalize_local_route("/v1/memory/search") == "/memory/search"
     assert mod._normalize_local_route("/health") == "/health"
+
+
+def test_release_cc_lock_can_clear_stale_lock_without_active_process():
+    mod = _load_module()
+    acquired = mod._proc_lock.acquire(blocking=False)
+    assert acquired is True
+    mod._current_proc = None
+    mod._lock_acquired_at = 123
+
+    try:
+        assert mod._release_cc_lock(force=True) is True
+        assert mod._proc_lock.acquire(blocking=False) is True
+        mod._proc_lock.release()
+        assert mod._lock_acquired_at == 0
+    finally:
+        if mod._proc_lock.locked():
+            mod._release_cc_lock(force=True)

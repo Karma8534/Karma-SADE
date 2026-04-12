@@ -19,6 +19,10 @@ const CLAUDEMEM_URL = "http://127.0.0.1:37778";
 const OLLAMA_URL = process.platform === "win32" ? "http://localhost:11434" : "http://172.22.240.1:11434";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "llama-3.3-70b-versatile";
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+const OPENROUTER_MODEL = process.env.KARMA_OPENROUTER_MODEL || "anthropic/claude-sonnet-4.6";
+const OPENROUTER_FALLBACK_MODEL = process.env.KARMA_OPENROUTER_FALLBACK_MODEL || "google/gemini-2.0-flash";
+const OPENROUTER_THIRD_MODEL = process.env.KARMA_OPENROUTER_THIRD_MODEL || "meta-llama/llama-3.3-70b-instruct";
 const BOUNDS_FILE = path.join(app.getPath("userData"), "karma_bounds.json");
 const SESSION_FILE = path.join(app.getPath("home"), ".karma_electron_session_id");
 const SESSION_REGISTRY_FILE = path.join(app.getPath("home"), ".karma_electron_session_registry.json");
@@ -32,6 +36,8 @@ const SMOKE_MODE = process.env.KARMA_ELECTRON_SMOKE === "1";
 const SMOKE_PROMPT = process.env.KARMA_ELECTRON_SMOKE_PROMPT || "";
 const SMOKE_OUT = process.env.KARMA_ELECTRON_SMOKE_OUT || path.join(WORK_DIR, "tmp", "electron-smoke.json");
 const LOCAL_OLLAMA_MODEL = process.env.KARMA_LOCAL_OLLAMA_MODEL || "sam860/LFM2:350m";
+const EMERGENCY_INDEPENDENT = String(process.env.KARMA_EMERGENCY_INDEPENDENT || "").toLowerCase() === "1"
+  || String(process.env.KARMA_EMERGENCY_INDEPENDENT || "").toLowerCase() === "true";
 const RUNTIME_LOG_FILE = path.join(app.getPath("userData"), "karma_runtime.log");
 const HUB_CHAT_TOKEN = (() => {
   try {
@@ -39,6 +45,22 @@ const HUB_CHAT_TOKEN = (() => {
   } catch {
     return "";
   }
+})();
+const OPENROUTER_API_KEY = (() => {
+  const fromEnv = (process.env.OPENROUTER_API_KEY || "").trim();
+  if (fromEnv) return fromEnv;
+  const candidates = [
+    path.join(WORK_DIR, ".openrouter-api-key"),
+    path.join(WORK_DIR, ".openrouter-api-key.txt"),
+    path.join(app.getPath("home"), ".openrouter-api-key"),
+  ];
+  for (const candidate of candidates) {
+    try {
+      const value = fs.readFileSync(candidate, "utf-8").trim();
+      if (value) return value;
+    } catch {}
+  }
+  return "";
 })();
 const TOOL_DEFS = [
   {
@@ -921,6 +943,61 @@ async function callGroq(message, runId = null) {
   throw new Error("Groq tool loop limit exceeded");
 }
 
+async function callOpenRouter(message, runId = null) {
+  if (!OPENROUTER_API_KEY) {
+    throw new Error("missing OpenRouter API key");
+  }
+  const models = [OPENROUTER_MODEL, OPENROUTER_FALLBACK_MODEL, OPENROUTER_THIRD_MODEL];
+  let lastError = null;
+  for (const model of models) {
+    try {
+      const response = await fetch(OPENROUTER_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+          "HTTP-Referer": "https://hub.arknexus.net",
+          "X-Title": "Karma Nexus Electron",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "user", content: message }],
+          max_tokens: 1024,
+          temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(30000),
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        if (response.status === 429) {
+          lastError = new Error(`OpenRouter ${response.status} (${model}): ${text.slice(0, 200)}`);
+          continue;
+        }
+        throw new Error(`OpenRouter ${response.status} (${model}): ${text.slice(0, 300)}`);
+      }
+      const data = await response.json();
+      const content = (data.choices?.[0]?.message?.content || "").trim();
+      const usedModel = data.model || model;
+      const assistantEvt = {
+        type: "assistant",
+        message: { role: "assistant", content: [{ type: "text", text: content }], model: usedModel },
+      };
+      if (runId) emitChatEvent(runId, assistantEvt);
+      if (runId) emitChatEvent(runId, { type: "result", result: content, provider: "openrouter", total_cost_usd: 0 });
+      return {
+        ok: true,
+        provider: "openrouter",
+        result: content,
+        model: usedModel,
+        events: [assistantEvt],
+      };
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError || new Error("OpenRouter failed");
+}
+
 async function callCortex(message) {
   const response = await fetch(`${CORTEX_URL}/query`, {
     method: "POST",
@@ -967,10 +1044,23 @@ async function runChatCascade(message, opts = {}, runId = null) {
   if (deterministic) return deterministic;
   const transcript = Array.isArray(opts.priorTranscript) ? opts.priorTranscript : [];
   const contextualMessage = composeMessageWithTranscript(message, transcript);
+  if (EMERGENCY_INDEPENDENT) {
+    emitChatEvent(runId, { type: "error", error: "Emergency independent mode active: skipping Claude primary." });
+    try {
+      return await callOpenRouter(contextualMessage, runId);
+    } catch (openRouterError) {
+      emitChatEvent(runId, { type: "error", error: `OpenRouter unavailable, falling back: ${openRouterError.message}` });
+    }
+  }
   try {
     return await runClaudeHarness(message, opts, runId);
   } catch (claudeError) {
     emitChatEvent(runId, { type: "error", error: `Claude unavailable, falling back: ${claudeError.message}` });
+    try {
+      return await callOpenRouter(contextualMessage, runId);
+    } catch (openRouterError) {
+      emitChatEvent(runId, { type: "error", error: `OpenRouter unavailable, falling back: ${openRouterError.message}` });
+    }
     try {
       const groq = await callGroq(contextualMessage, runId);
       emitChatEvent(runId, { type: "result", result: groq.result, provider: "groq", total_cost_usd: 0 });
