@@ -146,3 +146,47 @@ Patched Scripts/cc_server_p1.py:
 ### Verdict
 - Previous claim "Karma has tool use" was PARTIAL/UNVERIFIED on this phrasing path.
 - Current status after fix: VERIFIED for explicit shell_run and file-read tool paths through live hub + P1 runtime, with disk side-effect proof.
+
+## REMEDIATION PASS — 2026-04-14 19:59:16 -04:00
+
+### Scope executed
+- Fixed recurring CC Archon false-alert and stale-email behavior using runtime proof.
+- Fixed Karpathy local-model fallback mismatch.
+- Re-ran live hub + P1 smoke probes after fixes.
+
+### Changes applied
+1. Scripts/cc_archon_agent.ps1
+- Rewritten as ASCII-safe, PowerShell 5 compatible script (scheduled task runtime compatible).
+- Added robust Kiki check via SSH + JSON parse (no fragile nested inline-python quoting).
+- Identity drift markers aligned to current snapshot conventions (SOVEREIGN/ASCENDANT/INITIATE/SADE).
+- claude-mem base URL now resolves from ~/.claude-mem/settings.json worker port.
+- claude-mem save failure now queues payload to Logs/archon_claudemem_queue.jsonl (fail-closed capture, no silent drop).
+
+2. Scripts/cc_email_daemon.py
+- Status digest now ignores volatile snapshot Generated: timestamp to prevent unchanged-content spam sends every interval.
+
+3. Scripts/karpathy_loop.py
+- Default local model changed to installed gemma3:1b.
+- Added installed-model selector using Ollama /api/tags.
+- Added fallback from textual K2 error payloads (CORTEX ERROR) to local Ollama inference.
+
+### Ground-truth verification results
+- Archon foreground run (-HiddenRelaunch) now completes successfully.
+- New run evidence:
+  - drift=False
+  - kiki=alive
+  - bus post dedup active
+  - status email gated correctly (skipped when under threshold)
+- Forced status check with 31-minute age returns:
+  - skipped unchanged (31.0m since last, force=240m)
+- Karpathy propose now succeeds with generated JSON proposal (no missing-model 404 path).
+- Live smoke probes:
+  - GET https://hub.arknexus.net/health -> 200
+  - GET https://hub.arknexus.net/v1/status -> 200
+  - GET http://127.0.0.1:7891/health -> 200
+  - POST https://hub.arknexus.net/v1/chat with forced shell tool produced 	ool_log_count=1 and disk side effect file 	mp/groundtruth_probe_* with expected content.
+
+### Remaining blocker (still active)
+- claude-mem worker HTTP path is degraded/intermittent (127.0.0.1:37781 timeouts from external callers).
+- Mitigation in place: Archon now queues unsaved observations to local JSONL fallback instead of dropping them.
+- Status: PARTIALLY RESOLVED (durable capture restored, worker service still requires deeper claude-mem runtime repair).

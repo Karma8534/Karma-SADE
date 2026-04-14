@@ -21,6 +21,7 @@ import datetime
 import pathlib
 import subprocess
 import os
+import hashlib
 import urllib.request
 import urllib.error
 from email.utils import parseaddr
@@ -36,6 +37,7 @@ CREDS_FILE         = REPO / ".gmail-cc-creds"
 WATERMARK_FILE     = LOGS / "cc_email_watermark.txt"
 CHECK_LAST_FILE    = LOGS / "cc_email_check_last.txt"
 STATUS_SENT_FILE   = LOGS / "cc_email_status_last.txt"
+STATUS_DIGEST_FILE = LOGS / "cc_email_status_digest.txt"
 PERSONAL_SENT_FILE = LOGS / "cc_email_personal_last.txt"
 SPINE_VER_FILE     = LOGS / "cc_email_spine_version.txt"
 DIRECTIVE_QUEUE_DIR = REPO / "tmp" / "sovereign_email_inbox"
@@ -44,6 +46,7 @@ DIRECTIVE_QUEUE_DIR.mkdir(parents=True, exist_ok=True)
 # ── Config ────────────────────────────────────────────────────────────────────
 CHECK_INTERVAL_MIN  = 15
 STATUS_INTERVAL_MIN = 30
+STATUS_FORCE_INTERVAL_MIN = 240
 PERSONAL_IDLE_H    = 8       # hours before idle personal check-in fires
 OLLAMA_URL         = os.environ.get("EMAIL_OLLAMA_URL", "http://localhost:11434/v1/chat/completions")
 OLLAMA_MODEL       = os.environ.get("EMAIL_OLLAMA_MODEL", "sam860/LFM2:350m")
@@ -294,8 +297,10 @@ def _read_snapshot_summary() -> str:
         digest = []
 
         generated = next((line.strip() for line in lines if line.startswith("Generated:")), "")
+        # Ignore volatile "Generated:" timestamps so unchanged status snapshots
+        # do not force digest churn and stale 30-minute status emails.
         if generated:
-            digest.append(_clean_email_text(generated.replace("Generated:", "Snapshot generated:").strip()))
+            pass
 
         identity_line = ""
         in_identity = False
@@ -447,6 +452,19 @@ def cmd_status() -> str:
 
     snapshot = _read_snapshot_summary()
     blocker_status = _read_state_blockers()
+    digest_input = f"{_clean_email_text(snapshot)}\n---\n{_clean_email_text(blocker_status)}"
+    status_digest = hashlib.sha256(digest_input.encode("utf-8", errors="replace")).hexdigest()
+    last_digest = ""
+    try:
+        last_digest = STATUS_DIGEST_FILE.read_text(encoding="utf-8").strip()
+    except Exception:
+        last_digest = ""
+    if last_digest and last_digest == status_digest and minutes < STATUS_FORCE_INTERVAL_MIN:
+        return (
+            f"skipped unchanged ({minutes:.1f}m since last, "
+            f"force={STATUS_FORCE_INTERVAL_MIN}m)"
+        )
+
     now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
     subject = f"[CC STATUS] {now}"
@@ -454,6 +472,7 @@ def cmd_status() -> str:
     result = send_to_colby(subject, body)
     if result.get("ok"):
         _write_now(STATUS_SENT_FILE)
+        STATUS_DIGEST_FILE.write_text(status_digest, encoding="utf-8")
         return f"sent: {subject}"
     else:
         return f"send error: {result.get('error', 'unknown')}"

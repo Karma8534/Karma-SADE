@@ -31,7 +31,25 @@ PROPOSALS_DIR.mkdir(parents=True, exist_ok=True)
 
 K2_CORTEX_URL = os.environ.get("K2_CORTEX_URL", "http://192.168.0.226:7892")
 OLLAMA_URL = os.environ.get("P1_OLLAMA_URL", "http://localhost:11434")
-OLLAMA_MODEL = os.environ.get("P1_OLLAMA_MODEL", "sam860/LFM2:350m")
+OLLAMA_MODEL = os.environ.get("P1_OLLAMA_MODEL", "gemma3:1b")
+
+
+def pick_available_ollama_model(preferred: str) -> str:
+    """Return a locally installed model, preferring the configured one."""
+    try:
+        with urllib.request.urlopen(f"{OLLAMA_URL}/api/tags", timeout=8) as r:
+            payload = json.loads(r.read())
+        names = [m.get("name", "") for m in payload.get("models", []) if m.get("name")]
+        if preferred in names:
+            return preferred
+        # Try a practical default if configured model is missing.
+        if "gemma3:1b" in names:
+            return "gemma3:1b"
+        if names:
+            return names[0]
+    except Exception:
+        pass
+    return preferred
 
 
 def read_nexus_tail(max_chars=3000):
@@ -79,6 +97,21 @@ def propose():
         "JSON only. Keep the text under 200 words. Be specific and actionable."
     )
 
+    def _query_ollama(local_prompt: str) -> str:
+        payload = json.dumps({
+            "model": pick_available_ollama_model(OLLAMA_MODEL),
+            "messages": [{"role": "user", "content": local_prompt}],
+            "stream": False,
+            "options": {"temperature": 0.4, "num_ctx": 4096},
+        }).encode()
+        req = urllib.request.Request(
+            f"{OLLAMA_URL}/api/chat", data=payload,
+            headers={"Content-Type": "application/json"}, method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=60) as r:
+            data = json.loads(r.read())
+        return data.get("message", {}).get("content", "")
+
     # Try K2 cortex first (free)
     try:
         req = urllib.request.Request(
@@ -90,22 +123,13 @@ def propose():
         with urllib.request.urlopen(req, timeout=60) as r:
             data = json.loads(r.read())
         answer = data.get("answer", "")
+        # Cortex can return textual error payloads while still returning 200.
+        if not answer or "CORTEX ERROR" in answer.upper():
+            answer = _query_ollama(prompt)
     except Exception:
         # Fall back to P1 Ollama
         try:
-            payload = json.dumps({
-                "model": OLLAMA_MODEL,
-                "messages": [{"role": "user", "content": prompt}],
-                "stream": False,
-                "options": {"temperature": 0.4, "num_ctx": 4096},
-            }).encode()
-            req = urllib.request.Request(
-                f"{OLLAMA_URL}/api/chat", data=payload,
-                headers={"Content-Type": "application/json"}, method="POST",
-            )
-            with urllib.request.urlopen(req, timeout=60) as r:
-                data = json.loads(r.read())
-            answer = data.get("message", {}).get("content", "")
+            answer = _query_ollama(prompt)
         except Exception as e:
             print(f"[karpathy] Both inference sources failed: {e}")
             return None

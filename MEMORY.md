@@ -307,3 +307,27 @@ S162: temporal KG, dedup, palace vocab, contradiction detection
 - Added queue-wait lock acquisition behavior in `cc_server_p1` to serialize concurrent requests and reduce avoidable 429 contention.
 - Completed dedicated organic walkthrough artifact (`tmp/organic-walkthrough-041126.json`) with openrouter provider, UI success, and memory hit.
 - Re-validated recursive test/build/runtime suite; no remaining resolvable non-emergency blockers.
+
+## PITFALL: claude-mem worker zombie socket pattern (2026-04-14)
+- `CLAUDE_MEM_WORKER_HOST` env var is set by CC session init and ALWAYS overrides settings.json (via `applyEnvOverrides()` in settings class)
+- PowerShell `Start-Process -WindowStyle Hidden` leaves orphaned zombie sockets that cannot be killed — avoids this by using `nohup bun worker-service.cjs &` from bash
+- When worker dies and leaves zombie socket, use a NEW port instead of trying to kill zombie
+- Effective fix: set `CLAUDE_MEM_WORKER_PORT` to unused port in `~/.claude-mem/settings.json`, kill all mcp-server processes (CC respawns fresh), start worker via `nohup ~/.bun/bin/bun.exe worker-service.cjs &`
+- Current working port: **37779** (set 2026-04-14, obs #28075)
+
+## Codex Update — 2026-04-14 17:38:47 -04:00
+- Fixed live Nexus tool execution gap for shell_run/read prompts in Scripts/cc_server_p1.py.
+- Root cause: grounding gate missed shell_run phrasing and parser ignored fenced 	ool_code blocks.
+- Added alias handling (shell_run|bash -> shell, ile_read|file_write), stronger grounding triggers, and broader forced tool extraction.
+- Verified via live probes through https://hub.arknexus.net/v1/chat with disk side effects:
+  - shell write created 	mp/tool_write_probe_hub.txt
+  - read-file probe returned exact file content with tool log.
+- Remaining: continue full goal->start line-by-line reconstruction for other unresolved requirement paths.
+
+## [Codex Remediation] 2026-04-14 19:59:37 -04:00
+- Hardened Scripts/cc_archon_agent.ps1 for PowerShell 5/task-scheduler compatibility and robust K2 Kiki check.
+- Added claude-mem save fallback queue (Logs/archon_claudemem_queue.jsonl) to prevent checkpoint loss during worker outages.
+- Fixed stale status email spam source in Scripts/cc_email_daemon.py by excluding volatile Generated timestamp from digest.
+- Updated Scripts/karpathy_loop.py to prefer installed local Ollama models (gemma3:1b) and fallback from textual K2 error payloads.
+- Live verification: hub and P1 health endpoints 200; forced hub tool call produced disk side effect.
+- Open blocker: claude-mem worker API remains intermittently unavailable/timeouts on local port from external callers.
