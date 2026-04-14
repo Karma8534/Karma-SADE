@@ -180,8 +180,9 @@ OPENROUTER_MODEL = "anthropic/claude-sonnet-4-6"  # Same model name on OR, diffe
 OPENROUTER_FALLBACK_MODEL = "google/gemini-2.0-flash"  # Tier 2: if OR Anthropic also rate-limited
 OPENROUTER_THIRD_MODEL = "meta-llama/llama-3.3-70b-instruct"  # Tier 3: non-Anthropic OpenRouter fallback
 OPENROUTER_TIMEOUT = int(os.environ.get("OPENROUTER_TIMEOUT", "45"))
-EMERGENCY_INDEPENDENT = os.environ.get("KARMA_EMERGENCY_INDEPENDENT", "0").strip().lower() in ("1", "true", "yes", "on")
-DISABLE_ANTHROPIC = os.environ.get("KARMA_DISABLE_ANTHROPIC", "0").strip().lower() in ("1", "true", "yes", "on")
+# Fail-closed emergency posture by default: Anthropic paths are opt-in only.
+EMERGENCY_INDEPENDENT = os.environ.get("KARMA_EMERGENCY_INDEPENDENT", "1").strip().lower() in ("1", "true", "yes", "on")
+DISABLE_ANTHROPIC = os.environ.get("KARMA_DISABLE_ANTHROPIC", "1").strip().lower() in ("1", "true", "yes", "on")
 CLAUDEMEM_DB   = pathlib.Path.home() / ".claude-mem" / "claude-mem.db"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama-3.3-70b-versatile"
@@ -838,6 +839,15 @@ def _parse_json_object(text):
             return json.loads(candidate)
         except Exception:
             continue
+    # Accept lightweight tool-code blocks emitted by model fallbacks:
+    # ```tool_code
+    # echo hello
+    # ```
+    tool_code = re.search(r"```(?:tool_code|bash|sh)?\s*([\s\S]+?)```", trimmed, re.IGNORECASE)
+    if tool_code:
+        command = _strip_trailing_punct(tool_code.group(1))
+        if command:
+            return {"tool_use": {"name": "shell", "input": {"command": command}}}
     return None
 
 
@@ -897,6 +907,14 @@ def _execute_tool_locally(tool_name, tool_input):
     tool_name = str(tool_name or "").strip()
     if ":" in tool_name:
         tool_name = tool_name.split(":")[-1].strip()
+    alias_map = {
+        "shell_run": "shell",
+        "shell_exec": "shell",
+        "bash": "shell",
+        "file_read": "read_file",
+        "file_write": "write_file",
+    }
+    tool_name = alias_map.get(tool_name, tool_name)
     allowed, reason = _check_tool_permission(tool_name, tool_input)
     if not allowed:
         return {"ok": False, "error": f"Blocked by permission engine: {reason}"}
@@ -1135,11 +1153,96 @@ def _compose_harness_message(message, transcript_context=""):
 
 def _message_needs_grounding(message):
     patterns = [
-        r"\b(memory\.md|state\.md|heading|first line|top of|local file|workspace|repo|repository|current state|read file|write file|create file|shell|git|glob|grep)\b",
+        r"\b(memory\.md|state\.md|heading|first line|top of|local file|workspace|repo|repository|current state|read file|write file|create file|shell|shell_run|bash|git|glob|grep)\b",
         r"\b(?:read|write|create)\s+[A-Za-z0-9_./\\-]+\.[A-Za-z0-9]+\b",
+        r"\b(list|show)\s+(?:the\s+)?(?:first\s+\d+\s+)?files?\s+(?:under|in)\b",
+        r"\b(command output|exact command)\b",
+        r"\bexecute(?:\s+exactly)?\s*[:\-]",
+        r"\b[A-Za-z]:[\\/][A-Za-z0-9_./\\-]+\b",
         r"\btmp/[A-Za-z0-9_./\\-]+\b",
     ]
     return any(re.search(pattern, message, re.IGNORECASE) for pattern in patterns)
+
+
+def _strip_trailing_punct(text):
+    return re.sub(r"[\s`\"'.,;:!?]+$", "", str(text or "").strip())
+
+
+def _extract_forced_tool_call(message):
+    msg = str(message or "")
+    tool_code_match = re.search(r"```(?:tool_code|bash|sh)?\s*([\s\S]+?)```", msg, re.IGNORECASE)
+    if tool_code_match:
+        command = _strip_trailing_punct(tool_code_match.group(1))
+        if command:
+            return {"name": "shell", "input": {"command": command}}
+
+    shell_run_match = re.search(
+        r"(?:use\s+)?(?:the\s+)?shell_run(?:\s+tool)?(?:\s+now)?(?:.*?)(?:execute(?:\s+exactly)?\s*[:\-]?\s*)(.+)",
+        msg,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if shell_run_match:
+        command = _strip_trailing_punct(shell_run_match.group(1))
+        if command:
+            return {"name": "shell", "input": {"command": command}}
+
+    shell_match = re.search(r"(?:run|execute)\s+(?:a\s+)?shell command\s*[:\-]?\s*(.+)", msg, re.IGNORECASE | re.DOTALL)
+    if shell_match:
+        command = _strip_trailing_punct(shell_match.group(1))
+        if command:
+            return {"name": "shell", "input": {"command": command}}
+
+    py_match = re.search(r"(python(?:3)?\s+-c\s+.+)", msg, re.IGNORECASE | re.DOTALL)
+    if py_match:
+        command = _strip_trailing_punct(py_match.group(1))
+        if command:
+            return {"name": "shell", "input": {"command": command}}
+
+    read_match = re.search(r"(?:read|show)\s+(?:the\s+contents\s+of\s+|the\s+first\s+line\s+of\s+|file\s+)?([A-Za-z]:[\\/][A-Za-z0-9_./\\-]+|[A-Za-z0-9_./\\-]+\.[A-Za-z0-9]+)", msg, re.IGNORECASE)
+    if read_match:
+        path = _strip_trailing_punct(read_match.group(1))
+        if path:
+            return {"name": "read_file", "input": {"path": path, "limit": 200}}
+    if re.search(r"\b(read|show)\b", msg, re.IGNORECASE):
+        path_any = re.search(r"([A-Za-z]:[\\/][A-Za-z0-9_./\\-]+|[A-Za-z0-9_./\\-]+\.[A-Za-z0-9]+)", msg)
+        if path_any:
+            path = _strip_trailing_punct(path_any.group(1))
+            if path:
+                return {"name": "read_file", "input": {"path": path, "limit": 200}}
+
+    list_match = re.search(r"list\s+(?:the\s+)?(?:first\s+\d+\s+)?files?\s+(?:under|in)\s+([A-Za-z]:[\\/][A-Za-z0-9_./\\-]+|[A-Za-z0-9_./\\-]+)", msg, re.IGNORECASE)
+    if list_match:
+        raw_path = _strip_trailing_punct(list_match.group(1))
+        if raw_path:
+            return {"name": "glob", "input": {"pattern": "*", "path": raw_path}}
+    return None
+
+
+def _tool_output_summary(tool_name, output):
+    if not isinstance(output, dict):
+        return _safe_preview(output, 2000)
+    if not output.get("ok"):
+        return f"[{tool_name}] failed: {output.get('error', 'unknown error')}"
+    if tool_name == "shell":
+        stdout = str(output.get("stdout", "")).strip()
+        stderr = str(output.get("stderr", "")).strip()
+        if stdout:
+            return stdout
+        if stderr:
+            return stderr
+        return "[shell] completed with no stdout"
+    if tool_name == "read_file":
+        return str(output.get("content", "")).strip()
+    if tool_name == "glob":
+        matches = output.get("matches", []) or []
+        return "\n".join(matches[:20]) if matches else "[glob] no matches"
+    if tool_name == "grep":
+        rows = output.get("matches", []) or []
+        if not rows:
+            return "[grep] no matches"
+        lines = [f"{m.get('path')}:{m.get('line')}: {m.get('text')}" for m in rows[:20]]
+        return "\n".join(lines)
+    return _safe_preview(output, 2000)
 
 
 def _message_prefers_transcript_only(message):
@@ -1343,6 +1446,24 @@ def _run_cc_harness(message, effort=None, model=None, budget=None, event_sink=No
         parsed = _parse_json_object(attempt["text"])
         tool_use = parsed.get("tool_use") if isinstance(parsed, dict) else None
         if not tool_use or not tool_use.get("name"):
+            if _message_needs_grounding(message):
+                forced = _extract_forced_tool_call(message)
+                if forced:
+                    tool_name = forced.get("name", "")
+                    tool_input = forced.get("input", {}) or {}
+                    tool_id = f"{tool_name}-forced-{int(time.time() * 1000)}-{turn}"
+                    assistant_evt = {"type": "assistant", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": tool_id, "name": tool_name, "input": tool_input}]}}
+                    if event_sink:
+                        event_sink(assistant_evt)
+                    tool_output = _execute_tool_locally(tool_name, tool_input)
+                    tool_evt = {"type": "tool_result", "tool_use_id": tool_id, "content": _tool_result_content(tool_output)}
+                    if event_sink:
+                        event_sink(tool_evt)
+                    summary = _tool_output_summary(tool_name, tool_output)
+                    result_evt = {"type": "result", "result": summary, "session_id": load_session_id(conv_id) or ""}
+                    if event_sink:
+                        event_sink(result_evt)
+                    return summary.strip(), final_lines
             result_evt = {"type": "result", "result": attempt["text"], "session_id": load_session_id(conv_id) or ""}
             if event_sink:
                 event_sink(result_evt)
@@ -1404,6 +1525,17 @@ def run_cc(message, effort=None, model=None, budget=None, transcript_context="",
     """Run the harness-managed CC loop with degraded fallback cascade."""
     if _should_force_non_anthropic():
         print("[cc-server] Emergency independent mode active: skipping Anthropic primary and using OpenRouter-first cascade")
+        if _message_needs_grounding(message):
+            forced = _extract_forced_tool_call(message)
+            if forced:
+                out = _execute_tool_locally(forced.get("name", ""), forced.get("input", {}) or {})
+                return _tool_output_summary(forced.get("name", ""), out)
+            try:
+                text, _used_model = _local_ollama_fallback(message, transcript_context=transcript_context)
+                if text:
+                    return text
+            except Exception as ollama_err:
+                print(f"[cc-server] Local Ollama grounding fallback failed: {ollama_err}")
         try:
             text, _used_model = _openrouter_fallback(message, transcript_context=transcript_context)
             if text:
@@ -1429,6 +1561,17 @@ def run_cc(message, effort=None, model=None, budget=None, transcript_context="",
         return text
     except Exception as cc_err:
         print(f"[cc-server] Claude failed, trying OpenRouter: {cc_err}")
+        if _message_needs_grounding(message):
+            forced = _extract_forced_tool_call(message)
+            if forced:
+                out = _execute_tool_locally(forced.get("name", ""), forced.get("input", {}) or {})
+                return _tool_output_summary(forced.get("name", ""), out)
+            try:
+                text, _used_model = _local_ollama_fallback(message, transcript_context=transcript_context)
+                if text:
+                    return text
+            except Exception as ollama_ground_err:
+                print(f"[cc-server] Local grounding fallback failed in exception path: {ollama_ground_err}")
         try:
             text, _used_model = _openrouter_fallback(message, transcript_context=transcript_context)
             if text:
@@ -1460,6 +1603,25 @@ def run_cc_stream(message, effort=None, model=None, budget=None, transcript_cont
     """Yield harness-managed SSE events with permission-gated local tools and fallback cascade."""
     if _should_force_non_anthropic():
         print("[cc-server] Emergency independent mode active (stream): OpenRouter-first cascade")
+        if _message_needs_grounding(message):
+            forced = _extract_forced_tool_call(message)
+            if forced:
+                tool_name = forced.get("name", "")
+                tool_input = forced.get("input", {}) or {}
+                tool_id = f"{tool_name}-forced-{int(time.time() * 1000)}"
+                yield json.dumps({"type": "assistant", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": tool_id, "name": tool_name, "input": tool_input}]}})
+                out = _execute_tool_locally(tool_name, tool_input)
+                yield json.dumps({"type": "tool_result", "tool_use_id": tool_id, "content": _tool_result_content(out)})
+                summary = _tool_output_summary(tool_name, out)
+                yield json.dumps({"type": "result", "result": summary, "model": "local-forced-tool", "total_cost_usd": 0, "provider": "local"})
+                return
+            try:
+                text, used_model = _local_ollama_fallback(message, transcript_context=transcript_context)
+                yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+                yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "ollama"})
+                return
+            except Exception as ollama_err:
+                yield json.dumps({"type": "error", "error": f"Local grounding fallback failed: {ollama_err}"})
         try:
             text, used_model = _openrouter_fallback(message, transcript_context=transcript_context)
             yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
@@ -1497,6 +1659,33 @@ def run_cc_stream(message, effort=None, model=None, budget=None, transcript_cont
         print(f"[cc-server] Claude stream failed, trying OpenRouter: {cc_err}")
         for evt in events:
             yield evt
+        if _message_needs_grounding(message):
+            forced = _extract_forced_tool_call(message)
+            if forced:
+                tool_name = forced.get("name", "")
+                tool_input = forced.get("input", {}) or {}
+                tool_id = f"{tool_name}-forced-{int(time.time() * 1000)}"
+                yield json.dumps({"type": "assistant", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": tool_id, "name": tool_name, "input": tool_input}]}})
+                out = _execute_tool_locally(tool_name, tool_input)
+                yield json.dumps({"type": "tool_result", "tool_use_id": tool_id, "content": _tool_result_content(out)})
+                summary = _tool_output_summary(tool_name, out)
+                yield json.dumps({"type": "result", "result": summary, "model": "local-forced-tool", "total_cost_usd": 0, "provider": "local"})
+                return
+            try:
+                ollama_events = []
+                text, used_model = _local_ollama_fallback(
+                    message,
+                    transcript_context=transcript_context,
+                    event_sink=lambda evt: ollama_events.append(json.dumps(evt, ensure_ascii=False)),
+                )
+                for evt in ollama_events:
+                    yield evt
+                if not ollama_events:
+                    yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+                    yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "ollama"})
+                return
+            except Exception as ollama_ground_err:
+                yield json.dumps({"type": "error", "error": f"Local grounding fallback failed in exception path: {ollama_ground_err}"})
         try:
             text, used_model = _openrouter_fallback(message, transcript_context=transcript_context)
             yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
@@ -1600,6 +1789,8 @@ class CCHandler(BaseHTTPRequestHandler):
             return
         if request_path == "/health":
             self._json(200, {"ok": True, "service": "cc-server-p1", "gmail": GMAIL_AVAILABLE,
+                             "emergency_independent": EMERGENCY_INDEPENDENT,
+                             "disable_anthropic": DISABLE_ANTHROPIC,
                              "latency": _last_latency,
                              "lock_held": _proc_lock.locked(),
                              "current_proc_pid": getattr(_current_proc, "pid", None) if _current_proc else None,
@@ -2342,8 +2533,42 @@ class CCHandler(BaseHTTPRequestHandler):
                 if not _acquire_cc_lock():
                     return
                 batch_lock_held = True
-                response_text = run_cc(message, effort=effort, model=model, budget=budget, transcript_context=batch_transcript_context, conversation_id=batch_conv_id)
-                self._json(200, {"ok": True, "response": response_text})
+                response_text = ""
+                tool_log = []
+                tool_pending = {}
+                used_model = ""
+                provider = ""
+                for line in run_cc_stream(message, effort=effort, model=model, budget=budget, transcript_context=batch_transcript_context, conversation_id=batch_conv_id):
+                    try:
+                        obj = json.loads(line)
+                    except Exception:
+                        continue
+                    evt_type = obj.get("type")
+                    if evt_type == "assistant":
+                        msg_obj = obj.get("message", {}) or {}
+                        used_model = msg_obj.get("model") or used_model
+                        content = msg_obj.get("content", [])
+                        if isinstance(content, list):
+                            for block in content:
+                                if isinstance(block, dict) and block.get("type") == "tool_use":
+                                    tool_pending[block.get("id")] = {"tool": block.get("name"), "input": block.get("input")}
+                    elif evt_type == "tool_result":
+                        tid = obj.get("tool_use_id")
+                        pending = tool_pending.get(tid, {})
+                        tool_log.append({
+                            "tool": pending.get("tool", "unknown"),
+                            "input": pending.get("input", {}),
+                            "output": _safe_preview(obj.get("content", ""), 4000),
+                        })
+                    elif evt_type == "result":
+                        response_text = obj.get("result", "") or response_text
+                        used_model = obj.get("model") or used_model
+                        provider = obj.get("provider") or provider
+                    elif evt_type == "error" and not response_text:
+                        raise RuntimeError(obj.get("error", "stream error"))
+                if not response_text:
+                    raise RuntimeError("No result emitted by run_cc_stream")
+                self._json(200, {"ok": True, "response": response_text, "tool_log": tool_log, "model": used_model, "provider": provider})
                 # Gate 6: Auto-save chat turn to claude-mem (fire-and-forget)
                 _auto_save_memory(message, response_text)
                 if NEXUS_AGENT_AVAILABLE and response_text:
