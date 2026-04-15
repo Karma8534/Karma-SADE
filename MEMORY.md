@@ -21,7 +21,19 @@
 - **Verdict: DO NOT SCRAP. 1.5-2 days to Foundation PASS.**
 
 ### Active task
-Resolving all adversarial review findings — deploying proxy.js fixes (C1 IP allowlist, C3 duplicate route, H1 session persistence, L1 runtime truth)
+Resolving adversarial review findings — CRITICAL+HIGH deployed, docs updated, verifying remaining MEDIUM items
+
+### Fixes deployed this session
+- C1: Tailscale IP allowlist on /v1/shell, /v1/file, /v1/email/send, /v1/self-edit (LIVE)
+- C2: electron/main.js claude-mem port 37778→37782 (committed)
+- C3: Duplicate /v1/shell handler deleted (LIVE)
+- H1: /v1/session/{id}/save + /history endpoints with disk persistence (LIVE, returns 200)
+- L1: /v1/runtime/truth endpoint (LIVE, returns 200)
+- H2: VERIFIED NOT BROKEN (spine format valid, systemd services active — review used wrong test commands)
+- H3: VERIFIED EXISTS (routeToHarness() already does P1→K2 failover with health checks)
+- H4: ccprop6.md + EXECUTION_GATES.md updated Electron→Tauri (15 references)
+- M1: hub.env cleaned — stale MODEL_DEFAULT/MODEL_DEEP/K2_OLLAMA_MODEL/pricing commented out
+- M3: rebuild.sh created on vault-neo for automated git pull→sync→build→deploy→health-check
 
 ---
 
