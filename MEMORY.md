@@ -2,6 +2,29 @@
 
 # Karma SADE — Active Memory
 
+## Session 170 (2026-04-15) — Forensic Audit + Adversarial Review Skill
+
+### What was done
+- Wrote `JulianAudit0415h.md`: forensic audit of ccprop6/jprop6 plan files vs live system state
+- Wrote `juliandiff.md`: Sovereign Directive vs ground-truth delta analysis
+- Built `/adversarial-review` skill: 5-stage chunked pipeline (chunk→summarize→merge→review→aggregate)
+  - Solves ENOBUFS: works on any repo size by using `git log --stat` + awk chunking, never `git diff`
+  - 3 CC adversarial personas (Devil's Advocate, Cost/Sustainability, Contradiction Hunter) + optional Codex
+  - Output: `tmp/adversarial-review/ADVERSARIAL_REPORT.md`
+
+### Key findings from audit
+- **Phase 2 (Chat Contract): 3/4 gates PASS** — identity, memory, tools all verified live
+- **Phase 0 (/v1/runtime/truth): 404** — endpoint never added to proxy.js
+- **Phase 1 (/v1/session/{id}): 404** — session persistence never added
+- **B1 CRITICAL: claude-mem port 37778→37782** — brain wire writes may silently fail
+- **proxy.js has 40+ routes** (directive listed ~10) — current state EXCEEDS plan
+- **Verdict: DO NOT SCRAP. 1.5-2 days to Foundation PASS.**
+
+### Active task
+Running full adversarial review (March 1 - today) via new skill
+
+---
+
 ## Session 162 (2026-04-09) — Nexus 5.6.0 Build DEPLOYED
 
 - **12/13 tasks PASS**, 1 DEFERRED (K2 cortex down)
