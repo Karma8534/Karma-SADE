@@ -7,7 +7,7 @@ Groq, K2, and OpenRouter are degraded fallbacks when Claude is unavailable.
 Returns: {response, ok}
 Auth: Bearer token checked against HUB_CHAT_TOKEN env var.
 """
-import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.parse, sqlite3, base64, threading, time, re, fnmatch, glob
+import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.parse, sqlite3, base64, threading, time, re, fnmatch, glob, datetime, uuid
 from http.server import HTTPServer, ThreadingHTTPServer, BaseHTTPRequestHandler
 from collections import defaultdict
 sys.path.insert(0, os.path.dirname(__file__))
@@ -171,7 +171,21 @@ except ImportError as e:
     print(f"[cc-server] NexusAgent: DISABLED ({e})")
 
 API_TIMEOUT    = 120  # seconds — CC subprocess can be slow on complex tasks
-CLAUDEMEM_URL  = "http://127.0.0.1:37778"  # claude-mem worker (loopback) — updated S155 port change
+def _resolve_claudemem_url():
+    """Resolve claude-mem worker URL from settings.json with safe fallback."""
+    default_port = "37778"
+    settings_path = pathlib.Path.home() / ".claude-mem" / "settings.json"
+    try:
+        if settings_path.exists():
+            data = json.loads(settings_path.read_text(encoding="utf-8"))
+            port = str(data.get("CLAUDE_MEM_WORKER_PORT", default_port)).strip()
+            if port:
+                return f"http://127.0.0.1:{port}"
+    except Exception as e:
+        print(f"[cc-server] WARN: failed to read claude-mem settings: {e}")
+    return f"http://127.0.0.1:{default_port}"
+
+CLAUDEMEM_URL  = (os.environ.get("CLAUDEMEM_URL", "").strip() or _resolve_claudemem_url())
 
 # ── EscapeHatch: OpenRouter fallback (S157 — rate limit contingency) ──────────
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
@@ -352,6 +366,90 @@ def claudemem_proxy(path, method="GET", body=None, timeout=10):
         except Exception:
             return e.code, {"error": str(e)}
     except Exception as e:
+        # Fallback: direct SQLite operations for critical memory endpoints.
+        try:
+            if path in ("/api/health", "/health"):
+                conn = sqlite3.connect(CLAUDEMEM_DB, timeout=5)
+                conn.execute("SELECT 1")
+                conn.close()
+                return 200, {"ok": True, "fallback": "sqlite"}
+
+            if path == "/api/version":
+                return 200, {"version": "sqlite-fallback", "fallback": True}
+
+            if path == "/api/search" and method == "GET":
+                q = (body or {}).get("query", "") if isinstance(body, dict) else ""
+                lim = int((body or {}).get("limit", 20)) if isinstance(body, dict) else 20
+                lim = max(1, min(lim, 100))
+                like = f"%{q}%"
+                conn = sqlite3.connect(CLAUDEMEM_DB, timeout=8)
+                conn.row_factory = sqlite3.Row
+                rows = conn.execute(
+                    """
+                    SELECT id, title, project, COALESCE(text, narrative, '') AS body, created_at_epoch
+                    FROM observations
+                    WHERE (? = '' OR COALESCE(title,'') LIKE ? OR COALESCE(text,'') LIKE ? OR COALESCE(narrative,'') LIKE ?)
+                    ORDER BY created_at_epoch DESC
+                    LIMIT ?
+                    """,
+                    (q, like, like, like, lim),
+                ).fetchall()
+                conn.close()
+                content = [
+                    {
+                        "id": int(r["id"]),
+                        "title": r["title"] or "",
+                        "project": r["project"] or "",
+                        "text": r["body"] or "",
+                    }
+                    for r in rows
+                ]
+                return 200, {"content": content, "fallback": "sqlite"}
+
+            if path == "/api/memory/save" and method == "POST" and isinstance(body, dict):
+                text = str(body.get("text", "") or body.get("content", "") or "").strip()
+                title = str(body.get("title", "") or "memory save").strip()
+                project = str(body.get("project", "") or "Karma_SADE").strip()
+                if not text:
+                    return 400, {"error": "missing text"}
+
+                now = datetime.datetime.now(datetime.timezone.utc)
+                now_iso = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+                now_epoch = int(now.timestamp() * 1000)
+
+                conn = sqlite3.connect(CLAUDEMEM_DB, timeout=8)
+                conn.row_factory = sqlite3.Row
+                row = conn.execute(
+                    "SELECT memory_session_id FROM sdk_sessions WHERE project=? AND memory_session_id IS NOT NULL ORDER BY id DESC LIMIT 1",
+                    (project,),
+                ).fetchone()
+                mem_id = row["memory_session_id"] if row else None
+                if not mem_id:
+                    mem_id = f"fallback-{uuid.uuid4()}"
+                    content_id = f"fallback-content-{uuid.uuid4()}"
+                    conn.execute(
+                        """
+                        INSERT INTO sdk_sessions
+                        (content_session_id, memory_session_id, project, user_prompt, started_at, started_at_epoch, status, prompt_counter)
+                        VALUES (?, ?, ?, ?, ?, ?, 'active', 0)
+                        """,
+                        (content_id, mem_id, project, "fallback-memory-save", now_iso, now_epoch),
+                    )
+                cur = conn.execute(
+                    """
+                    INSERT INTO observations
+                    (memory_session_id, project, text, type, title, created_at, created_at_epoch, prompt_number, discovery_tokens)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (mem_id, project, text, "change", title, now_iso, now_epoch, 0, 0),
+                )
+                obs_id = int(cur.lastrowid)
+                conn.commit()
+                conn.close()
+                return 200, {"id": obs_id, "ok": True, "fallback": "sqlite"}
+        except Exception as db_e:
+            return 503, {"error": f"claude-mem unavailable: {str(e)}; sqlite fallback failed: {str(db_e)}"}
+
         return 503, {"error": f"claude-mem unavailable: {str(e)}"}
 
 
@@ -361,6 +459,80 @@ def _normalize_memory_save_payload(body):
     if "text" not in normalized and isinstance(normalized.get("content"), str):
         normalized["text"] = normalized.get("content")
     return normalized
+
+
+def _sqlite_memory_search(query="", limit=20):
+    q = str(query or "")
+    lim = max(1, min(int(limit or 20), 100))
+    like = f"%{q}%"
+    conn = sqlite3.connect(CLAUDEMEM_DB, timeout=8)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute(
+        """
+        SELECT id, title, project, COALESCE(text, narrative, '') AS body, created_at_epoch
+        FROM observations
+        WHERE (? = '' OR COALESCE(title,'') LIKE ? OR COALESCE(text,'') LIKE ? OR COALESCE(narrative,'') LIKE ?)
+        ORDER BY created_at_epoch DESC
+        LIMIT ?
+        """,
+        (q, like, like, like, lim),
+    ).fetchall()
+    conn.close()
+    return {
+        "content": [
+            {
+                "id": int(r["id"]),
+                "title": r["title"] or "",
+                "project": r["project"] or "",
+                "text": r["body"] or "",
+            }
+            for r in rows
+        ],
+        "fallback": "sqlite",
+    }
+
+
+def _sqlite_memory_save(body):
+    text = str(body.get("text", "") or body.get("content", "") or "").strip()
+    title = str(body.get("title", "") or "memory save").strip()
+    project = str(body.get("project", "") or "Karma_SADE").strip()
+    if not text:
+        return 400, {"error": "missing text"}
+
+    now = datetime.datetime.now(datetime.timezone.utc)
+    now_iso = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    now_epoch = int(now.timestamp() * 1000)
+
+    conn = sqlite3.connect(CLAUDEMEM_DB, timeout=8)
+    conn.row_factory = sqlite3.Row
+    row = conn.execute(
+        "SELECT memory_session_id FROM sdk_sessions WHERE project=? AND memory_session_id IS NOT NULL ORDER BY id DESC LIMIT 1",
+        (project,),
+    ).fetchone()
+    mem_id = row["memory_session_id"] if row else None
+    if not mem_id:
+        mem_id = f"fallback-{uuid.uuid4()}"
+        content_id = f"fallback-content-{uuid.uuid4()}"
+        conn.execute(
+            """
+            INSERT INTO sdk_sessions
+            (content_session_id, memory_session_id, project, user_prompt, started_at, started_at_epoch, status, prompt_counter)
+            VALUES (?, ?, ?, ?, ?, ?, 'active', 0)
+            """,
+            (content_id, mem_id, project, "fallback-memory-save", now_iso, now_epoch),
+        )
+    cur = conn.execute(
+        """
+        INSERT INTO observations
+        (memory_session_id, project, text, type, title, created_at, created_at_epoch, prompt_number, discovery_tokens)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (mem_id, project, text, "change", title, now_iso, now_epoch, 0, 0),
+    )
+    obs_id = int(cur.lastrowid)
+    conn.commit()
+    conn.close()
+    return 200, {"id": obs_id, "ok": True, "fallback": "sqlite"}
 
 
 def _claudemem_status_payload(timeout=5):
@@ -2101,6 +2273,13 @@ class CCHandler(BaseHTTPRequestHandler):
             code, payload = claudemem_proxy(
                 "/api/search", "GET", params, timeout=5
             )
+            # Worker can return 200 with semantic-vector failure text; fail closed to sqlite.
+            if isinstance(payload, dict):
+                maybe_content = payload.get("content")
+                if isinstance(maybe_content, list):
+                    joined = "\n".join(str(b.get("text", "")) for b in maybe_content if isinstance(b, dict))
+                    if "Vector search failed" in joined:
+                        code, payload = 200, _sqlite_memory_search(query=query, limit=limit)
             # Transform MCP content format to structured results for frontend
             if isinstance(payload, dict) and "content" in payload:
                 # claude-mem returns {content: [{type: "text", text: "..."}]}
@@ -2126,6 +2305,12 @@ class CCHandler(BaseHTTPRequestHandler):
             }
             body.update(palace_tags)
             code, payload = claudemem_proxy("/api/memory/save", "POST", body, timeout=5)
+            # Fallback to sqlite if worker returns any error payload.
+            if code >= 400 or (isinstance(payload, dict) and payload.get("error")):
+                try:
+                    code, payload = _sqlite_memory_save(body)
+                except Exception as e:
+                    code, payload = 503, {"error": f"memory save failed: {e}"}
             # Backfill palace tags into sqlite if id present
             try:
                 obs_id = None

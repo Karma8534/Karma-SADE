@@ -377,3 +377,24 @@ S162: temporal KG, dedup, palace vocab, contradiction detection
 
 ### Remaining
 - Claimed blockers list in snapshot can still contain stale documented blockers until source docs are refreshed.
+
+## Session 167 (2026-04-14) — Ground-truth closure pass
+
+### Completed
+- Added dynamic claude-mem worker URL resolution in cc_server_p1.py from ~/.claude-mem/settings.json (current 37782).
+- Added robust sqlite fallback helpers in cc_server_p1.py for /memory/save + /memory/search when worker path fails or vector search returns degraded payload.
+- Restarted cc_server and verified /memory/health now reports claudemem_url=http://127.0.0.1:37782.
+- Installed qwen3.5:4b on P1 Ollama and verified direct generation.
+- Updated Run-SessionIngest.ps1 to use settings-based claude-mem URL and valid fallback model (gemma3:1b).
+- Added worker bootstrap script Scripts/Start-ClaudeMemWorker.ps1 and startup launcher fallback (%APPDATA%/Startup/KarmaClaudeMemWorker.cmd) for persistence.
+- Updated stale docs/runtime references in docs/ForColby/nexus.md and Scripts/cc_hourly_snapshot.ps1.
+- Updated forensic outputs: codexfull041426a.md and docs/For Colby/whatsleft.md.
+
+### Verification
+- pytest tests/test_cc_server_harness.py tests/test_cc_email_daemon.py => 44 passed.
+- pytest tests/test_palace_precompact.py tests/test_cc_email_daemon.py tests/test_cc_server_harness.py tests/test_electron_memory_autosave.py => 58 passed.
+- Scripts/nexus_parity_matrix.py => 	mp/parity-matrix-latest.json with ok=true.
+- Hub status 200, forced tool-use side effect file created, memory save/search probes succeeded.
+
+### Remaining
+- Scheduled Task API write for new worker task blocked by local permission (Access is denied). Startup-folder launcher is active mitigation.

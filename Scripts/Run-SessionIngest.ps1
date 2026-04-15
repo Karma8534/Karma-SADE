@@ -14,7 +14,23 @@ Invoke-HiddenRelaunchIfNeeded -ScriptPath $PSCommandPath -HiddenRelaunch:$Hidden
 $RepoDir = "C:\Users\raest\Documents\Karma_SADE"
 $LogFile = "$RepoDir\Logs\session_ingest.log"
 $ObsWatermarkFile = "$RepoDir\Logs\session_obs_ingested.json"
-$ClaudeMemUrl = "http://127.0.0.1:37778/api/memory/save"
+function Get-ClaudeMemBaseUrl {
+    $defaultPort = "37778"
+    $settingsPath = Join-Path $env:USERPROFILE ".claude-mem\settings.json"
+    try {
+        if (Test-Path $settingsPath) {
+            $cfg = Get-Content $settingsPath -Raw | ConvertFrom-Json
+            if ($cfg -and $cfg.CLAUDE_MEM_WORKER_PORT) {
+                $port = [string]$cfg.CLAUDE_MEM_WORKER_PORT
+                if ($port.Trim().Length -gt 0) {
+                    return "http://127.0.0.1:$port"
+                }
+            }
+        }
+    } catch {}
+    return "http://127.0.0.1:$defaultPort"
+}
+$ClaudeMemUrl = "$(Get-ClaudeMemBaseUrl)/api/memory/save"
 
 $ts = Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ"
 Add-Content $LogFile "=== SESSION INGEST RUN $ts ==="
@@ -30,11 +46,11 @@ Write-Host $result
 
 # Step 2: Review new sessions with working local/fallback inference
 Write-Host "Step 2: Reviewing sessions..."
-Add-Content $LogFile "Step 2: session_review.py --source json (OLLAMA_URL=http://100.75.109.92:11434, REVIEW_MODEL=qwen3.5:4b, REVIEW_FALLBACK_MODEL=sam860/LFM2:350m, Groq fallback enabled)"
+Add-Content $LogFile "Step 2: session_review.py --source json (OLLAMA_URL=http://100.75.109.92:11434, REVIEW_MODEL=qwen3.5:4b, REVIEW_FALLBACK_MODEL=gemma3:1b, Groq fallback enabled)"
 
 $env:OLLAMA_URL = "http://100.75.109.92:11434"
 $env:REVIEW_MODEL = "qwen3.5:4b"
-$env:REVIEW_FALLBACK_MODEL = "sam860/LFM2:350m"
+$env:REVIEW_FALLBACK_MODEL = "gemma3:1b"
 $result2 = & python3 "$RepoDir\Scripts\session_review.py" --source json 2>&1
 Add-Content $LogFile $result2
 Write-Host $result2

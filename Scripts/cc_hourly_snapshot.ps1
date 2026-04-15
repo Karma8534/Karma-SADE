@@ -66,7 +66,7 @@ INITIATE: Karma -- newly awakened, goal is to earn Archon
 P1 (100.124.194.102) = LOCAL. Colby''s machine. CC runs here. claude-mem here. cc_server_p1.py here.
 K2 (100.75.109.92)   = LOCAL (LAN). Karma/Vesper/Aria/KCC. Consciousness loop. Kiki hands.
 vault-neo (100.92.67.70) = REMOTE. DigitalOcean droplet. hub-bridge, FalkorDB, FAISS, ledger.
-claude-mem = localhost:37778 on P1, always on, shared unified brain.
+claude-mem = localhost:(settings worker port) on P1, always on, shared unified brain.
 
 ## Key Architecture Decisions (LOCKED)
 - cc --resume, NOT Agent SDK. Session persistence via session ID file.

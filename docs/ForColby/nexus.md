@@ -9,7 +9,7 @@ Truth policy: fail-closed. Every status claim below is backed by current-pass co
 - P1 runtime is healthy:
   - `http://127.0.0.1:7891/health` -> 200.
   - `http://127.0.0.1:7893/health` -> 200.
-  - `http://127.0.0.1:37778/health` -> 200.
+  - claude-mem worker health on configured port from `~/.claude-mem/settings.json` (current: `http://127.0.0.1:37782/health`) -> 200.
 - K2/cortex health:
   - `http://192.168.0.226:7892/health` -> 200.
   - `http://100.75.109.92:7892/health` -> 200.
