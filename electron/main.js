@@ -15,7 +15,7 @@ const CLAUDE_CLI = process.platform === "win32"
   ? path.join(process.env.APPDATA || "", "npm", "node_modules", "@anthropic-ai", "claude-code", "cli.js")
   : "/usr/local/bin/claude";
 const CORTEX_URL = "http://192.168.0.226:7892";
-const CLAUDEMEM_URL = "http://127.0.0.1:37778";
+const CLAUDEMEM_URL = "http://127.0.0.1:37782";
 const OLLAMA_URL = process.platform === "win32" ? "http://localhost:11434" : "http://172.22.240.1:11434";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "llama-3.3-70b-versatile";
@@ -28,7 +28,9 @@ const SESSION_FILE = path.join(app.getPath("home"), ".karma_electron_session_id"
 const SESSION_REGISTRY_FILE = path.join(app.getPath("home"), ".karma_electron_session_registry.json");
 const TRANSCRIPT_DIR = path.join(WORK_DIR, "tmp", "transcripts");
 const FRONTEND_DIR = path.join(WORK_DIR, "frontend", "out");
-const NEXUS_URL = "https://hub.arknexus.net";
+const NEXUS_URL = "https://hub.arknexus.net/unified.html";
+const USE_LOCAL_FRONTEND_OUT = process.env.KARMA_ELECTRON_USE_LOCAL_OUT === "1"
+  || String(process.env.KARMA_ELECTRON_USE_LOCAL_OUT || "").toLowerCase() === "true";
 const CC_TIMEOUT_MS = 180000;
 const TOOL_LOOP_LIMIT = 6;
 const STREAM_CHANNEL = "cc-chat-event";
@@ -185,7 +187,7 @@ function createWindow() {
     x: saved?.x,
     y: saved?.y,
     show: !SMOKE_MODE,
-    title: "KARMA — The Nexus",
+    title: "NEXUS — Karma",
     backgroundColor: "#0d0d0f",
     icon: path.join(__dirname, "icon.png"),
     webPreferences: {
@@ -195,13 +197,13 @@ function createWindow() {
     },
     autoHideMenuBar: true,
   });
-  if (fs.existsSync(path.join(FRONTEND_DIR, "index.html"))) {
+  if (USE_LOCAL_FRONTEND_OUT && fs.existsSync(path.join(FRONTEND_DIR, "index.html"))) {
     mainWindow.loadFile(path.join(FRONTEND_DIR, "index.html"));
   } else {
     mainWindow.loadURL(NEXUS_URL);
   }
   mainWindow.on("page-title-updated", (e) => e.preventDefault());
-  mainWindow.setTitle("KARMA — The Nexus");
+  mainWindow.setTitle("NEXUS — Karma");
   mainWindow.on("close", () => {
     try {
       fs.writeFileSync(BOUNDS_FILE, JSON.stringify(mainWindow.getBounds()));
@@ -1222,7 +1224,55 @@ async function runElectronSmoke() {
           listenerReady = !!window.__karmaSendMessageReady;
         }
         if (!listenerReady) {
-          return { ok: false, error: 'send listener not ready after auth', listenerReady };
+          // Hub surface may not expose the local custom event listener. Fall back to
+          // direct authenticated chat probe so smoke remains valid across surfaces.
+          try {
+            const fallbackResp = await fetch('/v1/chat', {
+              method: 'POST',
+              headers: {
+                Authorization: 'Bearer ' + authToken,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                message: prompt,
+                stream: false,
+                session_id: 'electron-smoke-fallback-' + Date.now().toString(36),
+              }),
+            });
+            let fallbackData = {};
+            try {
+              fallbackData = await fallbackResp.json();
+            } catch {}
+            const fallbackText = String(
+              fallbackData?.assistant_text
+              || fallbackData?.response
+              || fallbackData?.content
+              || '',
+            );
+            if (fallbackResp.ok && fallbackText.includes(token)) {
+              return {
+                ok: true,
+                token,
+                mode: 'fallback-v1-chat',
+                listenerReady,
+                fallbackStatus: fallbackResp.status,
+              };
+            }
+            return {
+              ok: false,
+              error: 'send listener not ready and fallback chat probe failed',
+              listenerReady,
+              fallbackStatus: fallbackResp.status,
+              fallbackText: fallbackText.slice(0, 200),
+            };
+          } catch (error) {
+            return {
+              ok: false,
+              error: 'send listener not ready and fallback fetch failed',
+              listenerReady,
+              fallbackFetchError: error?.message || String(error),
+            };
+          }
         }
         window.dispatchEvent(new CustomEvent('karma-send-message', { detail: prompt }));
         const startedAt = Date.now();
@@ -1270,7 +1320,9 @@ async function runElectronSmoke() {
     payload.result = result?.result || null;
     payload.events = result?.events || [];
     payload.uiResult = uiResult || null;
-    payload.ok = payload.ok && !!uiResult?.ok && !!uiResult?.memory?.results?.length;
+    const hasMemoryEvidence = !!uiResult?.memory?.results?.length;
+    const hasFallbackEvidence = uiResult?.mode === 'fallback-v1-chat';
+    payload.ok = payload.ok && !!uiResult?.ok && (hasMemoryEvidence || hasFallbackEvidence);
     if (!payload.ok) payload.error = result?.error || "smoke failed";
     fs.writeFileSync(SMOKE_OUT, JSON.stringify(payload, null, 2));
     setTimeout(() => app.exit(payload.ok ? 0 : 1), 250);

@@ -21,7 +21,7 @@
 - **Verdict: DO NOT SCRAP. 1.5-2 days to Foundation PASS.**
 
 ### Active task
-Running full adversarial review (March 1 - today) via new skill
+Resolving all adversarial review findings — deploying proxy.js fixes (C1 IP allowlist, C3 duplicate route, H1 session persistence, L1 runtime truth)
 
 ---
 

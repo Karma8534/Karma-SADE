@@ -32,6 +32,11 @@ const HARNESS_K2 = process.env.HARNESS_K2_URL || "http://100.75.109.92:7891";
 const HARNESS_TIMEOUT = Number(process.env.HARNESS_TIMEOUT || "120000");
 const HEALTH_CACHE_MS = 30000; // cache health check result for 30s
 const HEALTH_CHECK_TIMEOUT_MS = 8000; // 8s — Tailscale can spike above 3s transiently
+const GOVERNOR_DAILY_CAP_USD = Number(process.env.GOVERNOR_DAILY_CAP_USD || "3");
+const GOVERNOR_MAX_GROQ_FALLBACKS_PER_DAY = Number(process.env.GOVERNOR_MAX_GROQ_FALLBACKS_PER_DAY || "25");
+const BREAKER_MAX_FAILS = Number(process.env.GOVERNOR_BREAKER_MAX_FAILS || "3");
+const BREAKER_FILE = process.env.GOVERNOR_BREAKER_FILE || "/run/state/session_breakers.json";
+const STRICT_STAGING_OVERWRITE = String(process.env.STRICT_STAGING_OVERWRITE || "1").toLowerCase() !== "0";
 
 // ── Secrets ──────────────────────────────────────────────────────────────────
 function readFileTrim(p) { return fs.readFileSync(p, "utf8").trim(); }
@@ -51,6 +56,24 @@ function bearerToken(req) {
   return m?.[1]?.trim() || "";
 }
 function authChat(req) { return HUB_CHAT_TOKEN && bearerToken(req) === HUB_CHAT_TOKEN; }
+
+// ── Tailscale IP allowlist for dangerous routes (C1 fix — adversarial review 2026-04-15) ──
+// Only Tailscale IPs (100.x.x.x) and localhost can access /v1/shell, /v1/file, /v1/email, /v1/self-edit
+const TAILSCALE_ALLOWLIST = new Set([
+  "100.124.194.102", // P1
+  "100.75.109.92",   // K2
+  "100.92.67.70",    // vault-neo
+  "127.0.0.1", "::1", "::ffff:127.0.0.1",
+]);
+function isDangerousRoute(url) {
+  return url === "/v1/shell" || url.startsWith("/v1/file") || url === "/v1/email/send" || url.startsWith("/v1/self-edit/");
+}
+function isAllowedIP(req) {
+  const fwd = (req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+  const remote = req.socket?.remoteAddress?.replace("::ffff:", "") || "";
+  return TAILSCALE_ALLOWLIST.has(fwd) || TAILSCALE_ALLOWLIST.has(remote);
+}
+
 function harnessHeaders(extra = {}) {
   return { Authorization: `Bearer ${HUB_CHAT_TOKEN}`, ...extra };
 }
@@ -123,6 +146,104 @@ const _traceLog = [];
 const TRACE_MAX = 50;
 function traceAppend(entry) { _traceLog.push(entry); if (_traceLog.length > TRACE_MAX) _traceLog.shift(); }
 
+const _governor = {
+  day: new Date().toISOString().slice(0, 10),
+  spendByModel: {},
+  groqFallbackCalls: 0,
+};
+const _sessionBreaker = new Map();
+const _sessionStore = new Map(); // H1 fix: server-side session persistence
+
+// Load persisted sessions from disk at startup
+try {
+  const sessDir = "/run/state/sessions";
+  if (fs.existsSync(sessDir)) {
+    for (const f of fs.readdirSync(sessDir).filter(f => f.endsWith(".json"))) {
+      try {
+        const turns = JSON.parse(fs.readFileSync(`${sessDir}/${f}`, "utf8"));
+        _sessionStore.set(f.replace(".json", ""), turns);
+      } catch (_) {}
+    }
+    console.log(`[SESSION] Loaded ${_sessionStore.size} sessions from disk`);
+  }
+} catch (_) {}
+
+function loadBreakerState() {
+  try {
+    if (!fs.existsSync(BREAKER_FILE)) return;
+    const raw = JSON.parse(fs.readFileSync(BREAKER_FILE, "utf-8"));
+    if (!raw || typeof raw !== "object") return;
+    for (const [k, v] of Object.entries(raw)) {
+      if (!v || typeof v !== "object") continue;
+      _sessionBreaker.set(k, {
+        fails: Number(v.fails || 0),
+        halted: !!v.halted,
+        lastError: String(v.lastError || ""),
+        updatedAt: String(v.updatedAt || new Date().toISOString()),
+      });
+    }
+  } catch {}
+}
+
+function saveBreakerState() {
+  try {
+    const obj = {};
+    for (const [k, v] of _sessionBreaker.entries()) obj[k] = v;
+    fs.writeFileSync(BREAKER_FILE, JSON.stringify(obj, null, 2), "utf-8");
+  } catch {}
+}
+
+function ensureGovernorDay() {
+  const day = new Date().toISOString().slice(0, 10);
+  if (_governor.day === day) return;
+  _governor.day = day;
+  _governor.spendByModel = {};
+  _governor.groqFallbackCalls = 0;
+}
+
+function recordSpend(model, usd = 0) {
+  ensureGovernorDay();
+  const key = String(model || "unknown");
+  const val = Number(usd || 0);
+  _governor.spendByModel[key] = Number(_governor.spendByModel[key] || 0) + (Number.isFinite(val) ? val : 0);
+}
+
+function totalSpendUsd() {
+  ensureGovernorDay();
+  return Object.values(_governor.spendByModel).reduce((a, b) => a + Number(b || 0), 0);
+}
+
+function cloudFallbackBlocked() {
+  ensureGovernorDay();
+  return totalSpendUsd() >= GOVERNOR_DAILY_CAP_USD || _governor.groqFallbackCalls >= GOVERNOR_MAX_GROQ_FALLBACKS_PER_DAY;
+}
+
+function markFailure(sessionId, err) {
+  const sid = String(sessionId || "default");
+  const prev = _sessionBreaker.get(sid) || { fails: 0, halted: false, lastError: "", updatedAt: new Date().toISOString() };
+  const next = {
+    fails: prev.fails + 1,
+    halted: prev.fails + 1 >= BREAKER_MAX_FAILS,
+    lastError: String(err || ""),
+    updatedAt: new Date().toISOString(),
+  };
+  _sessionBreaker.set(sid, next);
+  saveBreakerState();
+  return next;
+}
+
+function clearFailure(sessionId) {
+  const sid = String(sessionId || "default");
+  if (_sessionBreaker.has(sid)) {
+    _sessionBreaker.delete(sid);
+    saveBreakerState();
+  }
+}
+
+function breakerState(sessionId) {
+  return _sessionBreaker.get(String(sessionId || "default")) || { fails: 0, halted: false, lastError: "", updatedAt: null };
+}
+
 // P1-first routing: P1 = Claude Code CLI ($0 Max sub), K2 = cloud cascade fallback
 function harnessNodes() {
   return [
@@ -151,7 +272,12 @@ async function routeToHarness(message, sessionId) {
       // Detect K2 cascade false-positive: ok=true but response is an error message (P090)
       const respText = data.response || data.assistant_text || "";
       const isFalsePositive = respText.includes("all inference tiers failed") || respText.includes("[K2 harness:") || respText.includes("CORTEX ERROR") || respText.includes("Invalid API key") || respText.includes("Fix external API key");
-      if (r.ok && data.ok !== false && !isFalsePositive) { console.log(`[HARNESS] ${node.label} responded OK`); data._harness = node.label; return data; }
+      if (r.ok && data.ok !== false && !isFalsePositive) {
+        console.log(`[HARNESS] ${node.label} responded OK`);
+        data._harness = node.label;
+        clearFailure(sessionId);
+        return data;
+      }
       if (isFalsePositive) { errors.push(`${node.label} false-positive: ${respText.slice(0, 80)}`); continue; }
       errors.push(`${node.label} ${r.status}: ${data.error || "non-ok"}`);
     } catch (e) { errors.push(`${node.label}: ${e.message}`); }
@@ -159,10 +285,13 @@ async function routeToHarness(message, sessionId) {
   // If all nodes were busy, return specific busy message (not generic "failed")
   if (busyCount > 0) {
     console.warn("[HARNESS] All nodes busy:", errors.join("; "));
-    return { ok: false, error: BUSY_MSG };
+    const s = markFailure(sessionId, BUSY_MSG);
+    return { ok: false, error: BUSY_MSG, breaker: s };
   }
   console.error("[HARNESS] All nodes failed:", errors.join("; "));
-  return { ok: false, error: `All harness nodes failed: ${errors.join("; ")}` };
+  const err = `All harness nodes failed: ${errors.join("; ")}`;
+  const s = markFailure(sessionId, err);
+  return { ok: false, error: err, breaker: s };
 }
 
 // ── Request Queue (Phase 1 — no dropped messages) ───────────────────────────
@@ -186,6 +315,15 @@ async function drainQueue() {
 
 // ── Harness streaming (SSE passthrough) ─────────────────────────────────────
 async function routeToHarnessStream(message, sessionId, effort, model, clientRes, files, budget) {
+  const b = breakerState(sessionId);
+  if (b.halted) {
+    if (!clientRes.headersSent) {
+      clientRes.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive", "Access-Control-Allow-Origin": "*" });
+    }
+    clientRes.write(`data: ${JSON.stringify({ type: "error", error: `Session halted by 3-strike breaker (${b.fails} fails). Resolve root cause or start new session.` })}\n\n`);
+    clientRes.end();
+    return;
+  }
   if (_streamActive) {
     // CC is busy — queue instead of dropping
     if (_requestQueue.length >= QUEUE_MAX) {
@@ -329,6 +467,7 @@ async function executeStream(message, sessionId, effort, model, clientRes, files
         clientRes.end();
 
         if (streamCostUsd > 0) console.log(`[COST] stream request: $${streamCostUsd.toFixed(4)} via ${streamModel} (Max sub — no actual charge)`);
+        recordSpend(streamModel || "cc-sovereign", streamCostUsd || 0);
         postResponseSideEffects({ message, assistantText: fullText, sessionId, costUsd: streamCostUsd, model: streamModel, tagSuffix: "-STREAM" });
         traceAppend({ ts: new Date().toISOString(), path: "stream", harness: node.label, model: streamModel || "cc-sovereign", usd: streamCostUsd, message_len: message.length, ok: true });
 
@@ -420,6 +559,111 @@ function autoApproveKarmaEntries() {
 }
 if (_directRun) {
   setInterval(autoApproveKarmaEntries, 30000); // Check every 30s
+}
+
+// ── AGORA Bridge Queue (bidirectional transport) ────────────────────────────
+const AGORA_FILE = "/run/state/agora_messages.jsonl";
+const AGORA_TTL_MS = 24 * 60 * 60 * 1000;
+const AGORA_MAX_ENTRIES = 5000;
+const _agoraMessages = [];
+const _agoraById = new Map();
+
+function agoraId() { return `agora_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`; }
+function ensureRunStateDir() { try { fs.mkdirSync("/run/state", { recursive: true }); } catch {} }
+
+function evictAgora() {
+  const cutoff = Date.now() - AGORA_TTL_MS;
+  const kept = [];
+  for (const m of _agoraMessages) {
+    const t = new Date(m.ts || 0).getTime();
+    if (!Number.isFinite(t) || t < cutoff) continue;
+    kept.push(m);
+  }
+  while (kept.length > AGORA_MAX_ENTRIES) kept.shift();
+  _agoraMessages.length = 0;
+  _agoraById.clear();
+  for (const m of kept) {
+    _agoraMessages.push(m);
+    _agoraById.set(m.id, m);
+  }
+}
+
+function saveAgoraDisk() {
+  try {
+    ensureRunStateDir();
+    fs.writeFileSync(AGORA_FILE, _agoraMessages.map((m) => JSON.stringify(m)).join("\n") + (_agoraMessages.length ? "\n" : ""));
+  } catch {}
+}
+
+function appendAgoraDisk(entry) {
+  try {
+    ensureRunStateDir();
+    fs.appendFileSync(AGORA_FILE, JSON.stringify(entry) + "\n");
+  } catch {}
+}
+
+function loadAgoraFromDisk() {
+  try {
+    if (!fs.existsSync(AGORA_FILE)) return;
+    const lines = fs.readFileSync(AGORA_FILE, "utf-8").split("\n").filter(Boolean);
+    for (const line of lines) {
+      try {
+        const msg = JSON.parse(line);
+        if (!msg?.id) continue;
+        _agoraMessages.push(msg);
+        _agoraById.set(msg.id, msg);
+      } catch {}
+    }
+    evictAgora();
+    if (_agoraMessages.length > 0) console.log(`[AGORA] loaded ${_agoraMessages.length} messages from disk`);
+  } catch {}
+}
+
+function agoraRolePrefix(from = "") {
+  const v = String(from || "").trim().toLowerCase();
+  if (v === "karma_hub" || v === "karma" || v === "regent" || v === "vesper") return "[Karma]";
+  if (v === "codex_p1" || v === "codex") return "[Codex]";
+  return "";
+}
+
+function normalizeAgoraContent(from, content) {
+  const text = String(content || "");
+  const prefix = agoraRolePrefix(from);
+  if (!prefix) return text;
+  if (text.startsWith("[Karma]") || text.startsWith("[Codex]")) return text;
+  return `${prefix} ${text}`;
+}
+
+function enqueueAgoraMessage(input = {}) {
+  const entry = {
+    id: String(input.id || agoraId()),
+    thread_id: String(input.thread_id || input.session_id || "default"),
+    from: String(input.from || "").trim(),
+    to: String(input.to || "").trim(),
+    type: String(input.type || "message").trim(),
+    content: normalizeAgoraContent(input.from, input.content),
+    ts: String(input.ts || input.timestamp || new Date().toISOString()),
+    reply_to: input.reply_to ? String(input.reply_to) : null,
+    meta: input.meta && typeof input.meta === "object" ? input.meta : {},
+    acked_at: null,
+    acked_by: null,
+  };
+  _agoraMessages.push(entry);
+  _agoraById.set(entry.id, entry);
+  evictAgora();
+  appendAgoraDisk(entry);
+  return entry;
+}
+
+function validateAgoraEnvelope(data) {
+  const from = String(data?.from || "").trim();
+  const to = String(data?.to || "").trim();
+  const type = String(data?.type || "").trim();
+  const id = String(data?.id || "").trim();
+  if (!from || !to || !type) return { ok: false, error: "from,to,type required" };
+  if (id && id.length > 120) return { ok: false, error: "id_too_long" };
+  if (from.length > 80 || to.length > 80 || type.length > 40) return { ok: false, error: "field_too_long" };
+  return { ok: true };
 }
 
 // ── Content-hash dedup (S155 Rule 36) ───────────────────────────────────────
@@ -524,6 +768,12 @@ const server = http.createServer(async (req, res) => {
   }
   console.log(`[REQUEST] ${req.method} ${originalUrl} -> ${req.url}`);
 
+  // ── C1 FIX: Block dangerous routes from non-Tailscale IPs ──────────
+  if (isDangerousRoute(req.url) && !isAllowedIP(req)) {
+    console.warn(`[BLOCKED] ${req.method} ${req.url} from ${req.socket?.remoteAddress} — not in Tailscale allowlist`);
+    return json(res, 403, { ok: false, error: "forbidden: Tailscale network required for this endpoint" });
+  }
+
   try {
     // ── Static files ───────────────────────────────────────────────────
     // Next.js static export (Sprint 3b — Task 1)
@@ -554,6 +804,75 @@ const server = http.createServer(async (req, res) => {
       const html = fs.readFileSync(path.join(PUBLIC_DIR, "unified.html"), "utf-8");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
       return res.end(html);
+    }
+
+    // ── /agora bridge API — bidirectional message transport ───────────
+    if (req.method === "GET" && req.url.startsWith("/agora/health")) {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      evictAgora();
+      const now = Date.now();
+      const unacked = _agoraMessages.filter((m) => !m.acked_at);
+      const byTarget = {};
+      for (const m of unacked) byTarget[m.to] = (byTarget[m.to] || 0) + 1;
+      return json(res, 200, {
+        ok: true,
+        service: "agora-bridge",
+        ts: new Date().toISOString(),
+        queue_depth: _agoraMessages.length,
+        unacked_depth: unacked.length,
+        oldest_unacked_ms: unacked.length ? (now - new Date(unacked[0].ts).getTime()) : 0,
+        by_target: byTarget,
+      });
+    }
+
+    if (req.method === "POST" && (req.url === "/agora/messages" || req.url === "/agora")) {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      const raw = await parseBody(req, 200000);
+      let body;
+      try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+      const valid = validateAgoraEnvelope(body);
+      if (!valid.ok) return json(res, 400, { ok: false, error: valid.error });
+
+      if (body.id && _agoraById.has(body.id)) {
+        const existing = _agoraById.get(body.id);
+        return json(res, 200, { ok: true, duplicate: true, message: existing });
+      }
+      const message = enqueueAgoraMessage(body);
+      return json(res, 202, { ok: true, message });
+    }
+
+    if (req.method === "GET" && req.url.startsWith("/agora/messages")) {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      evictAgora();
+      const params = new URL(req.url, `http://${req.headers.host}`).searchParams;
+      const to = String(params.get("to") || "").trim();
+      if (!to) return json(res, 400, { ok: false, error: "to required" });
+      const limit = Math.min(Math.max(parseInt(params.get("limit") || "20", 10) || 20, 1), 200);
+      const cursor = String(params.get("cursor") || "").trim();
+      let rows = _agoraMessages.filter((m) => m.to === to && !m.acked_at);
+      if (cursor) {
+        const idx = rows.findIndex((m) => m.id === cursor);
+        if (idx >= 0) rows = rows.slice(idx + 1);
+      }
+      rows = rows.slice(0, limit);
+      const next_cursor = rows.length ? rows[rows.length - 1].id : cursor || null;
+      return json(res, 200, { ok: true, count: rows.length, messages: rows, next_cursor });
+    }
+
+    if (req.method === "POST" && req.url === "/agora/ack") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      const raw = await parseBody(req, 20000);
+      let body;
+      try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
+      const id = String(body.id || "").trim();
+      const by = String(body.by || "").trim();
+      if (!id || !by) return json(res, 400, { ok: false, error: "id,by required" });
+      const msg = _agoraById.get(id);
+      if (!msg) return json(res, 404, { ok: false, error: "not_found" });
+      msg.acked_at = new Date().toISOString();
+      msg.acked_by = by;
+      saveAgoraDisk();
+      return json(res, 200, { ok: true, message: msg });
     }
 
     // ── /agora — Evolution Dashboard ───────────────────────────────────
@@ -757,21 +1076,8 @@ const server = http.createServer(async (req, res) => {
       return json(res, 404, { ok: false, error: `Unknown K2 endpoint: ${subpath}` });
     }
 
-    // ── /v1/shell — CC-independent shell execution (S160 inversion) ───────
-    if (req.method === "POST" && req.url === "/v1/shell") {
-      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
-      try {
-        const body = await parseBody(req);
-        const r = await fetch(`${HARNESS_P1}/shell`, {
-          method: "POST",
-          headers: harnessHeaders({ "Content-Type": "application/json" }),
-          body: JSON.stringify(body),
-          signal: AbortSignal.timeout(60000),
-        });
-        const data = await r.json();
-        return json(res, r.ok ? 200 : 502, data);
-      } catch (e) { return json(res, 502, { ok: false, error: `Shell failed: ${e.message?.slice(0, 100)}` }); }
-    }
+    // [DELETED] /v1/shell duplicate handler was here (S160 inversion). Shadowed by R2 handler at line 947.
+    // Removed 2026-04-15 — adversarial review finding C3.
 
     // ── /v1/email/inbox — CC-independent inbox check (S160) ───────────────
     if (req.method === "GET" && req.url === "/v1/email/inbox") {
@@ -839,6 +1145,20 @@ const server = http.createServer(async (req, res) => {
       } catch (e) { return json(res, 502, { ok: false, error: "memory search unreachable" }); }
     }
 
+    // ── /v1/memory/save — memory write for browser workspace ──────────
+    if (req.method === "POST" && req.url === "/v1/memory/save") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      const raw = await parseBody(req, 20000);
+      try {
+        const r = await fetch(`${HARNESS_P1}/memory/save`, {
+          method: "POST", headers: harnessHeaders({ "Content-Type": "application/json" }),
+          body: raw, signal: AbortSignal.timeout(5000),
+        });
+        const data = await r.json();
+        return json(res, r.ok ? 200 : 502, data);
+      } catch (e) { return json(res, 502, { ok: false, error: "memory save unreachable" }); }
+    }
+
     // ── /v1/spine — K2 spine status for Context Panel ────────────────
     if (req.method === "GET" && req.url === "/v1/spine") {
       try {
@@ -898,11 +1218,48 @@ const server = http.createServer(async (req, res) => {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
       _p1Healthy = await checkHealth(HARNESS_P1, _p1Healthy, _p1CheckedAt); _p1CheckedAt = Date.now();
       _k2Healthy = await checkHealth(HARNESS_K2, _k2Healthy, _k2CheckedAt); _k2CheckedAt = Date.now();
+      ensureGovernorDay();
       return json(res, 200, {
         ok: true, service: "sovereign-proxy", ts: new Date().toISOString(),
         harness: { p1: { url: HARNESS_P1, healthy: _p1Healthy }, k2: { url: HARNESS_K2, healthy: _k2Healthy } },
         cost: { model: "cc-sovereign (Max subscription)", usd_per_request: 0, note: "H8: CC --resume runs on Max subscription. API cost shown in stream result events is accounting only, not billed. Actual charge: $0/request. Monthly sub: $100-200." },
+        governor: {
+          day: _governor.day,
+          daily_cap_usd: GOVERNOR_DAILY_CAP_USD,
+          total_spend_usd: totalSpendUsd(),
+          groq_fallback_calls: _governor.groqFallbackCalls,
+          groq_fallback_limit: GOVERNOR_MAX_GROQ_FALLBACKS_PER_DAY,
+          cloud_blocked: cloudFallbackBlocked(),
+          active_session_breakers: [..._sessionBreaker.values()].filter(v => v.halted).length,
+        },
       });
+    }
+
+    // ── /v1/governor/breaker — deterministic breaker control/probe ───────
+    if (req.method === "POST" && req.url === "/v1/governor/breaker") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      const body = JSON.parse(await parseBody(req, 20000));
+      const sessionId = String(body.session_id || "").trim();
+      if (!sessionId) return json(res, 400, { ok: false, error: "session_id required" });
+      const fails = Math.max(0, Number(body.fails ?? BREAKER_MAX_FAILS));
+      const halted = body.halted === undefined ? fails >= BREAKER_MAX_FAILS : !!body.halted;
+      const st = {
+        fails,
+        halted,
+        lastError: String(body.last_error || (halted ? "manual-breaker-set" : "")),
+        updatedAt: new Date().toISOString(),
+      };
+      _sessionBreaker.set(sessionId, st);
+      saveBreakerState();
+      return json(res, 200, { ok: true, session_id: sessionId, breaker: st });
+    }
+    if (req.method === "DELETE" && req.url.startsWith("/v1/governor/breaker/")) {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      const sessionId = decodeURIComponent(req.url.replace("/v1/governor/breaker/", "").trim());
+      if (!sessionId) return json(res, 400, { ok: false, error: "session_id required" });
+      _sessionBreaker.delete(sessionId);
+      saveBreakerState();
+      return json(res, 200, { ok: true, session_id: sessionId, cleared: true });
     }
 
     // ── /v1/feedback — thumbs up/down → coordination bus (P092 fix) ────
@@ -923,6 +1280,72 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, count: _traceLog.length, entries: _traceLog });
     }
 
+    // ── /v1/runtime/truth — live system state (L1 fix, adversarial review 2026-04-15) ──
+    if (req.method === "GET" && req.url === "/v1/runtime/truth") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      _p1Healthy = await checkHealth(HARNESS_P1, _p1Healthy, _p1CheckedAt); _p1CheckedAt = Date.now();
+      _k2Healthy = await checkHealth(HARNESS_K2, _k2Healthy, _k2CheckedAt); _k2CheckedAt = Date.now();
+      // Query FalkorDB node count via karma-server
+      let falkordbNodes = null;
+      try {
+        const fRes = await internalJsonRequest(`${VAULT_INTERNAL_URL}/v1/cypher`, {
+          method: "POST", headers: { Authorization: `Bearer ${VAULT_BEARER}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ query: "MATCH (n) RETURN count(n) as total" }), timeoutMs: 5000,
+        });
+        const fData = JSON.parse(fRes.body);
+        falkordbNodes = fData?.result?.[0]?.[0] ?? fData?.result ?? null;
+      } catch (_) {}
+      // Read ledger line count via vault-file
+      let ledgerCount = null;
+      try {
+        const lRes = await internalJsonRequest(`${VAULT_INTERNAL_URL}/v1/stats`, { timeoutMs: 5000 });
+        const lData = JSON.parse(lRes.body);
+        ledgerCount = lData?.ledger_entries ?? null;
+      } catch (_) {}
+      return json(res, 200, {
+        ok: true, ts: new Date().toISOString(), service: "sovereign-proxy",
+        harness: { p1: { url: HARNESS_P1, healthy: _p1Healthy }, k2: { url: HARNESS_K2, healthy: _k2Healthy } },
+        inference: { model: "cc-sovereign (CC --resume via Max)", cost_per_request: "$0" },
+        falkordb: { nodes: falkordbNodes },
+        ledger: { entries: ledgerCount },
+        governor: { day: _governor.day, daily_cap_usd: GOVERNOR_DAILY_CAP_USD, total_spend_usd: totalSpendUsd(), cloud_blocked: cloudFallbackBlocked() },
+        coordination_bus: { entries: _coordCache.size },
+      });
+    }
+
+    // ── /v1/session — server-side session persistence (H1 fix, adversarial review 2026-04-15) ──
+    if (req.method === "POST" && req.url.match(/^\/v1\/session\/[^/]+\/save$/)) {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      const sessionId = req.url.split("/")[3];
+      const body = JSON.parse(await parseBody(req, 100000));
+      if (!_sessionStore.has(sessionId)) _sessionStore.set(sessionId, []);
+      const turns = _sessionStore.get(sessionId);
+      turns.push({ ...body, ts: new Date().toISOString() });
+      // Prune to max 100 turns
+      while (turns.length > 100) turns.shift();
+      // Persist to disk
+      try {
+        const dir = "/run/state/sessions";
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(`${dir}/${sessionId}.json`, JSON.stringify(turns));
+      } catch (e) { console.warn(`[SESSION] disk write failed for ${sessionId}: ${e.message}`); }
+      return json(res, 201, { ok: true, session_id: sessionId, turn_count: turns.length });
+    }
+    if (req.method === "GET" && req.url.match(/^\/v1\/session\/[^/]+\/history$/)) {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      const sessionId = req.url.split("/")[3];
+      // Try in-memory first, then disk
+      let turns = _sessionStore.get(sessionId) || null;
+      if (!turns) {
+        try {
+          const data = fs.readFileSync(`/run/state/sessions/${sessionId}.json`, "utf8");
+          turns = JSON.parse(data);
+          _sessionStore.set(sessionId, turns); // cache
+        } catch (_) { turns = []; }
+      }
+      return json(res, 200, turns);
+    }
+
     // ── /v1/chat — proxy to sovereign harness with local pre-classification ──
     if (req.method === "POST" && req.url === "/v1/chat") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
@@ -931,6 +1354,14 @@ const server = http.createServer(async (req, res) => {
       const message = body.message || body.content || "";
       if (!message) return json(res, 400, { ok: false, error: "message required" });
       const sessionId = body.session_id || "";
+      const b = breakerState(sessionId);
+      if (b.halted) {
+        return json(res, 423, {
+          ok: false,
+          error: `session_halted_by_breaker (${b.fails} fails)`,
+          breaker: b,
+        });
+      }
 
       if (shouldBypassHarnessForV1Chat(body)) {
         return json(res, 500, { ok: false, error: "proxy_harness_bypass_disabled" });
@@ -949,6 +1380,10 @@ const server = http.createServer(async (req, res) => {
         const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("CC_TIMEOUT")), batchHarnessTimeout));
         result = await Promise.race([ccPromise, timeoutPromise]);
       } catch (ccErr) {
+        markFailure(sessionId, ccErr?.message || "CC_TIMEOUT");
+        if (cloudFallbackBlocked()) {
+          return json(res, 503, { ok: false, error: "cloud_fallback_blocked_by_governor", governor: { total_spend_usd: totalSpendUsd(), cap_usd: GOVERNOR_DAILY_CAP_USD, groq_fallback_calls: _governor.groqFallbackCalls } });
+        }
         // CC timed out or failed — try Groq as emergency fallback
         let groqFallbackKey = "";
         for (const p of ["/karma/repo/.groq-api-key", "/home/neo/karma-sade/.groq-api-key"]) {
@@ -966,6 +1401,8 @@ const server = http.createServer(async (req, res) => {
               const gData = await gRes.json();
               const gAnswer = gData.choices?.[0]?.message?.content || "";
               if (gAnswer) {
+                _governor.groqFallbackCalls += 1;
+                recordSpend("groq-fallback", 0);
                 postResponseSideEffects({ message, assistantText: gAnswer, sessionId, costUsd: 0, model: "groq-fallback" });
                 return json(res, 200, { ok: true, response: gAnswer, assistant_text: gAnswer, model: "groq-fallback", routing: "cc-locked-groq-fallback", cost_usd: 0 });
               }
@@ -1075,6 +1512,14 @@ const server = http.createServer(async (req, res) => {
         fs.appendFileSync(filePath, "\n" + body.append);
         return json(res, 200, { ok: true, action: "append", bytes_appended: Buffer.byteLength(body.append) });
       } else if (body.content !== undefined && body.confirm_overwrite === true) {
+        if (STRICT_STAGING_OVERWRITE && body.allow_production_overwrite !== true) {
+          return json(res, 423, {
+            ok: false,
+            error: "production_overwrite_blocked",
+            required: "allow_production_overwrite:true",
+            note: "Staging-first safeguard active",
+          });
+        }
         fs.writeFileSync(filePath, body.content, "utf-8");
         return json(res, 200, { ok: true, action: "overwrite", bytes: Buffer.byteLength(body.content) });
       }
@@ -1107,6 +1552,8 @@ const server = http.createServer(async (req, res) => {
 // ── Startup ──────────────────────────────────────────────────────────────────
 if (_directRun) {
   loadCoordFromDisk();
+  loadAgoraFromDisk();
+  loadBreakerState();
   server.listen(PORT, () => {
     console.log(`[SOVEREIGN-PROXY] Listening on port ${PORT}`);
     console.log(`[SOVEREIGN-PROXY] Harness P1: ${HARNESS_P1}`);
