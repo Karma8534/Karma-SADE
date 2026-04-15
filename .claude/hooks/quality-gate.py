@@ -43,7 +43,8 @@ SCAN_EXTENSIONS = {'.js', '.py', '.json', '.md', '.sh', '.env', '.yaml', '.yml',
 
 # Directories to skip
 SKIP_DIRS = {'node_modules', '.git', '__pycache__', '.claude', 'Logs', 'Learned',
-             'docs', 'PHASE-', 'SESSION-', 'Karma_PDFs', 'claude-mem-dev', 'EscapePlan'}
+             'docs', 'PHASE-', 'SESSION-', 'Karma_PDFs', 'claude-mem-dev', 'EscapePlan',
+             'agentmemory-main', 'cc-haha-mainb', 'ccprop6'}
 
 
 def is_safe_line(line: str) -> bool:

@@ -347,3 +347,8 @@ S162: temporal KG, dedup, palace vocab, contradiction detection
 **Blockers:** claude-mem worker dies between sessions (zombie socket + bash subshell kill). Needs Task Scheduler. P1 Ollama missing qwen3.5:4b (cascade tier 3 gap).
 
 **F1-F10:** 8/10 VERIFIED GREEN. F3 (claude-mem) RED. F8/F9 not re-run.
+
+## quality-gate fix (2026-04-15)
+- Added agentmemory-main, cc-haha-mainb, ccprop6 to SKIP_DIRS in .claude/hooks/quality-gate.py
+- These contain test fixtures with dummy api_key strings (false positives)
+
