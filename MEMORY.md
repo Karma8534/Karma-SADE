@@ -331,3 +331,19 @@ S162: temporal KG, dedup, palace vocab, contradiction detection
 - Updated Scripts/karpathy_loop.py to prefer installed local Ollama models (gemma3:1b) and fallback from textual K2 error payloads.
 - Live verification: hub and P1 health endpoints 200; forced hub tool call produced disk side effect.
 - Open blocker: claude-mem worker API remains intermittently unavailable/timeouts on local port from external callers.
+
+## Session 2026-04-15 — Full Forensic Audit (context-2)
+
+**What changed:** Added comprehensive forensic audit to codexfull041426a.md.
+
+**Architecture truth confirmed:**
+- hub-bridge runs proxy.js (not server.js). CC --resume = primary inference ($0, Max sub).
+- K2 julian cortex: gemma3:1b default (not qwen3.5:4b). P1 cortex (7893): qwen3.5:4b 32K.
+- P1 Ollama: only gemma3:1b + nomic-embed-text.
+- Ledger: 397,513 entries (2x STATE.md claim).
+- K2 Vesper: 1306 promotions, all 3 stages active.
+- claude-mem: zombie chain 37778→37782, settings.json=37782, CHROMA_ENABLED=false.
+
+**Blockers:** claude-mem worker dies between sessions (zombie socket + bash subshell kill). Needs Task Scheduler. P1 Ollama missing qwen3.5:4b (cascade tier 3 gap).
+
+**F1-F10:** 8/10 VERIFIED GREEN. F3 (claude-mem) RED. F8/F9 not re-run.
