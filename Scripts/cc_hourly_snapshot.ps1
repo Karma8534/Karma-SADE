@@ -31,12 +31,13 @@ if (Test-Path $StateMd) {
     if (-not $stateBlock) { $stateBlock = "(no active blockers found in STATE.md)" }
 }
 
-# Guard: if snapshot was written within last 2 hours (e.g. by wrap-session), skip overwrite
-# Session-written snapshots have richer context than this hourly template
+# Guard: if snapshot was written within the last 55 minutes, skip overwrite.
+# This keeps wrap-session snapshots briefly intact while preventing Archon
+# stale false-positives (stale threshold is 90 minutes).
 if (Test-Path $SnapFile) {
     $lastWrite = (Get-Item $SnapFile).LastWriteTime
     $age = (Get-Date) - $lastWrite
-    if ($age.TotalHours -lt 2) {
+    if ($age.TotalMinutes -lt 55) {
         Write-Host "HOURLY SNAPSHOT: skipped -- snapshot is $([int]$age.TotalMinutes)min old (written by session wrap or manual run)"
         exit 0
     }

@@ -352,3 +352,28 @@ S162: temporal KG, dedup, palace vocab, contradiction detection
 - Added agentmemory-main, cc-haha-mainb, ccprop6 to SKIP_DIRS in .claude/hooks/quality-gate.py
 - These contain test fixtures with dummy api_key strings (false positives)
 
+
+## Session 166 (2026-04-14) — Archon drift loop + claim-line-map hardening
+
+### What changed
+- Fixed Scripts/cc_archon_agent.ps1 Kiki parser bug where JSON date auto-conversion caused kiki=error false negatives.
+- Fixed Scripts/cc_hourly_snapshot.ps1 guard (2h -> 55m) to prevent stale false-alert loop against Archon's 90m stale threshold.
+- Updated Scripts/cc_email_daemon.py default Ollama model from sam860/LFM2:350m to gemma3:1b (installed and reachable).
+- Added mandated-doc extraction artifact: docs/ForColby/claim_line_map_041426.md.
+- Updated tests to match current runtime behavior and defaults:
+  - 	ests/test_cc_email_daemon.py
+  - 	ests/test_cc_server_harness.py
+
+### Why
+- Eliminate recurring false ALERT/DEGRADED states and stale personal/email misdiagnosis.
+- Keep runtime status aligned with real K2/P1 conditions.
+- Close blocker on incomplete full-file claim extraction mapping.
+
+### Ground-truth verification
+- Archon run now logs State: OK | drift=False | stale=False | kiki=alive.
+- Direct worker probe http://127.0.0.1:37782/health returns {status:"ok"}.
+- python -m pytest -q tests/test_cc_email_daemon.py => 9 passed.
+- python -m pytest -q tests/test_cc_server_harness.py => 35 passed.
+
+### Remaining
+- Claimed blockers list in snapshot can still contain stale documented blockers until source docs are refreshed.

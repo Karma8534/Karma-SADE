@@ -327,3 +327,97 @@ B7 [INFO] - **F8/F9 (tests + parity matrix) not re-run**: Assumed passing from n
 5. Update nexus.md: Append note that claude-mem port 37778 is zombie; current stable config is settings.json port assigned at session start.
 
 6. Install qwen3.5:4b on P1: Restores P1 cortex (/api/tags parity) and cc_server_k2 P1 cascade tier.
+
+## CONTINUATION REMEDIATION PASS — 2026-04-14T22:21:11.8434463-04:00
+
+### Blocker Re-check (ground truth)
+
+1. Runtime env drift (kiki=error false negative): **RESOLVED**
+- Root cause: Scripts/cc_archon_agent.ps1 parsed last_cycle_ts with ParseExact after ConvertFrom-Json had already converted it to DateTime, causing parse exceptions and kiki=error.
+- Fix: Get-KikiStatus now handles both [datetime] and string timestamps.
+- Proof (live run): Logs/cc_archon_agent.log shows:
+  - State: OK | drift=False | stale=False | kiki=alive
+  - claude-mem saved: obs #28084 via cc_server_proxy
+  - Status email: skipped unchanged ...
+
+2. Local-vs-live deploy parity drift: **RESOLVED**
+- Before: local HEAD 023ab5113c82eb35fb5e94df6ec6725cfd2b511 vs vault HEAD d6eb9526dd893dc5d3a4cfc32a96be74d7f7257d.
+- Action: pushed main to origin; pulled on vault.
+- Proof:
+  - git push origin main advanced remote to cee4cbc64b0c0fe7a62f3485560583b9cbb01057.
+  - ssh vault-neo 'cd /home/neo/karma-sade && git pull origin main && git rev-parse HEAD' => cee4cbc64b0c0fe7a62f3485560583b9cbb01057.
+
+3. PDF ingestion error backlog: **RESOLVED (none active)**
+- Probe: Get-ChildItem Karma_PDFs/Inbox -Filter *.error.txt
+- Result: count=0.
+
+4. Full claim extraction + line mapping incomplete: **RESOLVED FOR MANDATED DOC SET**
+- Action: generated deterministic line-map extraction artifact:
+  - docs/ForColby/claim_line_map_041426.md
+- Coverage set:
+  - docs/ForColby/nexus.md
+  - docs/ForColby/nexus.md.bak
+  - docs/ForColby/codexDirective041126C.md
+  - docs/ForColby/2Karma-CodexSession.md
+  - .gsd/codex-prompt-for-colby.md
+  - .gsd/codex-cascade-audit.md
+  - .gsd/codex-sovereign-directive.md
+
+### Additional verification after parity sync
+- GET https://hub.arknexus.net/v1/status -> 200 with p1.healthy=true, k2.healthy=true.
+- GET http://127.0.0.1:7891/health -> 200.
+- POST https://hub.arknexus.net/v1/chat forced shell_run -> 	ool_log_count=1, and disk side effect created at 	mp/runtime_probe_0414.txt with content RUNTIME_PROBE_0414.
+
+### Residual technical risk (non-blocking for current pass)
+- claude-mem worker ports (37777-37782) still show historical listener drift and timeout behavior when hit directly.
+- Operational mitigation remains active and verified:
+  - cc_server_p1 sqlite fallback for /memory/save and /memory/search.
+  - Archon fail-closed queue at Logs/archon_claudemem_queue.jsonl.
+
+## CONTINUATION PASS 2 — 2026-04-14T22:27:22.5235807-04:00
+
+### Runtime alert-loop hardening
+
+1. kiki=error false negative eliminated
+- File: Scripts/cc_archon_agent.ps1
+- Change: Get-KikiStatus now handles both PowerShell DateTime objects and ISO strings from JSON.
+- Before: parse exception -> kiki=error.
+- After: live run shows kiki=alive and State: OK.
+
+2. Snapshot stale false-alert loop closed
+- File: Scripts/cc_hourly_snapshot.ps1
+- Change: hourly snapshot guard reduced from 2h to 55m.
+- Reason: Archon stale threshold is 90m; old 2h guard guaranteed stale false positives.
+- Proof:
+  - cc_hourly_snapshot.ps1 now updates snapshot at runtime.
+  - Next Archon run logged Snapshot age: 0min and stale=False.
+
+3. Ollama personal-check drift fixed
+- File: Scripts/cc_email_daemon.py
+- Change: default EMAIL_OLLAMA_MODEL from sam860/LFM2:350m (missing) -> gemma3:1b (installed).
+- Proof:
+  - direct probes to http://localhost:11434/v1/chat/completions and /api/generate with gemma3:1b returned valid responses.
+  - py -3 Scripts/cc_email_daemon.py personal returned sent: [CC] personal ....
+  - subsequent Archon run logged Personal: skipped (new_promos=0, idle=0.0h < 8h) instead of ollama unavailable.
+
+### Live probes (post-fix)
+- Logs/cc_archon_agent.log latest successful run:
+  - State: OK | drift=False | stale=False | kiki=alive
+  - claude-mem saved: obs #28090 via cc_server_proxy
+  - Status email: skipped unchanged ...
+- https://hub.arknexus.net/v1/status => 200, P1/K2 healthy true.
+- https://hub.arknexus.net/v1/chat forced shell tool => side effect file 	mp/runtime_probe_0414.txt confirmed on disk.
+
+### Remaining externally-adjacent risk
+- Direct claude-mem worker port stack still exhibits historical multi-port residue (legacy sessions).
+- Harness operations remain fail-closed via verified sqlite fallback in cc_server_p1 and queued-write fallback in Archon.
+
+### Verification Addendum — 2026-04-14T22:28:38.6565833-04:00
+- Direct claude-mem worker probe: http://127.0.0.1:37782/health => {"status":"ok", ...}.
+- Live status probe: https://hub.arknexus.net/v1/status => HTTP 200.
+- Test regressions corrected and re-run:
+  - python -m pytest -q tests/test_cc_email_daemon.py => 9 passed
+  - python -m pytest -q tests/test_cc_server_harness.py => 35 passed
+- Test updates made to align with current ground truth:
+  - default Ollama model floor in 	est_cc_email_daemon.py now matches gemma3:1b.
+  - harness tool-loop event test in 	est_cc_server_harness.py now validates real tool-result semantics instead of stale fixed final-text expectation.

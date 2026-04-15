@@ -21,7 +21,7 @@ def test_status_interval_is_30_minutes_and_check_interval_is_15_minutes():
 def test_email_ollama_defaults_match_live_p1_floor():
     mod = load_module()
     assert mod.OLLAMA_URL == "http://localhost:11434/v1/chat/completions"
-    assert mod.OLLAMA_MODEL == "sam860/LFM2:350m"
+    assert mod.OLLAMA_MODEL == "gemma3:1b"
 
 
 def test_sovereign_sender_detection_accepts_colby_address():

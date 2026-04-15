@@ -43,7 +43,11 @@ function Get-KikiStatus {
         if (-not $raw) { return 'error' }
         $obj = $raw | ConvertFrom-Json
         if (-not $obj.last_cycle_ts) { return 'stale:9999s' }
-        $last = [datetime]::ParseExact([string]$obj.last_cycle_ts, 'yyyy-MM-ddTHH:mm:ssZ', [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AssumeUniversal)
+        if ($obj.last_cycle_ts -is [datetime]) {
+            $last = [datetime]$obj.last_cycle_ts
+        } else {
+            $last = [datetimeoffset]::Parse([string]$obj.last_cycle_ts, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AssumeUniversal).UtcDateTime
+        }
         $age = [int](($([datetime]::UtcNow) - $last.ToUniversalTime()).TotalSeconds)
         if ($age -lt 600) { return 'alive' }
         return "stale:${age}s"
@@ -123,6 +127,19 @@ if ($isDrift) {
 }
 
 $claudeMemBase = Get-ClaudeMemBaseUrl
+$token = ''
+try {
+    $localTokenPath = Join-Path $ScriptRepo '.hub-chat-token'
+    if (Test-Path $localTokenPath) {
+        $token = (Get-Content $localTokenPath -Raw -Encoding UTF8).Trim()
+    }
+} catch {}
+if (-not $token) {
+    try {
+        $token = (ssh vault-neo 'cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt' 2>$null).Trim()
+    } catch {}
+}
+
 $obsNow = [datetime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ')
 $obsText = @"
 CC ARCHON CHECKPOINT [$obsNow]
@@ -134,15 +151,22 @@ Recent work: $memoryRecent
 "@
 
 try {
-    $saveBody = [ordered]@{
+    $saveBodyObj = [ordered]@{
         text = ($obsText -replace '[^\x20-\x7E\r\n]', '')
         title = "[ARCHON] CC state $stateTag | age:${snapshotAge}min | $obsNow"
         project = 'Karma_SADE'
-    } | ConvertTo-Json -Compress -Depth 3
+    }
+    $saveBody = $saveBodyObj | ConvertTo-Json -Compress -Depth 3
 
-    $saveRes = Invoke-WebRequest -Uri "$claudeMemBase/api/memory/save" -Method POST -Body $saveBody -ContentType 'application/json' -UseBasicParsing -TimeoutSec 6
+    if ($token) {
+        $saveHeaders = @{ Authorization = "Bearer $token" }
+        $saveRes = Invoke-WebRequest -Uri "http://127.0.0.1:7891/v1/memory/save" -Headers $saveHeaders -Method POST -Body $saveBody -ContentType 'application/json' -UseBasicParsing -TimeoutSec 8
+    } else {
+        $saveRes = Invoke-WebRequest -Uri "$claudeMemBase/api/memory/save" -Method POST -Body $saveBody -ContentType 'application/json' -UseBasicParsing -TimeoutSec 6
+    }
     $saveJson = $saveRes.Content | ConvertFrom-Json
-    Write-Log ("claude-mem saved: obs #{0} via {1}" -f $saveJson.id, $claudeMemBase)
+    $saveId = if ($saveJson.id) { $saveJson.id } else { '(no-id)' }
+    Write-Log ("claude-mem saved: obs #{0} via {1}" -f $saveId, ($(if ($token) { 'cc_server_proxy' } else { $claudeMemBase })))
 } catch {
     Write-Log ("WARN saving to claude-mem via {0}: {1}" -f $claudeMemBase, $_.Exception.Message)
     try {
@@ -161,11 +185,6 @@ try {
         Write-Log ("ERROR queueing claude-mem fallback payload: {0}" -f $_.Exception.Message)
     }
 }
-
-$token = ''
-try {
-    $token = (ssh vault-neo 'cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt' 2>$null).Trim()
-} catch {}
 if (-not $token) {
     Write-Log 'ERROR: could not get hub token'
     exit 1
