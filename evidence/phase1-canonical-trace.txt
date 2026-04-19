@@ -1,0 +1,36 @@
+PHASE 1 — CANONICAL ENDPOINT TRACE
+Generated: 2026-04-19T02:50:42.779Z
+
+CANONICAL ENDPOINTS USED
+  ✓ /memory/wakeup
+  ✓ /memory/session
+  ✓ /v1/session/{session_id}
+
+ENDPOINT CALLS MADE
+
+  /memory/wakeup
+    Purpose: Load persona/identity data
+    Called: YES
+    Result: remote
+
+
+  /memory/session
+    Purpose: Load session metadata
+    Called: YES
+    Result: remote
+
+
+  /v1/session/{session_id}
+    Purpose: Load conversation turns
+    Called: YES
+    Result: remote
+
+
+VALIDATION
+  Persona sourced from remote: PASS
+  Session sourced from remote: PASS
+  Turns sourced from remote: PASS
+  All canonical endpoints: PASS
+
+NO NEW ENDPOINTS INTRODUCED: PASS
+NO HARDCODED DATA: PASS (all sourced from canonical endpoints)

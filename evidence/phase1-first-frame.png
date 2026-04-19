@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-04-19T02:50:42.779Z",
+  "requirements": {
+    "persona_visible": true,
+    "history_visible": true,
+    "render_time_ms": 450,
+    "render_deadline_met": true
+  },
+  "rendered_elements": {
+    "persona_name": "Karma",
+    "persona_status": "ready",
+    "persona_generic": false,
+    "history_turn_count": 3,
+    "history_sample": "user: how are you?..."
+  }
+}

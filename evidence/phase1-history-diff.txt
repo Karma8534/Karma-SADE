@@ -1,0 +1,21 @@
+PHASE 1 — HISTORY EVIDENCE
+Generated: 2026-04-19T02:50:42.778Z
+
+REQUIREMENT
+  Last 3 turns from prior session must be rendered deterministically
+
+ACTUAL RESULT
+  Turn count: 3 (required: 3)
+  Turn order: user → assistant → user
+  Valid: YES
+
+TURNS
+  [0] user: hello karma
+  [1] assistant: hi there friend
+  [2] user: how are you?
+
+VALIDATION
+  Exactly 3 turns: PASS
+  Deterministic order: PASS
+  No hardcoded data: PASS
+  Last 3 guaranteed: PASS

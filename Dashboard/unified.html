@@ -425,6 +425,91 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--bg-hover);
         }
+
+        /* Boot Hydration Styles */
+        .persona-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .persona-block {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .persona-block.generic {
+            opacity: 0.7;
+        }
+
+        .persona-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent-purple);
+        }
+
+        .persona-status {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .history-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .history-block {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .history-empty {
+            color: var(--text-secondary);
+            font-style: italic;
+            text-align: center;
+            padding: 24px 16px;
+        }
+
+        .turn {
+            padding: 12px;
+            background: var(--bg-primary);
+            border-radius: 6px;
+            border-left: 3px solid var(--accent-purple);
+        }
+
+        .turn-role {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .turn-text {
+            font-size: 13px;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        .timing-debug {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 16px;
+        }
+
+        .timing-metric {
+            padding: 4px 0;
+        }
     </style>
 </head>
 <body>
@@ -477,6 +562,16 @@
 
         <!-- Center Panel: Main Dashboard -->
         <div class="main-panel">
+            <!-- Boot Hydration: Persona Section -->
+            <div data-section="persona" class="persona-section">
+                <div style="text-align: center; color: var(--text-secondary); font-size: 12px;">Loading persona...</div>
+            </div>
+
+            <!-- Boot Hydration: History Section -->
+            <div data-section="history" class="history-section">
+                <div style="text-align: center; color: var(--text-secondary); font-size: 12px;">Loading prior session...</div>
+            </div>
+
             <div class="dashboard-grid">
                 <div class="card">
                     <h3>System Health</h3>
@@ -893,6 +988,29 @@
 
         // Start
         init();
+    </script>
+
+    <!-- Boot Hydration Script -->
+    <script src="bootHydration.js"></script>
+
+    <!-- Debug Timing Info -->
+    <div data-section="timing" class="timing-debug" style="display: none;"></div>
+
+    <script>
+        // Auto-show timing debug info when metrics are available
+        setInterval(() => {
+            if (window.__bootMetrics && window.__bootMetrics.timing) {
+                const timingDiv = document.querySelector('[data-section="timing"]');
+                if (timingDiv) {
+                    const metrics = window.__bootMetrics;
+                    const fetchDuration = metrics.timing.fetch_end_ms - metrics.timing.fetch_start_ms;
+                    timingDiv.innerHTML = `
+                        Fetch: ${fetchDuration}ms | Paint: ${metrics.timing.paint_ms}ms | Source: ${metrics.source.persona}/${metrics.source.session}/${metrics.source.turns}
+                    `;
+                    timingDiv.style.display = 'block';
+                }
+            }
+        }, 100);
     </script>
 </body>
 </html>
