@@ -10,9 +10,10 @@
  */
 async function bootHydration() {
   const timing = {
-    fetch_start_ms: Date.now(),
-    fetch_end_ms: null,
-    paint_ms: null
+    window_visible_ms: performance.timing.navigationStart + performance.timing.domInteractive - performance.timing.navigationStart || 0,
+    boot_fetch_start_ms: Date.now(),
+    boot_fetch_end_ms: null,
+    persona_paint_ms: null
   };
 
   try {
@@ -62,7 +63,7 @@ async function bootHydration() {
       }
     }
 
-    timing.fetch_end_ms = Date.now();
+    timing.boot_fetch_end_ms = Date.now();
 
     return {
       persona: persona || null,
@@ -77,7 +78,7 @@ async function bootHydration() {
     };
   } catch (error) {
     console.error('Boot hydration failed:', error);
-    timing.fetch_end_ms = Date.now();
+    timing.boot_fetch_end_ms = Date.now();
     return {
       persona: null,
       session: null,
@@ -145,7 +146,7 @@ function renderHistory(turns) {
 
 /**
  * Render timing info for debugging
- * @param {Object} timing - Timing data with fetch_start_ms, fetch_end_ms
+ * @param {Object} timing - Timing data with window_visible_ms, boot_fetch_start_ms, boot_fetch_end_ms, persona_paint_ms
  * @returns {HTMLElement}
  */
 function renderTiming(timing) {
@@ -153,8 +154,8 @@ function renderTiming(timing) {
   container.className = 'timing-block';
   container.setAttribute('data-test', 'timing-block');
 
-  const fetchDuration = timing.fetch_end_ms - timing.fetch_start_ms;
-  const paintDuration = timing.paint_ms || 0;
+  const fetchDuration = timing.boot_fetch_end_ms - timing.boot_fetch_start_ms;
+  const paintDuration = timing.persona_paint_ms || 0;
 
   container.innerHTML = `
     <div class="timing-metric">Fetch: ${fetchDuration}ms</div>
@@ -187,7 +188,7 @@ async function initializeBootHydration() {
   const hydrationData = await bootHydration();
 
   // Record paint timing
-  hydrationData.timing.paint_ms = Date.now() - startPaint;
+  hydrationData.timing.persona_paint_ms = Date.now() - startPaint;
 
   // Find or create containers in unified.html
   const personaContainer = document.querySelector('[data-section="persona"]') ||
@@ -226,9 +227,9 @@ async function initializeBootHydration() {
   console.log('[Boot Hydration]', {
     persona: hydrationData.persona?.name || 'null',
     turns: hydrationData.turns.length,
-    fetch_ms: hydrationData.timing.fetch_end_ms - hydrationData.timing.fetch_start_ms,
-    paint_ms: hydrationData.timing.paint_ms,
-    passed: hydrationData.timing.paint_ms < 2000
+    fetch_ms: hydrationData.timing.boot_fetch_end_ms - hydrationData.timing.boot_fetch_start_ms,
+    paint_ms: hydrationData.timing.persona_paint_ms,
+    passed: hydrationData.timing.persona_paint_ms < 2000
   });
 
   return hydrationData;

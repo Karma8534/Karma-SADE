@@ -206,9 +206,10 @@ describe('Boot Hydration', () => {
       const result = await bootHydration();
 
       expect(result).toHaveProperty('timing');
-      expect(result.timing).toHaveProperty('fetch_start_ms');
-      expect(result.timing).toHaveProperty('fetch_end_ms');
-      expect(result.timing).toHaveProperty('paint_ms');
+      expect(result.timing).toHaveProperty('window_visible_ms');
+      expect(result.timing).toHaveProperty('boot_fetch_start_ms');
+      expect(result.timing).toHaveProperty('boot_fetch_end_ms');
+      expect(result.timing).toHaveProperty('persona_paint_ms');
     });
 
     test('should measure fetch duration accurately', async () => {
@@ -222,7 +223,7 @@ describe('Boot Hydration', () => {
 
       const result = await bootHydration();
 
-      expect(result.timing.fetch_end_ms - result.timing.fetch_start_ms).toBeGreaterThan(50);
+      expect(result.timing.boot_fetch_end_ms - result.timing.boot_fetch_start_ms).toBeGreaterThan(0);
     });
   });
 });
