@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { createPatch } from 'diff';
 import { useKarmaStore } from '@/store/karma';
 import { CodeBlock } from '@/components/CodeBlock';
+import { apiFetch } from '@/lib/api';
 
 interface OpenCodeEventDetail {
   path: string;
@@ -26,22 +28,11 @@ function detectLanguage(path: string): string {
   return map[ext] || 'text';
 }
 
-function buildDiff(original: string, edited: string): string {
-  const left = original.split('\n');
-  const right = edited.split('\n');
-  const max = Math.max(left.length, right.length);
-  const out: string[] = [];
-  for (let i = 0; i < max; i += 1) {
-    const a = left[i] ?? '';
-    const b = right[i] ?? '';
-    if (a === b) {
-      out.push(` ${a}`);
-      continue;
-    }
-    if (a) out.push(`-${a}`);
-    if (b) out.push(`+${b}`);
-  }
-  return out.join('\n');
+function buildDiff(original: string, edited: string, filePath: string): string {
+  // LCS-based unified diff via jsdiff — proper alignment for inserts/deletes mid-file
+  const name = filePath || 'file';
+  const patch = createPatch(name, original, edited, 'original', 'edited', { context: 3 });
+  return patch;
 }
 
 export function CodePanel() {
@@ -68,10 +59,8 @@ export function CodePanel() {
     async function loadFile() {
       setLoading(true);
       setError('');
-      try {
-        const res = await fetch(`/v1/file?path=${encodeURIComponent(filePath)}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        try {
+        const res = await apiFetch(`/v1/file?path=${encodeURIComponent(filePath)}`, { token });
         const data = await res.json();
         if (!active) return;
         if (!res.ok || data.ok === false) {
@@ -92,7 +81,7 @@ export function CodePanel() {
     return () => { active = false; };
   }, [filePath, token]);
 
-  const diffText = useMemo(() => buildDiff(original, draft), [original, draft]);
+  const diffText = useMemo(() => buildDiff(original, draft, filePath), [original, draft, filePath]);
   const language = detectLanguage(filePath);
   const dirty = draft !== original;
 
@@ -100,9 +89,10 @@ export function CodePanel() {
     setSaving(true);
     setError('');
     try {
-      const res = await fetch('/v1/file', {
+      const res = await apiFetch('/v1/file', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        token,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ path: filePath, content: draft }),
       });
       const data = await res.json();

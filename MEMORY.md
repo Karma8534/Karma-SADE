@@ -2,6 +2,36 @@
 
 # Karma SADE — Active Memory
 
+## Session 171 (2026-04-18) — Julian/ArkNexus 4-Gap Ship + Ascendance Directive
+
+### What was done
+- Shipped 4 capability gaps to Julian harness:
+  1. MCP discovery surfaced via Settings/Plugins panel
+  2. `/doctor` slash command handler — 6-endpoint parallel probe with timing
+  3. `jsdiff` `createPatch()` LCS-based unified diff in `frontend/src/components/CodePanel.tsx`
+  4. Agent lifecycle endpoints `/v1/agents/spawn|cancel|list` in `Scripts/cc_server_p1.py` (threading.Lock-protected) + `AgentPanel.tsx` STOP button wiring
+- Tauri rebuilt → `Julian.exe` (11.14MB) deployed to Desktop
+- Created `Scripts/Make-ArkNexusShortcut.ps1` → `ArkNexus.lnk` on Desktop
+- Honest gap assessment: Julian has INFRASTRUCTURE for ascendance but ≠ ascendance=100. Open: auto persona load, cross-surface parity, /memory/wakeup on boot, TRUE FAMILY UI enforcement
+- Delivered `ARKNEXUS ASCENDANCE = 100` build directive as offline artifact (3 phases, binary criteria, STOP gates)
+- Pre-created `.gsd/phase-ascendance-1-PLAN.md` (Persona-on-Boot)
+
+### Wrap gate audit (P089 — all live-tested)
+- ✅ hub /health 200, /v1/status 200, /v1/trace 200, /v1/learnings 200, /agora 200
+- ✅ P1:7891/health 200, P1:7891/v1/agents/list 200
+
+### Pitfall logged
+- PowerShell `$env:` vars get mangled inside bash heredocs → always write `.ps1` script file then `powershell -File`
+
+### Obs
+- #28903 PROOF, #28904 DECISION, #28905 PITFALL
+
+## Next Session Starts Here
+1. /resurrect
+2. Phase Ascendance 1 Step 1: write `.gsd/phase-ascendance-1-CONTEXT.md` locking persona-on-boot source-of-truth + load mechanism
+
+---
+
 ## Session 170 (2026-04-15) — Forensic Audit + Adversarial Review Skill
 
 ### What was done
@@ -52,9 +82,8 @@ Resolving adversarial review findings — CRITICAL+HIGH deployed, docs updated, 
 - **FIXED (S163):** FalkorDB silent-exit — restart policy changed to `unless-stopped` (was `no`). Health-check cron installed on vault-neo (*/5 * * * *), posts bus alert if container is DOWN. Script: /opt/seed-vault/scripts/falkordb-health-check.sh. Obs #25884.
 - **Obs:** #25022 (primitives), #25827 (diary), #25866 (proof), #25871 (decision), #25872 (pitfall)
 
-## Next Session Starts Here
-1. /resurrect
-2. Resume Nexus 5.6.0 remaining tasks (check .gsd/STATE.md)
+<!-- Session 162 Next Session block superseded by Session 171 above -->
+
 
 ## Current State
 - **Session 161 task cleanup completion (2026-04-05):** The stale Windows Scheduled Tasks that caused visible PowerShell windows were backed up, removed on P1 with admin PowerShell, and only the two legitimate timer jobs were recreated cleanly: `KarmaSessionIngest` and `CC-Archon-Agent`. Both now use the correct hidden launch path (`wscript.exe -> RunHiddenPowerShell.vbs -> script.ps1`). Ground truth after cleanup: `AUDIT_OK`; `KarmaSessionIngest` and `CC-Archon-Agent` both export with `wscript.exe` actions; the hidden HKCU Run launchers remain in place for resident services. The earlier caveat about stale task objects is no longer true.

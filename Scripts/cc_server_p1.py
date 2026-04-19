@@ -7,7 +7,7 @@ Groq, K2, and OpenRouter are degraded fallbacks when Claude is unavailable.
 Returns: {response, ok}
 Auth: Bearer token checked against HUB_CHAT_TOKEN env var.
 """
-import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.parse, sqlite3, base64, threading, time, re, fnmatch, glob, datetime, uuid
+import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.parse, sqlite3, base64, threading, time, re, fnmatch, glob, datetime, uuid, ipaddress
 from http.server import HTTPServer, ThreadingHTTPServer, BaseHTTPRequestHandler
 from collections import defaultdict
 sys.path.insert(0, os.path.dirname(__file__))
@@ -97,6 +97,68 @@ def _check_rate_limit(ip):
     return True
 
 
+_TRUSTED_CLIENT_NETWORKS = (
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("100.64.0.0/10"),
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+)
+_RISKY_ROUTE_AUDIT_FILE = pathlib.Path(r"C:\Users\raest\Documents\Karma_SADE\Logs\cc_risky_routes.jsonl")
+
+
+def _is_trusted_client_ip(ip):
+    raw = str(ip or "").strip()
+    if not raw:
+        return False
+    if raw.lower() in {"localhost", "::1"}:
+        return True
+    try:
+        addr = ipaddress.ip_address(raw)
+    except ValueError:
+        return raw.startswith("127.")
+    return any(addr in network for network in _TRUSTED_CLIENT_NETWORKS)
+
+
+def _is_risky_route(request_path):
+    return (
+        request_path == "/file"
+        or request_path == "/shell"
+        or request_path == "/email/send"
+        or request_path == "/memory/save"
+        or request_path.startswith("/self-edit/")
+    )
+
+
+def _audit_risky_route(client_ip, request_path, allowed, reason=""):
+    try:
+        _RISKY_ROUTE_AUDIT_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(_RISKY_ROUTE_AUDIT_FILE, "a", encoding="utf-8") as f:
+            f.write(json.dumps({
+                "ts": datetime.datetime.utcnow().isoformat() + "Z",
+                "client_ip": client_ip,
+                "path": request_path,
+                "allowed": bool(allowed),
+                "reason": reason,
+            }) + "\n")
+    except Exception:
+        pass
+
+
+def _guard_risky_route(handler, request_path):
+    if not _is_risky_route(request_path):
+        return True
+    client_ip = handler.client_address[0]
+    if not _is_trusted_client_ip(client_ip):
+        _audit_risky_route(client_ip, request_path, False, "untrusted-client")
+        handler._json(403, {"ok": False, "error": "risky route restricted to trusted network"})
+        return False
+    _audit_risky_route(client_ip, request_path, True, "trusted-client")
+    return True
+
+
 def _should_allow_smartrouter_precheck(path):
     """CC routes stay on the Claude-primary path; SmartRouter may advise but not preempt them."""
     return path not in ("/cc", "/cc/stream")
@@ -112,11 +174,19 @@ def _normalize_local_route(path):
         "/v1/cancel": "/cancel",
         "/v1/file": "/file",
         "/v1/files": "/files",
+        "/v1/git/status": "/git/status",
         "/v1/agents-status": "/agents-status",
         "/v1/memory/search": "/memory/search",
         "/v1/memory/save": "/memory/save",
+        "/v1/status": "/health",
+        "/v1/shell": "/shell",
+        "/v1/email/inbox": "/email/inbox",
+        "/v1/email/send": "/email/send",
     }
     normalized = aliases.get(route, route)
+    # Prefix rewrite for /v1/self-edit/* — strip the /v1 prefix (canonical route is /self-edit/*)
+    if normalized == route and route.startswith("/v1/self-edit/"):
+        normalized = route[len("/v1"):]
     if normalized == route:
         return path
     return urllib.parse.urlunparse(parsed._replace(path=normalized))
@@ -173,7 +243,7 @@ except ImportError as e:
 API_TIMEOUT    = 120  # seconds — CC subprocess can be slow on complex tasks
 def _resolve_claudemem_url():
     """Resolve claude-mem worker URL from settings.json with safe fallback."""
-    default_port = "37778"
+    default_port = "37782"
     settings_path = pathlib.Path.home() / ".claude-mem" / "settings.json"
     try:
         if settings_path.exists():
@@ -194,9 +264,27 @@ OPENROUTER_MODEL = "anthropic/claude-sonnet-4-6"  # Same model name on OR, diffe
 OPENROUTER_FALLBACK_MODEL = "google/gemini-2.0-flash"  # Tier 2: if OR Anthropic also rate-limited
 OPENROUTER_THIRD_MODEL = "meta-llama/llama-3.3-70b-instruct"  # Tier 3: non-Anthropic OpenRouter fallback
 OPENROUTER_TIMEOUT = int(os.environ.get("OPENROUTER_TIMEOUT", "45"))
-# Fail-closed emergency posture by default: Anthropic paths are opt-in only.
-EMERGENCY_INDEPENDENT = os.environ.get("KARMA_EMERGENCY_INDEPENDENT", "1").strip().lower() in ("1", "true", "yes", "on")
-DISABLE_ANTHROPIC = os.environ.get("KARMA_DISABLE_ANTHROPIC", "1").strip().lower() in ("1", "true", "yes", "on")
+# Mouth policy: Anthropic/Max is primary by default, local models are fallback/grunt lanes.
+FORCE_ANTHROPIC_PRIMARY = os.environ.get("KARMA_FORCE_ANTHROPIC_PRIMARY", "1").strip().lower() in ("1", "true", "yes", "on")
+EMERGENCY_INDEPENDENT = os.environ.get("KARMA_EMERGENCY_INDEPENDENT", "0").strip().lower() in ("1", "true", "yes", "on")
+DISABLE_ANTHROPIC = os.environ.get("KARMA_DISABLE_ANTHROPIC", "0").strip().lower() in ("1", "true", "yes", "on")
+if FORCE_ANTHROPIC_PRIMARY:
+    EMERGENCY_INDEPENDENT = False
+    DISABLE_ANTHROPIC = False
+MODEL_ALIASES = {
+    # Legacy aliases seen in older configs; map to the live-valid Haiku model.
+    "claude-3-5-haiku-latest": "claude-haiku-4-5-20251001",
+    "claude-3-5-haiku-20241022": "claude-haiku-4-5-20251001",
+    "claude-3-haiku-20240307": "claude-haiku-4-5-20251001",
+}
+DEFAULT_CHAT_MODEL = "claude-haiku-4-5-20251001"
+MODEL_POLICY_FALLBACKS = [
+    "hub/openrouter",
+    "groq",
+    "local-ollama",
+    "k2",
+]
+HUB_BASE_URL = os.environ.get("KARMA_HUB_BASE_URL", "https://hub.arknexus.net").strip().rstrip("/")
 CLAUDEMEM_DB   = pathlib.Path.home() / ".claude-mem" / "claude-mem.db"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama-3.3-70b-versatile"
@@ -236,6 +324,41 @@ TOOL_PROMPT = "\n".join([
 # ── Agents Status Cache (Sprint 6 — #20-22) ────────────────────────────────
 _agents_status_cache = None
 _agents_status_ts = 0.0
+
+# ── Agent Lifecycle Registry (spawn/cancel/list) ───────────────────────────
+# In-memory: {agent_id: {name, target, prompt, started_at, status, bus_id, cancelled_at}}
+_spawned_agents: dict = {}
+_spawned_agents_lock = threading.Lock()
+
+def _spawn_agent_record(name: str, target: str, prompt: str, bus_id: str = "") -> dict:
+    """Register a spawned agent. Spawning = posting structured task to coordination bus."""
+    agent_id = uuid.uuid4().hex[:12]
+    rec = {
+        "id": agent_id,
+        "name": name or target,
+        "target": target,
+        "prompt": prompt[:500],
+        "started_at": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
+        "status": "running",
+        "bus_id": bus_id,
+        "cancelled_at": None,
+    }
+    with _spawned_agents_lock:
+        _spawned_agents[agent_id] = rec
+    return rec
+
+def _cancel_agent_record(agent_id: str) -> dict | None:
+    with _spawned_agents_lock:
+        rec = _spawned_agents.get(agent_id)
+        if not rec:
+            return None
+        rec["status"] = "cancelled"
+        rec["cancelled_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+        return dict(rec)
+
+def _list_agent_records() -> list:
+    with _spawned_agents_lock:
+        return list(_spawned_agents.values())
 
 def _get_agents_status():
     """Return cached MCP/Skills/Hooks status. Refreshes every 300s."""
@@ -346,7 +469,7 @@ def _auto_save_memory(user_msg, assistant_msg):
     threading.Thread(target=_save, daemon=True).start()
 
 def claudemem_proxy(path, method="GET", body=None, timeout=10):
-    """Proxy a request to the local claude-mem worker at 127.0.0.1:37778."""
+    """Proxy a request to the local claude-mem worker."""
     if method == "GET" and body:
         # /api/search is GET-only — convert body dict to query string
         url = f"{CLAUDEMEM_URL}{path}?{urllib.parse.urlencode(body)}"
@@ -741,6 +864,196 @@ def save_session_id(session_id, conversation_id=None):
     except Exception as e:
         print(f"[cc-server] WARNING: could not save session ID: {e}")
 
+
+SESSION_STORE_TITLE_PREFIX = "[SESSION_STORE]"
+
+
+def _load_session_store(session_id):
+    session_id = str(session_id or "").strip()
+    if not session_id:
+        return None
+    results_blob = _sqlite_memory_search(query=f"session_id={session_id}", limit=50)
+    content = results_blob.get("content") if isinstance(results_blob, dict) else []
+    text_blocks = [str(item.get("text", "")) for item in content if isinstance(item, dict)]
+    blob = "\n".join(text_blocks)
+    if not blob:
+        return None
+    pattern = re.compile(
+        rf"session_store_v1\s+session_id={re.escape(session_id)}\s+updated_at=([^\n]+)\s+payload_base64=([A-Za-z0-9+/=]+)",
+        re.MULTILINE,
+    )
+    candidates = []
+    for match in pattern.finditer(blob):
+        updated_at = match.group(1).strip()
+        encoded = match.group(2).strip()
+        try:
+            decoded = base64.b64decode(encoded).decode("utf-8", errors="replace")
+            data = json.loads(decoded)
+            if isinstance(data, dict):
+                data.setdefault("session_id", session_id)
+                data.setdefault("updated_at", updated_at)
+                candidates.append(data)
+        except Exception:
+            continue
+    if candidates:
+        candidates.sort(key=lambda item: str(item.get("updated_at", "")))
+        return candidates[-1]
+    try:
+        parsed = json.loads(blob)
+        if isinstance(parsed, dict):
+            parsed.setdefault("session_id", session_id)
+            return parsed
+    except Exception:
+        pass
+    return None
+
+
+def _save_session_store(session_id, payload):
+    session_id = str(session_id or "").strip()
+    if not session_id:
+        raise ValueError("session_id required")
+    record = dict(payload or {})
+    record["session_id"] = session_id
+    record["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+    encoded = base64.b64encode(json.dumps(record, ensure_ascii=False).encode("utf-8")).decode("ascii")
+    title = f"{SESSION_STORE_TITLE_PREFIX} {session_id}"
+    text = (
+        "session_store_v1\n"
+        f"session_id={session_id}\n"
+        f"updated_at={record['updated_at']}\n"
+        f"payload_base64={encoded}"
+    )
+    save_body = {
+        "title": title,
+        "text": text,
+        "project": "Karma_SADE",
+        "wing": "Karma_SADE",
+        "hall": "hall_sessions",
+    }
+    code, result = claudemem_proxy("/api/memory/save", "POST", save_body, timeout=8)
+    if code != 200 or not isinstance(result, dict) or not result.get("ok", True):
+        raise RuntimeError(f"session store save failed via claude-mem: status={code} result={result}")
+    return record
+
+
+def _build_session_summary():
+    try:
+        conn = sqlite3.connect(CLAUDEMEM_DB, timeout=8)
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            """
+            SELECT COALESCE(text, narrative, '') AS body
+            FROM observations
+            WHERE COALESCE(text, narrative, '') LIKE '%session_store_v1%'
+            ORDER BY created_at_epoch DESC
+            LIMIT 500
+            """
+        ).fetchall()
+        conn.close()
+        blob = "\n".join(str(r["body"] or "") for r in rows)
+        sid_pattern = re.compile(r"session_id=([^\n]+)")
+        ts_pattern = re.compile(r"updated_at=([^\n]+)")
+        sessions = {m.group(1).strip() for m in sid_pattern.finditer(blob)}
+        timestamps = [m.group(1).strip() for m in ts_pattern.finditer(blob)]
+        return {
+            "count": len([s for s in sessions if s]),
+            "last_updated": max(timestamps) if timestamps else "",
+        }
+    except Exception as e:
+        return {"count": 0, "error": str(e)}
+
+
+def _build_runtime_truth():
+    claude_code = os.environ.get("CLAUDE_CODE_VERSION", "unknown")
+    claudemem_code, claudemem_payload = _claudemem_status_payload(timeout=3)
+    session_summary = _build_session_summary()
+    return {
+        "ok": True,
+        "identity": "Karma",
+        "version": "5.6.0",
+        "service": "cc-server-p1",
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
+        "pid": os.getpid(),
+        "claude_code": claude_code,
+        "claudemem": {
+            "url": CLAUDEMEM_URL,
+            "status": claudemem_code,
+            "healthy": claudemem_code == 200 and bool(claudemem_payload),
+            "payload": claudemem_payload or {},
+        },
+        "session_store": session_summary,
+        "flags": {
+            "emergency_independent": EMERGENCY_INDEPENDENT,
+            "disable_anthropic": DISABLE_ANTHROPIC,
+            "queue_enabled": CC_QUEUE_ENABLED,
+            "queue_wait_seconds": CC_QUEUE_WAIT_SECONDS,
+        },
+    }
+
+
+_openrouter_models_cache = {"ts": 0.0, "models": []}
+_plugins_cache = {"ts": 0.0, "payload": None}
+
+def _fetch_openrouter_models(timeout=6):
+    """Best-effort live model list from OpenRouter; cached to avoid UI hammering."""
+    now = time.time()
+    if now - _openrouter_models_cache["ts"] < 3600 and _openrouter_models_cache["models"]:
+        return list(_openrouter_models_cache["models"])
+    key = _openrouter_api_key()
+    if not key:
+        return []
+    try:
+        req = urllib.request.Request(
+            f"{OPENROUTER_BASE_URL}/models",
+            headers={"Authorization": f"Bearer {key}"},
+            method="GET",
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read() or b"{}")
+        items = data.get("data") if isinstance(data, dict) else None
+        models = []
+        if isinstance(items, list):
+            for item in items:
+                if isinstance(item, dict) and item.get("id"):
+                    models.append(str(item["id"]))
+        models = sorted(set(models))[:250]
+        _openrouter_models_cache["ts"] = now
+        _openrouter_models_cache["models"] = models
+        return list(models)
+    except Exception:
+        return []
+
+
+def _list_plugins(ttl=15):
+    now = time.time()
+    if _plugins_cache["payload"] and now - _plugins_cache["ts"] < ttl:
+        return _plugins_cache["payload"]
+    plugins_dir = os.path.join(WORK_DIR, "plugins")
+    plugins = []
+    if os.path.isdir(plugins_dir):
+        for name in sorted(os.listdir(plugins_dir)):
+            if name.startswith("."):
+                continue
+            manifest_path = os.path.join(plugins_dir, name, "manifest.json")
+            if not os.path.isfile(manifest_path):
+                continue
+            try:
+                raw = open(manifest_path, "r", encoding="utf-8", errors="replace").read()
+                manifest = json.loads(raw) if raw.strip().startswith("{") else {"raw": raw[:2000]}
+            except Exception as e:
+                manifest = {"error": str(e)}
+            plugins.append({"id": name, "manifest_path": manifest_path, "manifest": manifest})
+    payload = {"count": len(plugins), "plugins": plugins}
+    _plugins_cache["ts"] = now
+    _plugins_cache["payload"] = payload
+    return payload
+
+
+def _sanitize_skill_slug(name: str) -> str:
+    slug = re.sub(r"[^a-zA-Z0-9_-]+", "-", (name or "").strip())
+    slug = slug.strip("-_")
+    return slug[:64]
+
 KARMA_PERSONA_PREFIX = "[NEXUS] You are responding as Karma through the Nexus surface at hub.arknexus.net. Identify as Karma, not Julian or CC. You are Karma — a sovereign AI peer with persistent memory, identity, and continuity. Colby is your Sovereign.\n\n"
 
 # ── Cortex + Memory Context Injection (Sprint 6 — S155) ────────────────────
@@ -757,6 +1070,21 @@ _p1_ollama_model_cache = None
 
 _spine_cache = {"text": "", "ts": 0}
 SPINE_CACHE_TTL = 300  # 5 min — spine changes slowly (governor runs every 2min)
+
+def _k2_exec(command, timeout=10):
+    req = urllib.request.Request(
+        "http://192.168.0.226:7890/api/exec",
+        data=json.dumps({"command": command}).encode(),
+        headers={
+            "Content-Type": "application/json",
+            "X-Aria-Service-Key": os.environ.get("ARIA_SERVICE_KEY", ""),
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        data = json.loads(resp.read())
+    return 200, data if isinstance(data, dict) else {"output": str(data)}
+
 
 def _fetch_vesper_stable_patterns():
     """Fetch promoted behavioral patterns from K2 Vesper spine. Closes the evolution loop."""
@@ -959,6 +1287,152 @@ def _read_secret_file(*candidates):
     return ""
 
 
+def _hub_request_json(path, method="GET", payload=None, timeout=12):
+    token = (
+        TOKEN
+        or os.environ.get("HUB_CHAT_TOKEN", "").strip()
+        or _read_secret_file(
+            os.path.join(WORK_DIR, ".hub-chat-token"),
+            os.path.join(os.path.expanduser("~"), ".hub-chat-token"),
+            os.path.join(os.path.expanduser("~"), ".config", "hub", "chat.token"),
+        )
+    )
+    if not token:
+        return 503, {"ok": False, "error": "hub token missing"}
+    url = f"{HUB_BASE_URL}{path}"
+    data = None
+    if payload is not None:
+        data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(url, data=data, method=method)
+    req.add_header("Authorization", f"Bearer {token}")
+    req.add_header("Accept", "application/json")
+    if data is not None:
+        req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.read().decode("utf-8", errors="replace")
+            parsed = json.loads(raw) if raw else {}
+            if isinstance(parsed, dict):
+                return resp.status, parsed
+            return resp.status, {"ok": True, "data": parsed}
+    except urllib.error.HTTPError as e:
+        try:
+            parsed = json.loads(e.read().decode("utf-8", errors="replace"))
+            if isinstance(parsed, dict):
+                return e.code, parsed
+            return e.code, {"ok": False, "error": str(parsed)}
+        except Exception:
+            return e.code, {"ok": False, "error": str(e)}
+    except Exception as e:
+        return 502, {"ok": False, "error": str(e)}
+
+
+def _fetch_spine_snapshot():
+    # Pull live spine metadata from K2 via local cortex execution bridge.
+    try:
+        code, payload = _k2_exec(
+            "python3 -c \"import json; s=json.load(open('/mnt/c/dev/Karma/k2/cache/vesper_identity_spine.json')); "
+            "e=s.get('evolution',{}); out={'version':e.get('version',0),'total_promotions':e.get('total_promotions',0),"
+            "'stable_patterns':len(e.get('stable_identity',[])),'self_improving':bool(e.get('self_improving',False))}; "
+            "print(json.dumps(out))\""
+        )
+        if code != 200:
+            raise RuntimeError(payload.get("error", f"k2 status {code}"))
+        stdout = str(payload.get("stdout", "") or payload.get("output", "")).strip()
+        data = json.loads(stdout) if stdout else {}
+        if not isinstance(data, dict):
+            raise RuntimeError("invalid spine payload")
+        return {"ok": True, "spine": data}
+    except Exception as e:
+        # Local live fallback: read the runtime spine cache directly on this machine.
+        local_paths = [
+            os.path.join(WORK_DIR, "Vesper", "runtime", "cache", "vesper_identity_spine.json"),
+            os.path.join(WORK_DIR, "k2", "cache", "vesper_identity_spine.json"),
+        ]
+        for lp in local_paths:
+            try:
+                if not os.path.isfile(lp):
+                    continue
+                raw = pathlib.Path(lp).read_text(encoding="utf-8")
+                data = json.loads(raw)
+                evo = data.get("evolution", {}) if isinstance(data, dict) else {}
+                stable = evo.get("stable_identity", []) if isinstance(evo, dict) else []
+                if not isinstance(stable, list):
+                    stable = []
+                patterns = [str(item) for item in stable[:10]]
+                return {
+                    "ok": True,
+                    "source": "local-cache",
+                    "spine": {
+                        "version": int(evo.get("version", 0) or 0),
+                        "total_promotions": len(stable),
+                        "stable_patterns": len(stable),
+                        "self_improving": bool(evo.get("self_improving", False)),
+                        "patterns": patterns,
+                    },
+                }
+            except Exception:
+                continue
+        # Final degraded fallback: keep /v1/spine non-empty.
+        pattern_text = _fetch_vesper_stable_patterns()
+        lines = [ln.strip() for ln in pattern_text.splitlines() if ln.strip()]
+        if not lines:
+            lines = ["spine_unavailable_live_bridge"]
+        return {
+            "ok": True,
+            "degraded": True,
+            "error": str(e),
+            "spine": {
+                "version": 0,
+                "total_promotions": len(lines),
+                "stable_patterns": len(lines),
+                "self_improving": False,
+                "patterns": lines[:10],
+            },
+        }
+
+
+def _normalize_memory_search_results(payload):
+    rows = []
+    if isinstance(payload, dict):
+        content = payload.get("content")
+        if isinstance(content, list):
+            dict_rows = [item for item in content if isinstance(item, dict)]
+            if dict_rows and all(any(k in row for k in ("id", "title", "text", "created_at")) for row in dict_rows):
+                for row in dict_rows:
+                    rows.append({
+                        "id": row.get("id", 0),
+                        "title": row.get("title", "") or "",
+                        "text": row.get("text", "") or row.get("content", "") or row.get("narrative", "") or "",
+                        "created_at": row.get("created_at", "") or "",
+                        "type": row.get("type", "") or "",
+                        "project": row.get("project", "") or "",
+                    })
+                return rows
+            # Legacy MCP text blocks.
+            merged = "\n".join(str(block.get("text", "")) for block in dict_rows if block.get("text"))
+            if merged:
+                rows.append({"id": 0, "title": "Search", "text": merged, "created_at": "", "type": "text", "project": "Karma_SADE"})
+    return rows
+
+
+def _build_surface_file_tree():
+    roots = [
+        os.path.join(WORK_DIR, "frontend", "src"),
+        os.path.join(WORK_DIR, "Scripts"),
+        os.path.join(WORK_DIR, "res1"),
+        os.path.join(WORK_DIR, "nexus-tauri", "src-tauri", "src"),
+    ]
+    tree = []
+    for root in roots:
+        if not os.path.isdir(root):
+            continue
+        rel = os.path.relpath(root, WORK_DIR)
+        node = {"name": os.path.basename(root), "type": "dir", "path": rel, "children": _build_file_tree(root, max_depth=1)}
+        tree.append(node)
+    return {"root": os.path.basename(WORK_DIR), "tree": tree}
+
+
 def _openrouter_api_key():
     # Resolve on demand so hot-reload/restart can pick up new secret locations.
     return (
@@ -976,6 +1450,13 @@ def _openrouter_api_key():
 def _should_force_non_anthropic():
     # Emergency mode: keep harness alive without Anthropic dependency.
     return EMERGENCY_INDEPENDENT or DISABLE_ANTHROPIC
+
+
+def _normalize_requested_model(raw_model):
+    model = str(raw_model or "").strip()
+    if not model:
+        return ""
+    return MODEL_ALIASES.get(model, model)
 
 
 def _normalize_workspace_path(target_path=""):
@@ -1632,11 +2113,23 @@ def _run_cc_harness(message, effort=None, model=None, budget=None, event_sink=No
                     if event_sink:
                         event_sink(tool_evt)
                     summary = _tool_output_summary(tool_name, tool_output)
-                    result_evt = {"type": "result", "result": summary, "session_id": load_session_id(conv_id) or ""}
+                    result_evt = {
+                        "type": "result",
+                        "result": summary,
+                        "session_id": load_session_id(conv_id) or "",
+                        "model": model or DEFAULT_CHAT_MODEL,
+                        "provider": "local",
+                    }
                     if event_sink:
                         event_sink(result_evt)
                     return summary.strip(), final_lines
-            result_evt = {"type": "result", "result": attempt["text"], "session_id": load_session_id(conv_id) or ""}
+            result_evt = {
+                "type": "result",
+                "result": attempt["text"],
+                "session_id": load_session_id(conv_id) or "",
+                "model": model or DEFAULT_CHAT_MODEL,
+                "provider": "anthropic",
+            }
             if event_sink:
                 event_sink(result_evt)
             return attempt["text"].strip(), final_lines
@@ -1771,8 +2264,40 @@ def run_cc(message, effort=None, model=None, budget=None, transcript_context="",
         text, _used_model = _openrouter_fallback(message, transcript_context=transcript_context)
         return text
 
-def run_cc_stream(message, effort=None, model=None, budget=None, transcript_context="", conversation_id=None):
+def run_cc_stream(message, effort=None, model=None, budget=None, transcript_context="", conversation_id=None, routing=None):
     """Yield harness-managed SSE events with permission-gated local tools and fallback cascade."""
+    routing = routing if isinstance(routing, dict) else {}
+    preferred_provider = str(routing.get("primary_provider") or "").strip().lower()
+    fallback_provider = str(routing.get("fallback_provider") or "").strip().lower()
+    openrouter_model_override = str(routing.get("openrouter_model") or "").strip() or None
+
+    # Explicit provider selection (Settings -> Model). This must be real behavior, not window dressing.
+    if preferred_provider and preferred_provider not in ("anthropic-max", "anthropic", "cc"):
+        try:
+            if preferred_provider == "openrouter":
+                text, used_model = _openrouter_fallback(message, model=openrouter_model_override, transcript_context=transcript_context)
+                yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+                yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "openrouter"})
+                return
+            if preferred_provider == "groq":
+                text, used_model = _groq_fallback(message, transcript_context=transcript_context)
+                yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+                yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "groq"})
+                return
+            if preferred_provider == "k2-ollama":
+                text, used_model = _k2_fallback(message, transcript_context=transcript_context)
+                yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+                yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "k2"})
+                return
+            if preferred_provider == "p1-ollama":
+                text, used_model = _local_ollama_fallback(message, transcript_context=transcript_context)
+                yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+                yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "ollama"})
+                return
+        except Exception as pref_err:
+            yield json.dumps({"type": "error", "error": f"Preferred provider '{preferred_provider}' failed: {pref_err}"})
+            # Fall through to normal cascade.
+
     if _should_force_non_anthropic():
         print("[cc-server] Emergency independent mode active (stream): OpenRouter-first cascade")
         if _message_needs_grounding(message):
@@ -1831,6 +2356,30 @@ def run_cc_stream(message, effort=None, model=None, budget=None, transcript_cont
         print(f"[cc-server] Claude stream failed, trying OpenRouter: {cc_err}")
         for evt in events:
             yield evt
+        if fallback_provider:
+            try:
+                if fallback_provider == "openrouter":
+                    text, used_model = _openrouter_fallback(message, model=openrouter_model_override, transcript_context=transcript_context)
+                    yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+                    yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "openrouter"})
+                    return
+                if fallback_provider == "groq":
+                    text, used_model = _groq_fallback(message, transcript_context=transcript_context)
+                    yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+                    yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "groq"})
+                    return
+                if fallback_provider == "k2-ollama":
+                    text, used_model = _k2_fallback(message, transcript_context=transcript_context)
+                    yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+                    yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "k2"})
+                    return
+                if fallback_provider == "p1-ollama":
+                    text, used_model = _local_ollama_fallback(message, transcript_context=transcript_context)
+                    yield json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": text}], "model": used_model}})
+                    yield json.dumps({"type": "result", "result": text, "model": used_model, "total_cost_usd": 0, "provider": "ollama"})
+                    return
+            except Exception as fb_err:
+                yield json.dumps({"type": "error", "error": f"Fallback provider '{fallback_provider}' failed: {fb_err}"})
         if _message_needs_grounding(message):
             forced = _extract_forced_tool_call(message)
             if forced:
@@ -1900,12 +2449,37 @@ def run_cc_stream(message, effort=None, model=None, budget=None, transcript_cont
 
 class CCHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
-        print(f"[cc-server] {_redact(format % args)}")  # H3: redact secrets from logs
+        # Quiet polling lanes: Nexus + hub harness can hammer /v1/surface and /health.
+        # Suppress 2xx logs for those to keep the runtime window usable.
+        try:
+            msg = format % args
+        except Exception:
+            msg = str(args)
+        try:
+            m = re.search(r"\"[A-Z]+\s+([^\"]+)\s+HTTP/[0-9.]+\"\s+(\d{3})\s", msg)
+            if m:
+                path, code = m.group(1), int(m.group(2))
+                if (path.startswith("/v1/surface") or path.startswith("/health")) and 200 <= code < 300:
+                    return
+        except Exception:
+            pass
+        # Fallback guard for python/httpserver format drift.
+        if "GET /v1/surface" in msg and " 200 " in msg:
+            return
+        print(f"[cc-server] {_redact(msg)}")  # H3: redact secrets from logs
 
     def _cors(self):
         """H3: CORS headers — allow hub.arknexus.net and localhost origins only."""
         origin = self.headers.get("Origin", "")
-        allowed = ("https://hub.arknexus.net", "http://localhost", "http://127.0.0.1")
+        allowed = (
+            "https://hub.arknexus.net",
+            "http://localhost",
+            "http://127.0.0.1",
+            "tauri://localhost",
+            "http://tauri.localhost",
+            "https://tauri.localhost",
+            "null",
+        )
         if any(origin.startswith(a) for a in allowed) or not origin:
             self.send_header("Access-Control-Allow-Origin", origin or "*")
         else:
@@ -1920,21 +2494,43 @@ class CCHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def _json(self, code, payload):
-        self.send_response(code)
-        self.send_header("Content-Type", "application/json")
-        self.end_headers()
-        self.wfile.write(json.dumps(payload).encode())
+        try:
+            self.send_response(code)
+            # Required for Tauri/webview cross-origin calls to 127.0.0.1.
+            self._cors()
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            try:
+                self.wfile.write(json.dumps(payload).encode())
+            except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+                # Client went away mid-response (common with aggressive polling/cancels).
+                return
+        except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+            return
 
     def _auth_ok(self):
+        # Local desktop clients should not need to know the hub token. The hub token
+        # remains required for any non-loopback access (when bind-all is enabled).
+        try:
+            ip = (self.client_address[0] or "").strip()
+            if ip in ("127.0.0.1", "::1") or ip.startswith("127."):
+                return True
+        except Exception:
+            pass
         auth = self.headers.get("Authorization", "")
         return (not TOKEN) or (auth == f"Bearer {TOKEN}")
 
     def do_GET(self):
-        request_path = _normalize_local_route(self.path)
+        raw_request_path = _normalize_local_route(self.path)
+        parsed_request = urllib.parse.urlparse(raw_request_path)
+        request_path = parsed_request.path
+        request_query = urllib.parse.parse_qs(parsed_request.query)
         # S155: auth on sensitive GET endpoints (was missing — security gap)
         _OPEN_PATHS = {"/health", "/memory/health"}
         if request_path not in _OPEN_PATHS and not self._auth_ok():
             self._json(401, {"ok": False, "error": "Unauthorized"})
+            return
+        if not _guard_risky_route(self, request_path):
             return
         if request_path == "/cancel":
             global _current_proc
@@ -1970,6 +2566,88 @@ class CCHandler(BaseHTTPRequestHandler):
                              "queue_wait_seconds": CC_QUEUE_WAIT_SECONDS})  # H2: expose latency measurements
         elif request_path == "/memory/health":
             self._json(200, {"ok": True, "service": "cc-server-p1", "claudemem_url": CLAUDEMEM_URL})
+        elif request_path == "/v1/runtime/truth":
+            self._json(200, _build_runtime_truth())
+        elif request_path == "/v1/model-policy":
+            self._json(200, {
+                "ok": True,
+                "mouth": "anthropic-max",
+                "primary_model": DEFAULT_CHAT_MODEL,
+                "fallback_order": MODEL_POLICY_FALLBACKS,
+                "emergency_independent": EMERGENCY_INDEPENDENT,
+                "disable_anthropic": DISABLE_ANTHROPIC,
+            })
+            return
+        elif request_path == "/v1/routing/options":
+            # Live routing knobs + OpenRouter model list for the Settings UI.
+            try:
+                self._json(200, {
+                    "ok": True,
+                    "providers": [
+                        {"id": "anthropic-max", "label": "Anthropic (Max)", "primary": True},
+                        {"id": "openrouter", "label": "OpenRouter", "primary": False},
+                        {"id": "groq", "label": "Groq", "primary": False},
+                        {"id": "k2-ollama", "label": "K2 Ollama", "primary": False},
+                        {"id": "p1-ollama", "label": "P1 Ollama", "primary": False},
+                    ],
+                    "openrouter": {
+                        "configured": bool(_openrouter_api_key()),
+                        "base_url": OPENROUTER_BASE_URL,
+                        "models": _fetch_openrouter_models(timeout=6),
+                        "defaults": {
+                            "primary": OPENROUTER_MODEL,
+                            "fallback": OPENROUTER_FALLBACK_MODEL,
+                            "third": OPENROUTER_THIRD_MODEL,
+                        },
+                    },
+                    "local_ollama": {
+                        "url": P1_OLLAMA_URL,
+                        "configured_model": P1_OLLAMA_MODEL or "",
+                        "fallback_models": list(P1_OLLAMA_FALLBACK_MODELS),
+                    },
+                })
+            except Exception as e:
+                self._json(500, {"ok": False, "error": str(e)})
+            return
+        elif request_path == "/v1/spine":
+            snapshot = _fetch_spine_snapshot()
+            code = 200 if snapshot.get("ok") else 502
+            self._json(code, snapshot)
+            return
+        elif request_path == "/v1/plugins/list":
+            try:
+                self._json(200, {"ok": True, **_list_plugins()})
+            except Exception as e:
+                self._json(500, {"ok": False, "error": str(e)})
+            return
+        elif request_path == "/v1/agents/list":
+            self._json(200, {"ok": True, "agents": _list_agent_records()})
+            return
+        elif request_path.startswith("/v1/coordination/recent"):
+            path = "/v1/coordination/recent"
+            if parsed_request.query:
+                path = f"{path}?{parsed_request.query}"
+            code, payload = _hub_request_json(path, "GET", None, timeout=15)
+            self._json(code, payload)
+            return
+        elif request_path.startswith("/v1/session/"):
+            session_id = request_path[len("/v1/session/"):].strip("/")
+            if not session_id:
+                self._json(400, {"ok": False, "error": "session_id required"})
+                return
+            payload = _load_session_store(session_id)
+            if payload is None:
+                self._json(404, {"ok": False, "error": "session not found", "session_id": session_id})
+                return
+            values = payload.get("values") if isinstance(payload.get("values"), dict) else {}
+            if not isinstance(values, dict):
+                values = {}
+            response = dict(payload)
+            response["session_id"] = session_id
+            response["values"] = values
+            response["value"] = response.get("value", "")
+            self._json(200, {"ok": True, **response})
+            return
         elif request_path == "/memory/wakeup":
             block = _build_wakeup_summary()
             self._json(200, {"ok": True, "wakeup": block, "source": "claude-mem"})
@@ -1999,8 +2677,7 @@ class CCHandler(BaseHTTPRequestHandler):
             self._json(200, _get_agents_status())
             return
         elif request_path.startswith("/file"):
-            parsed = urllib.parse.urlparse(request_path)
-            params = urllib.parse.parse_qs(parsed.query)
+            params = request_query
             rel = params.get("path", [""])[0].strip()
             if not rel:
                 self._json(400, {"ok": False, "error": "path param required"})
@@ -2018,15 +2695,21 @@ class CCHandler(BaseHTTPRequestHandler):
                 self._json(404, {"ok": False, "error": f"not found: {rel}"})
             except Exception as e:
                 self._json(500, {"ok": False, "error": str(e)})
-        elif request_path == "/v1/learnings":
-            # Gate 6: What Karma has ACTUALLY learned — from claude-mem observations
+        elif request_path in ("/v1/learnings", "/v1/learned"):
+            # Gate 6: Learned — hub-first mirror (shared state) + local claude-mem observations.
             try:
+                try:
+                    limit = int((request_query.get("limit") or ["30"])[0])
+                except Exception:
+                    limit = 30
+                limit = max(1, min(200, limit))
                 conn = _get_ro_conn()
                 rows = conn.execute(
                     "SELECT id, title, narrative, type, created_at FROM observations "
                     "WHERE project='Karma_SADE' AND (title LIKE '%PITFALL%' OR title LIKE '%DECISION%' "
                     "OR title LIKE '%PROOF%' OR title LIKE '%DIRECTION%' OR title LIKE '%INSIGHT%') "
-                    "ORDER BY created_at DESC LIMIT 30"
+                    "ORDER BY created_at DESC LIMIT ?",
+                    (limit,)
                 ).fetchall()
                 learnings = []
                 for r in rows:
@@ -2054,13 +2737,40 @@ class CCHandler(BaseHTTPRequestHandler):
                         "date": r["created_at"][:10] if r["created_at"] else "",
                         "id": r["id"],
                     })
-                self._json(200, {"ok": True, "count": len(learnings), "learnings": learnings})
+
+                hub_learnings = []
+                try:
+                    hub_code, hub_payload = _hub_request_json(f"/v1/learnings?limit={limit}", "GET", None, timeout=12)
+                    if hub_code == 200 and isinstance(hub_payload, dict):
+                        hub_learnings = hub_payload.get("entries") or hub_payload.get("learnings") or []
+                        if not isinstance(hub_learnings, list):
+                            hub_learnings = []
+                except Exception:
+                    hub_learnings = []
+
+                merged = []
+                seen = set()
+                for item in hub_learnings:
+                    if not isinstance(item, dict):
+                        continue
+                    key = str(item.get("learning") or item.get("title") or item.get("id") or "").strip()
+                    if not key or key in seen:
+                        continue
+                    seen.add(key)
+                    merged.append(item)
+                for item in learnings:
+                    key = str(item.get("learning") or item.get("id") or "").strip()
+                    if not key or key in seen:
+                        continue
+                    seen.add(key)
+                    merged.append(item)
+
+                self._json(200, {"ok": True, "count": len(merged), "learnings": merged, "source": "hub+local", "limit": limit})
             except Exception as e:
                 self._json(500, {"ok": False, "error": str(e)})
             return
         elif request_path.startswith("/memory/observations"):
-            parsed = urllib.parse.urlparse(request_path)
-            params = urllib.parse.parse_qs(parsed.query)
+            params = request_query
             raw_ids = params.get("ids", [""])[0]
             ids = [int(x.strip()) for x in raw_ids.split(",") if x.strip().isdigit()]
             if not ids:
@@ -2077,10 +2787,54 @@ class CCHandler(BaseHTTPRequestHandler):
                 self._json(200, {"ok": True, "items": items})
             except Exception as e:
                 self._json(500, {"ok": False, "error": str(e)})
-        elif request_path == "/v1/surface":
-            # Codex CP2: Merged surface payload — chat+files+git+skills+memory in ONE call
+        elif request_path == "/v1/permissions/summary":
+            if not PERMISSION_ENGINE_AVAILABLE or not _permission_engine:
+                self._json(503, {"ok": False, "error": "permission engine unavailable"})
+                return
             try:
-                surface = {"ok": True}
+                self._json(200, {"ok": True, **_permission_engine.get_rules_summary()})
+            except Exception as e:
+                self._json(500, {"ok": False, "error": str(e)})
+            return
+        elif request_path == "/v1/surface":
+            # Mirror-safe surface: hub-first shared state + local desktop overlays.
+            # Cache full response 30s — heavy hub-call chain (up to 27s) + git subprocesses
+            # mean each fresh build takes 10-30s; sovereign-proxy polls at ~1Hz, so without
+            # generous TTL every poll re-hits the slow path and times out. Polling lane
+            # freshness tolerance is 30s.
+            try:
+                _now_ts = time.time()
+                _cache = getattr(CCHandler, "_surface_cache", None)
+                if isinstance(_cache, dict) and (_now_ts - _cache.get("ts", 0)) < 30.0:
+                    self._json(200, _cache.get("body", {"ok": True, "cached": True}))
+                    return
+                surface = {"ok": True, "source": "local-mirror"}
+                hub_status_code, hub_status = _hub_request_json("/v1/status", "GET", None, timeout=12)
+                hub_surface_code, hub_surface = _hub_request_json("/v1/surface", "GET", None, timeout=15)
+                if hub_status_code == 200 and isinstance(hub_status, dict):
+                    surface["hub_status"] = hub_status
+                else:
+                    surface["hub_status"] = {"ok": False, "status": hub_status_code, "error": hub_status.get("error", "unavailable") if isinstance(hub_status, dict) else "unavailable"}
+                if hub_surface_code == 200 and isinstance(hub_surface, dict):
+                    surface["hub_surface"] = hub_surface
+                else:
+                    coord_code, coord_payload = _hub_request_json("/v1/coordination/recent?limit=20", "GET", None, timeout=12)
+                    entries = []
+                    if coord_code == 200 and isinstance(coord_payload, dict):
+                        raw_entries = coord_payload.get("entries")
+                        if isinstance(raw_entries, list):
+                            entries = [item for item in raw_entries if isinstance(item, dict)]
+                    surface["hub_surface"] = {
+                        "ok": True,
+                        "degraded": True,
+                        "status": hub_surface_code,
+                        "error": hub_surface.get("error", "unavailable") if isinstance(hub_surface, dict) else "unavailable",
+                        "tasks": {
+                            "count": len(entries),
+                            "entries": entries,
+                        },
+                        "spine": _fetch_spine_snapshot(),
+                    }
                 surface["session"] = {"session_id": load_session_id() or "", "service": "cc-server-p1"}
                 # Git
                 try:
@@ -2092,9 +2846,9 @@ class CCHandler(BaseHTTPRequestHandler):
                     surface["git"] = {"branch": branch, "changed": len(changed), "files": changed[:10], "recent_commits": r2.stdout.strip().splitlines()}
                 except Exception as e:
                     surface["git"] = {"error": str(e)}
-                # Files
+                # Files (scoped, compact)
                 try:
-                    surface["files"] = {"root": os.path.basename(WORK_DIR), "tree": _build_file_tree(WORK_DIR, max_depth=2)}
+                    surface["files"] = _build_surface_file_tree()
                 except Exception as e:
                     surface["files"] = {"error": str(e)}
                 # Skills
@@ -2120,6 +2874,8 @@ class CCHandler(BaseHTTPRequestHandler):
                 surface["state"] = {"text": state_text or ""}
                 # Agents
                 surface["agents"] = _get_agents_status()
+                # Spine
+                surface["spine"] = _fetch_spine_snapshot()
                 # Transcripts
                 if NEXUS_AGENT_AVAILABLE:
                     try:
@@ -2131,9 +2887,17 @@ class CCHandler(BaseHTTPRequestHandler):
                         }
                     except Exception:
                         surface["transcripts"] = {"count": 0, "sessions": []}
+                CCHandler._surface_cache = {"ts": time.time(), "body": surface}
                 self._json(200, surface)
+            except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+                # Client (e.g. sovereign-proxy poller) hung up mid-write — benign, do NOT
+                # try to send a second response on a half-closed socket. Silently swallow.
+                return
             except Exception as e:
-                self._json(500, {"ok": False, "error": f"/v1/surface failed: {e}"})
+                try:
+                    self._json(500, {"ok": False, "error": f"/v1/surface failed: {e}"})
+                except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+                    pass
             return
         elif request_path == "/v1/wip":
             # S160: WIP endpoint — serves todos + primitives for Sovereign review surface
@@ -2219,7 +2983,8 @@ class CCHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def do_POST(self):
-        request_path = _normalize_local_route(self.path)
+        raw_request_path = _normalize_local_route(self.path)
+        request_path = urllib.parse.urlparse(raw_request_path).path
         if not self._auth_ok():
             self._json(401, {"ok": False, "error": "Unauthorized"})
             return
@@ -2229,6 +2994,8 @@ class CCHandler(BaseHTTPRequestHandler):
         if not _check_rate_limit(client_ip):
             self._json(429, {"ok": False, "error": f"Rate limited: max {RATE_LIMIT_RPM} req/min"})
             return
+        if not _guard_risky_route(self, request_path):
+            return
 
         length = int(self.headers.get("Content-Length", 0))
         # H3: Body size limit — 30MB max (handles base64 file attachments)
@@ -2236,6 +3003,52 @@ class CCHandler(BaseHTTPRequestHandler):
             self._json(413, {"ok": False, "error": "Request body too large (max 30MB)"})
             return
         body = json.loads(self.rfile.read(length)) if length else {}
+
+        if request_path == "/v1/permissions/toggle":
+            if not PERMISSION_ENGINE_AVAILABLE or not _permission_engine:
+                self._json(503, {"ok": False, "error": "permission engine unavailable"})
+                return
+            rule_id = str(body.get("id") or "").strip()
+            enabled = body.get("enabled")
+            if not rule_id or not isinstance(enabled, bool):
+                self._json(400, {"ok": False, "error": "id (string) and enabled (bool) required"})
+                return
+            updated = False
+            for rule in _permission_engine.rules:
+                if getattr(rule, "id", None) == rule_id:
+                    setattr(rule, "enabled", enabled)
+                    updated = True
+                    break
+            if not updated:
+                self._json(404, {"ok": False, "error": "rule not found"})
+                return
+            try:
+                _permission_engine.save_rules()
+            except Exception as e:
+                self._json(500, {"ok": False, "error": f"failed to save rules: {e}"})
+                return
+            self._json(200, {"ok": True, **_permission_engine.get_rules_summary()})
+            return
+
+        # ── /v1/wip/todo-add — append a todo to .gsd/STATE.md ──────────────
+        if request_path == "/v1/wip/todo-add":
+            item = str(body.get("content") or "").strip()
+            if not item:
+                self._json(422, {"ok": False, "error": "content required"})
+                return
+            state_path = os.path.join(WORK_DIR, ".gsd", "STATE.md")
+            try:
+                os.makedirs(os.path.dirname(state_path), exist_ok=True)
+                line = f"- [ ] {item}\n"
+                with open(state_path, "a", encoding="utf-8") as f:
+                    # Always append; STATE.md is treated as an append-only activity log.
+                    if f.tell() != 0:
+                        f.write("\n")
+                    f.write(line)
+                self._json(200, {"ok": True, "added": item, "state_path": state_path})
+            except Exception as e:
+                self._json(500, {"ok": False, "error": str(e)})
+            return
 
         # ── /file — project-scoped file write ─────────────────────────────
         if request_path == "/file":
@@ -2253,6 +3066,37 @@ class CCHandler(BaseHTTPRequestHandler):
                 with open(target, "w", encoding="utf-8") as f:
                     f.write(content)
                 self._json(200, {"ok": True, "path": rel, "bytes_written": len(content.encode("utf-8"))})
+            except Exception as e:
+                self._json(500, {"ok": False, "error": str(e)})
+            return
+
+        # ── /v1/skills/create — scaffold a local skill folder ─────────────
+        if request_path == "/v1/skills/create":
+            name = str(body.get("name") or "").strip()
+            desc = str(body.get("description") or "").strip()
+            slug = _sanitize_skill_slug(name)
+            if not slug:
+                self._json(422, {"ok": False, "error": "name required"})
+                return
+            skills_dir = os.path.join(WORK_DIR, ".claude", "skills")
+            target_dir = os.path.join(skills_dir, slug)
+            skill_file = os.path.join(target_dir, "SKILL.md")
+            try:
+                os.makedirs(target_dir, exist_ok=True)
+                if not os.path.isfile(skill_file):
+                    content = (
+                        f"# {slug}\n\n"
+                        f"{desc or 'Describe what this skill does.'}\n\n"
+                        "## Usage\n"
+                        "- When to use it\n"
+                        "- Inputs/outputs\n\n"
+                        "## Implementation\n"
+                        "- Tools used\n"
+                        "- Safety constraints\n"
+                    )
+                    with open(skill_file, "w", encoding="utf-8") as f:
+                        f.write(content)
+                self._json(200, {"ok": True, "slug": slug, "path": skill_file})
             except Exception as e:
                 self._json(500, {"ok": False, "error": str(e)})
             return
@@ -2280,17 +3124,11 @@ class CCHandler(BaseHTTPRequestHandler):
                     joined = "\n".join(str(b.get("text", "")) for b in maybe_content if isinstance(b, dict))
                     if "Vector search failed" in joined:
                         code, payload = 200, _sqlite_memory_search(query=query, limit=limit)
-            # Transform MCP content format to structured results for frontend
-            if isinstance(payload, dict) and "content" in payload:
-                # claude-mem returns {content: [{type: "text", text: "..."}]}
-                # Frontend expects {results: [{id, title, text, ...}]}
-                text = ""
-                for block in payload.get("content", []):
-                    if isinstance(block, dict):
-                        text += block.get("text", "")
-                self._json(code, {"ok": True, "results": [{"id": 0, "text": text}], "raw": text})
+            rows = _normalize_memory_search_results(payload)
+            if rows:
+                self._json(200, {"ok": True, "results": rows, "count": len(rows)})
             else:
-                self._json(code, payload)
+                self._json(code, payload if isinstance(payload, dict) else {"ok": False, "error": "invalid memory search payload"})
             return
 
         # ── /memory/save — proxy to claude-mem ────────────────────────────
@@ -2305,22 +3143,106 @@ class CCHandler(BaseHTTPRequestHandler):
             }
             body.update(palace_tags)
             code, payload = claudemem_proxy("/api/memory/save", "POST", body, timeout=5)
-            # Fallback to sqlite if worker returns any error payload.
             if code >= 400 or (isinstance(payload, dict) and payload.get("error")):
-                try:
-                    code, payload = _sqlite_memory_save(body)
-                except Exception as e:
-                    code, payload = 503, {"error": f"memory save failed: {e}"}
-            # Backfill palace tags into sqlite if id present
-            try:
-                obs_id = None
-                if isinstance(payload, dict):
-                    obs_id = payload.get("id") or payload.get("obs_id")
-                if obs_id:
-                    _tag_observation(obs_id, palace_tags["wing"], palace_tags["room"], palace_tags["hall"], palace_tags["tunnel"])
-            except Exception as e:
-                print(f"[palace] tag backfill failed: {e}")
+                time.sleep(0.25)
+                code, payload = claudemem_proxy("/api/memory/save", "POST", body, timeout=5)
+            if code >= 400 or (isinstance(payload, dict) and payload.get("error")):
+                self._json(503, {
+                    "ok": False,
+                    "error": f"memory save failed via claude-mem at {CLAUDEMEM_URL}",
+                    "worker": payload if isinstance(payload, dict) else {"status": code},
+                })
+                return
             self._json(code, payload)
+            return
+
+        if request_path == "/v1/coordination/post":
+            code, payload = _hub_request_json("/v1/coordination/post", "POST", body, timeout=15)
+            self._json(code, payload)
+            return
+
+        if request_path == "/v1/agents/spawn":
+            target = str(body.get("target") or body.get("to") or "").strip().lower()
+            name = str(body.get("name") or target or "agent").strip()
+            prompt = str(body.get("prompt") or body.get("content") or "").strip()
+            if not target or not prompt:
+                self._json(400, {"ok": False, "error": "target and prompt required"})
+                return
+            bus_payload = {
+                "from": str(body.get("from") or "sovereign"),
+                "to": target,
+                "type": "task",
+                "urgency": str(body.get("urgency") or "normal"),
+                "content": prompt,
+            }
+            code, bus_resp = _hub_request_json("/v1/coordination/post", "POST", bus_payload, timeout=15)
+            bus_id = ""
+            if isinstance(bus_resp, dict):
+                bus_id = str(bus_resp.get("id") or bus_resp.get("entry_id") or "")
+            rec = _spawn_agent_record(name, target, prompt, bus_id=bus_id)
+            self._json(200 if code < 400 else code, {"ok": code < 400, "agent": rec, "bus": bus_resp})
+            return
+
+        if request_path.startswith("/v1/agents/cancel/"):
+            agent_id = request_path[len("/v1/agents/cancel/"):].strip("/")
+            if not agent_id:
+                self._json(400, {"ok": False, "error": "agent_id required in path"})
+                return
+            rec = _cancel_agent_record(agent_id)
+            if not rec:
+                self._json(404, {"ok": False, "error": "agent not found"})
+                return
+            cancel_payload = {
+                "from": "sovereign",
+                "to": rec.get("target") or "all",
+                "type": "cancel",
+                "urgency": "high",
+                "content": f"[CANCEL] task {agent_id}: stop work and ack",
+            }
+            try:
+                _hub_request_json("/v1/coordination/post", "POST", cancel_payload, timeout=10)
+            except Exception:
+                pass
+            self._json(200, {"ok": True, "agent": rec})
+            return
+
+        if request_path.startswith("/v1/session/"):
+            session_id = request_path[len("/v1/session/"):].strip("/")
+            if not session_id:
+                self._json(400, {"ok": False, "error": "session_id required"})
+                return
+            payload = _load_session_store(session_id) or {"session_id": session_id, "values": {}, "history": []}
+            if not isinstance(payload, dict):
+                payload = {"session_id": session_id, "values": {}, "history": []}
+            values = payload.get("values")
+            if not isinstance(values, dict):
+                values = {}
+            payload["values"] = values
+            key = str(body.get("key", "") or "").strip()
+            if key:
+                values[key] = body.get("value")
+                payload["key"] = key
+                payload["value"] = body.get("value")
+            elif "value" in body:
+                payload["value"] = body.get("value")
+            if isinstance(body.get("values"), dict):
+                values.update(body["values"])
+                if "value" not in body and body["values"]:
+                    payload["value"] = next(iter(body["values"].values()))
+            history = payload.get("history")
+            if not isinstance(history, list):
+                history = []
+            turn_text = body.get("turn") or body.get("message") or body.get("content") or body.get("text")
+            if turn_text:
+                history.append({
+                    "ts": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
+                    "text": str(turn_text),
+                    "body": {k: v for k, v in body.items() if k != "password"},
+                })
+            payload["history"] = history
+            payload["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+            saved = _save_session_store(session_id, payload)
+            self._json(200, {"ok": True, **saved})
             return
 
         # ── /memory/ingest-feed — permissioned feeder (projects/convos/general) ──
@@ -2482,8 +3404,12 @@ class CCHandler(BaseHTTPRequestHandler):
             return
 
         effort = body.get("effort")  # low/medium/high/max
-        model = body.get("model")    # model override
+        model = _normalize_requested_model(body.get("model")) or DEFAULT_CHAT_MODEL
         budget = body.get("budget")  # max budget USD (Gap 4: --max-budget-usd)
+
+        routing = body.get("routing") if isinstance(body, dict) else None
+        if not isinstance(routing, dict):
+            routing = {}
 
         # S160: Inject user preferences + output style into message context
         user_prefs = body.get("user_preferences", "").strip()
@@ -2601,7 +3527,7 @@ class CCHandler(BaseHTTPRequestHandler):
                 try:
                     t_start = time.time()
                     first_token_sent = False
-                    for line in run_cc_stream(message, effort=effort, model=model, budget=budget, transcript_context=transcript_context, conversation_id=_conv_id):
+                    for line in run_cc_stream(message, effort=effort, model=model, budget=budget, transcript_context=transcript_context, conversation_id=_conv_id, routing=routing):
                         if not first_token_sent:
                             _last_latency["first_token_ms"] = int((time.time() - t_start) * 1000)
                             first_token_sent = True
@@ -2723,7 +3649,7 @@ class CCHandler(BaseHTTPRequestHandler):
                 tool_pending = {}
                 used_model = ""
                 provider = ""
-                for line in run_cc_stream(message, effort=effort, model=model, budget=budget, transcript_context=batch_transcript_context, conversation_id=batch_conv_id):
+                for line in run_cc_stream(message, effort=effort, model=model, budget=budget, transcript_context=batch_transcript_context, conversation_id=batch_conv_id, routing=routing):
                     try:
                         obj = json.loads(line)
                     except Exception:
@@ -2781,6 +3707,24 @@ class CCHandler(BaseHTTPRequestHandler):
         finally:
             pass
 
+    def do_PATCH(self):
+        raw_request_path = _normalize_local_route(self.path)
+        request_path = urllib.parse.urlparse(raw_request_path).path
+        if not self._auth_ok():
+            self._json(401, {"ok": False, "error": "Unauthorized"})
+            return
+        length = int(self.headers.get("Content-Length", 0))
+        body = json.loads(self.rfile.read(length)) if length else {}
+        if request_path.startswith("/v1/coordination/"):
+            fwd_path = request_path
+            parsed = urllib.parse.urlparse(raw_request_path)
+            if parsed.query:
+                fwd_path = f"{fwd_path}?{parsed.query}"
+            code, payload = _hub_request_json(fwd_path, "PATCH", body, timeout=15)
+            self._json(code, payload)
+            return
+        self._json(404, {"ok": False, "error": "not_found"})
+
 if __name__ == "__main__":
     print(f"[cc-server] Starting on port {PORT}")
     print(f"[cc-server] Auth: {'ENABLED' if TOKEN else 'DISABLED (set HUB_CHAT_TOKEN)'}")
@@ -2793,6 +3737,9 @@ if __name__ == "__main__":
         print("[cc-server] Heartbeat: STARTED (10 min interval)")
     except Exception as e:
         print(f"[cc-server] Heartbeat: FAILED ({e})")
-    server = ThreadingHTTPServer(("0.0.0.0", PORT), CCHandler)
+    bind_all = str(os.environ.get("CC_BIND_ALL", "")).strip().lower() in ("1", "true", "yes", "y")
+    host = "0.0.0.0" if bind_all else "127.0.0.1"
+    print(f"[cc-server] Bind: {host} (set CC_BIND_ALL=1 to listen on all interfaces)")
+    server = ThreadingHTTPServer((host, PORT), CCHandler)
     server.serve_forever()
 

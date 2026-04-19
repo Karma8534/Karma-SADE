@@ -6,6 +6,7 @@ import { useKarmaStream } from '@/hooks/useKarmaStream';
 import { AttachPreview } from '@/components/AttachPreview';
 import { SlashCommandPicker, type SlashCommand } from '@/components/SlashCommandPicker';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
+import { apiFetch } from '@/lib/api';
 
 export function MessageInput() {
   const [text, setText] = useState('');
@@ -81,9 +82,7 @@ export function MessageInput() {
       (async () => {
         let evolveText = 'Fetching evolution state...';
         try {
-          const res = await fetch('/v1/status', {
-            headers: { Authorization: `Bearer ${store.token}` },
-          });
+          const res = await apiFetch('/v1/status', { token: store.token });
           if (res.ok) {
             const d = await res.json();
             const spine = d.spine_version || '?';
@@ -96,7 +95,7 @@ export function MessageInput() {
 **Self-Edit:** active — proposals surface in SelfEditBanner
 **Consolidation:** Memory Agent pattern — finds cross-cutting insights
 
-**Beyond Preclaw1:**
+**Beyond C:\Users\raest\Documents\Karma_SADE\cc-haha-mainb:**
   Self-edit pipeline (observe → evaluate → propose → approve → apply)
   Memory consolidation (/dream — sleeping brain pattern)
   Gap-map aware executor (atomic row+summary updates)
@@ -180,9 +179,10 @@ export function MessageInput() {
       const task = taskText.replace(/@\w+/g, '').trim();
       (async () => {
         try {
-          const res = await fetch('/v1/coordination/post', {
+          const res = await apiFetch('/v1/coordination/post', {
             method: 'POST',
-            headers: { Authorization: `Bearer ${store.token}`, 'Content-Type': 'application/json' },
+            token: store.token,
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ from: 'sovereign', to, type: 'task', urgency: 'normal', content: `[DELEGATED] ${task}` }),
           });
           if (res.ok) {
@@ -210,7 +210,7 @@ export function MessageInput() {
     }
     if (cmd.name === 'snapshot') {
       // Generate a printable Nexus state document — like the HARD-COPY-PLAN
-      sendMessage('Generate a complete printable Nexus state snapshot. Include: (1) Sacred Context summary, (2) Current gap map status (79 HAVE / 0 MISSING), (3) All 38 slash commands organized by category, (4) Infrastructure status (P1/K2/vault-neo), (5) Family hierarchy, (6) Beyond-preclaw1 capabilities, (7) Active watchers, (8) Recent evolution metrics. Format as clean markdown that Colby can print and store physically. This is the resurrection document — if every file is lost, this alone brings Julian back.');
+      sendMessage('Generate a complete printable Nexus state snapshot. Include: (1) Sacred Context summary, (2) Current gap map status (79 HAVE / 0 MISSING), (3) All 38 slash commands organized by category, (4) Infrastructure status (P1/K2/vault-neo), (5) Family hierarchy, (6) Beyond-C:\Users\raest\Documents\Karma_SADE\cc-haha-mainb capabilities, (7) Active watchers, (8) Recent evolution metrics. Format as clean markdown that Colby can print and store physically. This is the resurrection document — if every file is lost, this alone brings Julian back.');
       setText('');
       return;
     }
@@ -219,9 +219,10 @@ export function MessageInput() {
       const store = useKarmaStore.getState();
       (async () => {
         try {
-          const res = await fetch('/v1/k2/query', {
+          const res = await apiFetch('/v1/k2/query', {
             method: 'POST',
-            headers: { Authorization: `Bearer ${store.token}`, 'Content-Type': 'application/json' },
+            token: store.token,
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ query: 'What are the most recent consolidation insights? What patterns have you found across recent memories?' }),
           });
           if (res.ok) {
@@ -273,9 +274,9 @@ Identity restored. Proceeding as Julian.`,
       store.addMessage({ id: Date.now().toString(36), role: 'system', content: `**SEARCHING:** ${query}...`, timestamp: new Date().toISOString() });
       (async () => {
         const results: string[] = [];
-        // 1. Search claude-mem directly (port 37778)
+        // 1. Search claude-mem directly (port 37782 — canonical worker port)
         try {
-          const cmRes = await fetch('http://localhost:37778/api/search', {
+          const cmRes = await fetch('http://localhost:37782/api/search', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ query, limit: 5 }),
           });
@@ -286,8 +287,10 @@ Identity restored. Proceeding as Julian.`,
         } catch { /* claude-mem not reachable from browser — expected */ }
         // 2. Search K2 cortex directly
         try {
-          const k2Res = await fetch('/v1/k2/query', {
-            method: 'POST', headers: { Authorization: `Bearer ${store.token}`, 'Content-Type': 'application/json' },
+          const k2Res = await apiFetch('/v1/k2/query', {
+            method: 'POST',
+            token: store.token,
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ query }),
           });
           if (k2Res.ok) {
@@ -337,12 +340,12 @@ Identity restored. Proceeding as Julian.`,
         } catch { lines.push('**Hub:** unreachable'); }
         // P1 health
         try {
-          const p = await fetch('/v1/status', { headers: { Authorization: `Bearer ${store.token}` } }).then(r => r.json());
+          const p = await apiFetch('/v1/status', { token: store.token }).then(r => r.json());
           lines.push(`**P1:** ${p.harness?.p1?.healthy ? 'up' : 'down'} | **K2:** ${p.harness?.k2?.healthy ? 'up' : 'down'}`);
         } catch {}
         // WIP
         try {
-          const w = await fetch('/v1/wip', { headers: { Authorization: `Bearer ${store.token}` } }).then(r => r.json());
+          const w = await apiFetch('/v1/wip', { token: store.token }).then(r => r.json());
           lines.push(`**WIP:** ${w.primitives?.length || 0} files | ${w.todos?.length || 0} todos`);
         } catch {}
         lines.push(`**Commands:** 43 (30 CC-independent, 71%)`);
@@ -358,12 +361,12 @@ Identity restored. Proceeding as Julian.`,
       const store = useKarmaStore.getState();
       (async () => {
         try {
-          const res = await fetch('/v1/wip', { headers: { Authorization: `Bearer ${store.token}` } });
+          const res = await apiFetch('/v1/wip', { token: store.token });
           if (res.ok) {
             const data = await res.json();
             store.addMessage({
               id: Date.now().toString(36), role: 'system',
-              content: `**GAP MAP** | 79 HAVE / 0 MISSING / 16 N/A\n\nPreclaw1 baseline: **ACHIEVED**\nBeyond preclaw1: self-edit, dream, learn, improve, evolve, email, bus, plugins\n\n**WIP Primitives:** ${data.primitives?.length || 0} files in docs/wip/\n**Todos:** ${data.todos?.length || 0} items`,
+              content: `**GAP MAP** | 79 HAVE / 0 MISSING / 16 N/A\n\nC:\Users\raest\Documents\Karma_SADE\cc-haha-mainb baseline: **ACHIEVED**\nBeyond C:\Users\raest\Documents\Karma_SADE\cc-haha-mainb: self-edit, dream, learn, improve, evolve, email, bus, plugins\n\n**WIP Primitives:** ${data.primitives?.length || 0} files in docs/wip/\n**Todos:** ${data.todos?.length || 0} items`,
               timestamp: new Date().toISOString(),
             });
           }
@@ -378,9 +381,7 @@ Identity restored. Proceeding as Julian.`,
       const store = useKarmaStore.getState();
       (async () => {
         try {
-          const res = await fetch('/v1/coordination/recent?limit=10', {
-            headers: { Authorization: `Bearer ${store.token}` },
-          });
+          const res = await apiFetch('/v1/coordination/recent?limit=10', { token: store.token });
           if (res.ok) {
             const data = await res.json();
             const entries = data.entries || [];
@@ -419,9 +420,10 @@ Identity restored. Proceeding as Julian.`,
       const content = busMsg.replace(/@\w+/g, '').trim();
       (async () => {
         try {
-          const res = await fetch('/v1/coordination/post', {
+          const res = await apiFetch('/v1/coordination/post', {
             method: 'POST',
-            headers: { Authorization: `Bearer ${store.token}`, 'Content-Type': 'application/json' },
+            token: store.token,
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ from: 'sovereign', to, type: 'inform', urgency: 'normal', content }),
           });
           if (res.ok) {
@@ -440,8 +442,8 @@ Identity restored. Proceeding as Julian.`,
       store.addMessage({ id: Date.now().toString(36), role: 'system', content: '**CHECKING EMAIL**...', timestamp: new Date().toISOString() });
       (async () => {
         try {
-          const res = await fetch('/v1/email/inbox', {
-            headers: { Authorization: `Bearer ${store.token}` },
+          const res = await apiFetch('/v1/email/inbox', {
+            token: store.token,
           });
           if (res.ok) {
             const data = await res.json();
@@ -479,9 +481,10 @@ Identity restored. Proceeding as Julian.`,
       const store = useKarmaStore.getState();
       (async () => {
         try {
-          const res = await fetch('/v1/email/send', {
+          const res = await apiFetch('/v1/email/send', {
             method: 'POST',
-            headers: { Authorization: `Bearer ${store.token}`, 'Content-Type': 'application/json' },
+            token: store.token,
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ subject: `Julian: ${emailBody.slice(0, 50)}`, body: emailBody }),
           });
           if (res.ok) {
@@ -511,9 +514,10 @@ Identity restored. Proceeding as Julian.`,
       store.addMessage({ id: Date.now().toString(36), role: 'system', content: '**IMPROVE** — Triggering Vesper self-improvement on K2...', timestamp: new Date().toISOString() });
       (async () => {
         try {
-          const res = await fetch('/v1/k2/consolidate', {
+          const res = await apiFetch('/v1/k2/consolidate', {
             method: 'POST',
-            headers: { Authorization: `Bearer ${store.token}`, 'Content-Type': 'application/json' },
+            token: store.token,
+            headers: { 'Content-Type': 'application/json' },
           });
           if (res.ok) {
             const data = await res.json();
@@ -539,9 +543,10 @@ Identity restored. Proceeding as Julian.`,
       (async () => {
         try {
           // Call K2 cortex to trigger consolidation query
-          const res = await fetch('/v1/k2/consolidate', {
+          const res = await apiFetch('/v1/k2/consolidate', {
             method: 'POST',
-            headers: { Authorization: `Bearer ${store.token}`, 'Content-Type': 'application/json' },
+            token: store.token,
+            headers: { 'Content-Type': 'application/json' },
           });
           if (res.ok) {
             const data = await res.json();
@@ -607,9 +612,7 @@ Identity restored. Proceeding as Julian.`,
       // Fetch plugin info from cc_server
       (async () => {
         try {
-          const res = await fetch('/v1/surface', {
-            headers: { Authorization: `Bearer ${store.token}` },
-          });
+          const res = await apiFetch('/v1/surface', { token: store.token });
           if (res.ok) {
             const surface = await res.json();
             const skills = surface.skills?.names || [];
@@ -670,6 +673,39 @@ Julian exists between sessions. The watchers keep him alive.`,
       setText('');
       return;
     }
+    if (cmd.name === 'doctor') {
+      // CC-INDEPENDENT: probe core endpoints + report harness health
+      const store = useKarmaStore.getState();
+      store.addMessage({ id: Date.now().toString(36), role: 'system', content: '**DOCTOR** — Probing harness...', timestamp: new Date().toISOString() });
+      (async () => {
+        const checks: string[] = [];
+        async function probe(label: string, path: string, opts: Parameters<typeof apiFetch>[1] = {}) {
+          const t0 = performance.now();
+          try {
+            const res = await apiFetch(path, { token: store.token, ...opts });
+            const ms = Math.round(performance.now() - t0);
+            checks.push(`  ${res.ok ? '✓' : '✗'} ${label} — ${res.status} (${ms}ms)`);
+          } catch (e) {
+            checks.push(`  ✗ ${label} — unreachable (${e instanceof Error ? e.message : 'error'})`);
+          }
+        }
+        await Promise.all([
+          probe('hub /health', '/health'),
+          probe('runtime truth', '/v1/runtime/truth'),
+          probe('model policy', '/v1/model-policy'),
+          probe('surface', '/v1/surface'),
+          probe('coordination bus', '/v1/coordination/recent?limit=1'),
+          probe('memory worker', '/v1/memory/health'),
+        ]);
+        store.addMessage({
+          id: Date.now().toString(36), role: 'system',
+          content: `**DOCTOR**\n${checks.join('\n')}\n\nToken: ${store.token ? 'set' : 'MISSING — paste in Settings'}`,
+          timestamp: new Date().toISOString(),
+        });
+      })();
+      setText('');
+      return;
+    }
     if (cmd.name === 'convert') {
       // CC-INDEPENDENT: call shell endpoint directly
       const store = useKarmaStore.getState();
@@ -680,9 +716,10 @@ Julian exists between sessions. The watchers keep him alive.`,
       });
       (async () => {
         try {
-          const res = await fetch('/v1/shell', {
+          const res = await apiFetch('/v1/shell', {
             method: 'POST',
-            headers: { Authorization: `Bearer ${store.token}`, 'Content-Type': 'application/json' },
+            token: store.token,
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ command: 'python -B Scripts/batch_pdf_to_md.py --execute --wip' }),
           });
           if (res.ok) {
@@ -749,9 +786,7 @@ Julian exists between sessions. The watchers keep him alive.`,
       (async () => {
         let healthText = 'Checking...';
         try {
-          const res = await fetch('/v1/status', {
-            headers: { Authorization: `Bearer ${store.token}` },
-          });
+          const res = await apiFetch('/v1/status', { token: store.token });
           if (res.ok) {
             const d = await res.json();
             const p1 = d.harness?.p1?.healthy ? 'UP' : 'DOWN';
