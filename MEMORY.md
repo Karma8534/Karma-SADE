@@ -120,7 +120,8 @@ Step 2: TBD (awaiting Sovereign direction on next Phase Ascendance milestone)
 
 ## Next Session Starts Here
 1. /resurrect
-2. Phase Ascendance 1 Step 1: write `.gsd/phase-ascendance-1-CONTEXT.md` locking persona-on-boot source-of-truth + load mechanism
+2. Read `.gsd/ascendance-build-checkpoint.json`. If `status=pending phase=0`: load `.gsd/phase-ascendance-build-PLAN.md` (v2) and `docs/ForColby/ascendance-directive-v3.md` (v3). Confirm Sovereign manual review complete before executing Phase 0. Anchor tag: `pre-ascendance-build-v2-20260421T204928Z`. Context: `.gsd/phase-ascendance-build-CONTEXT.md`. Model: Opus 4.7 1M High. AA1-AA7 pre-authorized. Do NOT start Phase 0 without explicit Sovereign go. Override any older "Next Session" pointer elsewhere in this file.
+3. On go: run Phase 0.0 preflight battery (`Scripts/ascendance-preflight.ps1` — does not yet exist; build in Phase 0.0).
 
 ---
 

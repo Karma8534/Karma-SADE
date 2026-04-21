@@ -1,0 +1,13 @@
+{
+  "plan_version": "v2",
+  "plan_path": ".gsd/phase-ascendance-build-PLAN.md",
+  "directive_version_bound": "v3",
+  "directive_path": "docs/ForColby/ascendance-directive-v3.md",
+  "context_path": ".gsd/phase-ascendance-build-CONTEXT.md",
+  "anchor_tag": "pre-ascendance-build-v2-20260421T204928Z",
+  "anchor_utc": "2026-04-21T20:49:28Z",
+  "phase": 0,
+  "status": "pending",
+  "phase_markers_dir": "evidence/plan-run-{run_id}/",
+  "notes": "Anchor committed. Phase 0 NOT started. Sovereign manual review required before preflight battery fires. Next session /resurrect reads this file, confirms status=pending, loads plan v2, awaits explicit go."
+}

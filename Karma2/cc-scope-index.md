@@ -425,3 +425,7 @@ Why: Session 161 — broad `37777` scans surfaced binary PDF/xref hits and massi
 P112 [ledger-must-not-preserve-corrected-falsehoods]:
 Rule: When a factual correction changes a foundational assumption, immediately update the execution ledger and any active status docs so they do not continue asserting the old falsehood in normalized language.
 Why: Session 161 — a mechanical port replacement corrupted the execution ledger into stating false runtime facts, which would have re-seeded drift if left uncorrected.
+
+P113 [inferred-is-not-ground-truth] CRITICAL L1:
+Rule: Ground truth is binary — Yes (VERIFIED by live probe in current session) or No (FAIL/BLOCKED). INFERRED is NOT a valid terminal state. It is a rationalization label that lets stale or previous-session data survive as "probably fine" and corrupts the evidence ledger. If a probe cannot produce a definitive Yes/No right now, either add a follow-up probe that resolves the ambiguity or mark FAIL/BLOCKED with reason. Never mix INFERRED into a gate decision.
+Why: Session 181 (2026-04-21) ARKNEXUS ASCENDANCE = 100 re-verification — Phase 1 __bootMetrics scrape returned a LevelDB entry timestamped 2026-04-19T06:02:45 (previous session). CC flagged as "INFERRED risk for G14" instead of probing whether the current boot overwrote the entry. Sovereign correction: Section 2 of directive allows only VERIFIED / FAIL / BLOCKED. INFERRED is a canonical-directive violation.
