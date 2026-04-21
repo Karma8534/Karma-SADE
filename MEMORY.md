@@ -555,3 +555,13 @@ S162: temporal KG, dedup, palace vocab, contradiction detection
 ### Remaining
 - Scheduled Task API write for new worker task blocked by local permission (Access is denied). Startup-folder launcher is active mitigation.
 
+
+## 2026-04-21 - Live blocker email ground-truth hardening
+- What changed:
+  - Updated `C:\Users\raest\Documents\Karma_SADE\Scripts\cc_email_daemon.py` to compute Open Blockers from live probes instead of `.gsd\STATE.md` text.
+  - Added `C:\Users\raest\Documents\Karma_SADE\Scripts\build_corpus_cc.py` to build `corpus_cc.jsonl` from CC-tagged session rows.
+- Why it changed:
+  - Status emails were reporting stale blockers even when runtime truth had moved.
+  - B16 required a repeatable path to produce corpus_cc from live/ledger data.
+- Blockers / next steps:
+  - Runtime continuity was restarted (`nexus.exe` + watchdog). Keep watcher running and validate UI panel parity in live app.

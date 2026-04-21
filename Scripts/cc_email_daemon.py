@@ -38,6 +38,7 @@ WATERMARK_FILE     = LOGS / "cc_email_watermark.txt"
 CHECK_LAST_FILE    = LOGS / "cc_email_check_last.txt"
 STATUS_SENT_FILE   = LOGS / "cc_email_status_last.txt"
 STATUS_DIGEST_FILE = LOGS / "cc_email_status_digest.txt"
+STATUS_BASELINE_FILE = LOGS / "cc_email_status_baseline.json"
 PERSONAL_SENT_FILE = LOGS / "cc_email_personal_last.txt"
 SPINE_VER_FILE     = LOGS / "cc_email_spine_version.txt"
 DIRECTIVE_QUEUE_DIR = REPO / "tmp" / "sovereign_email_inbox"
@@ -85,6 +86,19 @@ def _read_int(path: pathlib.Path, default: int = 0) -> int:
         return int(path.read_text().strip())
     except Exception:
         return default
+
+
+def _read_secret_file(*paths: pathlib.Path) -> str:
+    for path in paths:
+        if not path:
+            continue
+        try:
+            value = pathlib.Path(path).read_text(encoding="utf-8").strip()
+            if value:
+                return value
+        except Exception:
+            pass
+    return ""
 
 
 def _call_ollama(prompt: str) -> str:
@@ -253,40 +267,96 @@ def _read_spine_info() -> dict:
         return {"version": 0, "recent": [], "error": str(e)}
 
 
-def _read_state_blockers() -> str:
-    """Parse .gsd/STATE.md Active Blockers section and return only OPEN items."""
-    state_file = REPO / ".gsd" / "STATE.md"
+def _count_lines(path: pathlib.Path) -> int:
     try:
-        text = state_file.read_text(encoding="utf-8", errors="replace")
-        start = text.find("## Active Blockers")
-        if start == -1:
-            return "(Active Blockers section not found in STATE.md)"
-        end = text.find("\n## ", start + 1)
-        section = text[start:end] if end != -1 else text[start:start + 4000]
+        with path.open("r", encoding="utf-8", errors="replace") as f:
+            return sum(1 for _ in f)
+    except Exception:
+        return 0
 
-        open_count = 0
-        lines_out = []
-        for line in section.splitlines():
-            line = line.strip()
-            m = re.match(r'^(\d+)\.\s+(.+)$', line)
-            if not m:
-                continue
-            num, content = m.group(1), m.group(2)
-            cu = content.upper()
-            if 'FALSE POSITIVE' in cu:
-                continue
-            if '\u2705' in content or ('~~' in content and content.count('~~') >= 2):
-                continue
-            open_count += 1
-            title = _clean_email_text(content)
-            lines_out.append(f"- B{num}: {title}")
 
-        summary = f"Open blockers: {open_count}"
-        if lines_out:
-            summary += "\n" + "\n".join(lines_out[:10])
-        return summary
-    except Exception as e:
-        return f"(STATE.md read error: {e})"
+def _ssh_capture(cmd: str, timeout: int = 20) -> tuple[int, str]:
+    try:
+        r = subprocess.run(
+            ["ssh", "vault-neo", cmd],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            encoding="utf-8",
+            errors="replace",
+        )
+        return r.returncode, (r.stdout or "").strip()
+    except Exception:
+        return 1, ""
+
+
+def _read_open_blockers_ground_truth() -> str:
+    """
+    Live blocker checks. Do NOT trust STATE.md for open blocker truth.
+    Tracks historical blocker IDs from prior reports (B16/B17/B18).
+    """
+    open_items = []
+
+    # B16: corpus_cc.jsonl must exist and be non-empty.
+    cc_corpus = REPO / "Karma2" / "training" / "corpus_cc.jsonl"
+    cc_lines = _count_lines(cc_corpus)
+    if not cc_corpus.exists() or cc_lines == 0:
+        open_items.append(
+            "B16: corpus_cc.jsonl missing/empty — run Scripts/build_corpus_cc.py"
+        )
+
+    # B17: old P0-G dead code check (server.js + K2 flag). Runtime is proxy.js-first.
+    runtime_proxy = False
+    try:
+        dockerfile = (REPO / "hub-bridge" / "app" / "Dockerfile").read_text(
+            encoding="utf-8", errors="replace"
+        )
+        runtime_proxy = 'CMD ["node", "proxy.js"]' in dockerfile
+    except Exception:
+        runtime_proxy = False
+
+    b17_open = False
+    b17_note = ""
+    rc_refs, out_refs = _ssh_capture(
+        "grep -c 'callWithK2Fallback' /opt/seed-vault/memory_v1/hub_bridge/app/server.js || true"
+    )
+    rc_flag, out_flag = _ssh_capture(
+        "grep -c '^K2_INFERENCE_ENABLED=' /opt/seed-vault/memory_v1/hub_bridge/hub.env || true"
+    )
+    if rc_refs != 0 and not out_refs:
+        # Could not verify remotely; fail closed.
+        b17_open = True
+        b17_note = "remote verification unavailable"
+    else:
+        refs = int(out_refs or "0")
+        flag = int(out_flag or "0")
+        if refs > 0 and flag == 0:
+            b17_open = True
+            b17_note = "callWithK2Fallback refs present but K2_INFERENCE_ENABLED unset"
+        elif refs > 0 and runtime_proxy:
+            # Non-runtime dead code still present; keep visible as cleanup debt.
+            b17_open = True
+            b17_note = "legacy dead code present in server.js though runtime is proxy.js"
+    if b17_open:
+        open_items.append(f"B17: {b17_note}")
+
+    # B18: PROOF-A Task 1 verified by proof artifact.
+    proof_file = REPO / "res1" / "artifacts" / "proof_a_codex_exec.json"
+    proof_ok = False
+    try:
+        proof = json.loads(proof_file.read_text(encoding="utf-8", errors="replace"))
+        proof_ok = int(proof.get("rc", 1)) == 0 and str(proof.get("output", "")).strip() == "4"
+    except Exception:
+        proof_ok = False
+    if not proof_ok:
+        open_items.append(
+            "B18: PROOF-A Task 1 not proven — verify Scripts/kcc_codex_trigger.ps1 non-interactive codex exec"
+        )
+
+    summary = f"Open blockers: {len(open_items)}"
+    if open_items:
+        summary += "\n" + "\n".join(f"- {item}" for item in open_items)
+    return summary
 
 
 def _read_snapshot_summary() -> str:
@@ -343,13 +413,181 @@ def _read_snapshot_summary() -> str:
         return "(snapshot unavailable)"
 
 
-def build_status_email_body(now: str, snapshot: str, blocker_status: str) -> str:
+def _collect_live_status() -> dict:
+    token = _read_secret_file(REPO / ".hub-chat-token")
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+    payload = {
+        "cc_health": None,
+        "surface": None,
+        "coord": None,
+        "learnings": None,
+        "model_policy": None,
+    }
+    try:
+        req = urllib.request.Request("http://127.0.0.1:7891/health", headers=headers, method="GET")
+        with urllib.request.urlopen(req, timeout=10) as r:
+            payload["cc_health"] = json.loads(r.read().decode("utf-8", errors="replace"))
+    except Exception:
+        pass
+    try:
+        req = urllib.request.Request("http://127.0.0.1:7891/v1/surface", headers=headers, method="GET")
+        with urllib.request.urlopen(req, timeout=35) as r:
+            payload["surface"] = json.loads(r.read().decode("utf-8", errors="replace"))
+    except Exception:
+        pass
+    try:
+        req = urllib.request.Request("http://127.0.0.1:7891/v1/coordination/recent?limit=20", headers=headers, method="GET")
+        with urllib.request.urlopen(req, timeout=12) as r:
+            payload["coord"] = json.loads(r.read().decode("utf-8", errors="replace"))
+    except Exception:
+        pass
+    try:
+        req = urllib.request.Request("http://127.0.0.1:7891/v1/learnings", headers=headers, method="GET")
+        with urllib.request.urlopen(req, timeout=20) as r:
+            payload["learnings"] = json.loads(r.read().decode("utf-8", errors="replace"))
+    except Exception:
+        pass
+    try:
+        req = urllib.request.Request("http://127.0.0.1:7891/v1/model-policy", headers=headers, method="GET")
+        with urllib.request.urlopen(req, timeout=10) as r:
+            payload["model_policy"] = json.loads(r.read().decode("utf-8", errors="replace"))
+    except Exception:
+        pass
+    return payload
+
+
+def _load_status_baseline() -> dict:
+    try:
+        return json.loads(STATUS_BASELINE_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _save_status_baseline(data: dict) -> None:
+    STATUS_BASELINE_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+
+def _build_status_delta(current: dict, previous: dict) -> tuple[str, str]:
+    lines = []
+    why = []
+    cur_health = (current.get("cc_health") or {}) if isinstance(current, dict) else {}
+    cur_surface = (current.get("surface") or {}) if isinstance(current, dict) else {}
+    cur_coord = (current.get("coord") or {}) if isinstance(current, dict) else {}
+    cur_learnings = (current.get("learnings") or {}) if isinstance(current, dict) else {}
+    cur_policy = (current.get("model_policy") or {}) if isinstance(current, dict) else {}
+    prev_surface = (previous.get("surface") or {}) if isinstance(previous, dict) else {}
+    prev_coord = (previous.get("coord") or {}) if isinstance(previous, dict) else {}
+    prev_learnings = (previous.get("learnings") or {}) if isinstance(previous, dict) else {}
+
+    cur_changed = int(((cur_surface.get("git") or {}).get("changed")) or 0)
+    prev_changed = int((((prev_surface.get("git") or {}).get("changed")) or 0)
+                       if isinstance(prev_surface, dict) else 0)
+    if cur_changed != prev_changed:
+        diff = cur_changed - prev_changed
+        lines.append(f"- Git changed files: {prev_changed} -> {cur_changed} ({diff:+d})")
+        why.append("Git delta changed because repo working state moved between snapshots.")
+
+    cur_skills = int(((cur_surface.get("skills") or {}).get("count")) or 0)
+    prev_skills = int((((prev_surface.get("skills") or {}).get("count")) or 0)
+                      if isinstance(prev_surface, dict) else 0)
+    if cur_skills != prev_skills:
+        lines.append(f"- Skills count: {prev_skills} -> {cur_skills}")
+        why.append("Skill count changed due to skill install/remove or discovery refresh.")
+
+    cur_tasks = int(cur_coord.get("count") or 0) if isinstance(cur_coord, dict) else 0
+    prev_tasks = int(prev_coord.get("count") or 0) if isinstance(prev_coord, dict) else 0
+    if cur_tasks != prev_tasks:
+        lines.append(f"- Coordination tasks: {prev_tasks} -> {cur_tasks}")
+        why.append("Task count changed because queue entries were added/acked/closed.")
+    cur_entries = cur_coord.get("entries") if isinstance(cur_coord, dict) else []
+    prev_entries = prev_coord.get("entries") if isinstance(prev_coord, dict) else []
+    cur_latest_id = ""
+    prev_latest_id = ""
+    if isinstance(cur_entries, list) and cur_entries and isinstance(cur_entries[0], dict):
+        cur_latest_id = str(cur_entries[0].get("id") or "")
+    if isinstance(prev_entries, list) and prev_entries and isinstance(prev_entries[0], dict):
+        prev_latest_id = str(prev_entries[0].get("id") or "")
+    if cur_latest_id and cur_latest_id != prev_latest_id:
+        latest = cur_entries[0] if isinstance(cur_entries, list) and cur_entries and isinstance(cur_entries[0], dict) else {}
+        lines.append(
+            "- Latest task: "
+            + str(latest.get("id") or "")
+            + " "
+            + str(latest.get("from") or "unknown")
+            + "->"
+            + str(latest.get("to") or "unknown")
+            + " "
+            + str(latest.get("status") or "")
+        )
+        why.append("Latest coordination head changed because a newer bus row was published.")
+
+    cur_learn = int(cur_learnings.get("count") or 0) if isinstance(cur_learnings, dict) else 0
+    prev_learn = int(prev_learnings.get("count") or 0) if isinstance(prev_learnings, dict) else 0
+    if cur_learn != prev_learn:
+        lines.append(f"- Learnings count: {prev_learn} -> {cur_learn}")
+        why.append("Learnings changed due to newly extracted observations or merged hub/local entries.")
+
+    if cur_health:
+        lines.append(
+            "- Mouth policy: emergency_independent="
+            + str(cur_health.get("emergency_independent"))
+            + ", disable_anthropic="
+            + str(cur_health.get("disable_anthropic"))
+        )
+        why.append("Mouth policy reflects live runtime env and startup policy.")
+    if isinstance(cur_policy, dict) and cur_policy:
+        lines.append(
+            "- Mouth route: "
+            + str(cur_policy.get("mouth") or "unknown")
+            + " -> "
+            + str(cur_policy.get("primary_model") or "unknown")
+        )
+        why.append("Model policy line mirrors live /v1/model-policy contract used by the UI.")
+
+    if not lines:
+        lines.append("- No major live deltas detected since last sent baseline.")
+        why.append("No route/task/git counters changed enough to trigger delta entries.")
+
+    blocker_lines = []
+    if cur_health and (cur_health.get("emergency_independent") or cur_health.get("disable_anthropic")):
+        blocker_lines.append("- Mouth policy still degraded (local/openrouter fallback forced).")
+    if cur_tasks == 0:
+        blocker_lines.append("- Coordination task stream currently empty.")
+    if not cur_surface:
+        blocker_lines.append("- /v1/surface unavailable in live probe.")
+    if not blocker_lines:
+        blocker_lines.append("- No critical blockers detected in live status sample.")
+
+    resolutions = [
+        "- Ensure KARMA_FORCE_ANTHROPIC_PRIMARY=1 at process launch and verify /health flags.",
+        "- Keep /v1/coordination/recent wired and authenticated; verify non-empty task payload expansion in UI.",
+        "- Keep /v1/surface compact + mirror-safe to prevent UI starvation.",
+    ]
+    delta_text = "\n".join(lines)
+    why_text = "\n".join(f"- {item}" for item in why)
+    blocker_text = "\n".join(blocker_lines)
+    resolution_text = "\n".join(resolutions)
+    composed = (
+        "--- Live Changes ---\n"
+        f"{delta_text}\n\n"
+        "--- Why It Changed ---\n"
+        f"{why_text}\n\n"
+        "--- Blockers & Gaps ---\n"
+        f"{blocker_text}\n\n"
+        "--- Optimal Resolutions ---\n"
+        f"{resolution_text}"
+    )
+    return composed, delta_text
+
+
+def build_status_email_body(now: str, snapshot: str, blocker_status: str, live_delta: str) -> str:
     return (
         "CC Ascendant - Status Report\n"
         f"{now}\n\n"
         f"{_clean_email_text(snapshot)}\n\n"
         "--- Open Blockers ---\n"
         f"{_clean_email_text(blocker_status)}\n\n"
+        f"{_clean_email_text(live_delta)}\n\n"
         "---\n"
         f"Sent every {STATUS_INTERVAL_MIN}m | watcher every {CHECK_INTERVAL_MIN}m | CC Ascendant (paybackh1@gmail.com)\n"
     )
@@ -451,8 +689,12 @@ def cmd_status() -> str:
         return f"skipped ({minutes:.1f}m since last, threshold={STATUS_INTERVAL_MIN}m)"
 
     snapshot = _read_snapshot_summary()
-    blocker_status = _read_state_blockers()
+    blocker_status = _read_open_blockers_ground_truth()
+    current_live = _collect_live_status()
+    previous_live = _load_status_baseline()
+    live_delta, delta_digest = _build_status_delta(current_live, previous_live)
     digest_input = f"{_clean_email_text(snapshot)}\n---\n{_clean_email_text(blocker_status)}"
+    digest_input += f"\n---\n{_clean_email_text(delta_digest)}"
     status_digest = hashlib.sha256(digest_input.encode("utf-8", errors="replace")).hexdigest()
     last_digest = ""
     try:
@@ -468,11 +710,12 @@ def cmd_status() -> str:
     now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
     subject = f"[CC STATUS] {now}"
-    body = build_status_email_body(now, snapshot, blocker_status)
+    body = build_status_email_body(now, snapshot, blocker_status, live_delta)
     result = send_to_colby(subject, body)
     if result.get("ok"):
         _write_now(STATUS_SENT_FILE)
         STATUS_DIGEST_FILE.write_text(status_digest, encoding="utf-8")
+        _save_status_baseline(current_live)
         return f"sent: {subject}"
     else:
         return f"send error: {result.get('error', 'unknown')}"
