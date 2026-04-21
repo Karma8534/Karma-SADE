@@ -565,3 +565,8 @@ S162: temporal KG, dedup, palace vocab, contradiction detection
   - B16 required a repeatable path to produce corpus_cc from live/ledger data.
 - Blockers / next steps:
   - Runtime continuity was restarted (`nexus.exe` + watchdog). Keep watcher running and validate UI panel parity in live app.
+
+## 2026-04-21 - Ascendance v6 bootstrap foundations
+- Added Scripts/ascendance-init-run.ps1 to create nonce-bound ascendance run directories and seed session/evidence files.
+- Added Scripts/ascendance-final-gate.ps1 to compute machine FINAL_GATE fields from run evidence and emit binary pass/fail.
+- Verified both scripts execute; final gate currently fails as expected on unmet gates, enabling real build->verify loop.
