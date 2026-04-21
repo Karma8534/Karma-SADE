@@ -9,5 +9,7 @@
   "phase": 0,
   "status": "pending",
   "phase_markers_dir": "evidence/plan-run-{run_id}/",
-  "notes": "Anchor committed. Phase 0 NOT started. Sovereign manual review required before preflight battery fires. Next session /resurrect reads this file, confirms status=pending, loads plan v2, awaits explicit go."
+  "launcher_path": "docs/ForColby/ascendance-launcher-v3-hardened.md",
+  "launcher_version": "v3-hardened-20260421T204928Z",
+  "notes": "Anchor committed. Phase 0 NOT started. Sovereign manual review required before preflight battery fires. Next session /resurrect reads this file, confirms status=pending, loads launcher + plan v2 + directive v3 + CONTEXT, awaits explicit go."
 }

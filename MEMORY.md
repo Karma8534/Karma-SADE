@@ -120,8 +120,15 @@ Step 2: TBD (awaiting Sovereign direction on next Phase Ascendance milestone)
 
 ## Next Session Starts Here
 1. /resurrect
-2. Read `.gsd/ascendance-build-checkpoint.json`. If `status=pending phase=0`: load `.gsd/phase-ascendance-build-PLAN.md` (v2) and `docs/ForColby/ascendance-directive-v3.md` (v3). Confirm Sovereign manual review complete before executing Phase 0. Anchor tag: `pre-ascendance-build-v2-20260421T204928Z`. Context: `.gsd/phase-ascendance-build-CONTEXT.md`. Model: Opus 4.7 1M High. AA1-AA7 pre-authorized. Do NOT start Phase 0 without explicit Sovereign go. Override any older "Next Session" pointer elsewhere in this file.
+2. Read `.gsd/ascendance-build-checkpoint.json`. If `status=pending phase=0`: load launcher `docs/ForColby/ascendance-launcher-v3-hardened.md`, plan `.gsd/phase-ascendance-build-PLAN.md` (v2), directive `docs/ForColby/ascendance-directive-v3.md` (v3), CONTEXT `.gsd/phase-ascendance-build-CONTEXT.md`. Confirm Sovereign manual review complete before executing Phase 0. Anchor tag: `pre-ascendance-build-v2-20260421T204928Z`. Model: Opus 4.7 1M High. AA1-AA7 pre-authorized. Do NOT start Phase 0 without explicit Sovereign go. Override any older "Next Session" pointer elsewhere in this file.
 3. On go: run Phase 0.0 preflight battery (`Scripts/ascendance-preflight.ps1` — does not yet exist; build in Phase 0.0).
+
+## Session 181 anchor note (2026-04-21)
+- P113 [inferred-is-not-ground-truth] CRITICAL L1 locked in cc-scope-index (obs #29441)
+- Plan v2 + directive v3 + CONTEXT + checkpoint anchored (obs #29467, commit fecfa21f, tag pre-ascendance-build-v2-20260421T204928Z)
+- Hardened launcher v3 committed (obs #29480) replacing legacy codexDirective041126C reference
+- Desktop shortcut created: C:\Users\raest\OneDrive\Desktop\Arknexus.lnk → nexus.exe
+- Phase 0 gated on Sovereign explicit go — NOT started
 
 ---
 
