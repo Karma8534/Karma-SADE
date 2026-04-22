@@ -120,8 +120,10 @@ Step 2: TBD (awaiting Sovereign direction on next Phase Ascendance milestone)
 
 ## Next Session Starts Here
 1. /resurrect
-2. Read `.gsd/ascendance-build-checkpoint.json`. If `status=pending phase=0`: load launcher `docs/ForColby/ascendance-launcher-v3-hardened.md`, plan `.gsd/phase-ascendance-build-PLAN.md` (v2), directive `docs/ForColby/ascendance-directive-v3.md` (v3), CONTEXT `.gsd/phase-ascendance-build-CONTEXT.md`. Confirm Sovereign manual review complete before executing Phase 0. Anchor tag: `pre-ascendance-build-v2-20260421T204928Z`. Model: Opus 4.7 1M High. AA1-AA7 pre-authorized. Do NOT start Phase 0 without explicit Sovereign go. Override any older "Next Session" pointer elsewhere in this file.
-3. On go: run Phase 0.0 preflight battery (`Scripts/ascendance-preflight.ps1` — does not yet exist; build in Phase 0.0).
+2. Read `.gsd/ascendance-build-checkpoint.json`. Current state: `phases_complete: [0, 0.5, 1, 2]`, `phase: 3`, `status: ready_for_phase_3`, `plan_run_id: plan-run-20260421T234721Z-64a746fd`. Load launcher `docs/ForColby/ascendance-launcher-v3-hardened.md`, plan `.gsd/phase-ascendance-build-PLAN.md` (v2), directive `docs/ForColby/ascendance-directive-v3.md` (v3), CONTEXT `.gsd/phase-ascendance-build-CONTEXT.md`. Anchor tag: `pre-ascendance-build-v2-20260421T204928Z`. Model: Opus 4.7 1M High. AA1-AA7 pre-authorized. Override any older "Next Session" pointer elsewhere in this file.
+3. Binary state: arknexusv6.exe sha 4D4BCA72EE70ADD08B606DF483A3AC33AABBD6D3AD2681CD9C237C3246A795BC at nexus-tauri/src-tauri/target/release/, built 2026-04-22T10:02:17. CDP confirmed working via Scripts/launch-julian-cdp.ps1 + Scripts/probe-cdp-seeded.ps1 (port 9222, ARKNEXUS_DEVTOOLS=1 env required).
+4. Standing phrase (Sovereign): "No defer. Binary only. If blocked beyond AA1-AA7, AA7 ESCALATION email + wait for auth. No silent defer permitted." — any reply containing this phrase triggers self-audit.
+5. Await Sovereign "go Phase 3" then execute: rewrite 6 harnesses (phase1-cold-boot/phase2-parity/phase2-stress/phase3-family/ritual-recorder/ascendance-ritual) + ascendance-independent-verify. Budget 14 turns.
 
 ## Session 181 anchor note (2026-04-21)
 - P113 [inferred-is-not-ground-truth] CRITICAL L1 locked in cc-scope-index (obs #29441)
