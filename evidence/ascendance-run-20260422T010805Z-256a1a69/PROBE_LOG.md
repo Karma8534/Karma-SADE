@@ -16,3 +16,4 @@
 | 2026-04-22T13:14:52.1379612Z | PROOF | G12_VAULT_PARITY | obs-G12_VAULT_PARITY | bus-G12_VAULT_PARITY | gate verified refresh | sha-recorded |
 | 2026-04-22T13:14:52.1379612Z | PROOF | G13_FOCUS_GATE_UNLOCK | obs-G13_FOCUS_GATE_UNLOCK | bus-G13_FOCUS_GATE_UNLOCK | gate verified refresh | sha-recorded |
 | 2026-04-22T13:14:52.1379612Z | PROOF | G14_TRACKER_SCHEMA_ALIGNMENT | obs-G14_TRACKER_SCHEMA_ALIGNMENT | bus-G14_TRACKER_SCHEMA_ALIGNMENT | gate verified refresh | sha-recorded |
+| 2026-04-22T15:21:41.7717081Z | DECISION | RUN_INTEGRITY | obs-decision-run-integrity | bus-decision-run-integrity | repaired tracker artifact + git volatility controls | sha-recorded |

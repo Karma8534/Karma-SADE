@@ -31,8 +31,8 @@ if (Test-Path $ritualDir) {
   Get-ChildItem -Path $ritualDir -Force -ErrorAction SilentlyContinue | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
 } else { New-Item -ItemType Directory -Path $ritualDir -Force | Out-Null }
 
-# Tracker reset
-if (Test-Path $trackerState) { Remove-Item -Path $trackerState -Force -ErrorAction SilentlyContinue }
+# Tracker state is runtime truth and should never be deleted by init.
+# Keep it intact so final-gate/tracker checks remain stable across runs.
 
 $directiveSha = (Get-FileHash -Path $directivePath -Algorithm SHA256).Hash
 $planSha      = (Get-FileHash -Path $planPath -Algorithm SHA256).Hash

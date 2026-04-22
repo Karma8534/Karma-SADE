@@ -197,6 +197,8 @@
   {
     "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\.claude\\hooks\\.arknexus-tracker-state.json",
     "session_id": "256a1a69-8279-45c7-8f85-4f306d68c8c1",
-    "sha256": "6fab3bb63f8d3bd382b41a1fb485c33d2ff9ebe6b3dd606420860930930da745"
+    "sha256": "fd185beb28af2b0524a5336d14e0185ebc6d66adcc5c16c70e6ddf75eb5e795d",
+    "gate": "G14_TRACKER_SCHEMA_ALIGNMENT",
+    "verified_utc": "2026-04-22T15:23:15.0861098Z"
   }
 ]
