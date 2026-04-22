@@ -1,0 +1,30 @@
+{
+  "phase": 3,
+  "completed_utc": "2026-04-22T14:18:00Z",
+  "run_id": "plan-run-20260421T234721Z-64a746fd",
+  "session_id": "S182",
+  "sha256_of_work_products": {
+    "Scripts/phase1-cold-boot-harness.ps1":    "22DF9E0F9A4C83C08CC4D22E5114FB9D8B6648C3C25103A2D225193CE4B90167",
+    "Scripts/phase2-parity-harness.ps1":       "50D3F7307C4406E5E12F2C5DC6FE06DC2159BA21E7AB12D5C476D1B2D59ABBB2",
+    "Scripts/phase2-stress-harness.ps1":       "B3F0A390A8E2D9BAE6C0179DE327B719139160927B5B572249AAC045CB9BAE82",
+    "Scripts/phase3-family-harness.ps1":       "8E13794E4DB4C33EC88A404E02E3419ACE8197EEBA4BEEC5737E848262110C38",
+    "Scripts/ritual-recorder.ps1":             "B14C768A5CEDC6A331F718F8E8914918980562793993111ABE8E5524DDE7E95F",
+    "Scripts/ascendance-ritual-harness.ps1":   "A302E2F7E97CDFD23EC2B6215EC1246EADA06F1F0CB30DED4CD0B05EB4236580",
+    "Scripts/ascendance-independent-verify.ps1": "0EC2F320E01D64EFCA1CDDC87282E35531EA635764D11FAD338A5CA425B8EC3A"
+  },
+  "gate_mapping": {
+    "phase1-cold-boot-harness.ps1": "G1,G2,G14",
+    "phase2-parity-harness.ps1":    "G3",
+    "phase2-stress-harness.ps1":    "G4",
+    "phase3-family-harness.ps1":    "G3,G5,G6",
+    "ritual-recorder.ps1":          "G8",
+    "ascendance-ritual-harness.ps1": "G7",
+    "ascendance-independent-verify.ps1": "G1,G2,G3,G4,G5,G6,G7,G8,G14"
+  },
+  "acceptance": {
+    "whatif_dryrun_all_harnesses": "PASS",
+    "harness_gate_header_declared_per_file": "PASS",
+    "session_id_injection_param": "PASS (RunDir/session.json)",
+    "independent_verify_tool_family": "powershell_invoke+python_json+curl_ssh+filesystem_mtime (different from harness)"
+  }
+}

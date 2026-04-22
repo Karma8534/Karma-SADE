@@ -11,21 +11,30 @@
   "plan_run_id": "plan-run-20260421T234721Z-64a746fd",
   "sovereign_go_utc": "2026-04-21T23:47:47Z",
   "phase_markers_dir": "evidence/plan-run-20260421T234721Z-64a746fd/",
-  "phases_complete": ["0", "0.5", "1", "2"],
-  "phase": 3,
-  "status": "ready_for_phase_3",
-  "last_completed_sub_phase": "2.11",
-  "last_session_ended_utc": "2026-04-22T14:10:00Z",
-  "turn_budget_remaining": 10,
-  "next_session_first_action": "Phase 3 — rewrite 6 harnesses (phase1-cold-boot/phase2-parity/phase2-stress/phase3-family/ritual-recorder/ascendance-ritual) + ascendance-independent-verify; budget 14 turns",
+  "phases_complete": ["0", "0.5", "1", "2", "3"],
+  "phase": 4,
+  "status": "ready_for_phase_4",
+  "last_completed_sub_phase": "3.8",
+  "last_session_ended_utc": "2026-04-22T14:18:30Z",
+  "turn_budget_remaining": 8,
+  "next_session_first_action": "Phase 4 -- implement Scripts/ascendance-final-gate.ps1 (verifier) + .git/hooks/pre-commit (scope whitelist + secret scan + MEMORY.md schema + banned-label) + Scripts/install-ascendance-hooks.ps1 + Scripts/ascendance-verifier-self-test.ps1; budget 10 turns",
   "key_artifacts": {
-    "latest_commit_sha":  "540fbe77 (Phase 2.11 resolution + P115 + karma.ts nonce priority fix)",
+    "latest_commit_sha":  "pending-phase-3-commit",
     "binary_sha":          "4D4BCA72EE70ADD08B606DF483A3AC33AABBD6D3AD2681CD9C237C3246A795BC",
     "binary_name":         "arknexusv6.exe",
     "binary_built_utc":    "2026-04-22T14:02:17Z",
-    "cdp_launch_script":   "Scripts/launch-julian-cdp.ps1 (sets ARKNEXUS_DEVTOOLS=1 + WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS)",
-    "cdp_probe_script":    "Scripts/probe-cdp-seeded.ps1"
+    "cdp_launch_script":   "Scripts/launch-julian-cdp.ps1",
+    "cdp_probe_script":    "Scripts/probe-cdp-seeded.ps1",
+    "harness_gate_map": {
+      "phase1-cold-boot-harness.ps1": "G1,G2,G14",
+      "phase2-parity-harness.ps1":    "G3",
+      "phase2-stress-harness.ps1":    "G4",
+      "phase3-family-harness.ps1":    "G3,G5,G6",
+      "ritual-recorder.ps1":          "G8",
+      "ascendance-ritual-harness.ps1": "G7",
+      "ascendance-independent-verify.ps1": "G1,G2,G3,G4,G5,G6,G7,G8,G14"
+    }
   },
   "standing_sovereign_phrase": "No defer. Binary only. If blocked beyond AA1-AA7, AA7 ESCALATION email + wait for auth. No silent defer permitted.",
-  "pitfalls_locked_this_session": ["P113", "P114", "P115"]
+  "pitfalls_locked_this_session": ["P115"]
 }

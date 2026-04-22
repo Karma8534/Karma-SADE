@@ -1,4 +1,27 @@
 ﻿
+## Session 182 (2026-04-22) — Ascendance Build v2 Phase 3 COMPLETE
+
+### What was done (Phase 3 — harness rewrites, budget 14 turns used ~8)
+- **Task 3.1** `Scripts/phase1-cold-boot-harness.ps1` rewritten (G1,G2,G14): SESSION_ID injection via RunDir/session.json, CDP Runtime.evaluate for `<html>` dataset, leveldb_latest scraper for `__bootMetrics`, emits persona_paint_ms + effective_paint_ms per G14.
+- **Task 3.2** `Scripts/phase2-parity-harness.ps1` rewritten (G3): probe text now `PARITY-PROBE-{SESSION_ID}-{utc}`, writes probe to phase2-probe.txt for phase3-family CDP Network capture, session equality check.
+- **Task 3.3** `Scripts/phase2-stress-harness.ps1` rewritten (G4): probes `STRESS-{SESSION_ID}-{n}`, 40 concurrent, configurable settle, cites atomic write-tmp+fsync+rename in cc_server_p1.py.
+- **Task 3.4** `Scripts/phase3-family-harness.ps1` rewritten (G3,G5,G6): Chromium CDP with fresh `%TEMP%\ark-{SESSION_ID}-browser`, WebSocket CDP client for Input.dispatchKeyEvent (slash → picker-open → whoami → Enter), Network.enable for /v1/session body capture, dir deleted on close.
+- **Task 3.5** `Scripts/ritual-recorder.ps1` created (G8): modes mp4 (ffmpeg gdigrab) and pngseq (per-step screenshots), start/mark/stop actions, monotonic timestamp check, within-session-window check, 180s max gap.
+- **Task 3.6** `Scripts/ascendance-ritual-harness.ps1` rewritten (G7): ritual prompt contains SESSION_ID, fresh browser per G6 pattern, recorder marks every step, G7 predicate = first-paint history contains `ASCENDANCE-RITUAL-{SESSION_ID}`.
+- **Task 3.7** `Scripts/ascendance-independent-verify.ps1` created (G1–G8,G14): different tool family (python json + curl via ssh + filesystem mtime + Invoke-WebRequest to local) cross-checking harness gate_g*_pass values, emits delta report.
+- **Task 3.8** `HARNESS_GATE: G#` headers declared on every script; verified via -WhatIf dry-runs.
+- Phase-3 DONE marker written with sha256 of all 7 script artifacts.
+
+### Verification
+- All 6 harness -WhatIf dry-runs print their planned probes cleanly (parse errors from em-dash and arrow characters fixed).
+- Endpoint audit at resurrect: /health 200, /v1/status 200, /v1/chat 200, P1:7891 200, K2:7892 200.
+- Bus pending queue clean (0 entries to cc).
+
+### Next
+Phase 4 (budget 10 turns): implement `Scripts/ascendance-final-gate.ps1` verifier + `.git/hooks/pre-commit` (scope whitelist + secret scan + MEMORY.md schema + banned-label) + `Scripts/install-ascendance-hooks.ps1` + `Scripts/ascendance-verifier-self-test.ps1`. Checkpoint advanced to `ready_for_phase_4`.
+
+---
+
 ## Session 174 (2026-04-19) — Phase Ascendance 1 Step 1 COMPLETE (Tasks 1-5)
 
 ### What was done
