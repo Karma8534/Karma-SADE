@@ -14,8 +14,8 @@ $ErrorActionPreference = 'Stop'
 if ($WhatIf) {
   Write-Host 'HARNESS_GATE: G1,G2,G14'
   Write-Host 'Probe plan:'
-  Write-Host '  1. Kill julian,msedgewebview2'
-  Write-Host '  2. Launch Julian.exe with ARKNEXUS_DEVTOOLS=1 + CDP port'
+  Write-Host '  1. Kill arknexusv6,julian,msedgewebview2'
+  Write-Host '  2. Launch arknexusv6.exe with ARKNEXUS_DEVTOOLS=1 + CDP port'
   Write-Host '  3. Measure window_visible_ms (MainWindowHandle poll)'
   Write-Host '  4. CDP Runtime.evaluate <html> data-hydration-state + data-session-id'
   Write-Host '  5. Scrape LevelDB __bootMetrics via Scripts/leveldb_latest.ps1'
@@ -47,7 +47,7 @@ Get-Process julian, arknexusv6, msedgewebview2 -ErrorAction SilentlyContinue | S
 Start-Sleep -Milliseconds 700
 
 $env:ARKNEXUS_DEVTOOLS = '1'
-$env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=$CdpPort"
+$env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=$CdpPort --remote-allow-origins=*"
 $env:NEXUS_SESSION_ID = $sessionId
 
 $sw = [Diagnostics.Stopwatch]::StartNew()

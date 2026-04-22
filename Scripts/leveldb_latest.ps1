@@ -1,7 +1,7 @@
 # leveldb_latest.ps1 - Return LATEST value for given key from Tauri WebView2 LevelDB
 # HARNESS_GATE: support (G2 Phase1 cold-boot scraper)
-# Tauri app identifier: net.arknexus.julian
-# LevelDB dir: %LOCALAPPDATA%\net.arknexus.julian\EBWebView\Default\Local Storage\leveldb\
+# Tauri app identifier: net.arknexus.v6
+# LevelDB dir: %LOCALAPPDATA%\net.arknexus.v6\EBWebView\Default\Local Storage\leveldb\
 # Format: key-value sstable. LOG record format:
 #   sequence(8) + type(1) + key_len(varint) + key + value_len(varint) + value (simplified)
 # Our strategy: regex-scan .log files for UTF-8 key text; return last match's trailing value.
@@ -9,7 +9,7 @@
 param(
   [Parameter(Mandatory=$true)][string]$Key,
   [string]$LevelDbDir,
-  [string]$AppIdentifier = 'net.arknexus.julian'
+  [string]$AppIdentifier = 'net.arknexus.v6'
 )
 $ErrorActionPreference = 'Stop'
 if (-not $LevelDbDir) {
