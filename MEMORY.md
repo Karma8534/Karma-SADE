@@ -703,3 +703,4 @@ next: verify running process/window title and continuity behavior remain stable
 - 2026-04-22T15:40:00Z: Captured rebuilt frontend static bundle after boot-metrics store update; kept Phase1 harness readiness polling to stabilize CDP hydrate capture.
 - 2026-04-22T15:42:00Z: Synced G14 tracker artifact hash in ascendance run index/manifest and ignored recurring dry-run phase1 probe outputs to prevent false git-dirty regressions.
 - 2026-04-22T15:46:00Z: Accepted live fix in frontend/src/app/page.tsx to always run hydrateBootFrame pre-auth; rebuilt frontend/out assets synced.
+- SESSION_ID: 256a1a69-8279-45c7-8f85-4f306d68c8c1 | 2026-04-22T15:49:00Z | Refreshed G14 tracker artifact hash references in EVIDENCE_INDEX + artifact_manifest after live tracker snapshot drift.
