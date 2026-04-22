@@ -694,3 +694,5 @@ next: verify running process/window title and continuity behavior remain stable
 - Why: required for machine-gated tracker_shipped_in_session truth at final gate.
 - Blockers/next: rerun ascendance-final-gate and confirm exit 0.
 
+
+- 2026-04-22T15:25:00Z: Stabilized volatile runtime tracking by ignoring tracker state + runtime log from git cleanliness checks.
