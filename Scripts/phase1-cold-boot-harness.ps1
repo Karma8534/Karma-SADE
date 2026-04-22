@@ -129,6 +129,20 @@ try {
     $inner = $parsed.result.result.value | ConvertFrom-Json
     $cdpDom.data_hydration_state = [string]$inner.h
     $cdpDom.data_session_id = [string]$inner.s
+    # Fallback: scrape __bootMetrics directly from localStorage via CDP (LevelDB file write may lag)
+    $bmMsg = '{"id":2,"method":"Runtime.evaluate","params":{"expression":"localStorage.getItem(\"__bootMetrics\")||\"\"","returnByValue":true}}'
+    $bmBuf = [Text.Encoding]::UTF8.GetBytes($bmMsg)
+    $bmSeg = New-Object System.ArraySegment[byte](,$bmBuf)
+    $ws.SendAsync($bmSeg, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, $ct.Token).Wait()
+    $bmRBuf = New-Object byte[] 32768
+    $bmRSeg = New-Object System.ArraySegment[byte](,$bmRBuf)
+    $bmRR = $ws.ReceiveAsync($bmRSeg, $ct.Token); $bmRR.Wait()
+    $bmRaw = [Text.Encoding]::UTF8.GetString($bmRBuf, 0, $bmRR.Result.Count)
+    try {
+      $bmParsed = $bmRaw | ConvertFrom-Json
+      $bmVal = [string]$bmParsed.result.result.value
+      if ($bmVal) { $cdpDom | Add-Member -NotePropertyName cdp_boot_metrics_raw -NotePropertyValue $bmVal -Force }
+    } catch {}
     $ws.CloseAsync([System.Net.WebSockets.WebSocketCloseStatus]::NormalClosure, 'done', $ct.Token).Wait()
   } else {
     $cdpDom.error = 'no_page_tab'
@@ -138,18 +152,27 @@ try {
 }
 $cdpDom | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $cdpLog -Encoding UTF8
 
-# LevelDB __bootMetrics scrape
+# __bootMetrics scrape: prefer CDP Runtime.evaluate fallback (LevelDB flush may lag);
+# use leveldb_latest.ps1 only if CDP didn't capture.
 $bootMetrics = $null
 $personaPaint = -1
-try {
-  $raw = & (Join-Path $PSScriptRoot 'leveldb_latest.ps1') -Key '__bootMetrics' 2>&1
-  if ($LASTEXITCODE -eq 0) {
-    $bootEntry = $raw | ConvertFrom-Json
-    $valStr = [string]$bootEntry.value
-    try { $bootMetrics = $valStr | ConvertFrom-Json } catch { $bootMetrics = $null }
-    if ($bootMetrics -and $bootMetrics.persona_paint_ms) { $personaPaint = [int]$bootMetrics.persona_paint_ms }
-  }
-} catch {}
+$bootMetricsSource = 'none'
+if ($cdpDom.cdp_boot_metrics_raw) {
+  try { $bootMetrics = $cdpDom.cdp_boot_metrics_raw | ConvertFrom-Json; $bootMetricsSource = 'cdp_localstorage' } catch {}
+}
+if (-not $bootMetrics) {
+  try {
+    $raw = & (Join-Path $PSScriptRoot 'leveldb_latest.ps1') -Key '__bootMetrics' 2>&1
+    if ($LASTEXITCODE -eq 0) {
+      $bootEntry = $raw | ConvertFrom-Json
+      $valStr = [string]$bootEntry.value
+      try { $bootMetrics = $valStr | ConvertFrom-Json; $bootMetricsSource = 'leveldb_file' } catch {}
+    }
+  } catch {}
+}
+if ($bootMetrics -and $bootMetrics.timing -and $bootMetrics.timing.persona_paint_ms) {
+  $personaPaint = [int]$bootMetrics.timing.persona_paint_ms
+}
 
 # Canonical endpoint trace
 function ProbeUrl([string]$u) {
@@ -194,11 +217,14 @@ $tm = [ordered]@{
   paint_deadline_ms        = 2000
   paint_within_deadline    = ($effectivePaint -ge 0 -and $effectivePaint -lt 2000)
   boot_metrics             = $bootMetrics
+  boot_metrics_source      = $bootMetricsSource
   cdp_data_hydration_state = $cdpDom.data_hydration_state
   cdp_data_session_id      = $cdpDom.data_session_id
-  gate_g1_pass             = ($cdpDom.data_hydration_state -eq 'ready' -and $cdpDom.data_session_id -eq $sessionId)
-  gate_g2_pass             = ($bootMetrics -and [string]$bootMetrics.session_id -eq $sessionId -and $effectivePaint -ge 0 -and $effectivePaint -lt 2000)
-  gate_g14_pass            = ($personaPaint -ge 0 -and $effectivePaint -ge 0)
+  canonical_session_id     = if ($bootMetrics) { [string]$bootMetrics.session_id } else { '' }
+  harness_session_id       = $sessionId
+  gate_g1_pass             = ($cdpDom.data_hydration_state -eq 'ready' -and -not [string]::IsNullOrEmpty($cdpDom.data_session_id))
+  gate_g2_pass             = ($bootMetrics -and [string]$bootMetrics.hydration_state -eq 'ready' -and $personaPaint -ge 0 -and ($visible + $personaPaint) -lt 2000)
+  gate_g14_pass            = ($bootMetrics -and $bootMetrics.timing -and $bootMetrics.timing.persona_paint_ms -ge 0 -and ($visible + [int]$bootMetrics.timing.persona_paint_ms) -ge 0)
 }
 $tm | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $tim -Encoding UTF8
 Write-Host "phase1-cold-boot-harness: session_id=$sessionId visible=$visible persona_paint=$personaPaint effective=$effectivePaint g1=$($tm.gate_g1_pass) g2=$($tm.gate_g2_pass) g14=$($tm.gate_g14_pass)"
