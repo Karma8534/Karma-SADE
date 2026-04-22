@@ -7,9 +7,12 @@
   "anchor_tag": "pre-ascendance-build-v2-20260421T204928Z",
   "anchor_utc": "2026-04-21T20:49:28Z",
   "phase": 0,
-  "status": "pending",
-  "phase_markers_dir": "evidence/plan-run-{run_id}/",
+  "status": "in_progress",
+  "plan_run_id": "plan-run-20260421T234721Z-64a746fd",
+  "last_completed_sub_phase": "0.5",
+  "sovereign_go_utc": "2026-04-21T23:47:47Z",
+  "phase_markers_dir": "evidence/plan-run-20260421T234721Z-64a746fd/",
   "launcher_path": "docs/ForColby/ascendance-launcher-v3-hardened.md",
   "launcher_version": "v3-hardened-20260421T204928Z",
-  "notes": "Anchor committed. Phase 0 NOT started. Sovereign manual review required before preflight battery fires. Next session /resurrect reads this file, confirms status=pending, loads launcher + plan v2 + directive v3 + CONTEXT, awaits explicit go."
+  "notes": "Phase 0 (0.0-0.9) and Phase 0.5 arch audit VERIFIED. Section 8 escalation resolved via D+B hybrid (obs #29521). Auto-stash interference encountered; recovery via atomic commit. Next: Phase 1 red tests + skeletons. vault-neo HEAD drift noted for Phase 6 reconcile."
 }

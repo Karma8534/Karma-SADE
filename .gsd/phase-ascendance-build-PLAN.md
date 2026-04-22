@@ -100,7 +100,7 @@ All sequential unless marked parallel. Each phase: goal, tasks, acceptance, roll
 
 ### PHASE 0 — freeze, archive, bootstrap (budget: 5 turns)
 0.0 Preflight battery (Section 3). Any BLOCKED halts here.
-0.1 git stash push --include-untracked -m "pre-ascendance-drift-{utc}" for non-whitelist M-files. `git status --porcelain` empty.
+0.1 SCOPE-WHITELIST-ENFORCEMENT-ONLY (revised 2026-04-22 S181-cont after §8 escalation + Sovereign D+B hybrid directive; obs #29521; coord_1776816855512_237e). Intent: no non-whitelist file bleeds into any Ascendance commit. Enforcement: Phase 4 pre-commit hook scope whitelist. Procedure: git stash push --include-untracked -m "pre-ascendance-drift-{utc}" as safety net for current state, regardless of drift size. Acceptance: stash entry created AND Phase 4 pre-commit hook rejects any non-whitelist staged path. Original strict predicate "git status --porcelain empty" RETIRED — tree can contain non-Ascendance work; commit-scope whitelist is the authoritative drift block.
 0.2 Archive old Karma2/PLAN.md → Karma2/PLAN-ARCHIVED-{utc}.md. Rewrite Karma2/PLAN.md = pointer to this file.
 0.3 Verify ffmpeg; install if needed.
 0.4 Snapshot sha256: Scripts/phase*-harness.ps1, Scripts/ascendance-*.ps1, .claude/settings.local.json, .git/hooks/pre-commit, Karma2/cc-scope-index.md. Store in plan.session.json.snapshots.

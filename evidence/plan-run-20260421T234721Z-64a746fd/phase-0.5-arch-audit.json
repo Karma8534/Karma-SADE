@@ -1,0 +1,79 @@
+{
+  "phase": "0.5",
+  "audit_utc": "2026-04-22T00:28:00Z",
+  "findings": [
+    {
+      "id": "A01",
+      "check": "grep frontend/src for DOM attrs required by G1+G5+G6",
+      "result": "VERIFIED_PRESENT",
+      "evidence": {
+        "data-hydration-state": "frontend/src/app/page.tsx:97 (useEffect, bound to bootHydration store)",
+        "data-session-id":      "frontend/src/app/page.tsx:100-102 (useEffect, set/removed based on bootSessionId)",
+        "data-picker-open":     "frontend/src/components/SlashCommandPicker.tsx:149 (bound to visible state)"
+      },
+      "implication": "Phase 2 Batch A tasks 2.1, 2.2, 2.3 likely already complete in source. Phase 5 dry-run must verify attrs land in runtime DOM via CDP readback. No conflicting attrs detected.",
+      "conflicting_attrs_found": false
+    },
+    {
+      "id": "A02",
+      "check": "grep Scripts/cc_server_p1.py for atomic write-then-rename pattern",
+      "result": "VERIFIED_PRESENT",
+      "evidence": {
+        "function_name": "_atomic_write_text",
+        "file_line": "Scripts/cc_server_p1.py:887-899",
+        "pattern": "open(tmp) -> write -> flush -> os.fsync -> os.replace(tmp, target)",
+        "marker_comment_present": true,
+        "marker_text": "# ATOMIC_WRITE_THEN_RENAME file:line"
+      },
+      "implication": "Phase 2 task 2.6 (atomic rename + marker) already complete. G4 atomicity proven by code inspection. Still needs stress test (G4 predicate: 40 concurrent POSTs, byte-diff)."
+    },
+    {
+      "id": "A03",
+      "check": "Tauri LevelDB format canary — locate Julian profile + log file",
+      "result": "VERIFIED_PRESENT",
+      "evidence": {
+        "app_identifier": "net.arknexus.julian",
+        "leveldb_dir": "C:/Users/raest/AppData/Local/net.arknexus.julian/EBWebView/Default/Local Storage/leveldb/",
+        "current_log_file": "000009.log"
+      },
+      "implication": "phase1-cold-boot-harness.ps1 LevelDB path resolver must use 'net.arknexus.julian'. leveldb_latest.ps1 (Phase 2.8) must handle dynamic log numbering."
+    },
+    {
+      "id": "A04",
+      "check": "hub.arknexus.net + P1 /v1/session/{uuid} 404 vs 200 matrix",
+      "result": "VERIFIED_EXPECTED_404",
+      "evidence": {
+        "P1_session_unknown_uuid":      "404",
+        "hub_session_unknown_uuid":     "404",
+        "hub_chat":                      "200",
+        "P1_health":                     "200"
+      },
+      "implication": "/v1/session/{uuid} returns 404 when session does not exist (correct). Parity harness must POST /v1/chat first (creates session) then probe /v1/session/{id}.",
+      "proxy_route_broken": false
+    },
+    {
+      "id": "A05",
+      "check": "frontend version pins + Cargo.toml",
+      "result": "VERIFIED_SANE",
+      "evidence": {
+        "frontend": {
+          "next": "14.2.21",
+          "react": "18.3.1",
+          "react-dom": "18.3.1",
+          "typescript": "5.7.3"
+        },
+        "cargo_toml_location": "nexus-tauri build tree produced julian.exe/nexus.exe successfully; exact Cargo.toml path deferred to Phase 2 if rebuild needed"
+      },
+      "known_broken_pins_flagged": 0
+    }
+  ],
+  "summary": {
+    "blocked_structural_findings": 0,
+    "ready_to_proceed": true,
+    "major_discoveries": [
+      "DOM attrs for G1+G5 already in source (Phase 2 Batch A may be fast-forward-able)",
+      "Atomic write-then-rename + marker comment already in cc_server_p1.py (Phase 2 task 2.6 already done)",
+      "Tauri app identifier is 'net.arknexus.julian' — harness path must use this"
+    ]
+  }
+}

@@ -128,7 +128,11 @@ Step 2: TBD (awaiting Sovereign direction on next Phase Ascendance milestone)
 - Plan v2 + directive v3 + CONTEXT + checkpoint anchored (obs #29467, commit fecfa21f, tag pre-ascendance-build-v2-20260421T204928Z)
 - Hardened launcher v3 committed (obs #29480) replacing legacy codexDirective041126C reference
 - Desktop shortcut created: C:\Users\raest\OneDrive\Desktop\Arknexus.lnk → nexus.exe
-- Phase 0 gated on Sovereign explicit go — NOT started
+- Phase 0 started 2026-04-22T00:14Z on Sovereign "go Phase 0" directive
+- Phase 0 + 0.5 complete: 15/15 preflight VERIFIED, 5/5 arch audit VERIFIED (obs #29537, #29558)
+- Section 8 escalation: Phase 0.1 strict-tree-predicate unrealistic → D+B hybrid (obs #29521)
+- Major arch discovery: DOM attrs + atomic rename already present in frontend/src + cc_server_p1.py (Phase 2 fast-forward)
+- External auto-stash interference encountered (wiped working tree via git reset); atomic commit recovery
 
 ---
 

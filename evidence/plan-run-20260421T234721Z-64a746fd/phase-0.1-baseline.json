@@ -1,0 +1,25 @@
+{
+  "phase": "0.1",
+  "acceptance_revised_utc": "2026-04-22T00:14:16Z",
+  "sovereign_directive": "D+B hybrid — scope-whitelist-enforcement-only + stash as safety net",
+  "section_8_obs_id": 29521,
+  "section_8_bus_id": "coord_1776816855512_237e",
+  "working_tree_baseline": {
+    "total_porcelain_lines": 15921,
+    "unstaged_deletions": 13673,
+    "unstaged_modifications": 102,
+    "untracked": 2146,
+    "deletion_source": "docs/wip/leaks/cc-haha-main/** (prior-session directory purge, uncommitted)",
+    "modification_source_sample": [
+      "hub-bridge/app/server.js",
+      "hub-bridge/app/proxy.js",
+      "k2/aria/julian_cortex.py",
+      "Scripts/cc_server_p1.py",
+      "Vesper/*",
+      "frontend/src/hooks/useKarmaStream.ts"
+    ]
+  },
+  "enforcement_mechanism": "Phase 4 pre-commit hook scope whitelist — no non-whitelist file may enter any Ascendance commit",
+  "phase_4_validation_test": "Tests/ascendance/test_precommit_scope_whitelist.ps1 (planned)",
+  "status": "VERIFIED (revised predicate; Phase 4 validation deferred)"
+}

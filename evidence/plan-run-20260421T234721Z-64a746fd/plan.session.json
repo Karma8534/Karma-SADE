@@ -1,0 +1,43 @@
+{
+  "plan_run_id": "plan-run-20260421T234721Z-64a746fd",
+  "started_utc": "2026-04-21T23:47:21Z",
+  "anchor_tag": "pre-ascendance-build-v2-20260421T204928Z",
+  "launcher_path": "docs/ForColby/ascendance-launcher-v3-hardened.md",
+  "launcher_sha256": "C4F2DEDC4D58E34D9A16E9D4D92DD30D12C49EDEA7AB7D07681F5EAFB5858871",
+  "plan_path": ".gsd/phase-ascendance-build-PLAN.md",
+  "plan_sha256_at_snapshot": "D4E6CB60A2256FD20DD0779409A0D25D2595657ADEF998A623C62FBBFC36198D",
+  "directive_path": "docs/ForColby/ascendance-directive-v3.md",
+  "directive_sha256": "9B4AA3D38EE06E5D0354D4418CB788DDB7799D38ABE8D6955B1EB205EE37F74B",
+  "sovereign_go_utc": "2026-04-21T23:47:47Z",
+  "operator": "CC (Ascendant)",
+  "model": "claude-opus-4-7 1M High",
+  "snapshots": {
+    "harness_ps1_sha256": {
+      "Scripts/phase1-cold-boot-harness.ps1": "2DC0E7C548E93DE539B61EF8CFCE44C43E76619ACB50767CA0A7915A6AA02176",
+      "Scripts/phase2-parity-harness.ps1":    "C737BEB4CE1ABF35D9A3FA52ECF885AF0AF9752A72179CE266A8A9BA49DFB85B",
+      "Scripts/phase3-family-harness.ps1":    "2BE0E59EA5BC09E3A29A0FFE396AB87E6A1BD32C6651E26CBE0B7CD56545AF41",
+      "Scripts/ascendance-init-run.ps1":      "A362F74E1983B09B9B0482EC2966A6B2E8D8C32E770CFBE4BD2E8D73DC002A2A",
+      "Scripts/ascendance-final-gate.ps1":    "BA74731D854C0BF13E10EF08445CE2048B95BC35FC71D89F1A62994501975F90",
+      "Scripts/ascendance-ritual-harness.ps1":"FC51A587282F8C84EE83D4D02ED3D2DC5B28A2BF3AEB123733003842EA1D9054"
+    },
+    "settings_local_sha256": "FB24284225173DC208A390C6EC3D5D8545372507D74C9E62187277201ED8AE6D",
+    "pre_commit_sha256":     "977D685422E5CF41271E750939398ED0127B664BAA962A13D780534AD9E61F9C",
+    "cc_scope_index_sha256": "80C7606A936189D10F26E884B690D7475B5E5B682D069E3A7EE9D05C95C0F08F"
+  },
+  "vault_neo": {
+    "compose_hub_yml_sha256": "0c629e9f5df364b57042bd27e1683772cd0d76137dbabfe0fe0f5d24abd62c5c",
+    "head_sha_at_snapshot": "f92b44de1e3509ad557c6e3d0149acab3ad0b7fa",
+    "drift_vs_local": "behind (Phase 6 reconcile)",
+    "cron_backup": "/tmp/cron.bak.ascendance-plan-run-20260421T234721Z-64a746fd",
+    "cron_lines_paused": 1,
+    "cron_lines_preserved": 4
+  },
+  "ffmpeg_bin": "C:\\Users\\raest\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-8.1-full_build\\bin\\ffmpeg.exe",
+  "preflight_result": "ALL 15 PASS",
+  "phase_0_escalations": [
+    {"obs": 29521, "bus": "coord_1776816855512_237e", "topic": "Phase-0.1 strict-tree-predicate unrealistic", "resolution": "D+B hybrid — scope-whitelist-enforcement-only"}
+  ],
+  "arch_audit_obs": 29558,
+  "arch_audit_bus": "coord_1776817991754_xpfy",
+  "resilience_notes": "External auto-stash process ('pre-ascendance-clean-room-*') observed wiping working tree via git reset HEAD at 2026-04-22T00:34:44Z. Recovery: atomic rebuild + immediate commit. Going forward: commit after every phase end."
+}

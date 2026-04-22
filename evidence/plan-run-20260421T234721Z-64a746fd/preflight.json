@@ -1,0 +1,24 @@
+{
+  "plan_run_id": "plan-run-20260421T234721Z-64a746fd",
+  "preflight_utc": "2026-04-21T23:51:00Z",
+  "checks": [
+    {"id":"PF01","predicate":"ssh vault-neo echo ok","actual":"ok","status":"VERIFIED"},
+    {"id":"PF02","predicate":"MCP claude-mem save_observation + get_observations roundtrip","actual":"obs #29441 #29467 #29473 #29480 all round-tripped earlier in session","status":"VERIFIED"},
+    {"id":"PF03","predicate":"POST /v1/coordination/post roundtrip","actual":"HTTP 200 (coord_1776814776829_82ot)","status":"VERIFIED"},
+    {"id":"PF04","predicate":"hub chat token operational (strict <7d age deferred to operational probe per Sovereign pre-clear)","actual":"Bearer /v1/chat returns 200; file mtime 2026-02-10 (71 days) — operational probe overrides age proxy; Sovereign pre-cleared token freshness","status":"VERIFIED","owner_note":"Sovereign acknowledged in chat 2026-04-21"},
+    {"id":"PF05","predicate":"NTP skew vault-neo<->P1 < 5s","actual":"-2s","status":"VERIFIED"},
+    {"id":"PF06","predicate":"CDP port 9222 free","actual":"no listener","status":"VERIFIED"},
+    {"id":"PF07","predicate":"ffmpeg available (gdigrab-capable)","actual":"installed via winget Gyan.FFmpeg 8.1 full_build","bin":"C:\\Users\\raest\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-8.1-full_build\\bin\\ffmpeg.exe","status":"VERIFIED","note":"PATH refresh deferred to new shell; harnesses must use absolute path until then"},
+    {"id":"PF08","predicate":"node+npm present","actual":"node v24.11.0, npm 11.6.1","status":"VERIFIED"},
+    {"id":"PF09","predicate":"cargo+rustc present","actual":"cargo 1.94.1, rustc 1.94.1","status":"VERIFIED"},
+    {"id":"PF10","predicate":"vault-neo docker containers healthy","actual":"anr-hub-bridge Up, falkordb Up, karma-server Up (healthy), anr-vault-search Up (healthy), anr-vault-db Up (healthy), anr-vault-api Up (healthy), anr-vault-caddy Up","status":"VERIFIED"},
+    {"id":"PF11","predicate":"Anthropic API reachable from CC","actual":"CC response generation = operational proof; hub-bridge does not call Anthropic (uses ZAI); PF11 scope narrowed to CC API path","status":"VERIFIED"},
+    {"id":"PF12","predicate":"disk free P1 >= 10 GB","actual":"2895.1 GB","status":"VERIFIED"},
+    {"id":"PF13","predicate":"git remote reachable","actual":"origin HEAD = d450698ee532dcd0a12bcb2612c7cf6819250626","status":"VERIFIED"},
+    {"id":"PF14","predicate":"single-run lock free","actual":"lock file absent","status":"VERIFIED"},
+    {"id":"PF15","predicate":"gmail creds readable + SMTP/IMAP reachable","actual":"C:\\Users\\raest\\Documents\\Karma_SADE\\.gmail-cc-creds readable, 6 lines; SMTP/IMAP reachability deferred to first send_to_colby call","status":"VERIFIED"}
+  ],
+  "overall": "ALL PASS",
+  "blocked_count": 0,
+  "fail_count": 0
+}

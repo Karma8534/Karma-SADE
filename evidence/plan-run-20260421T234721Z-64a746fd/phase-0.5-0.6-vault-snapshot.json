@@ -1,0 +1,25 @@
+{
+  "phase": "0.5 + 0.6",
+  "snapshot_utc": "2026-04-22T00:20:00Z",
+  "vault_neo_compose_hub_yml_sha256": "0c629e9f5df364b57042bd27e1683772cd0d76137dbabfe0fe0f5d24abd62c5c",
+  "vault_neo_compose_path": "/opt/seed-vault/memory_v1/hub_bridge/compose.hub.yml",
+  "vault_neo_git_head_sha": "f92b44de1e3509ad557c6e3d0149acab3ad0b7fa",
+  "local_git_head_sha_at_snapshot": "d450698ee532dcd0a12bcb2612c7cf6819250626",
+  "drift_detected": true,
+  "drift_reason": "vault-neo HEAD is behind local; Phase 6 will ssh vault-neo git pull to reconcile",
+  "containers": [
+    {"name": "anr-hub-bridge",   "status": "Up 5 minutes"},
+    {"name": "falkordb",          "status": "Up 12 days"},
+    {"name": "karma-server",      "status": "Up 12 days (healthy)"},
+    {"name": "anr-vault-search",  "status": "Up 2 weeks (healthy)"},
+    {"name": "anr-vault-db",      "status": "Up 2 weeks (healthy)"},
+    {"name": "anr-vault-api",     "status": "Up 2 weeks (healthy)"},
+    {"name": "anr-vault-caddy",   "status": "Up 2 weeks"}
+  ],
+  "containers_count": 7,
+  "containers_healthy": 4,
+  "containers_up_no_healthcheck": 3,
+  "containers_unhealthy": 0,
+  "all_up": true,
+  "cron_backup_path_on_vault_neo": "/tmp/cron.bak.ascendance-plan-run-20260421T234721Z-64a746fd"
+}
