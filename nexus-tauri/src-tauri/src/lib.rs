@@ -1,3 +1,5 @@
+use tauri::Manager;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
@@ -9,6 +11,12 @@ pub fn run() {
             .level(log::LevelFilter::Info)
             .build(),
         )?;
+      }
+      // Ascendance harness: open devtools on main window when ARKNEXUS_DEVTOOLS=1
+      if std::env::var("ARKNEXUS_DEVTOOLS").unwrap_or_default() == "1" {
+        if let Some(win) = app.get_webview_window("main") {
+          win.open_devtools();
+        }
       }
       Ok(())
     })

@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-  julian_lib::run();
+  arknexusv6_lib::run();
 }

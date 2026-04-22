@@ -606,3 +606,9 @@ session_id: 256a1a69-8279-45c7-8f85-4f306d68c8c1
 what_changed: included full observed workspace state (hooks, tauri tree, refreshed evidence artifacts, runtime/session deltas)
 why: explicit user directive to include all current changes and ship this state
 next: none
+
+## ArknexusV6 Title Rename 2026-04-22T14:00:00.9542465Z
+what_changed: tauri productName/identifier/window title moved from Julian to ArknexusV6; runtime scripts now prefer arknexusv6.exe; desktop shortcut creator now emits ArknexusV6.lnk on both Desktop paths; included all current workspace changes per user directive option 2
+why: production branding must ship as ArknexusV6 and future launches must preserve that title
+blockers: none
+next: verify running process/window title and continuity behavior remain stable

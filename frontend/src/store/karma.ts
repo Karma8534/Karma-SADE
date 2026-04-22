@@ -515,7 +515,11 @@ export const useKarmaStore = create<KarmaState>((set, get) => ({
       bootTiming: null,
     });
 
-    const fallbackSessionId = String(state.conversationId || generateId());
+    // Ascendance directive v3 G2 nonce priority: if harness pre-seeded karma-ark-session-nonce,
+    // that value is the canonical session_id for __bootMetrics and MUST NOT be overwritten by
+    // server-side /memory/session payload.
+    const ascendanceNonce = (typeof window !== 'undefined') ? (localStorage.getItem('karma-ark-session-nonce') || '') : '';
+    const fallbackSessionId = String(ascendanceNonce || state.conversationId || generateId());
     let sessionId = fallbackSessionId;
     let wakeupText = '';
     let sessionPayload: Record<string, unknown> = {};
@@ -532,7 +536,7 @@ export const useKarmaStore = create<KarmaState>((set, get) => ({
       } else {
         const sessionJson = await sessionResp.json().catch(() => ({}));
         const fetchedSessionId = String(sessionJson?.session_id || '').trim();
-        if (fetchedSessionId) sessionId = fetchedSessionId;
+        if (fetchedSessionId && !ascendanceNonce) sessionId = fetchedSessionId;
       }
 
       if (wakeupResp.ok) {
