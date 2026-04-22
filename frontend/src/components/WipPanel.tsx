@@ -18,6 +18,7 @@ interface Primitive {
   source: string;
   preview?: string;
   primitives?: string[];
+  dismissed_primitives?: string[];
   what?: string;
   impact_if_merged?: string;
   dismiss_reason?: string;
@@ -33,6 +34,7 @@ export function WipPanel({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'todos' | 'primitives'>('todos');
   const [newTodo, setNewTodo] = useState('');
+  const [expandedPrimitiveId, setExpandedPrimitiveId] = useState<string | null>(null);
   const token = useKarmaStore((s) => s.token);
 
   useEffect(() => {
@@ -234,7 +236,11 @@ export function WipPanel({ onClose }: { onClose: () => void }) {
                 </div>
               ) : (
                 primitives.map((p) => (
-                  <div key={p.id} className="border border-karma-border rounded p-2">
+                  <div
+                    key={p.id}
+                    className="border border-karma-border rounded p-2 cursor-pointer hover:bg-karma-bg/40"
+                    onClick={() => setExpandedPrimitiveId((prev) => (prev === p.id ? null : p.id))}
+                  >
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-karma-text font-mono">{p.title}</span>
                       <span className={`text-[9px] tracking-[1px] ${
@@ -243,19 +249,36 @@ export function WipPanel({ onClose }: { onClose: () => void }) {
                       }`}>{p.relevance}</span>
                     </div>
                     <div className="text-[9px] text-karma-muted">{p.source}{p.size_kb ? ` (${p.size_kb}KB)` : ''}</div>
-                    {p.what && <div className="text-[9px] text-karma-accent mt-1">WHAT: <span className="text-karma-text">{p.what}</span></div>}
-                    {p.impact_if_merged && <div className="text-[9px] text-karma-accent2 mt-0.5">IMPACT: <span className="text-karma-text">{p.impact_if_merged}</span></div>}
-                    {Array.isArray(p.primitives) && p.primitives.length > 0 && (
-                      <div className="text-[9px] text-karma-text/70 mt-1">
-                        {p.primitives.slice(0, 3).map((line, idx) => (
-                          <div key={idx}>- {line}</div>
-                        ))}
-                      </div>
+                    <div className="text-[9px] text-karma-muted mt-0.5">{expandedPrimitiveId === p.id ? '▼ details' : '▶ click for details'}</div>
+                    {expandedPrimitiveId === p.id && (
+                      <>
+                        {p.what && <div className="text-[9px] text-karma-accent mt-1">WHAT: <span className="text-karma-text">{p.what}</span></div>}
+                        {p.impact_if_merged && <div className="text-[9px] text-karma-accent2 mt-0.5">IMPACT: <span className="text-karma-text">{p.impact_if_merged}</span></div>}
+
+                        {Array.isArray(p.primitives) && p.primitives.length > 0 && (
+                          <div className="text-[9px] mt-1">
+                            <div className="text-karma-accent2 font-bold">PRUNED FOR ASSIMILATION</div>
+                            {p.primitives.map((line, idx) => (
+                              <div key={idx} className="text-karma-text">- {line}</div>
+                            ))}
+                          </div>
+                        )}
+
+                        {Array.isArray(p.dismissed_primitives) && p.dismissed_primitives.length > 0 && (
+                          <div className="text-[9px] mt-1">
+                            <div className="text-karma-danger font-bold">DISMISSED</div>
+                            {p.dismissed_primitives.map((line, idx) => (
+                              <div key={idx} className="text-karma-danger">- {line}</div>
+                            ))}
+                          </div>
+                        )}
+
+                        {p.dismiss_reason && <div className="text-[9px] text-karma-danger mt-0.5">DISMISS: {p.dismiss_reason}</div>}
+                        {!p.what && p.preview && <div className="text-[9px] text-karma-text/60 mt-0.5">{p.preview}</div>}
+                      </>
                     )}
-                    {p.dismiss_reason && <div className="text-[9px] text-karma-danger mt-0.5">DISMISS: {p.dismiss_reason}</div>}
-                    {!p.what && p.preview && <div className="text-[9px] text-karma-text/60 mt-0.5 line-clamp-2">{p.preview}</div>}
                     {p.status === 'pending' ? (
-                      <div className="flex gap-2 justify-end">
+                      <div className="flex gap-2 justify-end mt-2" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => rejectPrimitive(p.id)}
                           className="px-2 py-0.5 text-[9px] border border-karma-border text-karma-muted hover:border-karma-danger hover:text-karma-danger cursor-pointer bg-transparent"
@@ -266,7 +289,7 @@ export function WipPanel({ onClose }: { onClose: () => void }) {
                         >YES \u2192 MERGE</button>
                       </div>
                     ) : (
-                      <div className={`text-[9px] text-right ${statusColor(p.status)}`}>
+                      <div className={`text-[9px] text-right mt-2 ${statusColor(p.status)}`}>
                         {p.status.toUpperCase()}
                       </div>
                     )}

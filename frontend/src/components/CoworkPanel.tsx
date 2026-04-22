@@ -15,6 +15,10 @@ export interface CoworkArtifact {
 export function detectCoworkArtifact(content: string, id: string, timestamp: string): CoworkArtifact | null {
   const text = (content || '').trim();
   if (!text) return null;
+  // Filter stale ascendance ritual ledger blobs from historical chat so Cowork shows
+  // actionable artifacts only.
+  if (/\bascendance ritual\b/i.test(text) && /\buuids?\b/i.test(text)) return null;
+  if (/\bcheckpoint uuids?\b/i.test(text) || /\britual continues to step\b/i.test(text)) return null;
 
   const hasDiff = /^diff --git/m.test(text) || /^@@/m.test(text) || /```diff[\s\S]+```/i.test(text);
   const hasCode = /```[\w-]*\n[\s\S]+```/.test(text);
@@ -35,7 +39,7 @@ export function detectCoworkArtifact(content: string, id: string, timestamp: str
   return { id, type, title, content: text, summary, timestamp };
 }
 
-export function CoworkPanel() {
+export function CoworkPanel({ onCollapse }: { onCollapse?: () => void }) {
   const messages = useKarmaStore((s) => s.messages);
   const artifacts = useMemo(
     () => messages
@@ -61,7 +65,17 @@ export function CoworkPanel() {
   return (
     <div className="w-[340px] border-l border-karma-border bg-karma-surface flex-shrink-0 flex flex-col">
       <div className="px-3 py-2 border-b border-karma-border">
-        <div className="text-karma-accent text-[11px] tracking-[2px] font-bold">COWORK</div>
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-karma-accent text-[11px] tracking-[2px] font-bold">COWORK</div>
+          {onCollapse && (
+            <button
+              onClick={onCollapse}
+              className="text-[10px] px-1.5 py-0.5 border border-karma-border text-karma-muted hover:text-karma-accent bg-transparent cursor-pointer"
+            >
+              HIDE
+            </button>
+          )}
+        </div>
         <div className="text-karma-muted text-[10px]">Structured plans, diffs, and code artifacts.</div>
       </div>
 

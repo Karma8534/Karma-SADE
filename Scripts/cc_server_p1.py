@@ -71,7 +71,7 @@ PORT          = 7891
 _current_proc = None  # Track running CC subprocess for cancel
 _proc_lock    = threading.Lock()  # Concurrency guard — one CC subprocess at a time
 _lock_acquired_at = 0  # timestamp when lock was acquired (for stale detection)
-LOCK_STALE_SECONDS = 180  # auto-release lock after 3 minutes (covers API_TIMEOUT + overhead)
+LOCK_STALE_SECONDS = 75  # auto-release lock quickly so stuck runs do not freeze UI chat
 CC_QUEUE_ENABLED = os.environ.get("KARMA_CC_QUEUE", "1").strip().lower() in ("1", "true", "yes", "on")
 CC_QUEUE_WAIT_SECONDS = float(os.environ.get("KARMA_CC_QUEUE_WAIT_SECONDS", "45"))
 TOKEN         = os.environ.get("HUB_CHAT_TOKEN", "")
@@ -972,6 +972,12 @@ def _primitive_noise_line(line):
 
 def _extract_primitives_from_text(text, max_items=3):
     lines = []
+    scored = []
+    keywords = (
+        "must", "should", "use", "build", "implement", "avoid", "verify",
+        "session", "memory", "pipeline", "agent", "tool", "cache", "state",
+        "sync", "route", "fallback", "timeout", "retry", "contract",
+    )
     for raw in str(text or "").splitlines():
         stripped = raw.strip().lstrip("#").strip()
         if not stripped:
@@ -983,13 +989,28 @@ def _extract_primitives_from_text(text, max_items=3):
         words = [w for w in re.split(r"\s+", stripped) if w]
         if len(words) < 5:
             continue
+        if re.search(r"\.(md|txt|pdf)\b", stripped, re.IGNORECASE):
+            continue
+        if re.match(r"^[A-Za-z0-9 _-]{1,42}$", stripped):
+            continue
         alpha_chars = sum(1 for ch in stripped if ch.isalpha())
         if alpha_chars < 15:
             continue
         if re.match(r"^([*\-]|\d+\.)\s+", stripped):
             stripped = re.sub(r"^([*\-]|\d+\.)\s+", "", stripped).strip()
-        if stripped and stripped not in lines:
-            lines.append(stripped)
+        if not stripped:
+            continue
+        score = 0
+        lower = stripped.lower()
+        score += sum(1 for k in keywords if k in lower)
+        if any(k in lower for k in ("http://", "https://", "www.")):
+            score -= 2
+        if len(words) > 35:
+            score -= 1
+        scored.append((score, stripped))
+    for _, candidate in sorted(scored, key=lambda x: (-x[0], len(x[1]))):
+        if candidate not in lines:
+            lines.append(candidate)
         if len(lines) >= max_items:
             break
     if lines:
@@ -1006,6 +1027,16 @@ def _extract_primitives_from_text(text, max_items=3):
         if len(out) >= 2:
             break
     return out
+
+
+def _dismiss_primitive_reason(title, line):
+    t = str(title or "").lower()
+    s = str(line or "").lower()
+    if any(k in t for k in ("30b", "70b", "moe", "localllm", "localllm")) or any(k in s for k in ("30b", "70b", "moe", "full local", "no openai api", "consumer gpu")):
+        return "Conflicts with current mouth/runtime policy and hardware stability constraints."
+    if any(k in s for k in ("replace anthropic", "drop haiku", "disable anthropic")):
+        return "Conflicts with required Haiku-first mouth policy."
+    return ""
 
 
 def _primitive_assessment(title, text):
@@ -1685,6 +1716,34 @@ def _normalize_memory_search_results(payload):
     return rows
 
 
+def _run_memory_recent_observations(limit=20, project="Karma_SADE"):
+    try:
+        limit = int(limit)
+    except Exception:
+        limit = 20
+    limit = max(1, min(limit, 200))
+    params = {"project": str(project or "Karma_SADE"), "limit": limit}
+    code, payload = claudemem_proxy("/api/observations", "GET", params, timeout=5)
+    if code != 200 or not isinstance(payload, dict):
+        return []
+    items = payload.get("items")
+    if not isinstance(items, list):
+        return []
+    rows = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        rows.append({
+            "id": item.get("id", 0),
+            "title": item.get("title", "") or "",
+            "text": item.get("text", "") or item.get("narrative", "") or "",
+            "created_at": item.get("created_at", "") or "",
+            "type": item.get("type", "") or "",
+            "project": item.get("project", "") or "",
+        })
+    return rows
+
+
 def _run_memory_search(query="recent", limit=20, wing=None, room=None, hall=None, tunnel=None):
     try:
         limit = int(limit)
@@ -1692,6 +1751,12 @@ def _run_memory_search(query="recent", limit=20, wing=None, room=None, hall=None
         limit = 20
     limit = max(1, min(limit, 200))
     query = str(query or "recent")
+
+    q_norm = query.strip().lower()
+    if q_norm in ("", "recent", "latest", "now", "current", "newest"):
+        rows = _run_memory_recent_observations(limit=limit, project="Karma_SADE")
+        if rows:
+            return 200, {"ok": True, "results": rows, "count": len(rows), "source": "claude-mem-observations"}
 
     params = {"query": query, "limit": limit}
     if wing:
@@ -2117,8 +2182,17 @@ def _deterministic_workspace_answer(message):
 
 def _deterministic_smalltalk_answer(message):
     msg = str(message or "").strip()
-    if re.fullmatch(r"(?is)(hi|hello|hey|yo|sup|good morning|good afternoon|good evening)(?:\s+[a-z0-9'_-]+){0,3}[!?.\s]*", msg):
+    norm = re.sub(r"[^a-z0-9\s]+", " ", msg.lower())
+    norm = re.sub(r"\s+", " ", norm).strip()
+    if re.fullmatch(r"(hi|hiya|hello|hey|yo|sup|morning|good morning|good afternoon|good evening)(?:\s+[a-z0-9'_-]+){0,3}", norm):
         return "Karma online. Ready."
+    return None
+
+
+def _deterministic_ui_state_answer(message):
+    lower = str(message or "").lower()
+    if re.search(r"\b(explain|what is|what are|why).*\buuids?\s+held\b", lower) or re.search(r"\b\d+\s+uuids?\s+held\b", lower):
+        return "“UUIDs held” is legacy session text from prior parity/test turns in this chat context, not active locked memory objects."
     return None
 
 
@@ -2148,6 +2222,8 @@ def _normalize_karma_voice(user_message, assistant_text):
     if re.search(r"\b(who are you|what are you|identify yourself|are you karma|are you claude)\b", user, re.IGNORECASE):
         return "Karma in Nexus. Mouth model is Claude Haiku on the Anthropic path."
     if re.search(r"^\s*(hi|hello|hey|yo|sup)\b", user, re.IGNORECASE):
+        if re.search(r"\b(uuid|uuids held|working plan captured|ready step)\b", text, re.IGNORECASE):
+            return "Karma online. Ready."
         return "Karma online. Ready."
     filtered = []
     for line in text.splitlines():
@@ -3385,17 +3461,30 @@ class CCHandler(BaseHTTPRequestHandler):
                             assessment = _primitive_assessment(fname, text)
                             meta = primitive_meta.get(fname, {}) if isinstance(primitive_meta, dict) else {}
                             status = str(meta.get("status") or "pending")
+                            assimilable = []
+                            dismissed = []
+                            for line in distilled:
+                                reason = _dismiss_primitive_reason(fname, line)
+                                if reason:
+                                    dismissed.append(f"{line} — {reason}")
+                                else:
+                                    assimilable.append(line)
+                            if not assimilable and dismissed and status == "pending":
+                                status = "dismissed"
                             what = assessment["what"]
                             impact = assessment["impact_if_merged"]
                             dismiss_reason = assessment["dismiss_reason"]
                             if status in {"rejected", "dismissed"} and not dismiss_reason:
                                 dismiss_reason = "Rejected by sovereign review."
+                            if not dismiss_reason and dismissed:
+                                dismiss_reason = dismissed[0].split(" — ", 1)[-1]
                             primitives.append({
                                 "id": fname,
                                 "title": fname.rsplit(".", 1)[0],
                                 "source": f"docs/wip/{fname}",
-                                "preview": distilled[0] if distilled else what,
-                                "primitives": distilled,
+                                "preview": (assimilable[0] if assimilable else (dismissed[0] if dismissed else what)),
+                                "primitives": assimilable,
+                                "dismissed_primitives": dismissed,
                                 "what": what,
                                 "impact_if_merged": impact,
                                 "dismiss_reason": dismiss_reason,
@@ -4033,6 +4122,17 @@ class CCHandler(BaseHTTPRequestHandler):
                         self.wfile.flush()
                         self.close_connection = True
                         return
+                    ui_state_answer = _deterministic_ui_state_answer(message)
+                    if ui_state_answer:
+                        append_transcript(_conv_id, {"role": "user", "content": message, "ts": time.time()})
+                        append_transcript(_conv_id, {"role": "assistant", "content": ui_state_answer, "ts": time.time()})
+                        _append_session_turn(_conv_id, "user", message, source="v1_chat_stream")
+                        _append_session_turn(_conv_id, "assistant", ui_state_answer, source="v1_chat_stream")
+                        self.wfile.write(f"data: {json.dumps({'type': 'assistant', 'message': {'content': [{'type': 'text', 'text': ui_state_answer}], 'model': 'ui-state-shortcut'}}, ensure_ascii=False)}\n\n".encode())
+                        self.wfile.write(f"data: {json.dumps({'type': 'result', 'result': ui_state_answer, 'model': 'ui-state-shortcut', 'total_cost_usd': 0, 'provider': 'workspace'}, ensure_ascii=False)}\n\n".encode())
+                        self.wfile.flush()
+                        self.close_connection = True
+                        return
                     smalltalk_answer = _deterministic_smalltalk_answer(message)
                     if smalltalk_answer:
                         append_transcript(_conv_id, {"role": "user", "content": message, "ts": time.time()})
@@ -4169,6 +4269,14 @@ class CCHandler(BaseHTTPRequestHandler):
                         _append_session_turn(batch_conv_id, "user", message, source="v1_chat_batch")
                         _append_session_turn(batch_conv_id, "assistant", workspace_answer, source="v1_chat_batch")
                         self._json(200, {"ok": True, "response": workspace_answer})
+                        return
+                    ui_state_answer = _deterministic_ui_state_answer(message)
+                    if ui_state_answer:
+                        append_transcript(batch_conv_id, {"role": "user", "content": message, "ts": time.time()})
+                        append_transcript(batch_conv_id, {"role": "assistant", "content": ui_state_answer, "ts": time.time()})
+                        _append_session_turn(batch_conv_id, "user", message, source="v1_chat_batch")
+                        _append_session_turn(batch_conv_id, "assistant", ui_state_answer, source="v1_chat_batch")
+                        self._json(200, {"ok": True, "response": ui_state_answer, "model": "ui-state-shortcut", "provider": "workspace"})
                         return
                     smalltalk_answer = _deterministic_smalltalk_answer(message)
                     if smalltalk_answer:

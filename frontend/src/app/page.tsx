@@ -104,6 +104,16 @@ export default function Home() {
   }, [bootHydration, bootSessionId]);
 
   const [showSearch, setShowSearch] = useState(false);
+  const [showCowork, setShowCowork] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const raw = window.localStorage.getItem('karma-show-cowork');
+    return raw == null ? true : raw === '1';
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem('karma-show-cowork', showCowork ? '1' : '0');
+  }, [showCowork]);
 
   // Ctrl+K opens global search
   const handleGlobalKey = useCallback((e: KeyboardEvent) => {
@@ -209,7 +219,16 @@ export default function Home() {
           <MessageInput />
           <StatusBar />
         </div>
-        <CoworkPanel />
+        {showCowork ? (
+          <CoworkPanel onCollapse={() => setShowCowork(false)} />
+        ) : (
+          <button
+            onClick={() => setShowCowork(true)}
+            className="h-full px-2 border-l border-karma-border bg-karma-surface text-karma-accent text-[10px] tracking-[2px] cursor-pointer hover:bg-karma-bg"
+          >
+            COWORK
+          </button>
+        )}
         <ContextPanel />
       </div>
       <CodePanel />

@@ -12,8 +12,9 @@ interface SystemHealth {
 export function StatusBar() {
   const sessionCost = useKarmaStore((s) => s.sessionCost);
   const messages = useKarmaStore((s) => s.messages);
+  const lastModel = useKarmaStore((s) => s.lastModel);
+  const lastProvider = useKarmaStore((s) => s.lastProvider);
   const [health, setHealth] = useState<SystemHealth>({ p1: false, k2: false, vault: false });
-  const [model, setModel] = useState('cc-sovereign');
   const [contextChars, setContextChars] = useState(0);
   const [monthlyCost, setMonthlyCost] = useState(0);
   const token = useKarmaStore((s) => s.token);
@@ -31,7 +32,6 @@ export function StatusBar() {
             k2: data.harness?.k2?.healthy ?? false,
             vault: data.ok ?? false,
           });
-          if (data.harness?.p1?.healthy) setModel('cc-sovereign (Max $0)');
           if (data.monthly_cost_usd != null) setMonthlyCost(data.monthly_cost_usd);
         }
       } catch {}
@@ -49,6 +49,9 @@ export function StatusBar() {
 
   const contextKB = (contextChars / 1024).toFixed(1);
   const contextPct = Math.min(100, (contextChars / 128000) * 100).toFixed(0);
+  const modelLabel = lastModel
+    ? `${lastProvider || 'provider'} → ${lastModel}`
+    : 'awaiting model route';
 
   const dot = (ok: boolean) => (
     <span className={`inline-block w-1.5 h-1.5 rounded-full ${ok ? 'bg-karma-accent2' : 'bg-karma-danger'}`} />
@@ -57,7 +60,7 @@ export function StatusBar() {
   return (
     <div className="flex items-center gap-4 text-[10px] text-karma-muted px-4 py-1 border-t border-karma-border bg-karma-bg">
       {/* Model badge */}
-      <span className="text-karma-accent font-mono">{model}</span>
+      <span className="text-karma-accent font-mono">{modelLabel}</span>
 
       {/* Session cost */}
       <span>

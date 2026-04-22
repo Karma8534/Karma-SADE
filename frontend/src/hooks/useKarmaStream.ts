@@ -48,7 +48,7 @@ export function useKarmaStream(options: StreamOptions = {}) {
     store.addMessage({
       id: karmaId,
       role: 'karma',
-      content: '',
+      content: 'Karma is thinking...',
       timestamp: new Date().toISOString(),
     });
 
@@ -118,6 +118,11 @@ export function useKarmaStream(options: StreamOptions = {}) {
 
       if (res.status === 401) {
         store.setError('Token rejected.');
+        const state = useKarmaStore.getState();
+        const lastMsg = state.messages[state.messages.length - 1];
+        if (lastMsg?.role === 'karma' && lastMsg.content === 'Karma is thinking...') {
+          store.updateLastMessage('Auth failed. Reconnect token and retry.');
+        }
         store.setStreaming(false);
         return;
       }
@@ -127,6 +132,7 @@ export function useKarmaStream(options: StreamOptions = {}) {
       // Non-streaming fallback (server returns JSON)
       if (!ct.includes('text/event-stream')) {
         const data = await res.json();
+        store.setLastInference(String(data.model || ''), String(data.provider || ''));
         store.updateLastMessage(
           data.assistant_text || data.response || data.content || data.error || '(no response)'
         );
@@ -173,6 +179,11 @@ export function useKarmaStream(options: StreamOptions = {}) {
         // User cancelled — OK
       } else {
         store.setError(err instanceof Error ? err.message : 'Stream failed');
+        const state = useKarmaStore.getState();
+        const lastMsg = state.messages[state.messages.length - 1];
+        if (lastMsg?.role === 'karma' && lastMsg.content === 'Karma is thinking...') {
+          store.updateLastMessage('Karma reconnecting... please resend in a moment.');
+        }
       }
     } finally {
       store.setStreaming(false);
@@ -243,6 +254,7 @@ export function useKarmaStream(options: StreamOptions = {}) {
       // Final result — update cost
       const cost = evt.total_cost_usd as number;
       if (cost) store.addCost(cost);
+      store.setLastInference(String(evt.model || ''), String(evt.provider || ''));
 
       // If karma message is still empty (all content was in tool calls), set the result
       const state = useKarmaStore.getState();

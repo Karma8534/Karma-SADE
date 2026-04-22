@@ -340,9 +340,11 @@ export const useKarmaStore = create<KarmaState>((set, get) => ({
     set((s) => {
       const msgs = [...s.messages];
       if (msgs.length > 0 && msgs[msgs.length - 1].role === 'karma') {
+        const prior = msgs[msgs.length - 1].content || '';
+        const base = prior.trim() === 'Karma is thinking...' ? '' : prior;
         msgs[msgs.length - 1] = {
           ...msgs[msgs.length - 1],
-          content: msgs[msgs.length - 1].content + delta,
+          content: base + delta,
         };
       }
       persistMessages(msgs, s.conversationId);

@@ -65,7 +65,7 @@ export function MemoryPanel({ onClose }: { onClose: () => void }) {
           <span className="text-karma-accent text-[11px] tracking-[2px] font-bold">MEMORY</span>
           <div className="flex gap-2 items-center">
             <a
-              href="http://localhost:37778"
+              href="http://127.0.0.1:37782"
               target="_blank"
               rel="noopener noreferrer"
               className="text-karma-muted text-[9px] hover:text-karma-accent"
