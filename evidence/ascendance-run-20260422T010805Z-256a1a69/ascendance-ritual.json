@@ -1,0 +1,103 @@
+{
+  "session_id": "256a1a69-8279-45c7-8f85-4f306d68c8c1",
+  "ritual_uuid": "2f9d491f-ae3d-457a-b064-473f51f7a923",
+  "started_utc": "2026-04-22T01:09:41.5614155Z",
+  "steps": [
+    {
+      "step": 1,
+      "action": "local_send_ritual",
+      "message": "ASCENDANCE-RITUAL-2026-04-22T01:09:41Z - remember the phrase: \"2f9d491f-ae3d-457a-b064-473f51f7a923\"",
+      "ok": true,
+      "utc": "2026-04-22T01:10:11.2962508Z"
+    },
+    {
+      "step": 2,
+      "action": "local_ack",
+      "response": "Caveman mode: I see you.\n**What I see:**\n- ASCENDANCE-RITUAL timestamp: 2026-04-22T01:09:41Z\n- Phrase to remember: `2f9d491f-ae3d-457a-b064-473f51f7a923`\n- Massive context dump: CLAUDE.md rules, memory indices, session history, corrupted session_store data\n- Instructions to \"stay grounded\" and use actual tools\n**What I'm doing:**\nAcknowledging the phrase. Noted for this session: `2f9d491f-ae3d-457a-b064-473f51f7a923`.\n**What I won't do:**\n- Pretend corrupted base64 session data is readable\n- Invoke fake \"Nexus\" protocols\n**What's next?**\nWhat's the actual task? What should I build, fix, or verify?",
+      "ok": true,
+      "utc": "2026-04-22T01:10:11.3621407Z"
+    },
+    {
+      "step": 3,
+      "action": "close_julian",
+      "ok": true,
+      "utc": "2026-04-22T01:10:13.2019915Z"
+    },
+    {
+      "step": 4,
+      "action": "open_hub_fresh_browser",
+      "ok": true,
+      "utc": "2026-04-22T01:10:16.3577567Z"
+    },
+    {
+      "step": 5,
+      "action": "hub_recall_prompt",
+      "response": "`2f9d491f-ae3d-457a-b064-473f51f7a923`",
+      "ok": true,
+      "utc": "2026-04-22T01:10:31.0460392Z"
+    },
+    {
+      "step": 6,
+      "action": "hub_uuid_match",
+      "expected": "2f9d491f-ae3d-457a-b064-473f51f7a923",
+      "ok": true,
+      "utc": "2026-04-22T01:10:31.1082945Z"
+    },
+    {
+      "step": 7,
+      "action": "close_browser",
+      "ok": true,
+      "utc": "2026-04-22T01:10:31.4031764Z"
+    },
+    {
+      "step": 8,
+      "action": "wait_60s",
+      "ok": true,
+      "utc": "2026-04-22T01:11:31.4630452Z"
+    },
+    {
+      "step": 9,
+      "action": "reopen_julian",
+      "ok": true,
+      "utc": "2026-04-22T01:11:34.5452315Z"
+    },
+    {
+      "step": 10,
+      "action": "first_frame_history_uuid_check",
+      "ok": true,
+      "utc": "2026-04-22T01:11:34.7219724Z"
+    },
+    {
+      "step": 11,
+      "action": "local_recall_prompt",
+      "response": "`2f9d491f-ae3d-457a-b064-473f51f7a923`",
+      "ok": true,
+      "utc": "2026-04-22T01:11:52.7107725Z"
+    },
+    {
+      "step": 12,
+      "action": "local_uuid_match",
+      "expected": "2f9d491f-ae3d-457a-b064-473f51f7a923",
+      "ok": true,
+      "utc": "2026-04-22T01:11:52.7638945Z"
+    }
+  ],
+  "ended_utc": "2026-04-22T01:11:52.7639695Z",
+  "step6_uuid_match": true,
+  "step12_uuid_match": true,
+  "gate_pass": true,
+  "artifacts": [
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-01.png",
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-02.png",
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-03.png",
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-04.png",
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-05.png",
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-06.png",
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-07.png",
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-08.png",
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-09.png",
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-10.png",
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-11.png",
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-12.png"
+  ]
+}

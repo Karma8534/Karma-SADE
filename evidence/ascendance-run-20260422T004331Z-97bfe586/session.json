@@ -1,0 +1,46 @@
+{
+  "run_id": "20260422T004331Z-97bfe586",
+  "mode": "real",
+  "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564",
+  "session_start_utc": "2026-04-22T00:43:31.9852776Z",
+  "plan_file": "C:\\Users\\raest\\Documents\\Karma_SADE\\docs\\For Colby\\cxArkNexusv4Prop1.md",
+  "plan_sha256": "dd8712b1c518b37fa2d07415a476aee0ea293642de79b3fe80bfabd57ee50316",
+  "snapshots": [
+    {
+      "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\.claude\\settings.local.json",
+      "sha256": "c97b55a2addc593536255b3579fc4842bae14e127e6a98ba147f9c6193a0aac4"
+    },
+    {
+      "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\.git\\hooks\\pre-commit",
+      "sha256": "977d685422e5cf41271e750939398ed0127b664baa962a13d780534ad9e61f9c"
+    },
+    {
+      "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\ascendance-final-gate.ps1",
+      "sha256": "ba74731d854c0bf13e10ef08445ce2048b95bc35fc71d89f1a62994501975f90"
+    },
+    {
+      "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\ascendance-init-run.ps1",
+      "sha256": "a362f74e1983b09b9b0482ec2966a6b2e8d8c32e770cfbe4bd2e8d73dc002a2a"
+    },
+    {
+      "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\ascendance-ritual-harness.ps1",
+      "sha256": "cb0bfd0daf320874e11f4a3b2516715ba93b8bc617bd560b32972a6a524de099"
+    },
+    {
+      "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\phase1-cold-boot-harness.ps1",
+      "sha256": "3da9f845cb8f3440e384711165f7661c336a3c879ecdaade16343fb7ceb32092"
+    },
+    {
+      "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\phase2-parity-harness.ps1",
+      "sha256": "83718cd73af5db44bf7cd82e44fbf6e8d97ad9263ba1ae1c35b9985ea1188a17"
+    },
+    {
+      "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\phase2-stress-harness.ps1",
+      "sha256": "0ac61b382c729c203f18aaad3e1057224110876b9976fcd6298ec8c7bd8e377f"
+    },
+    {
+      "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\phase3-family-harness.ps1",
+      "sha256": "ad9ee507904cab2ba8904a27da762f17ee5b84277bec4409f5aa19b793b5aee4"
+    }
+  ]
+}

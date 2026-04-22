@@ -146,6 +146,7 @@ export function SlashCommandPicker({ filter, onSelect, onClose, visible }: Props
 
   return (
     <div
+      data-picker-open={visible ? 'true' : 'false'}
       className="absolute bottom-full left-0 right-0 mb-1 bg-karma-surface border border-karma-border
                  max-h-[280px] overflow-y-auto z-50 shadow-lg"
       ref={listRef}

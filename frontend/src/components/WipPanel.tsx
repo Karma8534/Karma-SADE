@@ -2,10 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useKarmaStore } from '@/store/karma';
+import { apiFetch } from '@/lib/api';
 
 interface TodoItem {
+  id?: string;
   content: string;
-  status: 'pending' | 'in_progress' | 'completed';
+  status: 'pending' | 'in_progress' | 'completed' | 'rejected';
+  source?: string;
+  updated_at?: string;
 }
 
 interface Primitive {
@@ -13,9 +17,14 @@ interface Primitive {
   title: string;
   source: string;
   preview?: string;
+  primitives?: string[];
+  what?: string;
+  impact_if_merged?: string;
+  dismiss_reason?: string;
+  updated_at?: string;
   size_kb?: number;
   relevance: 'HIGH' | 'MEDIUM' | 'LOW';
-  status: 'pending' | 'approved' | 'rejected' | 'merged';
+  status: 'pending' | 'approved' | 'rejected' | 'merged' | 'dismissed';
 }
 
 export function WipPanel({ onClose }: { onClose: () => void }) {
@@ -23,23 +32,40 @@ export function WipPanel({ onClose }: { onClose: () => void }) {
   const [primitives, setPrimitives] = useState<Primitive[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'todos' | 'primitives'>('todos');
+  const [newTodo, setNewTodo] = useState('');
   const token = useKarmaStore((s) => s.token);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [token]);
 
   async function loadData() {
     setLoading(true);
     try {
-      const res = await fetch('/v1/wip', {
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => null);
+      const res = await apiFetch('/v1/wip', { token }).catch(() => null);
 
       if (res?.ok) {
         const data = await res.json();
         if (data.todos) setTodos(data.todos);
         if (data.primitives) setPrimitives(data.primitives);
+
+        // If state-backed todos are empty, project pending coordination tasks as WIP rows.
+        if ((!Array.isArray(data.todos) || data.todos.length === 0)) {
+          const busRes = await apiFetch('/v1/coordination/recent?limit=20', { token }).catch(() => null);
+          if (busRes?.ok) {
+            const busData = await busRes.json();
+            const entries = Array.isArray(busData.entries) ? busData.entries : [];
+            const busTodos: TodoItem[] = entries
+              .filter((e: Record<string, unknown>) => e && (e.status === 'pending' || e.status === 'open'))
+              .slice(0, 20)
+              .map((e: Record<string, unknown>) => ({
+                content: `${String(e.from || 'unknown')} → ${String(e.to || 'unknown')}: ${String(e.content || '').slice(0, 120)}`,
+                status: 'pending',
+                source: 'coordination',
+              }));
+            if (busTodos.length) setTodos(busTodos);
+          }
+        }
       }
     } catch {}
     setLoading(false);
@@ -48,12 +74,10 @@ export function WipPanel({ onClose }: { onClose: () => void }) {
   async function approvePrimitive(id: string) {
     // Send approval to CC via bus
     try {
-      await fetch('/v1/coordination/post', {
+      await apiFetch('/v1/coordination/post', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        token,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           from: 'sovereign',
           to: 'cc',
@@ -62,12 +86,55 @@ export function WipPanel({ onClose }: { onClose: () => void }) {
           content: `APPROVE primitive ${id} for surgical merge. Julian: choose optimal method and execute.`,
         }),
       });
-      setPrimitives(prev => prev.map(p => p.id === id ? { ...p, status: 'approved' } : p));
+      await setPrimitiveStatus(id, 'approved');
     } catch {}
   }
 
   async function rejectPrimitive(id: string) {
-    setPrimitives(prev => prev.map(p => p.id === id ? { ...p, status: 'rejected' } : p));
+    await setPrimitiveStatus(id, 'rejected');
+  }
+
+  async function setPrimitiveStatus(id: string, status: Primitive['status']) {
+    try {
+      await apiFetch('/v1/wip/primitive-status', {
+        method: 'POST',
+        token,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
+      });
+      setPrimitives(prev => prev.map(p => p.id === id ? { ...p, status } : p));
+    } catch {}
+  }
+
+  async function setTodoStatus(todo: TodoItem, status: TodoItem['status']) {
+    try {
+      await apiFetch('/v1/wip/todo-status', {
+        method: 'POST',
+        token,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: todo.id, content: todo.content, status }),
+      });
+      setTodos((prev) => prev.map((t) => {
+        const sameId = todo.id && t.id && todo.id === t.id;
+        const sameContent = !todo.id && t.content === todo.content;
+        return (sameId || sameContent) ? { ...t, status } : t;
+      }));
+    } catch {}
+  }
+
+  async function addTodo() {
+    const content = newTodo.trim();
+    if (!content) return;
+    try {
+      await apiFetch('/v1/wip/todo-add', {
+        method: 'POST',
+        token,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+      setNewTodo('');
+      await loadData();
+    } catch {}
   }
 
   const statusIcon = (s: string) => {
@@ -80,7 +147,7 @@ export function WipPanel({ onClose }: { onClose: () => void }) {
   const statusColor = (s: string) => {
     if (s === 'completed' || s === 'merged' || s === 'approved') return 'text-karma-accent2';
     if (s === 'in_progress') return 'text-karma-accent';
-    if (s === 'rejected') return 'text-karma-danger';
+    if (s === 'rejected' || s === 'dismissed') return 'text-karma-danger';
     return 'text-karma-muted';
   };
 
@@ -103,6 +170,12 @@ export function WipPanel({ onClose }: { onClose: () => void }) {
                 </button>
               ))}
             </div>
+            <button
+              onClick={loadData}
+              className="px-2 py-0.5 text-[9px] border border-karma-border text-karma-muted hover:text-karma-accent cursor-pointer bg-transparent"
+            >
+              REFRESH
+            </button>
           </div>
           <button onClick={onClose} className="text-karma-muted hover:text-karma-danger cursor-pointer bg-transparent border-none">x</button>
         </div>
@@ -113,6 +186,22 @@ export function WipPanel({ onClose }: { onClose: () => void }) {
             <div className="text-karma-muted text-center p-4">Loading...</div>
           ) : tab === 'todos' ? (
             <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 mb-2">
+                <input
+                  className="flex-1 bg-karma-bg border border-karma-border text-karma-text px-2 py-1 text-[10px] font-mono outline-none focus:border-karma-accent placeholder:text-karma-border"
+                  placeholder="Add a todo..."
+                  value={newTodo}
+                  onChange={(e) => setNewTodo(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && addTodo()}
+                />
+                <button
+                  onClick={addTodo}
+                  disabled={!newTodo.trim()}
+                  className="px-2 py-1 text-[9px] border border-karma-accent text-karma-accent bg-transparent hover:bg-karma-accent/20 cursor-pointer disabled:opacity-40"
+                >
+                  ADD
+                </button>
+              </div>
               {todos.length === 0 ? (
                 <div className="text-karma-muted text-center p-4">
                   No active todos. Julian is either idle or between tasks.
@@ -122,8 +211,15 @@ export function WipPanel({ onClose }: { onClose: () => void }) {
               ) : (
                 todos.map((t, i) => (
                   <div key={i} className="flex items-center gap-2 px-2 py-1 hover:bg-karma-bg">
-                    <span className={`${statusColor(t.status)} text-[10px]`}>{statusIcon(t.status)}</span>
-                    <span className={t.status === 'completed' ? 'line-through text-karma-muted' : 'text-karma-text'}>{t.content}</span>
+                  <span className={`${statusColor(t.status)} text-[10px]`}>{statusIcon(t.status)}</span>
+                    <span className={(t.status === 'completed' || t.status === 'rejected') ? 'line-through text-karma-muted' : 'text-karma-text'}>{t.content}</span>
+                    {t.source && <span className="text-[9px] text-karma-muted ml-auto">{t.source}</span>}
+                    <div className="flex items-center gap-1 ml-auto">
+                      <button onClick={() => setTodoStatus(t, 'pending')} className="px-1.5 py-0.5 text-[8px] border border-karma-border text-karma-muted hover:border-karma-accent cursor-pointer bg-transparent">PEND</button>
+                      <button onClick={() => setTodoStatus(t, 'in_progress')} className="px-1.5 py-0.5 text-[8px] border border-karma-border text-karma-muted hover:border-karma-accent cursor-pointer bg-transparent">DO</button>
+                      <button onClick={() => setTodoStatus(t, 'completed')} className="px-1.5 py-0.5 text-[8px] border border-karma-accent text-karma-accent hover:bg-karma-accent/20 cursor-pointer bg-transparent">DONE</button>
+                      <button onClick={() => setTodoStatus(t, 'rejected')} className="px-1.5 py-0.5 text-[8px] border border-karma-danger text-karma-danger hover:bg-karma-danger/20 cursor-pointer bg-transparent">NO</button>
+                    </div>
                   </div>
                 ))
               )}
@@ -147,7 +243,17 @@ export function WipPanel({ onClose }: { onClose: () => void }) {
                       }`}>{p.relevance}</span>
                     </div>
                     <div className="text-[9px] text-karma-muted">{p.source}{p.size_kb ? ` (${p.size_kb}KB)` : ''}</div>
-                    {p.preview && <div className="text-[9px] text-karma-text/60 mt-0.5 line-clamp-2">{p.preview}</div>}
+                    {p.what && <div className="text-[9px] text-karma-accent mt-1">WHAT: <span className="text-karma-text">{p.what}</span></div>}
+                    {p.impact_if_merged && <div className="text-[9px] text-karma-accent2 mt-0.5">IMPACT: <span className="text-karma-text">{p.impact_if_merged}</span></div>}
+                    {Array.isArray(p.primitives) && p.primitives.length > 0 && (
+                      <div className="text-[9px] text-karma-text/70 mt-1">
+                        {p.primitives.slice(0, 3).map((line, idx) => (
+                          <div key={idx}>- {line}</div>
+                        ))}
+                      </div>
+                    )}
+                    {p.dismiss_reason && <div className="text-[9px] text-karma-danger mt-0.5">DISMISS: {p.dismiss_reason}</div>}
+                    {!p.what && p.preview && <div className="text-[9px] text-karma-text/60 mt-0.5 line-clamp-2">{p.preview}</div>}
                     {p.status === 'pending' ? (
                       <div className="flex gap-2 justify-end">
                         <button
@@ -173,7 +279,9 @@ export function WipPanel({ onClose }: { onClose: () => void }) {
 
         {/* Footer */}
         <div className="px-4 py-2 border-t border-karma-border text-[9px] text-karma-muted">
-          {tab === 'todos' ? `${todos.filter(t => t.status === 'completed').length}/${todos.length} complete` : `${primitives.filter(p => p.status === 'approved' || p.status === 'merged').length}/${primitives.length} approved`}
+          {tab === 'todos'
+            ? `${todos.filter(t => t.status === 'completed').length}/${todos.length} complete`
+            : `${primitives.filter(p => p.status === 'approved' || p.status === 'merged').length}/${primitives.length} approved`}
         </div>
       </div>
     </div>

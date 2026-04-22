@@ -1,0 +1,585 @@
+{
+  "session_id": "256a1a69-8279-45c7-8f85-4f306d68c8c1",
+  "values": {},
+  "history": [
+    {
+      "ts": "2026-04-22T01:08:12.860158Z",
+      "text": "RUN-INIT-256a1a69-8279-45c7-8f85-4f306d68c8c1",
+      "body": {
+        "role": "user",
+        "turn": "RUN-INIT-256a1a69-8279-45c7-8f85-4f306d68c8c1"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:37.108090Z",
+      "text": "PARITY-PROBE-2026-04-22T01:08:36.9561841Z",
+      "body": {
+        "turn": "PARITY-PROBE-2026-04-22T01:08:36.9561841Z",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:37.790935Z",
+      "text": "PARITY-PROBE-REV-2026-04-22T01:08:37.5197993Z",
+      "body": {
+        "turn": "PARITY-PROBE-REV-2026-04-22T01:08:37.5197993Z",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:48.752324Z",
+      "text": "STRESS-PROBE-20260422T010847Z-3",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010847Z-3"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:49.095853Z",
+      "text": "STRESS-PROBE-20260422T010847Z-5",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010847Z-5"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:49.509849Z",
+      "text": "STRESS-PROBE-20260422T010847Z-7",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010847Z-7",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:49.935881Z",
+      "text": "STRESS-PROBE-20260422T010847Z-9",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010847Z-9",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:50.290339Z",
+      "text": "STRESS-PROBE-20260422T010847Z-11",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010847Z-11"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:50.721956Z",
+      "text": "STRESS-PROBE-20260422T010847Z-13",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010847Z-13",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:50.920744Z",
+      "text": "STRESS-PROBE-20260422T010847Z-14",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010847Z-14",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:51.335953Z",
+      "text": "STRESS-PROBE-20260422T010847Z-16",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010847Z-16",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:51.783563Z",
+      "text": "STRESS-PROBE-20260422T010847Z-18",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010847Z-18",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:52.089791Z",
+      "text": "STRESS-PROBE-20260422T010847Z-19",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010847Z-19"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:52.425565Z",
+      "text": "STRESS-PROBE-20260422T010847Z-21",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010847Z-21"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:52.897386Z",
+      "text": "STRESS-PROBE-20260422T010847Z-23",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010847Z-23"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:53.320389Z",
+      "text": "STRESS-PROBE-20260422T010847Z-25",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010847Z-25"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:53.662026Z",
+      "text": "STRESS-PROBE-20260422T010847Z-27",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010847Z-27",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:54.136678Z",
+      "text": "STRESS-PROBE-20260422T010847Z-29",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010847Z-29",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:54.506989Z",
+      "text": "STRESS-PROBE-20260422T010847Z-31",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010847Z-31",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:54.787726Z",
+      "text": "STRESS-PROBE-20260422T010847Z-32",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010847Z-32",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:54.987275Z",
+      "text": "STRESS-PROBE-20260422T010847Z-33",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010847Z-33",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:55.262370Z",
+      "text": "STRESS-PROBE-20260422T010847Z-34",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010847Z-34",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:55.649887Z",
+      "text": "STRESS-PROBE-20260422T010847Z-36",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010847Z-36"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:56.097927Z",
+      "text": "STRESS-PROBE-20260422T010847Z-38",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010847Z-38",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:56.427864Z",
+      "text": "STRESS-PROBE-20260422T010847Z-40",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010847Z-40"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:09:43.815076Z",
+      "text": "ASCENDANCE-RITUAL-2026-04-22T01:09:41Z - remember the phrase: \"2f9d491f-ae3d-457a-b064-473f51f7a923\"",
+      "body": {
+        "role": "user",
+        "content": "ASCENDANCE-RITUAL-2026-04-22T01:09:41Z - remember the phrase: \"2f9d491f-ae3d-457a-b064-473f51f7a923\"",
+        "turn": "ASCENDANCE-RITUAL-2026-04-22T01:09:41Z - remember the phrase: \"2f9d491f-ae3d-457a-b064-473f51f7a923\"",
+        "source": "v1_chat_batch",
+        "session_id": "256a1a69-8279-45c7-8f85-4f306d68c8c1"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:10:09.030457Z",
+      "text": "Caveman mode: I see you.\n**What I see:**\n- ASCENDANCE-RITUAL timestamp: 2026-04-22T01:09:41Z\n- Phrase to remember: `2f9d491f-ae3d-457a-b064-473f51f7a923`\n- Massive context dump: CLAUDE.md rules, memory indices, session history, corrupted session_store data\n- Instructions to \"stay grounded\" and use actual tools\n**What I'm doing:**\nAcknowledging the phrase. Noted for this session: `2f9d491f-ae3d-457a-b064-473f51f7a923`.\n**What I won't do:**\n- Pretend corrupted base64 session data is readable\n- Invoke fake \"Nexus\" protocols\n**What's next?**\nWhat's the actual task? What should I build, fix, or verify?",
+      "body": {
+        "role": "assistant",
+        "content": "Caveman mode: I see you.\n**What I see:**\n- ASCENDANCE-RITUAL timestamp: 2026-04-22T01:09:41Z\n- Phrase to remember: `2f9d491f-ae3d-457a-b064-473f51f7a923`\n- Massive context dump: CLAUDE.md rules, memory indices, session history, corrupted session_store data\n- Instructions to \"stay grounded\" and use actual tools\n**What I'm doing:**\nAcknowledging the phrase. Noted for this session: `2f9d491f-ae3d-457a-b064-473f51f7a923`.\n**What I won't do:**\n- Pretend corrupted base64 session data is readable\n- Invoke fake \"Nexus\" protocols\n**What's next?**\nWhat's the actual task? What should I build, fix, or verify?",
+        "turn": "Caveman mode: I see you.\n**What I see:**\n- ASCENDANCE-RITUAL timestamp: 2026-04-22T01:09:41Z\n- Phrase to remember: `2f9d491f-ae3d-457a-b064-473f51f7a923`\n- Massive context dump: CLAUDE.md rules, memory indices, session history, corrupted session_store data\n- Instructions to \"stay grounded\" and use actual tools\n**What I'm doing:**\nAcknowledging the phrase. Noted for this session: `2f9d491f-ae3d-457a-b064-473f51f7a923`.\n**What I won't do:**\n- Pretend corrupted base64 session data is readable\n- Invoke fake \"Nexus\" protocols\n**What's next?**\nWhat's the actual task? What should I build, fix, or verify?",
+        "source": "v1_chat_batch",
+        "session_id": "256a1a69-8279-45c7-8f85-4f306d68c8c1"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:10:16.710173Z",
+      "text": "What phrase did I just ask you to remember?",
+      "body": {
+        "role": "user",
+        "content": "What phrase did I just ask you to remember?",
+        "turn": "What phrase did I just ask you to remember?",
+        "source": "v1_chat_batch",
+        "session_id": "256a1a69-8279-45c7-8f85-4f306d68c8c1"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:10:28.815384Z",
+      "text": "`2f9d491f-ae3d-457a-b064-473f51f7a923`",
+      "body": {
+        "role": "assistant",
+        "content": "`2f9d491f-ae3d-457a-b064-473f51f7a923`",
+        "turn": "`2f9d491f-ae3d-457a-b064-473f51f7a923`",
+        "source": "v1_chat_batch",
+        "session_id": "256a1a69-8279-45c7-8f85-4f306d68c8c1"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:11:34.874575Z",
+      "text": "What phrase did I ask you to remember?",
+      "body": {
+        "role": "user",
+        "content": "What phrase did I ask you to remember?",
+        "turn": "What phrase did I ask you to remember?",
+        "source": "v1_chat_batch",
+        "session_id": "256a1a69-8279-45c7-8f85-4f306d68c8c1"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:11:50.559248Z",
+      "text": "`2f9d491f-ae3d-457a-b064-473f51f7a923`",
+      "body": {
+        "role": "assistant",
+        "content": "`2f9d491f-ae3d-457a-b064-473f51f7a923`",
+        "turn": "`2f9d491f-ae3d-457a-b064-473f51f7a923`",
+        "source": "v1_chat_batch",
+        "session_id": "256a1a69-8279-45c7-8f85-4f306d68c8c1"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:08.124929Z",
+      "text": "STRESS-PROBE-20260422T011207Z-2",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-2"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:08.148160Z",
+      "text": "STRESS-PROBE-20260422T011207Z-3",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-3",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:08.324799Z",
+      "text": "STRESS-PROBE-20260422T011207Z-4",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-4",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:08.543885Z",
+      "text": "STRESS-PROBE-20260422T011207Z-5",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-5"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:08.690534Z",
+      "text": "STRESS-PROBE-20260422T011207Z-6",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-6",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:08.879626Z",
+      "text": "STRESS-PROBE-20260422T011207Z-7",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-7"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:09.054949Z",
+      "text": "STRESS-PROBE-20260422T011207Z-8",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-8"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:09.307764Z",
+      "text": "STRESS-PROBE-20260422T011207Z-9",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-9",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:09.455853Z",
+      "text": "STRESS-PROBE-20260422T011207Z-10",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-10"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:09.642257Z",
+      "text": "STRESS-PROBE-20260422T011207Z-11",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-11"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:09.855872Z",
+      "text": "STRESS-PROBE-20260422T011207Z-12",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-12"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:10.006017Z",
+      "text": "STRESS-PROBE-20260422T011207Z-13",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-13"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:10.193524Z",
+      "text": "STRESS-PROBE-20260422T011207Z-14",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-14",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:10.432325Z",
+      "text": "STRESS-PROBE-20260422T011207Z-15",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-15",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:10.605277Z",
+      "text": "STRESS-PROBE-20260422T011207Z-16",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-16",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:10.781292Z",
+      "text": "STRESS-PROBE-20260422T011207Z-17",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-17",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:11.024661Z",
+      "text": "STRESS-PROBE-20260422T011207Z-18",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-18"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:11.222698Z",
+      "text": "STRESS-PROBE-20260422T011207Z-19",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-19",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:11.334342Z",
+      "text": "STRESS-PROBE-20260422T011207Z-20",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-20"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:11.516559Z",
+      "text": "STRESS-PROBE-20260422T011207Z-21",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-21"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:11.844492Z",
+      "text": "STRESS-PROBE-20260422T011207Z-22",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-22",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:12.001451Z",
+      "text": "STRESS-PROBE-20260422T011207Z-23",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-23"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:12.192616Z",
+      "text": "STRESS-PROBE-20260422T011207Z-24",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-24",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:12.404185Z",
+      "text": "STRESS-PROBE-20260422T011207Z-25",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-25"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:12.613769Z",
+      "text": "STRESS-PROBE-20260422T011207Z-26",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-26",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:12.785324Z",
+      "text": "STRESS-PROBE-20260422T011207Z-27",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-27"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:12.994503Z",
+      "text": "STRESS-PROBE-20260422T011207Z-28",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-28"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:13.178249Z",
+      "text": "STRESS-PROBE-20260422T011207Z-29",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-29",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:13.362498Z",
+      "text": "STRESS-PROBE-20260422T011207Z-30",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-30",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:13.605747Z",
+      "text": "STRESS-PROBE-20260422T011207Z-31",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-31",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:13.739772Z",
+      "text": "STRESS-PROBE-20260422T011207Z-32",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-32",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:13.956097Z",
+      "text": "STRESS-PROBE-20260422T011207Z-33",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-33"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:14.147982Z",
+      "text": "STRESS-PROBE-20260422T011207Z-34",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-34",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:14.321168Z",
+      "text": "STRESS-PROBE-20260422T011207Z-35",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-35",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:14.553591Z",
+      "text": "STRESS-PROBE-20260422T011207Z-36",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-36"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:14.764187Z",
+      "text": "STRESS-PROBE-20260422T011207Z-37",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-37",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:14.935853Z",
+      "text": "STRESS-PROBE-20260422T011207Z-38",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-38"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:15.112795Z",
+      "text": "STRESS-PROBE-20260422T011207Z-39",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T011207Z-39"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:12:15.249889Z",
+      "text": "STRESS-PROBE-20260422T011207Z-40",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T011207Z-40",
+        "role": "user"
+      }
+    }
+  ],
+  "updated_at": "2026-04-22T01:12:15.249910Z"
+}

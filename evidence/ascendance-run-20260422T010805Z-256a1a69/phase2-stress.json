@@ -1,0 +1,341 @@
+{
+  "artifacts": [
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase2-stress.json",
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase2-stress-diff.txt"
+  ],
+  "ended_utc": "2026-04-22T01:12:15.3028406Z",
+  "history_match": true,
+  "session_id": "256a1a69-8279-45c7-8f85-4f306d68c8c1",
+  "probe_prefix": "STRESS-PROBE-20260422T011207Z",
+  "concurrency": 40,
+  "missing_local_count": 0,
+  "posted_fail_count": 1,
+  "missing_remote_count": 0,
+  "started_utc": "2026-04-22T01:12:07.5049105Z",
+  "posted_ok_count": 39,
+  "ok": true,
+  "post_results": [
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-1",
+      "PSComputerName": "localhost",
+      "RunspaceId": "ae610d79-e1d1-45ff-8510-270006de8b60",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "probe": "STRESS-PROBE-20260422T011207Z-2",
+      "ok": false,
+      "error": "An error occurred while sending the request.",
+      "PSComputerName": "localhost",
+      "RunspaceId": "639ad1d2-c543-4306-9247-7c7bf61ead34",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-3",
+      "PSComputerName": "localhost",
+      "RunspaceId": "6df52db1-a081-4076-8a1f-3eeed333efc9",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-4",
+      "PSComputerName": "localhost",
+      "RunspaceId": "736376a7-5f0a-4715-b9df-10c72dfcfb87",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-5",
+      "PSComputerName": "localhost",
+      "RunspaceId": "76e58be0-df29-4cbc-b7de-aeb425dafab2",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-6",
+      "PSComputerName": "localhost",
+      "RunspaceId": "87c23a11-7f96-40c3-a33e-23599d6ca05e",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-7",
+      "PSComputerName": "localhost",
+      "RunspaceId": "d018dec5-e8d0-440c-8b73-08387b267930",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-8",
+      "PSComputerName": "localhost",
+      "RunspaceId": "a139d5c5-84e0-44b1-b8d0-66cebb25c1f4",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-9",
+      "PSComputerName": "localhost",
+      "RunspaceId": "14dfad37-ed3a-44a6-b47d-24280027f67b",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-10",
+      "PSComputerName": "localhost",
+      "RunspaceId": "03459637-7b53-48c0-99fb-36f0b83581bc",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-11",
+      "PSComputerName": "localhost",
+      "RunspaceId": "8b0a182b-c5c1-40a2-9600-f6b710966707",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-12",
+      "PSComputerName": "localhost",
+      "RunspaceId": "b0ee7ff2-2185-4fea-afce-e55afb269f06",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-13",
+      "PSComputerName": "localhost",
+      "RunspaceId": "923905cc-7093-4515-93f8-c76c15c0fe56",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-14",
+      "PSComputerName": "localhost",
+      "RunspaceId": "4e817442-a5be-4996-beae-ed642ad757eb",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-15",
+      "PSComputerName": "localhost",
+      "RunspaceId": "80f79f8d-d0bd-4082-bea3-1df0ab21b419",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-16",
+      "PSComputerName": "localhost",
+      "RunspaceId": "31cf5b0c-8de3-4354-912b-097862be7ac0",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-17",
+      "PSComputerName": "localhost",
+      "RunspaceId": "ed85bf6c-5a29-4872-9fe9-cfa3e951b814",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-18",
+      "PSComputerName": "localhost",
+      "RunspaceId": "66a27737-070d-4735-b790-ac989ed95449",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-19",
+      "PSComputerName": "localhost",
+      "RunspaceId": "cca6a887-a6ab-4c78-a849-8a14ba9c311f",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-20",
+      "PSComputerName": "localhost",
+      "RunspaceId": "b9e13203-84f6-4282-8ace-0b12e85ef168",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-21",
+      "PSComputerName": "localhost",
+      "RunspaceId": "6c80601b-2b35-4c44-8d94-8a87723b4d97",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-22",
+      "PSComputerName": "localhost",
+      "RunspaceId": "058d4f9c-1f8f-4549-aa37-dafbd1d587b3",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-23",
+      "PSComputerName": "localhost",
+      "RunspaceId": "78da6aac-d7a8-4ef2-97f6-b18074e47e76",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-24",
+      "PSComputerName": "localhost",
+      "RunspaceId": "0df9789e-1fa2-4f92-8034-ab2deb0bd253",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-25",
+      "PSComputerName": "localhost",
+      "RunspaceId": "bc91835a-06e4-42a3-9fdb-baada35c5353",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-26",
+      "PSComputerName": "localhost",
+      "RunspaceId": "becd7936-7be3-409f-b73a-91d0a3e80a4c",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-27",
+      "PSComputerName": "localhost",
+      "RunspaceId": "83f400f3-72d8-4b52-9ee1-967755c7050b",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-28",
+      "PSComputerName": "localhost",
+      "RunspaceId": "38162737-d737-44dc-9cc3-93dce51ca78b",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-29",
+      "PSComputerName": "localhost",
+      "RunspaceId": "732d41ff-d725-40e6-b10e-d42620fb5d41",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-30",
+      "PSComputerName": "localhost",
+      "RunspaceId": "0f4c7725-1fbc-4feb-8430-ee7a35515ca0",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-31",
+      "PSComputerName": "localhost",
+      "RunspaceId": "7a3eb38a-245e-404f-af7a-b88ca2105f57",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-32",
+      "PSComputerName": "localhost",
+      "RunspaceId": "e2485d1e-6b54-4690-85ed-eb6cdacba330",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-33",
+      "PSComputerName": "localhost",
+      "RunspaceId": "6d25c075-d3b6-472d-945c-6c5aae2ff169",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-34",
+      "PSComputerName": "localhost",
+      "RunspaceId": "e9439d6b-9f78-4419-a914-009cfd8e6fcd",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-35",
+      "PSComputerName": "localhost",
+      "RunspaceId": "4d11f1c9-3a22-4c6d-adae-6a24a7d7e016",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-36",
+      "PSComputerName": "localhost",
+      "RunspaceId": "086b8e6e-fddf-4dcf-ad74-006a7f3bf856",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-37",
+      "PSComputerName": "localhost",
+      "RunspaceId": "286d6c83-55f1-4f4d-a0fe-fae0f9e0ec22",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-38",
+      "PSComputerName": "localhost",
+      "RunspaceId": "2b60bbeb-99e0-499f-95ff-5345c46b7a98",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-39",
+      "PSComputerName": "localhost",
+      "RunspaceId": "650fe0de-2525-4e78-8316-6c7ff98a6a71",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T011207Z-40",
+      "PSComputerName": "localhost",
+      "RunspaceId": "c5b8c95f-2565-42af-b10c-f9f0a65c549b",
+      "PSShowComputerName": false
+    }
+  ],
+  "gate_pass": true
+}

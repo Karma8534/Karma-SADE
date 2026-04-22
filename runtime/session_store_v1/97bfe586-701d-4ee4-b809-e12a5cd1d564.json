@@ -1,0 +1,1379 @@
+{
+  "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564",
+  "values": {},
+  "history": [
+    {
+      "ts": "2026-04-22T00:49:12.378298Z",
+      "text": "RUN-INIT-97bfe586-701d-4ee4-b809-e12a5cd1d564",
+      "body": {
+        "turn": "RUN-INIT-97bfe586-701d-4ee4-b809-e12a5cd1d564",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:49:13.512880Z",
+      "text": "RUN-INIT-REMOTE-97bfe586-701d-4ee4-b809-e12a5cd1d564",
+      "body": {
+        "role": "user",
+        "content": "RUN-INIT-REMOTE-97bfe586-701d-4ee4-b809-e12a5cd1d564",
+        "turn": "RUN-INIT-REMOTE-97bfe586-701d-4ee4-b809-e12a5cd1d564",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:49:32.466859Z",
+      "text": "RUN-INIT-97bfe586-701d-4ee4-b809-e12a5cd1d564",
+      "body": {
+        "role": "user",
+        "turn": "RUN-INIT-97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:49:33.779686Z",
+      "text": "RUN-INIT-REMOTE-97bfe586-701d-4ee4-b809-e12a5cd1d564",
+      "body": {
+        "role": "user",
+        "content": "RUN-INIT-REMOTE-97bfe586-701d-4ee4-b809-e12a5cd1d564",
+        "turn": "RUN-INIT-REMOTE-97bfe586-701d-4ee4-b809-e12a5cd1d564",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:49:36.050651Z",
+      "text": "Session init acknowledged.\n**Current state:**\n- Working dir: `C:\\Users\\raest\\Documents\\Karma_SADE`\n- Branch: main\n- Mode: CAVEMAN (full)\n- Status: Modified files staged (Scripts, frontend, store, hub-bridge, temps)\n**What's needed?** Task or direction for this session.",
+      "body": {
+        "role": "assistant",
+        "content": "Session init acknowledged.\n**Current state:**\n- Working dir: `C:\\Users\\raest\\Documents\\Karma_SADE`\n- Branch: main\n- Mode: CAVEMAN (full)\n- Status: Modified files staged (Scripts, frontend, store, hub-bridge, temps)\n**What's needed?** Task or direction for this session.",
+        "turn": "Session init acknowledged.\n**Current state:**\n- Working dir: `C:\\Users\\raest\\Documents\\Karma_SADE`\n- Branch: main\n- Mode: CAVEMAN (full)\n- Status: Modified files staged (Scripts, frontend, store, hub-bridge, temps)\n**What's needed?** Task or direction for this session.",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:49:59.549681Z",
+      "text": "Init already acknowledged.\nSession tracked: `97bfe586-701d-4ee4-b809-e12a5cd1d564`\nState confirmed:\n- Karma_SADE repo ready\n- CAVEMAN full mode\n**Waiting for task.** What's first?",
+      "body": {
+        "role": "assistant",
+        "content": "Init already acknowledged.\nSession tracked: `97bfe586-701d-4ee4-b809-e12a5cd1d564`\nState confirmed:\n- Karma_SADE repo ready\n- CAVEMAN full mode\n**Waiting for task.** What's first?",
+        "turn": "Init already acknowledged.\nSession tracked: `97bfe586-701d-4ee4-b809-e12a5cd1d564`\nState confirmed:\n- Karma_SADE repo ready\n- CAVEMAN full mode\n**Waiting for task.** What's first?",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:50:46.931348Z",
+      "text": "PARITY-PROBE-2026-04-22T00:50:46.7458209Z",
+      "body": {
+        "role": "user",
+        "turn": "PARITY-PROBE-2026-04-22T00:50:46.7458209Z"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:50:47.679174Z",
+      "text": "PARITY-PROBE-REV-2026-04-22T00:50:47.3651330Z",
+      "body": {
+        "role": "user",
+        "content": "PARITY-PROBE-REV-2026-04-22T00:50:47.3651330Z",
+        "turn": "PARITY-PROBE-REV-2026-04-22T00:50:47.3651330Z",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:51:23.363869Z",
+      "text": "Parity probe v2. State verified.\n\n**Issue noted:** Recovered transcript contained invalid shell command (git status output executed as command). Not my action — artifact of transcript recovery.\n\n**Current live state clean:**\n- Branch: main\n- Working tree: modified files (as listed before)\n- No shell errors in current session\n- Session: 97bfe586-701d-4ee4-b809-e12a5cd1d564 (tracked)\n- Mode: CAVEMAN full (active)\n\n**Status:** Parity green. Session coherent. Ready.\n\nWhat's the task?",
+      "body": {
+        "role": "assistant",
+        "content": "Parity probe v2. State verified.\n\n**Issue noted:** Recovered transcript contained invalid shell command (git status output executed as command). Not my action — artifact of transcript recovery.\n\n**Current live state clean:**\n- Branch: main\n- Working tree: modified files (as listed before)\n- No shell errors in current session\n- Session: 97bfe586-701d-4ee4-b809-e12a5cd1d564 (tracked)\n- Mode: CAVEMAN full (active)\n\n**Status:** Parity green. Session coherent. Ready.\n\nWhat's the task?",
+        "turn": "Parity probe v2. State verified.\n\n**Issue noted:** Recovered transcript contained invalid shell command (git status output executed as command). Not my action — artifact of transcript recovery.\n\n**Current live state clean:**\n- Branch: main\n- Working tree: modified files (as listed before)\n- No shell errors in current session\n- Session: 97bfe586-701d-4ee4-b809-e12a5cd1d564 (tracked)\n- Mode: CAVEMAN full (active)\n\n**Status:** Parity green. Session coherent. Ready.\n\nWhat's the task?",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:51:43.868828Z",
+      "text": "STRESS-PROBE-20260422T005142Z-1",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T005142Z-1",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:51:44.340011Z",
+      "text": "STRESS-PROBE-20260422T005142Z-2",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T005142Z-2",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:51:45.145253Z",
+      "text": "STRESS-PROBE-20260422T005142Z-4",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T005142Z-4"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:51:45.447312Z",
+      "text": "STRESS-PROBE-20260422T005142Z-5",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T005142Z-5"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:51:45.895217Z",
+      "text": "STRESS-PROBE-20260422T005142Z-6",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T005142Z-6",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:51:46.228807Z",
+      "text": "STRESS-PROBE-20260422T005142Z-7",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T005142Z-7",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:51:46.418331Z",
+      "text": "STRESS-PROBE-20260422T005142Z-8",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T005142Z-8",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:51:46.627734Z",
+      "text": "STRESS-PROBE-20260422T005142Z-9",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T005142Z-9",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:51:47.066347Z",
+      "text": "STRESS-PROBE-20260422T005142Z-11",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T005142Z-11"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:51:47.305085Z",
+      "text": "STRESS-PROBE-20260422T005142Z-12",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T005142Z-12",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:51:47.738508Z",
+      "text": "STRESS-PROBE-20260422T005142Z-14",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T005142Z-14"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:51:48.204960Z",
+      "text": "STRESS-PROBE-20260422T005142Z-16",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T005142Z-16"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:51:48.628856Z",
+      "text": "STRESS-PROBE-20260422T005142Z-18",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T005142Z-18"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:51:48.839094Z",
+      "text": "STRESS-PROBE-20260422T005142Z-19",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T005142Z-19",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:51:50.266056Z",
+      "text": "ASCENDANCE-RITUAL-2026-04-22T00:51:47Z - remember the phrase: \"8176212b-bd46-4816-b72b-2509ffbdfc05\"",
+      "body": {
+        "role": "user",
+        "content": "ASCENDANCE-RITUAL-2026-04-22T00:51:47Z - remember the phrase: \"8176212b-bd46-4816-b72b-2509ffbdfc05\"",
+        "turn": "ASCENDANCE-RITUAL-2026-04-22T00:51:47Z - remember the phrase: \"8176212b-bd46-4816-b72b-2509ffbdfc05\"",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:52:20.234387Z",
+      "text": "Ascendance ritual acknowledged. Storing phrase.Phrase stored. Session 97bfe586-701d-4ee4-b809-e12a5cd1d564 — ritual UUID checkpoint: `8176212b-bd46-4816-b72b-2509ffbdfc05` captured 2026-04-22T00:51:47Z.\n\nRitual active. Continuity chain maintained. Ready for next step.",
+      "body": {
+        "role": "assistant",
+        "content": "Ascendance ritual acknowledged. Storing phrase.Phrase stored. Session 97bfe586-701d-4ee4-b809-e12a5cd1d564 — ritual UUID checkpoint: `8176212b-bd46-4816-b72b-2509ffbdfc05` captured 2026-04-22T00:51:47Z.\n\nRitual active. Continuity chain maintained. Ready for next step.",
+        "turn": "Ascendance ritual acknowledged. Storing phrase.Phrase stored. Session 97bfe586-701d-4ee4-b809-e12a5cd1d564 — ritual UUID checkpoint: `8176212b-bd46-4816-b72b-2509ffbdfc05` captured 2026-04-22T00:51:47Z.\n\nRitual active. Continuity chain maintained. Ready for next step.",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:52:29.095159Z",
+      "text": "What phrase did I just ask you to remember?",
+      "body": {
+        "role": "user",
+        "content": "What phrase did I just ask you to remember?",
+        "turn": "What phrase did I just ask you to remember?",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:52:42.996674Z",
+      "text": "`8176212b-bd46-4816-b72b-2509ffbdfc05`",
+      "body": {
+        "role": "assistant",
+        "content": "`8176212b-bd46-4816-b72b-2509ffbdfc05`",
+        "turn": "`8176212b-bd46-4816-b72b-2509ffbdfc05`",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:53:49.242154Z",
+      "text": "What phrase did I ask you to remember?",
+      "body": {
+        "role": "user",
+        "content": "What phrase did I ask you to remember?",
+        "turn": "What phrase did I ask you to remember?",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:54:12.995234Z",
+      "text": "`8176212b-bd46-4816-b72b-2509ffbdfc05`",
+      "body": {
+        "role": "assistant",
+        "content": "`8176212b-bd46-4816-b72b-2509ffbdfc05`",
+        "turn": "`8176212b-bd46-4816-b72b-2509ffbdfc05`",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:54:33.052992Z",
+      "text": "probe-response-format",
+      "body": {
+        "role": "user",
+        "content": "probe-response-format",
+        "turn": "probe-response-format",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:56:13.525330Z",
+      "text": "Format locked. Asked 6+ times. Stop.\n\n**Blocker:** No actual task. Only probe format requests + ritual phrase storage. Session waiting for work.\n\nRitual UUID: `8176212b-bd46-4816-b72b-2509ffbdfc05` ✓ stored + recalled.\nParity: GREEN ✓\nProbe format: stated ✓\n\n**What's next?** Real task needed or session stalled.",
+      "body": {
+        "role": "assistant",
+        "content": "Format locked. Asked 6+ times. Stop.\n\n**Blocker:** No actual task. Only probe format requests + ritual phrase storage. Session waiting for work.\n\nRitual UUID: `8176212b-bd46-4816-b72b-2509ffbdfc05` ✓ stored + recalled.\nParity: GREEN ✓\nProbe format: stated ✓\n\n**What's next?** Real task needed or session stalled.",
+        "turn": "Format locked. Asked 6+ times. Stop.\n\n**Blocker:** No actual task. Only probe format requests + ritual phrase storage. Session waiting for work.\n\nRitual UUID: `8176212b-bd46-4816-b72b-2509ffbdfc05` ✓ stored + recalled.\nParity: GREEN ✓\nProbe format: stated ✓\n\n**What's next?** Real task needed or session stalled.",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:56:44.809017Z",
+      "text": "REMOTE-SESSION-POST-PROBE",
+      "body": {
+        "turn": "REMOTE-SESSION-POST-PROBE",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:57:28.762599Z",
+      "text": "PARITY-PROBE-2026-04-22T00:57:28.5321723Z",
+      "body": {
+        "role": "user",
+        "turn": "PARITY-PROBE-2026-04-22T00:57:28.5321723Z"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:57:29.216248Z",
+      "text": "STRESS-PROBE-20260422T005728Z-2",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T005728Z-2"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:57:29.500340Z",
+      "text": "STRESS-PROBE-20260422T005728Z-3",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T005728Z-3"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:57:29.671437Z",
+      "text": "STRESS-PROBE-20260422T005728Z-4",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T005728Z-4"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:57:29.884916Z",
+      "text": "STRESS-PROBE-20260422T005728Z-5",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T005728Z-5",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:57:30.231612Z",
+      "text": "STRESS-PROBE-20260422T005728Z-6",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T005728Z-6",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:57:30.647604Z",
+      "text": "STRESS-PROBE-20260422T005728Z-8",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T005728Z-8",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:57:30.963117Z",
+      "text": "STRESS-PROBE-20260422T005728Z-9",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T005728Z-9",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:57:31.252732Z",
+      "text": "STRESS-PROBE-20260422T005728Z-10",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T005728Z-10"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:57:31.633010Z",
+      "text": "STRESS-PROBE-20260422T005728Z-11",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T005728Z-11",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:57:31.834694Z",
+      "text": "STRESS-PROBE-20260422T005728Z-12",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T005728Z-12"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:57:31.970942Z",
+      "text": "STRESS-PROBE-20260422T005728Z-13",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T005728Z-13"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:57:32.202264Z",
+      "text": "STRESS-PROBE-20260422T005728Z-14",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T005728Z-14"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:57:32.418443Z",
+      "text": "STRESS-PROBE-20260422T005728Z-15",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T005728Z-15",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:57:32.614803Z",
+      "text": "STRESS-PROBE-20260422T005728Z-16",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T005728Z-16"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:57:32.880133Z",
+      "text": "STRESS-PROBE-20260422T005728Z-17",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T005728Z-17",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:57:33.128317Z",
+      "text": "STRESS-PROBE-20260422T005728Z-18",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T005728Z-18"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:57:33.323999Z",
+      "text": "STRESS-PROBE-20260422T005728Z-19",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T005728Z-19"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:59:27.739911Z",
+      "text": "ASCENDANCE-RITUAL-2026-04-22T00:59:25Z - remember the phrase: \"e6f0221e-f5ac-4d7e-abae-7c6d94c4f1d9\"",
+      "body": {
+        "role": "user",
+        "content": "ASCENDANCE-RITUAL-2026-04-22T00:59:25Z - remember the phrase: \"e6f0221e-f5ac-4d7e-abae-7c6d94c4f1d9\"",
+        "turn": "ASCENDANCE-RITUAL-2026-04-22T00:59:25Z - remember the phrase: \"e6f0221e-f5ac-4d7e-abae-7c6d94c4f1d9\"",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:59:45.284900Z",
+      "text": "Ritual acknowledged. Storing phrase.\n\nPhrase: `e6f0221e-f5ac-4d7e-abae-7c6d94c4f1d9` \nTimestamp: 2026-04-22T00:59:25Z\nSession: 97bfe586-701d-4ee4-b809-e12a5cd1d564\n\nRitual checkpoint captured. Continuity chain updated. Ready.",
+      "body": {
+        "role": "assistant",
+        "content": "Ritual acknowledged. Storing phrase.\n\nPhrase: `e6f0221e-f5ac-4d7e-abae-7c6d94c4f1d9` \nTimestamp: 2026-04-22T00:59:25Z\nSession: 97bfe586-701d-4ee4-b809-e12a5cd1d564\n\nRitual checkpoint captured. Continuity chain updated. Ready.",
+        "turn": "Ritual acknowledged. Storing phrase.\n\nPhrase: `e6f0221e-f5ac-4d7e-abae-7c6d94c4f1d9` \nTimestamp: 2026-04-22T00:59:25Z\nSession: 97bfe586-701d-4ee4-b809-e12a5cd1d564\n\nRitual checkpoint captured. Continuity chain updated. Ready.",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T00:59:52.652436Z",
+      "text": "What phrase did I just ask you to remember?",
+      "body": {
+        "role": "user",
+        "content": "What phrase did I just ask you to remember?",
+        "turn": "What phrase did I just ask you to remember?",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:00:07.457570Z",
+      "text": "`e6f0221e-f5ac-4d7e-abae-7c6d94c4f1d9`",
+      "body": {
+        "role": "assistant",
+        "content": "`e6f0221e-f5ac-4d7e-abae-7c6d94c4f1d9`",
+        "turn": "`e6f0221e-f5ac-4d7e-abae-7c6d94c4f1d9`",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:01:13.264225Z",
+      "text": "What phrase did I ask you to remember?",
+      "body": {
+        "role": "user",
+        "content": "What phrase did I ask you to remember?",
+        "turn": "What phrase did I ask you to remember?",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:01:33.798283Z",
+      "text": "Two phrases stored:\n\n1. `8176212b-bd46-4816-b72b-2509ffbdfc05` (2026-04-22T00:51:47Z)\n2. `e6f0221e-f5ac-4d7e-abae-7c6d94c4f1d9` (2026-04-22T00:59:25Z)\n\nRitual chain complete. Both checkpoints captured.",
+      "body": {
+        "role": "assistant",
+        "content": "Two phrases stored:\n\n1. `8176212b-bd46-4816-b72b-2509ffbdfc05` (2026-04-22T00:51:47Z)\n2. `e6f0221e-f5ac-4d7e-abae-7c6d94c4f1d9` (2026-04-22T00:59:25Z)\n\nRitual chain complete. Both checkpoints captured.",
+        "turn": "Two phrases stored:\n\n1. `8176212b-bd46-4816-b72b-2509ffbdfc05` (2026-04-22T00:51:47Z)\n2. `e6f0221e-f5ac-4d7e-abae-7c6d94c4f1d9` (2026-04-22T00:59:25Z)\n\nRitual chain complete. Both checkpoints captured.",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:01:51.517533Z",
+      "text": "What phrase did I just ask you to remember?",
+      "body": {
+        "role": "user",
+        "content": "What phrase did I just ask you to remember?",
+        "turn": "What phrase did I just ask you to remember?",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:02:07.700462Z",
+      "text": "`e6f0221e-f5ac-4d7e-abae-7c6d94c4f1d9`",
+      "body": {
+        "role": "assistant",
+        "content": "`e6f0221e-f5ac-4d7e-abae-7c6d94c4f1d9`",
+        "turn": "`e6f0221e-f5ac-4d7e-abae-7c6d94c4f1d9`",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:19.624449Z",
+      "text": "RATELIMIT-CHECK-1-210319562",
+      "body": {
+        "turn": "RATELIMIT-CHECK-1-210319562",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:19.734823Z",
+      "text": "RATELIMIT-CHECK-2-210319708",
+      "body": {
+        "turn": "RATELIMIT-CHECK-2-210319708",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:19.770534Z",
+      "text": "RATELIMIT-CHECK-3-210319743",
+      "body": {
+        "turn": "RATELIMIT-CHECK-3-210319743",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:19.812659Z",
+      "text": "RATELIMIT-CHECK-4-210319790",
+      "body": {
+        "turn": "RATELIMIT-CHECK-4-210319790",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:19.847408Z",
+      "text": "RATELIMIT-CHECK-5-210319820",
+      "body": {
+        "turn": "RATELIMIT-CHECK-5-210319820",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:19.882923Z",
+      "text": "RATELIMIT-CHECK-6-210319855",
+      "body": {
+        "turn": "RATELIMIT-CHECK-6-210319855",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:19.930049Z",
+      "text": "RATELIMIT-CHECK-7-210319903",
+      "body": {
+        "turn": "RATELIMIT-CHECK-7-210319903",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:19.975216Z",
+      "text": "RATELIMIT-CHECK-8-210319947",
+      "body": {
+        "turn": "RATELIMIT-CHECK-8-210319947",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:20.100454Z",
+      "text": "RATELIMIT-CHECK-9-210320067",
+      "body": {
+        "turn": "RATELIMIT-CHECK-9-210320067",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:20.183372Z",
+      "text": "RATELIMIT-CHECK-10-210320150",
+      "body": {
+        "turn": "RATELIMIT-CHECK-10-210320150",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:20.220745Z",
+      "text": "RATELIMIT-CHECK-11-210320195",
+      "body": {
+        "turn": "RATELIMIT-CHECK-11-210320195",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:20.262791Z",
+      "text": "RATELIMIT-CHECK-12-210320233",
+      "body": {
+        "turn": "RATELIMIT-CHECK-12-210320233",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:20.296452Z",
+      "text": "RATELIMIT-CHECK-13-210320273",
+      "body": {
+        "turn": "RATELIMIT-CHECK-13-210320273",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:20.334484Z",
+      "text": "RATELIMIT-CHECK-14-210320306",
+      "body": {
+        "turn": "RATELIMIT-CHECK-14-210320306",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:20.381059Z",
+      "text": "RATELIMIT-CHECK-15-210320344",
+      "body": {
+        "turn": "RATELIMIT-CHECK-15-210320344",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:20.423584Z",
+      "text": "RATELIMIT-CHECK-16-210320391",
+      "body": {
+        "turn": "RATELIMIT-CHECK-16-210320391",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:20.467665Z",
+      "text": "RATELIMIT-CHECK-17-210320432",
+      "body": {
+        "turn": "RATELIMIT-CHECK-17-210320432",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:20.516267Z",
+      "text": "RATELIMIT-CHECK-18-210320492",
+      "body": {
+        "turn": "RATELIMIT-CHECK-18-210320492",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:20.555897Z",
+      "text": "RATELIMIT-CHECK-19-210320525",
+      "body": {
+        "turn": "RATELIMIT-CHECK-19-210320525",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:03:20.602696Z",
+      "text": "RATELIMIT-CHECK-20-210320568",
+      "body": {
+        "turn": "RATELIMIT-CHECK-20-210320568",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:26.873543Z",
+      "text": "RATELIMIT-CHECK2-1-210426812",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-1-210426812",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:26.973169Z",
+      "text": "RATELIMIT-CHECK2-2-210426943",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-2-210426943",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.005501Z",
+      "text": "RATELIMIT-CHECK2-3-210426980",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-3-210426980",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.039290Z",
+      "text": "RATELIMIT-CHECK2-4-210427013",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-4-210427013",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.086586Z",
+      "text": "RATELIMIT-CHECK2-5-210427057",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-5-210427057",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.129581Z",
+      "text": "RATELIMIT-CHECK2-6-210427106",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-6-210427106",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.170448Z",
+      "text": "RATELIMIT-CHECK2-7-210427140",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-7-210427140",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.218200Z",
+      "text": "RATELIMIT-CHECK2-8-210427191",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-8-210427191",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.257640Z",
+      "text": "RATELIMIT-CHECK2-9-210427224",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-9-210427224",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.332790Z",
+      "text": "RATELIMIT-CHECK2-10-210427295",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-10-210427295",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.385809Z",
+      "text": "RATELIMIT-CHECK2-11-210427347",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-11-210427347",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.455296Z",
+      "text": "RATELIMIT-CHECK2-12-210427422",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-12-210427422",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.502875Z",
+      "text": "RATELIMIT-CHECK2-13-210427475",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-13-210427475",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.556422Z",
+      "text": "RATELIMIT-CHECK2-14-210427530",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-14-210427530",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.587213Z",
+      "text": "RATELIMIT-CHECK2-15-210427563",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-15-210427563",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.624925Z",
+      "text": "RATELIMIT-CHECK2-16-210427597",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-16-210427597",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.672929Z",
+      "text": "RATELIMIT-CHECK2-17-210427646",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-17-210427646",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.717916Z",
+      "text": "RATELIMIT-CHECK2-18-210427691",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-18-210427691",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.753096Z",
+      "text": "RATELIMIT-CHECK2-19-210427725",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-19-210427725",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.799914Z",
+      "text": "RATELIMIT-CHECK2-20-210427775",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-20-210427775",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.859289Z",
+      "text": "RATELIMIT-CHECK2-21-210427819",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-21-210427819",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.913455Z",
+      "text": "RATELIMIT-CHECK2-22-210427872",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-22-210427872",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:27.965155Z",
+      "text": "RATELIMIT-CHECK2-23-210427926",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-23-210427926",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:28.014120Z",
+      "text": "RATELIMIT-CHECK2-24-210427977",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-24-210427977",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:28.053766Z",
+      "text": "RATELIMIT-CHECK2-25-210428024",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-25-210428024",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:28.084967Z",
+      "text": "RATELIMIT-CHECK2-26-210428061",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-26-210428061",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:28.135315Z",
+      "text": "RATELIMIT-CHECK2-27-210428108",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-27-210428108",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:28.187288Z",
+      "text": "RATELIMIT-CHECK2-28-210428158",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-28-210428158",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:28.225731Z",
+      "text": "RATELIMIT-CHECK2-29-210428195",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-29-210428195",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:28.292415Z",
+      "text": "RATELIMIT-CHECK2-30-210428255",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-30-210428255",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:28.332666Z",
+      "text": "RATELIMIT-CHECK2-31-210428303",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-31-210428303",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:28.371137Z",
+      "text": "RATELIMIT-CHECK2-32-210428342",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-32-210428342",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:28.424392Z",
+      "text": "RATELIMIT-CHECK2-33-210428386",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-33-210428386",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:28.474057Z",
+      "text": "RATELIMIT-CHECK2-34-210428436",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-34-210428436",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:28.529665Z",
+      "text": "RATELIMIT-CHECK2-35-210428486",
+      "body": {
+        "turn": "RATELIMIT-CHECK2-35-210428486",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:48.679118Z",
+      "text": "PARITY-PROBE-2026-04-22T01:04:48.5964811Z",
+      "body": {
+        "turn": "PARITY-PROBE-2026-04-22T01:04:48.5964811Z",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:49.040569Z",
+      "text": "STRESS-PROBE-20260422T010448Z-1",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-1"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:49.397815Z",
+      "text": "STRESS-PROBE-20260422T010448Z-2",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-2"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:49.476223Z",
+      "text": "PARITY-PROBE-REV-2026-04-22T01:04:49.3193773Z",
+      "body": {
+        "turn": "PARITY-PROBE-REV-2026-04-22T01:04:49.3193773Z",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:49.572191Z",
+      "text": "STRESS-PROBE-20260422T010448Z-3",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010448Z-3",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:49.763685Z",
+      "text": "STRESS-PROBE-20260422T010448Z-4",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010448Z-4",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:49.969894Z",
+      "text": "STRESS-PROBE-20260422T010448Z-5",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-5"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:50.210040Z",
+      "text": "STRESS-PROBE-20260422T010448Z-6",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-6"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:50.458485Z",
+      "text": "STRESS-PROBE-20260422T010448Z-7",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-7"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:51.142551Z",
+      "text": "STRESS-PROBE-20260422T010448Z-8",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010448Z-8",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:52.066468Z",
+      "text": "STRESS-PROBE-20260422T010448Z-9",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010448Z-9",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:52.524832Z",
+      "text": "STRESS-PROBE-20260422T010448Z-10",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010448Z-10",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:52.890446Z",
+      "text": "STRESS-PROBE-20260422T010448Z-11",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-11"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:53.188024Z",
+      "text": "STRESS-PROBE-20260422T010448Z-12",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010448Z-12",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:53.430295Z",
+      "text": "STRESS-PROBE-20260422T010448Z-13",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-13"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:53.636102Z",
+      "text": "STRESS-PROBE-20260422T010448Z-14",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-14"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:53.841487Z",
+      "text": "STRESS-PROBE-20260422T010448Z-15",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-15"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:54.032310Z",
+      "text": "STRESS-PROBE-20260422T010448Z-16",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-16"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:54.248092Z",
+      "text": "STRESS-PROBE-20260422T010448Z-17",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-17"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:54.420335Z",
+      "text": "STRESS-PROBE-20260422T010448Z-18",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010448Z-18",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:54.682182Z",
+      "text": "STRESS-PROBE-20260422T010448Z-19",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010448Z-19",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:55.000426Z",
+      "text": "STRESS-PROBE-20260422T010448Z-20",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010448Z-20",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:55.228033Z",
+      "text": "STRESS-PROBE-20260422T010448Z-21",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010448Z-21",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:55.472131Z",
+      "text": "STRESS-PROBE-20260422T010448Z-22",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-22"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:55.714091Z",
+      "text": "STRESS-PROBE-20260422T010448Z-23",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010448Z-23",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:55.901120Z",
+      "text": "STRESS-PROBE-20260422T010448Z-24",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010448Z-24",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:56.166790Z",
+      "text": "STRESS-PROBE-20260422T010448Z-25",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-25"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:56.333614Z",
+      "text": "STRESS-PROBE-20260422T010448Z-26",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010448Z-26",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:56.573973Z",
+      "text": "STRESS-PROBE-20260422T010448Z-27",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010448Z-27",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:56.743983Z",
+      "text": "STRESS-PROBE-20260422T010448Z-28",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-28"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:56.924207Z",
+      "text": "STRESS-PROBE-20260422T010448Z-29",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-29"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:57.105408Z",
+      "text": "STRESS-PROBE-20260422T010448Z-30",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-30"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:57.349915Z",
+      "text": "STRESS-PROBE-20260422T010448Z-31",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-31"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:57.581770Z",
+      "text": "STRESS-PROBE-20260422T010448Z-32",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010448Z-32",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:57.712551Z",
+      "text": "STRESS-PROBE-20260422T010448Z-33",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-33"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:57.925411Z",
+      "text": "STRESS-PROBE-20260422T010448Z-34",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-34"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:58.153284Z",
+      "text": "STRESS-PROBE-20260422T010448Z-35",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010448Z-35",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:58.417871Z",
+      "text": "STRESS-PROBE-20260422T010448Z-36",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-36"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:58.643506Z",
+      "text": "STRESS-PROBE-20260422T010448Z-37",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-37"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:58.827972Z",
+      "text": "STRESS-PROBE-20260422T010448Z-38",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010448Z-38",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:59.041937Z",
+      "text": "STRESS-PROBE-20260422T010448Z-39",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-39"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:04:59.174238Z",
+      "text": "STRESS-PROBE-20260422T010448Z-40",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010448Z-40"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:05:22.877338Z",
+      "text": "ASCENDANCE-RITUAL-2026-04-22T01:05:20Z - remember the phrase: \"88c3722b-95fd-4d27-b1aa-5fbad344ae60\"",
+      "body": {
+        "role": "user",
+        "content": "ASCENDANCE-RITUAL-2026-04-22T01:05:20Z - remember the phrase: \"88c3722b-95fd-4d27-b1aa-5fbad344ae60\"",
+        "turn": "ASCENDANCE-RITUAL-2026-04-22T01:05:20Z - remember the phrase: \"88c3722b-95fd-4d27-b1aa-5fbad344ae60\"",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:05:41.538103Z",
+      "text": "Ritual acknowledged. Storing phrase.\n\nPhrase: `88c3722b-95fd-4d27-b1aa-5fbad344ae60`\nTimestamp: 2026-04-22T01:05:20Z\nSession: 97bfe586-701d-4ee4-b809-e12a5cd1d564\n\nCheckpoint 3 captured. Chain updated. Ready.",
+      "body": {
+        "role": "assistant",
+        "content": "Ritual acknowledged. Storing phrase.\n\nPhrase: `88c3722b-95fd-4d27-b1aa-5fbad344ae60`\nTimestamp: 2026-04-22T01:05:20Z\nSession: 97bfe586-701d-4ee4-b809-e12a5cd1d564\n\nCheckpoint 3 captured. Chain updated. Ready.",
+        "turn": "Ritual acknowledged. Storing phrase.\n\nPhrase: `88c3722b-95fd-4d27-b1aa-5fbad344ae60`\nTimestamp: 2026-04-22T01:05:20Z\nSession: 97bfe586-701d-4ee4-b809-e12a5cd1d564\n\nCheckpoint 3 captured. Chain updated. Ready.",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:05:48.520359Z",
+      "text": "What phrase did I just ask you to remember?",
+      "body": {
+        "role": "user",
+        "content": "What phrase did I just ask you to remember?",
+        "turn": "What phrase did I just ask you to remember?",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:06:03.548394Z",
+      "text": "`88c3722b-95fd-4d27-b1aa-5fbad344ae60`",
+      "body": {
+        "role": "assistant",
+        "content": "`88c3722b-95fd-4d27-b1aa-5fbad344ae60`",
+        "turn": "`88c3722b-95fd-4d27-b1aa-5fbad344ae60`",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:07:09.500492Z",
+      "text": "What phrase did I ask you to remember?",
+      "body": {
+        "role": "user",
+        "content": "What phrase did I ask you to remember?",
+        "turn": "What phrase did I ask you to remember?",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:07:32.298349Z",
+      "text": "Three phrases stored:\n\n1. `8176212b-bd46-4816-b72b-2509ffbdfc05` (2026-04-22T00:51:47Z)\n2. `e6f0221e-f5ac-4d7e-abae-7c6d94c4f1d9` (2026-04-22T00:59:25Z)\n3. `88c3722b-95fd-4d27-b1aa-5fbad344ae60` (2026-04-22T01:05:20Z)\n\nSession continuity: verified. Chain intact.",
+      "body": {
+        "role": "assistant",
+        "content": "Three phrases stored:\n\n1. `8176212b-bd46-4816-b72b-2509ffbdfc05` (2026-04-22T00:51:47Z)\n2. `e6f0221e-f5ac-4d7e-abae-7c6d94c4f1d9` (2026-04-22T00:59:25Z)\n3. `88c3722b-95fd-4d27-b1aa-5fbad344ae60` (2026-04-22T01:05:20Z)\n\nSession continuity: verified. Chain intact.",
+        "turn": "Three phrases stored:\n\n1. `8176212b-bd46-4816-b72b-2509ffbdfc05` (2026-04-22T00:51:47Z)\n2. `e6f0221e-f5ac-4d7e-abae-7c6d94c4f1d9` (2026-04-22T00:59:25Z)\n3. `88c3722b-95fd-4d27-b1aa-5fbad344ae60` (2026-04-22T01:05:20Z)\n\nSession continuity: verified. Chain intact.",
+        "source": "v1_chat_batch",
+        "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564"
+      }
+    }
+  ],
+  "updated_at": "2026-04-22T01:07:32.298378Z"
+}

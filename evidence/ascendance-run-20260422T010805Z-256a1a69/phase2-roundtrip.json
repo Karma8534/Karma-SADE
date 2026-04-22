@@ -1,0 +1,11 @@
+{
+  "remote_to_local_within_deadline": true,
+  "session_id": "256a1a69-8279-45c7-8f85-4f306d68c8c1",
+  "probe_local_to_remote": "PARITY-PROBE-2026-04-22T01:08:36.9561841Z",
+  "timestamp": "2026-04-21T21:08:47.3095704-04:00",
+  "remote_to_local_ms": 486,
+  "local_to_remote_ms": 560,
+  "deadline_ms": 5000,
+  "local_to_remote_within_deadline": true,
+  "probe_remote_to_local": "PARITY-PROBE-REV-2026-04-22T01:08:37.5197993Z"
+}

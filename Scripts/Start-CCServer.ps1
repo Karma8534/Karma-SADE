@@ -55,14 +55,26 @@ try {
         Write-Host "[cc-server] WARNING: OpenRouter key not available (.openrouter-api-key missing and env empty)"
     }
 
-    # Emergency hardening: allow Anthropic-independent survival mode.
-    if (-not $env:KARMA_EMERGENCY_INDEPENDENT) { $env:KARMA_EMERGENCY_INDEPENDENT = "1" }
-    if (-not $env:KARMA_DISABLE_ANTHROPIC) { $env:KARMA_DISABLE_ANTHROPIC = "1" }
+    # Default to Anthropic/Max mouth enabled unless explicitly overridden.
+    if (-not $env:KARMA_EMERGENCY_INDEPENDENT) { $env:KARMA_EMERGENCY_INDEPENDENT = "0" }
+    if (-not $env:KARMA_DISABLE_ANTHROPIC) { $env:KARMA_DISABLE_ANTHROPIC = "0" }
+    if (-not $env:CC_BIND_ALL) { $env:CC_BIND_ALL = "1" }
 
     Remove-Item Env:ANTHROPIC_API_KEY -ErrorAction SilentlyContinue
     Remove-Item Env:CLAUDE_API_KEY -ErrorAction SilentlyContinue
 
     Write-Host "[cc-server] Starting cc_server_p1.py on port 7891 at $(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssK')"
+
+    # Ensure inbound access from LAN/Tailscale for hub parity probes.
+    try {
+        $ruleName = "Karma CC Server 7891 Inbound"
+        if (-not (Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue)) {
+            New-NetFirewallRule -DisplayName $ruleName -Direction Inbound -Action Allow -Protocol TCP -LocalPort 7891 | Out-Null
+            Write-Host "[cc-server] Firewall rule created: $ruleName"
+        }
+    } catch {
+        Write-Host "[cc-server] WARNING: firewall rule check/create failed ($($_.Exception.Message))"
+    }
 
     $existingPids = @(netstat -ano | Select-String ":7891 " | ForEach-Object {
         $parts = ($_ -split '\s+') | Where-Object { $_ -ne '' }

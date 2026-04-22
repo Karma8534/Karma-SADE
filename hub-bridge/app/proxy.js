@@ -923,16 +923,186 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, evolution_events: entries, recent_chats: chatEdits, k2_evolution: k2Evolution });
     }
 
+    const reqUrlObj = new URL(req.url, "http://localhost");
+    const reqPath = reqUrlObj.pathname;
+    const reqQuery = reqUrlObj.search || "";
+
     // ── /v1/learnings — what Karma has actually learned (from claude-mem)
-    if (req.method === "GET" && req.url === "/v1/learnings") {
+    if (req.method === "GET" && (reqPath === "/v1/learnings" || reqPath === "/v1/learned")) {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
       try {
         // Fetch from P1 cc_server (has direct claude-mem access)
-        const r = await fetch(`${HARNESS_P1}/v1/learnings`, { headers: harnessHeaders(), signal: AbortSignal.timeout(10000) });
+        const r = await fetch(`${HARNESS_P1}/v1/learnings${reqQuery}`, { headers: harnessHeaders(), signal: AbortSignal.timeout(25000) });
         const data = await r.json();
         return json(res, r.ok ? 200 : 502, data);
       } catch (e) {
         return json(res, 502, { ok: false, error: `Learnings unavailable: ${e.message}` });
+      }
+    }
+
+    // ── Canonical memory/session/model routes required by Nexus boot and panels ──
+    if (req.method === "GET" && (reqPath === "/memory/wakeup" || reqPath === "/memory/session")) {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const r = await fetch(`${HARNESS_P1}${reqPath}${reqQuery}`, {
+          headers: harnessHeaders(),
+          signal: AbortSignal.timeout(10000),
+        });
+        const data = await r.json();
+        return json(res, r.status, data);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `${reqPath} unavailable: ${e.message}` });
+      }
+    }
+    if (req.method === "GET" && reqPath === "/v1/model-policy") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const r = await fetch(`${HARNESS_P1}/v1/model-policy`, {
+          headers: harnessHeaders(),
+          signal: AbortSignal.timeout(8000),
+        });
+        const data = await r.json();
+        return json(res, r.status, data);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `Model policy unavailable: ${e.message}` });
+      }
+    }
+    if (req.method === "GET" && reqPath === "/v1/agents/list") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const r = await fetch(`${HARNESS_P1}/v1/agents/list`, {
+          headers: harnessHeaders(),
+          signal: AbortSignal.timeout(10000),
+        });
+        const data = await r.json();
+        return json(res, r.status, data);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `Agents list unavailable: ${e.message}` });
+      }
+    }
+    if (req.method === "POST" && reqPath === "/v1/agents/spawn") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const raw = await parseBody(req, 100000);
+        const r = await fetch(`${HARNESS_P1}/v1/agents/spawn`, {
+          method: "POST",
+          headers: harnessHeaders({ "Content-Type": "application/json" }),
+          body: raw,
+          signal: AbortSignal.timeout(10000),
+        });
+        const data = await r.json();
+        return json(res, r.status, data);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `Agent spawn unavailable: ${e.message}` });
+      }
+    }
+    if (req.method === "POST" && reqPath.startsWith("/v1/agents/cancel/")) {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const r = await fetch(`${HARNESS_P1}${reqPath}`, {
+          method: "POST",
+          headers: harnessHeaders(),
+          signal: AbortSignal.timeout(10000),
+        });
+        const data = await r.json();
+        return json(res, r.status, data);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `Agent cancel unavailable: ${e.message}` });
+      }
+    }
+    if (req.method === "GET" && reqPath === "/v1/routing/options") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const r = await fetch(`${HARNESS_P1}/v1/routing/options`, {
+          headers: harnessHeaders(),
+          signal: AbortSignal.timeout(10000),
+        });
+        const data = await r.json();
+        return json(res, r.status, data);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `Routing options unavailable: ${e.message}` });
+      }
+    }
+    if (req.method === "GET" && reqPath === "/v1/permissions/summary") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const r = await fetch(`${HARNESS_P1}/v1/permissions/summary`, {
+          headers: harnessHeaders(),
+          signal: AbortSignal.timeout(10000),
+        });
+        const data = await r.json();
+        return json(res, r.status, data);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `Permissions summary unavailable: ${e.message}` });
+      }
+    }
+    if (req.method === "POST" && reqPath === "/v1/permissions/toggle") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const raw = await parseBody(req, 20000);
+        const r = await fetch(`${HARNESS_P1}/v1/permissions/toggle`, {
+          method: "POST",
+          headers: harnessHeaders({ "Content-Type": "application/json" }),
+          body: raw,
+          signal: AbortSignal.timeout(10000),
+        });
+        const data = await r.json();
+        return json(res, r.status, data);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `Permissions toggle unavailable: ${e.message}` });
+      }
+    }
+    if (req.method === "GET" && reqPath === "/v1/plugins/list") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const r = await fetch(`${HARNESS_P1}/v1/plugins/list`, {
+          headers: harnessHeaders(),
+          signal: AbortSignal.timeout(10000),
+        });
+        const data = await r.json();
+        return json(res, r.status, data);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `Plugins list unavailable: ${e.message}` });
+      }
+    }
+    if (req.method === "POST" && reqPath === "/v1/skills/create") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const raw = await parseBody(req, 20000);
+        const r = await fetch(`${HARNESS_P1}/v1/skills/create`, {
+          method: "POST",
+          headers: harnessHeaders({ "Content-Type": "application/json" }),
+          body: raw,
+          signal: AbortSignal.timeout(10000),
+        });
+        const data = await r.json();
+        return json(res, r.status, data);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `Skill create unavailable: ${e.message}` });
+      }
+    }
+    if ((req.method === "GET" || req.method === "POST") && reqPath.match(/^\/v1\/session\/[^/]+$/)) {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      const sid = decodeURIComponent(reqPath.split("/")[3] || "").trim();
+      if (!sid) return json(res, 400, { ok: false, error: "session_id required" });
+      const upstream = `${HARNESS_P1}/v1/session/${encodeURIComponent(sid)}`;
+      try {
+        if (req.method === "GET") {
+          const r = await fetch(upstream, { headers: harnessHeaders(), signal: AbortSignal.timeout(30000) });
+          const data = await r.json();
+          return json(res, r.status, data);
+        }
+        const raw = await parseBody(req, 100000);
+        const r = await fetch(upstream, {
+          method: "POST",
+          headers: harnessHeaders({ "Content-Type": "application/json" }),
+          body: raw,
+          signal: AbortSignal.timeout(30000),
+        });
+        const data = await r.json();
+        return json(res, r.status, data);
+      } catch (e) {
+        return json(res, 502, { ok: false, error: `/v1/session unavailable: ${e.message}` });
       }
     }
 
@@ -1019,7 +1189,7 @@ const server = http.createServer(async (req, res) => {
       try {
         const r = await internalJsonRequest(`${HARNESS_P1}/v1/surface`, {
           headers: harnessHeaders(),
-          timeoutMs: 10000,
+          timeoutMs: 30000,
         });
         return json(res, r.ok ? 200 : 502, r.json);
       } catch (e) { return json(res, 502, { ok: false, error: `Surface endpoint unreachable: ${e.message}` }); }
@@ -1048,7 +1218,9 @@ const server = http.createServer(async (req, res) => {
       if (req.method === "POST" && subpath === "/query") {
         // Direct cortex query — no CC wrapper
         try {
-          const body = await parseBody(req);
+          const raw = await parseBody(req);
+          let body = {};
+          try { body = raw ? JSON.parse(raw) : {}; } catch { body = {}; }
           const r = await fetch(`${K2_CORTEX}/query`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1095,7 +1267,9 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "POST" && req.url === "/v1/email/send") {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
       try {
-        const body = await parseBody(req);
+        const raw = await parseBody(req);
+        let body = {};
+        try { body = raw ? JSON.parse(raw) : {}; } catch { return json(res, 400, { ok: false, error: "invalid_json" }); }
         const r = await fetch(`${HARNESS_P1}/email/send`, {
           method: "POST",
           headers: harnessHeaders({ "Content-Type": "application/json" }),
@@ -1118,6 +1292,20 @@ const server = http.createServer(async (req, res) => {
         return json(res, r.ok ? 200 : 502, r.json);
       } catch (e) { return json(res, 502, { ok: false, error: `WIP endpoint unreachable: ${e.message}` }); }
     }
+    if (req.method === "POST" && req.url === "/v1/wip/todo-add") {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      const raw = await parseBody(req, 20000);
+      try {
+        const r = await fetch(`${HARNESS_P1}/v1/wip/todo-add`, {
+          method: "POST",
+          headers: harnessHeaders({ "Content-Type": "application/json" }),
+          body: raw,
+          signal: AbortSignal.timeout(10000),
+        });
+        const data = await r.json();
+        return json(res, r.status, data);
+      } catch (e) { return json(res, 502, { ok: false, error: `WIP todo-add failed: ${e.message}` }); }
+    }
 
     // ── /v1/files — file tree for Context Panel (Sprint 4c) ────────────
     if (req.method === "GET" && req.url === "/v1/files") {
@@ -1132,7 +1320,20 @@ const server = http.createServer(async (req, res) => {
     }
 
     // ── /v1/memory/search — memory search for Context Panel ──────────
-    if (req.method === "POST" && req.url === "/v1/memory/search") {
+    if (req.method === "GET" && req.url.startsWith("/v1/memory/search")) {
+      if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
+      try {
+        const querySuffix = req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "";
+        const r = await fetch(`${HARNESS_P1}/memory/search${querySuffix}`, {
+          method: "GET",
+          headers: harnessHeaders(),
+          signal: AbortSignal.timeout(5000),
+        });
+        const data = await r.json();
+        return json(res, r.ok ? 200 : 502, data);
+      } catch (e) { return json(res, 502, { ok: false, error: "memory search unreachable" }); }
+    }
+    if (req.method === "POST" && req.url.startsWith("/v1/memory/search")) {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
       const raw = await parseBody(req, 10000);
       try {
@@ -1292,14 +1493,14 @@ const server = http.createServer(async (req, res) => {
           method: "POST", headers: { Authorization: `Bearer ${VAULT_BEARER}`, "Content-Type": "application/json" },
           body: JSON.stringify({ query: "MATCH (n) RETURN count(n) as total" }), timeoutMs: 5000,
         });
-        const fData = JSON.parse(fRes.body);
+        const fData = fRes.json;
         falkordbNodes = fData?.result?.[0]?.[0] ?? fData?.result ?? null;
       } catch (_) {}
       // Read ledger line count via vault-file
       let ledgerCount = null;
       try {
         const lRes = await internalJsonRequest(`${VAULT_INTERNAL_URL}/v1/stats`, { timeoutMs: 5000 });
-        const lData = JSON.parse(lRes.body);
+        const lData = lRes.json;
         ledgerCount = lData?.ledger_entries ?? null;
       } catch (_) {}
       return json(res, 200, {
@@ -1468,9 +1669,11 @@ const server = http.createServer(async (req, res) => {
     }
 
     // ── Coordination Bus: PATCH ───────────────────────────────────────
-    if (req.method === "PATCH" && req.url.startsWith("/v1/coordination/coord_")) {
+    if (req.method === "PATCH" && req.url.startsWith("/v1/coordination/")) {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
-      const id = req.url.replace("/v1/coordination/", "");
+      const parsed = new URL(req.url, "http://localhost");
+      const id = parsed.pathname.replace("/v1/coordination/", "").trim();
+      if (!id || id === "recent" || id === "post") return json(res, 400, { ok: false, error: "invalid coordination id" });
       if (!_coordCache.has(id)) return json(res, 404, { ok: false, error: "not found" });
       const data = JSON.parse(await parseBody(req, 100000));
       const entry = _coordCache.get(id);

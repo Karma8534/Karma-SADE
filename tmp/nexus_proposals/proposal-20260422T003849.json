@@ -1,0 +1,8 @@
+{
+  "section": "Anti-Drift",
+  "text": "Implement a stricter timeout for the `provider=openrouter` probe. Currently, it\u2019s a quick check, but a longer timeout (e.g., 100ms) would reduce the risk of false positives due to minor code changes.",
+  "reason": "This addresses a critical vulnerability \u2013 a short timeout could lead to false emergency alerts, requiring manual investigation and potentially impacting system stability. A longer timeout provides more confidence in the emergency contract's validity.",
+  "id": "proposal-20260422T003849",
+  "created_at": "2026-04-22T00:38:49.153236Z",
+  "status": "pending"
+}

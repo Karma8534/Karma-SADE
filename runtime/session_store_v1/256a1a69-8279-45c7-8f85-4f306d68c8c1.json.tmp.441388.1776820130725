@@ -1,0 +1,79 @@
+{
+  "session_id": "256a1a69-8279-45c7-8f85-4f306d68c8c1",
+  "values": {},
+  "history": [
+    {
+      "ts": "2026-04-22T01:08:12.860158Z",
+      "text": "RUN-INIT-256a1a69-8279-45c7-8f85-4f306d68c8c1",
+      "body": {
+        "role": "user",
+        "turn": "RUN-INIT-256a1a69-8279-45c7-8f85-4f306d68c8c1"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:37.108090Z",
+      "text": "PARITY-PROBE-2026-04-22T01:08:36.9561841Z",
+      "body": {
+        "turn": "PARITY-PROBE-2026-04-22T01:08:36.9561841Z",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:37.790935Z",
+      "text": "PARITY-PROBE-REV-2026-04-22T01:08:37.5197993Z",
+      "body": {
+        "turn": "PARITY-PROBE-REV-2026-04-22T01:08:37.5197993Z",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:48.752324Z",
+      "text": "STRESS-PROBE-20260422T010847Z-3",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010847Z-3"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:49.095853Z",
+      "text": "STRESS-PROBE-20260422T010847Z-5",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010847Z-5"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:49.509849Z",
+      "text": "STRESS-PROBE-20260422T010847Z-7",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010847Z-7",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:49.935881Z",
+      "text": "STRESS-PROBE-20260422T010847Z-9",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010847Z-9",
+        "role": "user"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:50.290339Z",
+      "text": "STRESS-PROBE-20260422T010847Z-11",
+      "body": {
+        "role": "user",
+        "turn": "STRESS-PROBE-20260422T010847Z-11"
+      }
+    },
+    {
+      "ts": "2026-04-22T01:08:50.721956Z",
+      "text": "STRESS-PROBE-20260422T010847Z-13",
+      "body": {
+        "turn": "STRESS-PROBE-20260422T010847Z-13",
+        "role": "user"
+      }
+    }
+  ],
+  "updated_at": "2026-04-22T01:08:50.721988Z"
+}

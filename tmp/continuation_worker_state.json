@@ -1,11 +1,11 @@
 {
-  "ts": "2026-04-08T10:45:02.0599740-04:00",
+  "ts": "2026-04-21T21:15:01.5826081-04:00",
   "paused": false,
   "actions": [
     "cc_email_daemon_check"
   ],
   "results": {
-    "cc_email_daemon_check": "skipped (14.9m since last, threshold=15m)"
+    "cc_email_daemon_check": "skipped (5.0m since last, threshold=15m)"
   },
   "ok": true
 }

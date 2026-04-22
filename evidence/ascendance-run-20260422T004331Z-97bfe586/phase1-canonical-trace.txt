@@ -1,0 +1,26 @@
+[
+  {
+    "url": "http://127.0.0.1:7891/memory/wakeup",
+    "status": 200,
+    "lat": 0,
+    "snippet": "{\"ok\": true, \"wakeup\": \"AAAK WAKEUP | Nexus continuity\\n* [SESSION_STORE] 0febc5fa-058b-4f1-8021-67bfd51101: session_store_v1 session_d=0febc5fa-058b-4f1-8021-67bfd51101 pdated_t=2026-04-22T00:43:45.289728Z payload_base64=yJzZXNzaW9X2lkIjogIjBmZWJjNWZhLTA1GItNGVmMS04MDIxLTZlN2JmZDUxMWEwMSIsICJ2YWx1Z"
+  },
+  {
+    "url": "http://127.0.0.1:7891/memory/session",
+    "status": 200,
+    "lat": 0,
+    "snippet": "{\"ok\": true, \"session_id\": \"0febc5fa-058b-4ef1-8021-6e7bfd511a01\"}"
+  },
+  {
+    "url": "http://127.0.0.1:7891/v1/runtime/truth",
+    "status": 200,
+    "lat": 0,
+    "snippet": "{\"ok\": true, \"identity\": \"Karma\", \"version\": \"5.6.0\", \"service\": \"cc-server-p1\", \"timestamp\": \"2026-04-22T00:43:50.874381Z\", \"pid\": 565936, \"claude_code\": \"unknown\", \"claudemem\": {\"url\": \"http://127.0.0.1:37782\", \"status\": 200, \"healthy\": true, \"payload\": {\"status\": \"ok\", \"version\": \"10.6.3\", \"worke"
+  },
+  {
+    "url": "http://127.0.0.1:7891/v1/session/0febc5fa-058b-4ef1-8021-6e7bfd511a01",
+    "status": 200,
+    "lat": 0,
+    "snippet": "{\"ok\": true, \"session_id\": \"0febc5fa-058b-4ef1-8021-6e7bfd511a01\", \"values\": {}, \"history\": [{\"ts\": \"2026-04-19T01:41:24.581426Z\", \"text\": \"PHASE1-PROBE\", \"body\": {\"source\": \"codex-live-test\", \"role\": \"user\", \"turn\": \"PHASE1-PROBE\", \"content\": \"PHASE1-PROBE-2026-04-18T21:41:24.1496151-04:00\"}}, {\"ts"
+  }
+]

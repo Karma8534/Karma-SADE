@@ -1,0 +1,5 @@
+session_id: 0febc5fa-058b-4ef1-8021-6e7bfd511a01
+last 3 turns:
+user | TEST-V1CHAT
+assistant | 9 UUIDs held. Nexus live. Ready.
+user | PARITY-PROBE-2026-04-22T00:45:14.2876881Z

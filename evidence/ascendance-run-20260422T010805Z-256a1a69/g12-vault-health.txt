@@ -1,0 +1,5 @@
+session_id: 256a1a69-8279-45c7-8f85-4f306d68c8c1
+local_compose_sha: 4b671d78f47bc9743e1a2d94507b5cfbac2e8d4cad289de94b89c925f177735b
+remote_compose_sha: 4b671d78f47bc9743e1a2d94507b5cfbac2e8d4cad289de94b89c925f177735b
+compose_match: True
+docker: anr-hub-bridge Up About an hour karma-server Up 12 days (healthy)

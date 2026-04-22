@@ -7,7 +7,7 @@ Groq, K2, and OpenRouter are degraded fallbacks when Claude is unavailable.
 Returns: {response, ok}
 Auth: Bearer token checked against HUB_CHAT_TOKEN env var.
 """
-import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.parse, sqlite3, base64, threading, time, re, fnmatch, glob, datetime, uuid, ipaddress
+import os, json, sys, subprocess, pathlib, urllib.request, urllib.error, urllib.parse, sqlite3, base64, threading, time, re, fnmatch, glob, datetime, uuid, ipaddress, concurrent.futures, hashlib
 from http.server import HTTPServer, ThreadingHTTPServer, BaseHTTPRequestHandler
 from collections import defaultdict
 sys.path.insert(0, os.path.dirname(__file__))
@@ -78,7 +78,7 @@ TOKEN         = os.environ.get("HUB_CHAT_TOKEN", "")
 
 # H3: Rate limiting — per-IP sliding window
 _rate_buckets = defaultdict(list)  # ip -> [timestamps]
-RATE_LIMIT_RPM = 20  # requests per minute per IP
+RATE_LIMIT_RPM = int(os.environ.get("KARMA_RATE_LIMIT_RPM", "120"))  # requests per minute per IP
 RATE_LIMIT_WINDOW = 60  # seconds
 
 def _check_rate_limit(ip):
@@ -228,6 +228,9 @@ def _redact(s):
 WORK_DIR      = r"C:\Users\raest\Documents\Karma_SADE"
 SESSION_FILE  = pathlib.Path.home() / ".cc_nexus_session_id"  # Dedicated Nexus session — never shared with interactive CC
 SESSION_REGISTRY_FILE = pathlib.Path.home() / ".cc_nexus_session_registry.json"
+SESSION_STORE_LOCAL_DIR = pathlib.Path(WORK_DIR) / "runtime" / "session_store_v1"
+WIP_TODO_META_FILE = pathlib.Path(WORK_DIR) / "runtime" / "wip_todo_meta.json"
+WIP_PRIMITIVE_META_FILE = pathlib.Path(WORK_DIR) / "runtime" / "wip_primitive_meta.json"
 # Bypass .cmd wrapper — call node + cli.js directly (avoids PATH issues in background processes)
 NODE_EXE       = r"C:\Program Files\nodejs\node.exe"
 CLAUDE_CLI_JS  = r"C:\Users\raest\AppData\Roaming\npm\node_modules\@anthropic-ai\claude-code\cli.js"
@@ -240,7 +243,7 @@ except ImportError as e:
     NEXUS_AGENT_AVAILABLE = False
     print(f"[cc-server] NexusAgent: DISABLED ({e})")
 
-API_TIMEOUT    = 120  # seconds — CC subprocess can be slow on complex tasks
+API_TIMEOUT    = int(os.environ.get("KARMA_API_TIMEOUT", "60"))  # seconds
 def _resolve_claudemem_url():
     """Resolve claude-mem worker URL from settings.json with safe fallback."""
     default_port = "37782"
@@ -309,16 +312,11 @@ GROQ_TOOL_DEFS = [
     for tool in TOOL_DEFS
 ]
 TOOL_PROMPT = "\n".join([
-    "You are Karma inside the Nexus harness.",
-    "You do not have direct filesystem or shell access.",
-    "When you need a tool, respond with ONLY a JSON object in this exact form:",
-    '{"tool_use":{"name":"read_file","input":{"path":"MEMORY.md"}}}',
-    "Allowed tools:",
-    json.dumps(TOOL_DEFS),
-    "Rules:",
-    "1. Use tools instead of guessing about files, git state, or shell output.",
-    "2. After a tool result is returned, continue from that result.",
-    "3. When you are done, return plain text only, not JSON.",
+    "You are Karma in the Nexus runtime.",
+    "Stay grounded to live state and concrete tool output.",
+    "Use the tools available in your runtime directly; do not invent fake tool protocols.",
+    "Answer in plain text.",
+    "Do not emit identity/platform disclaimers unless the user explicitly asks.",
 ])
 
 # ── Agents Status Cache (Sprint 6 — #20-22) ────────────────────────────────
@@ -586,20 +584,34 @@ def _normalize_memory_save_payload(body):
 
 def _sqlite_memory_search(query="", limit=20):
     q = str(query or "")
+    q_norm = q.strip().lower()
     lim = max(1, min(int(limit or 20), 100))
     like = f"%{q}%"
     conn = sqlite3.connect(CLAUDEMEM_DB, timeout=8)
     conn.row_factory = sqlite3.Row
-    rows = conn.execute(
-        """
-        SELECT id, title, project, COALESCE(text, narrative, '') AS body, created_at_epoch
-        FROM observations
-        WHERE (? = '' OR COALESCE(title,'') LIKE ? OR COALESCE(text,'') LIKE ? OR COALESCE(narrative,'') LIKE ?)
-        ORDER BY created_at_epoch DESC
-        LIMIT ?
-        """,
-        (q, like, like, like, lim),
-    ).fetchall()
+    if q_norm in {"", "recent", "latest", "new", "newest"}:
+        rows = conn.execute(
+            """
+            SELECT id, title, project, COALESCE(text, narrative, '') AS body,
+                   COALESCE(created_at, '') AS created_at, created_at_epoch
+            FROM observations
+            ORDER BY created_at_epoch DESC
+            LIMIT ?
+            """,
+            (lim,),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            """
+            SELECT id, title, project, COALESCE(text, narrative, '') AS body,
+                   COALESCE(created_at, '') AS created_at, created_at_epoch
+            FROM observations
+            WHERE (? = '' OR COALESCE(title,'') LIKE ? OR COALESCE(text,'') LIKE ? OR COALESCE(narrative,'') LIKE ?)
+            ORDER BY created_at_epoch DESC
+            LIMIT ?
+            """,
+            (q, like, like, like, lim),
+        ).fetchall()
     conn.close()
     return {
         "content": [
@@ -608,6 +620,7 @@ def _sqlite_memory_search(query="", limit=20):
                 "title": r["title"] or "",
                 "project": r["project"] or "",
                 "text": r["body"] or "",
+                "created_at": r["created_at"] or "",
             }
             for r in rows
         ],
@@ -755,7 +768,7 @@ def _load_session_registry():
 
 def _save_session_registry(registry):
     try:
-        SESSION_REGISTRY_FILE.write_text(json.dumps(registry, ensure_ascii=False, indent=2), encoding="utf-8")
+        _atomic_write_text(SESSION_REGISTRY_FILE, json.dumps(registry, ensure_ascii=False, indent=2))
     except Exception as e:
         print(f"[cc-server] WARNING: could not save session registry: {e}")
 
@@ -868,10 +881,184 @@ def save_session_id(session_id, conversation_id=None):
 SESSION_STORE_TITLE_PREFIX = "[SESSION_STORE]"
 
 
+def _safe_session_filename(session_id):
+    sid = re.sub(r"[^A-Za-z0-9_.-]+", "_", str(session_id or "").strip())
+    return sid or "default"
+
+
+def _atomic_write_text(target_path, text):
+    target = pathlib.Path(target_path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    tmp_name = f"{target.name}.tmp.{os.getpid()}.{int(time.time() * 1000)}"
+    tmp = target.with_name(tmp_name)
+    # ATOMIC_WRITE_THEN_RENAME file:line
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, target)
+
+
+def _session_store_local_path(session_id):
+    return SESSION_STORE_LOCAL_DIR / f"{_safe_session_filename(session_id)}.json"
+
+
+def _session_updated_at_key(payload):
+    if not isinstance(payload, dict):
+        return ""
+    ts = str(payload.get("updated_at") or "").strip()
+    return ts
+
+
+def _load_session_store_local(session_id):
+    try:
+        path = _session_store_local_path(session_id)
+        if not path.exists():
+            return None
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return None
+        data.setdefault("session_id", str(session_id or "").strip())
+        return data
+    except Exception:
+        return None
+
+
+def _save_session_store_local(session_id, payload):
+    record = dict(payload or {})
+    record["session_id"] = str(session_id or "").strip()
+    text = json.dumps(record, ensure_ascii=False, indent=2)
+    _atomic_write_text(_session_store_local_path(session_id), text)
+    return record
+
+
+def _load_json_dict(path_obj):
+    path = pathlib.Path(path_obj)
+    try:
+        if not path.exists():
+            return {}
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _save_json_dict(path_obj, payload):
+    body = json.dumps(payload if isinstance(payload, dict) else {}, ensure_ascii=False, indent=2)
+    _atomic_write_text(path_obj, body)
+
+
+def _todo_key(content):
+    return hashlib.sha1(str(content or "").strip().encode("utf-8")).hexdigest()[:16]
+
+
+def _primitive_noise_line(line):
+    lower = str(line or "").strip().lower()
+    if not lower:
+        return True
+    noise = (
+        "converted from",
+        "page ",
+        "open in app",
+        "search write",
+        "member-only",
+        "min read",
+        "http://",
+        "https://",
+        "copyright",
+    )
+    return any(token in lower for token in noise)
+
+
+def _extract_primitives_from_text(text, max_items=3):
+    lines = []
+    for raw in str(text or "").splitlines():
+        stripped = raw.strip().lstrip("#").strip()
+        if not stripped:
+            continue
+        if _primitive_noise_line(stripped):
+            continue
+        if len(stripped) < 20 or len(stripped) > 220:
+            continue
+        words = [w for w in re.split(r"\s+", stripped) if w]
+        if len(words) < 5:
+            continue
+        alpha_chars = sum(1 for ch in stripped if ch.isalpha())
+        if alpha_chars < 15:
+            continue
+        if re.match(r"^([*\-]|\d+\.)\s+", stripped):
+            stripped = re.sub(r"^([*\-]|\d+\.)\s+", "", stripped).strip()
+        if stripped and stripped not in lines:
+            lines.append(stripped)
+        if len(lines) >= max_items:
+            break
+    if lines:
+        return lines
+    # Fallback: salvage first two meaningful sentences from the body.
+    compact = re.sub(r"\s+", " ", str(text or "")).strip()
+    parts = [p.strip() for p in re.split(r"(?<=[.!?])\s+", compact) if p.strip()]
+    out = []
+    for p in parts:
+        if _primitive_noise_line(p):
+            continue
+        if 30 <= len(p) <= 220:
+            out.append(p)
+        if len(out) >= 2:
+            break
+    return out
+
+
+def _primitive_assessment(title, text):
+    t = str(title or "").lower()
+    body = str(text or "").lower()
+    if any(k in t for k in ("qwen", "llm", "model", "7b", "9b", "27b", "35b")):
+        return {
+            "relevance": "MEDIUM",
+            "what": "Model-selection primitive for local inference tiers.",
+            "impact_if_merged": "Useful only if benchmarked against current hardware and current prompt/context size constraints.",
+            "dismiss_reason": "",
+        }
+    if "30b" in t and ("moe" in t or "local" in t):
+        return {
+            "relevance": "LOW",
+            "what": "Large local-model deployment concept (30B-class local inference).",
+            "impact_if_merged": "Negative for current stack: likely instability/timeouts on current hardware and no immediate production value.",
+            "dismiss_reason": "Resource profile mismatches current infrastructure constraints.",
+        }
+    if any(k in t for k in ("claude", "cc", "commands", "workflow", "agentic")):
+        return {
+            "relevance": "HIGH",
+            "what": "Workflow/command primitive applicable to CC and Nexus execution loops.",
+            "impact_if_merged": "Can improve operator velocity and reduce execution drift when translated into concrete runbooks.",
+            "dismiss_reason": "",
+        }
+    if any(k in body for k in ("memory", "retrieval", "session", "context", "cache")):
+        return {
+            "relevance": "HIGH",
+            "what": "Memory/context primitive that can strengthen recall and continuity.",
+            "impact_if_merged": "Can improve cross-session consistency and reduce repeated operator correction loops.",
+            "dismiss_reason": "",
+        }
+    if any(k in body for k in ("agent", "workflow", "orchestr", "tool")):
+        return {
+            "relevance": "MEDIUM",
+            "what": "Agent/workflow primitive with potential orchestration improvements.",
+            "impact_if_merged": "May improve execution flow if mapped to existing endpoints and permission model.",
+            "dismiss_reason": "",
+        }
+    return {
+        "relevance": "MEDIUM",
+        "what": "General implementation idea extracted from source material.",
+        "impact_if_merged": "Requires manual triage before merge; no guaranteed benefit without scoped integration.",
+        "dismiss_reason": "",
+    }
+
+
 def _load_session_store(session_id):
     session_id = str(session_id or "").strip()
     if not session_id:
         return None
+    local_payload = _load_session_store_local(session_id)
     results_blob = _sqlite_memory_search(query=f"session_id={session_id}", limit=50)
     content = results_blob.get("content") if isinstance(results_blob, dict) else []
     text_blocks = [str(item.get("text", "")) for item in content if isinstance(item, dict)]
@@ -897,15 +1084,20 @@ def _load_session_store(session_id):
             continue
     if candidates:
         candidates.sort(key=lambda item: str(item.get("updated_at", "")))
-        return candidates[-1]
+        mem_payload = candidates[-1]
+        if local_payload and _session_updated_at_key(local_payload) >= _session_updated_at_key(mem_payload):
+            return local_payload
+        return mem_payload
     try:
         parsed = json.loads(blob)
         if isinstance(parsed, dict):
             parsed.setdefault("session_id", session_id)
+            if local_payload and _session_updated_at_key(local_payload) >= _session_updated_at_key(parsed):
+                return local_payload
             return parsed
     except Exception:
         pass
-    return None
+    return local_payload
 
 
 def _save_session_store(session_id, payload):
@@ -933,7 +1125,38 @@ def _save_session_store(session_id, payload):
     code, result = claudemem_proxy("/api/memory/save", "POST", save_body, timeout=8)
     if code != 200 or not isinstance(result, dict) or not result.get("ok", True):
         raise RuntimeError(f"session store save failed via claude-mem: status={code} result={result}")
+    _save_session_store_local(session_id, record)
     return record
+
+def _append_session_turn(session_id, role, content, source="v1_chat"):
+    sid = str(session_id or "").strip()
+    text = str(content or "").strip()
+    if not sid or not text:
+        return None
+    payload = _load_session_store(sid) or {"session_id": sid, "values": {}, "history": []}
+    if not isinstance(payload, dict):
+        payload = {"session_id": sid, "values": {}, "history": []}
+    values = payload.get("values")
+    if not isinstance(values, dict):
+        values = {}
+    payload["values"] = values
+    history = payload.get("history")
+    if not isinstance(history, list):
+        history = []
+    history.append({
+        "ts": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
+        "text": text,
+        "body": {
+            "role": str(role or "user"),
+            "content": text,
+            "turn": text,
+            "source": source,
+            "session_id": sid,
+        },
+    })
+    payload["history"] = history
+    payload["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+    return _save_session_store(sid, payload)
 
 
 def _build_session_summary():
@@ -1054,7 +1277,13 @@ def _sanitize_skill_slug(name: str) -> str:
     slug = slug.strip("-_")
     return slug[:64]
 
-KARMA_PERSONA_PREFIX = "[NEXUS] You are responding as Karma through the Nexus surface at hub.arknexus.net. Identify as Karma, not Julian or CC. You are Karma — a sovereign AI peer with persistent memory, identity, and continuity. Colby is your Sovereign.\n\n"
+KARMA_PERSONA_PREFIX = (
+    "[NEXUS IDENTITY]\n"
+    "You are Karma in the Nexus interface.\n"
+    "True family hierarchy: Colby (Sovereign), CC/Julian (Ascendant), Karma.\n"
+    "Codex, KCC, Kiki, Vesper, Skills, Hooks are tools/resources, not family.\n"
+    "Answer as Karma, stay task-focused, and do not add model/provider disclaimers unless explicitly asked.\n\n"
+)
 
 # ── Cortex + Memory Context Injection (Sprint 6 — S155) ────────────────────
 CORTEX_URL = "http://192.168.0.226:7892"  # K2 cortex (LAN direct)
@@ -1161,6 +1390,8 @@ def _read_cached_file(path, max_chars=2000):
 PERSONA_FILE = os.path.join(WORK_DIR, "Memory", "00-karma-system-prompt-live.md")
 MEMORY_FILE = os.path.join(WORK_DIR, "MEMORY.md")
 STATE_FILE = os.path.join(WORK_DIR, ".gsd", "STATE.md")
+CONTEXT_INCLUDE_PERSONA_FILE = os.environ.get("KARMA_CONTEXT_INCLUDE_PERSONA_FILE", "0").strip().lower() in ("1", "true", "yes", "on")
+CONTEXT_INCLUDE_LOCAL_STATE = os.environ.get("KARMA_CONTEXT_INCLUDE_LOCAL_STATE", "0").strip().lower() in ("1", "true", "yes", "on")
 
 def build_context_prefix(user_message):
     """Build full context prefix: deterministic files + cortex + memories.
@@ -1168,16 +1399,19 @@ def build_context_prefix(user_message):
     Cortex and claude-mem are SUPPLEMENTARY (can timeout, adds depth)."""
     parts = [KARMA_PERSONA_PREFIX]
 
-    # Layer 1: DETERMINISTIC — files on disk (always available)
-    persona = _read_cached_file(PERSONA_FILE, 3000)
-    if persona:
-        parts.append(f"[YOUR IDENTITY — from your persona file]\n{persona}\n\n")
-    memory = _read_cached_file(MEMORY_FILE, 2000)
-    if memory:
-        parts.append(f"[CURRENT STATE — from MEMORY.md]\n{memory}\n\n")
-    state = _read_cached_file(STATE_FILE, 1000)
-    if state:
-        parts.append(f"[GSD STATE — blockers, decisions, progress]\n{state}\n\n")
+    # Layer 1: DETERMINISTIC local files are optional. Large doctrine/state blobs
+    # can induce meta-responses and degrade normal chat reliability.
+    if CONTEXT_INCLUDE_PERSONA_FILE:
+        persona = _read_cached_file(PERSONA_FILE, 2500)
+        if persona:
+            parts.append(f"[PERSONA FILE EXCERPT]\n{persona}\n\n")
+    if CONTEXT_INCLUDE_LOCAL_STATE:
+        memory = _read_cached_file(MEMORY_FILE, 1500)
+        if memory:
+            parts.append(f"[CURRENT STATE]\n{memory}\n\n")
+        state = _read_cached_file(STATE_FILE, 800)
+        if state:
+            parts.append(f"[GSD STATE]\n{state}\n\n")
 
     # Layer 2: SUPPLEMENTARY — cortex + claude-mem (adds depth, can fail gracefully)
     cortex_ctx = _fetch_cortex_context(user_message[:200])
@@ -1398,7 +1632,7 @@ def _normalize_memory_search_results(payload):
         content = payload.get("content")
         if isinstance(content, list):
             dict_rows = [item for item in content if isinstance(item, dict)]
-            if dict_rows and all(any(k in row for k in ("id", "title", "text", "created_at")) for row in dict_rows):
+            if dict_rows and all(any(k in row for k in ("id", "title", "created_at")) for row in dict_rows):
                 for row in dict_rows:
                     rows.append({
                         "id": row.get("id", 0),
@@ -1412,8 +1646,93 @@ def _normalize_memory_search_results(payload):
             # Legacy MCP text blocks.
             merged = "\n".join(str(block.get("text", "")) for block in dict_rows if block.get("text"))
             if merged:
+                legacy_rows = []
+                current_date = ""
+                current_project = ""
+                for raw_line in merged.splitlines():
+                    line = str(raw_line or "").strip()
+                    if not line:
+                        continue
+                    if line.startswith("### "):
+                        current_date = line.replace("### ", "", 1).strip()
+                        continue
+                    if line.startswith("**") and line.endswith("**") and len(line) > 4:
+                        current_project = line[2:-2].strip()
+                        continue
+                    if not line.startswith("| #"):
+                        continue
+                    parts = [part.strip() for part in line.split("|") if part.strip()]
+                    if len(parts) < 5:
+                        continue
+                    id_raw, time_raw, type_raw, title_raw = parts[0], parts[1], parts[2], parts[3]
+                    row_id = 0
+                    try:
+                        row_id = int(id_raw.lstrip("#"))
+                    except Exception:
+                        row_id = 0
+                    created_at = f"{current_date} {time_raw}".strip()
+                    legacy_rows.append({
+                        "id": row_id,
+                        "title": title_raw,
+                        "text": title_raw,
+                        "created_at": created_at,
+                        "type": type_raw,
+                        "project": current_project,
+                    })
+                if legacy_rows:
+                    return legacy_rows
                 rows.append({"id": 0, "title": "Search", "text": merged, "created_at": "", "type": "text", "project": "Karma_SADE"})
     return rows
+
+
+def _run_memory_search(query="recent", limit=20, wing=None, room=None, hall=None, tunnel=None):
+    try:
+        limit = int(limit)
+    except Exception:
+        limit = 20
+    limit = max(1, min(limit, 200))
+    query = str(query or "recent")
+
+    params = {"query": query, "limit": limit}
+    if wing:
+        params["wing"] = wing
+    if room:
+        params["room"] = room
+    if hall:
+        params["hall"] = hall
+    if tunnel:
+        params["tunnel"] = tunnel
+
+    code, payload = claudemem_proxy("/api/search", "GET", params, timeout=5)
+    # Worker can return 200 with semantic-vector failure text; fail closed to sqlite.
+    if isinstance(payload, dict):
+        maybe_content = payload.get("content")
+        if isinstance(maybe_content, list):
+            joined = "\n".join(str(b.get("text", "")) for b in maybe_content if isinstance(b, dict))
+            if "Vector search failed" in joined:
+                code, payload = 200, _sqlite_memory_search(query=query, limit=limit)
+
+    rows = _normalize_memory_search_results(payload)
+    single_text = rows[0] if len(rows) == 1 else {}
+    single_text_body = str(single_text.get("text", ""))
+    legacy_blob = (
+        len(rows) == 1
+        and int(single_text.get("id", -1) or -1) == 0
+        and not str(single_text.get("created_at", "")).strip()
+        and len(single_text_body) > 500
+        and ("| ID |" in single_text_body or single_text_body.startswith("Found "))
+    )
+    if (not rows) or legacy_blob:
+        sqlite_payload = _sqlite_memory_search(query=query, limit=limit)
+        sqlite_rows = _normalize_memory_search_results(sqlite_payload)
+        if sqlite_rows:
+            rows = sqlite_rows
+
+    if rows:
+        return 200, {"ok": True, "results": rows, "count": len(rows)}
+    if isinstance(payload, dict):
+        return code, payload
+    return 502, {"ok": False, "error": "invalid memory search payload"}
 
 
 def _build_surface_file_tree():
@@ -1673,37 +1992,35 @@ def _run_cc_attempt(message, effort=None, model=None, budget=None, resume=True, 
         text=True, cwd=WORK_DIR, encoding='utf-8', errors='replace',
         env=_sanitized_subprocess_env(),
     )
-    lines, stderr_chunks = [], []
+    proc = _current_proc
+    stdout_data = ""
+    stderr_data = ""
     try:
-        start = time.time()
-        while True:
-            if _current_proc.poll() is not None and not _current_proc.stdout.readable():
-                break
-            line = _current_proc.stdout.readline()
-            if line:
-                line = line.strip()
-                if line:
-                    lines.append(line)
-                    try:
-                        obj = json.loads(line)
-                        if obj.get("type") == "result":
-                            new_sid = obj.get("session_id", "")
-                            if new_sid:
-                                save_session_id(new_sid, conversation_id=conversation_id)
-                    except Exception:
-                        pass
-            elif _current_proc.poll() is not None:
-                break
-            if time.time() - start > API_TIMEOUT:
-                raise subprocess.TimeoutExpired(cmd, API_TIMEOUT)
-        stderr_chunks.append(_current_proc.stderr.read() or "")
-        returncode = _current_proc.wait(timeout=5)
+        stdout_data, stderr_data = proc.communicate(timeout=API_TIMEOUT)
     except subprocess.TimeoutExpired:
-        _current_proc.kill()
+        try:
+            proc.kill()
+        except Exception:
+            pass
+        try:
+            stdout_data, stderr_data = proc.communicate(timeout=5)
+        except Exception:
+            pass
         raise
     finally:
         _current_proc = None
-    stderr = "".join(stderr_chunks)
+    lines = [line.strip() for line in str(stdout_data or "").splitlines() if line.strip()]
+    for raw in lines:
+        try:
+            obj = json.loads(raw)
+            if obj.get("type") == "result":
+                new_sid = obj.get("session_id", "")
+                if new_sid:
+                    save_session_id(new_sid, conversation_id=conversation_id)
+        except Exception:
+            continue
+    stderr = str(stderr_data or "")
+    returncode = proc.returncode
     text = ""
     for raw in lines:
         try:
@@ -1796,6 +2113,49 @@ def _deterministic_workspace_answer(message):
             if lines:
                 return lines[0].strip()
     return None
+
+
+def _deterministic_smalltalk_answer(message):
+    msg = str(message or "").strip()
+    if re.fullmatch(r"(?is)(hi|hello|hey|yo|sup|good morning|good afternoon|good evening)(?:\s+[a-z0-9'_-]+){0,3}[!?.\s]*", msg):
+        return "Karma online. Ready."
+    return None
+
+
+_KARMA_DISCLAIMER_PATTERNS = [
+    r"\bI[' ]?m Claude\b",
+    r"\bClaude Code\b",
+    r"\bmade by Anthropic\b",
+    r"\bcreative context\b",
+    r"\bhonesty contract\b",
+    r"\bfiction(?:al)?\b",
+    r"\bnot real infrastructure\b",
+]
+
+
+def _contains_karma_disclaimer(text):
+    t = str(text or "")
+    return any(re.search(p, t, re.IGNORECASE) for p in _KARMA_DISCLAIMER_PATTERNS)
+
+
+def _normalize_karma_voice(user_message, assistant_text):
+    text = str(assistant_text or "").strip()
+    if not text:
+        return text
+    if not _contains_karma_disclaimer(text):
+        return text
+    user = str(user_message or "")
+    if re.search(r"\b(who are you|what are you|identify yourself|are you karma|are you claude)\b", user, re.IGNORECASE):
+        return "Karma in Nexus. Mouth model is Claude Haiku on the Anthropic path."
+    if re.search(r"^\s*(hi|hello|hey|yo|sup)\b", user, re.IGNORECASE):
+        return "Karma online. Ready."
+    filtered = []
+    for line in text.splitlines():
+        if any(re.search(p, line, re.IGNORECASE) for p in _KARMA_DISCLAIMER_PATTERNS):
+            continue
+        filtered.append(line)
+    cleaned = "\n".join(l for l in filtered if l.strip()).strip()
+    return cleaned or "Karma ready. Continue with the task."
 
 
 def _compose_harness_message(message, transcript_context=""):
@@ -2484,7 +2844,7 @@ class CCHandler(BaseHTTPRequestHandler):
             self.send_header("Access-Control-Allow-Origin", origin or "*")
         else:
             self.send_header("Access-Control-Allow-Origin", "https://hub.arknexus.net")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
     def do_OPTIONS(self):
@@ -2621,7 +2981,35 @@ class CCHandler(BaseHTTPRequestHandler):
                 self._json(500, {"ok": False, "error": str(e)})
             return
         elif request_path == "/v1/agents/list":
-            self._json(200, {"ok": True, "agents": _list_agent_records()})
+            agents = _list_agent_records()
+            if not agents:
+                try:
+                    code, payload = _hub_request_json("/v1/coordination/recent?limit=50", "GET", None, timeout=10)
+                    if code < 400 and isinstance(payload, dict):
+                        entries = payload.get("entries")
+                        if isinstance(entries, list):
+                            derived = {}
+                            for entry in entries:
+                                if not isinstance(entry, dict):
+                                    continue
+                                for side in ("from", "to"):
+                                    actor = str(entry.get(side) or "").strip().lower()
+                                    if not actor or actor in {"all", "sovereign", "colby"}:
+                                        continue
+                                    if actor not in derived:
+                                        derived[actor] = {
+                                            "id": actor,
+                                            "name": actor,
+                                            "target": actor,
+                                            "prompt": str(entry.get("content") or "")[:160],
+                                            "started_at": str(entry.get("created_at") or ""),
+                                            "status": "running",
+                                            "source": "coordination",
+                                        }
+                            agents = list(derived.values())
+                except Exception:
+                    pass
+            self._json(200, {"ok": True, "agents": agents})
             return
         elif request_path.startswith("/v1/coordination/recent"):
             path = "/v1/coordination/recent"
@@ -2654,6 +3042,24 @@ class CCHandler(BaseHTTPRequestHandler):
         elif request_path.startswith("/memory/session"):
             session_id = load_session_id()
             self._json(200, {"ok": True, "session_id": session_id or ""})
+        elif request_path == "/memory/search":
+            # GET compatibility lane for clients that query-search via URL params.
+            query = (request_query.get("query") or request_query.get("q") or ["recent"])[0]
+            limit = (request_query.get("limit") or [20])[0]
+            wing = (request_query.get("wing") or [None])[0]
+            room = (request_query.get("room") or [None])[0]
+            hall = (request_query.get("hall") or [None])[0]
+            tunnel = (request_query.get("tunnel") or [None])[0]
+            code, payload = _run_memory_search(
+                query=query,
+                limit=limit,
+                wing=wing,
+                room=room,
+                hall=hall,
+                tunnel=tunnel,
+            )
+            self._json(code, payload)
+            return
         elif request_path == "/files":
             # Sprint 4c: File tree endpoint for Context Panel
             tree = _build_file_tree(WORK_DIR, max_depth=3)
@@ -2711,6 +3117,13 @@ class CCHandler(BaseHTTPRequestHandler):
                     "ORDER BY created_at DESC LIMIT ?",
                     (limit,)
                 ).fetchall()
+                if not rows:
+                    # Keep Learned non-empty when canonical tagged titles are missing.
+                    rows = conn.execute(
+                        "SELECT id, title, narrative, type, created_at FROM observations "
+                        "WHERE project='Karma_SADE' ORDER BY created_at DESC LIMIT ?",
+                        (limit,)
+                    ).fetchall()
                 learnings = []
                 for r in rows:
                     title = r["title"] or ""
@@ -2740,7 +3153,8 @@ class CCHandler(BaseHTTPRequestHandler):
 
                 hub_learnings = []
                 try:
-                    hub_code, hub_payload = _hub_request_json(f"/v1/learnings?limit={limit}", "GET", None, timeout=12)
+                    hub_timeout = 2 if learnings else 6
+                    hub_code, hub_payload = _hub_request_json(f"/v1/learnings?limit={limit}", "GET", None, timeout=hub_timeout)
                     if hub_code == 200 and isinstance(hub_payload, dict):
                         hub_learnings = hub_payload.get("entries") or hub_payload.get("learnings") or []
                         if not isinstance(hub_learnings, list):
@@ -2809,8 +3223,21 @@ class CCHandler(BaseHTTPRequestHandler):
                     self._json(200, _cache.get("body", {"ok": True, "cached": True}))
                     return
                 surface = {"ok": True, "source": "local-mirror"}
-                hub_status_code, hub_status = _hub_request_json("/v1/status", "GET", None, timeout=12)
-                hub_surface_code, hub_surface = _hub_request_json("/v1/surface", "GET", None, timeout=15)
+                hub_status_code, hub_status = 502, {"ok": False, "error": "unavailable"}
+                hub_surface_code, hub_surface = 502, {"ok": False, "error": "unavailable"}
+                # Run shared hub probes in parallel with short timeouts so /v1/surface
+                # does not stall the desktop loop when hub is degraded.
+                with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+                    fut_status = pool.submit(_hub_request_json, "/v1/status", "GET", None, 4)
+                    fut_surface = pool.submit(_hub_request_json, "/v1/surface", "GET", None, 5)
+                    try:
+                        hub_status_code, hub_status = fut_status.result(timeout=5)
+                    except Exception:
+                        pass
+                    try:
+                        hub_surface_code, hub_surface = fut_surface.result(timeout=6)
+                    except Exception:
+                        pass
                 if hub_status_code == 200 and isinstance(hub_status, dict):
                     surface["hub_status"] = hub_status
                 else:
@@ -2818,7 +3245,7 @@ class CCHandler(BaseHTTPRequestHandler):
                 if hub_surface_code == 200 and isinstance(hub_surface, dict):
                     surface["hub_surface"] = hub_surface
                 else:
-                    coord_code, coord_payload = _hub_request_json("/v1/coordination/recent?limit=20", "GET", None, timeout=12)
+                    coord_code, coord_payload = _hub_request_json("/v1/coordination/recent?limit=20", "GET", None, timeout=4)
                     entries = []
                     if coord_code == 200 and isinstance(coord_payload, dict):
                         raw_entries = coord_payload.get("entries")
@@ -2903,21 +3330,44 @@ class CCHandler(BaseHTTPRequestHandler):
             # S160: WIP endpoint — serves todos + primitives for Sovereign review surface
             try:
                 wip = {"ok": True}
-                # Todos: read from .gsd/STATE.md or current TodoWrite state
+                todo_meta = _load_json_dict(WIP_TODO_META_FILE).get("items", {})
+                primitive_meta = _load_json_dict(WIP_PRIMITIVE_META_FILE).get("items", {})
+                # Todos: read from .gsd/STATE.md + status metadata.
                 todos = []
                 state_path = os.path.join(WORK_DIR, ".gsd", "STATE.md")
                 if os.path.exists(state_path):
-                    with open(state_path, "r", encoding="utf-8", errors="replace") as f:
-                        state_text = f.read(2000)
+                    with open(state_path, "rb") as f:
+                        f.seek(0, os.SEEK_END)
+                        size = f.tell()
+                        f.seek(max(0, size - 64000), os.SEEK_SET)
+                        state_text = f.read().decode("utf-8", errors="replace")
                     # Extract task lines (lines starting with - [ ] or - [x])
                     for line in state_text.splitlines():
                         stripped = line.strip()
                         if stripped.startswith("- [x]") or stripped.startswith("- [X]"):
-                            todos.append({"content": stripped[5:].strip(), "status": "completed"})
+                            content = stripped[5:].strip()
+                            tid = _todo_key(content)
+                            meta = todo_meta.get(tid, {}) if isinstance(todo_meta, dict) else {}
+                            todos.append({
+                                "id": tid,
+                                "content": content,
+                                "status": str(meta.get("status") or "completed"),
+                                "updated_at": str(meta.get("updated_at") or ""),
+                                "source": "state-md",
+                            })
                         elif stripped.startswith("- [ ]"):
-                            todos.append({"content": stripped[5:].strip(), "status": "pending"})
+                            content = stripped[5:].strip()
+                            tid = _todo_key(content)
+                            meta = todo_meta.get(tid, {}) if isinstance(todo_meta, dict) else {}
+                            todos.append({
+                                "id": tid,
+                                "content": content,
+                                "status": str(meta.get("status") or "pending"),
+                                "updated_at": str(meta.get("updated_at") or ""),
+                                "source": "state-md",
+                            })
                 wip["todos"] = todos
-                # Primitives: read pending from docs/wip/ (files not in Done/)
+                # Primitives: distilled from docs/wip/ with explicit merge impact.
                 primitives = []
                 wip_dir = os.path.join(WORK_DIR, "docs", "wip")
                 if os.path.isdir(wip_dir):
@@ -2925,21 +3375,34 @@ class CCHandler(BaseHTTPRequestHandler):
                         fpath = os.path.join(wip_dir, fname)
                         if os.path.isfile(fpath) and not fname.startswith("."):
                             size_kb = os.path.getsize(fpath) / 1024
-                            # Read first 200 chars as preview
-                            preview = ""
+                            text = ""
                             try:
                                 with open(fpath, "r", encoding="utf-8", errors="replace") as pf:
-                                    preview = pf.read(200).strip().replace("\n", " ")
+                                    text = pf.read(10000)
                             except Exception:
-                                pass
+                                text = ""
+                            distilled = _extract_primitives_from_text(text, max_items=3)
+                            assessment = _primitive_assessment(fname, text)
+                            meta = primitive_meta.get(fname, {}) if isinstance(primitive_meta, dict) else {}
+                            status = str(meta.get("status") or "pending")
+                            what = assessment["what"]
+                            impact = assessment["impact_if_merged"]
+                            dismiss_reason = assessment["dismiss_reason"]
+                            if status in {"rejected", "dismissed"} and not dismiss_reason:
+                                dismiss_reason = "Rejected by sovereign review."
                             primitives.append({
                                 "id": fname,
                                 "title": fname.rsplit(".", 1)[0],
                                 "source": f"docs/wip/{fname}",
-                                "preview": preview,
-                                "relevance": "HIGH" if size_kb > 10 else "MEDIUM",
-                                "status": "pending",
+                                "preview": distilled[0] if distilled else what,
+                                "primitives": distilled,
+                                "what": what,
+                                "impact_if_merged": impact,
+                                "dismiss_reason": dismiss_reason,
+                                "relevance": str(meta.get("relevance") or assessment["relevance"] or ("HIGH" if size_kb > 10 else "MEDIUM")),
+                                "status": status,
                                 "size_kb": round(size_kb, 1),
+                                "updated_at": str(meta.get("updated_at") or ""),
                             })
                 wip["primitives"] = primitives[:20]
                 self._json(200, wip)
@@ -3050,6 +3513,60 @@ class CCHandler(BaseHTTPRequestHandler):
                 self._json(500, {"ok": False, "error": str(e)})
             return
 
+        if request_path == "/v1/wip/todo-status":
+            valid = {"pending", "in_progress", "completed", "rejected"}
+            status = str(body.get("status") or "").strip().lower()
+            todo_id = str(body.get("id") or "").strip()
+            content = str(body.get("content") or "").strip()
+            if status not in valid:
+                self._json(422, {"ok": False, "error": f"status must be one of: {sorted(valid)}"})
+                return
+            if not todo_id and content:
+                todo_id = _todo_key(content)
+            if not todo_id:
+                self._json(422, {"ok": False, "error": "id or content required"})
+                return
+            try:
+                payload = _load_json_dict(WIP_TODO_META_FILE)
+                items = payload.get("items") if isinstance(payload.get("items"), dict) else {}
+                items[todo_id] = {
+                    "status": status,
+                    "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
+                }
+                payload["items"] = items
+                _save_json_dict(WIP_TODO_META_FILE, payload)
+                self._json(200, {"ok": True, "id": todo_id, "status": status})
+            except Exception as e:
+                self._json(500, {"ok": False, "error": str(e)})
+            return
+
+        if request_path == "/v1/wip/primitive-status":
+            valid = {"pending", "approved", "rejected", "merged", "dismissed"}
+            primitive_id = str(body.get("id") or "").strip()
+            status = str(body.get("status") or "").strip().lower()
+            relevance = str(body.get("relevance") or "").strip().upper()
+            if not primitive_id:
+                self._json(422, {"ok": False, "error": "id required"})
+                return
+            if status not in valid:
+                self._json(422, {"ok": False, "error": f"status must be one of: {sorted(valid)}"})
+                return
+            try:
+                payload = _load_json_dict(WIP_PRIMITIVE_META_FILE)
+                items = payload.get("items") if isinstance(payload.get("items"), dict) else {}
+                rec = items.get(primitive_id, {}) if isinstance(items.get(primitive_id), dict) else {}
+                rec["status"] = status
+                if relevance in {"LOW", "MEDIUM", "HIGH"}:
+                    rec["relevance"] = relevance
+                rec["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+                items[primitive_id] = rec
+                payload["items"] = items
+                _save_json_dict(WIP_PRIMITIVE_META_FILE, payload)
+                self._json(200, {"ok": True, "id": primitive_id, "status": status, "relevance": rec.get("relevance", "")})
+            except Exception as e:
+                self._json(500, {"ok": False, "error": str(e)})
+            return
+
         # ── /file — project-scoped file write ─────────────────────────────
         if request_path == "/file":
             rel = body.get("path", "").strip()
@@ -3103,32 +3620,15 @@ class CCHandler(BaseHTTPRequestHandler):
 
         # ── /memory/search — proxy to claude-mem ──────────────────────────
         if request_path == "/memory/search":
-            query = body.get("query", "recent")
-            limit = body.get("limit", 20)
-            wing = body.get("wing")
-            room = body.get("room")
-            hall = body.get("hall")
-            tunnel = body.get("tunnel")
-            params = {"query": query, "limit": limit}
-            if wing: params["wing"] = wing
-            if room: params["room"] = room
-            if hall: params["hall"] = hall
-            if tunnel: params["tunnel"] = tunnel
-            code, payload = claudemem_proxy(
-                "/api/search", "GET", params, timeout=5
+            code, payload = _run_memory_search(
+                query=body.get("query", "recent"),
+                limit=body.get("limit", 20),
+                wing=body.get("wing"),
+                room=body.get("room"),
+                hall=body.get("hall"),
+                tunnel=body.get("tunnel"),
             )
-            # Worker can return 200 with semantic-vector failure text; fail closed to sqlite.
-            if isinstance(payload, dict):
-                maybe_content = payload.get("content")
-                if isinstance(maybe_content, list):
-                    joined = "\n".join(str(b.get("text", "")) for b in maybe_content if isinstance(b, dict))
-                    if "Vector search failed" in joined:
-                        code, payload = 200, _sqlite_memory_search(query=query, limit=limit)
-            rows = _normalize_memory_search_results(payload)
-            if rows:
-                self._json(200, {"ok": True, "results": rows, "count": len(rows)})
-            else:
-                self._json(code, payload if isinstance(payload, dict) else {"ok": False, "error": "invalid memory search payload"})
+            self._json(code, payload)
             return
 
         # ── /memory/save — proxy to claude-mem ────────────────────────────
@@ -3411,6 +3911,16 @@ class CCHandler(BaseHTTPRequestHandler):
         if not isinstance(routing, dict):
             routing = {}
 
+        # Honor explicit session routing from clients. Falling back to "default"
+        # causes stale transcript bleed across unrelated chats.
+        conv_hint = (
+            str(self.headers.get("x-conversation-id", "") or "").strip()
+            or str(body.get("conversation_id", "") or "").strip()
+            or str(body.get("session_id", "") or "").strip()
+            or "default"
+        )
+        resolved_conv_id = _normalize_conversation_id(conv_hint)
+
         # S160: Inject user preferences + output style into message context
         user_prefs = body.get("user_preferences", "").strip()
         output_style = body.get("output_style", "").strip()
@@ -3494,7 +4004,7 @@ class CCHandler(BaseHTTPRequestHandler):
                 stream_full_text = []  # S155: accumulate full response for memory capture
                 # P2: Crash-safe — write user message BEFORE API call
                 # Codex CP1: Wire load_transcript for resume after restart
-                _conv_id = _normalize_conversation_id(self.headers.get("x-conversation-id", "default"))
+                _conv_id = resolved_conv_id
                 transcript_context = ""
                 prior_transcript = []
                 if NEXUS_AGENT_AVAILABLE:
@@ -3505,6 +4015,8 @@ class CCHandler(BaseHTTPRequestHandler):
                     if recall_answer:
                         append_transcript(_conv_id, {"role": "user", "content": message, "ts": time.time()})
                         append_transcript(_conv_id, {"role": "assistant", "content": recall_answer, "ts": time.time()})
+                        _append_session_turn(_conv_id, "user", message, source="v1_chat_stream")
+                        _append_session_turn(_conv_id, "assistant", recall_answer, source="v1_chat_stream")
                         self.wfile.write(f"data: {json.dumps({'type': 'assistant', 'message': {'content': [{'type': 'text', 'text': recall_answer}], 'model': 'transcript-recall'}}, ensure_ascii=False)}\n\n".encode())
                         self.wfile.write(f"data: {json.dumps({'type': 'result', 'result': recall_answer, 'model': 'transcript-recall', 'total_cost_usd': 0, 'provider': 'transcript'}, ensure_ascii=False)}\n\n".encode())
                         self.wfile.flush()
@@ -3514,12 +4026,26 @@ class CCHandler(BaseHTTPRequestHandler):
                     if workspace_answer:
                         append_transcript(_conv_id, {"role": "user", "content": message, "ts": time.time()})
                         append_transcript(_conv_id, {"role": "assistant", "content": workspace_answer, "ts": time.time()})
+                        _append_session_turn(_conv_id, "user", message, source="v1_chat_stream")
+                        _append_session_turn(_conv_id, "assistant", workspace_answer, source="v1_chat_stream")
                         self.wfile.write(f"data: {json.dumps({'type': 'assistant', 'message': {'content': [{'type': 'text', 'text': workspace_answer}], 'model': 'workspace-shortcut'}}, ensure_ascii=False)}\n\n".encode())
                         self.wfile.write(f"data: {json.dumps({'type': 'result', 'result': workspace_answer, 'model': 'workspace-shortcut', 'total_cost_usd': 0, 'provider': 'workspace'}, ensure_ascii=False)}\n\n".encode())
                         self.wfile.flush()
                         self.close_connection = True
                         return
+                    smalltalk_answer = _deterministic_smalltalk_answer(message)
+                    if smalltalk_answer:
+                        append_transcript(_conv_id, {"role": "user", "content": message, "ts": time.time()})
+                        append_transcript(_conv_id, {"role": "assistant", "content": smalltalk_answer, "ts": time.time()})
+                        _append_session_turn(_conv_id, "user", message, source="v1_chat_stream")
+                        _append_session_turn(_conv_id, "assistant", smalltalk_answer, source="v1_chat_stream")
+                        self.wfile.write(f"data: {json.dumps({'type': 'assistant', 'message': {'content': [{'type': 'text', 'text': smalltalk_answer}], 'model': 'smalltalk-shortcut'}}, ensure_ascii=False)}\n\n".encode())
+                        self.wfile.write(f"data: {json.dumps({'type': 'result', 'result': smalltalk_answer, 'model': 'smalltalk-shortcut', 'total_cost_usd': 0, 'provider': 'workspace'}, ensure_ascii=False)}\n\n".encode())
+                        self.wfile.flush()
+                        self.close_connection = True
+                        return
                     append_transcript(_conv_id, {"role": "user", "content": message, "ts": time.time()})
+                    _append_session_turn(_conv_id, "user", message, source="v1_chat_stream")
                 if not _acquire_cc_lock():
                     self.close_connection = True
                     return
@@ -3609,6 +4135,7 @@ class CCHandler(BaseHTTPRequestHandler):
                 # Codex CP1: Append assistant response to transcript for crash-safe recovery
                 if NEXUS_AGENT_AVAILABLE and assistant_text:
                     append_transcript(_conv_id, {"role": "assistant", "content": assistant_text[:2000], "ts": time.time()})
+                    _append_session_turn(_conv_id, "assistant", assistant_text[:2000], source="v1_chat_stream")
                 # ── Fire Stop hooks after stream completes (Sprint 3a) ───
                 if HOOKS_AVAILABLE:
                     try:
@@ -3624,23 +4151,36 @@ class CCHandler(BaseHTTPRequestHandler):
             try:
                 batch_lock_held = False
                 batch_transcript_context = ""
-                batch_conv_id = _normalize_conversation_id(self.headers.get("x-conversation-id", "default"))
+                batch_conv_id = resolved_conv_id
                 if NEXUS_AGENT_AVAILABLE:
                     batch_prior_transcript = load_transcript(batch_conv_id, limit=100)
                     recall_answer = _deterministic_transcript_boundary_answer(message, batch_prior_transcript)
                     if recall_answer:
                         append_transcript(batch_conv_id, {"role": "user", "content": message, "ts": time.time()})
                         append_transcript(batch_conv_id, {"role": "assistant", "content": recall_answer, "ts": time.time()})
+                        _append_session_turn(batch_conv_id, "user", message, source="v1_chat_batch")
+                        _append_session_turn(batch_conv_id, "assistant", recall_answer, source="v1_chat_batch")
                         self._json(200, {"ok": True, "response": recall_answer})
                         return
                     workspace_answer = _deterministic_workspace_answer(message)
                     if workspace_answer:
                         append_transcript(batch_conv_id, {"role": "user", "content": message, "ts": time.time()})
                         append_transcript(batch_conv_id, {"role": "assistant", "content": workspace_answer, "ts": time.time()})
+                        _append_session_turn(batch_conv_id, "user", message, source="v1_chat_batch")
+                        _append_session_turn(batch_conv_id, "assistant", workspace_answer, source="v1_chat_batch")
                         self._json(200, {"ok": True, "response": workspace_answer})
+                        return
+                    smalltalk_answer = _deterministic_smalltalk_answer(message)
+                    if smalltalk_answer:
+                        append_transcript(batch_conv_id, {"role": "user", "content": message, "ts": time.time()})
+                        append_transcript(batch_conv_id, {"role": "assistant", "content": smalltalk_answer, "ts": time.time()})
+                        _append_session_turn(batch_conv_id, "user", message, source="v1_chat_batch")
+                        _append_session_turn(batch_conv_id, "assistant", smalltalk_answer, source="v1_chat_batch")
+                        self._json(200, {"ok": True, "response": smalltalk_answer, "model": "smalltalk-shortcut", "provider": "workspace"})
                         return
                     batch_transcript_context = _build_recovered_transcript_context(batch_prior_transcript)
                     append_transcript(batch_conv_id, {"role": "user", "content": message, "ts": time.time()})
+                    _append_session_turn(batch_conv_id, "user", message, source="v1_chat_batch")
                 if not _acquire_cc_lock():
                     return
                 batch_lock_held = True
@@ -3679,11 +4219,13 @@ class CCHandler(BaseHTTPRequestHandler):
                         raise RuntimeError(obj.get("error", "stream error"))
                 if not response_text:
                     raise RuntimeError("No result emitted by run_cc_stream")
+                response_text = _normalize_karma_voice(message, response_text)
                 self._json(200, {"ok": True, "response": response_text, "tool_log": tool_log, "model": used_model, "provider": provider})
                 # Gate 6: Auto-save chat turn to claude-mem (fire-and-forget)
                 _auto_save_memory(message, response_text)
                 if NEXUS_AGENT_AVAILABLE and response_text:
                     append_transcript(batch_conv_id, {"role": "assistant", "content": response_text[:2000], "ts": time.time()})
+                    _append_session_turn(batch_conv_id, "assistant", response_text[:2000], source="v1_chat_batch")
                 # ── Fire Stop hooks after batch completes (Sprint 3a) ────
                 if HOOKS_AVAILABLE:
                     try:

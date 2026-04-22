@@ -1,0 +1,8 @@
+{
+  "section": "Anti-DRIFT Rules",
+  "text": "Strengthen the \u2018Never claim Anthropic independence without current-pass openrouter-provider evidence\u2019 fail condition to include a more granular timeout duration. Currently, it\u2019s a broad \u2018no evidence\u2019 check. Increase the timeout to 500ms, ensuring a more reliable detection of drift.",
+  "reason": "This reduces false positives caused by transient network hiccups and improves the overall stability of the resurrection process, minimizing potential disruptions.",
+  "id": "proposal-20260422T005351",
+  "created_at": "2026-04-22T00:53:51.874102Z",
+  "status": "pending"
+}

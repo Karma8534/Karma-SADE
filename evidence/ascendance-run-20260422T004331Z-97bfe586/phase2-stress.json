@@ -1,0 +1,340 @@
+{
+  "probe_prefix": "STRESS-PROBE-20260422T010448Z",
+  "posted_fail_count": 0,
+  "missing_remote_count": 0,
+  "post_results": [
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-1",
+      "PSComputerName": "localhost",
+      "RunspaceId": "bdca1037-a653-4c42-bdda-849e02b28122",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-2",
+      "PSComputerName": "localhost",
+      "RunspaceId": "de9f434d-b3cd-413f-86ea-7fa8a511374f",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-3",
+      "PSComputerName": "localhost",
+      "RunspaceId": "10345099-adb8-4f72-85f9-42b4b1c9f93f",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-4",
+      "PSComputerName": "localhost",
+      "RunspaceId": "7d2e83fe-5abe-47be-a52b-705410f4c61c",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-5",
+      "PSComputerName": "localhost",
+      "RunspaceId": "2c37588f-73cf-4bd1-8cf2-1d9682889db6",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-6",
+      "PSComputerName": "localhost",
+      "RunspaceId": "2039e131-8d76-4edc-a11b-2034eb347814",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-7",
+      "PSComputerName": "localhost",
+      "RunspaceId": "f3d730f1-a904-44bb-92d1-aea6758b6a9e",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-8",
+      "PSComputerName": "localhost",
+      "RunspaceId": "87219aae-2f02-4087-822e-aba66089c7c1",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-9",
+      "PSComputerName": "localhost",
+      "RunspaceId": "403f812e-c824-4f16-ac2f-96d88cea4cd7",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-10",
+      "PSComputerName": "localhost",
+      "RunspaceId": "508f6775-3b94-416e-bc3a-95d66debe057",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-11",
+      "PSComputerName": "localhost",
+      "RunspaceId": "d122148b-0ffe-41ef-80ec-7ea9f8114b4c",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-12",
+      "PSComputerName": "localhost",
+      "RunspaceId": "9e83b41a-e12b-4a64-ace6-093639dab814",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-13",
+      "PSComputerName": "localhost",
+      "RunspaceId": "dd9ed1af-d685-4a54-a17b-7d1e18880858",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-14",
+      "PSComputerName": "localhost",
+      "RunspaceId": "cf4ccb4c-426f-4115-881b-2b3e040cfa74",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-15",
+      "PSComputerName": "localhost",
+      "RunspaceId": "c2c4c1b5-ffac-41e8-98c4-fbba55a3a03c",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-16",
+      "PSComputerName": "localhost",
+      "RunspaceId": "f325ba84-e5af-4ab0-bcd2-0b16007ab486",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-17",
+      "PSComputerName": "localhost",
+      "RunspaceId": "f648ded8-c712-46e5-9269-f25a33be8a7a",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-18",
+      "PSComputerName": "localhost",
+      "RunspaceId": "4d06de8c-7539-4878-9f72-b7aa35d81344",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-19",
+      "PSComputerName": "localhost",
+      "RunspaceId": "3a3b987d-e74b-4274-9ae4-87db45108dff",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-20",
+      "PSComputerName": "localhost",
+      "RunspaceId": "1a601935-7f8b-4def-8c09-df3771c21b5e",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-21",
+      "PSComputerName": "localhost",
+      "RunspaceId": "93766bc2-8a3b-4b8a-b1a6-5a95ca8662c7",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-22",
+      "PSComputerName": "localhost",
+      "RunspaceId": "13159570-2239-4038-a9b0-b651427a1d4e",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-23",
+      "PSComputerName": "localhost",
+      "RunspaceId": "7d081f5e-c8a9-4242-be39-098f92c73a36",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-24",
+      "PSComputerName": "localhost",
+      "RunspaceId": "555aa217-47a0-4c0a-b8fa-e5fad9d54978",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-25",
+      "PSComputerName": "localhost",
+      "RunspaceId": "30ae7519-ffcd-4060-bc77-690af3af5939",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-26",
+      "PSComputerName": "localhost",
+      "RunspaceId": "de66de1b-e5e2-40f7-b745-60ae0bdc4f2a",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-27",
+      "PSComputerName": "localhost",
+      "RunspaceId": "28050e56-1958-4ff2-bea8-8af9cd37d3da",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-28",
+      "PSComputerName": "localhost",
+      "RunspaceId": "09bc826d-264c-4eb7-acdf-0a363c8007b1",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-29",
+      "PSComputerName": "localhost",
+      "RunspaceId": "9f2aac1b-af4f-40cb-9323-23a56a942ac6",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-30",
+      "PSComputerName": "localhost",
+      "RunspaceId": "6a33489b-dff7-41e0-a4a9-deaf04d50e13",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-31",
+      "PSComputerName": "localhost",
+      "RunspaceId": "8d1e465c-17ce-44d0-90d6-1e456203b93b",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-32",
+      "PSComputerName": "localhost",
+      "RunspaceId": "955fdb9c-b308-411c-85d7-9d11fe945820",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-33",
+      "PSComputerName": "localhost",
+      "RunspaceId": "898b1882-03a6-45ec-9cd7-9e62840f75bb",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-34",
+      "PSComputerName": "localhost",
+      "RunspaceId": "2117a9ff-928b-4e7f-b268-8a8bb9d43840",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-35",
+      "PSComputerName": "localhost",
+      "RunspaceId": "ccf6a11a-442e-47c8-a728-805db85922b2",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-36",
+      "PSComputerName": "localhost",
+      "RunspaceId": "4d30c440-5669-4d55-82b5-c93d7dea9159",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-37",
+      "PSComputerName": "localhost",
+      "RunspaceId": "378abe81-19cd-440d-bfff-1836e5fe8b71",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-38",
+      "PSComputerName": "localhost",
+      "RunspaceId": "a43ed299-8ea1-410a-8c80-c0c878313e46",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-39",
+      "PSComputerName": "localhost",
+      "RunspaceId": "611ec962-7bbe-48e3-93bd-a55d15e52883",
+      "PSShowComputerName": false
+    },
+    {
+      "attempts": 1,
+      "ok": true,
+      "probe": "STRESS-PROBE-20260422T010448Z-40",
+      "PSComputerName": "localhost",
+      "RunspaceId": "607659e7-07b1-46c6-8d47-2b032a2255c0",
+      "PSShowComputerName": false
+    }
+  ],
+  "concurrency": 40,
+  "history_match": true,
+  "gate_pass": true,
+  "session_id": "97bfe586-701d-4ee4-b809-e12a5cd1d564",
+  "artifacts": [
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T004331Z-97bfe586\\phase2-stress.json",
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T004331Z-97bfe586\\phase2-stress-diff.txt"
+  ],
+  "posted_ok_count": 40,
+  "missing_local_count": 0,
+  "ok": true,
+  "ended_utc": "2026-04-22T01:04:59.2549714Z",
+  "started_utc": "2026-04-22T01:04:48.5998256Z"
+}
