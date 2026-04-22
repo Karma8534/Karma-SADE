@@ -1,5 +1,11 @@
 {
-  "session_id": "256a1a69-8279-45c7-8f85-4f306d68c8c1",
+  "pct": 100,
   "overall": "ASCENDANCE = 100 (SHIPPED)",
-  "last_run": "2026-04-22T13:15:00.9572301Z"
+  "run_dir": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69",
+  "gates_verified": 14,
+  "gates_fail": 0,
+  "gates_blocked": 0,
+  "gates_missing": 0,
+  "shipped": true,
+  "last_run": "2026-04-22T14:53:28.2177068Z"
 }

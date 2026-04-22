@@ -638,3 +638,9 @@ what_changed: tauri productName/identifier/window title moved from Julian to Ark
 why: production branding must ship as ArknexusV6 and future launches must preserve that title
 blockers: none
 next: verify running process/window title and continuity behavior remain stable
+
+## Ascendance Gate Snapshot 2026-04-22T14:53:59Z
+- What changed: persisted FINAL_GATE_exit marker and refreshed tracker shipped snapshot for ascendance-run-20260422T010805Z-256a1a69.
+- Why: required for machine-gated tracker_shipped_in_session truth at final gate.
+- Blockers/next: rerun ascendance-final-gate and confirm exit 0.
+
