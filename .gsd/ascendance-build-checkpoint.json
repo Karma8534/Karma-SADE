@@ -11,13 +11,13 @@
   "plan_run_id": "plan-run-20260421T234721Z-64a746fd",
   "sovereign_go_utc": "2026-04-21T23:47:47Z",
   "phase_markers_dir": "evidence/plan-run-20260421T234721Z-64a746fd/",
-  "phases_complete": ["0", "0.5", "1", "2", "3"],
-  "phase": 4,
-  "status": "ready_for_phase_4",
-  "last_completed_sub_phase": "3.8",
-  "last_session_ended_utc": "2026-04-22T14:18:30Z",
-  "turn_budget_remaining": 8,
-  "next_session_first_action": "Phase 4 -- implement Scripts/ascendance-final-gate.ps1 (verifier) + .git/hooks/pre-commit (scope whitelist + secret scan + MEMORY.md schema + banned-label) + Scripts/install-ascendance-hooks.ps1 + Scripts/ascendance-verifier-self-test.ps1; budget 10 turns",
+  "phases_complete": ["0", "0.5", "1", "2", "3", "4"],
+  "phase": 5,
+  "status": "ready_for_phase_5",
+  "last_completed_sub_phase": "4.5",
+  "last_session_ended_utc": "2026-04-22T15:02:00Z",
+  "turn_budget_remaining": 6,
+  "next_session_first_action": "Phase 5 -- end-to-end dry-run: ascendance-init-run.ps1 --dry, reverse-pass stubs for 14 gates, forward-pass attempt_n=1 each gate, drain dual-write queue, run ascendance-final-gate.ps1 --dry (expect exit 0 after fixes). Install pre-commit via Scripts/install-ascendance-hooks.ps1 first. Budget 8 turns.",
   "key_artifacts": {
     "latest_commit_sha":  "pending-phase-3-commit",
     "binary_sha":          "4D4BCA72EE70ADD08B606DF483A3AC33AABBD6D3AD2681CD9C237C3246A795BC",
@@ -33,6 +33,12 @@
       "ritual-recorder.ps1":          "G8",
       "ascendance-ritual-harness.ps1": "G7",
       "ascendance-independent-verify.ps1": "G1,G2,G3,G4,G5,G6,G7,G8,G14"
+    },
+    "phase_4_locks": {
+      "verifier_sha256":            "EB1A3B2256F688A2D524066A059EFD3D88CF62415D6E3ECBE92F8C58A98FB394",
+      "pre_commit_hook_sha256":     "FB7021EDB66D176C7BD6A3FECCEDF38BCA1C5B96907131CADF45A188A0C613EF",
+      "installer_sha256":           "7C1C3D7CAD8CFF1E7C67B855BFBF4C13FBA530C16E2BC038D84BF8A8F4610B87",
+      "self_test_sha256":           "FCA4E1E27261118FB436BA48913BCE794C01BA241BD2127D33FDEECB7BC41AD7"
     }
   },
   "standing_sovereign_phrase": "No defer. Binary only. If blocked beyond AA1-AA7, AA7 ESCALATION email + wait for auth. No silent defer permitted.",

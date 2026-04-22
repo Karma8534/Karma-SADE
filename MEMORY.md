@@ -1,4 +1,24 @@
 ﻿
+## Session 182 (2026-04-22) — Ascendance Build v2 Phase 4 COMPLETE
+
+### What was done (Phase 4 — verifier + hooks + self-test, budget 10 turns used ~6)
+- **Task 4.1** `Scripts/ascendance-final-gate.ps1` enhanced: 21 fields emitted (14 gate + 7 session/env + G11/G13 live re-probes + PROBE_LOG proof/decision check); directive_sha256 + plan_sha256 cross-check; queue-drain check; banned-label scope pinned to evidence/** + MEMORY.md Ascendance section; harness/settings/pre-commit/scope-index sha comparison to plan.session.json.snapshots.
+- **Task 4.2** `Scripts/ascendance-pre-commit.sh` authored: ascendance-mode auto-detect (staged path prefix OR commit-message prefix); non-ascendance commits only need MEMORY.md-touched gate; ascendance commits enforce: scope whitelist (G10), two-pass secret scan (Bearer/AKIA/AIza/ghp/sk-/PEM headers, excludes tests/fixtures + Logs), MEMORY.md staged + SESSION_ID present, banned-label scan on evidence/** + MEMORY.md Ascendance section.
+- **Task 4.3** `Scripts/install-ascendance-hooks.ps1` created: idempotent install; backs up existing non-ascendance pre-commit once; sha256 match verification; `-Uninstall` restores backup.
+- **Task 4.4** `Scripts/ascendance-verifier-self-test.ps1` created: 5 synthetic FAIL fixtures (banned-label, missing session_id, sha mismatch, missing gate, dual-write unconfirmed) + 1 PASS fixture (logic-testable fields only; env-dependent fields like git_clean/vault_parity/memory_schema excluded from sandbox scope). **Self-test run: all_pass=true.**
+- **Task 4.5** Verifier sha256 `EB1A3B22...A98FB394` locked into `plan.session.json.phase_4_locks` + `.gsd/ascendance-build-checkpoint.json.phase_4_locks`.
+- Phase-4 DONE marker written.
+
+### Verification
+- Self-test: 5 FAIL fixtures correctly detect their specific failure (exit 1 + specific field match); PASS fixture all logic-testable fields true.
+- Encoding fix: synthetic queue jsonl written via `[IO.File]::WriteAllText` with UTF-8 no-BOM (PS5 `Set-Content -Encoding UTF8` emits BOM which broke ConvertFrom-Json).
+- P114 recovery: external auto-stash wiped Phase 4 Write outputs mid-session; rebuilt from chat context + atomic-commit-immediately pattern per checkpoint resilience note.
+
+### Next
+Phase 5 (budget 8 turns): end-to-end dry-run. Install pre-commit hook (`Scripts/install-ascendance-hooks.ps1`), run `Scripts/ascendance-init-run.ps1 --dry`, reverse-pass stubs for 14 gates, forward-pass attempt_n=1 each, drain queue, run `Scripts/ascendance-final-gate.ps1 --dry` (expect exit 0 after residual fixes). Checkpoint advanced to `ready_for_phase_5`.
+
+---
+
 ## Session 182 (2026-04-22) — Ascendance Build v2 Phase 3 COMPLETE
 
 ### What was done (Phase 3 — harness rewrites, budget 14 turns used ~8)

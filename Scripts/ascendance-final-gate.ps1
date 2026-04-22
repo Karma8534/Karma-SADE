@@ -1,8 +1,17 @@
+# HARNESS_GATE: verifier
+# Ascendance final gate verifier -- plan v2 Phase 4.1 + directive v3 Section 9.2.
+# Reads session.json, EVIDENCE_INDEX.json, GAP_MATRIX.md, PROBE_LOG.md, dual-write-queue.jsonl.
+# Recomputes sha256; enforces SESSION_ID-in-artifact; banned-label scan (evidence/** + MEMORY.md Ascendance section);
+# asserts harness_sha + settings_sha unchanged vs plan.session.json.snapshots;
+# re-probes binary-fixed gates (G11 quarantine, G13 focus) live;
+# directive_sha256 recheck vs canonical; queue drain check.
+# Emits FINAL_GATE block. Exit 0 iff every field true.
 param(
   [string]$RunDir,
-  [string]$GitRemote = 'origin'
+  [string]$PlanRunId,
+  [string]$GitRemote = 'origin',
+  [switch]$Dry
 )
-
 $ErrorActionPreference = 'Stop'
 $repoRoot = 'C:\Users\raest\Documents\Karma_SADE'
 $evidenceRoot = Join-Path $repoRoot 'evidence'
@@ -10,9 +19,9 @@ $trackerStatePath = Join-Path $repoRoot '.claude\hooks\.arknexus-tracker-state.j
 $memoryPath = Join-Path $repoRoot 'MEMORY.md'
 
 function Resolve-LatestRunDir {
-  param([string]$Root)
+  param([string]$Root, [string]$Prefix = 'ascendance-run-')
   $dirs = Get-ChildItem -LiteralPath $Root -Directory -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -like 'ascendance-run-*' } |
+    Where-Object { $_.Name -like "$Prefix*" } |
     Sort-Object LastWriteTime -Descending
   if (-not $dirs -or $dirs.Count -eq 0) { return $null }
   return $dirs[0].FullName
@@ -35,7 +44,7 @@ function Get-ShaMatch {
   param([string]$Path, [string]$Expected)
   try {
     $actual = (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash.ToLowerInvariant()
-    return ($actual -eq [string]$Expected).ToString().ToLowerInvariant()
+    return ($actual -eq [string]$Expected.ToLowerInvariant())
   } catch { return $false }
 }
 
@@ -43,7 +52,7 @@ function Get-TextSessionHit {
   param([string]$Path, [string]$SessionId)
   try {
     $ext = [IO.Path]::GetExtension($Path).ToLowerInvariant()
-    if ($ext -in @('.json', '.txt', '.md', '.log', '.ps1', '.ts', '.tsx', '.js', '.jsx', '.yml', '.yaml', '.csv')) {
+    if ($ext -in @('.json', '.txt', '.md', '.log', '.ps1', '.ts', '.tsx', '.js', '.jsx', '.yml', '.yaml', '.csv', '.jsonl', '.marker')) {
       $raw = Get-Content -LiteralPath $Path -Raw -ErrorAction Stop
       return ($raw -match [regex]::Escape($SessionId))
     }
@@ -60,8 +69,19 @@ function Get-AscendanceMemorySection {
   return [string]$m[$m.Count - 1].Value
 }
 
+function Scan-BannedLabels {
+  param([string[]]$Texts)
+  $bannedRegex = '(?i)\b(inferred|likely|should|probably|close enough|done-ish|implied|assumed|effectively|essentially|in practice|approximately|basically|mostly|seems|appears to|close to|near enough)\b'
+  $hits = 0
+  foreach ($t in $Texts) {
+    if ($t) { $hits += [regex]::Matches($t, $bannedRegex).Count }
+  }
+  return $hits
+}
+
 if (-not $RunDir) {
-  $RunDir = Resolve-LatestRunDir -Root $evidenceRoot
+  $RunDir = Resolve-LatestRunDir -Root $evidenceRoot -Prefix 'ascendance-run-'
+  if (-not $RunDir) { $RunDir = Resolve-LatestRunDir -Root $evidenceRoot -Prefix 'plan-run-' }
 }
 if (-not $RunDir -or -not (Test-Path -LiteralPath $RunDir)) {
   Write-Host 'FINAL_GATE:'
@@ -75,19 +95,25 @@ $indexPath = Join-Path $RunDir 'EVIDENCE_INDEX.json'
 $manifestPath = Join-Path $RunDir 'artifact_manifest.json'
 $gapPath = Join-Path $RunDir 'GAP_MATRIX.md'
 $probePath = Join-Path $RunDir 'PROBE_LOG.md'
+$queuePath = Join-Path $RunDir 'dual-write-queue.jsonl'
+$planSessionPath = Join-Path $RunDir 'plan.session.json'
 
 $session = Load-JsonFile -Path $sessionPath
+if (-not $session) { $session = Load-JsonFile -Path $planSessionPath }
 $index = Load-JsonFile -Path $indexPath
 $manifest = Load-JsonFile -Path $manifestPath
-if ($null -eq $session -or $null -eq $index) {
+if ($null -eq $session) {
   Write-Host 'FINAL_GATE:'
   Write-Host '- verifier_exit_code:          1'
-  Write-Host '- error:                       session_or_index_missing_or_invalid'
+  Write-Host '- error:                       session_missing_or_invalid'
   exit 1
 }
+if ($null -eq $index) { $index = @() }
 
 $sessionId = [string]$session.session_id
 if (-not $sessionId) { $sessionId = [string]$session.SESSION_ID }
+$sessionStartUtc = [string]$session.session_start_utc
+if (-not $sessionStartUtc) { $sessionStartUtc = [string]$session.started_utc }
 $now = (Get-Date).ToUniversalTime()
 
 $expectedGateIds = @(
@@ -101,64 +127,34 @@ $latest = @{}
 foreach ($row in @($index)) {
   $gid = [string]$row.gate_id
   if (-not $gid) { continue }
-  if (-not $latest.ContainsKey($gid)) {
-    $latest[$gid] = $row
-    continue
-  }
+  if (-not $latest.ContainsKey($gid)) { $latest[$gid] = $row; continue }
   $prevAttempt = [int]$latest[$gid].attempt_n
   $newAttempt = [int]$row.attempt_n
   if ($newAttempt -ge $prevAttempt) { $latest[$gid] = $row }
 }
 
-$all14 = $true
-$anyFail = $false
-$anyBlocked = $false
-$artifactComplete = $true
-$sessionIdInArtifacts = $true
-$dualWrites = $true
-
+$all14 = $true; $anyFail = $false; $anyBlocked = $false
+$artifactComplete = $true; $sessionIdInArtifacts = $true; $dualWrites = $true
 foreach ($gid in $expectedGateIds) {
-  if (-not $latest.ContainsKey($gid)) {
-    $all14 = $false
-    $anyBlocked = $true
-    continue
-  }
+  if (-not $latest.ContainsKey($gid)) { $all14 = $false; $anyBlocked = $true; continue }
   $row = $latest[$gid]
   $status = [string]$row.status
   if ($status -ne 'VERIFIED') { $all14 = $false }
   if ($status -eq 'FAIL') { $anyFail = $true }
   if ($status -eq 'BLOCKED') { $anyBlocked = $true }
-
-  if (-not $row.obs_roundtrip_confirmed -or -not $row.bus_roundtrip_confirmed) {
-    $dualWrites = $false
-  }
-
+  if (-not $row.obs_roundtrip_confirmed -or -not $row.bus_roundtrip_confirmed) { $dualWrites = $false }
   foreach ($ap in @($row.artifacts)) {
     $p = [string]$ap
-    if (-not $p -or -not (Test-Path -LiteralPath $p)) {
-      $artifactComplete = $false
-      continue
-    }
+    if (-not $p -or -not (Test-Path -LiteralPath $p)) { $artifactComplete = $false; continue }
     $expected = $null
-    if ($row.sha256 -and $row.sha256.PSObject.Properties.Name -contains $p) {
-      $expected = [string]$row.sha256.$p
-    }
-    if (-not $expected) {
-      $artifactComplete = $false
-      continue
-    }
-    if (-not (Get-ShaMatch -Path $p -Expected $expected)) {
-      $artifactComplete = $false
-    }
-
+    if ($row.sha256 -and $row.sha256.PSObject.Properties.Name -contains $p) { $expected = [string]$row.sha256.$p }
+    if (-not $expected) { $artifactComplete = $false; continue }
+    if (-not (Get-ShaMatch -Path $p -Expected $expected)) { $artifactComplete = $false }
     $isTextHit = Get-TextSessionHit -Path $p -SessionId $sessionId
     if (-not $isTextHit) {
       $manifestHit = $false
       foreach ($m in @($manifest)) {
-        if ([string]$m.path -eq $p -and [string]$m.session_id -eq $sessionId -and [string]$m.sha256 -eq $expected) {
-          $manifestHit = $true
-          break
-        }
+        if ([string]$m.path -eq $p -and [string]$m.session_id -eq $sessionId -and [string]$m.sha256 -eq $expected) { $manifestHit = $true; break }
       }
       if (-not $manifestHit) { $sessionIdInArtifacts = $false }
     }
@@ -166,29 +162,26 @@ foreach ($gid in $expectedGateIds) {
 }
 
 $memorySection = Get-AscendanceMemorySection -Path $memoryPath
-$bannedRegex = '(?i)\b(inferred|likely|should|probably|close enough|done-ish|implied|assumed|effectively|essentially|in practice|approximately|basically|mostly|seems|appears to|close to|near enough)\b'
-$bannedHits = 0
-foreach ($sf in @($indexPath, $gapPath, $probePath)) {
-  if (-not (Test-Path -LiteralPath $sf)) { continue }
-  try {
-    $raw = Get-Content -LiteralPath $sf -Raw
-    $bannedHits += [regex]::Matches($raw, $bannedRegex).Count
-  } catch {}
+$bannedTexts = @()
+foreach ($sf in @($indexPath, $gapPath, $probePath, $queuePath)) {
+  if (Test-Path -LiteralPath $sf) {
+    try { $bannedTexts += (Get-Content -LiteralPath $sf -Raw) } catch {}
+  }
 }
-if ($memorySection) {
-  $bannedHits += [regex]::Matches($memorySection, $bannedRegex).Count
-}
+$bannedTexts += $memorySection
+$bannedHits = Scan-BannedLabels -Texts $bannedTexts
 
 $harnessShaUnchanged = $true
 $settingsShaUnchanged = $true
 $snapshotMap = @{}
 $sNode = $session.snapshots
-if ($sNode -and $sNode -is [System.Collections.IDictionary]) {
-  foreach ($k in $sNode.Keys) { $snapshotMap[[string]$k] = [string]$sNode[$k] }
-} else {
-  foreach ($s in @($sNode)) {
-    if ($s.path -and $s.sha256) { $snapshotMap[[string]$s.path] = [string]$s.sha256 }
+if ($sNode) {
+  if ($sNode.harness_ps1_sha256) {
+    foreach ($prop in $sNode.harness_ps1_sha256.PSObject.Properties) { $snapshotMap[[string]$prop.Name] = [string]$prop.Value }
   }
+  if ($sNode.settings_local_sha256) { $snapshotMap['.claude/settings.local.json'] = [string]$sNode.settings_local_sha256 }
+  if ($sNode.pre_commit_sha256) { $snapshotMap['.git/hooks/pre-commit'] = [string]$sNode.pre_commit_sha256 }
+  if ($sNode.cc_scope_index_sha256) { $snapshotMap['Karma2/cc-scope-index.md'] = [string]$sNode.cc_scope_index_sha256 }
 }
 foreach ($k in $snapshotMap.Keys) {
   $p = $k
@@ -203,15 +196,25 @@ foreach ($k in $snapshotMap.Keys) {
   }
 }
 
-$memorySchemaValid = $false
-if ($memorySection -and $memorySection -match [regex]::Escape($sessionId) -and $memorySection -match 'commit_sha:') {
-  $memorySchemaValid = $true
+$directiveMatch = $true
+$directivePath = Join-Path $repoRoot 'docs\ForColby\ascendance-directive-v3.md'
+if ($session.directive_sha256 -and (Test-Path -LiteralPath $directivePath)) {
+  $directiveMatch = Get-ShaMatch -Path $directivePath -Expected ([string]$session.directive_sha256)
 }
 
+$planMatch = $true
+$planPath = Join-Path $repoRoot '.gsd\phase-ascendance-build-PLAN.md'
+if ($session.plan_sha256_at_snapshot -and (Test-Path -LiteralPath $planPath)) {
+  $planMatch = Get-ShaMatch -Path $planPath -Expected ([string]$session.plan_sha256_at_snapshot)
+}
+
+$memorySchemaValid = $false
+if ($memorySection -and $memorySection -match [regex]::Escape($sessionId) -and $memorySection -match 'commit_sha:') { $memorySchemaValid = $true }
+
 $ritualRecordingValid = $false
-$mp4 = Join-Path $RunDir 'ascendance-ritual.mp4'
 $ritualSubDir = Join-Path $RunDir 'ritual'
-if (Test-Path -LiteralPath $mp4) {
+$mp4File = Get-ChildItem -LiteralPath $ritualSubDir -Filter '*.mp4' -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($mp4File -and $mp4File.Length -gt 0) {
   $ritualRecordingValid = $true
 } elseif (Test-Path -LiteralPath $ritualSubDir) {
   $allSteps = $true
@@ -221,11 +224,22 @@ if (Test-Path -LiteralPath $mp4) {
   $ritualRecordingValid = $allSteps
 }
 
+$queueDrained = $true
+if (Test-Path -LiteralPath $queuePath) {
+  $queueLines = Get-Content -LiteralPath $queuePath -ErrorAction SilentlyContinue
+  foreach ($line in @($queueLines)) {
+    if (-not $line.Trim()) { continue }
+    try {
+      $entry = $line | ConvertFrom-Json
+      if ([string]$entry.state -ne 'confirmed') { $queueDrained = $false }
+    } catch { $queueDrained = $false }
+  }
+}
+
 $gitClean = ((git -C $repoRoot status --porcelain) -join '') -eq ''
 $localHead = (git -C $repoRoot rev-parse HEAD).Trim()
 $remoteHead = ''
-$remotesToTry = @($GitRemote, 'origin', 'cxNexusv6') | Select-Object -Unique
-foreach ($r in $remotesToTry) {
+foreach ($r in @($GitRemote, 'origin') | Select-Object -Unique) {
   if (-not $r) { continue }
   try {
     $line = (git -C $repoRoot ls-remote $r refs/heads/main)
@@ -248,39 +262,50 @@ if ($trackerState) {
   try {
     $lastRunUtc = [datetime]::Parse([string]$trackerState.last_run).ToUniversalTime()
     $recent = (($now - $lastRunUtc).TotalSeconds -le 600)
-    if ([string]$trackerState.overall -match 'ASCENDANCE = 100 \(SHIPPED\)' -and $recent) {
-      $trackerShipped = $true
-    }
+    if ([string]$trackerState.overall -match 'ASCENDANCE = 100 \(SHIPPED\)' -and $recent) { $trackerShipped = $true }
   } catch {}
 }
 
+$g11Live = (-not (Test-Path -LiteralPath (Join-Path $repoRoot 'config\permission_rules.json.broken-bak'))) -and `
+           (-not (Test-Path -LiteralPath (Join-Path $repoRoot 'evidence\invalidated-synthetic-s174')))
+$g13Live = -not (Test-Path -LiteralPath (Join-Path $repoRoot '.claude\hooks\.arknexus-focus-lock.json'))
+
+$probeLogRaw = ''
+if (Test-Path -LiteralPath $probePath) { $probeLogRaw = Get-Content -LiteralPath $probePath -Raw }
+$probeHasProof = ($probeLogRaw -match '\bPROOF\b')
+$probeHasDecision = ($probeLogRaw -match '\bDECISION\b')
+
 $fields = [ordered]@{
-  all_14_verified = $all14
-  any_fail_remaining = $anyFail
-  any_blocked_remaining = $anyBlocked
-  banned_label_hits = $bannedHits
-  artifacts_complete = $artifactComplete
-  session_id_in_all_artifacts = $sessionIdInArtifacts
-  dual_writes_confirmed = $dualWrites
-  ritual_recording_valid = $ritualRecordingValid
-  git_clean_and_pushed = $gitScopeCleanAndPushed
-  vault_parity_verified = $vaultParityVerified
-  harness_sha_unchanged = $harnessShaUnchanged
-  settings_sha_unchanged = $settingsShaUnchanged
-  memory_md_schema_valid = $memorySchemaValid
-  tracker_shipped_in_session = $trackerShipped
+  all_14_verified              = $all14
+  any_fail_remaining           = $anyFail
+  any_blocked_remaining        = $anyBlocked
+  banned_label_hits            = $bannedHits
+  artifacts_complete           = $artifactComplete
+  session_id_in_all_artifacts  = $sessionIdInArtifacts
+  dual_writes_confirmed        = $dualWrites
+  queue_drained                = $queueDrained
+  ritual_recording_valid       = $ritualRecordingValid
+  git_clean_and_pushed         = $gitScopeCleanAndPushed
+  vault_parity_verified        = $vaultParityVerified
+  harness_sha_unchanged        = $harnessShaUnchanged
+  settings_sha_unchanged       = $settingsShaUnchanged
+  directive_sha256_match       = $directiveMatch
+  plan_sha256_match            = $planMatch
+  memory_md_schema_valid       = $memorySchemaValid
+  tracker_shipped_in_session   = $trackerShipped
+  g11_live_reprobe             = $g11Live
+  g13_live_reprobe             = $g13Live
+  probe_log_has_proof          = $probeHasProof
+  probe_log_has_decision       = $probeHasDecision
 }
 
-$shaInputs = @()
-$shaInputs += (Get-FileHash -Algorithm SHA256 -LiteralPath $sessionPath).Hash.ToLowerInvariant()
+$shaInputs = @((Get-FileHash -Algorithm SHA256 -LiteralPath $sessionPath).Hash.ToLowerInvariant())
 foreach ($gid in $expectedGateIds) {
   if (-not $latest.ContainsKey($gid)) { continue }
   $row = $latest[$gid]
   foreach ($p in @($row.artifacts)) {
     $path = [string]$p
-    if ($row.sha256 -and $row.sha256.PSObject.Properties.Name -contains $path) {
-      $shaInputs += [string]$row.sha256.$path
-    }
+    if ($row.sha256 -and $row.sha256.PSObject.Properties.Name -contains $path) { $shaInputs += [string]$row.sha256.$path }
   }
 }
 $joined = ($shaInputs | Sort-Object) -join ''
@@ -290,31 +315,19 @@ $sessionDigest = if ($joined) {
   ($shaObj.ComputeHash($bytes) | ForEach-Object { $_.ToString('x2') }) -join ''
 } else { '' }
 
+$trueRequired = @('all_14_verified','artifacts_complete','session_id_in_all_artifacts','dual_writes_confirmed','queue_drained','ritual_recording_valid','git_clean_and_pushed','vault_parity_verified','harness_sha_unchanged','settings_sha_unchanged','directive_sha256_match','plan_sha256_match','memory_md_schema_valid','tracker_shipped_in_session','g11_live_reprobe','g13_live_reprobe','probe_log_has_proof','probe_log_has_decision')
 $allTrue = $true
-foreach ($k in @('all_14_verified','artifacts_complete','session_id_in_all_artifacts','dual_writes_confirmed','ritual_recording_valid','git_clean_and_pushed','vault_parity_verified','harness_sha_unchanged','settings_sha_unchanged','memory_md_schema_valid','tracker_shipped_in_session')) {
-  if (-not $fields[$k]) { $allTrue = $false }
-}
-if ($fields.any_fail_remaining -or $fields.any_blocked_remaining -or $fields.banned_label_hits -gt 0) {
-  $allTrue = $false
-}
+foreach ($k in $trueRequired) { if (-not $fields[$k]) { $allTrue = $false } }
+if ($fields.any_fail_remaining -or $fields.any_blocked_remaining -or $fields.banned_label_hits -gt 0) { $allTrue = $false }
 $exitCode = if ($allTrue) { 0 } else { 1 }
 
 Write-Host 'FINAL_GATE:'
-Write-Host ("- all_14_verified:             " + ($fields.all_14_verified.ToString().ToLowerInvariant()))
-Write-Host ("- any_fail_remaining:          " + ($fields.any_fail_remaining.ToString().ToLowerInvariant()))
-Write-Host ("- any_blocked_remaining:       " + ($fields.any_blocked_remaining.ToString().ToLowerInvariant()))
-Write-Host ("- banned_label_hits:           " + $fields.banned_label_hits)
-Write-Host ("- artifacts_complete:          " + ($fields.artifacts_complete.ToString().ToLowerInvariant()))
-Write-Host ("- session_id_in_all_artifacts: " + ($fields.session_id_in_all_artifacts.ToString().ToLowerInvariant()))
-Write-Host ("- dual_writes_confirmed:       " + ($fields.dual_writes_confirmed.ToString().ToLowerInvariant()))
-Write-Host ("- ritual_recording_valid:      " + ($fields.ritual_recording_valid.ToString().ToLowerInvariant()))
-Write-Host ("- git_clean_and_pushed:        " + ($fields.git_clean_and_pushed.ToString().ToLowerInvariant()))
-Write-Host ("- vault_parity_verified:       " + ($fields.vault_parity_verified.ToString().ToLowerInvariant()))
-Write-Host ("- harness_sha_unchanged:       " + ($fields.harness_sha_unchanged.ToString().ToLowerInvariant()))
-Write-Host ("- settings_sha_unchanged:      " + ($fields.settings_sha_unchanged.ToString().ToLowerInvariant()))
-Write-Host ("- memory_md_schema_valid:      " + ($fields.memory_md_schema_valid.ToString().ToLowerInvariant()))
-Write-Host ("- tracker_shipped_in_session:  " + ($fields.tracker_shipped_in_session.ToString().ToLowerInvariant()))
-Write-Host ("- session_digest:              " + $sessionDigest)
-Write-Host ("- verifier_exit_code:          " + $exitCode)
-
+foreach ($k in $fields.Keys) {
+  $v = $fields[$k]
+  $vs = if ($v -is [bool]) { $v.ToString().ToLowerInvariant() } else { [string]$v }
+  Write-Host ("- {0,-30} {1}" -f ($k + ':'), $vs)
+}
+Write-Host ("- {0,-30} {1}" -f 'session_digest:', $sessionDigest)
+Write-Host ("- {0,-30} {1}" -f 'directive_sha256:', ([string]$session.directive_sha256))
+Write-Host ("- {0,-30} {1}" -f 'verifier_exit_code:', $exitCode)
 exit $exitCode

@@ -39,5 +39,12 @@
   ],
   "arch_audit_obs": 29558,
   "arch_audit_bus": "coord_1776817991754_xpfy",
-  "resilience_notes": "External auto-stash process ('pre-ascendance-clean-room-*') observed wiping working tree via git reset HEAD at 2026-04-22T00:34:44Z. Recovery: atomic rebuild + immediate commit. Going forward: commit after every phase end."
+  "resilience_notes": "External auto-stash process ('pre-ascendance-clean-room-*') observed wiping working tree via git reset HEAD at 2026-04-22T00:34:44Z. Recovery: atomic rebuild + immediate commit. Going forward: commit after every phase end.",
+  "phase_4_locks": {
+    "verifier_sha256":            "EB1A3B2256F688A2D524066A059EFD3D88CF62415D6E3ECBE92F8C58A98FB394",
+    "pre_commit_hook_sha256":     "FB7021EDB66D176C7BD6A3FECCEDF38BCA1C5B96907131CADF45A188A0C613EF",
+    "installer_sha256":           "7C1C3D7CAD8CFF1E7C67B855BFBF4C13FBA530C16E2BC038D84BF8A8F4610B87",
+    "self_test_sha256":           "FCA4E1E27261118FB436BA48913BCE794C01BA241BD2127D33FDEECB7BC41AD7",
+    "locked_utc":                 "2026-04-22T15:02:00Z"
+  }
 }
