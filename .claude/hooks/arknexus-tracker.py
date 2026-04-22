@@ -27,11 +27,15 @@ GATE_IDS = [
 def latest_run_dir() -> Path | None:
     if not EVIDENCE.exists():
         return None
-    candidates = [d for d in EVIDENCE.iterdir() if d.is_dir() and (d.name.startswith("ascendance-run-") or d.name.startswith("ascendance-dry-run-"))]
-    if not candidates:
-        return None
-    candidates.sort(key=lambda p: p.stat().st_mtime, reverse=True)
-    return candidates[0]
+    real_runs = [d for d in EVIDENCE.iterdir() if d.is_dir() and d.name.startswith("ascendance-run-")]
+    dry_runs = [d for d in EVIDENCE.iterdir() if d.is_dir() and d.name.startswith("ascendance-dry-run-")]
+    if real_runs:
+        real_runs.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+        return real_runs[0]
+    if dry_runs:
+        dry_runs.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+        return dry_runs[0]
+    return None
 
 
 def load_index(run_dir: Path) -> list:

@@ -257,6 +257,12 @@ if (Test-Path -LiteralPath $vaultMarker) {
 }
 
 $trackerShipped = $false
+$trackerScriptPath = Join-Path $repoRoot '.claude\hooks\arknexus-tracker.py'
+if (Test-Path -LiteralPath $trackerScriptPath) {
+  try {
+    & python $trackerScriptPath | Out-Null
+  } catch {}
+}
 $trackerState = Load-JsonFile -Path $trackerStatePath
 if ($trackerState) {
   try {
