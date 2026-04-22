@@ -1,0 +1,23 @@
+{
+  "phase": 2,
+  "completed_utc": "2026-04-22T13:45:00Z",
+  "run_id": "plan-run-20260421T234721Z-64a746fd",
+  "sub_phase_status": {
+    "2.1_data_hydration_state":        "VERIFIED (already in code per arch audit)",
+    "2.2_data_session_id":              "VERIFIED (already in code per arch audit)",
+    "2.3_data_picker_open":             "VERIFIED (already in code per arch audit)",
+    "2.4_bootMetrics_session_id":       "VERIFIED (karma.ts line 607 emits session_id)",
+    "2.4b_nonce_override":              "VERIFIED (commit ef15de3b; karma-ark-session-nonce localStorage key)",
+    "2.5_first_paint_history":          "VERIFIED (karma.ts hydrateBootFrame pre-populates messages)",
+    "2.6_cc_server_atomic_rename":      "VERIFIED (already in code per arch audit; _atomic_write_text fn, marker comment)",
+    "2.7_arknexus_tracker_rewrite":     "VERIFIED (commit ef15de3b; 14-gate schema, cache-disabled)",
+    "2.8_leveldb_latest":               "VERIFIED (commit ef15de3b; Scripts/leveldb_latest.ps1)",
+    "2.9_npm_run_build":                "VERIFIED (frontend/out rebuilt; 7 static pages)",
+    "2.10_cargo_tauri_build":           "VERIFIED (julian.exe sha 3AB27272C9C39C5C340BFC02C43C0D0554C2C439AF013EBCBFE49D417474B273 built 2026-04-22T09:38:16-04:00 size 11110912 bytes)",
+    "2.11_smoke_cdp_readback":          "FAIL (CDP port 9222 did not listen after 30s with WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS env var; Julian binary launches with MainWindowHandle but WebView2 does not expose debug port in release build; root cause under investigation - likely requires tauri devtools feature flag or different env propagation mechanism; Phase 3 family-harness rewrite must address)"
+  },
+  "blockers": {
+    "CDP_webview2_debug_port": "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port not taking effect in Julian release build. Prior session (S171) reports CDP over WebSocket worked. Investigation needed: (a) tauri Cargo.toml features = [\"devtools\"] may be required; (b) env var format may differ; (c) Tauri 2.10.3 may require Rust-side webview_options.devtools = true. Phase 3 family-harness must solve before G1/G3/G5 can probe."
+  },
+  "next_phase": "Phase 3 harnesses (with CDP blocker resolution as priority sub-task)"
+}
