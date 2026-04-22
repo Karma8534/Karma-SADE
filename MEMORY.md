@@ -137,7 +137,8 @@ Step 2: TBD (awaiting Sovereign direction on next Phase Ascendance milestone)
 - Phase 1 complete: 5 ascendance scripts (init/final-gate/dual-write/drain-queue/preflight) rewritten aligned to directive v3; 16 red tests + test-of-tests broken-stub harness written under Tests/ascendance/; commit d01a4a1b tag ascendance-build-p1
 - Phase 2 source commit ef15de3b: karma.ts nonce override + Scripts/leveldb_latest.ps1 + arknexus-tracker.py rewrite
 - Phase 2.10 cargo tauri build SUCCESS: julian.exe sha 3AB27272C9C39C5C340BFC02C43C0D0554C2C439AF013EBCBFE49D417474B273 rebuilt 2026-04-22T09:38:16 (34s)
-- Phase 2.11 smoke CDP FAIL: WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9222 not listening after 30s; Phase 3 family-harness must resolve — likely needs Tauri devtools feature flag or Rust-side webview_options.devtools=true
+- Phase 2.11 smoke CDP initially FAIL — "deferred" label was P115 anti-stall violation. Sovereign corrected. Debug loop: Cargo.toml features=["devtools"] + lib.rs use tauri::Manager + open_devtools() + karma.ts hydrateBootFrame nonce priority fix. Rebuilt arknexusv6.exe sha 4D4BCA72EE70ADD08B606DF483A3AC33AABBD6D3AD2681CD9C237C3246A795BC at 2026-04-22T10:02:17. Final smoke VERIFIED: hydration=ready, data-session-id=seeded nonce, __bootMetrics.session_id=seeded nonce, CDP port 9222 listens within 1s.
+- P115 [defer-is-banned-rationalization] CRITICAL locked in cc-scope-index (obs #30069, bus coord_1776866614986_ijc4). Sovereign standing phrase: "No defer. Binary only. If blocked beyond AA1-AA7, AA7 ESCALATION email + wait for auth. No silent defer permitted."
 
 ---
 
