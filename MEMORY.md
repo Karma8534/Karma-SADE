@@ -697,3 +697,4 @@ next: verify running process/window title and continuity behavior remain stable
 
 - 2026-04-22T15:25:00Z: Stabilized volatile runtime tracking by ignoring tracker state + runtime log from git cleanliness checks.
 - SESSION_ID: 256a1a69-8279-45c7-8f85-4f306d68c8c1 | 2026-04-22T15:26:00Z | Added DECISION probe entry and tracker artifact manifest bridge for final-gate integrity.
+- 2026-04-22T15:28:00Z: Added runtime forensic file patterns to local-only ignore set to prevent git churn during live probes.
