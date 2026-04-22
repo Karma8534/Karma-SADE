@@ -59,8 +59,42 @@ for ($i = 0; $i -lt 120; $i++) {
   if ($p.MainWindowHandle -ne 0) { $visible = $sw.ElapsedMilliseconds; break }
 }
 
-# Screenshot
-Start-Sleep -Seconds 3
+# Wait for CDP port to actually listen (up to 15s)
+$cdpReady = $false
+for ($i = 0; $i -lt 30; $i++) {
+  Start-Sleep -Milliseconds 500
+  $conn = Get-NetTCPConnection -LocalPort $CdpPort -State Listen -ErrorAction SilentlyContinue
+  if ($conn) { $cdpReady = $true; break }
+}
+# Poll CDP for page tab + wait for hydration attr to become 'ready' (up to 10s after port open)
+$hydrationReady = $false
+if ($cdpReady) {
+  for ($i = 0; $i -lt 20; $i++) {
+    Start-Sleep -Milliseconds 500
+    try {
+      $pollTabs = Invoke-RestMethod -Uri "http://127.0.0.1:$CdpPort/json" -TimeoutSec 3 -ErrorAction SilentlyContinue
+      $pollPage = $pollTabs | Where-Object { $_.type -eq 'page' -and $_.url -notmatch '^devtools:' } | Select-Object -First 1
+      if (-not $pollPage) { $pollPage = $pollTabs | Where-Object { $_.type -eq 'page' } | Select-Object -First 1 }
+      if ($pollPage -and $pollPage.webSocketDebuggerUrl) {
+        $pollWs = New-Object System.Net.WebSockets.ClientWebSocket
+        $pollCt = New-Object System.Threading.CancellationTokenSource 3000
+        $pollWs.ConnectAsync([Uri]$pollPage.webSocketDebuggerUrl, $pollCt.Token).Wait()
+        $pollMsg = '{"id":999,"method":"Runtime.evaluate","params":{"expression":"document.documentElement.dataset.hydrationState || \"\""}}'
+        $pBuf = [Text.Encoding]::UTF8.GetBytes($pollMsg)
+        $pSeg = New-Object System.ArraySegment[byte](,$pBuf)
+        $pollWs.SendAsync($pSeg, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, $pollCt.Token).Wait()
+        $prBuf = New-Object byte[] 8192
+        $prSeg = New-Object System.ArraySegment[byte](,$prBuf)
+        $prResult = $pollWs.ReceiveAsync($prSeg, $pollCt.Token)
+        $prResult.Wait()
+        $prRaw = [Text.Encoding]::UTF8.GetString($prBuf, 0, $prResult.Result.Count)
+        $pollWs.CloseAsync([System.Net.WebSockets.WebSocketCloseStatus]::NormalClosure, 'poll', $pollCt.Token).Wait()
+        if ($prRaw -match '"ready"') { $hydrationReady = $true; break }
+      }
+    } catch {}
+  }
+}
+Start-Sleep -Seconds 1
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
@@ -75,7 +109,8 @@ $bmp.Dispose()
 $cdpDom = [ordered]@{ session_id = $sessionId; cdp_port = $CdpPort; data_hydration_state = ''; data_session_id = ''; error = $null }
 try {
   $tabs = Invoke-RestMethod -Uri "http://127.0.0.1:$CdpPort/json" -TimeoutSec 6
-  $pageTab = $tabs | Where-Object { $_.type -eq 'page' } | Select-Object -First 1
+  $pageTab = $tabs | Where-Object { $_.type -eq 'page' -and $_.url -notmatch '^devtools:' } | Select-Object -First 1
+  if (-not $pageTab) { $pageTab = $tabs | Where-Object { $_.type -eq 'page' } | Select-Object -First 1 }
   if ($pageTab -and $pageTab.webSocketDebuggerUrl) {
     $ws = New-Object System.Net.WebSockets.ClientWebSocket
     $ct = New-Object System.Threading.CancellationTokenSource 10000
