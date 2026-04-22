@@ -699,3 +699,4 @@ next: verify running process/window title and continuity behavior remain stable
 - SESSION_ID: 256a1a69-8279-45c7-8f85-4f306d68c8c1 | 2026-04-22T15:26:00Z | Added DECISION probe entry and tracker artifact manifest bridge for final-gate integrity.
 - 2026-04-22T15:28:00Z: Added runtime forensic file patterns to local-only ignore set to prevent git churn during live probes.
 - 2026-04-22T15:34:00Z: Forensic audit drift closure: committed arknexusv6 harness/process naming fixes and ignored runtime session/transcript artifacts to keep final gate clean under live probes.
+- 2026-04-22T15:36:00Z: Closed boot-metrics key mismatch by writing __bootMetrics plus legacy __boot_metrics_last for scraper compatibility.

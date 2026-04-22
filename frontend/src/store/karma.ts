@@ -633,7 +633,9 @@ export const useKarmaStore = create<KarmaState>((set, get) => ({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window as any).__bootMetrics = metrics;
       try {
-        localStorage.setItem('__boot_metrics_last', JSON.stringify(metrics));
+        const payload = JSON.stringify(metrics);
+        localStorage.setItem('__bootMetrics', payload);
+        localStorage.setItem('__boot_metrics_last', payload);
       } catch {}
     }
   },
