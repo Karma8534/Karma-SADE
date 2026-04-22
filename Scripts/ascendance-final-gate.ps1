@@ -247,7 +247,7 @@ $trackerState = Load-JsonFile -Path $trackerStatePath
 if ($trackerState) {
   try {
     $lastRunUtc = [datetime]::Parse([string]$trackerState.last_run).ToUniversalTime()
-    $recent = (($now - $lastRunUtc).TotalSeconds -le 120)
+    $recent = (($now - $lastRunUtc).TotalSeconds -le 600)
     if ([string]$trackerState.overall -match 'ASCENDANCE = 100 \(SHIPPED\)' -and $recent) {
       $trackerShipped = $true
     }
