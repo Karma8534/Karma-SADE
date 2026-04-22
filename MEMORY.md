@@ -133,6 +133,8 @@ Step 2: TBD (awaiting Sovereign direction on next Phase Ascendance milestone)
 - Section 8 escalation: Phase 0.1 strict-tree-predicate unrealistic → D+B hybrid (obs #29521)
 - Major arch discovery: DOM attrs + atomic rename already present in frontend/src + cc_server_p1.py (Phase 2 fast-forward)
 - External auto-stash interference encountered (wiped working tree via git reset); atomic commit recovery
+- P114 [external-auto-stash-wipes-working-tree] CRITICAL locked in cc-scope-index (obs #29602; coord_1776819036803_pmbs)
+- Phase 1 complete: 5 ascendance scripts (init/final-gate/dual-write/drain-queue/preflight) rewritten aligned to directive v3; 16 red tests + test-of-tests broken-stub harness written under Tests/ascendance/; atomic commit follows
 
 ---
 

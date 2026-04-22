@@ -1,121 +1,84 @@
+# ascendance-init-run.ps1 — Create run dir + session.json + skeleton artifacts per directive v3 §10
+# HARNESS_GATE: init
 param(
   [switch]$Real,
+  [switch]$Dry,
   [string]$RunId
 )
-
 $ErrorActionPreference = 'Stop'
-
 $repoRoot = 'C:\Users\raest\Documents\Karma_SADE'
 $evidenceRoot = Join-Path $repoRoot 'evidence'
-$planFile = Join-Path $repoRoot 'docs\For Colby\cxArkNexusv4Prop1.md'
-$trackerState = Join-Path $repoRoot '.claude\hooks\.arknexus-tracker-state.json'
+$directivePath = Join-Path $repoRoot 'docs\ForColby\ascendance-directive-v3.md'
+$planPath      = Join-Path $repoRoot '.gsd\phase-ascendance-build-PLAN.md'
+$launcherPath  = Join-Path $repoRoot 'docs\ForColby\ascendance-launcher-v3-hardened.md'
+$trackerState  = Join-Path $repoRoot '.claude\hooks\.arknexus-tracker-state.json'
+$ritualDir     = Join-Path $evidenceRoot 'ritual'
 
-if (-not (Test-Path -LiteralPath $evidenceRoot)) {
-  New-Item -ItemType Directory -Path $evidenceRoot -Force | Out-Null
-}
+if (-not (Test-Path $evidenceRoot)) { New-Item -ItemType Directory -Path $evidenceRoot -Force | Out-Null }
 
-$sessionId = [Guid]::NewGuid().ToString()
-$sessionStartUtc = (Get-Date).ToUniversalTime().ToString('o')
+$sessionId      = [Guid]::NewGuid().ToString()
+$sessionStartUtc = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
 if (-not $RunId) {
   $stamp = (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ')
   $RunId = "$stamp-$($sessionId.Substring(0,8))"
 }
-
-$runDir = Join-Path $evidenceRoot ("ascendance-run-" + $RunId)
+$prefix = if ($Real) { 'ascendance-run-' } elseif ($Dry) { 'ascendance-dry-run-' } else { 'ascendance-run-' }
+$runDir = Join-Path $evidenceRoot "$prefix$RunId"
 New-Item -ItemType Directory -Path $runDir -Force | Out-Null
 
-# Global ritual evidence precondition reset.
-$ritualDir = Join-Path $evidenceRoot 'ritual'
-if (Test-Path -LiteralPath $ritualDir) {
-  Get-ChildItem -LiteralPath $ritualDir -Force -ErrorAction SilentlyContinue | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
-} else {
-  New-Item -ItemType Directory -Path $ritualDir -Force | Out-Null
-}
+# G8 precondition: wipe ritual dir
+if (Test-Path $ritualDir) {
+  Get-ChildItem -Path $ritualDir -Force -ErrorAction SilentlyContinue | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
+} else { New-Item -ItemType Directory -Path $ritualDir -Force | Out-Null }
 
-if (Test-Path -LiteralPath $trackerState) {
-  Remove-Item -LiteralPath $trackerState -Force -ErrorAction SilentlyContinue
-}
+# Tracker reset
+if (Test-Path $trackerState) { Remove-Item -Path $trackerState -Force -ErrorAction SilentlyContinue }
 
-$snapshotGlobs = @(
-  'Scripts\phase*-harness.ps1',
-  'Scripts\ascendance-*.ps1',
+$directiveSha = (Get-FileHash -Path $directivePath -Algorithm SHA256).Hash
+$planSha      = (Get-FileHash -Path $planPath -Algorithm SHA256).Hash
+$launcherSha  = (Get-FileHash -Path $launcherPath -Algorithm SHA256).Hash
+
+$snapshotPaths = @(
+  'Scripts\phase1-cold-boot-harness.ps1',
+  'Scripts\phase2-parity-harness.ps1',
+  'Scripts\phase3-family-harness.ps1',
+  'Scripts\ascendance-ritual-harness.ps1',
+  'Scripts\ascendance-init-run.ps1',
+  'Scripts\ascendance-final-gate.ps1',
+  'Scripts\ascendance-dual-write.ps1',
+  'Scripts\ascendance-drain-queue.ps1',
+  'Scripts\ascendance-preflight.ps1',
   '.claude\settings.local.json',
   '.git\hooks\pre-commit'
 )
-
-$snapshotFiles = @()
-foreach ($g in $snapshotGlobs) {
-  $matches = Get-ChildItem -Path (Join-Path $repoRoot $g) -File -ErrorAction SilentlyContinue
-  foreach ($m in $matches) {
-    $snapshotFiles += $m.FullName
-  }
-}
-$snapshotFiles = $snapshotFiles | Sort-Object -Unique
-
-$snapshots = @()
-foreach ($f in $snapshotFiles) {
-  try {
-    $h = (Get-FileHash -Algorithm SHA256 -LiteralPath $f).Hash.ToLowerInvariant()
-    $snapshots += [ordered]@{
-      path = $f
-      sha256 = $h
-    }
-  } catch {}
+$snapshots = @{}
+foreach ($p in $snapshotPaths) {
+  $full = Join-Path $repoRoot $p
+  if (Test-Path $full) { $snapshots[$p] = (Get-FileHash $full -Algorithm SHA256).Hash }
 }
 
-$planSha = $null
-if (Test-Path -LiteralPath $planFile) {
-  $planSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $planFile).Hash.ToLowerInvariant()
-}
-
-$session = [ordered]@{
-  run_id = $RunId
-  mode = if ($Real) { 'real' } else { 'dry' }
-  session_id = $sessionId
+$sessionJson = @{
+  SESSION_ID = $sessionId
   session_start_utc = $sessionStartUtc
-  plan_file = $planFile
+  run_id = $RunId
+  mode = if ($Real) { 'real' } elseif ($Dry) { 'dry' } else { 'real' }
+  directive_path = 'docs/ForColby/ascendance-directive-v3.md'
+  directive_sha256 = $directiveSha
+  plan_path = '.gsd/phase-ascendance-build-PLAN.md'
   plan_sha256 = $planSha
+  launcher_path = 'docs/ForColby/ascendance-launcher-v3-hardened.md'
+  launcher_sha256 = $launcherSha
+  operator = 'CC (Ascendant)'
   snapshots = $snapshots
 }
+$sessionJson | ConvertTo-Json -Depth 5 | Out-File -LiteralPath (Join-Path $runDir 'session.json') -Encoding utf8NoBOM
 
-$sessionPath = Join-Path $runDir 'session.json'
-$indexPath = Join-Path $runDir 'EVIDENCE_INDEX.json'
-$gapPath = Join-Path $runDir 'GAP_MATRIX.md'
-$probePath = Join-Path $runDir 'PROBE_LOG.md'
-$manifestPath = Join-Path $runDir 'artifact_manifest.json'
+'[]' | Out-File -LiteralPath (Join-Path $runDir 'EVIDENCE_INDEX.json') -Encoding utf8NoBOM
+"# GAP_MATRIX - $RunId`n`n| gate_id | status | attempt_n | verified_utc | artifact |`n|---|---|---|---|---|`n" | Out-File -LiteralPath (Join-Path $runDir 'GAP_MATRIX.md') -Encoding utf8NoBOM
+"# PROBE_LOG - $RunId`n`nstarted_utc: $sessionStartUtc`nSESSION_ID: $sessionId`n`n## Log`n`n$sessionStartUtc | DIRECTION | init | obs=pending | bus=pending | run initialized | art_sha=none`n" | Out-File -LiteralPath (Join-Path $runDir 'PROBE_LOG.md') -Encoding utf8NoBOM
+'' | Out-File -LiteralPath (Join-Path $runDir 'dual-write-queue.jsonl') -Encoding utf8NoBOM
 
-$session | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $sessionPath -Encoding UTF8
-'[]' | Set-Content -LiteralPath $indexPath -Encoding UTF8
-'[]' | Set-Content -LiteralPath $manifestPath -Encoding UTF8
-
-$gates = 1..14 | ForEach-Object { "G$_" }
-$gapLines = @(
-  '# GAP_MATRIX',
-  '',
-  '| gate_id | status | attempt_n | verified_utc | artifact |',
-  '|---|---|---:|---|---|'
-)
-foreach ($g in $gates) {
-  $gapLines += "| $g | BLOCKED | 0 | - | - |"
-}
-$gapLines | Set-Content -LiteralPath $gapPath -Encoding UTF8
-
-$probeLines = @(
-  '# PROBE_LOG',
-  '',
-  '| utc | type | gate | obs_id | bus_id | title | hashes |',
-  '|---|---|---|---|---|---|---|'
-)
-$probeLines | Set-Content -LiteralPath $probePath -Encoding UTF8
-
-[ordered]@{
-  ok = $true
-  run_id = $RunId
-  run_dir = $runDir
-  session_path = $sessionPath
-  evidence_index_path = $indexPath
-  gap_matrix_path = $gapPath
-  probe_log_path = $probePath
-  artifact_manifest_path = $manifestPath
-  snapshots = $snapshots.Count
-} | ConvertTo-Json -Depth 6
+Write-Host "run_dir: $runDir"
+Write-Host "SESSION_ID: $sessionId"
+Write-Host "run_id: $RunId"
+exit 0
