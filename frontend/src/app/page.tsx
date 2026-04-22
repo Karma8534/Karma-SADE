@@ -70,13 +70,13 @@ export default function Home() {
     useKarmaStore.getState().setToken(token);
   }
 
-  // Canonical boot hydration first, then pull merged surface.
+  // Canonical boot hydration runs unconditionally (G1 predicate requires data-hydration-state=ready
+  // within 2000ms of window visible; auth is orthogonal). fetchSurface remains gated on auth.
   useEffect(() => {
-    if (!isAuthenticated) return;
     let cancelled = false;
     (async () => {
       await hydrateBootFrame();
-      if (!cancelled) await fetchSurface();
+      if (!cancelled && isAuthenticated) await fetchSurface();
     })();
     return () => { cancelled = true; };
   }, [isAuthenticated, hydrateBootFrame, fetchSurface]);

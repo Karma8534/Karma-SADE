@@ -701,3 +701,5 @@ next: verify running process/window title and continuity behavior remain stable
 - 2026-04-22T15:34:00Z: Forensic audit drift closure: committed arknexusv6 harness/process naming fixes and ignored runtime session/transcript artifacts to keep final gate clean under live probes.
 - 2026-04-22T15:36:00Z: Closed boot-metrics key mismatch by writing __bootMetrics plus legacy __boot_metrics_last for scraper compatibility.
 - 2026-04-22T15:40:00Z: Captured rebuilt frontend static bundle after boot-metrics store update; kept Phase1 harness readiness polling to stabilize CDP hydrate capture.
+- 2026-04-22T15:42:00Z: Synced G14 tracker artifact hash in ascendance run index/manifest and ignored recurring dry-run phase1 probe outputs to prevent false git-dirty regressions.
+- 2026-04-22T15:46:00Z: Accepted live fix in frontend/src/app/page.tsx to always run hydrateBootFrame pre-auth; rebuilt frontend/out assets synced.
