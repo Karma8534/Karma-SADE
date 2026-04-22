@@ -597,3 +597,9 @@ session_id: 256a1a69-8279-45c7-8f85-4f306d68c8c1
 what_changed: refreshed .claude/hooks/.arknexus-tracker-state.json timestamp for same shipped run
 why: keep final-gate tracker_shipped_in_session true during live continuity/watchdog operation
 next: none
+
+## Ascendance Consolidation 2026-04-22T13:15:00.9572301Z
+session_id: 256a1a69-8279-45c7-8f85-4f306d68c8c1
+what_changed: included full observed workspace state (hooks, tauri tree, refreshed evidence artifacts, runtime/session deltas)
+why: explicit user directive to include all current changes and ship this state
+next: none

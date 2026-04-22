@@ -286,8 +286,10 @@ export const useKarmaStore = create<KarmaState>((set, get) => ({
   isAuthenticated: false,
   messages: [],
   isStreaming: false,
+  // Ascendance directive v3 G2 nonce injection: harness writes `karma-ark-session-nonce` to localStorage
+  // before launching Julian. When present, that value is the canonical session_id for __bootMetrics.
   conversationId: typeof window !== 'undefined'
-    ? localStorage.getItem('karma-conversation-id') || generateId()
+    ? (localStorage.getItem('karma-ark-session-nonce') || localStorage.getItem('karma-conversation-id') || generateId())
     : generateId(),
   streamAbortController: null,
   pendingFiles: [],
