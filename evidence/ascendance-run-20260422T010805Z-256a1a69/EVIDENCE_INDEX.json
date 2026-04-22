@@ -2,8 +2,8 @@
   {
     "gate_id": "G1_BOOT_DOM_ATTR",
     "status": "VERIFIED",
-    "attempt_n": 1,
-    "verified_utc": "2026-04-22T01:15:52.2828704Z",
+    "attempt_n": 2,
+    "verified_utc": "2026-04-22T13:14:52.1379612Z",
     "artifacts": [
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase1-first-frame.png",
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase1-timing.json",
@@ -20,8 +20,8 @@
   {
     "gate_id": "G2_COLD_BOOT_RERUN",
     "status": "VERIFIED",
-    "attempt_n": 1,
-    "verified_utc": "2026-04-22T01:15:52.2828704Z",
+    "attempt_n": 2,
+    "verified_utc": "2026-04-22T13:14:52.1379612Z",
     "artifacts": [
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase1-history-diff.txt",
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase1-canonical-trace.txt"
@@ -36,17 +36,17 @@
   {
     "gate_id": "G3_PARITY_BROWSER_SCREEN",
     "status": "VERIFIED",
-    "attempt_n": 1,
-    "verified_utc": "2026-04-22T01:15:52.2828704Z",
+    "attempt_n": 3,
+    "verified_utc": "2026-04-22T13:14:52.1379612Z",
     "artifacts": [
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase2-parity.png",
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase2-roundtrip.json",
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase2-session-equality.txt"
     ],
     "sha256": {
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase2-parity.png": "c1814a9a4cc92c563f360a957e0b521d79bf1158acc99a4c0091126efb34295d",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase2-roundtrip.json": "2e25fd0db3bf2978f0916883298e8bd3a17fa2cef4c6378479545530c7e31d38",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase2-session-equality.txt": "168f3db585f98e08a04149f8113ec44751d9b085d343afda8ea2f7f5879b2eb0"
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase2-parity.png": "fb099135571e09210bc1dc6192b7ca909296a975ba05547bc300164c4e0cb705",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase2-roundtrip.json": "d61a5d5e1296921fabdcb78b005b273cce4bb2f2f436c55acd544bb973e6810d",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase2-session-equality.txt": "7dd6ec2087de9ef35a23936514e6a619fedcb6576dc98c4a8a389ab9175e2ded"
     },
     "obs_roundtrip_confirmed": true,
     "bus_roundtrip_confirmed": true
@@ -54,15 +54,15 @@
   {
     "gate_id": "G4_PARITY_STRESS",
     "status": "VERIFIED",
-    "attempt_n": 2,
-    "verified_utc": "2026-04-22T01:15:52.2828704Z",
+    "attempt_n": 3,
+    "verified_utc": "2026-04-22T13:14:52.1379612Z",
     "artifacts": [
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase2-stress.json",
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase2-stress-diff.txt"
     ],
     "sha256": {
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase2-stress.json": "d65daa3682e05fa64bfec7b060bc3d6d177715e4ee81711cde5bd52b85a10d6e",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase2-stress-diff.txt": "dcecefa5aa1d3af7a9ac69661c52423377af31d16d70168c2d22ff8d233ef814"
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase2-stress.json": "44099b6951f9c26b652d1221ce19873b0c7b840d7be92740739ba63de42978ad",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase2-stress-diff.txt": "a71eb0e27e5ae0a684d154ae785faa41e377ed1828fba736523b2c762ad51bd8"
     },
     "obs_roundtrip_confirmed": true,
     "bus_roundtrip_confirmed": true
@@ -70,8 +70,8 @@
   {
     "gate_id": "G5_WHOAMI_REAL_UI",
     "status": "VERIFIED",
-    "attempt_n": 1,
-    "verified_utc": "2026-04-22T01:15:52.2828704Z",
+    "attempt_n": 2,
+    "verified_utc": "2026-04-22T13:14:52.1379612Z",
     "artifacts": [
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase3-agents-sections.png",
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\phase3-whoami.png",
@@ -88,8 +88,8 @@
   {
     "gate_id": "G6_RITUAL_STEP4_FRESH_BROWSER",
     "status": "VERIFIED",
-    "attempt_n": 1,
-    "verified_utc": "2026-04-22T01:15:52.2828704Z",
+    "attempt_n": 3,
+    "verified_utc": "2026-04-22T13:14:52.1379612Z",
     "artifacts": [
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-04.png",
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-05.png",
@@ -97,10 +97,10 @@
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ascendance-ritual.json"
     ],
     "sha256": {
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-04.png": "2250b57acc2446cb4ffccc78dfc0f5334596fb1ca8fe8954e7a8c7b8711c837a",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-05.png": "9ca43146ba7a7ddcd2cf3c29b6faa1b166c2c05a926b9db4e6bd98dab9844c23",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-06.png": "9ca43146ba7a7ddcd2cf3c29b6faa1b166c2c05a926b9db4e6bd98dab9844c23",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ascendance-ritual.json": "271b1db8240758017286f1df64a6a455c327ca526fd2ff6d96c78057ea6bded3"
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-04.png": "1ab1c421c0d3eff8a25500f2062fee0cb49af08bcf5f80c85ff651f1511ccb59",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-05.png": "46ec3e0235e070c3c15ae33615d0a9a676da2fd8f4a7afa44a69b54586630ab5",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-06.png": "46ec3e0235e070c3c15ae33615d0a9a676da2fd8f4a7afa44a69b54586630ab5",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ascendance-ritual.json": "c4769f6736ba839992262f20a58c35d25c0816a0a9ecad10f7c20d37b5a71b96"
     },
     "obs_roundtrip_confirmed": true,
     "bus_roundtrip_confirmed": true
@@ -108,15 +108,15 @@
   {
     "gate_id": "G7_RITUAL_STEP10_FIRST_PAINT",
     "status": "VERIFIED",
-    "attempt_n": 1,
-    "verified_utc": "2026-04-22T01:15:52.2828704Z",
+    "attempt_n": 3,
+    "verified_utc": "2026-04-22T13:14:52.1379612Z",
     "artifacts": [
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-10.png",
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ascendance-ritual.json"
     ],
     "sha256": {
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-10.png": "2c4bb15113c7c208acb76547cbe18767e7fed676af4a1b51fd038be7da3a6b42",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ascendance-ritual.json": "271b1db8240758017286f1df64a6a455c327ca526fd2ff6d96c78057ea6bded3"
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-10.png": "9187f79ff53a2d49dbbfe5bbc77f919d7aec586fe1835b088149fe0bcb219479",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ascendance-ritual.json": "c4769f6736ba839992262f20a58c35d25c0816a0a9ecad10f7c20d37b5a71b96"
     },
     "obs_roundtrip_confirmed": true,
     "bus_roundtrip_confirmed": true
@@ -124,8 +124,8 @@
   {
     "gate_id": "G8_RITUAL_UNINTERRUPTED_RECORDING",
     "status": "VERIFIED",
-    "attempt_n": 1,
-    "verified_utc": "2026-04-22T01:15:52.2828704Z",
+    "attempt_n": 3,
+    "verified_utc": "2026-04-22T13:14:52.1379612Z",
     "artifacts": [
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-01.png",
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-02.png",
@@ -142,19 +142,19 @@
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ascendance-ritual.json"
     ],
     "sha256": {
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-01.png": "bbe2b672341cebe1e98e4a5c3764c24e1e2418df8f5c7f80967e0e46cefa04b4",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-02.png": "bbe2b672341cebe1e98e4a5c3764c24e1e2418df8f5c7f80967e0e46cefa04b4",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-03.png": "5dbe609efcda96eacf4a367792fa122a05c2e391249abe03052736d7d6f90029",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-04.png": "2250b57acc2446cb4ffccc78dfc0f5334596fb1ca8fe8954e7a8c7b8711c837a",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-05.png": "9ca43146ba7a7ddcd2cf3c29b6faa1b166c2c05a926b9db4e6bd98dab9844c23",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-06.png": "9ca43146ba7a7ddcd2cf3c29b6faa1b166c2c05a926b9db4e6bd98dab9844c23",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-07.png": "0b0b2062a8ee8e5af4b4f5cbe0c66abddba29bf676bf585db17706aa88fefd56",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-08.png": "ee92d450b141bd8df4fd5953edfe6510df3828a4d69b901bbba44ef1b3d2517e",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-09.png": "2c4bb15113c7c208acb76547cbe18767e7fed676af4a1b51fd038be7da3a6b42",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-10.png": "2c4bb15113c7c208acb76547cbe18767e7fed676af4a1b51fd038be7da3a6b42",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-11.png": "2c4bb15113c7c208acb76547cbe18767e7fed676af4a1b51fd038be7da3a6b42",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-12.png": "2c4bb15113c7c208acb76547cbe18767e7fed676af4a1b51fd038be7da3a6b42",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ascendance-ritual.json": "271b1db8240758017286f1df64a6a455c327ca526fd2ff6d96c78057ea6bded3"
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-01.png": "21d2781c7a2e643c7fc1bccd074a0c3b50c75a473cf200b3ca0d1b2be8a80a0f",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-02.png": "21d2781c7a2e643c7fc1bccd074a0c3b50c75a473cf200b3ca0d1b2be8a80a0f",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-03.png": "71db892274f273f7a7088ef19dbb113b7cb9ec9cd8080a1e3a2ea6d5d706ff7f",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-04.png": "1ab1c421c0d3eff8a25500f2062fee0cb49af08bcf5f80c85ff651f1511ccb59",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-05.png": "46ec3e0235e070c3c15ae33615d0a9a676da2fd8f4a7afa44a69b54586630ab5",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-06.png": "46ec3e0235e070c3c15ae33615d0a9a676da2fd8f4a7afa44a69b54586630ab5",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-07.png": "2deb94c0fe44c6c92afd44cac0dbef8a95e76aaedf87ee3b03093266eef88051",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-08.png": "e059164b919a33024592fdc31171ab9136cef3488f90e416b9c21a53abda6c43",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-09.png": "9187f79ff53a2d49dbbfe5bbc77f919d7aec586fe1835b088149fe0bcb219479",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-10.png": "9187f79ff53a2d49dbbfe5bbc77f919d7aec586fe1835b088149fe0bcb219479",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-11.png": "db64a11ae26c841f4c29b672ccc6f813d09fb4b853420fda5da3f9a916e0e6d8",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ritual\\step-12.png": "db64a11ae26c841f4c29b672ccc6f813d09fb4b853420fda5da3f9a916e0e6d8",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\ascendance-ritual.json": "c4769f6736ba839992262f20a58c35d25c0816a0a9ecad10f7c20d37b5a71b96"
     },
     "obs_roundtrip_confirmed": true,
     "bus_roundtrip_confirmed": true
@@ -162,8 +162,8 @@
   {
     "gate_id": "G9_DUAL_WRITE_DISCIPLINE",
     "status": "VERIFIED",
-    "attempt_n": 1,
-    "verified_utc": "2026-04-22T01:15:52.2828704Z",
+    "attempt_n": 2,
+    "verified_utc": "2026-04-22T13:14:52.1379612Z",
     "artifacts": [
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\g9-dual-write.json"
     ],
@@ -176,8 +176,8 @@
   {
     "gate_id": "G10_GIT_AND_MEMORY",
     "status": "VERIFIED",
-    "attempt_n": 1,
-    "verified_utc": "2026-04-22T01:15:52.2828704Z",
+    "attempt_n": 2,
+    "verified_utc": "2026-04-22T13:14:52.1379612Z",
     "artifacts": [
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\g10-git-memory.txt"
     ],
@@ -190,8 +190,8 @@
   {
     "gate_id": "G11_QUARANTINE_CLEANUP",
     "status": "VERIFIED",
-    "attempt_n": 1,
-    "verified_utc": "2026-04-22T01:15:52.2828704Z",
+    "attempt_n": 2,
+    "verified_utc": "2026-04-22T13:14:52.1379612Z",
     "artifacts": [
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\g11-quarantine-cleanup.txt"
     ],
@@ -204,8 +204,8 @@
   {
     "gate_id": "G12_VAULT_PARITY",
     "status": "VERIFIED",
-    "attempt_n": 1,
-    "verified_utc": "2026-04-22T01:15:52.2828704Z",
+    "attempt_n": 2,
+    "verified_utc": "2026-04-22T13:14:52.1379612Z",
     "artifacts": [
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\vault_parity_verified.json",
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\g12-vault-health.txt"
@@ -220,8 +220,8 @@
   {
     "gate_id": "G13_FOCUS_GATE_UNLOCK",
     "status": "VERIFIED",
-    "attempt_n": 1,
-    "verified_utc": "2026-04-22T01:15:52.2828704Z",
+    "attempt_n": 2,
+    "verified_utc": "2026-04-22T13:14:52.1379612Z",
     "artifacts": [
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\g13-focus-gate.txt"
     ],
@@ -234,15 +234,15 @@
   {
     "gate_id": "G14_TRACKER_SCHEMA_ALIGNMENT",
     "status": "VERIFIED",
-    "attempt_n": 1,
-    "verified_utc": "2026-04-22T01:15:52.2828704Z",
+    "attempt_n": 2,
+    "verified_utc": "2026-04-22T13:14:52.1379612Z",
     "artifacts": [
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\g14-tracker-schema.txt",
       "C:\\Users\\raest\\Documents\\Karma_SADE\\.claude\\hooks\\.arknexus-tracker-state.json"
     ],
     "sha256": {
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260422T010805Z-256a1a69\\g14-tracker-schema.txt": "4e6d7116c9940b7afffd83a8223e9740fbc21afb775199f6ad0a6e1a867d178b",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\.claude\\hooks\\.arknexus-tracker-state.json": "dce77c3b7d0332032b598fc95868859eac8ca7eb878da6b87de5b047b8fc08fe"
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\.claude\\hooks\\.arknexus-tracker-state.json": "6fab3bb63f8d3bd382b41a1fb485c33d2ff9ebe6b3dd606420860930930da745"
     },
     "obs_roundtrip_confirmed": true,
     "bus_roundtrip_confirmed": true
