@@ -1,0 +1,28 @@
+{
+  "phase": 5,
+  "completed_utc": "2026-04-22T15:16:00Z",
+  "run_id": "plan-run-20260421T234721Z-64a746fd",
+  "session_id": "S182",
+  "dry_run_dir": "evidence/ascendance-dry-run-20260422T151430Z-91cf359a",
+  "verifier_exit": 1,
+  "session_digest": "66b39f784f14d53cd687dbe4144444a07bbe7d8129b4348eef8d7602982383ab",
+  "pre_commit_installed": {
+    "hook_sha256": "FB7021EDB66D176C7BD6A3FECCEDF38BCA1C5B96907131CADF45A188A0C613EF",
+    "backup_preserved": ".git/hooks/pre-commit.pre-ascendance.bak"
+  },
+  "reverse_pass_entries": 14,
+  "forward_pass_entries": 14,
+  "live_verified_in_dry": ["G11_QUARANTINE_CLEANUP", "G13_FOCUS_GATE_UNLOCK"],
+  "blocked_pending_phase_7": ["G1","G2","G3","G4","G5","G6","G7","G8","G9","G10","G12","G14"],
+  "residual_doc": "evidence/plan-run-20260421T234721Z-64a746fd/phase5-residual.md",
+  "acceptance": {
+    "banned_label_hits": 0,
+    "directive_sha256_match": true,
+    "plan_sha256_match": true,
+    "harness_sha_unchanged": true,
+    "queue_drained": true,
+    "session_id_in_all_artifacts": true,
+    "no_section_8_escalation_required": true
+  },
+  "decision": "ADVANCE_TO_PHASE_6 -- BLOCKED gates require Phase 6 deploy pre-work + Phase 7 real execution; NOT Phase 2/3 regressions."
+}

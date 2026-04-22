@@ -1,4 +1,34 @@
 ﻿
+## Session 182 (2026-04-22) — Ascendance Build v2 Phase 5 COMPLETE
+
+### What was done (Phase 5 — end-to-end dry-run, budget 8 turns used ~4)
+- **Pre-commit installed** via `Scripts/install-ascendance-hooks.ps1`: sha256 FB7021ED...A188A0C613EF matches source; prior pre-commit backed up to `.git/hooks/pre-commit.pre-ascendance.bak` for `-Uninstall` rollback.
+- **Task 5.1** `Scripts/ascendance-init-run.ps1 -Dry` executed via pwsh 7 (PS 5.1 doesn't support `utf8NoBOM` encoding): generated `evidence/ascendance-dry-run-20260422T151430Z-91cf359a/` with session.json (SESSION_ID 91cf359a-324d-4857-b97e-0caa800b58a5), EVIDENCE_INDEX stub, GAP_MATRIX stub, PROBE_LOG with init DIRECTION, dual-write-queue.jsonl empty.
+- **Task 5.2-5.3** reverse-pass (14 stubs attempt_n=0 BLOCKED reason=planned) + forward-pass (14 stubs attempt_n=1) written via inline pwsh helper to EVIDENCE_INDEX.json (28 entries total).
+- **Task 5.4** dual-write queue was empty; drain vacuously passes (queue_drained=true).
+- **Task 5.5** `Scripts/ascendance-final-gate.ps1 -RunDir ... -Dry` exit 1 (expected). Output captured to `evidence/ascendance-dry-run-.../final-gate-dry.txt`.
+- **Task 5.6** Residual matrix written: `evidence/plan-run-.../phase5-residual.md`. 12 gates BLOCKED (G1-G10, G12, G14) pending live Phase 6+7 execution; G11+G13 already VERIFIED via live re-probe.
+
+### Verification (dry-run)
+- banned_label_hits: 0
+- session_id_in_all_artifacts: true
+- queue_drained: true
+- harness_sha_unchanged: true
+- settings_sha_unchanged: true
+- directive_sha256_match: true (canonical 9B4AA3D3...ee37f74b matches session.json)
+- plan_sha256_match: true
+- G11_QUARANTINE_CLEANUP: VERIFIED (live re-probe)
+- G13_FOCUS_GATE_UNLOCK: VERIFIED (live re-probe)
+- Session digest: 66b39f784f14d53cd687dbe4144444a07bbe7d8129b4348eef8d7602982383ab
+
+### Decision
+Per plan 5.6 interpretation: BLOCKED gates are NOT Phase 2/3 regressions (harness deliverables complete + self-tested). They require Phase 6 deploy pre-work + Phase 7 real execution. No Section 8 escalation. Residual doc serves as Phase 6/7 hand-off checklist. Advance to Phase 6.
+
+### Next
+Phase 6 (budget 6 turns): token freshness, scp frontend to vault-neo build context, karma-hub-deploy, canary hub-bridge healthcheck (AA3 rollback on fail), compose.hub.yml local==remote sha, vault-neo HEAD unchanged, smoke battery, vault_parity_verified.json marker.
+
+---
+
 ## Session 182 (2026-04-22) — Ascendance Build v2 Phase 4 COMPLETE
 
 ### What was done (Phase 4 — verifier + hooks + self-test, budget 10 turns used ~6)

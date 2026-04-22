@@ -1,0 +1,25 @@
+FINAL_GATE:
+- all_14_verified:               false
+- any_fail_remaining:            false
+- any_blocked_remaining:         true
+- banned_label_hits:             0
+- artifacts_complete:            true
+- session_id_in_all_artifacts:   true
+- dual_writes_confirmed:         false
+- queue_drained:                 true
+- ritual_recording_valid:        false
+- git_clean_and_pushed:          false
+- vault_parity_verified:         false
+- harness_sha_unchanged:         true
+- settings_sha_unchanged:        true
+- directive_sha256_match:        true
+- plan_sha256_match:             true
+- memory_md_schema_valid:        false
+- tracker_shipped_in_session:    false
+- g11_live_reprobe:              true
+- g13_live_reprobe:              true
+- probe_log_has_proof:           false
+- probe_log_has_decision:        false
+- session_digest:                66b39f784f14d53cd687dbe4144444a07bbe7d8129b4348eef8d7602982383ab
+- directive_sha256:              9B4AA3D38EE06E5D0354D4418CB788DDB7799D38ABE8D6955B1EB205EE37F74B
+- verifier_exit_code:            1
