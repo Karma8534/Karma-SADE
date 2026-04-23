@@ -71,7 +71,7 @@ export interface ApiFetchInit extends RequestInit {
   json?: unknown;
 }
 
-export function apiFetch(path: string, init: ApiFetchInit = {}): Promise<Response> {
+export async function apiFetch(path: string, init: ApiFetchInit = {}): Promise<Response> {
   const { token, json, headers, body, ...rest } = init;
   const merged: Record<string, string> = {};
   if (headers) {
@@ -94,7 +94,18 @@ export function apiFetch(path: string, init: ApiFetchInit = {}): Promise<Respons
   if (resolvedToken && !Object.keys(merged).some((k) => k.toLowerCase() === 'authorization')) {
     merged['Authorization'] = `Bearer ${resolvedToken}`;
   }
-  return fetch(apiUrl(path), { ...rest, headers: merged, body: actualBody });
+  const primaryUrl = apiUrl(path);
+  const res = await fetch(primaryUrl, { ...rest, headers: merged, body: actualBody });
+  // P-FU7 (S183 Nexus V3.0 merge fragment): on hub 5xx, retry once against direct P1 bridge if accessible.
+  // Only applies when primary URL is remote (not already 127.0.0.1) and response is 5xx.
+  if (res.status >= 500 && res.status < 600 && !/127\.0\.0\.1|localhost/.test(primaryUrl)) {
+    try {
+      const fallbackUrl = `${FALLBACK_BRIDGE}${path.startsWith('/') ? path : `/${path}`}`;
+      const fbRes = await fetch(fallbackUrl, { ...rest, headers: merged, body: actualBody });
+      if (fbRes.ok) return fbRes;
+    } catch { /* fall through to original 5xx response */ }
+  }
+  return res;
 }
 
 function readStoredToken(): string {
