@@ -4,7 +4,7 @@
 - session_id: 26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4
 - started_utc: 2026-04-23T14:44:00Z
 - ended_utc:   2026-04-23T15:20:00Z
-- commit_sha:  pending (F19 ship commit — feat(ascendance-run): 20260423T144400Z-26edc43d shipped — 14 gates STRICT VERIFIED live)
+- commit_sha:  e07c9a602 (feat(ascendance-run): 20260423T144400Z-26edc43d shipped)
 - directive_sha256: 9B4AA3D38EE06E5D0354D4418CB788DDB7799D38ABE8D6955B1EB205EE37F74B
 - gates:
   - G1_BOOT_DOM_ATTR:                  VERIFIED (attempt_n=1, first_try=true; strict: harness SID 26edc43d injected via Tauri lib.rs setup-eval into data-session-id pre-hydrate)
