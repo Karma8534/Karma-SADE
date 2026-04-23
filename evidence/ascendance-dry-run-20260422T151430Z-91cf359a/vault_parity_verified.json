@@ -1,0 +1,12 @@
+{
+  "verified": true,
+  "verified_utc": "2026-04-23T14:15:00Z",
+  "session_id": "91cf359a-324d-4857-b97e-0caa800b58a5",
+  "hub_endpoints": {
+    "/health": 200,
+    "/v1/status": 200,
+    "/v1/chat_POST": 200
+  },
+  "remote_compose_sha": "0c629e9f5df364b57042bd27e1683772cd0d76137dbabfe0fe0f5d24abd62c5c",
+  "containers_up": 5
+}

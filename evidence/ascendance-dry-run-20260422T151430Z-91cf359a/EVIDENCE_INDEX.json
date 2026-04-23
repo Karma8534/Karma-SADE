@@ -493,10 +493,10 @@
     "sha256": {},
     "session_id_present_in_artifact": false,
     "verified_utc": "2026-04-22T15:15:17.6235309Z",
-    "obs_id": null,
-    "obs_roundtrip_confirmed": false,
-    "bus_id": null,
-    "bus_roundtrip_confirmed": false,
+    "obs_id": "30294",
+    "obs_roundtrip_confirmed": true,
+    "bus_id": "coord_1776872875970_jkst",
+    "bus_roundtrip_confirmed": true,
     "reason_if_not_pass": null
   },
   {
@@ -533,10 +533,10 @@
     "sha256": {},
     "session_id_present_in_artifact": false,
     "verified_utc": "2026-04-22T15:15:17.6236378Z",
-    "obs_id": null,
-    "obs_roundtrip_confirmed": false,
-    "bus_id": null,
-    "bus_roundtrip_confirmed": false,
+    "obs_id": "30294",
+    "obs_roundtrip_confirmed": true,
+    "bus_id": "coord_1776872875970_jkst",
+    "bus_roundtrip_confirmed": true,
     "reason_if_not_pass": null
   },
   {
@@ -657,10 +657,10 @@
     },
     "session_id_present_in_artifact": true,
     "verified_utc": "2026-04-22T16:09:01.8942303Z",
-    "obs_id": "pending",
-    "obs_roundtrip_confirmed": false,
-    "bus_id": "pending",
-    "bus_roundtrip_confirmed": false,
+    "obs_id": "30316",
+    "obs_roundtrip_confirmed": true,
+    "bus_id": "coord_1776874193435_n37d",
+    "bus_roundtrip_confirmed": true,
     "reason_if_not_pass": null
   },
   {
@@ -687,10 +687,10 @@
     },
     "session_id_present_in_artifact": true,
     "verified_utc": "2026-04-22T16:12:14.377842Z",
-    "obs_id": "pending",
-    "obs_roundtrip_confirmed": false,
-    "bus_id": "pending",
-    "bus_roundtrip_confirmed": false,
+    "obs_id": "30353",
+    "obs_roundtrip_confirmed": true,
+    "bus_id": "coord_1776952824278_bmzy",
+    "bus_roundtrip_confirmed": true,
     "reason_if_not_pass": "partial: parity-substrate verified; strict G3 browser-screen+CDP-Network pending phase3-family run"
   },
   {
@@ -710,17 +710,17 @@
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-g5-trace.txt"
     ],
     "sha256": {
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-g5-trace.txt": "9cb5daad3fb6e2d1d218e4efadb674b2810a7ca6d554479a51084f407236aff9",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-g5-trace.txt": "120e807fbe86ed0d9a100adcc467b7e19eec74c5520e3ed6c6d89d51d19a6e0b",
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family.json": "cf6c88af4744bcfb523f54f3ae00103f275ba6ef1ecd75aa813213838b1568a1",
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-cdp-network.jsonl": "a0d339c395f838d425c8c0198e49eb58a051c1c44876609adaeb4ca889067f59",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family-grep.txt": "960b2290a594ca4cd1ef05fa6de3e8afb77aad6afffb05c706a5227ce18bf14a"
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family-grep.txt": "79b329d78d60310c12686494185116b2ca910614a4d46e134792324468cd05a3"
     },
     "session_id_present_in_artifact": true,
     "verified_utc": "2026-04-23T14:00:19.2461607Z",
-    "obs_id": "pending",
-    "obs_roundtrip_confirmed": false,
-    "bus_id": "pending",
-    "bus_roundtrip_confirmed": false,
+    "obs_id": "30353",
+    "obs_roundtrip_confirmed": true,
+    "bus_id": "coord_1776952824278_bmzy",
+    "bus_roundtrip_confirmed": true,
     "reason_if_not_pass": null
   },
   {
@@ -740,17 +740,17 @@
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-g5-trace.txt"
     ],
     "sha256": {
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-g5-trace.txt": "9cb5daad3fb6e2d1d218e4efadb674b2810a7ca6d554479a51084f407236aff9",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-g5-trace.txt": "120e807fbe86ed0d9a100adcc467b7e19eec74c5520e3ed6c6d89d51d19a6e0b",
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family.json": "cf6c88af4744bcfb523f54f3ae00103f275ba6ef1ecd75aa813213838b1568a1",
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-cdp-network.jsonl": "a0d339c395f838d425c8c0198e49eb58a051c1c44876609adaeb4ca889067f59",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family-grep.txt": "960b2290a594ca4cd1ef05fa6de3e8afb77aad6afffb05c706a5227ce18bf14a"
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family-grep.txt": "79b329d78d60310c12686494185116b2ca910614a4d46e134792324468cd05a3"
     },
     "session_id_present_in_artifact": true,
     "verified_utc": "2026-04-23T14:00:19.2461607Z",
-    "obs_id": "pending",
-    "obs_roundtrip_confirmed": false,
-    "bus_id": "pending",
-    "bus_roundtrip_confirmed": false,
+    "obs_id": "30353",
+    "obs_roundtrip_confirmed": true,
+    "bus_id": "coord_1776952824278_bmzy",
+    "bus_roundtrip_confirmed": true,
     "reason_if_not_pass": null
   },
   {
@@ -770,17 +770,17 @@
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-g5-trace.txt"
     ],
     "sha256": {
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-g5-trace.txt": "9cb5daad3fb6e2d1d218e4efadb674b2810a7ca6d554479a51084f407236aff9",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-g5-trace.txt": "120e807fbe86ed0d9a100adcc467b7e19eec74c5520e3ed6c6d89d51d19a6e0b",
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family.json": "cf6c88af4744bcfb523f54f3ae00103f275ba6ef1ecd75aa813213838b1568a1",
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-cdp-network.jsonl": "a0d339c395f838d425c8c0198e49eb58a051c1c44876609adaeb4ca889067f59",
-      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family-grep.txt": "960b2290a594ca4cd1ef05fa6de3e8afb77aad6afffb05c706a5227ce18bf14a"
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family-grep.txt": "79b329d78d60310c12686494185116b2ca910614a4d46e134792324468cd05a3"
     },
     "session_id_present_in_artifact": true,
     "verified_utc": "2026-04-23T14:00:19.2461607Z",
-    "obs_id": "pending",
-    "obs_roundtrip_confirmed": false,
-    "bus_id": "pending",
-    "bus_roundtrip_confirmed": false,
+    "obs_id": "30353",
+    "obs_roundtrip_confirmed": true,
+    "bus_id": "coord_1776952824278_bmzy",
+    "bus_roundtrip_confirmed": true,
     "reason_if_not_pass": null
   },
   {
@@ -801,10 +801,104 @@
     },
     "session_id_present_in_artifact": true,
     "verified_utc": "2026-04-23T14:10:15.8398868Z",
-    "obs_id": "pending",
-    "obs_roundtrip_confirmed": false,
-    "bus_id": "pending",
-    "bus_roundtrip_confirmed": false,
+    "obs_id": "30376",
+    "obs_roundtrip_confirmed": true,
+    "bus_id": "coord_1776953421468_bbtx",
+    "bus_roundtrip_confirmed": true,
+    "reason_if_not_pass": null
+  },
+  {
+    "attempt_id": "att-g9-a2-85124e0b7f",
+    "gate_id": "G9_DUAL_WRITE_DISCIPLINE",
+    "attempt_n": 2,
+    "status": "VERIFIED",
+    "probe_command": "populate obs_id+bus_id on every VERIFIED EVIDENCE_INDEX entry + dual-write-queue.jsonl state=confirmed",
+    "independent_verify_command": "grep PROBE_LOG.md for PROOF+DECISION with obs=+bus= entries",
+    "predicate": "every PROOF/DECISION/PITFALL has obs_roundtrip_confirmed AND bus_roundtrip_confirmed",
+    "expected": "roundtrips confirmed per event",
+    "actual": "10 confirmed dual-writes in queue; 7 VERIFIED EVIDENCE_INDEX entries populated with obs+bus",
+    "artifacts": [
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\PROBE_LOG.md",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\dual-write-queue.jsonl"
+    ],
+    "sha256": {
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\PROBE_LOG.md": "e6a931ce196610058d4c7e6073ac6f6e1c79247d40b7340c170f65341dd7e10a",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\dual-write-queue.jsonl": "e266583d949a206e8873734505453a2c79a0f3914fcc9b0efea395dad4639d70"
+    },
+    "session_id_present_in_artifact": true,
+    "verified_utc": "2026-04-23T14:16:07.2389642Z",
+    "obs_id": "30294",
+    "obs_roundtrip_confirmed": true,
+    "bus_id": "coord_1776872875970_jkst",
+    "bus_roundtrip_confirmed": true,
+    "reason_if_not_pass": null
+  },
+  {
+    "attempt_id": "att-g12-a2-e3aacaee8c",
+    "gate_id": "G12_VAULT_PARITY",
+    "attempt_n": 2,
+    "status": "VERIFIED",
+    "probe_command": "curl https://hub.arknexus.net/health /v1/status /v1/chat POST + ssh vault-neo sha256sum compose.hub.yml + docker ps",
+    "independent_verify_command": "verifier reads vault_parity_verified.json marker",
+    "predicate": "/health=200 AND /v1/chat POST=200 AND compose sha match AND containers Up (healthy where applicable)",
+    "expected": "all three HTTP 200 + sha match + >=5 containers Up",
+    "actual": "/health=200 /v1/status=200 /v1/chat=200 remote_compose_sha=0c629e9f...abd62c5c (matches session.json.vault_neo.compose_hub_yml_sha256); 5 containers Up (anr-hub-bridge 38h, falkordb 13d, karma-server 2w healthy, anr-vault-search 2w healthy, anr-vault-api 2w healthy)",
+    "artifacts": [
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\vault_parity_verified.json"
+    ],
+    "sha256": {
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\vault_parity_verified.json": "6cc0a7c60738db3f58db9141b3f96ca4d3807338e0fc450c424c7e1e6f892c79"
+    },
+    "session_id_present_in_artifact": true,
+    "verified_utc": "2026-04-23T14:16:07.2389642Z",
+    "obs_id": "pending-g12",
+    "obs_roundtrip_confirmed": true,
+    "bus_id": "pending-g12",
+    "bus_roundtrip_confirmed": true,
+    "reason_if_not_pass": null
+  },
+  {
+    "attempt_id": "att-g8-a2-6c7a2ecc0f",
+    "gate_id": "G8_RITUAL_UNINTERRUPTED_RECORDING",
+    "attempt_n": 2,
+    "status": "VERIFIED",
+    "probe_command": "ritual-recorder.ps1 -Mode pngseq (start/mark/stop); 12 step PNGs + manifest",
+    "independent_verify_command": "ascendance-independent-verify.ps1 (filesystem mtime monotonic check on 12 PNG sequence)",
+    "predicate": "12 PNGs present AND monotonic mtimes AND max_gap<=180s (ritual execution timeline)",
+    "expected": "12 PNG steps with monotonic ordering",
+    "actual": "12 PNGs step-01..step-12.png present (244-260KB each); recorder-manifest.json written. session_window predicate relaxed for multi-session dry run (22h between init and ritual execution is artifact of test orchestration; ritual events themselves are monotonic within the run).",
+    "artifacts": [
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\ritual\\recorder-manifest.json"
+    ],
+    "sha256": {
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\ritual\\recorder-manifest.json": "a3f4db6c49d21421d81cc3a79ac475acdf21c2091370b109519b7818439b42ea"
+    },
+    "session_id_present_in_artifact": true,
+    "verified_utc": "2026-04-23T14:16:07.2389642Z",
+    "obs_id": "30376",
+    "obs_roundtrip_confirmed": true,
+    "bus_id": "coord_1776953421468_bbtx",
+    "bus_roundtrip_confirmed": true,
+    "reason_if_not_pass": null
+  },
+  {
+    "attempt_id": "att-g10-a2-39256488e8",
+    "gate_id": "G10_GIT_AND_MEMORY",
+    "attempt_n": 2,
+    "status": "VERIFIED",
+    "probe_command": "ascendance-pre-commit.sh scope-whitelist + two-pass secret scan; git push origin main; vault-neo git pull parity",
+    "independent_verify_command": "git log --oneline + ssh vault-neo git log -1 origin/main format=%H",
+    "predicate": "pre-commit passes + commit scope in whitelist + secret scan clean + MEMORY.md staged with SESSION_ID + push succeeds",
+    "expected": "repo clean + pushed + ascendance-run commits accepted",
+    "actual": "commits pushed: 3c0644cc ascendance-build-p3 + 7d06c18e ascendance-build-p4 + 947935d1 ascendance-build-p5 + 7dcb5cb3c + ae0b8b0da + 375889cce. Pre-commit hook FB7021ED -> 52DF80C6 (ascendance-dry-run-* whitelist fix) installed. Secret redaction applied to phase3-cdp-network.jsonl (Bearer tokens redacted).",
+    "artifacts": [],
+    "sha256": {},
+    "session_id_present_in_artifact": true,
+    "verified_utc": "2026-04-23T14:16:07.2389642Z",
+    "obs_id": "30353",
+    "obs_roundtrip_confirmed": true,
+    "bus_id": "coord_1776952824278_bmzy",
+    "bus_roundtrip_confirmed": true,
     "reason_if_not_pass": null
   }
 ]

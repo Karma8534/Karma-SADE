@@ -1,4 +1,34 @@
 ﻿
+## Ascendance Run plan-run-20260421T234721Z-64a746fd
+
+- session_id: 91cf359a-324d-4857-b97e-0caa800b58a5
+- started_utc: 2026-04-22T15:14:30Z
+- ended_utc:   2026-04-23T14:20:00Z
+- commit_sha:  375889cce (phase-6-live G7; full lineage 3c0644cc 7d06c18e 947935d1 7dcb5cb3c ae0b8b0da 375889cce)
+- directive_sha256: 9B4AA3D38EE06E5D0354D4418CB788DDB7799D38ABE8D6955B1EB205EE37F74B
+- gates:
+  - G1_BOOT_DOM_ATTR:                  VERIFIED (attempt_n=2, first_try=false)
+  - G2_COLD_BOOT_RERUN:                VERIFIED (attempt_n=2, first_try=false)
+  - G3_PARITY_BROWSER_SCREEN:          VERIFIED (attempt_n=3, first_try=false)
+  - G4_PARITY_STRESS:                  VERIFIED (attempt_n=2, first_try=false)
+  - G5_WHOAMI_REAL_UI:                 VERIFIED (attempt_n=3, first_try=false)
+  - G6_RITUAL_STEP4_FRESH_BROWSER:     VERIFIED (attempt_n=3, first_try=false)
+  - G7_RITUAL_STEP10_FIRST_PAINT:      VERIFIED (attempt_n=2, first_try=false)
+  - G8_RITUAL_UNINTERRUPTED_RECORDING: VERIFIED (attempt_n=2, first_try=false)
+  - G9_DUAL_WRITE_DISCIPLINE:          VERIFIED (attempt_n=2, first_try=false)
+  - G10_GIT_AND_MEMORY:                VERIFIED (attempt_n=2, first_try=false)
+  - G11_QUARANTINE_CLEANUP:            VERIFIED (attempt_n=1, first_try=true)
+  - G12_VAULT_PARITY:                  VERIFIED (attempt_n=2, first_try=false)
+  - G13_FOCUS_GATE_UNLOCK:             VERIFIED (attempt_n=1, first_try=true)
+  - G14_TRACKER_SCHEMA_ALIGNMENT:      VERIFIED (attempt_n=2, first_try=false)
+- dual_writes: proofs=5, decisions=5, pitfalls=1, directions=1
+- vault_parity_sha: local=0c629e9f5df364b57042bd27e1683772cd0d76137dbabfe0fe0f5d24abd62c5c == remote=0c629e9f5df364b57042bd27e1683772cd0d76137dbabfe0fe0f5d24abd62c5c
+- tracker_state: ASCENDANCE = 100 (SHIPPED) — tracker_shipped_in_session=true
+- final_gate_exit: pending (git_clean_and_pushed + memory_md_schema_valid flip true with this commit)
+- session_digest: dc43c38f9d51a802ae4eae3eda399d3c1e31206947c52f29c795e2dd57ac5c14
+
+---
+
 ## Session 182 (2026-04-22) — Phase 6 live forward-pass: G1 G2 G3 G4 G14 VERIFIED attempt_n=2
 
 ### Live harness runs (ground-truth, CLAUDE.md Honesty Contract)

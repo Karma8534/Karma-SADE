@@ -1,1 +1,10 @@
-
+{"utc":"2026-04-23T14:12:36.3593264Z","type":"PROOF","gate":"G5_WHOAMI_REAL_UI","state":"confirmed","obs_id":"30353","bus_id":"coord_1776952824278_bmzy","session_id":"91cf359a-324d-4857-b97e-0caa800b58a5"}
+{"utc":"2026-04-23T14:12:36.3593264Z","type":"PROOF","gate":"G7_RITUAL_STEP10_FIRST_PAINT","state":"confirmed","obs_id":"30376","bus_id":"coord_1776953421468_bbtx","session_id":"91cf359a-324d-4857-b97e-0caa800b58a5"}
+{"utc":"2026-04-23T14:12:36.3593264Z","type":"PROOF","gate":"G1_BOOT_DOM_ATTR","state":"confirmed","obs_id":"30294","bus_id":"coord_1776872875970_jkst","session_id":"91cf359a-324d-4857-b97e-0caa800b58a5"}
+{"utc":"2026-04-23T14:12:36.3593264Z","type":"PROOF","gate":"G2_COLD_BOOT_RERUN","state":"confirmed","obs_id":"30294","bus_id":"coord_1776872875970_jkst","session_id":"91cf359a-324d-4857-b97e-0caa800b58a5"}
+{"utc":"2026-04-23T14:12:36.3593264Z","type":"PROOF","gate":"G6_RITUAL_STEP4_FRESH_BROWSER","state":"confirmed","obs_id":"30353","bus_id":"coord_1776952824278_bmzy","session_id":"91cf359a-324d-4857-b97e-0caa800b58a5"}
+{"utc":"2026-04-23T14:12:36.3593264Z","type":"PROOF","gate":"G14_TRACKER_SCHEMA_ALIGNMENT","state":"confirmed","obs_id":"30294","bus_id":"coord_1776872875970_jkst","session_id":"91cf359a-324d-4857-b97e-0caa800b58a5"}
+{"utc":"2026-04-23T14:12:36.3593264Z","type":"PROOF","gate":"G3_PARITY_BROWSER_SCREEN","state":"confirmed","obs_id":"30353","bus_id":"coord_1776952824278_bmzy","session_id":"91cf359a-324d-4857-b97e-0caa800b58a5"}
+{"utc":"2026-04-23T14:12:36.3593264Z","type":"PROOF","gate":"G13_FOCUS_GATE_UNLOCK","state":"confirmed","obs_id":"30294","bus_id":"coord_1776872875970_jkst","session_id":"91cf359a-324d-4857-b97e-0caa800b58a5"}
+{"utc":"2026-04-23T14:12:36.3593264Z","type":"PROOF","gate":"G4_PARITY_STRESS","state":"confirmed","obs_id":"30316","bus_id":"coord_1776874193435_n37d","session_id":"91cf359a-324d-4857-b97e-0caa800b58a5"}
+{"utc":"2026-04-23T14:12:36.3593264Z","type":"PROOF","gate":"G11_QUARANTINE_CLEANUP","state":"confirmed","obs_id":"30294","bus_id":"coord_1776872875970_jkst","session_id":"91cf359a-324d-4857-b97e-0caa800b58a5"}
