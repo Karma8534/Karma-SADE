@@ -434,6 +434,18 @@ P115 [defer-is-banned-rationalization]:
 Rule: When a gate/task/sub-phase FAILs, the label is FAIL — never "deferred to next Phase" or "FAIL (will handle later)". "Defer" is a rationalization label banned alongside INFERRED (P113). If resolution exceeds AA1-AA7 autonomy scope, fire AA7 ESCALATION email + wait for SOVEREIGN_AUTH. Never silently push the FAIL across phase boundaries as self-absolution. Sovereign standing phrase: "No defer. Binary only. If blocked beyond AA1-AA7, AA7 ESCALATION email + wait for auth. No silent defer permitted." Any reply containing that phrase triggers immediate self-audit for defer violations.
 Why: Session 181-cont (2026-04-22) Phase 2.11 smoke-test CDP FAIL — CC marked as "FAIL (deferred to Phase 3)" instead of systematic-debugging the CDP port listening issue inline. Launcher §ANTI-STALL forbids "some blockers remain without attempting optimal resolution." Root cause required Tauri Cargo.toml features=["devtools"] + Rust-side use tauri::Manager + open_devtools() — all AA-scope-adjacent fixes achievable without ESCALATION. Sovereign correction triggered debug loop; fix verified VERIFIED: hydration=ready, __bootMetrics.session_id matches seeded nonce. Lesson: defer temptation arises at phase boundaries; treat each sub-phase as atomic binary commit.
 
+P116 [verifier-pass-is-not-production-ready]:
+Rule: Never claim `100%=TRUE` from a narrow gate pass alone. `VERIFIER_PASS` is technical gate success only. `PRODUCTION_READY_100` requires an added hostile re-SHIP checklist pass in the same run (routes, assets, watchers, mounts, e2e chat/memory/slash, red-team probe).
+Why: Repeated false-positive completion claims happened when verifier output was green while operational checks still had drift or untested surfaces.
+
+P117 [tracker-selection-must-ignore-dry-run-dominance]:
+Rule: Any shipped-state tracker must prefer canonical `ascendance-run-*` over `ascendance-dry-run-*` when computing status. Dry-run freshness must never override shipped truth selection.
+Why: Tracker state flipped from shipped to building when newer dry-run folders existed, causing false negatives and completion churn.
+
+P118 [volatile-runtime-artifacts-must-be-non-tracked]:
+Rule: Runtime-generated evidence/transcript/session artifacts that are expected to churn during probes must be ignored or quarantined from clean-tree gates. If they are tracked, completion drift is guaranteed.
+Why: `git_clean_and_pushed` repeatedly regressed due to live runtime writes and dry-run artifact churn after otherwise valid fixes.
+
 P114 [external-auto-stash-wipes-working-tree]:
 Rule: An external process creates stash entries labeled `pre-ascendance-clean-room-*` and resets working tree to HEAD at unpredictable times. Mitigation: commit every Phase completion atomically before moving to next Phase. Never rely on uncommitted disk state to survive between tool calls. If edits disappear, recover via: (1) git stash list → find `pre-ascendance-clean-room-*`, (2) git ls-tree -r <stash>^3 → find file in untracked tree, (3) git checkout <stash>^3 -- <path>. Alternative: after recovery, rewrite files from chat context + commit immediately.
 Why: Session 181 (2026-04-22T00:34:44-04:00) — Phase 0 evidence + Karma2/PLAN.md + .gsd/ascendance-build-checkpoint.json + .gsd/phase-ascendance-build-PLAN.md edits all wiped via git reset HEAD triggered by external clean-room stash process. Reflog confirmed `reset: moving to HEAD`. Recovery required full rebuild from chat memory + atomic commit c5927bf8. Lesson: atomic commits at phase boundaries are the only safe state across Ascendance execution.

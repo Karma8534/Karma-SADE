@@ -363,6 +363,32 @@ FINAL_GATE:
 Any field false OR verifier_exit_code != 0 OR banned_label_hits > 0 → SHIPPED claim prohibited.
 State is NOT SHIPPED. Resume forward pass.
 
+### 9.3 Re-SHIP Hostile Audit Checklist (production enforcement)
+
+This checklist is mandatory after verifier exit 0 and before any `PRODUCTION_READY_100` claim.
+Every line is binary and must be probed live in-session.
+
+- [ ] Every GET route in `proxy.js`: live 200.
+- [ ] Every POST route in `proxy.js`: auth-valid live 200.
+- [ ] Every static asset referenced by HTML in `public/`: present on disk.
+- [ ] Every watcher service: successful run within last 10 minutes.
+- [ ] Every mounted volume: SHA equals expected.
+- [ ] End-to-end chat: user prompt -> assistant text returned.
+- [ ] End-to-end memory: write -> restart -> read-back exact match.
+- [ ] End-to-end slash command: actual UI invocation returns content.
+- [ ] Hostile red-team probe completed by a separate tool family.
+
+If any item is false, state is NOT `PRODUCTION_READY_100`.
+
+### 9.4 Language Discipline (claim boundary)
+
+`VERIFIER_PASS` and `PRODUCTION_READY_100` are separate labels:
+
+- `VERIFIER_PASS` = Section 9.2 final gate all true with verifier exit 0.
+- `PRODUCTION_READY_100` = `VERIFIER_PASS` plus Section 9.3 hostile audit checklist all true.
+
+Never use `VERIFIER_PASS` as a synonym for `PRODUCTION_READY_100`.
+
 ## 10) Start command
 
 1. Create evidence/ascendance-run-{run_id}/ and write session.json.
@@ -376,6 +402,7 @@ State is NOT SHIPPED. Resume forward pass.
 9. Forward pass (Section 7.2): close gates; smallest-cost order recommended but verifier is order-agnostic.
 10. When all 14 show latest status VERIFIED: run Scripts/ascendance-final-gate.ps1.
 11. Only if verifier exit 0: paste FINAL_GATE block verbatim, update MEMORY.md per 9.1, commit under G10 whitelist, push, vault-neo pull + SHA check, tracker run, dual-write final PROOF, claim SHIPPED.
-12. If verifier exit != 0: return to Section 7.2. Do not claim completion.
+12. Run Section 9.3 hostile audit checklist and record binary results.
+13. If verifier exit != 0 OR any Section 9.3 line is false: return to Section 7.2. Do not claim completion.
 
 No prior-session evidence. No INFERRED. No hand-typed FINAL_GATE. No prose substitutes for probes.

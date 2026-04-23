@@ -272,6 +272,30 @@ if ($trackerState) {
   } catch {}
 }
 
+$reshipAllTrue = $false
+$reshipPath = Join-Path $RunDir 're-ship-checklist.json'
+if (Test-Path -LiteralPath $reshipPath) {
+  $rs = Load-JsonFile -Path $reshipPath
+  if ($rs -and $rs.checks) {
+    $requiredReshipChecks = @(
+      'get_routes_200',
+      'post_routes_auth_200',
+      'static_assets_present',
+      'watcher_recent_success_10m',
+      'mounted_volume_sha_expected',
+      'e2e_chat_prompt_to_text',
+      'e2e_memory_write_restart_readback',
+      'e2e_slash_command_ui',
+      'hostile_red_team_separate_tool_family'
+    )
+    $reshipAllTrue = $true
+    foreach ($rk in $requiredReshipChecks) {
+      $rv = $rs.checks.$rk
+      if (-not ($rv -eq $true)) { $reshipAllTrue = $false; break }
+    }
+  }
+}
+
 $g11Live = (-not (Test-Path -LiteralPath (Join-Path $repoRoot 'config\permission_rules.json.broken-bak'))) -and `
            (-not (Test-Path -LiteralPath (Join-Path $repoRoot 'evidence\invalidated-synthetic-s174')))
 $g13Live = -not (Test-Path -LiteralPath (Join-Path $repoRoot '.claude\hooks\.arknexus-focus-lock.json'))
@@ -299,6 +323,7 @@ $fields = [ordered]@{
   plan_sha256_match            = $planMatch
   memory_md_schema_valid       = $memorySchemaValid
   tracker_shipped_in_session   = $trackerShipped
+  reship_checklist_all_true    = $reshipAllTrue
   g11_live_reprobe             = $g11Live
   g13_live_reprobe             = $g13Live
   probe_log_has_proof          = $probeHasProof
@@ -321,7 +346,7 @@ $sessionDigest = if ($joined) {
   ($shaObj.ComputeHash($bytes) | ForEach-Object { $_.ToString('x2') }) -join ''
 } else { '' }
 
-$trueRequired = @('all_14_verified','artifacts_complete','session_id_in_all_artifacts','dual_writes_confirmed','queue_drained','ritual_recording_valid','git_clean_and_pushed','vault_parity_verified','harness_sha_unchanged','settings_sha_unchanged','directive_sha256_match','plan_sha256_match','memory_md_schema_valid','tracker_shipped_in_session','g11_live_reprobe','g13_live_reprobe','probe_log_has_proof','probe_log_has_decision')
+$trueRequired = @('all_14_verified','artifacts_complete','session_id_in_all_artifacts','dual_writes_confirmed','queue_drained','ritual_recording_valid','git_clean_and_pushed','vault_parity_verified','harness_sha_unchanged','settings_sha_unchanged','directive_sha256_match','plan_sha256_match','memory_md_schema_valid','tracker_shipped_in_session','reship_checklist_all_true','g11_live_reprobe','g13_live_reprobe','probe_log_has_proof','probe_log_has_decision')
 $allTrue = $true
 foreach ($k in $trueRequired) { if (-not $fields[$k]) { $allTrue = $false } }
 if ($fields.any_fail_remaining -or $fields.any_blocked_remaining -or $fields.banned_label_hits -gt 0) { $allTrue = $false }

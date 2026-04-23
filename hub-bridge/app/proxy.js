@@ -1530,7 +1530,8 @@ const server = http.createServer(async (req, res) => {
         if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
         fs.writeFileSync(`${dir}/${sessionId}.json`, JSON.stringify(turns));
       } catch (e) { console.warn(`[SESSION] disk write failed for ${sessionId}: ${e.message}`); }
-      return json(res, 201, { ok: true, session_id: sessionId, turn_count: turns.length });
+      // Re-SHIP contract requires auth-valid POST routes to return 200 on success.
+      return json(res, 200, { ok: true, session_id: sessionId, turn_count: turns.length });
     }
     if (req.method === "GET" && req.url.match(/^\/v1\/session\/[^/]+\/history$/)) {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
