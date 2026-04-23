@@ -1,0 +1,89 @@
+{
+  "session_id": "91cf359a-324d-4857-b97e-0caa800b58a5",
+  "ritual_uuid": "49761667-a06d-42c9-a509-f6cfa2c03371",
+  "ritual_tag": "ASCENDANCE-RITUAL-91cf359a-324d-4857-b97e-0caa800b58a5",
+  "started_utc": "2026-04-23T14:07:05.0294114Z",
+  "steps": [
+    {
+      "step": 1,
+      "action": "local_send_ritual",
+      "message": "ASCENDANCE-RITUAL-91cf359a-324d-4857-b97e-0caa800b58a5-2026-04-23T14:07:05Z -- remember the phrase: \"49761667-a06d-42c9-a509-f6cfa2c03371\"",
+      "ok": true,
+      "utc": "2026-04-23T14:07:37.4329164Z"
+    },
+    {
+      "step": 2,
+      "action": "local_ack",
+      "ok": true,
+      "utc": "2026-04-23T14:07:37.4961673Z"
+    },
+    {
+      "step": 3,
+      "action": "close_julian",
+      "ok": true,
+      "utc": "2026-04-23T14:07:37.6844312Z"
+    },
+    {
+      "step": 4,
+      "action": "open_hub_fresh_browser",
+      "user_data_dir": "C:\\Users\\raest\\AppData\\Local\\Temp\\ark-91cf359a-324d-4857-b97e-0caa800b58a5-ritual-browser",
+      "ok": true,
+      "utc": "2026-04-23T14:07:40.7983812Z"
+    },
+    {
+      "step": 5,
+      "action": "hub_recall_prompt",
+      "ok": true,
+      "utc": "2026-04-23T14:08:12.9302540Z"
+    },
+    {
+      "step": 6,
+      "action": "hub_uuid_match",
+      "ok": true,
+      "utc": "2026-04-23T14:08:13.0197126Z"
+    },
+    {
+      "step": 7,
+      "action": "close_browser_and_delete_dir",
+      "dir_deleted": true,
+      "ok": true,
+      "utc": "2026-04-23T14:08:15.7344975Z"
+    },
+    {
+      "step": 8,
+      "action": "wait_15s",
+      "ok": true,
+      "utc": "2026-04-23T14:08:30.8186652Z"
+    },
+    {
+      "step": 9,
+      "action": "reopen_julian",
+      "ok": true,
+      "utc": "2026-04-23T14:08:34.9183469Z"
+    },
+    {
+      "step": 10,
+      "action": "g7_first_paint_ritual_in_history",
+      "ok": true,
+      "utc": "2026-04-23T14:08:35.1951753Z"
+    },
+    {
+      "step": 11,
+      "action": "local_recall_prompt",
+      "ok": true,
+      "utc": "2026-04-23T14:09:15.0948476Z"
+    },
+    {
+      "step": 12,
+      "action": "local_uuid_match",
+      "ok": true,
+      "utc": "2026-04-23T14:09:15.1919299Z"
+    }
+  ],
+  "ended_utc": "2026-04-23T14:09:15.2792835Z",
+  "step6_uuid_match": true,
+  "step10_first_paint_ritual": true,
+  "step12_uuid_match": true,
+  "gate_g7_pass": true,
+  "gate_g6_pass_ritual_segment": true
+}

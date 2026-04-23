@@ -782,5 +782,29 @@
     "bus_id": "pending",
     "bus_roundtrip_confirmed": false,
     "reason_if_not_pass": null
+  },
+  {
+    "attempt_id": "att-g7-a2-4867137be6",
+    "gate_id": "G7_RITUAL_STEP10_FIRST_PAINT",
+    "attempt_n": 2,
+    "status": "VERIFIED",
+    "probe_command": "ascendance-ritual-harness.ps1 -RunDir RUN -RecorderMode pngseq -WaitSeconds 15",
+    "independent_verify_command": "ascendance-independent-verify.ps1 (curl /v1/session/SID grep ASCENDANCE-RITUAL-SID)",
+    "predicate": "first-paint Local history contains ASCENDANCE-RITUAL-SID within 30 steps + hub uuid recall + local uuid recall",
+    "expected": "step6_uuid_match + step10_first_paint + step12_uuid_match all true",
+    "actual": "uuid6=True uuid12=True step10_first_paint=True dir_deleted=True",
+    "artifacts": [
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\ascendance-ritual.json"
+    ],
+    "sha256": {
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\ascendance-ritual.json": "47520b834c975cc128311b751752145569e4afac536d2008b9d321e2b4b83402"
+    },
+    "session_id_present_in_artifact": true,
+    "verified_utc": "2026-04-23T14:10:15.8398868Z",
+    "obs_id": "pending",
+    "obs_roundtrip_confirmed": false,
+    "bus_id": "pending",
+    "bus_roundtrip_confirmed": false,
+    "reason_if_not_pass": null
   }
 ]

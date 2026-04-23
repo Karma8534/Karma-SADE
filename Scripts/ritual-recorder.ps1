@@ -87,8 +87,11 @@ switch ($Action) {
   }
   'stop' {
     if (-not (Test-Path -LiteralPath $statePath)) { throw 'recorder-state.json missing' }
-    $state = Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
-    $state.end_utc = (Get-Date).ToUniversalTime().ToString('o')
+    $stateRaw = Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
+    # Rebuild as ordered hashtable so new keys can be added (PSCustomObject is fixed-shape)
+    $state = [ordered]@{}
+    foreach ($p in $stateRaw.PSObject.Properties) { $state[$p.Name] = $p.Value }
+    $state['end_utc'] = (Get-Date).ToUniversalTime().ToString('o')
     $gapOk = $true
     $maxGap = 0
     $steps = @($state.steps | Sort-Object step)
@@ -113,19 +116,19 @@ switch ($Action) {
       }
     }
     if ($state.mode -eq 'mp4' -and (Test-Path -LiteralPath $ffpidPath)) {
-      $pid = (Get-Content -LiteralPath $ffpidPath).Trim()
+      $ffPidVal = (Get-Content -LiteralPath $ffpidPath).Trim()
       try {
-        $ff = Get-Process -Id $pid -ErrorAction SilentlyContinue
-        if ($ff) { $ff.CloseMainWindow() | Out-Null; Start-Sleep -Seconds 3; if (-not $ff.HasExited) { Stop-Process -Id $pid -Force } }
+        $ff = Get-Process -Id $ffPidVal -ErrorAction SilentlyContinue
+        if ($ff) { $ff.CloseMainWindow() | Out-Null; Start-Sleep -Seconds 3; if (-not $ff.HasExited) { Stop-Process -Id $ffPidVal -Force } }
       } catch {}
       Start-Sleep -Seconds 2
-      $state.mp4_bytes = if (Test-Path -LiteralPath $mp4Path) { (Get-Item -LiteralPath $mp4Path).Length } else { 0 }
+      $state['mp4_bytes'] = if (Test-Path -LiteralPath $mp4Path) { (Get-Item -LiteralPath $mp4Path).Length } else { 0 }
     }
-    $state.max_gap_s = $maxGap
-    $state.monotonic = $monotonic
-    $state.gap_ok = $gapOk
-    $state.within_session_window = $withinWindow
-    $state.gate_g8_pass = ($monotonic -and $gapOk -and $withinWindow -and (($state.mode -eq 'mp4' -and $state.mp4_bytes -gt 0) -or ($state.mode -eq 'pngseq' -and $steps.Count -ge 12)))
+    $state['max_gap_s'] = $maxGap
+    $state['monotonic'] = $monotonic
+    $state['gap_ok'] = $gapOk
+    $state['within_session_window'] = $withinWindow
+    $state['gate_g8_pass'] = ($monotonic -and $gapOk -and $withinWindow -and (($state.mode -eq 'mp4' -and $state.mp4_bytes -gt 0) -or ($state.mode -eq 'pngseq' -and $steps.Count -ge 12)))
     $state | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $manifestPath -Encoding UTF8
     $state | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $statePath -Encoding UTF8
     Write-Host "ritual-recorder: stop mode=$($state.mode) max_gap=$maxGap monotonic=$monotonic within=$withinWindow g8=$($state.gate_g8_pass)"
