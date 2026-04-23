@@ -1,0 +1,178 @@
+﻿{
+    "ok":  true,
+    "checked_at_utc":  "2026-04-23T16:49:50.2409366Z",
+    "run_dir":  "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260423T144400Z-26edc43d",
+    "checks":  {
+                   "get_routes_200":  true,
+                   "post_routes_auth_200":  true,
+                   "static_assets_present":  true,
+                   "watcher_recent_success_10m":  true,
+                   "mounted_volume_sha_expected":  true,
+                   "e2e_chat_prompt_to_text":  true,
+                   "e2e_memory_write_restart_readback":  true,
+                   "e2e_slash_command_ui":  true,
+                   "hostile_red_team_separate_tool_family":  true
+               },
+    "details":  {
+                    "asset_refs":  "/",
+                    "slash_detail":  "gate_g5_pass=True attempt=1",
+                    "chat_status":  200,
+                    "mount_detail":  {
+                                         "sources_match":  true,
+                                         "container":  "anr-hub-bridge",
+                                         "missing_sources":  [
+
+                                                             ],
+                                         "compose_sha_match":  true,
+                                         "compose_remote_sha":  "1305b17a56d4f744704d93544bf4a052d3b1bf79f29c9201bcba249f4c0e5b59",
+                                         "compose_local_sha":  "1305b17a56d4f744704d93544bf4a052d3b1bf79f29c9201bcba249f4c0e5b59",
+                                         "expected_sources":  [
+                                                                  "/opt/seed-vault/memory_v1/session/openai.api_key.txt",
+                                                                  "/opt/seed-vault/memory_v1/session/anthropic.api_key.txt",
+                                                                  "/opt/seed-vault/memory_v1/session/brave.api_key.txt",
+                                                                  "/opt/seed-vault/memory_v1/session/vault.bearer_token.txt",
+                                                                  "/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt",
+                                                                  "/opt/seed-vault/memory_v1/hub_auth/hub.capture.token.txt",
+                                                                  "/opt/seed-vault/memory_v1/hub_auth/hub.handoff.token.txt",
+                                                                  "/opt/seed-vault/memory_v1/session/state",
+                                                                  "/opt/seed-vault/memory_v1/hub_bridge/data/handoffs",
+                                                                  "/home/neo/karma-sade",
+                                                                  "/opt/seed-vault",
+                                                                  "/opt/seed-vault/memory_v1/ledger",
+                                                                  "/home/neo/karma-sade/MEMORY.md",
+                                                                  "/opt/seed-vault/memory_v1/sessions"
+                                                              ]
+                                     },
+                    "get_routes":  [
+                                       {
+                                           "path":  "/health",
+                                           "status":  200,
+                                           "ok":  true,
+                                           "error":  ""
+                                       },
+                                       {
+                                           "path":  "/v1/status",
+                                           "status":  200,
+                                           "ok":  true,
+                                           "error":  ""
+                                       },
+                                       {
+                                           "path":  "/v1/surface",
+                                           "status":  200,
+                                           "ok":  true,
+                                           "error":  ""
+                                       },
+                                       {
+                                           "path":  "/v1/wip",
+                                           "status":  200,
+                                           "ok":  true,
+                                           "error":  ""
+                                       },
+                                       {
+                                           "path":  "/v1/skills",
+                                           "status":  200,
+                                           "ok":  true,
+                                           "error":  ""
+                                       },
+                                       {
+                                           "path":  "/v1/hooks",
+                                           "status":  200,
+                                           "ok":  true,
+                                           "error":  ""
+                                       },
+                                       {
+                                           "path":  "/v1/trace",
+                                           "status":  200,
+                                           "ok":  true,
+                                           "error":  ""
+                                       },
+                                       {
+                                           "path":  "/v1/runtime/truth",
+                                           "status":  200,
+                                           "ok":  true,
+                                           "error":  ""
+                                       },
+                                       {
+                                           "path":  "/v1/coordination/recent?limit=1",
+                                           "status":  200,
+                                           "ok":  true,
+                                           "error":  ""
+                                       },
+                                       {
+                                           "path":  "/v1/memory/search?q=probe\u0026limit=1",
+                                           "status":  200,
+                                           "ok":  true,
+                                           "error":  ""
+                                       },
+                                       {
+                                           "path":  "/agora/health",
+                                           "status":  200,
+                                           "ok":  true,
+                                           "error":  ""
+                                       },
+                                       {
+                                           "path":  "/agora/events",
+                                           "status":  200,
+                                           "ok":  true,
+                                           "error":  ""
+                                       },
+                                       {
+                                           "path":  "/v1/vault-file/MEMORY.md?tail=1",
+                                           "status":  200,
+                                           "ok":  true,
+                                           "error":  ""
+                                       },
+                                       {
+                                           "path":  "/v1/session/reship-probe/history",
+                                           "status":  200,
+                                           "ok":  true,
+                                           "error":  ""
+                                       }
+                                   ],
+                    "chat_text_len":  105,
+                    "memory_marker":  "RESHIP-E2E-MEM-a5acb6a5-2699-46e2-965e-ab5f88e114d8",
+                    "asset_missing":  [
+
+                                      ],
+                    "red_team":  "{\"ok\": true, \"unauth_truth\": 401, \"unauth_coord\": 401, \"unauth_shell_hub\": 403}",
+                    "post_routes":  [
+                                        {
+                                            "path":  "/v1/chat",
+                                            "status":  200,
+                                            "ok":  true,
+                                            "error":  ""
+                                        },
+                                        {
+                                            "path":  "/v1/coordination/post",
+                                            "status":  200,
+                                            "ok":  true,
+                                            "error":  ""
+                                        },
+                                        {
+                                            "path":  "/v1/feedback",
+                                            "status":  200,
+                                            "ok":  true,
+                                            "error":  ""
+                                        },
+                                        {
+                                            "path":  "/v1/cypher",
+                                            "status":  200,
+                                            "ok":  true,
+                                            "error":  ""
+                                        },
+                                        {
+                                            "path":  "/v1/session/reship-probe/save",
+                                            "status":  200,
+                                            "ok":  true,
+                                            "error":  ""
+                                        }
+                                    ],
+                    "memory_save_status":  200,
+                    "watcher_detail":  [
+                                           "cc-watchdog=True",
+                                           "regent=True",
+                                           "karma=True"
+                                       ],
+                    "memory_search_status":  200
+                }
+}

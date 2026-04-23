@@ -78,7 +78,8 @@ $index += Entry 'G13_FOCUS_GATE_UNLOCK' 1 'VERIFIED' @() 'verifier live re-probe
 $index += Entry 'G14_TRACKER_SCHEMA_ALIGNMENT' 1 'VERIFIED' @((Join-Path $absRun 'phase1-timing.json')) 'phase1-cold-boot-harness.ps1 gate logic' 'timing.json has persona_paint_ms AND effective_paint_ms' 'persona_paint_ms=418 effective_paint_ms=544 = window_visible_ms(126) + persona_paint_ms(418)' $null
 
 $indexPath = Join-Path $RunDir 'EVIDENCE_INDEX.json'
-$index | ConvertTo-Json -Depth 10 | Out-File -LiteralPath $indexPath -Encoding utf8NoBOM
+$indexJson = $index | ConvertTo-Json -Depth 10
+[IO.File]::WriteAllText($indexPath, $indexJson, [Text.UTF8Encoding]::new($false))
 
 # Build artifact_manifest.json covering binary PNGs/MP4 with session_id linkage
 $manifest = @()
@@ -102,7 +103,8 @@ foreach ($b in $binaries) {
   }
 }
 $manPath = Join-Path $RunDir 'artifact_manifest.json'
-$manifest | ConvertTo-Json -Depth 5 | Out-File -LiteralPath $manPath -Encoding utf8NoBOM
+$manifestJson = $manifest | ConvertTo-Json -Depth 5
+[IO.File]::WriteAllText($manPath, $manifestJson, [Text.UTF8Encoding]::new($false))
 
 # Queue confirm: rewrite queue entries state=confirmed with real ids
 $queuePath = Join-Path $RunDir 'dual-write-queue.jsonl'

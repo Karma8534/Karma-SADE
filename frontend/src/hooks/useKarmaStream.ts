@@ -1,6 +1,7 @@
 'use client';
 
 import { useKarmaStore, isVisibleTool, getPillLabel } from '@/store/karma';
+import { apiUrl as resolveApiUrl } from '@/lib/api';
 
 interface StreamOptions {
   apiUrl?: string;
@@ -21,7 +22,9 @@ declare global {
 
 export function useKarmaStream(options: StreamOptions = {}) {
   const store = useKarmaStore();
-  const apiUrl = options.apiUrl || '/v1/chat';
+  // S183 fix: default apiUrl was relative '/v1/chat' which 404s inside Tauri webview (http://tauri.localhost).
+  // Route through apiUrl() helper which picks 127.0.0.1:7891 in Tauri and hub.arknexus.net when configured.
+  const apiUrl = options.apiUrl || resolveApiUrl('/v1/chat');
 
   async function sendMessage(text: string) {
     const { token, conversationId, pendingFiles, effortLevel, personalPreferences, outputStyle } = useKarmaStore.getState();

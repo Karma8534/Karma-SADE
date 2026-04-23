@@ -1,21 +1,21 @@
-{
-  "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4",
-  "probe_value": "PARITY-PROBE-26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4-20260423T144543691Z",
-  "user_data_dir": "C:\\Users\\raest\\AppData\\Local\\Temp\\ark-26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4-browser",
-  "user_data_dir_existed_before": false,
-  "user_data_dir_deleted_after": true,
-  "chromium_cmdline": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe --remote-debugging-port=9333 --user-data-dir=C:\\Users\\raest\\AppData\\Local\\Temp\\ark-26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4-browser --no-first-run --no-default-browser-check https://hub.arknexus.net",
-  "picker_open": true,
-  "whoami_has_true_family": true,
-  "whoami_has_tools_resources": true,
-  "family_grep_hits": 0,
-  "gate_g3_pass": true,
-  "gate_g5_pass": true,
-  "gate_g6_pass": true,
-  "artifacts": [
-    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260423T144400Z-26edc43d\\phase3-agents-sections.png",
-    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260423T144400Z-26edc43d\\phase3-whoami.png",
-    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260423T144400Z-26edc43d\\phase3-family-grep.txt",
-    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260423T144400Z-26edc43d\\phase3-cdp-network.jsonl"
-  ]
+﻿{
+    "session_id":  "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4",
+    "probe_value":  "PARITY-PROBE-26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4-20260423T144543691Z",
+    "user_data_dir":  "C:\\Users\\raest\\AppData\\Local\\Temp\\ark-26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4-browser",
+    "user_data_dir_existed_before":  false,
+    "user_data_dir_deleted_after":  true,
+    "chromium_cmdline":  "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe --remote-debugging-port=9333 --user-data-dir=C:\\Users\\raest\\AppData\\Local\\Temp\\ark-26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4-browser --no-first-run --no-default-browser-check https://hub.arknexus.net",
+    "picker_open":  true,
+    "whoami_has_true_family":  true,
+    "whoami_has_tools_resources":  true,
+    "family_grep_hits":  0,
+    "gate_g3_pass":  true,
+    "gate_g5_pass":  true,
+    "gate_g6_pass":  true,
+    "artifacts":  [
+                      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260423T144400Z-26edc43d\\phase3-agents-sections.png",
+                      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260423T144400Z-26edc43d\\phase3-whoami.png",
+                      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260423T144400Z-26edc43d\\phase3-family-grep.txt",
+                      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260423T144400Z-26edc43d\\phase3-cdp-network.jsonl"
+                  ]
 }

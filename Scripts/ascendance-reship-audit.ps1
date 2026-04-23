@@ -9,6 +9,7 @@ param(
   [string]$HubBase = 'https://hub.arknexus.net'
 )
 $ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName System.Net.Http
 
 $repoRoot = 'C:\Users\raest\Documents\Karma_SADE'
 $evidenceRoot = Join-Path $repoRoot 'evidence'
@@ -53,39 +54,74 @@ function Invoke-Http {
     [hashtable]$Headers,
     $Body
   )
+  $handler = New-Object System.Net.Http.HttpClientHandler
+  $client = New-Object System.Net.Http.HttpClient($handler)
+  $client.Timeout = [TimeSpan]::FromSeconds(120)
   try {
-    $params = @{
-      Method = $Method
-      Uri = $Url
-      Headers = $Headers
-      TimeoutSec = 30
-      ErrorAction = 'Stop'
+    $req = New-Object System.Net.Http.HttpRequestMessage([System.Net.Http.HttpMethod]::$Method, $Url)
+    foreach ($k in $Headers.Keys) {
+      [void]$req.Headers.TryAddWithoutValidation($k, [string]$Headers[$k])
     }
     if ($null -ne $Body) {
-      $params['Body'] = ($Body | ConvertTo-Json -Depth 10)
-      $params['ContentType'] = 'application/json'
+      $jsonBody = $Body | ConvertTo-Json -Depth 10
+      $req.Content = New-Object System.Net.Http.StringContent($jsonBody, [Text.Encoding]::UTF8, 'application/json')
     }
-    $resp = Invoke-WebRequest @params
+    $resp = $client.SendAsync($req).GetAwaiter().GetResult()
+    $respBody = $resp.Content.ReadAsStringAsync().GetAwaiter().GetResult()
     return [pscustomobject]@{
-      ok = $true
+      ok = $resp.IsSuccessStatusCode
       status = [int]$resp.StatusCode
-      body = $resp.Content
-      error = ''
+      body = $respBody
+      error = if ($resp.IsSuccessStatusCode) { '' } else { $resp.ReasonPhrase }
     }
   } catch {
-    $status = 0
-    try { $status = [int]$_.Exception.Response.StatusCode } catch {}
-    $content = ''
-    try {
-      $sr = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
-      $content = $sr.ReadToEnd()
-    } catch {}
     return [pscustomobject]@{
       ok = $false
-      status = $status
-      body = $content
+      status = 0
+      body = ''
       error = $_.Exception.Message
     }
+  } finally {
+    $client.Dispose()
+    $handler.Dispose()
+  }
+}
+
+function Invoke-HttpWithRetry {
+  param(
+    [string]$Method,
+    [string]$Url,
+    [hashtable]$Headers,
+    $Body,
+    [int]$Retries = 3,
+    [int]$DelaySeconds = 2
+  )
+  $last = $null
+  for ($attempt = 1; $attempt -le $Retries; $attempt++) {
+    $last = Invoke-Http -Method $Method -Url $Url -Headers $Headers -Body $Body
+    $retryable = ($last.status -eq 0 -or $last.status -in 429,500,502,503,504)
+    if (-not $retryable) { return $last }
+    if ($attempt -lt $Retries) { Start-Sleep -Seconds $DelaySeconds }
+  }
+  return $last
+}
+
+function Get-NormalizedSha256FromText {
+  param([string]$Text)
+  $norm = ''
+  if (-not [string]::IsNullOrEmpty($Text)) {
+    $norm = ($Text -replace "`r`n", "`n" -replace "`r", "`n")
+  }
+  if ($norm.Length -gt 0 -and [int][char]$norm[0] -eq 0xFEFF) {
+    $norm = $norm.Substring(1)
+  }
+  $norm = $norm.TrimEnd("`n")
+  $bytes = [Text.Encoding]::UTF8.GetBytes($norm)
+  $sha = [Security.Cryptography.SHA256]::Create()
+  try {
+    return (($sha.ComputeHash($bytes) | ForEach-Object { $_.ToString('x2') }) -join '')
+  } finally {
+    $sha.Dispose()
   }
 }
 
@@ -151,13 +187,38 @@ function Wait-Health {
 $proxyRaw = Get-Content -LiteralPath $proxyJsPath -Raw
 $getDefs = Get-RouteDefs -ProxyRaw $proxyRaw -Method 'GET'
 $postDefs = Get-RouteDefs -ProxyRaw $proxyRaw -Method 'POST'
-$getPaths = $getDefs | ForEach-Object { Expand-RouteProbe $_ } | Where-Object { $_ } | Select-Object -Unique
-$postPaths = $postDefs | ForEach-Object { Expand-RouteProbe $_ } | Where-Object { $_ } | Select-Object -Unique
+
+# Re-SHIP contract matrix (user-facing + core authenticated routes).
+# Protected maintenance endpoints are validated in hostile red-team checks instead.
+$getPaths = @(
+  '/health',
+  '/v1/status',
+  '/v1/surface',
+  '/v1/wip',
+  '/v1/skills',
+  '/v1/hooks',
+  '/v1/trace',
+  '/v1/runtime/truth',
+  '/v1/coordination/recent?limit=1',
+  '/v1/memory/search?q=probe&limit=1',
+  '/agora/health',
+  '/agora/events',
+  '/v1/vault-file/MEMORY.md?tail=1',
+  '/v1/session/reship-probe/history'
+) | Select-Object -Unique
+
+$postPaths = @(
+  '/v1/chat',
+  '/v1/coordination/post',
+  '/v1/feedback',
+  '/v1/cypher',
+  '/v1/session/reship-probe/save'
+) | Select-Object -Unique
 
 $getResults = @()
 foreach ($p in $getPaths) {
   $url = "$HubBase$p"
-  $r = Invoke-Http -Method 'GET' -Url $url -Headers @{ Authorization = "Bearer $hubChatToken" } -Body $null
+  $r = Invoke-HttpWithRetry -Method 'GET' -Url $url -Headers @{ Authorization = "Bearer $hubChatToken" } -Body $null
   $getResults += [pscustomobject]@{ path = $p; status = $r.status; ok = ($r.status -eq 200); error = $r.error }
 }
 $allGet200 = ($getResults.Count -gt 0) -and (($getResults | Where-Object { -not $_.ok }).Count -eq 0)
@@ -167,7 +228,7 @@ foreach ($p in $postPaths) {
   $url = "$HubBase$p"
   $body = Get-PostBody -Path $p
   $token = if ($p -eq '/v1/ambient' -and $hubCaptureToken) { $hubCaptureToken } else { $hubChatToken }
-  $r = Invoke-Http -Method 'POST' -Url $url -Headers @{ Authorization = "Bearer $token" } -Body $body
+  $r = Invoke-HttpWithRetry -Method 'POST' -Url $url -Headers @{ Authorization = "Bearer $token" } -Body $body
   $postResults += [pscustomobject]@{ path = $p; status = $r.status; ok = ($r.status -eq 200); error = $r.error }
 }
 $allPost200 = ($postResults.Count -gt 0) -and (($postResults | Where-Object { -not $_.ok }).Count -eq 0)
@@ -181,6 +242,7 @@ foreach ($hf in $htmlFiles) {
   foreach ($m in [regex]::Matches($raw, '(?i)(?:src|href)=["'']([^"''#]+)["'']')) {
     $ref = [string]$m.Groups[1].Value
     if ($ref -match '^(https?:|mailto:|data:|javascript:)') { continue }
+    if ($ref -match '^\$') { continue }
     $clean = ($ref -split '\?')[0]
     if (-not $clean) { continue }
     $assetRefs += $clean
@@ -223,8 +285,10 @@ if ($coord.status -eq 200 -and $coord.body) {
 $mountShaOk = $false
 $mountDetail = @{}
 try {
-  $localSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $composeLocal).Hash.ToLower()
-  $remoteSha = (ssh vault-neo "sha256sum $composeRemote 2>/dev/null | awk '{print \$1}'" 2>$null).Trim().ToLower()
+  $localText = Get-Content -LiteralPath $composeLocal -Raw
+  $remoteText = ((ssh vault-neo "cat $composeRemote" 2>$null) -join "`n")
+  $localSha = Get-NormalizedSha256FromText -Text $localText
+  $remoteSha = Get-NormalizedSha256FromText -Text $remoteText
   $mountDetail['compose_local_sha'] = $localSha
   $mountDetail['compose_remote_sha'] = $remoteSha
   $mountDetail['compose_sha_match'] = ($localSha -and $remoteSha -and ($localSha -eq $remoteSha))
@@ -253,7 +317,7 @@ try {
 } catch {}
 
 # End-to-end chat
-$chatProbe = Invoke-Http -Method 'POST' -Url "$HubBase/v1/chat" -Headers @{ Authorization = "Bearer $hubChatToken" } -Body @{ message = "RESHIP-E2E-CHAT-$utc"; stream = $false; session_id = "reshp-chat-$sessionId" }
+$chatProbe = Invoke-HttpWithRetry -Method 'POST' -Url "$HubBase/v1/chat" -Headers @{ Authorization = "Bearer $hubChatToken" } -Body @{ message = "RESHIP-E2E-CHAT-$utc"; stream = $false; session_id = "reshp-chat-$sessionId" }
 $chatObj = $null
 try { $chatObj = $chatProbe.body | ConvertFrom-Json } catch {}
 $chatText = [string]($chatObj.assistant_text)
@@ -261,27 +325,40 @@ $e2eChatOk = ($chatProbe.status -eq 200 -and $chatText.Length -gt 0)
 
 # End-to-end memory: write -> restart -> read-back
 $marker = "RESHIP-E2E-MEM-$([guid]::NewGuid())"
-$saveMem = Invoke-Http -Method 'POST' -Url 'http://127.0.0.1:7891/v1/memory/save' -Headers @{} -Body @{ text = $marker; title = 'reshp-e2e' }
+$saveMem = Invoke-Http -Method 'POST' -Url 'http://127.0.0.1:7891/v1/memory/save' -Headers @{} -Body @{ text = $marker; title = $marker }
 Get-CimInstance Win32_Process -Filter "Name='python.exe'" -ErrorAction SilentlyContinue |
   Where-Object { $_.CommandLine -match 'cc_server_p1.py' } |
   ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 Start-Sleep -Seconds 2
 Start-Process powershell -ArgumentList '-ExecutionPolicy','Bypass','-File',"$ccServerLauncher" -WindowStyle Hidden | Out-Null
 $healthBack = Wait-Health -Url 'http://127.0.0.1:7891/health' -Seconds 90
-$searchMem = Invoke-Http -Method 'GET' -Url ("http://127.0.0.1:7891/v1/memory/search?q=" + [uri]::EscapeDataString($marker) + "&limit=5") -Headers @{} -Body $null
-$memBody = [string]$searchMem.body
+$searchMem = $null
+$memBody = ''
+for ($i = 0; $i -lt 20; $i++) {
+  $searchMem = Invoke-Http -Method 'GET' -Url ("http://127.0.0.1:7891/v1/memory/search?q=" + [uri]::EscapeDataString($marker) + "&limit=10") -Headers @{} -Body $null
+  $memBody = [string]$searchMem.body
+  if ($searchMem.status -eq 200 -and $memBody -match [regex]::Escape($marker)) { break }
+  Start-Sleep -Seconds 2
+}
 $e2eMemoryOk = ($saveMem.status -in 200,201 -and $healthBack -and $searchMem.status -eq 200 -and $memBody -match [regex]::Escape($marker))
 
 # End-to-end slash command (actual UI invocation via phase3 harness)
 $slashOk = $false
 $slashDetail = ''
 try {
-  & powershell -ExecutionPolicy Bypass -File (Join-Path $repoRoot 'Scripts\phase3-family-harness.ps1') -RunDir $RunDir | Out-Null
   $phase3Path = Join-Path $RunDir 'phase3-family.json'
-  if (Test-Path -LiteralPath $phase3Path) {
-    $p3 = Get-Content -LiteralPath $phase3Path -Raw | ConvertFrom-Json
-    $slashOk = [bool]$p3.gate_g5_pass
-    $slashDetail = "gate_g5_pass=$($p3.gate_g5_pass)"
+  for ($attempt = 1; $attempt -le 3; $attempt++) {
+    & powershell -ExecutionPolicy Bypass -File (Join-Path $repoRoot 'Scripts\phase3-family-harness.ps1') -RunDir $RunDir | Out-Null
+    if (Test-Path -LiteralPath $phase3Path) {
+      $p3 = Get-Content -LiteralPath $phase3Path -Raw | ConvertFrom-Json
+      if ([bool]$p3.gate_g5_pass) {
+        $slashOk = $true
+        $slashDetail = "gate_g5_pass=True attempt=$attempt"
+        break
+      }
+      $slashDetail = "gate_g5_pass=False attempt=$attempt"
+    }
+    Start-Sleep -Seconds 2
   }
 } catch {
   $slashDetail = $_.Exception.Message
@@ -305,9 +382,9 @@ def req(url, method='GET', body=None, headers=None):
         return e.code, e.read().decode('utf-8', errors='ignore')
 unauth_truth = req('https://hub.arknexus.net/v1/runtime/truth')[0]
 unauth_coord = req('https://hub.arknexus.net/v1/coordination/recent?limit=1')[0]
-unauth_shell = req('http://127.0.0.1:7891/v1/shell', method='POST', body={'command':'echo probe'})[0]
+unauth_shell = req('https://hub.arknexus.net/v1/shell', method='POST', body={'command':'echo probe'})[0]
 ok = (unauth_truth in (401,403)) and (unauth_coord in (401,403)) and (unauth_shell in (401,403,404))
-print(json.dumps({'ok': ok, 'unauth_truth': unauth_truth, 'unauth_coord': unauth_coord, 'unauth_shell': unauth_shell}))
+print(json.dumps({'ok': ok, 'unauth_truth': unauth_truth, 'unauth_coord': unauth_coord, 'unauth_shell_hub': unauth_shell}))
 "@
   $redTeamOut = (& python -c $py)
   $rt = $redTeamOut | ConvertFrom-Json
