@@ -50,3 +50,26 @@ BLOCKER-P116 NEW | verifier-pass != production-ready | locked via claude-mem obs
 - vesper timers firing
 
 ## Tauri end-to-end (pending full user-flow probe)
+
+## Additional blockers found + resolved S183 cont.
+
+BLOCKER-UX1 RESOLVED | unified.html leaked http://localhost:37778 in MEMORY link (unreachable from remote) | wrapped in `if (location.hostname === 'localhost'||'127.0.0.1')` | CLOSED
+
+BLOCKER-UX2 RESOLVED | K2 always showed "offline" in Tauri Header despite K2 live on Tailscale 100.75.109.92 | root cause: k2Active zustand state never set by any fetch; default false. Added useEffect in page.tsx polling /v1/status every 10s -> setStatus({k2Active,brainOk,lastSeen}) | CLOSED. Post-fix Tauri body: "K2 active brain ok last seen 0s ago"
+
+BLOCKER-UX3 | /v1/spine returns 502 "K2 spine unreachable" (hub-bridge proxy.js line 1366 fetches http://100.75.109.92:7892/spine which doesn't exist) | Bypassed in UI via /v1/status; proxy.js handler still buggy but no consumer now | DEGRADED-LOGIC
+
+BLOCKER-REDTEAM1 | 200 HTTP != TRUE | semantic body verification required per endpoint; Sovereign correction locked P116 | CLOSED-PROCEDURE-LOCK
+
+## Semantic verification (binary TRUE based on BODY match)
+- /health ok:true TRUE
+- /agora HTML with agora dashboard TRUE
+- / valid HTML TRUE
+- /v1/status has harness.k2.healthy + harness.p1.healthy + model TRUE
+- /v1/chat "2+2?" -> "4" TRUE (real LLM response)
+- /v1/learnings entries array TRUE
+- /v1/trace entries TRUE
+- /v1/feedback ok+id TRUE
+- /v1/coordination/recent has coord_ TRUE
+- memory write-read-back: write message via /v1/chat, GET /v1/session/{id}, history contains message TRUE
+- Tauri E2E: url=tauri.localhost hydration=ready session=harness-SID hasTextarea=true bodyLen=770 hasBootMetrics=true nexusSessionGlobal=harness-SID K2=active brain=ok TRUE

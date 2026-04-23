@@ -90,6 +90,35 @@ export default function Home() {
     return () => clearInterval(iv);
   }, [isAuthenticated]);
 
+  // S183 fix: poll /v1/status every 10s to populate K2/brain/lastSeen indicators in Header.
+  // Previously k2Active was never set by any code path -> UI always showed "offline" even when K2 was up.
+  useEffect(() => {
+    const setStatus = useKarmaStore.getState().setStatus;
+    let cancelled = false;
+    const fetchStatus = async () => {
+      try {
+        const { token } = useKarmaStore.getState();
+        const headers: Record<string, string> = {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+        const res = await fetch('https://hub.arknexus.net/v1/status', { headers });
+        if (!res.ok) return;
+        const d = await res.json();
+        const k2ok = !!(d && d.harness && d.harness.k2 && d.harness.k2.healthy);
+        const p1ok = !!(d && d.harness && d.harness.p1 && d.harness.p1.healthy);
+        if (!cancelled) {
+          setStatus({
+            k2Active: k2ok,
+            brainOk: k2ok || p1ok,
+            lastSeen: new Date().toISOString(),
+          });
+        }
+      } catch {}
+    };
+    void fetchStatus();
+    const iv = setInterval(fetchStatus, 10000);
+    return () => { cancelled = true; clearInterval(iv); };
+  }, []);
+
   // Ascendance gate contract: expose canonical hydration/session markers on root DOM.
   // G1 strict predicate: harness-injected NEXUS_SESSION_ID (via Tauri setup eval / window.__NEXUS_SESSION_ID)
   // takes precedence; fall through to canonical bootSessionId only if harness SID absent.

@@ -771,7 +771,10 @@
       html += '<div style="display:flex;gap:6px"><input id="suggest-learning-input" type="text" placeholder="e.g. Learn about WebSockets for real-time..." style="flex:1;background:#0d0d1a;border:1px solid #2d2d5e;border-radius:4px;padding:6px 8px;color:#e6edf3;font-size:12px;outline:none" />';
       html += '<button onclick="submitLearningSuggestion()" style="background:#7c3aed;border:none;color:#fff;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:11px;white-space:nowrap">SUGGEST</button></div></div>';
       html += '<div id="suggest-status" style="font-size:10px;margin-top:4px;color:#6b7280"></div>';
-      html += '<div style="margin-top:8px;text-align:center"><a href="http://localhost:37778" target="_blank" style="color:#a78bfa;font-size:11px">MEMORY &rarr;</a></div>';
+      // Only show local MEMORY link when running on localhost; production users can't reach claude-mem worker port 37778.
+      if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+        html += '<div style="margin-top:8px;text-align:center"><a href="http://localhost:37778" target="_blank" style="color:#a78bfa;font-size:11px">MEMORY &rarr;</a></div>';
+      }
       _learningsCache = html;
       _learningsCacheTs = Date.now();
       el.innerHTML = html;
@@ -1468,9 +1471,11 @@
   }
 
   function updateK2Status() {
-    // S155: check actual K2 cortex health, not just bus activity
-    fetch('https://hub.arknexus.net/v1/spine', { headers: auth() }).then(r => r.json()).then(d => {
-      const alive = d && d.pipeline && d.pipeline.pipeline_status;
+    // S183 fix: /v1/spine returned 502 (K2 has no /spine endpoint). Use /v1/status.harness.k2.healthy
+    // which hub-bridge derives from live K2:7891 probe.
+    fetch('https://hub.arknexus.net/v1/status', { headers: auth() }).then(r => r.json()).then(d => {
+      const k2 = d && d.harness && d.harness.k2;
+      const alive = !!(k2 && k2.healthy);
       document.getElementById('k2-dot').className = alive ? 'stat-dot alive' : 'stat-dot dead';
       document.getElementById('k2-val').textContent = alive ? 'active' : 'offline';
     }).catch(() => {

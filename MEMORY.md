@@ -878,6 +878,9 @@ next: verify running process/window title and continuity behavior remain stable
 - SESSION_ID: 256a1a69-8279-45c7-8f85-4f306d68c8c1 | 2026-04-22T15:49:00Z | Refreshed G14 tracker artifact hash references in EVIDENCE_INDEX + artifact_manifest after live tracker snapshot drift.
 - SESSION_ID: 256a1a69-8279-45c7-8f85-4f306d68c8c1 | 2026-04-22T15:53:00Z | Accepted Phase1 harness CDP localStorage boot-metrics fallback and refreshed G14 tracker hash map.
 - 2026-04-22T16:00:00Z: Hardened tracker stability: prefer ascendance-run over dry-run and force tracker refresh inside final-gate before tracker_shipped check; refreshed G14 tracker hash artifacts.
+- 2026-04-23T00:00:00Z PITFALL P116: `VERIFIER_PASS` is not equal to `PRODUCTION_READY_100`; require hostile re-SHIP checklist pass before 100% claims.
+- 2026-04-23T00:00:00Z PITFALL P117: tracker must prefer canonical ascendance-run over dry-run to prevent false status flips.
+- 2026-04-23T00:00:00Z PITFALL P118: volatile runtime artifacts must not be tracked by clean-tree gates; otherwise completion drifts recur.
 
 
 
