@@ -84,3 +84,16 @@ P-FU5 Vesper staging sandbox RESOLVED | Scripts/nexus-v3-staging-sandbox.sh depl
 P-FU6 Firewall port isolation SCRIPT-WRITTEN | Scripts/nexus-v3-firewall-isolation.ps1 idempotent installer (K2 + P1 Windows Firewall block ports 11434/6379/7890/7891/7892 except Tailscale 100.0.0.0/8 + 127.0.0.0/8); iptables reference rules for vault-neo in script footer | SCRIPT-READY-DEPLOY-PENDING-ADMIN
 
 P-FU7 Hub-down fallback RESOLVED | frontend/src/lib/api.ts apiFetch -> on hub 5xx retry once against direct FALLBACK_BRIDGE (127.0.0.1:7891). Only fires when primary URL is remote (not already localhost). Fallback silent if bridge unreachable; original 5xx returned. | CLOSED
+
+BLOCKER-UX4 RESOLVED | "Karma reconnecting... please resend in a moment" on Tauri launch | root cause: useKarmaStream.ts line 24 `options.apiUrl || '/v1/chat'` relative URL 404s in Tauri webview (http://tauri.localhost/v1/chat). Fix: import apiUrl helper from @/lib/api; default to resolveApiUrl('/v1/chat') which picks FALLBACK_BRIDGE 127.0.0.1:7891 in Tauri. Verified live: prompt "respond with the single word PONG" -> assistant "PONG" 12s latency via claude-haiku-4-5 cc-sovereign $0.0000 session. | CLOSED
+
+## Final production binary-TRUE state S183
+- Tauri chat end-to-end: user prompt -> assistant response via claude-haiku-4-5 cc-sovereign $0.0000/session
+- 18 messages persisted in session history (cross-surface sync active)
+- K2 active, brain ok, last seen 0s in UI Header
+- data-session-id=HARNESS_SID (Tauri setup-eval injection)
+- MagicDNS live resolving in container
+- Staging sandbox deployed vault-neo
+- node --check pre-commit gate active
+- All hub GET routes 200 semantic
+- cc-max $0 path intact
