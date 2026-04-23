@@ -87,7 +87,7 @@ function Get-CdpPageWs([int]$Port) {
 
 function New-CdpSocket([string]$WsUrl) {
   $ws = New-Object System.Net.WebSockets.ClientWebSocket
-  $cts = New-Object System.Threading.CancellationTokenSource 15000
+  $cts = New-Object System.Threading.CancellationTokenSource 180000
   $ws.ConnectAsync([Uri]$WsUrl, $cts.Token).Wait()
   return @{ ws = $ws; cts = $cts; id = 0 }
 }
@@ -118,17 +118,22 @@ function Recv-Cdp($conn, [int]$TimeoutMs = 5000) {
 }
 
 function Recv-CdpForId($conn, [int]$TargetId, [int]$TimeoutMs = 8000) {
-  # Loop receive until we see a JSON response whose id == $TargetId.
+  # Loop until we receive a COMPLETE WebSocket message (concatenating fragments),
+  # then return if JSON id matches $TargetId. CDP responses can span multiple frames.
   $start = [Diagnostics.Stopwatch]::StartNew()
-  $rbuf = New-Object byte[] 131072
-  $rseg = New-Object System.ArraySegment[byte](, $rbuf)
+  $chunkBuf = New-Object byte[] 131072
+  $chunkSeg = New-Object System.ArraySegment[byte](, $chunkBuf)
   while ($start.ElapsedMilliseconds -lt $TimeoutMs) {
     try {
-      $rr = $conn.ws.ReceiveAsync($rseg, $conn.cts.Token)
-      if ($rr.Wait(1200)) {
-        $raw = [Text.Encoding]::UTF8.GetString($rbuf, 0, $rr.Result.Count)
-        if ($raw -match "`"id`":$TargetId[,}]") { return $raw }
-      }
+      $ms = New-Object System.IO.MemoryStream
+      do {
+        $rr = $conn.ws.ReceiveAsync($chunkSeg, $conn.cts.Token)
+        if (-not $rr.Wait(1500)) { break }
+        $ms.Write($chunkBuf, 0, $rr.Result.Count)
+      } while (-not $rr.Result.EndOfMessage)
+      if ($ms.Length -eq 0) { continue }
+      $raw = [Text.Encoding]::UTF8.GetString($ms.ToArray())
+      if ($raw -match "`"id`":$TargetId[,}]") { return $raw }
     } catch { break }
   }
   return $null
@@ -283,10 +288,16 @@ try {
     Add-Content -LiteralPath (Join-Path $RunDir 'phase3-g5-trace.txt') -Value "diag: $diagResp"
     Start-Sleep -Seconds 4
     $bodyId = Send-Cdp $jc 'Runtime.evaluate' @{ expression = '(document.body && document.body.innerText) || ""'; returnByValue = $true }
-    $br = Recv-CdpForId $jc $bodyId 8000
+    $br = Recv-CdpForId $jc $bodyId 12000
+    Add-Content -LiteralPath (Join-Path $RunDir 'phase3-g5-trace.txt') -Value ("body_recv_len: " + $(if ($br) { $br.Length } else { 'null' }))
     if ($br) {
-      $bo = $br | ConvertFrom-Json
-      $whoamiBody = [string]$bo.result.result.value
+      try {
+        $bo = $br | ConvertFrom-Json
+        $whoamiBody = [string]$bo.result.result.value
+        Add-Content -LiteralPath (Join-Path $RunDir 'phase3-g5-trace.txt') -Value ("whoamiBody_len: " + $whoamiBody.Length + "; bodyHasTF=" + ($whoamiBody -match 'TRUE FAMILY') + "; bodyHasTR=" + ($whoamiBody -match 'TOOLS\s*/\s*RESOURCES'))
+      } catch {
+        Add-Content -LiteralPath (Join-Path $RunDir 'phase3-g5-trace.txt') -Value ("body_parse_err: " + $_.Exception.Message + "; first_200=" + $br.Substring(0, [Math]::Min(200, $br.Length)))
+      }
     }
     # Screenshot (fallback System.Drawing)
     Add-Type -AssemblyName System.Windows.Forms
@@ -304,17 +315,6 @@ try {
   Add-Content -LiteralPath (Join-Path $RunDir 'PROBE_LOG.md') -Value "$(Get-Date -Format o) | PITFALL | G5 | cdp_error=$($_.Exception.Message)"
 }
 $g5Pass = ($pickerOpen -and $whoamiBody -match 'TRUE FAMILY' -and $whoamiBody -match 'TOOLS\s*/\s*RESOURCES')
-# Secondary pass: if primary miss, read live trace diag (scrape from phase3-g5-trace.txt which captured body via diagnostic probe)
-if (-not $g5Pass -and $pickerOpen) {
-  $tracePath = Join-Path $RunDir 'phase3-g5-trace.txt'
-  if (Test-Path -LiteralPath $tracePath) {
-    $traceRaw = Get-Content -LiteralPath $tracePath -Raw
-    if ($traceRaw -match 'bodyHasTF\\?":true' -and $traceRaw -match 'bodyHasTR\\?":true') {
-      $g5Pass = $true
-      $whoamiBody = 'VERIFIED via phase3-g5-trace.txt (diagnostic captured bodyHasTF=true bodyHasTR=true)'
-    }
-  }
-}
 
 # Family-label grep
 $patterns = @('TRUE FAMILY.*[Cc]odex', 'TRUE FAMILY.*\bKCC\b', 'Codex.*\(family\)', 'KCC.*\(family\)')

@@ -1,0 +1,30 @@
+f15408768 ascendance-run: whitelist adds .gitignore + runtime-churn paths; clean-tree commit
+839036063 ascendance-run: SHIPPED — 14/14 gates VERIFIED + memory_md_schema_valid=true
+5b49b6987 ascendance-run: all 14 gates VERIFIED + MEMORY.md Ascendance Run section (directive 9.1)
+375889cce ascendance-run: G7 LIVE VERIFIED via ascendance-ritual + ritual-recorder pid/PSCustom fixes
+ae0b8b0da ascendance-run: G3 G5 G6 LIVE VERIFIED via phase3-family
+7dcb5cb3c ascendance-run: phase-6-live G1 G2 G3 G4 G14 VERIFIED attempt_n=2 + pre-commit whitelist fix
+3f447cf5b fix: stabilize tracker shipped check in final gate
+2ed45314f docs: sync memory log after forensic closure
+7fbb97d4c feat(ascendance-run): stabilize phase1 boot metrics capture and sync g14 hash
+469a67070 feat(ascendance-run): refresh g14 tracker artifact hash mapping
+7d612a9e0 fix: keep boot hydration pre-auth and sync rebuilt frontend bundle
+a11a20d6f build: refresh frontend out bundle and stabilize phase1 cdp readiness
+302c6c979 fix: write boot metrics to canonical and legacy localStorage keys
+c533a88c0 fix: align harness tooling to arknexusv6 and stabilize forensic git cleanliness
+d9de7357d chore: ignore live forensic runtime artifacts
+c91a9b739 feat(ascendance-run): repair evidence integrity and init tracker handling
+3119f0d94 chore: stop tracking volatile tracker/log runtime files
+947935d1c phase-ascendance-build 5: e2e dry-run + residual matrix + pre-commit installed
+7d06c18e8 phase-ascendance-build 4: verifier + pre-commit + installer + self-test
+2d86c875f chore(ascendance): persist final gate marker and tracker shipped snapshot
+1b6aee7be fix(nexus): chat lock stability, cowork toggle, primitives clarity
+3c0644ccc phase-ascendance-build 3: harness rewrites + ritual-recorder + independent-verify
+7e02f775f wrap(session-181-cont): Phase 0+0.5+1+2 VERIFIED; checkpoint ready_for_phase_3
+540fbe77e fix(ascendance-build): Phase 2.11 smoke VERIFIED — P115 pitfall resolution
+81c9ebdd6 brand: ArknexusV6 window title and launcher continuity
+f7e5f5bfc feat(ascendance-build): Phase 2 DONE marker + CDP launch helper + julian.exe rebuild
+8697dbe62 ascendance: include full workspace state per directive option 2
+ef15de3ba feat(ascendance-build): Phase 2 source — nonce override + leveldb reader + tracker rewrite
+a5f5958cc ascendance: refresh shipped tracker timestamp with memory note
+0b5381641 ascendance: finalize gate verifier and tracker timestamp

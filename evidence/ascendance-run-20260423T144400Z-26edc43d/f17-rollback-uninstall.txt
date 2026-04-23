@@ -1,0 +1,2 @@
+uninstall: restored pre-ascendance pre-commit hook
+-rwxr-xr-x 1 raest 197609 4016 Mar 31 22:37 .git/hooks/pre-commit*

@@ -1,0 +1,18 @@
+[
+  {
+    "url": "http://127.0.0.1:7891/memory/wakeup",
+    "status": 200,
+    "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4"
+  },
+  {
+    "url": "http://127.0.0.1:7891/memory/session",
+    "status": 200,
+    "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4"
+  },
+  {
+    "url": "http://127.0.0.1:7891/v1/session/26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4",
+    "status": 0,
+    "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4",
+    "error": "Response status code does not indicate success: 404 (Not Found)."
+  }
+]

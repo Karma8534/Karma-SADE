@@ -222,7 +222,7 @@ $tm = [ordered]@{
   cdp_data_session_id      = $cdpDom.data_session_id
   canonical_session_id     = if ($bootMetrics) { [string]$bootMetrics.session_id } else { '' }
   harness_session_id       = $sessionId
-  gate_g1_pass             = ($cdpDom.data_hydration_state -eq 'ready' -and -not [string]::IsNullOrEmpty($cdpDom.data_session_id))
+  gate_g1_pass             = ($cdpDom.data_hydration_state -eq 'ready' -and [string]$cdpDom.data_session_id -eq $sessionId)
   gate_g2_pass             = ($bootMetrics -and [string]$bootMetrics.hydration_state -eq 'ready' -and $personaPaint -ge 0 -and ($visible + $personaPaint) -lt 2000)
   gate_g14_pass            = ($bootMetrics -and $bootMetrics.timing -and $bootMetrics.timing.persona_paint_ms -ge 0 -and ($visible + [int]$bootMetrics.timing.persona_paint_ms) -ge 0)
 }

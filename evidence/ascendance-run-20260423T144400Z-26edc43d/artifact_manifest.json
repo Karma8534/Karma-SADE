@@ -1,0 +1,30 @@
+[
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260423T144400Z-26edc43d\\phase1-first-frame.png",
+    "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4",
+    "sha256": "440cccc00443ece8af82088e67a32813f183b63a6b46cdb4511838b310c719fe",
+    "kind": "binary",
+    "note": "covered by artifact_manifest for session_id_in_artifact predicate"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260423T144400Z-26edc43d\\phase2-parity.png",
+    "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4",
+    "sha256": "3d726e777a7ba271085063667fb85ab0854b54cc073407f420c2b68a85c16351",
+    "kind": "binary",
+    "note": "covered by artifact_manifest for session_id_in_artifact predicate"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260423T144400Z-26edc43d\\phase3-whoami.png",
+    "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4",
+    "sha256": "1e6e6b5db0e6b5a4f45984da5349595c9c275340c98842c436ae0221ebd6ac19",
+    "kind": "binary",
+    "note": "covered by artifact_manifest for session_id_in_artifact predicate"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260423T144400Z-26edc43d\\ritual\\ritual-26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4.mp4",
+    "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4",
+    "sha256": "4dc6a1632e8b797390a9a9cbc2501c1ffedb10b004783112ed03b4152bc4175e",
+    "kind": "binary",
+    "note": "covered by artifact_manifest for session_id_in_artifact predicate"
+  }
+]

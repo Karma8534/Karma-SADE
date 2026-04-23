@@ -78,13 +78,13 @@ $local = Invoke-RestMethod -Uri "$LocalBase/v1/session/$sessionId" -TimeoutSec 3
 $remote = Invoke-RestMethod -Uri "$RemoteBase/v1/session/$sessionId" -Headers @{ Authorization = "Bearer $token" } -TimeoutSec 30
 
 $localLines = @()
-foreach ($h in @($local.history | Select-Object -Last 500)) {
+foreach ($h in @($local.history)) {
   $role = if ($h.body.role) { $h.body.role } else { '' }
   $txt = if ($h.text) { $h.text } elseif ($h.body.content) { $h.body.content } else { '' }
   $localLines += "$role|$txt"
 }
 $remoteLines = @()
-foreach ($h in @($remote.history | Select-Object -Last 500)) {
+foreach ($h in @($remote.history)) {
   $role = if ($h.body.role) { $h.body.role } else { '' }
   $txt = if ($h.text) { $h.text } elseif ($h.body.content) { $h.body.content } else { '' }
   $remoteLines += "$role|$txt"

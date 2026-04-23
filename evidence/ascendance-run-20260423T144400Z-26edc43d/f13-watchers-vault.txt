@@ -1,0 +1,13 @@
+anr-hub-bridge Up 39 hours
+falkordb Up 2 weeks
+karma-server Up 2 weeks (healthy)
+anr-vault-search Up 2 weeks (healthy)
+anr-vault-db Up 2 weeks (healthy)
+anr-vault-api Up 2 weeks (healthy)
+anr-vault-caddy Up 2 weeks
+inactive
+activating
+inactive
+active
+active
+{"conversation_messages":108,"ingest_count":852215,"knowledge_blocks":697,"model":"gemma3:1b","ok":t

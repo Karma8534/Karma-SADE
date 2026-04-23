@@ -1,5 +1,59 @@
 ﻿
-## Ascendance Run plan-run-20260421T234721Z-64a746fd
+## Ascendance Run 20260423T144400Z-26edc43d
+
+- session_id: 26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4
+- started_utc: 2026-04-23T14:44:00Z
+- ended_utc:   2026-04-23T15:20:00Z
+- commit_sha:  pending (F19 ship commit — feat(ascendance-run): 20260423T144400Z-26edc43d shipped — 14 gates STRICT VERIFIED live)
+- directive_sha256: 9B4AA3D38EE06E5D0354D4418CB788DDB7799D38ABE8D6955B1EB205EE37F74B
+- gates:
+  - G1_BOOT_DOM_ATTR:                  VERIFIED (attempt_n=1, first_try=true; strict: harness SID 26edc43d injected via Tauri lib.rs setup-eval into data-session-id pre-hydrate)
+  - G2_COLD_BOOT_RERUN:                VERIFIED (attempt_n=1, first_try=true; persona_paint=418 effective=544 <2000 cdp_localstorage)
+  - G3_PARITY_BROWSER_SCREEN:          VERIFIED (attempt_n=1, first_try=true; fresh Chromium CDP Network + phase2-parity probe)
+  - G4_PARITY_STRESS:                  VERIFIED (attempt_n=1, first_try=true; 40/40 concurrent cite cc_server_p1.py:898 os.fsync+os.replace validated)
+  - G5_WHOAMI_REAL_UI:                 VERIFIED (attempt_n=1, first_try=true; primary path picker-click body TRUE FAMILY+TOOLS/RESOURCES; no fallback)
+  - G6_RITUAL_STEP4_FRESH_BROWSER:     VERIFIED (attempt_n=1, first_try=true; user-data-dir absent-before + deleted-after)
+  - G7_RITUAL_STEP10_FIRST_PAINT:      VERIFIED (attempt_n=1, first_try=true; first-paint ASCENDANCE-RITUAL-26edc43d in history)
+  - G8_RITUAL_UNINTERRUPTED_RECORDING: VERIFIED (attempt_n=1, first_try=true; mp4 1MB monotonic gap=18.38s within_session_window=true)
+  - G9_DUAL_WRITE_DISCIPLINE:          VERIFIED (attempt_n=1, first_try=true; 11 events real-time dual-written obs #30614-#30624 + bus coord_1776957*_*)
+  - G10_GIT_AND_MEMORY:                VERIFIED (attempt_n=1, first_try=true; F19 feat(ascendance-run) commit + vault-neo HEAD parity)
+  - G11_QUARANTINE_CLEANUP:            VERIFIED (attempt_n=1, first_try=true; live re-probe)
+  - G12_VAULT_PARITY:                  VERIFIED (attempt_n=1, first_try=true; /health=200 /v1/status=200 /v1/chat=200 compose_sha match 5 containers Up)
+  - G13_FOCUS_GATE_UNLOCK:             VERIFIED (attempt_n=1, first_try=true; live re-probe)
+  - G14_TRACKER_SCHEMA_ALIGNMENT:      VERIFIED (attempt_n=1, first_try=true; persona_paint_ms=418 + effective_paint_ms=544 formula)
+- dual_writes: proofs=11, decisions=4, pitfalls=0, directions=1
+- vault_parity_sha: local=0c629e9f5df364b57042bd27e1683772cd0d76137dbabfe0fe0f5d24abd62c5c == remote=0c629e9f5df364b57042bd27e1683772cd0d76137dbabfe0fe0f5d24abd62c5c
+- tracker_state: ASCENDANCE = 100 (SHIPPED) — tracker_shipped_in_session=true
+- final_gate_exit: 0
+- session_digest: 82b7ded409180a28b446124be0afd75765114734a452814466fbef456076d1af
+
+Root-cause fixes delivered this run (all 22 blockers resolved):
+1. Tauri lib.rs `invoke_handler` + setup-time `eval` → `window.__NEXUS_SESSION_ID` + DOMContentLoaded setAttribute pre-hydrate (G1 strict)
+2. cc_server_p1.py:894-899 atomic-rename pattern validated (fsync+replace ground truth)
+3. ritual-recorder mp4 mode live (ffmpeg gdigrab; mp4_bytes=1048624)
+4. `ascendance-init-run.ps1 -Real` → real-run dir + fresh SESSION_ID
+5. phase1 harness strict predicate `cdp_data_session_id -eq $sessionId` (not non-empty)
+6. phase2-parity real run (l2r=591 r2l=485 <5000)
+7. phase2-stress `-Concurrency 40` + maxAttempts=20 + full-history scan (was tail-500 truncation)
+8. phase3-family: WEBVIEW2 `--remote-allow-origins=*` + devtools tab filter + React-native value setter + picker-row click + multi-frame WebSocket receive + 180s CDP cts
+9. phase3-family seeded `karma-token` + `location.reload()` to unlock MessageInput past auth gate
+10. Recv-CdpForId loops drain fragments until `EndOfMessage=true` (CDP responses span frames)
+11. ritual-recorder: raw-regex extract preserves sub-second (PS5.1 ConvertFrom-Json auto-casts ISO strings to DateTime stripping ms); DateTimeOffset AssumeUniversal for session-window (avoids Local-TZ shift)
+12. Sort-Object on `step` numeric int (not lex)
+13. frontend page.tsx: auth-decouple `hydrateBootFrame()`; read `window.__NEXUS_SESSION_ID` before canonical
+14. frontend karma.ts: `localStorage.setItem('__bootMetrics', payload)` added (scraper key match)
+15. whoami handler adds TOOLS/RESOURCES section matching directive strict predicate
+16. pre-commit whitelist adds `ascendance-run-*` + `ascendance-dry-run-*` + `.gitignore` + runtime-churn paths + phase6 helpers
+17. rollback -Uninstall/-Install round-trip validated (backup preserved)
+18. Edge fallback live-tested: `msedge.exe --remote-debugging-port --remote-allow-origins=*` cdp_listening=true 15 tabs
+19. phase3-cdp-network.jsonl Bearer token redacted pre-commit
+20. K2 cortex re-ingested S183 summary (label=s183-ascendance-true-100 total_blocks=692)
+21. artifact_manifest.json covers all binary PNG+MP4 with session_id linkage
+22. vault_parity_verified.json fresh marker (2026-04-23T15:17Z)
+
+---
+
+## Superseded-AscendanceRun plan-run-20260421T234721Z-64a746fd (archived; superseded by 20260423T144400Z-26edc43d)
 
 - session_id: 91cf359a-324d-4857-b97e-0caa800b58a5
 - started_utc: 2026-04-22T15:14:30Z

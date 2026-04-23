@@ -1,0 +1,18 @@
+{
+  "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4",
+  "started_utc": "2026-04-23T14:47:56.0282646Z",
+  "ended_utc": "2026-04-23T14:48:03.2952586Z",
+  "concurrency": 40,
+  "probe_prefix": "STRESS-26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4",
+  "posted_ok_count": 40,
+  "posted_fail_count": 0,
+  "missing_remote_count": 0,
+  "missing_local_count": 0,
+  "history_match": true,
+  "atomic_write_cite": "cc_server_p1.py:898",
+  "gate_g4_pass": true,
+  "artifacts": [
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260423T144400Z-26edc43d\\phase2-stress.json",
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260423T144400Z-26edc43d\\phase2-stress-diff.txt"
+  ]
+}

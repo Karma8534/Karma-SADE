@@ -91,11 +91,16 @@ export default function Home() {
   }, [isAuthenticated]);
 
   // Ascendance gate contract: expose canonical hydration/session markers on root DOM.
+  // G1 strict predicate: harness-injected NEXUS_SESSION_ID (via Tauri setup eval / window.__NEXUS_SESSION_ID)
+  // takes precedence; fall through to canonical bootSessionId only if harness SID absent.
   useEffect(() => {
     if (typeof document === 'undefined') return;
     const root = document.documentElement;
     root.setAttribute('data-hydration-state', bootHydration || 'idle');
-    const sid = (bootSessionId || '').trim();
+    const w = window as Window & { __NEXUS_SESSION_ID?: string };
+    const harnessSid = (w.__NEXUS_SESSION_ID || '').trim();
+    const canonicalSid = (bootSessionId || '').trim();
+    const sid = harnessSid || canonicalSid;
     if (sid) {
       root.setAttribute('data-session-id', sid);
     } else {

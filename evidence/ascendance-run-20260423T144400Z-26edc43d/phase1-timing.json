@@ -1,0 +1,39 @@
+{
+  "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4",
+  "timestamp": "2026-04-23T14:45:02.6592545Z",
+  "window_visible_ms": 126,
+  "persona_paint_ms": 418,
+  "effective_paint_ms": 544,
+  "wall_clock_ms": 6124,
+  "paint_deadline_ms": 2000,
+  "paint_within_deadline": true,
+  "boot_metrics": {
+    "timestamp": "2026-04-23T14:44:57.854Z",
+    "session_id": "b3763079-3b48-4960-999d-7b82c7c0f5d8",
+    "persona_block_preview": "**KARMA BOOT**\nIdentity: Karma\n\nAAAK WAKEUP | Nexus continuity\n* G1 Strict Predicate VERIFIED: Harness SESSION_ID Now in data-session-d ttribute: Validated that G1 strict predicate fix works nd-to-nd ",
+    "persona_block_length": 424,
+    "history_turn_count": 0,
+    "history_turns": [],
+    "timing": {
+      "window_visible_ms": 0,
+      "boot_fetch_start_ms": 0,
+      "boot_fetch_end_ms": 418,
+      "persona_paint_ms": 418
+    },
+    "hydration_state": "ready",
+    "degraded_reason": null,
+    "canonical_endpoints_called": [
+      "/memory/session",
+      "/memory/wakeup",
+      "/v1/session/b3763079-3b48-4960-999d-7b82c7c0f5d8"
+    ]
+  },
+  "boot_metrics_source": "cdp_localstorage",
+  "cdp_data_hydration_state": "ready",
+  "cdp_data_session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4",
+  "canonical_session_id": "b3763079-3b48-4960-999d-7b82c7c0f5d8",
+  "harness_session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4",
+  "gate_g1_pass": true,
+  "gate_g2_pass": true,
+  "gate_g14_pass": true
+}

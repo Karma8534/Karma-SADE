@@ -87,32 +87,46 @@ switch ($Action) {
   }
   'stop' {
     if (-not (Test-Path -LiteralPath $statePath)) { throw 'recorder-state.json missing' }
-    $stateRaw = Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
+    $stateFileText = Get-Content -LiteralPath $statePath -Raw
+    $stateRaw = $stateFileText | ConvertFrom-Json
     # Rebuild as ordered hashtable so new keys can be added (PSCustomObject is fixed-shape)
     $state = [ordered]@{}
     foreach ($p in $stateRaw.PSObject.Properties) { $state[$p.Name] = $p.Value }
     $state['end_utc'] = (Get-Date).ToUniversalTime().ToString('o')
     $gapOk = $true
     $maxGap = 0
-    $steps = @($state.steps | Sort-Object step)
+    # Raw regex extract to preserve sub-second precision (ConvertFrom-Json auto-casts ISO-8601 to DateTime, strips sub-second).
+    # Each step object has "step": N and "utc": "ISO8601Z". Extract as string-pairs ordered by numeric step.
+    $stepMatches = [regex]::Matches($stateFileText, '"step"\s*:\s*(\d+)[^}]*?"utc"\s*:\s*"([^"]+)"', [System.Text.RegularExpressions.RegexOptions]::Singleline)
+    $rawSteps = @()
+    foreach ($m in $stepMatches) {
+      $rawSteps += [pscustomobject]@{ step = [int]$m.Groups[1].Value; utc = $m.Groups[2].Value }
+    }
+    $steps = @($rawSteps | Sort-Object -Property step)
     for ($i = 1; $i -lt $steps.Count; $i++) {
-      $prev = [DateTime]::Parse($steps[$i - 1].utc).ToUniversalTime()
-      $cur = [DateTime]::Parse($steps[$i].utc).ToUniversalTime()
-      $delta = ($cur - $prev).TotalSeconds
+      # DateTimeOffset preserves sub-second across PS5.1 parsing.
+      $prevDto = [System.DateTimeOffset]::Parse([string]$steps[$i - 1].utc, [cultureinfo]::InvariantCulture)
+      $curDto  = [System.DateTimeOffset]::Parse([string]$steps[$i].utc, [cultureinfo]::InvariantCulture)
+      $delta = ($curDto - $prevDto).TotalSeconds
       if ($delta -gt $maxGap) { $maxGap = $delta }
-      $allowed = if ($steps[$i].step -eq 8) { 180 } else { 180 }
-      if ($delta -gt $allowed) { $gapOk = $false }
+      if ($delta -gt 180) { $gapOk = $false }
     }
     $monotonic = $true
+    # PS5.1 DateTime.Parse truncates sub-second precision; ISO-8601 Z strings compare
+    # lexicographically correctly (2026-04-23T14:59:34.7842423Z < 2026-04-23T14:59:34.8021761Z by [string]::Compare).
     for ($i = 1; $i -lt $steps.Count; $i++) {
-      if ([DateTime]::Parse($steps[$i].utc) -le [DateTime]::Parse($steps[$i - 1].utc)) { $monotonic = $false; break }
+      $prevStr = [string]$steps[$i - 1].utc
+      $curStr  = [string]$steps[$i].utc
+      if ([string]::Compare($curStr, $prevStr, [System.StringComparison]::Ordinal) -le 0) { $monotonic = $false; break }
     }
     $withinWindow = $true
     if ($sessionStart) {
-      $ssUtc = [DateTime]::Parse($sessionStart).ToUniversalTime()
+      # DateTimeOffset handles Z suffix without Local-TZ shift.
+      $ssDto = [System.DateTimeOffset]::Parse([string]$sessionStart, [cultureinfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AssumeUniversal)
+      $ssEnd = $ssDto.AddMinutes(30)
       foreach ($s in $steps) {
-        $t = [DateTime]::Parse($s.utc).ToUniversalTime()
-        if ($t -lt $ssUtc -or $t -gt $ssUtc.AddMinutes(30)) { $withinWindow = $false }
+        $t = [System.DateTimeOffset]::Parse([string]$s.utc, [cultureinfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AssumeUniversal)
+        if ($t -lt $ssDto -or $t -gt $ssEnd) { $withinWindow = $false }
       }
     }
     if ($state.mode -eq 'mp4' -and (Test-Path -LiteralPath $ffpidPath)) {

@@ -1,0 +1,78 @@
+{
+  "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4",
+  "session_start_utc": "04/23/2026 14:44:00",
+  "mode": "mp4",
+  "framerate": 5,
+  "start_utc": "2026-04-23T15:07:44.6222169Z",
+  "steps": [
+    {
+      "step": 1,
+      "utc": "2026-04-23T15:08:08.7753625Z",
+      "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4"
+    },
+    {
+      "step": 2,
+      "utc": "2026-04-23T15:08:08.7913627Z",
+      "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4"
+    },
+    {
+      "step": 3,
+      "utc": "2026-04-23T15:08:08.8531344Z",
+      "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4"
+    },
+    {
+      "step": 4,
+      "utc": "2026-04-23T15:08:11.9088109Z",
+      "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4"
+    },
+    {
+      "step": 5,
+      "utc": "2026-04-23T15:08:27.7308424Z",
+      "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4"
+    },
+    {
+      "step": 6,
+      "utc": "2026-04-23T15:08:27.7445202Z",
+      "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4"
+    },
+    {
+      "step": 7,
+      "utc": "2026-04-23T15:08:30.3046919Z",
+      "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4"
+    },
+    {
+      "step": 8,
+      "utc": "2026-04-23T15:08:45.3210098Z",
+      "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4"
+    },
+    {
+      "step": 9,
+      "utc": "2026-04-23T15:08:49.3486936Z",
+      "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4"
+    },
+    {
+      "step": 10,
+      "utc": "2026-04-23T15:08:49.3894411Z",
+      "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4"
+    },
+    {
+      "step": 11,
+      "utc": "2026-04-23T15:09:07.7684078Z",
+      "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4"
+    },
+    {
+      "step": 12,
+      "utc": "2026-04-23T15:09:07.7778631Z",
+      "session_id": "26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4"
+    }
+  ],
+  "mp4_path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260423T144400Z-26edc43d\\ritual\\ritual-26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4.mp4",
+  "ffmpeg_pid": 9428,
+  "end_utc": "2026-04-23T15:09:07.7954355Z",
+  "mp4_bytes": 1048624,
+  "max_gap_s": 18.3789667,
+  "monotonic": true,
+  "gap_ok": true,
+  "within_session_window": true,
+  "gate_g8_pass": true
+}
