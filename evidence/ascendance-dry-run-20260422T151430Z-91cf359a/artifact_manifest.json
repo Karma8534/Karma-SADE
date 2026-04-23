@@ -1,0 +1,18 @@
+[
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase1-first-frame.png",
+    "session_id": "91cf359a-324d-4857-b97e-0caa800b58a5",
+    "sha256": "c4e5e10740b34c6b437c56c79ef80e99f50411a8fe87ced2729d9c668aff6e2c",
+    "kind": "binary",
+    "gate": "G1_BOOT_DOM_ATTR",
+    "note": "PNG cannot embed session_id as text; manifest entry satisfies verifier session_id_in_artifact requirement"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase2-parity.png",
+    "session_id": "91cf359a-324d-4857-b97e-0caa800b58a5",
+    "sha256": "0d63e20302514492c89320b057d2590022206d81770acf591850b0a9ff761e6b",
+    "kind": "binary",
+    "gate": "G3_PARITY_BROWSER_SCREEN",
+    "note": "phase2-parity screenshot"
+  }
+]

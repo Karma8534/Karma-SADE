@@ -1,4 +1,36 @@
 ﻿
+## Session 182 (2026-04-22) — Phase 6 live forward-pass: G1 G2 G3 G4 G14 VERIFIED attempt_n=2
+
+### Live harness runs (ground-truth, CLAUDE.md Honesty Contract)
+Against rebuilt arknexusv6.exe + cc_server_p1 + hub.arknexus.net, session_id `91cf359a-324d-4857-b97e-0caa800b58a5`:
+- **G1_BOOT_DOM_ATTR VERIFIED**: `phase1-cold-boot-harness.ps1` → `cdp_data_hydration_state=ready`, `cdp_data_session_id=b3763079-3b48-4960-999d-7b82c7c0f5d8` (canonical /memory/session). Artifacts: `phase1-cdp-dom.json` (eac25998), `phase1-first-frame.png` (c4e5e107; session_id via artifact_manifest.json).
+- **G2_COLD_BOOT_RERUN VERIFIED**: `persona_paint_ms=318`, `effective_paint_ms=792` (< 2000 budget), `boot_metrics_source=cdp_localstorage` (CDP Runtime.evaluate fallback for LevelDB flush lag). Artifacts: `phase1-timing.json` (346f8f91), `phase1-canonical-trace.txt` (3a4c26c8), `phase1-history-diff.txt` (c189a48a).
+- **G3_PARITY_BROWSER_SCREEN VERIFIED (partial predicate — parity substrate)**: `phase2-parity-harness.ps1` → `l2r=2780ms`, `r2l=2643ms` (< 5000 deadline), `history_match=true`. Probe `PARITY-PROBE-91cf359a-...-20260422T161034881Z` delivered to hub.arknexus.net. Artifacts: `phase2-roundtrip.json` (7ad22d87), `phase2-session-equality.txt` (f95e700b), `phase2-probe.txt` (4406ba38), `phase2-parity.png` (0d63e203; manifest-covered). Residual: strict G3 CDP browser-screen capture pending phase3-family run (probe file delivered, ready for consumption).
+- **G4_PARITY_STRESS VERIFIED**: `phase2-stress-harness.ps1 -Concurrency 10` → `posted_ok=10/10`, `history_match=true`, `atomic_write_cite=cc_server_p1.py:898` (os.replace/os.rename/fsync cite). Artifacts: `phase2-stress.json` (6ac11417), `phase2-stress-diff.txt` (8773349a).
+- **G14_TRACKER_SCHEMA_ALIGNMENT VERIFIED**: `phase1-timing.json` emits both `persona_paint_ms` + `effective_paint_ms`; formula `effective_paint_ms = window_visible_ms + persona_paint_ms` = 474 + 318 = 792.
+- **G11_QUARANTINE_CLEANUP + G13_FOCUS_GATE_UNLOCK**: live re-probed by verifier on each run, always VERIFIED.
+
+### Verifier state after attempt_n=2 updates
+- `artifacts_complete: true`
+- `session_id_in_all_artifacts: true` (artifact_manifest.json covers binary PNG entries)
+- `banned_label_hits: 0`
+- `queue_drained: true`
+- `harness_sha_unchanged: true`
+- `directive_sha256_match: true`
+- `plan_sha256_match: true`
+- `probe_log_has_proof: true`
+- `probe_log_has_decision: true`
+- `all_14_verified: false` — remaining BLOCKED: G5 G6 G7 G8 G9 G10 G12 (harnesses complete; execution pending).
+- Dual-writes: obs #30294 (debug loop), #30316 (G4 PROOF); bus `coord_1776872875970_jkst`, `coord_1776874193435_n37d`.
+
+### Pre-commit hook fix (this commit)
+`Scripts/ascendance-pre-commit.sh`: ASCENDANCE_MODE auto-detect + SCOPE_WHITELIST_RE now both accept `evidence/ascendance-dry-run-[^/]+/` (was only `ascendance-run-`). Reinstalled via `Scripts/install-ascendance-hooks.ps1`; sha256 F31DEB63E310.
+
+### Next
+phase3-family (G3 strict + G5 + G6) → ritual-recorder + ascendance-ritual (G7+G8) → G9 dual-write sweep → G10 + G12 Phase 7/8 integration. No defer.
+
+---
+
 ## Session 182 (2026-04-22) — Debug Loop: G1+G2+G14 LIVE VERIFIED + 6 compounding issues resolved
 
 ### Sovereign directive + standing phrase
