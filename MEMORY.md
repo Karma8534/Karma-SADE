@@ -826,3 +826,4 @@ next: verify running process/window title and continuity behavior remain stable
 - 2026-04-22T16:00:00Z: Hardened tracker stability: prefer ascendance-run over dry-run and force tracker refresh inside final-gate before tracker_shipped check; refreshed G14 tracker hash artifacts.
 
 
+
