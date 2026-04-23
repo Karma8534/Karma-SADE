@@ -73,3 +73,12 @@ BLOCKER-REDTEAM1 | 200 HTTP != TRUE | semantic body verification required per en
 - /v1/coordination/recent has coord_ TRUE
 - memory write-read-back: write message via /v1/chat, GET /v1/session/{id}, history contains message TRUE
 - Tauri E2E: url=tauri.localhost hydration=ready session=harness-SID hasTextarea=true bodyLen=770 hasBootMetrics=true nexusSessionGlobal=harness-SID K2=active brain=ok TRUE
+
+## Nexus V3.0 P-followup surgical merges (S183)
+
+P-FU1 MagicDNS RESOLVED | proxy.js 10 IPs -> 7 hostname refs (k2, payback); compose.hub.yml extra_hosts k2/payback/vault-neo/arknexus-vault-01; container /etc/hosts verified; docker exec wget http://k2:7892/health 200; docker exec wget http://payback:7891/health 200 | CLOSED
+P-FU2 OpenClaw 4-layer MEMORY.md RESOLVED | Headers ARCHITECTURE, DECISIONS, STATE, SESSION added at top of MEMORY.md with strict content per section | CLOSED
+P-FU3 node --check pre-commit hook RESOLVED | Scripts/ascendance-pre-commit.sh line ~44 gates staged hub-bridge/app/*.js via `node --check`; installer sha 840FA40D45CA; rejection verified on synthetic bad.js | CLOSED
+P-FU4 3-strike governor ALREADY-LIVE | proxy.js line 321 breakerState(sessionId).halted triggers "Session halted by 3-strike breaker (N fails)" block; pre-existing feature matching Nexus V3.0 Break 3 fix | CLOSED-EXISTING
+P-FU5 Vesper staging sandbox RESOLVED | Scripts/nexus-v3-staging-sandbox.sh deployed to vault-neo /tmp/nexus-v3-staging.sh; init created /opt/seed-vault/memory_v1/hub_bridge/staging/app/ with proxy-stage.js (89262 bytes) + public/ + package.json; supports stage/promote/diff with node --check gate | CLOSED
+P-FU6 Firewall port isolation SCRIPT-WRITTEN | Scripts/nexus-v3-firewall-isolation.ps1 idempotent installer (K2 + P1 Windows Firewall block ports 11434/6379/7890/7891/7892 except Tailscale 100.0.0.0/8 + 127.0.0.0/8); iptables reference rules for vault-neo in script footer | SCRIPT-READY-DEPLOY-PENDING-ADMIN

@@ -1,4 +1,42 @@
 ﻿
+# ARCHITECTURE
+OpenClaw memory anchor — tech stack rules. Authoritative claims only, no session-ephemera.
+- Edge: P1 (payback 100.124.194.102, Windows; CC Max subscription; Tauri arknexusv6.exe; frontend Next.js static export).
+- Brain/Async: K2 (k2 100.75.109.92, Windows WSL; karma-regent + aria daemons; gemma3:1b cortex on :7892; FalkorDB read client).
+- Gateway: vault-neo (arknexus-vault-01 100.92.67.70, Linux droplet; hub-bridge proxy.js Node.js; FalkorDB neo_workspace; anr-vault-api+search+caddy+karma-server Docker).
+- Mesh: Tailscale MagicDNS (k2, payback, arknexus-vault-01 hostnames; IP-ACL for /v1/shell/file/email/self-edit via 100.x.x.x whitelist in proxy.js lines 63-65).
+- Models: claude-4.7/4.6 via CC Max ($0 per call); gemma3:1b on K2; no paid OpenRouter in current routing.
+- Auth: hub.chat.token.txt + hub.capture.token.txt + hub.handoff.token.txt (vault_bearer uses files never env).
+- Proof doctrine: P089 live-probe only; P113 binary TRUE only (no INFERRED); P115 no silent defer; P116 verifier-pass ≠ production-ready, require hostile red-team before ship-claim.
+
+# DECISIONS
+OpenClaw decision log — locked choices with reason.
+- D001 FalkorDB graph `neo_workspace` (karma graph empty, never query).
+- D002 Droplet = canonical; K2 = worker/cache.
+- D003 PowerShell for git on Windows (Git Bash index.lock corruption).
+- D006 System prompt via file-load `Memory/00-karma-system-prompt-live.md` (git push + docker restart, no rebuild).
+- D007 K2 SSH via `karma@192.168.0.226` direct LAN (not via vault-neo tunnel).
+- D015 CLAUDE.md capped ~100 lines; modular rules in `.claude/rules/*.md`.
+- D032 `cc-sovereign` model via CC Max subscription $0/call (S150).
+- D-P116 Mandatory hostile red-team audit before ship-claim (S183 Sovereign lock).
+- D-Nexus3 Nexus V3.0 evaluation S183: merge 6 surgical items (MagicDNS, 3-strike governor, OpenClaw layers, staging, firewall, node-check); reject MiniMax/Opus/TurboQuant/4-dim contract as not-better.
+
+# STATE
+Active task and current blockers. Update this section as work progresses.
+- session_id: 26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4
+- active: Nexus V3.0 P-followup merge (P-FU1 MagicDNS DONE live-verified; P-FU2-6 in progress).
+- triple-parity: local = origin = vault-neo HEAD ae95458d1 (post-next commit will advance).
+- production: hub.arknexus.net all GET 200 semantic-verified; /v1/chat intelligent; memory persistence TRUE.
+- open: P-FU4 3-strike governor (proxy.js code, pending), P-FU5 Vesper staging sandbox chroot (infra, pending).
+
+# SESSION
+Ephemeral scratchpad for S183. Purged at session-end.
+- obs #30614-#30624 (G1-G14 PROOFs) + #30636 (ship PROOF) + #30663 (P116 PITFALL lock).
+- bus coord_1776957* (11 real-time dual-writes).
+- tracker ASCENDANCE = 100 (SHIPPED) confirmed.
+
+---
+
 ## Ascendance Run 20260423T144400Z-26edc43d
 
 - session_id: 26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4

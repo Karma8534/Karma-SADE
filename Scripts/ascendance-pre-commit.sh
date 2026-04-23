@@ -42,6 +42,19 @@ if [ "$SECRET_HITS" -gt 0 ]; then
   exit 1
 fi
 
+# --- P-FU3: node --check syntax gate for staged hub-bridge JS (Nexus V3.0 merge S183) ---
+if command -v node >/dev/null 2>&1; then
+  while IFS= read -r f; do
+    if [ -f "$f" ] && echo "$f" | grep -qE '^hub-bridge/app/.*\.js$'; then
+      if ! node --check "$f" 2>/tmp/pre-commit-node-err; then
+        echo "PRE-COMMIT FAIL: node --check rejected $f"
+        cat /tmp/pre-commit-node-err
+        exit 1
+      fi
+    fi
+  done <<< "$STAGED"
+fi
+
 if [ "$ASCENDANCE_MODE" -eq 0 ]; then
   if [ "$MEM_NEEDED" -eq 1 ] && ! echo "$STAGED" | grep -qE '^MEMORY\.md$'; then
     echo "PRE-COMMIT FAIL: code staged without MEMORY.md update. Stage MEMORY.md or mark commit as ascendance-run."
@@ -50,7 +63,7 @@ if [ "$ASCENDANCE_MODE" -eq 0 ]; then
   exit 0
 fi
 
-SCOPE_WHITELIST_RE='^(\.gitignore$|Scripts/cortex/state/.*|tmp/transcripts/.*|evidence/ascendance-run-[^/]+/|evidence/ascendance-dry-run-[^/]+/|evidence/plan-run-[^/]+/|MEMORY\.md$|\.gsd/phase-ascendance-.*-SUMMARY\.md$|\.gsd/phase-ascendance-.*-PLAN\.md$|\.gsd/phase-ascendance-.*-CONTEXT\.md$|\.gsd/ascendance-build-checkpoint\.json$|Karma2/cc-scope-index\.md$|Karma2/PLAN\.md$|Karma2/PLAN-ARCHIVED-.*\.md$|Scripts/phase[0-9].*-harness\.ps1$|Scripts/phase[0-9].*\.ps1$|Scripts/ascendance-.*\.ps1$|Scripts/ritual-recorder\.ps1$|Scripts/install-ascendance-hooks\.ps1$|Scripts/leveldb_latest\.ps1$|Scripts/cc_server_p1\.py$|Scripts/test_cc_server_atomic_rename\.py$|Scripts/ascendance-pre-commit\.sh$|Scripts/nexus_consistency_check\.py$|\.claude/hooks/arknexus-tracker\.py$|\.claude/hooks/pre-commit$|Tests/ascendance/.*\.ps1$|frontend/src/.*\.(tsx|ts|css)$|frontend/out/.*|nexus-tauri/src-tauri/target/release/arknexusv6\.exe$|docs/ForColby/ascendance-.*\.md$|nexus-tauri/src-tauri/.*\.(rs|toml)$|hub-bridge/app/public/.*\.html$|hub-bridge/app/.*\.js$)'
+SCOPE_WHITELIST_RE='^(\.gitignore$|Scripts/cortex/state/.*|tmp/transcripts/.*|evidence/ascendance-run-[^/]+/|evidence/ascendance-dry-run-[^/]+/|evidence/plan-run-[^/]+/|MEMORY\.md$|\.gsd/phase-ascendance-.*-SUMMARY\.md$|\.gsd/phase-ascendance-.*-PLAN\.md$|\.gsd/phase-ascendance-.*-CONTEXT\.md$|\.gsd/ascendance-build-checkpoint\.json$|Karma2/cc-scope-index\.md$|Karma2/PLAN\.md$|Karma2/PLAN-ARCHIVED-.*\.md$|Scripts/phase[0-9].*-harness\.ps1$|Scripts/phase[0-9].*\.ps1$|Scripts/ascendance-.*\.ps1$|Scripts/nexus-v3-.*\.(ps1|sh)$|Scripts/ritual-recorder\.ps1$|Scripts/install-ascendance-hooks\.ps1$|Scripts/leveldb_latest\.ps1$|Scripts/cc_server_p1\.py$|Scripts/test_cc_server_atomic_rename\.py$|Scripts/ascendance-pre-commit\.sh$|Scripts/nexus_consistency_check\.py$|\.claude/hooks/arknexus-tracker\.py$|\.claude/hooks/pre-commit$|Tests/ascendance/.*\.ps1$|frontend/src/.*\.(tsx|ts|css)$|frontend/out/.*|nexus-tauri/src-tauri/target/release/arknexusv6\.exe$|docs/ForColby/ascendance-.*\.md$|nexus-tauri/src-tauri/.*\.(rs|toml)$|hub-bridge/app/public/.*\.html$|hub-bridge/app/.*\.js$)'
 OFFSCOPE=0
 while IFS= read -r f; do
   if ! echo "$f" | grep -qE "$SCOPE_WHITELIST_RE"; then

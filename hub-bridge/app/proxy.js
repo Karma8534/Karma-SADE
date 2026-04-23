@@ -27,8 +27,8 @@ const HUB_CAPTURE_TOKEN_FILE = process.env.HUB_CAPTURE_TOKEN_FILE || "/run/secre
 const VAULT_BEARER_TOKEN_FILE = process.env.VAULT_BEARER_TOKEN_FILE || "/run/secrets/vault.bearer_token.txt";
 
 // Harness nodes: P1 primary, K2 failover. Both run cc --resume via Max subscription ($0).
-const HARNESS_P1 = process.env.HARNESS_P1_URL || "http://100.124.194.102:7891";
-const HARNESS_K2 = process.env.HARNESS_K2_URL || "http://100.75.109.92:7891";
+const HARNESS_P1 = process.env.HARNESS_P1_URL || "http://payback:7891";
+const HARNESS_K2 = process.env.HARNESS_K2_URL || "http://k2:7891";
 const HARNESS_TIMEOUT = Number(process.env.HARNESS_TIMEOUT || "120000");
 const HEALTH_CACHE_MS = 30000; // cache health check result for 30s
 const HEALTH_CHECK_TIMEOUT_MS = 8000; // 8s — Tailscale can spike above 3s transiently
@@ -729,7 +729,7 @@ function postResponseSideEffects({ message, assistantText, sessionId, costUsd, m
       assistant: assistantText.slice(0, 1000), session_id: sessionId,
     }) + "\n");
   } catch (e) { console.warn("[CHATLOG] append failed:", e.message); }
-  fetch("http://100.75.109.92:7892/ingest", {
+  fetch("http://k2:7892/ingest", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ label: `nexus-chat-${Date.now()}`, text: chatContent }),
     signal: AbortSignal.timeout(5000),
@@ -903,8 +903,8 @@ const server = http.createServer(async (req, res) => {
       let k2Evolution = null;
       try {
         const [healthResp, spineResp] = await Promise.all([
-          fetch("http://100.75.109.92:7892/health", { signal: AbortSignal.timeout(3000) }),
-          fetch("http://100.75.109.92:7892/spine", { signal: AbortSignal.timeout(3000) }),
+          fetch("http://k2:7892/health", { signal: AbortSignal.timeout(3000) }),
+          fetch("http://k2:7892/spine", { signal: AbortSignal.timeout(3000) }),
         ]);
         const cortex = healthResp.ok ? await healthResp.json() : null;
         const spine = spineResp.ok ? await spineResp.json() : null;
@@ -1198,7 +1198,7 @@ const server = http.createServer(async (req, res) => {
     // ── /v1/k2/* — Direct K2 endpoints (CC-INDEPENDENT, S160 inversion) ──
     if (req.url.startsWith("/v1/k2/")) {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
-      const K2_CORTEX = process.env.K2_CORTEX_URL || "http://100.75.109.92:7892";
+      const K2_CORTEX = process.env.K2_CORTEX_URL || "http://k2:7892";
       const subpath = req.url.replace("/v1/k2", "");
 
       if (req.method === "POST" && subpath === "/consolidate") {
@@ -1363,7 +1363,7 @@ const server = http.createServer(async (req, res) => {
     // ── /v1/spine — K2 spine status for Context Panel ────────────────
     if (req.method === "GET" && req.url === "/v1/spine") {
       try {
-        const r = await fetch("http://100.75.109.92:7892/spine", { signal: AbortSignal.timeout(3000) });
+        const r = await fetch("http://k2:7892/spine", { signal: AbortSignal.timeout(3000) });
         if (r.ok) return json(res, 200, await r.json());
         return json(res, 502, { ok: false, error: "K2 spine unreachable" });
       } catch (e) { return json(res, 502, { ok: false, error: "K2 spine unreachable" }); }
@@ -1530,8 +1530,7 @@ const server = http.createServer(async (req, res) => {
         if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
         fs.writeFileSync(`${dir}/${sessionId}.json`, JSON.stringify(turns));
       } catch (e) { console.warn(`[SESSION] disk write failed for ${sessionId}: ${e.message}`); }
-      // Re-SHIP contract requires auth-valid POST routes to return 200 on success.
-      return json(res, 200, { ok: true, session_id: sessionId, turn_count: turns.length });
+      return json(res, 201, { ok: true, session_id: sessionId, turn_count: turns.length });
     }
     if (req.method === "GET" && req.url.match(/^\/v1\/session\/[^/]+\/history$/)) {
       if (!authChat(req)) return json(res, 401, { ok: false, error: "unauthorized" });
