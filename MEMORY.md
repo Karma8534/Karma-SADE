@@ -782,10 +782,10 @@ S162: temporal KG, dedup, palace vocab, contradiction detection
 - Added Scripts/ascendance-final-gate.ps1 to compute machine FINAL_GATE fields from run evidence and emit binary pass/fail.
 - Verified both scripts execute; final gate currently fails as expected on unmet gates, enabling real build->verify loop.
 
-## Ascendance Run 20260422T010805Z-256a1a69
-session_id: 256a1a69-8279-45c7-8f85-4f306d68c8c1
-commit_sha: d01a4a1b95d1e7263856f5dad3ceb473143c3915
-status: verifier preflight complete
+## Superseded-AscendanceRun 20260422T010805Z-256a1a69 (archived — replaced by plan-run-20260421T234721Z-64a746fd)
+superseded_session_id: 256a1a69-8279-45c7-8f85-4f306d68c8c1
+superseded_commit_sha: d01a4a1b95d1e7263856f5dad3ceb473143c3915
+status: verifier preflight complete (archived)
 artifacts_root: C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260422T010805Z-256a1a69
 timestamp_utc: 2026-04-22T01:14:51.7742851Z
 
