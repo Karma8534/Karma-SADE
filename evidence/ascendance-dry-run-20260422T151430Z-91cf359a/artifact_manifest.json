@@ -14,5 +14,13 @@
     "kind": "binary",
     "gate": "G3_PARITY_BROWSER_SCREEN",
     "note": "phase2-parity screenshot"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-whoami.png",
+    "session_id": "91cf359a-324d-4857-b97e-0caa800b58a5",
+    "sha256": "b437b07d87e2b2311d6924ca697e62d1d9a19e739cde722a2dae267dda45ae92",
+    "kind": "binary",
+    "gate": "G5_WHOAMI_REAL_UI",
+    "note": "phase3-family whoami screenshot"
   }
 ]

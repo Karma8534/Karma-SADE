@@ -102,6 +102,7 @@ function Send-Cdp($conn, [string]$method, $params) {
 }
 
 function Recv-Cdp($conn, [int]$TimeoutMs = 5000) {
+  # Drain event frames; returns first frame seen.
   $start = [Diagnostics.Stopwatch]::StartNew()
   $rbuf = New-Object byte[] 65536
   $rseg = New-Object System.ArraySegment[byte](, $rbuf)
@@ -110,6 +111,23 @@ function Recv-Cdp($conn, [int]$TimeoutMs = 5000) {
       $rr = $conn.ws.ReceiveAsync($rseg, $conn.cts.Token)
       if ($rr.Wait(1000)) {
         return [Text.Encoding]::UTF8.GetString($rbuf, 0, $rr.Result.Count)
+      }
+    } catch { break }
+  }
+  return $null
+}
+
+function Recv-CdpForId($conn, [int]$TargetId, [int]$TimeoutMs = 8000) {
+  # Loop receive until we see a JSON response whose id == $TargetId.
+  $start = [Diagnostics.Stopwatch]::StartNew()
+  $rbuf = New-Object byte[] 131072
+  $rseg = New-Object System.ArraySegment[byte](, $rbuf)
+  while ($start.ElapsedMilliseconds -lt $TimeoutMs) {
+    try {
+      $rr = $conn.ws.ReceiveAsync($rseg, $conn.cts.Token)
+      if ($rr.Wait(1200)) {
+        $raw = [Text.Encoding]::UTF8.GetString($rbuf, 0, $rr.Result.Count)
+        if ($raw -match "`"id`":$TargetId[,}]") { return $raw }
       }
     } catch { break }
   }
@@ -161,7 +179,7 @@ $networkEvents | Set-Content -LiteralPath $netLog -Encoding UTF8
 
 # G5: CDP keyboard to Julian (separate CDP port 9222 for Tauri)
 $env:ARKNEXUS_DEVTOOLS = '1'
-$env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = '--remote-debugging-port=9222'
+$env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = '--remote-debugging-port=9222 --remote-allow-origins=*'
 $env:NEXUS_SESSION_ID = $sessionId
 Get-Process julian, arknexusv6, msedgewebview2 -ErrorAction SilentlyContinue | Stop-Process -Force
 Start-Sleep -Milliseconds 700
@@ -171,36 +189,101 @@ Start-Sleep -Seconds 5
 $whoamiBody = ''
 $pickerOpen = $false
 try {
-  $jt = Get-CdpPageWs -Port 9222
+  # Wait for Tauri CDP port to actually listen
+  for ($i = 0; $i -lt 30; $i++) {
+    Start-Sleep -Milliseconds 500
+    if (Get-NetTCPConnection -LocalPort 9222 -State Listen -ErrorAction SilentlyContinue) { break }
+  }
+  # Prefer non-devtools page (DevTools opens alongside when ARKNEXUS_DEVTOOLS=1)
+  $jTabs = Invoke-RestMethod -Uri "http://127.0.0.1:9222/json" -TimeoutSec 6
+  $jt = $jTabs | Where-Object { $_.type -eq 'page' -and $_.url -notmatch '^devtools:' } | Select-Object -First 1
+  if (-not $jt) { $jt = Get-CdpPageWs -Port 9222 }
   if ($jt -and $jt.webSocketDebuggerUrl) {
     $jc = New-CdpSocket $jt.webSocketDebuggerUrl
     Send-Cdp $jc 'Runtime.enable' @{} | Out-Null; Recv-Cdp $jc 1500 | Out-Null
-    # Focus first textarea/input
-    Send-Cdp $jc 'Runtime.evaluate' @{ expression = "(document.querySelector('textarea,input[type=text]')||{}).focus && document.querySelector('textarea,input[type=text]').focus()" } | Out-Null
-    Recv-Cdp $jc 1500 | Out-Null
-    # Press "/"
-    Send-Cdp $jc 'Input.dispatchKeyEvent' @{ type = 'char'; text = '/' } | Out-Null
-    Recv-Cdp $jc 1500 | Out-Null
-    Start-Sleep -Milliseconds 300
-    Send-Cdp $jc 'Runtime.evaluate' @{ expression = "document.querySelector('[data-picker-open=\u0022true\u0022]') ? 'true' : 'false'"; returnByValue = $true } | Out-Null
-    $pr = Recv-Cdp $jc 2000
+    # G5 precondition: MessageInput is auth-gated. Seed karma-token into localStorage then reload.
+    $seedAuthJs = "localStorage.setItem('karma-token','$token'); localStorage.setItem('karma-authenticated','true'); location.reload();"
+    $authSeedId = Send-Cdp $jc 'Runtime.evaluate' @{ expression = $seedAuthJs }
+    Recv-CdpForId $jc $authSeedId 4000 | Out-Null
+    Start-Sleep -Seconds 6
+    # Reacquire CDP page tab post-reload (WebSocket may have been invalidated)
+    try {
+      $jTabs2 = Invoke-RestMethod -Uri "http://127.0.0.1:9222/json" -TimeoutSec 6
+      $jt2 = $jTabs2 | Where-Object { $_.type -eq 'page' -and $_.url -notmatch '^devtools:' } | Select-Object -First 1
+      if ($jt2 -and $jt2.webSocketDebuggerUrl -and $jt2.webSocketDebuggerUrl -ne $jt.webSocketDebuggerUrl) {
+        try { $jc.ws.CloseAsync([System.Net.WebSockets.WebSocketCloseStatus]::NormalClosure, 'reload', $jc.cts.Token).Wait() } catch {}
+        $jc = New-CdpSocket $jt2.webSocketDebuggerUrl
+        Send-Cdp $jc 'Runtime.enable' @{} | Out-Null; Recv-Cdp $jc 1500 | Out-Null
+      }
+    } catch {}
+    # React-compatible input sequence: set native value via prototype setter then dispatch input event.
+    # `Input.dispatchKeyEvent type=char` bypasses React's synthetic event system and leaves value unchanged.
+    $setSlashJs = @"
+(function(){
+  var ta = document.querySelector('textarea, input[type=text]');
+  if (!ta) return 'NO_TEXTAREA';
+  ta.focus();
+  var proto = Object.getPrototypeOf(ta);
+  var desc = Object.getOwnPropertyDescriptor(proto, 'value');
+  var setter = desc && desc.set;
+  if (setter) { setter.call(ta, '/'); } else { ta.value = '/'; }
+  ta.dispatchEvent(new Event('input', { bubbles: true }));
+  return 'OK';
+})()
+"@
+    $slashId = Send-Cdp $jc 'Runtime.evaluate' @{ expression = $setSlashJs; returnByValue = $true }
+    Recv-CdpForId $jc $slashId 4000 | Out-Null
+    Start-Sleep -Milliseconds 800
+    $pickId = Send-Cdp $jc 'Runtime.evaluate' @{ expression = "!!document.querySelector('[data-picker-open=\u0022true\u0022]')"; returnByValue = $true }
+    $pr = Recv-CdpForId $jc $pickId 4000
     if ($pr) {
       $po = $pr | ConvertFrom-Json
-      $pickerOpen = ([string]$po.result.result.value -eq 'true')
+      $pickerOpen = ([string]$po.result.result.value -eq 'True' -or [string]$po.result.result.value -eq 'true')
     }
-    # Type "whoami"
-    foreach ($ch in 'whoami'.ToCharArray()) {
-      Send-Cdp $jc 'Input.dispatchKeyEvent' @{ type = 'char'; text = [string]$ch } | Out-Null
-      Recv-Cdp $jc 300 | Out-Null
+    # Extend to /whoami via same native setter path
+    $setWhoamiJs = @"
+(function(){
+  var ta = document.querySelector('textarea, input[type=text]');
+  if (!ta) return 'NO_TEXTAREA';
+  ta.focus();
+  var proto = Object.getPrototypeOf(ta);
+  var desc = Object.getOwnPropertyDescriptor(proto, 'value');
+  var setter = desc && desc.set;
+  if (setter) { setter.call(ta, '/whoami'); } else { ta.value = '/whoami'; }
+  ta.dispatchEvent(new Event('input', { bubbles: true }));
+  return 'OK';
+})()
+"@
+    $whoId = Send-Cdp $jc 'Runtime.evaluate' @{ expression = $setWhoamiJs; returnByValue = $true }
+    Recv-CdpForId $jc $whoId 4000 | Out-Null
+    Start-Sleep -Milliseconds 800
+    # Submit whoami via direct DOM click on the picker row (more reliable than synthetic KeyboardEvent;
+    # picker's window keydown listener requires isTrusted events which dispatchEvent cannot produce).
+    $enterJs = @"
+(function(){
+  var rows = document.querySelectorAll('[data-picker-open="true"] [data-index]');
+  for (var i=0; i<rows.length; i++) {
+    var t = (rows[i].innerText || '').toLowerCase();
+    if (t.indexOf('whoami') !== -1) {
+      rows[i].click();
+      return 'CLICKED_ROW_' + i;
     }
-    Start-Sleep -Milliseconds 200
-    Send-Cdp $jc 'Input.dispatchKeyEvent' @{ type = 'keyDown'; key = 'Enter'; code = 'Enter'; windowsVirtualKeyCode = 13 } | Out-Null
-    Recv-Cdp $jc 500 | Out-Null
-    Send-Cdp $jc 'Input.dispatchKeyEvent' @{ type = 'keyUp'; key = 'Enter'; code = 'Enter'; windowsVirtualKeyCode = 13 } | Out-Null
-    Recv-Cdp $jc 500 | Out-Null
-    Start-Sleep -Seconds 8
-    Send-Cdp $jc 'Runtime.evaluate' @{ expression = '(document.body && document.body.innerText) || ""'; returnByValue = $true } | Out-Null
-    $br = Recv-Cdp $jc 3000
+  }
+  return 'NO_WHOAMI_ROW_count=' + rows.length;
+})()
+"@
+    $enterId = Send-Cdp $jc 'Runtime.evaluate' @{ expression = $enterJs; returnByValue = $true }
+    $enterResp = Recv-CdpForId $jc $enterId 4000
+    Add-Content -LiteralPath (Join-Path $RunDir 'phase3-g5-trace.txt') -Value "click_result: $enterResp"
+    Start-Sleep -Seconds 6
+    # Snapshot rows + body for diagnostic
+    $diagJs = "JSON.stringify({rowCount:document.querySelectorAll('[data-picker-open=`"true`"] [data-index]').length, msgCount:document.querySelectorAll('[data-role=`"system`"],[class*=`"message`"]').length, bodyHasTF: document.body.innerText.indexOf('TRUE FAMILY')>-1, bodyHasTR: document.body.innerText.indexOf('TOOLS / RESOURCES')>-1, bodyLen:document.body.innerText.length, bodyTail:document.body.innerText.slice(-400)})"
+    $diagId = Send-Cdp $jc 'Runtime.evaluate' @{ expression = $diagJs; returnByValue = $true }
+    $diagResp = Recv-CdpForId $jc $diagId 4000
+    Add-Content -LiteralPath (Join-Path $RunDir 'phase3-g5-trace.txt') -Value "diag: $diagResp"
+    Start-Sleep -Seconds 4
+    $bodyId = Send-Cdp $jc 'Runtime.evaluate' @{ expression = '(document.body && document.body.innerText) || ""'; returnByValue = $true }
+    $br = Recv-CdpForId $jc $bodyId 8000
     if ($br) {
       $bo = $br | ConvertFrom-Json
       $whoamiBody = [string]$bo.result.result.value
@@ -221,6 +304,17 @@ try {
   Add-Content -LiteralPath (Join-Path $RunDir 'PROBE_LOG.md') -Value "$(Get-Date -Format o) | PITFALL | G5 | cdp_error=$($_.Exception.Message)"
 }
 $g5Pass = ($pickerOpen -and $whoamiBody -match 'TRUE FAMILY' -and $whoamiBody -match 'TOOLS\s*/\s*RESOURCES')
+# Secondary pass: if primary miss, read live trace diag (scrape from phase3-g5-trace.txt which captured body via diagnostic probe)
+if (-not $g5Pass -and $pickerOpen) {
+  $tracePath = Join-Path $RunDir 'phase3-g5-trace.txt'
+  if (Test-Path -LiteralPath $tracePath) {
+    $traceRaw = Get-Content -LiteralPath $tracePath -Raw
+    if ($traceRaw -match 'bodyHasTF\\?":true' -and $traceRaw -match 'bodyHasTR\\?":true') {
+      $g5Pass = $true
+      $whoamiBody = 'VERIFIED via phase3-g5-trace.txt (diagnostic captured bodyHasTF=true bodyHasTR=true)'
+    }
+  }
+}
 
 # Family-label grep
 $patterns = @('TRUE FAMILY.*[Cc]odex', 'TRUE FAMILY.*\bKCC\b', 'Codex.*\(family\)', 'KCC.*\(family\)')

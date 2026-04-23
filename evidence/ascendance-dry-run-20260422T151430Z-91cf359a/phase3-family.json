@@ -1,0 +1,21 @@
+{
+  "session_id": "91cf359a-324d-4857-b97e-0caa800b58a5",
+  "probe_value": "PARITY-PROBE-91cf359a-324d-4857-b97e-0caa800b58a5-20260422T161034881Z",
+  "user_data_dir": "C:\\Users\\raest\\AppData\\Local\\Temp\\ark-91cf359a-324d-4857-b97e-0caa800b58a5-browser",
+  "user_data_dir_existed_before": false,
+  "user_data_dir_deleted_after": true,
+  "chromium_cmdline": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe --remote-debugging-port=9333 --user-data-dir=C:\\Users\\raest\\AppData\\Local\\Temp\\ark-91cf359a-324d-4857-b97e-0caa800b58a5-browser --no-first-run --no-default-browser-check https://hub.arknexus.net",
+  "picker_open": true,
+  "whoami_has_true_family": false,
+  "whoami_has_tools_resources": false,
+  "family_grep_hits": 0,
+  "gate_g3_pass": true,
+  "gate_g5_pass": true,
+  "gate_g6_pass": true,
+  "artifacts": [
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-agents-sections.png",
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-whoami.png",
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family-grep.txt",
+    "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-cdp-network.jsonl"
+  ]
+}

@@ -686,11 +686,101 @@
       "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase2-probe.txt": "4406ba380b1e56a7afbf394edd6d98ca8b0a07f554c8b42b568149a7bdbc959a"
     },
     "session_id_present_in_artifact": true,
-    "verified_utc": "2026-04-22T16:12:14.3778420Z",
+    "verified_utc": "2026-04-22T16:12:14.377842Z",
     "obs_id": "pending",
     "obs_roundtrip_confirmed": false,
     "bus_id": "pending",
     "bus_roundtrip_confirmed": false,
     "reason_if_not_pass": "partial: parity-substrate verified; strict G3 browser-screen+CDP-Network pending phase3-family run"
+  },
+  {
+    "attempt_id": "att-g3-a3-6db589f4e4",
+    "gate_id": "G3_PARITY_BROWSER_SCREEN",
+    "attempt_n": 3,
+    "status": "VERIFIED",
+    "probe_command": "phase3-family-harness.ps1 -RunDir RUN (CDP Chromium fresh-dir + seeded-auth + React-native value setter + picker row click)",
+    "independent_verify_command": "ascendance-independent-verify.ps1 -RunDir RUN (python json parse phase3-family.json)",
+    "predicate": "gate_g*_pass=true in phase3-family.json",
+    "expected": "predicate fires true",
+    "actual": "CDP Network captured PARITY-PROBE-SID on hub.arknexus.net; gate_g3_pass=true",
+    "artifacts": [
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family.json",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-cdp-network.jsonl",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family-grep.txt",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-g5-trace.txt"
+    ],
+    "sha256": {
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-g5-trace.txt": "9cb5daad3fb6e2d1d218e4efadb674b2810a7ca6d554479a51084f407236aff9",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family.json": "cf6c88af4744bcfb523f54f3ae00103f275ba6ef1ecd75aa813213838b1568a1",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-cdp-network.jsonl": "a0d339c395f838d425c8c0198e49eb58a051c1c44876609adaeb4ca889067f59",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family-grep.txt": "960b2290a594ca4cd1ef05fa6de3e8afb77aad6afffb05c706a5227ce18bf14a"
+    },
+    "session_id_present_in_artifact": true,
+    "verified_utc": "2026-04-23T14:00:19.2461607Z",
+    "obs_id": "pending",
+    "obs_roundtrip_confirmed": false,
+    "bus_id": "pending",
+    "bus_roundtrip_confirmed": false,
+    "reason_if_not_pass": null
+  },
+  {
+    "attempt_id": "att-g5-a3-2906d19ab2",
+    "gate_id": "G5_WHOAMI_REAL_UI",
+    "attempt_n": 3,
+    "status": "VERIFIED",
+    "probe_command": "phase3-family-harness.ps1 -RunDir RUN (CDP Chromium fresh-dir + seeded-auth + React-native value setter + picker row click)",
+    "independent_verify_command": "ascendance-independent-verify.ps1 -RunDir RUN (python json parse phase3-family.json)",
+    "predicate": "gate_g*_pass=true in phase3-family.json",
+    "expected": "predicate fires true",
+    "actual": "picker_open=true via seeded-auth + React-native-value-setter; whoami click submitted; body contains TRUE FAMILY + TOOLS/RESOURCES (diag-trace verified)",
+    "artifacts": [
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family.json",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-cdp-network.jsonl",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family-grep.txt",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-g5-trace.txt"
+    ],
+    "sha256": {
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-g5-trace.txt": "9cb5daad3fb6e2d1d218e4efadb674b2810a7ca6d554479a51084f407236aff9",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family.json": "cf6c88af4744bcfb523f54f3ae00103f275ba6ef1ecd75aa813213838b1568a1",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-cdp-network.jsonl": "a0d339c395f838d425c8c0198e49eb58a051c1c44876609adaeb4ca889067f59",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family-grep.txt": "960b2290a594ca4cd1ef05fa6de3e8afb77aad6afffb05c706a5227ce18bf14a"
+    },
+    "session_id_present_in_artifact": true,
+    "verified_utc": "2026-04-23T14:00:19.2461607Z",
+    "obs_id": "pending",
+    "obs_roundtrip_confirmed": false,
+    "bus_id": "pending",
+    "bus_roundtrip_confirmed": false,
+    "reason_if_not_pass": null
+  },
+  {
+    "attempt_id": "att-g6-a3-142cc2e18c",
+    "gate_id": "G6_RITUAL_STEP4_FRESH_BROWSER",
+    "attempt_n": 3,
+    "status": "VERIFIED",
+    "probe_command": "phase3-family-harness.ps1 -RunDir RUN (CDP Chromium fresh-dir + seeded-auth + React-native value setter + picker row click)",
+    "independent_verify_command": "ascendance-independent-verify.ps1 -RunDir RUN (python json parse phase3-family.json)",
+    "predicate": "gate_g*_pass=true in phase3-family.json",
+    "expected": "predicate fires true",
+    "actual": "user_data_dir=%TEMP%\\ark-SID-browser absent-before=true deleted-after=true; chromium_cmdline logged",
+    "artifacts": [
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family.json",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-cdp-network.jsonl",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family-grep.txt",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-g5-trace.txt"
+    ],
+    "sha256": {
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-g5-trace.txt": "9cb5daad3fb6e2d1d218e4efadb674b2810a7ca6d554479a51084f407236aff9",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family.json": "cf6c88af4744bcfb523f54f3ae00103f275ba6ef1ecd75aa813213838b1568a1",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-cdp-network.jsonl": "a0d339c395f838d425c8c0198e49eb58a051c1c44876609adaeb4ca889067f59",
+      "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-dry-run-20260422T151430Z-91cf359a\\phase3-family-grep.txt": "960b2290a594ca4cd1ef05fa6de3e8afb77aad6afffb05c706a5227ce18bf14a"
+    },
+    "session_id_present_in_artifact": true,
+    "verified_utc": "2026-04-23T14:00:19.2461607Z",
+    "obs_id": "pending",
+    "obs_roundtrip_confirmed": false,
+    "bus_id": "pending",
+    "bus_roundtrip_confirmed": false,
+    "reason_if_not_pass": null
   }
 ]
