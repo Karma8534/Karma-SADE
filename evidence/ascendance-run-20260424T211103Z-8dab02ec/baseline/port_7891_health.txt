@@ -1,0 +1,13 @@
+# RUN_ID=ascendance-run-20260424T211103Z-8dab02ec
+# PROBE_ID=BASE_7891_HEALTH
+# TIMESTAMP_UTC=2026-04-24T21:11:48.2780585Z
+# COMMAND=Invoke-WebRequest -UseBasicParsing http://127.0.0.1:7891/health -TimeoutSec 10 | Select-Object StatusCode,Content | ConvertTo-Json -Depth 5
+
+{
+    "StatusCode":  200,
+    "Content":  "{\"ok\": true, \"service\": \"cc-server-p1\", \"gmail\": true, \"emergency_independent\": false, \"disable_anthropic\": false, \"latency\": {\"first_token_ms\": null, \"cancel_ms\": null, \"total_ms\": null}, \"lock_held\": false, \"current_proc_pid\": null, \"queue_enabled\": true, \"queue_wait_seconds\": 45.0, \"auto_memory\": {\"enabled\": true, \"db_path\": \"C:\\\\Users\\\\raest\\\\.copilot\\\\session-store.db\", \"last_sync_at\": \"2026-04-24T21:10:48.940021Z\", \"last_ok\": true, \"error\": \"\", \"sessions\": 127, \"turns\": 1765, \"search_rows\": 3523, \"last_reason\": \"interval\"}}"
+}
+
+
+# EXIT_CODE=0
+# SHA256=6C360A8AC3BEC3425F831FCFB5F2E7F7A2FD8419C34B51305217C890BBB89128

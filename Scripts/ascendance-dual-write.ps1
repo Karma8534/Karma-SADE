@@ -55,12 +55,19 @@ if (-not $QueueOnly) {
 }
 
 # Update queue entry state
-$lines = Get-Content $queuePath
+$lines = @()
+if (Test-Path -LiteralPath $queuePath) {
+  $lines = @(Get-Content -LiteralPath $queuePath -ErrorAction SilentlyContinue)
+}
 $idx = $lines.Count - 1
 $entry.obs_id = $obsId
 $entry.bus_id = $busId
 $entry.state = if ($obsOk -and $busOk) { 'confirmed' } else { 'pending' }
-$lines[$idx] = ($entry | ConvertTo-Json -Compress -Depth 3)
+if ($idx -lt 0) {
+  $lines = @(($entry | ConvertTo-Json -Compress -Depth 3))
+} else {
+  $lines[$idx] = ($entry | ConvertTo-Json -Compress -Depth 3)
+}
 Set-Content -Path $queuePath -Value $lines -Encoding UTF8
 
 # Append PROBE_LOG

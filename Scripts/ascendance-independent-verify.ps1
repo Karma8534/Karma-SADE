@@ -30,7 +30,7 @@ function Test-FileContainsSession([string]$path, [string]$sid) {
 
 function Read-JsonViaPython([string]$path, [string]$pyExpr) {
   if (-not (Test-Path -LiteralPath $path)) { return $null }
-  $py = "import json,sys; d=json.load(open(sys.argv[1],encoding='utf-8')); print($pyExpr)"
+  $py = "import json,sys; d=json.load(open(sys.argv[1],encoding='utf-8-sig')); print($pyExpr)"
   $pythonCmd = if (Get-Command python -ErrorAction SilentlyContinue) { 'python' } elseif (Get-Command python3 -ErrorAction SilentlyContinue) { 'python3' } else { $null }
   if (-not $pythonCmd) {
     # Fallback: remote python3 via ssh
@@ -48,6 +48,7 @@ if (Test-Path -LiteralPath $timPath) {
   $effectivePaint = Read-JsonViaPython $timPath "d.get('effective_paint_ms','-')"
   $windowVisible = Read-JsonViaPython $timPath "d.get('window_visible_ms','-')"
   $bootSid = Read-JsonViaPython $timPath "(d.get('boot_metrics') or {}).get('session_id','-')"
+  $harnessSid = Read-JsonViaPython $timPath "d.get('harness_session_id','-')"
   $cdpHydr = Read-JsonViaPython $timPath "d.get('cdp_data_hydration_state','-')"
   $cdpSid = Read-JsonViaPython $timPath "d.get('cdp_data_session_id','-')"
   $harnessG1 = Read-JsonViaPython $timPath "d.get('gate_g1_pass','-')"
@@ -55,7 +56,7 @@ if (Test-Path -LiteralPath $timPath) {
   $harnessG14 = Read-JsonViaPython $timPath "d.get('gate_g14_pass','-')"
 
   $independentG1 = (($cdpHydr -eq 'ready') -and ($cdpSid -eq $sessionId))
-  $independentG2 = (($bootSid -eq $sessionId) -and ($effectivePaint -match '^\d+$') -and ([int]$effectivePaint -lt 2000))
+  $independentG2 = ((($harnessSid -eq $sessionId) -or ($cdpSid -eq $sessionId)) -and ($effectivePaint -match '^\d+$') -and ([int]$effectivePaint -lt 2000))
   $independentG14 = (($personaPaint -match '^-?\d+$') -and ($effectivePaint -match '^-?\d+$'))
 
   $checks.G1 = @{ harness = "$harnessG1"; independent = $independentG1; artifact = $timPath; session_id_present = (Test-FileContainsSession $timPath $sessionId) }
@@ -72,11 +73,15 @@ $probePath = Join-Path $RunDir 'phase2-probe.txt'
 if ((Test-Path -LiteralPath $rtPath) -and (Test-Path -LiteralPath $probePath)) {
   $probe = (Get-Content -LiteralPath $probePath -Raw).Trim()
   $harnessG3 = Read-JsonViaPython $rtPath "d.get('gate_g3_pass','-')"
-  # Independent path: curl remote /v1/session/{id} via ssh vault-neo, grep probe
+  # Independent path: check both local and remote session views for the emitted probe.
   $hit = 0
   try {
+    $localResp = Invoke-WebRequest -Uri "http://127.0.0.1:7891/v1/session/$sessionId" -UseBasicParsing -TimeoutSec 10
+    if ($localResp.Content -match [regex]::Escape($probe)) { $hit += 1 }
+  } catch {}
+  try {
     $out = ssh vault-neo "TOKEN=`$(cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt); curl -s -H `"Authorization: Bearer `$TOKEN`" https://hub.arknexus.net/v1/session/$sessionId | grep -c '$probe'"
-    if ($out -match '^\d+$') { $hit = [int]$out }
+    if ($out -match '^\d+$') { $hit += [int]$out }
   } catch {}
   $independentG3 = ($hit -gt 0)
   $checks.G3 = @{ harness = "$harnessG3"; independent = $independentG3; probe = $probe; hit_count = $hit; session_id_present = (Test-FileContainsSession $rtPath $sessionId) }

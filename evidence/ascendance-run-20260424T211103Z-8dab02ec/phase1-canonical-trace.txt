@@ -1,0 +1,18 @@
+﻿[
+    {
+        "url":  "http://127.0.0.1:7891/memory/wakeup",
+        "status":  200,
+        "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1"
+    },
+    {
+        "url":  "http://127.0.0.1:7891/memory/session",
+        "status":  200,
+        "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1"
+    },
+    {
+        "url":  "http://127.0.0.1:7891/v1/session/8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+        "status":  0,
+        "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+        "error":  "The remote server returned an error: (404) Not Found."
+    }
+]

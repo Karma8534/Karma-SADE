@@ -1,0 +1,72 @@
+[
+  {
+    "gate": "G1_BOOT_DOM_ATTR",
+    "exit_code": 1,
+    "output": "C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\ascendance-dual-write.ps1 : Unable to index into an object of type \r\nSystem.String.\r\n    + CategoryInfo          : InvalidOperation: (:) [ascendance-dual-write.ps1], RuntimeException\r\n    + FullyQualifiedErrorId : CannotIndex,ascendance-dual-write.ps1"
+  },
+  {
+    "gate": "G2_COLD_BOOT_RERUN",
+    "exit_code": 0,
+    "output": "obs_id=31372 bus_id=coord_1777066000730_hsn1 state=confirmed"
+  },
+  {
+    "gate": "G3_PARITY_BROWSER_SCREEN",
+    "exit_code": 0,
+    "output": "obs_id=31373 bus_id=coord_1777066001975_uku0 state=confirmed"
+  },
+  {
+    "gate": "G4_PARITY_STRESS",
+    "exit_code": 0,
+    "output": "obs_id=31374 bus_id=coord_1777066003179_sak1 state=confirmed"
+  },
+  {
+    "gate": "G5_WHOAMI_REAL_UI",
+    "exit_code": 0,
+    "output": "obs_id=31375 bus_id=coord_1777066004353_ea58 state=confirmed"
+  },
+  {
+    "gate": "G6_RITUAL_STEP4_FRESH_BROWSER",
+    "exit_code": 0,
+    "output": "obs_id=31376 bus_id=coord_1777066005657_5uba state=confirmed"
+  },
+  {
+    "gate": "G7_RITUAL_STEP10_FIRST_PAINT",
+    "exit_code": 0,
+    "output": "obs_id=31377 bus_id=coord_1777066006918_uua0 state=confirmed"
+  },
+  {
+    "gate": "G8_RITUAL_UNINTERRUPTED_RECORDING",
+    "exit_code": 0,
+    "output": "obs_id=31378 bus_id=coord_1777066008102_zxtg state=confirmed"
+  },
+  {
+    "gate": "G9_DUAL_WRITE_DISCIPLINE",
+    "exit_code": 0,
+    "output": "obs_id=31379 bus_id=coord_1777066009280_dcg8 state=confirmed"
+  },
+  {
+    "gate": "G10_GIT_AND_MEMORY",
+    "exit_code": 0,
+    "output": "obs_id=31380 bus_id=coord_1777066010455_u9mn state=confirmed"
+  },
+  {
+    "gate": "G11_QUARANTINE_CLEANUP",
+    "exit_code": 0,
+    "output": "obs_id=31381 bus_id=coord_1777066011630_z3z4 state=confirmed"
+  },
+  {
+    "gate": "G12_VAULT_PARITY",
+    "exit_code": 0,
+    "output": "obs_id=31382 bus_id=coord_1777066012845_xbe4 state=confirmed"
+  },
+  {
+    "gate": "G13_FOCUS_GATE_UNLOCK",
+    "exit_code": 0,
+    "output": "obs_id=31383 bus_id=coord_1777066014001_yhl4 state=confirmed"
+  },
+  {
+    "gate": "G14_TRACKER_SCHEMA_ALIGNMENT",
+    "exit_code": 0,
+    "output": "obs_id=31384 bus_id=coord_1777066015229_iiq4 state=confirmed"
+  }
+]

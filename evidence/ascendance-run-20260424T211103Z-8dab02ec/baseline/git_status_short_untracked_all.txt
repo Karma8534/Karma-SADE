@@ -1,0 +1,15 @@
+# RUN_ID=ascendance-run-20260424T211103Z-8dab02ec
+# PROBE_ID=BASE_GIT_STATUS
+# TIMESTAMP_UTC=2026-04-24T21:11:43.3891328Z
+# COMMAND=git status --short --untracked-files=all
+
+?? evidence/ascendance-run-20260424T211103Z-8dab02ec/EVIDENCE_INDEX.json
+?? evidence/ascendance-run-20260424T211103Z-8dab02ec/GAP_MATRIX.md
+?? evidence/ascendance-run-20260424T211103Z-8dab02ec/PROBE_LOG.md
+?? evidence/ascendance-run-20260424T211103Z-8dab02ec/baseline/environment.txt
+?? evidence/ascendance-run-20260424T211103Z-8dab02ec/dual-write-queue.jsonl
+?? evidence/ascendance-run-20260424T211103Z-8dab02ec/session.json
+
+
+# EXIT_CODE=0
+# SHA256=53B7F32CF7E9D57B589EDF0FF36E8C365EDF5F4C99D428D143C2B45D84CA7B8C

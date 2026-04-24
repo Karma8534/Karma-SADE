@@ -1,0 +1,2036 @@
+# RUN_ID=ascendance-run-20260424T211103Z-8dab02ec
+# PROBE_ID=BASE_PROCESSES
+# TIMESTAMP_UTC=2026-04-24T21:11:44.7016925Z
+# COMMAND=Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match "cc_server|Arknexus|Nexus|watchdog|claude-mem|karma|regent|launcher" } | Select-Object ProcessId,Name,CommandLine | ConvertTo-Json -Depth 4
+
+[
+    {
+        "ProcessId":  1844,
+        "Name":  "pwsh.exe",
+        "CommandLine":  "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\"  -NoProfile -ExecutionPolicy Bypass -NonInteractive -File \"C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\start_cc_server.ps1\" \"-HiddenRelaunch\""
+    },
+    {
+        "ProcessId":  8912,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.PythonManager_26.1.240.0_x64__qbz5n2kfra8p0\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\cortex\\julian_cortex_p1.py"
+    },
+    {
+        "ProcessId":  21788,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\"  C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\cortex\\julian_cortex_p1.py"
+    },
+    {
+        "ProcessId":  28044,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  27048,
+        "Name":  "pwsh.exe",
+        "CommandLine":  "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\"  -NoProfile -ExecutionPolicy Bypass -NonInteractive -File \"C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\Start-CortexSync.ps1\""
+    },
+    {
+        "ProcessId":  8000,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  7140,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  28616,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  18684,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  51468,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  9764,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  27920,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  40688,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  58888,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  22900,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  19972,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  44516,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  7580,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  58516,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  54924,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  35348,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  41660,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  54780,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  34812,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  57948,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  13136,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  46404,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  57952,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  52800,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  60012,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  36936,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  42284,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  18248,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  61820,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  53028,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  50296,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  33468,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  21792,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  31416,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  26756,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  59812,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  53992,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  41792,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  57124,
+        "Name":  "powershell.exe",
+        "CommandLine":  "\"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -ExecutionPolicy Bypass -File C:\\Users\\raest\\Documents\\Karma_SADE\\res1\\runtime\\nexus_continuity_watchdog.ps1 "
+    },
+    {
+        "ProcessId":  57040,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  37744,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  56084,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  13860,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  53820,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  52976,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  3104,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  2368,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  20984,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  35804,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  27364,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  2752,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  22764,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  61764,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  54888,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  52812,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  29780,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  45260,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  24956,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  13588,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  45096,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  46356,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  61876,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  6444,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  16340,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  38832,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  19464,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  53344,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  32656,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  37812,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  19700,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  26860,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  55888,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  49252,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  14444,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  23716,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  47216,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  47324,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  6124,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  31908,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  18004,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  63076,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  40624,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  55864,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  22828,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  26384,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  3188,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  30660,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  63584,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  17288,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  61376,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  22724,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  36528,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  63884,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  65664,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  65940,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  66360,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  42668,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  63896,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  67472,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  66620,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  36204,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  68912,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  21264,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  70912,
+        "Name":  "claude.exe",
+        "CommandLine":  "C:\\Users\\raest\\AppData\\Roaming\\Claude\\claude-code\\2.1.111\\claude.exe --output-format stream-json --verbose --input-format stream-json --model claude-haiku-4-5-20251001 --permission-prompt-tool stdio --resume c56a8194-e4e4-4a3e-93ad-a203b546dfb3 --allowedTools mcp__computer-use,mcp__ccd_session__spawn_task,mcp__ccd_session__mark_chapter --setting-sources=user,project,local --permission-mode bypassPermissions --allow-dangerously-skip-permissions --include-partial-messages --plugin-dir C:\\Users\\raest\\AppData\\Roaming\\Claude\\local-agent-mode-sessions\\skills-plugin\\44866520-df5b-437e-88f7-7a28ab7b8e9b\\2c711dfb-8b66-43fd-9e9c-5955abbe8e31 --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\claude-plugins-official\\code-review\\unknown --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\claude-plugins-official\\code-simplifier\\1.0.0 --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\claude-plugins-official\\frontend-design\\unknown --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\claude-plugins-official\\sentry\\1.0.0 --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\claude-plugins-official\\superpowers\\5.0.7 --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\karma-local\\karma-tools\\1.0.0 --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\thedotmack\\claude-mem\\10.4.0 --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\claude-plugins-official\\chrome-devtools-mcp\\0.22.0 --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\claude-plugins-official\\skill-creator\\unknown --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\openai-codex\\codex\\1.0.2 --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\caveman\\caveman\\84cc3c14fa1e --replay-user-messages --settings {}"
+    },
+    {
+        "ProcessId":  71184,
+        "Name":  "node.exe",
+        "CommandLine":  "node C:\\Users\\raest\\.claude\\plugins\\cache\\thedotmack\\claude-mem\\10.4.0\\scripts\\mcp-server.cjs"
+    },
+    {
+        "ProcessId":  70420,
+        "Name":  "node.exe",
+        "CommandLine":  "\"C:\\Program Files\\nodejs\\node.exe\" C:\\Users\\raest\\AppData\\Local\\npm-cache\\_npx\\15c61037b1978c83\\node_modules\\chrome-devtools-mcp\\build\\src\\telemetry\\watchdog\\main.js --parent-pid=70876 --app-version=0.23.0 --os-type=1"
+    },
+    {
+        "ProcessId":  70140,
+        "Name":  "claude.exe",
+        "CommandLine":  "C:\\Users\\raest\\AppData\\Roaming\\Claude\\claude-code\\2.1.111\\claude.exe --output-format stream-json --verbose --input-format stream-json --effort medium --model claude-opus-4-7[1m] --permission-prompt-tool stdio --resume b67951c8-80b1-454e-8dce-81085531f495 --allowedTools mcp__computer-use,mcp__ccd_session__spawn_task,mcp__ccd_session__mark_chapter --setting-sources=user,project,local --permission-mode bypassPermissions --allow-dangerously-skip-permissions --include-partial-messages --plugin-dir C:\\Users\\raest\\AppData\\Roaming\\Claude\\local-agent-mode-sessions\\skills-plugin\\44866520-df5b-437e-88f7-7a28ab7b8e9b\\2c711dfb-8b66-43fd-9e9c-5955abbe8e31 --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\claude-plugins-official\\code-review\\unknown --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\claude-plugins-official\\code-simplifier\\1.0.0 --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\claude-plugins-official\\frontend-design\\unknown --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\claude-plugins-official\\sentry\\1.0.0 --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\claude-plugins-official\\superpowers\\5.0.7 --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\karma-local\\karma-tools\\1.0.0 --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\thedotmack\\claude-mem\\10.4.0 --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\claude-plugins-official\\chrome-devtools-mcp\\0.22.0 --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\claude-plugins-official\\skill-creator\\unknown --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\openai-codex\\codex\\1.0.2 --plugin-dir C:\\Users\\raest\\.claude\\plugins\\cache\\caveman\\caveman\\84cc3c14fa1e --replay-user-messages --settings {}"
+    },
+    {
+        "ProcessId":  67872,
+        "Name":  "node.exe",
+        "CommandLine":  "node C:\\Users\\raest\\.claude\\plugins\\cache\\thedotmack\\claude-mem\\10.4.0\\scripts\\mcp-server.cjs"
+    },
+    {
+        "ProcessId":  72328,
+        "Name":  "node.exe",
+        "CommandLine":  "\"C:\\Program Files\\nodejs\\node.exe\" C:\\Users\\raest\\AppData\\Local\\npm-cache\\_npx\\15c61037b1978c83\\node_modules\\chrome-devtools-mcp\\build\\src\\telemetry\\watchdog\\main.js --parent-pid=72164 --app-version=0.23.0 --os-type=1"
+    },
+    {
+        "ProcessId":  53168,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  41784,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  69476,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  66240,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  2640,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  41216,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  4544,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  69540,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  25844,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  44704,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  73128,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  59920,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  74192,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  75360,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  67784,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  76552,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  76488,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  38620,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  75520,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  52300,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  69384,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  78372,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  79272,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  79232,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  73032,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  39248,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  77896,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  79124,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  80856,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  80240,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  75828,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  81324,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  82656,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  75324,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  78384,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  78908,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  72776,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  344,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  83532,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  84620,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  64424,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  77788,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  74164,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  86532,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  88532,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  87320,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  89584,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  89528,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  87016,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  74980,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  87736,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  91496,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  84340,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  83272,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  88940,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  89740,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  94320,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  80180,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  86024,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  94820,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  94892,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  95444,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  94632,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  8136,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  94252,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  96780,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  98084,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  96364,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  80216,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  98856,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  95264,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  96656,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  98728,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  89228,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  101216,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  101868,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  98772,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  102588,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  101932,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  97316,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  104352,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  102404,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  105384,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  101680,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  39304,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  101620,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  105340,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  102212,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  107308,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  80928,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  98976,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  108452,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  84236,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  97620,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  108092,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  86716,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  97220,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  109852,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  111628,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  112508,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  110800,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  113024,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  108880,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  114096,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  114816,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  115184,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  116460,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  114772,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  114724,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  113992,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  117112,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  112336,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  118128,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  118768,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  117552,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  115728,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  112744,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  81108,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  109100,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  118392,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  122304,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  106280,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  120828,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  117020,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  123040,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  124292,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  122032,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  123224,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  120392,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  122952,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  127932,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  126180,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  125460,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  124620,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  120448,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  128416,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  123388,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  129840,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  121228,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  128660,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  125188,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  131292,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  109452,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  129668,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  121356,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  128528,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  132316,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  131788,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  133628,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  131528,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  132964,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  132844,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  133752,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  130792,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  130588,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  136720,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  134280,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  137780,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  138336,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  136372,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  138960,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  133076,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  125356,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  138444,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  141260,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  141028,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  143008,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  141352,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  142284,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  142168,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  140600,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  137536,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  139512,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  132124,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  132920,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  139432,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  144816,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  137200,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  126540,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  147324,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  146700,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  147200,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  143800,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  143296,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  147828,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  153220,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  149792,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  141820,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  150176,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  147800,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  152484,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  150216,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  149728,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  150984,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  149112,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  148976,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  143020,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  152824,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  154568,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  149100,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  144868,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  142780,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  155972,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  150952,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  153024,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  153624,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  30824,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  155164,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  155320,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  155216,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  158944,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  157176,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  159824,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  152348,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  156004,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  160988,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  152584,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  159596,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  162244,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  161948,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  162180,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  157124,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  163256,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  161820,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  84440,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  81148,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  13036,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  168076,
+        "Name":  "node.exe",
+        "CommandLine":  "\"C:\\Program Files\\nodejs\\node.exe\" --experimental-vm-modules C:\\Users\\raest\\AppData\\Local\\Temp\\.tmpXGlWBe\\kernel.js --session-id aeaba4acb2d64e598f6630aa50e99e58 --working-dir C:\\Users\\raest\\Documents\\Karma_SADE"
+    },
+    {
+        "ProcessId":  55352,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  163912,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  170252,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  34360,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  170488,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  167872,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  160536,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  160740,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  167952,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  52432,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  169652,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  165532,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  164080,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  157136,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  169148,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  165844,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  84616,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  137232,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  153860,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  161156,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  160716,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  163468,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  172872,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  173112,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  175704,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  172580,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  157320,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  142344,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  176620,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  179400,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  179956,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  75816,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  166724,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  164652,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  176068,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  175452,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  180076,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  174388,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  6936,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  179096,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  165572,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  156204,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  173124,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  148148,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  176768,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  174116,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  170180,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  178092,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  181728,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  156396,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\cc_server_p1.py"
+    },
+    {
+        "ProcessId":  177132,
+        "Name":  "arknexusv6.exe",
+        "CommandLine":  "\"C:\\Users\\raest\\Documents\\Karma_SADE\\nexus-tauri\\src-tauri\\target\\release\\arknexusv6.exe\" "
+    },
+    {
+        "ProcessId":  171328,
+        "Name":  "msedgewebview2.exe",
+        "CommandLine":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\147.0.3912.72\\msedgewebview2.exe\" --embedded-browser-webview=1 --webview-exe-name=arknexusv6.exe --webview-exe-version=0.1.0 --user-data-dir=\"C:\\Users\\raest\\AppData\\Local\\net.arknexus.v6\\EBWebView\" --noerrdialogs --embedded-browser-webview-dpi-awareness=2 --autoplay-policy=no-user-gesture-required --disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --remote-allow-origins=* --remote-debugging-port=9222 --lang=en-US --mojo-named-platform-channel-pipe=177132.41544.10808792477780293433 /pfhostedapp:56324fd2b3051cb514a2b670236dbf893c5d181c"
+    },
+    {
+        "ProcessId":  176548,
+        "Name":  "msedgewebview2.exe",
+        "CommandLine":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\147.0.3912.72\\msedgewebview2.exe\" --type=crashpad-handler --user-data-dir=C:\\Users\\raest\\AppData\\Local\\net.arknexus.v6\\EBWebView /prefetch:4 /pfhostedapp:56324fd2b3051cb514a2b670236dbf893c5d181c --monitor-self-annotation=ptype=crashpad-handler --database=C:\\Users\\raest\\AppData\\Local\\net.arknexus.v6\\EBWebView\\Crashpad --annotation=IsOfficialBuild=1 --annotation=channel= --annotation=chromium-version=147.0.7727.102 \"--annotation=exe=C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\147.0.3912.72\\msedgewebview2.exe\" --annotation=plat=Win64 \"--annotation=prod=Edge WebView2\" --annotation=ver=147.0.3912.72 --initial-client-data=0x184,0x188,0x18c,0x160,0xa0,0x7fff36050d58,0x7fff36050d64,0x7fff36050d70"
+    },
+    {
+        "ProcessId":  181044,
+        "Name":  "msedgewebview2.exe",
+        "CommandLine":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\147.0.3912.72\\msedgewebview2.exe\" --type=gpu-process --noerrdialogs --user-data-dir=\"C:\\Users\\raest\\AppData\\Local\\net.arknexus.v6\\EBWebView\" --webview-exe-name=arknexusv6.exe --webview-exe-version=0.1.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --gpu-preferences=SAAAAAAAAADgAAAEAAAAAAAAAAAAAGAAAQAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --startup-read-main-dll --metrics-shmem-handle=1788,i,446689107952732082,17908276424823478788,262144 --field-trial-handle=1928,i,10327613663926972943,14296413626191833194,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1908,i,2871485904566533637,5448662532861374603,4 --trace-process-track-uuid=3190708988185955192 --mojo-platform-channel-handle=1904 /prefetch:2 /pfhostedapp:56324fd2b3051cb514a2b670236dbf893c5d181c"
+    },
+    {
+        "ProcessId":  168864,
+        "Name":  "msedgewebview2.exe",
+        "CommandLine":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\147.0.3912.72\\msedgewebview2.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --noerrdialogs --user-data-dir=\"C:\\Users\\raest\\AppData\\Local\\net.arknexus.v6\\EBWebView\" --webview-exe-name=arknexusv6.exe --webview-exe-version=0.1.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --startup-read-main-dll --metrics-shmem-handle=2236,i,9771193424291424527,14264268573037419913,524288 --field-trial-handle=1928,i,10327613663926972943,14296413626191833194,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1908,i,2871485904566533637,5448662532861374603,4 --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2388 /prefetch:11 /pfhostedapp:56324fd2b3051cb514a2b670236dbf893c5d181c"
+    },
+    {
+        "ProcessId":  168912,
+        "Name":  "msedgewebview2.exe",
+        "CommandLine":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\147.0.3912.72\\msedgewebview2.exe\" --type=utility --utility-sub-type=storage.mojom.StorageService --lang=en-US --service-sandbox-type=service --noerrdialogs --user-data-dir=\"C:\\Users\\raest\\AppData\\Local\\net.arknexus.v6\\EBWebView\" --webview-exe-name=arknexusv6.exe --webview-exe-version=0.1.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --startup-read-main-dll --metrics-shmem-handle=2220,i,7078578899235611607,17038946573062139440,524288 --field-trial-handle=1928,i,10327613663926972943,14296413626191833194,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1908,i,2871485904566533637,5448662532861374603,4 --trace-process-track-uuid=3190708990060038890 --mojo-platform-channel-handle=2408 /prefetch:13 /pfhostedapp:56324fd2b3051cb514a2b670236dbf893c5d181c"
+    },
+    {
+        "ProcessId":  183964,
+        "Name":  "msedgewebview2.exe",
+        "CommandLine":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\147.0.3912.72\\msedgewebview2.exe\" --type=renderer --noerrdialogs --user-data-dir=\"C:\\Users\\raest\\AppData\\Local\\net.arknexus.v6\\EBWebView\" --webview-exe-name=arknexusv6.exe --webview-exe-version=0.1.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --autoplay-policy=no-user-gesture-required --remote-debugging-port=9222 --video-capture-use-gpu-memory-buffer --lang=en-US --js-flags=--expose-gc --device-scale-factor=1 --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=5 --time-ticks-at-unix-epoch=-1776950786514007 --launch-time-ticks=113800571327 --ssd-no-pressure-read-main-dll --metrics-shmem-handle=4404,i,3532779110593728680,6099159157573398547,2097152 --field-trial-handle=1928,i,10327613663926972943,14296413626191833194,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1908,i,2871485904566533637,5448662532861374603,4 --trace-process-track-uuid=3190708990997080739 --mojo-platform-channel-handle=4368 /pfhostedapp:56324fd2b3051cb514a2b670236dbf893c5d181c /prefetch:1"
+    },
+    {
+        "ProcessId":  181532,
+        "Name":  "msedgewebview2.exe",
+        "CommandLine":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\147.0.3912.72\\msedgewebview2.exe\" --type=renderer --noerrdialogs --user-data-dir=\"C:\\Users\\raest\\AppData\\Local\\net.arknexus.v6\\EBWebView\" --webview-exe-name=arknexusv6.exe --webview-exe-version=0.1.0 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --autoplay-policy=no-user-gesture-required --remote-debugging-port=9222 --video-capture-use-gpu-memory-buffer --lang=en-US --js-flags=--expose-gc --device-scale-factor=1 --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=6 --time-ticks-at-unix-epoch=-1776950786514007 --launch-time-ticks=113800770705 --skip-read-main-dll --metrics-shmem-handle=5040,i,1734047324265029941,2178761173986187818,2097152 --field-trial-handle=1928,i,10327613663926972943,14296413626191833194,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1908,i,2871485904566533637,5448662532861374603,4 --trace-process-track-uuid=3190708991934122588 --mojo-platform-channel-handle=5060 /pfhostedapp:56324fd2b3051cb514a2b670236dbf893c5d181c /prefetch:1"
+    },
+    {
+        "ProcessId":  45564,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  183300,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" \"C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\cortex\\sync_k2_to_p1.py\""
+    },
+    {
+        "ProcessId":  182248,
+        "Name":  "python.exe",
+        "CommandLine":  "\"C:\\Python314\\python.exe\" C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\karma_persistent.py "
+    },
+    {
+        "ProcessId":  177532,
+        "Name":  "pwsh.exe",
+        "CommandLine":  "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;\n$ErrorActionPreference=\u0027Continue\u0027\n$repo=\u0027C:\\Users\\raest\\Documents\\Karma_SADE\u0027\n$run=\u0027C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\u0027\n$base=Join-Path $run \u0027baseline\u0027\nNew-Item -ItemType Directory -Force -Path $base | Out-Null\nfunction Run-Probe($id,$cmd,$file){\n  $path=Join-Path $base $file\n  $ts=(Get-Date).ToUniversalTime().ToString(\u0027o\u0027)\n  $output = \u0026 powershell -NoProfile -ExecutionPolicy Bypass -Command $cmd 2\u003e\u00261\n  $ec=$LASTEXITCODE; if($null -eq $ec){$ec=0}\n  @(\\\"# RUN_ID=ascendance-run-20260424T211103Z-8dab02ec\\\",\\\"# PROBE_ID=$id\\\",\\\"# TIMESTAMP_UTC=$ts\\\",\\\"# COMMAND=$cmd\\\",\u0027\u0027,($output | Out-String),\u0027\u0027,\\\"# EXIT_CODE=$ec\\\") | Set-Content -LiteralPath $path -Encoding UTF8\n  $sha=(Get-FileHash -Algorithm SHA256 -LiteralPath $path).Hash\n  Add-Content -LiteralPath $path -Value \\\"# SHA256=$sha\\\"\n  Add-Content -LiteralPath (Join-Path $run \u0027PROBE_LOG.md\u0027) -Value \\\"`n- RUN_ID=ascendance-run-20260424T211103Z-8dab02ec | $id | $ts | command=$cmd | exit=$ec | evidence=$path | sha256=$sha\\\"\n}\nRun-Probe \u0027BASE_ENV\u0027 \u0027Get-Date -Format o; hostname; whoami; Get-Location; git branch --show-current; git remote -v; git rev-parse HEAD; git rev-parse \\\"@{u}\\\"\u0027 \u0027environment.txt\u0027\nRun-Probe \u0027BASE_GIT_STATUS\u0027 \u0027git status --short --untracked-files=all\u0027 \u0027git_status_short_untracked_all.txt\u0027\nRun-Probe \u0027BASE_IGNORED\u0027 \u0027git status --ignored --short --untracked-files=all -- res1 runtime tmp evidence Scripts frontend hub-bridge nexus-tauri\u0027 \u0027ignored_relevant_inventory.txt\u0027\nRun-Probe \u0027BASE_PROCESSES\u0027 \u0027Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match \\\"cc_server|Arknexus|Nexus|watchdog|claude-mem|karma|regent|launcher\\\" } | Select-Object ProcessId,Name,CommandLine | ConvertTo-Json -Depth 4\u0027 \u0027process_list_relevant.txt\u0027\nRun-Probe \u0027BASE_VERIFIER_HASHES\u0027 \u0027Get-ChildItem Scripts -File -Include *ascendance*.ps1,*harness*.ps1,ascendance-pre-commit.sh,cc_server_p1.py,Start-CCServer.ps1,auto_memory_bridge.py | ForEach-Object { $h=Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName; \\\"$($h.Hash)  $($_.FullName)\\\" }\u0027 \u0027verifier_harness_hashes.txt\u0027\nRun-Probe \u0027BASE_DESKTOP_HASHES\u0027 \u0027Get-ChildItem -Path nexus-tauri\\src-tauri\\target\\release -Filter *.exe -ErrorAction SilentlyContinue | ForEach-Object { $h=Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName; \\\"$($h.Hash)  $($_.FullName)\\\" }\u0027 \u0027desktop_exe_hashes.txt\u0027\nRun-Probe \u0027BASE_FRONTEND_HASHES\u0027 \u0027Get-ChildItem -Path frontend\\out -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 200 | ForEach-Object { $h=Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName; \\\"$($h.Hash)  $($_.FullName)\\\" }\u0027 \u0027frontend_build_hashes.txt\u0027\nRun-Probe \u0027BASE_7891_HEALTH\u0027 \u0027Invoke-WebRequest -UseBasicParsing http://127.0.0.1:7891/health -TimeoutSec 10 | Select-Object StatusCode,Content | ConvertTo-Json -Depth 5\u0027 \u0027port_7891_health.txt\u0027\nRun-Probe \u0027BASE_37782_HEALTH\u0027 \u0027Invoke-WebRequest -UseBasicParsing http://127.0.0.1:37782/health -TimeoutSec 10 | Select-Object StatusCode,Content | ConvertTo-Json -Depth 5\u0027 \u0027port_37782_health.txt\u0027\nRun-Probe \u0027BASE_HUB_HEALTH\u0027 \u0027Invoke-WebRequest -UseBasicParsing https://hub.arknexus.net/health -TimeoutSec 20 | Select-Object StatusCode,Content | ConvertTo-Json -Depth 5\u0027 \u0027hub_health.txt\u0027\nRun-Probe \u0027BASE_FINAL_GATE\u0027 \u0027powershell -NoProfile -ExecutionPolicy Bypass -File C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\ascendance-final-gate.ps1 -RunDir C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\u0027 \u0027current_final_gate_baseline.txt\u0027\nRun-Probe \u0027BASE_RESHIP\u0027 \u0027powershell -NoProfile -ExecutionPolicy Bypass -File C:\\Users\\raest\\Documents\\Karma_SADE\\Scripts\\ascendance-reship-audit.ps1 -RunDir C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\u0027 \u0027current_reship_audit_baseline.txt\u0027\n$results=@{run_id=\u0027ascendance-run-20260424T211103Z-8dab02ec\u0027; baseline_utc=(Get-Date).ToUniversalTime().ToString(\u0027o\u0027); files=(Get-ChildItem $base -File | % FullName)}\n$results | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $base \u0027baseline_results.json\u0027) -Encoding UTF8\nGet-ChildItem $base -File | Select-Object Name,Length,LastWriteTime\""
+    },
+    {
+        "ProcessId":  183956,
+        "Name":  "powershell.exe",
+        "CommandLine":  "\"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -ExecutionPolicy Bypass -Command \"Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match \\\"cc_server|Arknexus|Nexus|watchdog|claude-mem|karma|regent|launcher\\\" } | Select-Object ProcessId,Name,CommandLine | ConvertTo-Json -Depth 4\""
+    }
+]
+
+
+# EXIT_CODE=0
+# SHA256=5398F954FED8C88986AACF1E9BB938457B2C743189024AB8FB1E19A5909DF608

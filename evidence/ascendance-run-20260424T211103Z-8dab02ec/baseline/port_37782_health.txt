@@ -1,0 +1,13 @@
+# RUN_ID=ascendance-run-20260424T211103Z-8dab02ec
+# PROBE_ID=BASE_37782_HEALTH
+# TIMESTAMP_UTC=2026-04-24T21:11:48.6482571Z
+# COMMAND=Invoke-WebRequest -UseBasicParsing http://127.0.0.1:37782/health -TimeoutSec 10 | Select-Object StatusCode,Content | ConvertTo-Json -Depth 5
+
+{
+    "StatusCode":  200,
+    "Content":  "{\"status\":\"ok\",\"timestamp\":1777065109348}"
+}
+
+
+# EXIT_CODE=0
+# SHA256=E3586600CC55367E3C26A9A12C8A62AEBBD26239A82DA8BA0ACE0832EA02AF83

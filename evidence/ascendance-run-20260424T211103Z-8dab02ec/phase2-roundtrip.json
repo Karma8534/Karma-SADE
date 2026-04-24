@@ -1,0 +1,15 @@
+﻿{
+    "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "timestamp":  "2026-04-24T21:20:00.9436347Z",
+    "probe_local_to_remote":  "PARITY-PROBE-8dab02ec-7282-4da4-9c9f-f1a967e244f1-20260424T211951001Z",
+    "probe_remote_to_local":  "PARITY-PROBE-REV-8dab02ec-7282-4da4-9c9f-f1a967e244f1-20260424T211952022Z",
+    "local_to_remote_ms":  1012,
+    "remote_to_local_ms":  459,
+    "deadline_ms":  5000,
+    "local_to_remote_within_deadline":  true,
+    "remote_to_local_within_deadline":  true,
+    "session_id_match":  true,
+    "history_match":  true,
+    "gate_g3_probe_emitted":  true,
+    "gate_g3_pass":  true
+}

@@ -1,0 +1,9 @@
+# RUN_ID=ascendance-run-20260424T211103Z-8dab02ec
+# PROBE_ID=BASE_VERIFIER_HASHES
+# TIMESTAMP_UTC=2026-04-24T21:11:46.8533556Z
+# COMMAND=Get-ChildItem Scripts -File -Include *ascendance*.ps1,*harness*.ps1,ascendance-pre-commit.sh,cc_server_p1.py,Start-CCServer.ps1,auto_memory_bridge.py | ForEach-Object { $h=Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName; "$($h.Hash)  $($_.FullName)" }
+
+
+
+# EXIT_CODE=0
+# SHA256=5EDC8FFC5E3B37097C48F119F646DA0F09DAF3F227A9C6D97C28F1A7EC8B34BA

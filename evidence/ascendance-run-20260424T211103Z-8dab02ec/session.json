@@ -1,0 +1,26 @@
+{
+    "mode":  "real",
+    "session_start_utc":  "2026-04-24T21:11:03Z",
+    "plan_sha256":  "97D92B94EE1C0436B662D7B3369925F4B0415A0DEA74205FD675502C0754056D",
+    "directive_sha256":  "9F776E1AE9182734A5BAC8E103922873C18D116950DB702B491DD818A224F2EB",
+    "directive_path":  "docs/ForColby/ascendance-directive-v3.md",
+    "launcher_path":  "docs/ForColby/ascendance-launcher-v3-hardened.md",
+    "SESSION_ID":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "operator":  "CC (Ascendant)",
+    "snapshots":  {
+                      ".git\\hooks\\pre-commit":  "37E2153476FDD268946FB6265C611750CDD86CB42DA430DAA1C3DDC71535E285",
+                      "Scripts\\ascendance-init-run.ps1":  "6B711F48237A8D71FD2024942A2062E19741AA532BA22930D194E937F6255610",
+                      ".claude\\settings.local.json":  "C97B55A2ADDC593536255B3579FC4842BAE14E127E6A98BA147F9C6193A0AAC4",
+                      "Scripts\\phase1-cold-boot-harness.ps1":  "12011AD6B26CBB83B7EBCAB0B046222357626B41D84F564A6BA5AB137C95B389",
+                      "Scripts\\phase2-parity-harness.ps1":  "E5DC5944F9C4D2A75776DE18B098D84EAA4F491A74130F48DC76EADC6175A6E3",
+                      "Scripts\\ascendance-preflight.ps1":  "03EA471AB91A23B2FE1ABD307EBA951B5F5506804910F335408575F7389E4B10",
+                      "Scripts\\phase3-family-harness.ps1":  "CD0641F8A36A8E1B8BCF90EB981731F4E6A88C16848DAAD21028BD4F5DE5C97A",
+                      "Scripts\\ascendance-drain-queue.ps1":  "13658F7B9866B906FEFAB9763B423E786EA6854E6E7A693C20D573231D209C7F",
+                      "Scripts\\ascendance-dual-write.ps1":  "10762CE2A3C333E8E8FC49B129D976C90A8C7D3BF4ACB82800FCA6A747628C2F",
+                      "Scripts\\ascendance-ritual-harness.ps1":  "5B46519D2F31FBD67231637B794928F4AB37049788811CEF791C3AA2B8491FF1",
+                      "Scripts\\ascendance-final-gate.ps1":  "FC7B31BE35969485C03B963EDA495517B1D7E21767D966EF9CF3ABCA134A8744"
+                  },
+    "launcher_sha256":  "C4F2DEDC4D58E34D9A16E9D4D92DD30D12C49EDEA7AB7D07681F5EAFB5858871",
+    "run_id":  "20260424T211103Z-8dab02ec",
+    "plan_path":  ".gsd/phase-ascendance-build-PLAN.md"
+}

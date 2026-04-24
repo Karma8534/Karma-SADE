@@ -981,3 +981,14 @@ next: verify running process/window title and continuity behavior remain stable
 - vault_parity_sha: 1305b17a56d4f744704d93544bf4a052d3b1bf79f29c9201bcba249f4c0e5b59
 - ritual_recording: ordered png sequence step-01 through step-12
 - SESSION_ID: 9da3b561-d4a5-4882-9656-09cda8936e49 | 2026-04-24T21:04:13.7400375Z | Refreshed re-ship audit evidence hashes after final G28 rerun and redacted hub token from CDP network trace.
+
+## Ascendance Run 20260424T211103Z-8dab02ec
+
+- session_id: 8dab02ec-7282-4da4-9c9f-f1a967e244f1
+- started_utc: 2026-04-24T21:11:03Z
+- commit_sha: 27391e9cbbcfc24366f20a216a2b4143abb52cc6
+- run_dir: C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T211103Z-8dab02ec
+- gates_verified: G1 G2 G3 G4 G5 G6 G7 G8 G9 G10 G11 G12 G13 G14
+- dual_writes: confirmed
+- vault_parity_sha: 1305b17a56d4f744704d93544bf4a052d3b1bf79f29c9201bcba249f4c0e5b59
+- ritual_recording: ordered png sequence step-01 through step-12

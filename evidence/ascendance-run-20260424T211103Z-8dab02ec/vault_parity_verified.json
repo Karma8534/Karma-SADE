@@ -1,0 +1,8 @@
+{
+  "verified": true,
+  "run_id": "ascendance-run-20260424T211103Z-8dab02ec",
+  "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+  "checked_at_utc": "2026-04-24T21:40:55.1200463Z",
+  "compose_sha": "1305b17a56d4f744704d93544bf4a052d3b1bf79f29c9201bcba249f4c0e5b59",
+  "source": "ascendance-reship-audit mounted_volume_sha_expected=true"
+}

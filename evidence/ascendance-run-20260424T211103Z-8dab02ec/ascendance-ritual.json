@@ -1,0 +1,89 @@
+﻿{
+    "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "ritual_uuid":  "634800a0-b3b0-4417-b881-dfebd51e7510",
+    "ritual_tag":  "ASCENDANCE-RITUAL-8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "started_utc":  "2026-04-24T21:22:25.2076227Z",
+    "steps":  [
+                  {
+                      "step":  1,
+                      "action":  "local_send_ritual",
+                      "message":  "ASCENDANCE-RITUAL-8dab02ec-7282-4da4-9c9f-f1a967e244f1-2026-04-24T21:22:25Z -- remember the phrase: \"634800a0-b3b0-4417-b881-dfebd51e7510\"",
+                      "ok":  true,
+                      "utc":  "2026-04-24T21:22:48.4922856Z"
+                  },
+                  {
+                      "step":  2,
+                      "action":  "local_ack",
+                      "ok":  true,
+                      "utc":  "2026-04-24T21:22:48.5929094Z"
+                  },
+                  {
+                      "step":  3,
+                      "action":  "close_julian",
+                      "ok":  true,
+                      "utc":  "2026-04-24T21:22:50.2428529Z"
+                  },
+                  {
+                      "step":  4,
+                      "action":  "open_hub_fresh_browser",
+                      "user_data_dir":  "C:\\Users\\raest\\AppData\\Local\\Temp\\ark-8dab02ec-7282-4da4-9c9f-f1a967e244f1-ritual-browser",
+                      "ok":  true,
+                      "utc":  "2026-04-24T21:22:53.3476684Z"
+                  },
+                  {
+                      "step":  5,
+                      "action":  "hub_recall_prompt",
+                      "ok":  true,
+                      "utc":  "2026-04-24T21:23:10.4334360Z"
+                  },
+                  {
+                      "step":  6,
+                      "action":  "hub_uuid_match",
+                      "ok":  true,
+                      "utc":  "2026-04-24T21:23:10.5361594Z"
+                  },
+                  {
+                      "step":  7,
+                      "action":  "close_browser_and_delete_dir",
+                      "dir_deleted":  true,
+                      "ok":  true,
+                      "utc":  "2026-04-24T21:23:13.0517914Z"
+                  },
+                  {
+                      "step":  8,
+                      "action":  "wait_10s",
+                      "ok":  true,
+                      "utc":  "2026-04-24T21:23:23.1345194Z"
+                  },
+                  {
+                      "step":  9,
+                      "action":  "reopen_julian",
+                      "ok":  true,
+                      "utc":  "2026-04-24T21:23:27.2520660Z"
+                  },
+                  {
+                      "step":  10,
+                      "action":  "g7_first_paint_ritual_in_history",
+                      "ok":  true,
+                      "utc":  "2026-04-24T21:23:27.5223885Z"
+                  },
+                  {
+                      "step":  11,
+                      "action":  "local_recall_prompt",
+                      "ok":  true,
+                      "utc":  "2026-04-24T21:23:44.7766668Z"
+                  },
+                  {
+                      "step":  12,
+                      "action":  "local_uuid_match",
+                      "ok":  true,
+                      "utc":  "2026-04-24T21:23:44.8585806Z"
+                  }
+              ],
+    "ended_utc":  "2026-04-24T21:23:44.9513307Z",
+    "step6_uuid_match":  true,
+    "step10_first_paint_ritual":  true,
+    "step12_uuid_match":  true,
+    "gate_g7_pass":  true,
+    "gate_g6_pass_ritual_segment":  true
+}

@@ -1,0 +1,87 @@
+﻿{
+    "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "session_start_utc":  "2026-04-24T21:11:03Z",
+    "mode":  "pngseq",
+    "framerate":  5,
+    "start_utc":  "2026-04-24T21:22:20.3245721Z",
+    "steps":  [
+                  {
+                      "step":  1,
+                      "utc":  "2026-04-24T21:22:48.3202009Z",
+                      "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+                      "artifact":  "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-01.png"
+                  },
+                  {
+                      "step":  2,
+                      "utc":  "2026-04-24T21:22:48.5052339Z",
+                      "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+                      "artifact":  "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-02.png"
+                  },
+                  {
+                      "step":  3,
+                      "utc":  "2026-04-24T21:22:50.1644654Z",
+                      "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+                      "artifact":  "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-03.png"
+                  },
+                  {
+                      "step":  4,
+                      "utc":  "2026-04-24T21:22:53.2735985Z",
+                      "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+                      "artifact":  "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-04.png"
+                  },
+                  {
+                      "step":  5,
+                      "utc":  "2026-04-24T21:23:10.3608909Z",
+                      "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+                      "artifact":  "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-05.png"
+                  },
+                  {
+                      "step":  6,
+                      "utc":  "2026-04-24T21:23:10.4419923Z",
+                      "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+                      "artifact":  "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-06.png"
+                  },
+                  {
+                      "step":  7,
+                      "utc":  "2026-04-24T21:23:12.9892164Z",
+                      "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+                      "artifact":  "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-07.png"
+                  },
+                  {
+                      "step":  8,
+                      "utc":  "2026-04-24T21:23:23.0647278Z",
+                      "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+                      "artifact":  "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-08.png"
+                  },
+                  {
+                      "step":  9,
+                      "utc":  "2026-04-24T21:23:27.1707089Z",
+                      "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+                      "artifact":  "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-09.png"
+                  },
+                  {
+                      "step":  10,
+                      "utc":  "2026-04-24T21:23:27.4393826Z",
+                      "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+                      "artifact":  "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-10.png"
+                  },
+                  {
+                      "step":  11,
+                      "utc":  "2026-04-24T21:23:44.6966994Z",
+                      "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+                      "artifact":  "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-11.png"
+                  },
+                  {
+                      "step":  12,
+                      "utc":  "2026-04-24T21:23:44.7887259Z",
+                      "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+                      "artifact":  "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-12.png"
+                  }
+              ],
+    "end_utc":  "2026-04-24T21:23:44.8788443Z",
+    "max_gap_s":  17.257316799999998,
+    "monotonic":  true,
+    "gap_ok":  true,
+    "within_session_window":  true,
+    "gate_g8_pass":  true
+}

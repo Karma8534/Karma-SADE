@@ -1,0 +1,52 @@
+﻿{
+    "session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "timestamp":  "2026-04-24T21:19:39.2175989Z",
+    "window_visible_ms":  116,
+    "persona_paint_ms":  392,
+    "effective_paint_ms":  508,
+    "wall_clock_ms":  3473,
+    "paint_deadline_ms":  2000,
+    "paint_within_deadline":  true,
+    "boot_metrics":  {
+                         "timestamp":  "2026-04-24T21:19:36.965Z",
+                         "session_id":  "b3763079-3b48-4960-999d-7b82c7c0f5d8",
+                         "persona_block_preview":  "**KARMA BOOT**\nIdentity: Karma\n\nAAAK WAKEUP | Nexus continuity\n* [ARCHON] CC state OK | ge:17min | 2026-04-24T21:07:05Z: CC ARCHON CHECKPOINT [2026-04-24T21:07:05Z] State: OK | Snapshot ge: 17min (ts:",
+                         "persona_block_length":  341,
+                         "history_turn_count":  3,
+                         "history_turns":  [
+                                               {
+                                                   "role":  "karma",
+                                                   "content_preview":  "I’ll run live probes directly via available Nexus routes/tools and report exact blockers with command-level errors if an"
+                                               },
+                                               {
+                                                   "role":  "user",
+                                                   "content_preview":  "hiya Karma"
+                                               },
+                                               {
+                                                   "role":  "karma",
+                                                   "content_preview":  "Karma online. Ready."
+                                               }
+                                           ],
+                         "timing":  {
+                                        "window_visible_ms":  0,
+                                        "boot_fetch_start_ms":  0,
+                                        "boot_fetch_end_ms":  392,
+                                        "persona_paint_ms":  392
+                                    },
+                         "hydration_state":  "ready",
+                         "degraded_reason":  null,
+                         "canonical_endpoints_called":  [
+                                                            "/memory/session",
+                                                            "/memory/wakeup",
+                                                            "/v1/session/b3763079-3b48-4960-999d-7b82c7c0f5d8"
+                                                        ]
+                     },
+    "boot_metrics_source":  "cdp_localstorage",
+    "cdp_data_hydration_state":  "ready",
+    "cdp_data_session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "canonical_session_id":  "b3763079-3b48-4960-999d-7b82c7c0f5d8",
+    "harness_session_id":  "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "gate_g1_pass":  true,
+    "gate_g2_pass":  true,
+    "gate_g14_pass":  true
+}

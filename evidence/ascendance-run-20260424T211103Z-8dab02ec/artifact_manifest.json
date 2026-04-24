@@ -1,0 +1,128 @@
+[
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\phase1-first-frame.png",
+    "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "sha256": "864bc00560d0455b99c12f0229d6b54c6a8f9bffcf59bda855d015317464e245",
+    "kind": "binary",
+    "note": "session_id covered by artifact_manifest"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\phase2-parity.png",
+    "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "sha256": "c1b3e6c2d020550c0a9d921d6967d16df219a64f83dcf6c4bd5e79eefef924e7",
+    "kind": "binary",
+    "note": "session_id covered by artifact_manifest"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\phase3-whoami.png",
+    "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "sha256": "c6938a02dc095e61330b422f7598244f04aab6672d15dcdcbb7607d295314ce4",
+    "kind": "binary",
+    "note": "session_id covered by artifact_manifest"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\phase3-g5-trace.txt",
+    "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "sha256": "1afeb8446c6bb48899d4a0d34123b94ce99d1e709339d2cdff01e8070f68d483",
+    "kind": "text-cover",
+    "note": "session_id covered by artifact_manifest"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\dual-write-results.json",
+    "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "sha256": "d4d60e36f02477b52ea03f722c102bd0aea8e34fd60714f5dec82e514dbc2bf2",
+    "kind": "text-cover",
+    "note": "session_id covered by artifact_manifest"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\phase3-cdp-network.jsonl",
+    "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "sha256": "fa2e6a6be118c623b2dc18e2cd51c10ad9a978a9b0d902c92de5ee0ff568198c",
+    "kind": "text-cover",
+    "note": "session_id covered by artifact_manifest"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-01.png",
+    "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "sha256": "6117c3d215f66c53b8f65dd4c27fef0707b742147f5daadb04b01d2d6dd00d9b",
+    "kind": "binary",
+    "note": "session_id covered by artifact_manifest"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-02.png",
+    "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "sha256": "6117c3d215f66c53b8f65dd4c27fef0707b742147f5daadb04b01d2d6dd00d9b",
+    "kind": "binary",
+    "note": "session_id covered by artifact_manifest"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-03.png",
+    "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "sha256": "afc1ddafd189a5f1d6f9d1559db93778174d3e18d295480d2b1efb333fbe7f58",
+    "kind": "binary",
+    "note": "session_id covered by artifact_manifest"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-04.png",
+    "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "sha256": "b35c5add50205090eea505537426bb1704ced54ef3beba27cd76144cadb8665f",
+    "kind": "binary",
+    "note": "session_id covered by artifact_manifest"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-05.png",
+    "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "sha256": "32c0554271033bf0852c17903eee45589c4b0c524cad10954a7760a2aae2f756",
+    "kind": "binary",
+    "note": "session_id covered by artifact_manifest"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-06.png",
+    "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "sha256": "32c0554271033bf0852c17903eee45589c4b0c524cad10954a7760a2aae2f756",
+    "kind": "binary",
+    "note": "session_id covered by artifact_manifest"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-07.png",
+    "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "sha256": "cb46153094d98158da439d49319f5e81360a28886f3c424f91d550f5a0c1b720",
+    "kind": "binary",
+    "note": "session_id covered by artifact_manifest"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-08.png",
+    "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "sha256": "db75521629abf45d7a4dabbd3403930dfe51705bd502bd66083768c98961fa3e",
+    "kind": "binary",
+    "note": "session_id covered by artifact_manifest"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-09.png",
+    "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "sha256": "a3c1a2f48d1af1b34458d6cd538cf50b4de84a119f372812c0fdf389a808a103",
+    "kind": "binary",
+    "note": "session_id covered by artifact_manifest"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-10.png",
+    "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "sha256": "a3c1a2f48d1af1b34458d6cd538cf50b4de84a119f372812c0fdf389a808a103",
+    "kind": "binary",
+    "note": "session_id covered by artifact_manifest"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-11.png",
+    "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "sha256": "a3c1a2f48d1af1b34458d6cd538cf50b4de84a119f372812c0fdf389a808a103",
+    "kind": "binary",
+    "note": "session_id covered by artifact_manifest"
+  },
+  {
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T211103Z-8dab02ec\\ritual\\step-12.png",
+    "session_id": "8dab02ec-7282-4da4-9c9f-f1a967e244f1",
+    "sha256": "a3c1a2f48d1af1b34458d6cd538cf50b4de84a119f372812c0fdf389a808a103",
+    "kind": "binary",
+    "note": "session_id covered by artifact_manifest"
+  }
+]

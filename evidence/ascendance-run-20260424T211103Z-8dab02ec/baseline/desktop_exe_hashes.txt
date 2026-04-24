@@ -1,0 +1,11 @@
+# RUN_ID=ascendance-run-20260424T211103Z-8dab02ec
+# PROBE_ID=BASE_DESKTOP_HASHES
+# TIMESTAMP_UTC=2026-04-24T21:11:47.1930231Z
+# COMMAND=Get-ChildItem -Path nexus-tauri\src-tauri\target\release -Filter *.exe -ErrorAction SilentlyContinue | ForEach-Object { $h=Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName; "$($h.Hash)  $($_.FullName)" }
+
+CEA6A6CCDA429A9458CBEE4D887C6412D6575E96CAFB25BFFA6508AEBF1F30E7  C:\Users\raest\Documents\Karma_SADE\nexus-tauri\src-tauri\target\release\arknexusv6.exe
+B3CA44F78FBC74770C4AAEFF41BD94BAAFAD2CB483E1EC27EA4874D7F69BABE1  C:\Users\raest\Documents\Karma_SADE\nexus-tauri\src-tauri\target\release\nexus.exe
+
+
+# EXIT_CODE=0
+# SHA256=40F2DEE8DEFE6FF215933473628F0DAFD67A203CA4ADC0038B32152976D7BAFF
