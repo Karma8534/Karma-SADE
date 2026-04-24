@@ -1,6 +1,6 @@
 ﻿{
     "ok":  true,
-    "checked_at_utc":  "2026-04-24T19:29:53.1144703Z",
+    "checked_at_utc":  "2026-04-24T21:01:30.6734163Z",
     "run_dir":  "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561",
     "checks":  {
                    "get_routes_200":  true,
@@ -129,8 +129,8 @@
                                            "error":  ""
                                        }
                                    ],
-                    "chat_text_len":  318,
-                    "memory_marker":  "RESHIP-E2E-MEM-4475822c-3fda-4ba9-a191-bbcf7cb89478",
+                    "chat_text_len":  361,
+                    "memory_marker":  "RESHIP-E2E-MEM-31a0a645-2b4e-44e1-9c0c-ca5376a8cf34",
                     "asset_missing":  [
 
                                       ],
