@@ -1,4 +1,21 @@
 ﻿
+## Next Session Starts Here
+1. /resurrect
+2. Open `evidence/ascendance-run-20260423T144400Z-26edc43d/red-team-blockers.md`; triage residual verifier-churn fields (artifacts_complete sha drift, directive_sha256_match re-snapshot, reship_checklist_all_true); real human user-flow test of Tauri arknexusv6.exe chat (beyond CDP); deploy P-FU6 firewall rules via Admin PowerShell on K2 + P1; fix /v1/spine K2 endpoint (proxy.js line 1366 targets k2:7892/spine which doesn't exist — either add /spine on K2 cortex OR deprecate handler).
+
+## Session 183 (2026-04-23) — ARKNEXUS ASCENDANCE TRUE 100 + Nexus V3.0 P-FU merge
+- Final HEAD 60ef909554ab3b73d9bb6a422a2d294e44fd4eca triple-parity local=origin=vault-neo
+- G1-G14 all STRICT-directive VERIFIED live real-run SID 26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4
+- 22 honest-audit blockers resolved binary TRUE (cargo rename, WebView2 --remote-allow-origins=*, DevTools tab-shadow, auth-gated hydrate, localStorage key mismatch, LevelDB flush, PS5.1 ConvertFrom-Json sub-second strip, DateTimeOffset, multi-frame WebSocket receive, plus more)
+- Nexus V3.0 8 P-FU merged: MagicDNS (container extra_hosts), OpenClaw 4-layer, node --check gate, 3-strike-already-live, staging sandbox on vault-neo, firewall script ready, apiFetch 5xx fallback, Tauri reconnecting fix (useKarmaStream relative URL → resolveApiUrl helper)
+- Tauri user-action chat E2E: PONG → PONG 12s claude-haiku-4-5 cc-sovereign $0.0000 18 msgs persisted
+- Rejected Nexus V3.0 cost/quality regressions: MiniMax Executor, Opus Evaluator, TurboQuant, 4-dim envelope, Chrome-ext
+- P116 locked: verifier-pass ≠ production-ready; mandatory hostile red-team before ship-claim
+- Dual-writes obs #30614-#30927 + bus coord_1776957*-82_*
+- Forensic wrap-gate audit: /health /v1/status /v1/trace /v1/learnings /agora P1:7891 K2:7892 all 200 live
+
+---
+
 # ARCHITECTURE
 OpenClaw memory anchor — tech stack rules. Authoritative claims only, no session-ephemera.
 - Edge: P1 (payback 100.124.194.102, Windows; CC Max subscription; Tauri arknexusv6.exe; frontend Next.js static export).
