@@ -992,3 +992,4 @@ next: verify running process/window title and continuity behavior remain stable
 - dual_writes: confirmed
 - vault_parity_sha: 1305b17a56d4f744704d93544bf4a052d3b1bf79f29c9201bcba249f4c0e5b59
 - ritual_recording: ordered png sequence step-01 through step-12
+- 2026-04-24T21:48:00Z: refreshed tracked frontend static export after `npm run build` so clean-tree checks reflect current built output.
