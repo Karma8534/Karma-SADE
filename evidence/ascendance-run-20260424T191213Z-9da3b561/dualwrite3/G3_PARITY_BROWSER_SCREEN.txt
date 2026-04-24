@@ -1,0 +1,10 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# PROBE_ID=DUALWRITE3_G3_PARITY_BROWSER_SCREEN
+# TIMESTAMP_UTC=2026-04-24T19:23:39.4418304Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1 -Type PROOF -Title 'G3_PARITY_BROWSER_SCREEN fresh proof' -Text 'RUN_ID=ascendance-run-20260424T191213Z-9da3b561 SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49 G3_PARITY_BROWSER_SCREEN live evidence recorded in fresh run artifacts' -Gate G3_PARITY_BROWSER_SCREEN -RunDir C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T191213Z-9da3b561
+
+obs_id=31243 bus_id= state=pending
+
+
+# EXIT_CODE=1
+# SHA256=ABC1F629B7ECE44FF411A3173D6D6D1316366A4E4F8B67A20F3CF10A5153314D

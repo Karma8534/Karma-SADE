@@ -30,7 +30,9 @@ New-Item -ItemType Directory -Force -Path $RunDir | Out-Null
 $sessionPath = Join-Path $RunDir 'session.json'
 $sessionId = ''
 if (Test-Path -LiteralPath $sessionPath) {
-  $sessionId = [string]((Get-Content -LiteralPath $sessionPath -Raw | ConvertFrom-Json).session_id)
+  $session = Get-Content -LiteralPath $sessionPath -Raw | ConvertFrom-Json
+  $sessionId = [string]$session.session_id
+  if (-not $sessionId) { $sessionId = [string]$session.SESSION_ID }
 }
 if (-not $sessionId) {
   try { $sessionId = [string]((Invoke-RestMethod -Uri "$LocalBase/memory/session" -TimeoutSec 8).session_id) } catch {}

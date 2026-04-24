@@ -1,0 +1,35 @@
+# RUN_ID=ascendance-run-20260424T165457Z-fdc70db0
+# PROBE_ID=ASCENDANCE_FINAL_GATE_BASELINE
+# TIMESTAMP_UTC=2026-04-24T16:55:18.6091114Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-final-gate.ps1
+
+FINAL_GATE:
+- all_14_verified:               false
+- any_fail_remaining:            false
+- any_blocked_remaining:         true
+- banned_label_hits:             0
+- artifacts_complete:            true
+- session_id_in_all_artifacts:   true
+- dual_writes_confirmed:         true
+- queue_drained:                 true
+- ritual_recording_valid:        false
+- git_clean_and_pushed:          false
+- vault_parity_verified:         false
+- harness_sha_unchanged:         true
+- settings_sha_unchanged:        true
+- directive_sha256_match:        true
+- plan_sha256_match:             true
+- memory_md_schema_valid:        true
+- tracker_shipped_in_session:    false
+- reship_checklist_all_true:     false
+- g11_live_reprobe:              true
+- g13_live_reprobe:              true
+- probe_log_has_proof:           false
+- probe_log_has_decision:        false
+- session_digest:                dc0e94a01dd76787f05d116b0975d8a1272f517b1f0244b03d1e33e0b1dd3ccb
+- directive_sha256:              
+- verifier_exit_code:            1
+
+
+# EXIT_CODE=1
+# SHA256=C6BC913195AFBA0988C340957A38789C34B0F02040ACDD0ACC0E7F88AB0F19D1

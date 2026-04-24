@@ -1,0 +1,25 @@
+# RUN_ID=ascendance-run-20260424T165457Z-fdc70db0
+# PROBE_ID=VERIFIER_HARNESS_HASHES
+# TIMESTAMP_UTC=2026-04-24T16:55:15.9899283Z
+# COMMAND=@("Scripts\ascendance-final-gate.ps1","Scripts\ascendance-reship-audit.ps1") | ForEach-Object { if(Test-Path $_){ Get-FileHash -Algorithm SHA256 $_ | Format-List } else { "MISSING $_"; exit 1 } }
+
+
+
+Algorithm : SHA256
+Hash      : 29A4CE8861F3383B4965F1C7859DA078CA34D7CB6684E5705F2B17FB9EA8306A
+Path      : C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-final-gate.ps1
+
+
+
+
+
+Algorithm : SHA256
+Hash      : 8EB4056F590763CC0C96F8694693067BD2A8FE13640F7E2CC34F98ACACF6EA71
+Path      : C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-reship-audit.ps1
+
+
+
+
+
+# EXIT_CODE=0
+# SHA256=D943B232AFF280FBE717ECD8C3B243F19EFDE373B42A271AA41D3566A0D60F79

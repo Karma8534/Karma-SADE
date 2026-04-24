@@ -1,0 +1,10 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# PROBE_ID=DUALWRITE4_G13_FOCUS_GATE_UNLOCK
+# TIMESTAMP_UTC=2026-04-24T19:25:35.0326364Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1 -Type PROOF -Title 'G13_FOCUS_GATE_UNLOCK fresh proof' -Text 'RUN_ID=ascendance-run-20260424T191213Z-9da3b561 SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49 G13_FOCUS_GATE_UNLOCK live evidence recorded in fresh run artifacts' -Gate G13_FOCUS_GATE_UNLOCK -RunDir C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T191213Z-9da3b561
+
+obs_id=31269 bus_id=coord_1777058736801_hsmq state=confirmed
+
+
+# EXIT_CODE=0
+# SHA256=7FDA1D8FE65EB39EF857B27EEF752E48103061356324F50D81CAB06A74E4CCDB

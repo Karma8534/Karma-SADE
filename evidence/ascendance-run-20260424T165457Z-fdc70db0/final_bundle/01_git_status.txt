@@ -1,0 +1,45 @@
+# RUN_ID=ascendance-run-20260424T165457Z-fdc70db0
+# PROBE_ID=FINAL_BUNDLE_GIT_STATUS
+# TIMESTAMP_UTC=2026-04-24T16:59:15.7318366Z
+# COMMAND=git status --short --untracked-files=all
+
+ M Scripts/Start-CCServer.ps1
+ M Scripts/ascendance-ritual-harness.ps1
+ M Scripts/cc_server_p1.py
+ M Scripts/phase3-family-harness.ps1
+ M evidence/ascendance-run-20260423T144400Z-26edc43d/PROBE_LOG.md
+ M evidence/ascendance-run-20260423T144400Z-26edc43d/phase3-cdp-network.jsonl
+ M evidence/ascendance-run-20260423T144400Z-26edc43d/phase3-g5-trace.txt
+ M evidence/ascendance-run-20260423T144400Z-26edc43d/phase3-whoami.png
+ M evidence/ascendance-run-20260423T144400Z-26edc43d/re-ship-checklist.json
+ M evidence/ascendance-run-20260423T144400Z-26edc43d/re-ship-checklist.md
+?? Scripts/auto_memory_bridge.py
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/EVIDENCE_INDEX.json
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/GAP_MATRIX.md
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/PROBE_LOG.md
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/ascendance_final_gate_baseline.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/ascendance_reship_audit_baseline.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/autolaunch_state.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/desktop_app_first_frame.png
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/desktop_exe_hashes.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/environment.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/frontend_build_hashes.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/git_branch_remotes_heads.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/git_status_short_untracked_all.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/hub_first_frame_edge_headless.png
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/hub_first_frame_edge_headless.stdout.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/hub_health.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/ignored_relevant_inventory.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/port_37782_health.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/port_7891_health.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/process_list_relevant.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/resurrect_worktree_guard.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/verifier_harness_hashes.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/final_bundle/01_git_status.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/re-ship-checklist.json
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/re-ship-checklist.md
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/session.json
+
+
+# EXIT_CODE=0
+# SHA256=E690B5676AF41D6BABEB1CAC4A91BC5C25356BD063E27DA896CAF0BD547AEA0C

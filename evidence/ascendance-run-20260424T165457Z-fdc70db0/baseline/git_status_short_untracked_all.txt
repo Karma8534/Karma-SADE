@@ -1,0 +1,25 @@
+# RUN_ID=ascendance-run-20260424T165457Z-fdc70db0
+# PROBE_ID=GIT_STATUS_FULL
+# TIMESTAMP_UTC=2026-04-24T16:54:58.4792445Z
+# COMMAND=git status --short --untracked-files=all
+
+ M Scripts/Start-CCServer.ps1
+ M Scripts/cc_server_p1.py
+ M evidence/ascendance-run-20260423T144400Z-26edc43d/PROBE_LOG.md
+ M evidence/ascendance-run-20260423T144400Z-26edc43d/phase3-cdp-network.jsonl
+ M evidence/ascendance-run-20260423T144400Z-26edc43d/phase3-g5-trace.txt
+ M evidence/ascendance-run-20260423T144400Z-26edc43d/phase3-whoami.png
+ M evidence/ascendance-run-20260423T144400Z-26edc43d/re-ship-checklist.json
+ M evidence/ascendance-run-20260423T144400Z-26edc43d/re-ship-checklist.md
+?? Scripts/auto_memory_bridge.py
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/GAP_MATRIX.md
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/PROBE_LOG.md
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/environment.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/git_branch_remotes_heads.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/git_status_short_untracked_all.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/baseline/resurrect_worktree_guard.txt
+?? evidence/ascendance-run-20260424T165457Z-fdc70db0/session.json
+
+
+# EXIT_CODE=0
+# SHA256=033FE8BC22108C85057761A22FA2AF4FECF5CFC7BF68FCB8ED85A8655C5BC200

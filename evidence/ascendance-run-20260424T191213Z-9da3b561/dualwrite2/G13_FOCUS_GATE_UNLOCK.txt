@@ -1,0 +1,16 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# PROBE_ID=DUALWRITE2_G13_FOCUS_GATE_UNLOCK
+# TIMESTAMP_UTC=2026-04-24T19:22:02.2906886Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1 -Type PROOF -Title 'G13_FOCUS_GATE_UNLOCK fresh proof' -Text 'RUN_ID=ascendance-run-20260424T191213Z-9da3b561 SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49 G13_FOCUS_GATE_UNLOCK live evidence recorded in fresh run artifacts' -Gate G13_FOCUS_GATE_UNLOCK -RunDir C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T191213Z-9da3b561
+
+obs_id= bus_id= state=pending
+C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1 : The term 'if' is not recognized as the name of 
+a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, 
+verify that the path is correct and try again.
+    + CategoryInfo          : ObjectNotFound: (if:String) [ascendance-dual-write.ps1], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException,ascendance-dual-write.ps1
+ 
+
+
+# EXIT_CODE=1
+# SHA256=0B63D6A5F7885A357FC1FDD6884AF712C2696ADC6BEA2E9EEE1C1DAC212DB5EB

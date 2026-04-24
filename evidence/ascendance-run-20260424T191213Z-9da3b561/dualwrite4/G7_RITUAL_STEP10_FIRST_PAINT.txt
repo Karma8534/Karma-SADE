@@ -1,0 +1,10 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# PROBE_ID=DUALWRITE4_G7_RITUAL_STEP10_FIRST_PAINT
+# TIMESTAMP_UTC=2026-04-24T19:25:26.3786024Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1 -Type PROOF -Title 'G7_RITUAL_STEP10_FIRST_PAINT fresh proof' -Text 'RUN_ID=ascendance-run-20260424T191213Z-9da3b561 SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49 G7_RITUAL_STEP10_FIRST_PAINT live evidence recorded in fresh run artifacts' -Gate G7_RITUAL_STEP10_FIRST_PAINT -RunDir C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T191213Z-9da3b561
+
+obs_id=31263 bus_id=coord_1777058728254_zkoe state=confirmed
+
+
+# EXIT_CODE=0
+# SHA256=A321AFE724AFFDBA481C33B4C89E934613D405FD9BFE0DF8F0BA3BBBA1B27F91

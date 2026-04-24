@@ -1,0 +1,10 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# PROBE_ID=DUALWRITE4_G11_QUARANTINE_CLEANUP
+# TIMESTAMP_UTC=2026-04-24T19:25:32.1281312Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1 -Type PROOF -Title 'G11_QUARANTINE_CLEANUP fresh proof' -Text 'RUN_ID=ascendance-run-20260424T191213Z-9da3b561 SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49 G11_QUARANTINE_CLEANUP live evidence recorded in fresh run artifacts' -Gate G11_QUARANTINE_CLEANUP -RunDir C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T191213Z-9da3b561
+
+obs_id=31267 bus_id=coord_1777058733912_w2kv state=confirmed
+
+
+# EXIT_CODE=0
+# SHA256=6546771D0608CB7E444D428572F411C3FEC25F165D7CF0D4215B36944DD7E0FD

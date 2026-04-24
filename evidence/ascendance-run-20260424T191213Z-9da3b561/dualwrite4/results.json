@@ -1,0 +1,88 @@
+[
+  {
+    "gate": "G1_BOOT_DOM_ATTR",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\dualwrite4\\G1_BOOT_DOM_ATTR.txt",
+    "output": "obs_id=31257 bus_id=coord_1777058719562_bp0z state=confirmed"
+  },
+  {
+    "gate": "G2_COLD_BOOT_RERUN",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\dualwrite4\\G2_COLD_BOOT_RERUN.txt",
+    "output": "obs_id=31258 bus_id=coord_1777058720957_6wb9 state=confirmed"
+  },
+  {
+    "gate": "G3_PARITY_BROWSER_SCREEN",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\dualwrite4\\G3_PARITY_BROWSER_SCREEN.txt",
+    "output": "obs_id=31259 bus_id=coord_1777058722376_t2be state=confirmed"
+  },
+  {
+    "gate": "G4_PARITY_STRESS",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\dualwrite4\\G4_PARITY_STRESS.txt",
+    "output": "obs_id=31260 bus_id=coord_1777058723802_qpe1 state=confirmed"
+  },
+  {
+    "gate": "G5_WHOAMI_REAL_UI",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\dualwrite4\\G5_WHOAMI_REAL_UI.txt",
+    "output": "obs_id=31261 bus_id=coord_1777058725310_hvdc state=confirmed"
+  },
+  {
+    "gate": "G6_RITUAL_STEP4_FRESH_BROWSER",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\dualwrite4\\G6_RITUAL_STEP4_FRESH_BROWSER.txt",
+    "output": "obs_id=31262 bus_id=coord_1777058726776_kcv9 state=confirmed"
+  },
+  {
+    "gate": "G7_RITUAL_STEP10_FIRST_PAINT",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\dualwrite4\\G7_RITUAL_STEP10_FIRST_PAINT.txt",
+    "output": "obs_id=31263 bus_id=coord_1777058728254_zkoe state=confirmed"
+  },
+  {
+    "gate": "G8_RITUAL_UNINTERRUPTED_RECORDING",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\dualwrite4\\G8_RITUAL_UNINTERRUPTED_RECORDING.txt",
+    "output": "obs_id=31264 bus_id=coord_1777058729634_bn1b state=confirmed"
+  },
+  {
+    "gate": "G9_DUAL_WRITE_DISCIPLINE",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\dualwrite4\\G9_DUAL_WRITE_DISCIPLINE.txt",
+    "output": "obs_id=31265 bus_id=coord_1777058731078_ar9v state=confirmed"
+  },
+  {
+    "gate": "G10_GIT_AND_MEMORY",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\dualwrite4\\G10_GIT_AND_MEMORY.txt",
+    "output": "obs_id=31266 bus_id=coord_1777058732526_ilu9 state=confirmed"
+  },
+  {
+    "gate": "G11_QUARANTINE_CLEANUP",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\dualwrite4\\G11_QUARANTINE_CLEANUP.txt",
+    "output": "obs_id=31267 bus_id=coord_1777058733912_w2kv state=confirmed"
+  },
+  {
+    "gate": "G12_VAULT_PARITY",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\dualwrite4\\G12_VAULT_PARITY.txt",
+    "output": "obs_id=31268 bus_id=coord_1777058735432_ftzz state=confirmed"
+  },
+  {
+    "gate": "G13_FOCUS_GATE_UNLOCK",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\dualwrite4\\G13_FOCUS_GATE_UNLOCK.txt",
+    "output": "obs_id=31269 bus_id=coord_1777058736801_hsmq state=confirmed"
+  },
+  {
+    "gate": "G14_TRACKER_SCHEMA_ALIGNMENT",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\dualwrite4\\G14_TRACKER_SCHEMA_ALIGNMENT.txt",
+    "output": "obs_id=31270 bus_id=coord_1777058738221_aewh state=confirmed"
+  }
+]
+
+SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49

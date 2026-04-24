@@ -1,0 +1,10 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# PROBE_ID=DUALWRITE3_G5_WHOAMI_REAL_UI
+# TIMESTAMP_UTC=2026-04-24T19:23:42.1054793Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1 -Type PROOF -Title 'G5_WHOAMI_REAL_UI fresh proof' -Text 'RUN_ID=ascendance-run-20260424T191213Z-9da3b561 SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49 G5_WHOAMI_REAL_UI live evidence recorded in fresh run artifacts' -Gate G5_WHOAMI_REAL_UI -RunDir C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T191213Z-9da3b561
+
+obs_id=31245 bus_id= state=pending
+
+
+# EXIT_CODE=1
+# SHA256=FCC01A37510B82B3AC2E092859F3AB5F8E592792321E7DDE0F50EBBA500E45AD

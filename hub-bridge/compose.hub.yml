@@ -53,7 +53,13 @@ services:
       - /opt/seed-vault:/karma/vault:ro
       - /opt/seed-vault/memory_v1/ledger:/karma/ledger:rw
       - /home/neo/karma-sade/MEMORY.md:/karma/MEMORY.md:rw
+      # Phase Ascendance 2: cross-surface session store (Julian.exe + hub.arknexus.net share)
+      - /opt/seed-vault/memory_v1/sessions:/karma/sessions:rw
     extra_hosts:
+      - "k2:100.75.109.92"
+      - "payback:100.124.194.102"
+      - "vault-neo:100.92.67.70"
+      - "arknexus-vault-01:100.92.67.70"
       - "host.docker.internal:host-gateway"
     networks:
       - anr-vault-net

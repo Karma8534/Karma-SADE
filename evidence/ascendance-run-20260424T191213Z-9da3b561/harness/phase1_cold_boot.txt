@@ -1,0 +1,11 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49
+# PROBE_ID=PHASE1_COLD_BOOT_HARNESS
+# TIMESTAMP_UTC=2026-04-24T19:16:29.5298126Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\phase1-cold-boot-harness.ps1 -RunDir C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T191213Z-9da3b561
+
+phase1-cold-boot-harness: session_id=9da3b561-d4a5-4882-9656-09cda8936e49 visible=112 persona_paint=381 effective=493 g1=True g2=True g14=True
+
+
+# EXIT_CODE=0
+# SHA256=B7C7D6781E86091507063E3804229DF3895D0205A9D428E0D3D162BB9E681C62

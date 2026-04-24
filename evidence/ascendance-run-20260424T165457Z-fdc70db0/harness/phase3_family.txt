@@ -1,0 +1,10 @@
+# RUN_ID=ascendance-run-20260424T165457Z-fdc70db0
+# PROBE_ID=PHASE3_FAMILY_HARNESS
+# TIMESTAMP_UTC=2026-04-24T17:07:11.2356311Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\phase3-family-harness.ps1 -RunDir C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T165457Z-fdc70db0
+
+phase3-family: sid=0f84fd6d-a6a4-446e-9720-7908c097559b g3=True g5=True g6=True
+
+
+# EXIT_CODE=0
+# SHA256=17E4BC01898DE8A76E39195D7E37606D5D338F51D81D39E64EFBFAC947012EC0

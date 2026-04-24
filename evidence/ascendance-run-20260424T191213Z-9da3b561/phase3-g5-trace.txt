@@ -1,0 +1,13 @@
+click_result: {"id":6,"result":{"result":{"type":"string","value":"CLICKED_ROW_0"}}}
+diag: {"id":7,"result":{"result":{"type":"string","value":"{\"rowCount\":0,\"msgCount\":0,\"bodyHasTF\":true,\"bodyHasTR\":true,\"bodyLen\":4842,\"bodyTail\":\"rknexus.net \u2014 ARCHON state endpoint\\n2. K2 vesper_governor.py audit log \u2014 active blockers + KPI trend\\n3. Karma2/map/active-issues.md on P1 \u2014 canonical blockers file\\n\\n**Execute path:**\\n1. Fetch full blocker list (live or file)\\n2. Dependency-sort\\n3. TDD loop each: write test \u2192 execute \u2192 verify pass\\n4. Report binary YES/NO at end\\n\\n**Start now?** Or fetch blocker list first for full visibility?\\nCONTEXT\"}"}}}
+body_recv_len: 5170
+whoamiBody_len: 4842; bodyHasTF=True; bodyHasTR=True
+click_result: {"id":6,"result":{"result":{"type":"string","value":"CLICKED_ROW_0"}}}
+diag: {"id":7,"result":{"result":{"type":"string","value":"{\"rowCount\":0,\"msgCount\":0,\"bodyHasTF\":true,\"bodyHasTR\":true,\"bodyLen\":4573,\"bodyTail\":\"rknexus.net \u2014 ARCHON state endpoint\\n2. K2 vesper_governor.py audit log \u2014 active blockers + KPI trend\\n3. Karma2/map/active-issues.md on P1 \u2014 canonical blockers file\\n\\n**Execute path:**\\n1. Fetch full blocker list (live or file)\\n2. Dependency-sort\\n3. TDD loop each: write test \u2192 execute \u2192 verify pass\\n4. Report binary YES/NO at end\\n\\n**Start now?** Or fetch blocker list first for full visibility?\\nCONTEXT\"}"}}}
+body_recv_len: 4900
+whoamiBody_len: 4573; bodyHasTF=True; bodyHasTR=True
+SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49
+click_result: {"id":6,"result":{"result":{"type":"string","value":"CLICKED_ROW_0"}}}
+diag: {"id":7,"result":{"result":{"type":"string","value":"{\"rowCount\":0,\"msgCount\":0,\"bodyHasTF\":true,\"bodyHasTR\":true,\"bodyLen\":5460,\"bodyTail\":\"rknexus.net \u2014 ARCHON state endpoint\\n2. K2 vesper_governor.py audit log \u2014 active blockers + KPI trend\\n3. Karma2/map/active-issues.md on P1 \u2014 canonical blockers file\\n\\n**Execute path:**\\n1. Fetch full blocker list (live or file)\\n2. Dependency-sort\\n3. TDD loop each: write test \u2192 execute \u2192 verify pass\\n4. Report binary YES/NO at end\\n\\n**Start now?** Or fetch blocker list first for full visibility?\\nCONTEXT\"}"}}}
+body_recv_len: 5791
+whoamiBody_len: 5460; bodyHasTF=True; bodyHasTR=True

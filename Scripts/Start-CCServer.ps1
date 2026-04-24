@@ -9,6 +9,8 @@ $TokenFile = "$WorkDir\.hub-chat-token"
 $OpenRouterKeyFile = "$WorkDir\.openrouter-api-key"
 $PidFile   = "$WorkDir\Scripts\cc_server.pid"
 $MutexName = "Global\KarmaSovereignHarnessCCServer"
+$AutoMemoryBridge = "$WorkDir\Scripts\auto_memory_bridge.py"
+$AutoMemoryDb = Join-Path $env:USERPROFILE ".copilot\session-store.db"
 
 $PythonExe = (Get-Command python -ErrorAction SilentlyContinue).Source
 if (-not $PythonExe) {
@@ -59,9 +61,28 @@ try {
     if (-not $env:KARMA_EMERGENCY_INDEPENDENT) { $env:KARMA_EMERGENCY_INDEPENDENT = "0" }
     if (-not $env:KARMA_DISABLE_ANTHROPIC) { $env:KARMA_DISABLE_ANTHROPIC = "0" }
     if (-not $env:CC_BIND_ALL) { $env:CC_BIND_ALL = "1" }
+    if (-not $env:KARMA_AUTO_MEMORY_SYNC) { $env:KARMA_AUTO_MEMORY_SYNC = "1" }
+    if (-not $env:KARMA_AUTO_MEMORY_INTERVAL) { $env:KARMA_AUTO_MEMORY_INTERVAL = "120" }
+    if (-not $env:SESSION_RECALL_DB) { $env:SESSION_RECALL_DB = $AutoMemoryDb }
+    $env:PYTHONUTF8 = "1"
+    $env:PYTHONIOENCODING = "utf-8"
 
     Remove-Item Env:ANTHROPIC_API_KEY -ErrorAction SilentlyContinue
     Remove-Item Env:CLAUDE_API_KEY -ErrorAction SilentlyContinue
+
+    if (Test-Path $AutoMemoryBridge) {
+        try {
+            $bridgeArgs = if ($PythonExe -like "*\py.exe") {
+                @("-3", $AutoMemoryBridge, "--db", $AutoMemoryDb, "--quiet")
+            } else {
+                @($AutoMemoryBridge, "--db", $AutoMemoryDb, "--quiet")
+            }
+            & $PythonExe @bridgeArgs | Out-Null
+            Write-Host "[cc-server] auto-memory bridge primed: $AutoMemoryDb"
+        } catch {
+            Write-Host "[cc-server] WARNING: auto-memory bridge preflight failed ($($_.Exception.Message))"
+        }
+    }
 
     Write-Host "[cc-server] Starting cc_server_p1.py on port 7891 at $(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssK')"
 

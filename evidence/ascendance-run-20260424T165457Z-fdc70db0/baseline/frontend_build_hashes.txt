@@ -1,0 +1,10 @@
+# RUN_ID=ascendance-run-20260424T165457Z-fdc70db0
+# PROBE_ID=FRONTEND_BUILD_HASHES
+# TIMESTAMP_UTC=2026-04-24T16:55:18.3571656Z
+# COMMAND=if(Test-Path .\frontend\dist){ Get-ChildItem -Recurse -File .\frontend\dist | Get-FileHash -Algorithm SHA256 | Sort-Object Path | Format-Table -AutoSize } elseif(Test-Path .\frontend\build){ Get-ChildItem -Recurse -File .\frontend\build | Get-FileHash -Algorithm SHA256 | Sort-Object Path | Format-Table -AutoSize } else { "MISSING frontend build output"; exit 1 }
+
+MISSING frontend build output
+
+
+# EXIT_CODE=1
+# SHA256=DFC288AA5F44291BED9105A7FE1CAD543CAB644F3D5459A3C6605D3A629EB364

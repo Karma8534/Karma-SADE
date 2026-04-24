@@ -30,6 +30,7 @@ $sessionPath = Join-Path $RunDir 'session.json'
 if (-not (Test-Path -LiteralPath $sessionPath)) { throw "session.json missing: $sessionPath" }
 $session = Get-Content -LiteralPath $sessionPath -Raw | ConvertFrom-Json
 $sessionId = [string]$session.session_id
+if (-not $sessionId) { $sessionId = [string]$session.SESSION_ID }
 if (-not $sessionId) { throw 'session_id missing in session.json' }
 
 $token = (ssh vault-neo 'cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt').Trim()

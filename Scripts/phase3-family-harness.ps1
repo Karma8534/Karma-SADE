@@ -27,7 +27,9 @@ if (-not $RunDir) { throw 'RunDir is required.' }
 if (-not (Test-Path -LiteralPath $RunDir)) { throw "RunDir not found: $RunDir" }
 $sessionPath = Join-Path $RunDir 'session.json'
 if (-not (Test-Path -LiteralPath $sessionPath)) { throw "session.json missing: $sessionPath" }
-$sessionId = [string]((Get-Content -LiteralPath $sessionPath -Raw | ConvertFrom-Json).session_id)
+$session = Get-Content -LiteralPath $sessionPath -Raw | ConvertFrom-Json
+$sessionId = [string]$session.session_id
+if (-not $sessionId) { $sessionId = [string]$session.SESSION_ID }
 if (-not $sessionId) { throw 'session_id missing' }
 
 if (-not $ChromeExe) {

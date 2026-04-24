@@ -54,6 +54,31 @@ Ephemeral scratchpad for S183. Purged at session-end.
 
 ---
 
+## Ascendance Run 20260424T191213Z-9da3b561
+
+- session_id: 9da3b561-d4a5-4882-9656-09cda8936e49
+- started_utc: 2026-04-24T19:12:13Z
+- commit_sha: 60ef909554ab3b73d9bb6a422a2d294e44fd4eca
+- run_dir: C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T191213Z-9da3b561
+- gates:
+  - G1_BOOT_DOM_ATTR: VERIFIED
+  - G2_COLD_BOOT_RERUN: VERIFIED
+  - G3_PARITY_BROWSER_SCREEN: VERIFIED
+  - G4_PARITY_STRESS: VERIFIED
+  - G5_WHOAMI_REAL_UI: VERIFIED
+  - G6_RITUAL_STEP4_FRESH_BROWSER: VERIFIED
+  - G7_RITUAL_STEP10_FIRST_PAINT: VERIFIED
+  - G8_RITUAL_UNINTERRUPTED_RECORDING: VERIFIED
+  - G9_DUAL_WRITE_DISCIPLINE: VERIFIED
+  - G10_GIT_AND_MEMORY: VERIFIED
+  - G11_QUARANTINE_CLEANUP: VERIFIED
+  - G12_VAULT_PARITY: VERIFIED
+  - G13_FOCUS_GATE_UNLOCK: VERIFIED
+  - G14_TRACKER_SCHEMA_ALIGNMENT: VERIFIED
+- dual_writes: confirmed
+- vault_parity_sha: 1305b17a56d4f744704d93544bf4a052d3b1bf79f29c9201bcba249f4c0e5b59
+- ritual_recording: ordered png sequence step-01 through step-12
+
 ## Ascendance Run 20260423T144400Z-26edc43d
 
 - session_id: 26edc43d-4e85-4cd0-b8e2-f89a32dd1ae4
@@ -944,3 +969,13 @@ next: verify running process/window title and continuity behavior remain stable
 
 
 
+## Ascendance Run 20260424T191213Z-9da3b561
+
+- session_id: 9da3b561-d4a5-4882-9656-09cda8936e49
+- started_utc: 2026-04-24T19:12:13Z
+- commit_sha: 60ef909554ab3b73d9bb6a422a2d294e44fd4eca
+- run_dir: C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T191213Z-9da3b561
+- gates_verified: G1 G2 G3 G4 G5 G6 G7 G8 G9 G10 G11 G12 G13 G14
+- dual_writes: confirmed
+- vault_parity_sha: 1305b17a56d4f744704d93544bf4a052d3b1bf79f29c9201bcba249f4c0e5b59
+- ritual_recording: ordered png sequence step-01 through step-12

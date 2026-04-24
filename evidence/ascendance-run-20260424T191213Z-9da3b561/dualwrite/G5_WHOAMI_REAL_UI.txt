@@ -1,0 +1,55 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# PROBE_ID=DUALWRITE_G5_WHOAMI_REAL_UI
+# TIMESTAMP_UTC=2026-04-24T19:20:50.9361189Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1 -Type PROOF -Title 'G5_WHOAMI_REAL_UI fresh proof' -Text 'RUN_ID=ascendance-run-20260424T191213Z-9da3b561 SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49 G5_WHOAMI_REAL_UI live evidence recorded in fresh run artifacts' -Gate G5_WHOAMI_REAL_UI -RunDir C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T191213Z-9da3b561
+
+At C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1:48 char:39
++     $msg = "[$Type][$Gate] $Title â€” $Text"
++                                       ~~~~~~
+Unexpected token '$Text"
+    $pyCmd = @"' in expression or statement.
+At C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1:48 char:44
++     $msg = "[$Type][$Gate] $Title â€” $Text"
++                                            ~
+Unexpected token '"
+    $pyCmd = @"' in expression or statement.
+At C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1:52 char:29
++ payload = json.dumps({'from':'cc','to':'all','type':'inform','urgency ...
++                             ~~~~~
+Unexpected token ':'cc'' in expression or statement.
+At C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1:52 char:34
++ payload = json.dumps({'from':'cc','to':'all','type':'inform','urgency ...
++                                  ~
+Missing argument in parameter list.
+At C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1:53 char:78
++ ... uest.Request('https://hub.arknexus.net/v1/coordination/post', data=pa ...
++                                                                  ~
+Missing expression after ','.
+At C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1:53 char:79
++ ... 'https://hub.arknexus.net/v1/coordination/post', data=payload, header ...
++                                                      ~~~~~~~~~~~~
+Unexpected token 'data=payload' in expression or statement.
+At C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1:53 char:78
++ ... uest.Request('https://hub.arknexus.net/v1/coordination/post', data=pa ...
++                                                                  ~
+Missing closing ')' in expression.
+At C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1:53 char:117
++ ... post', data=payload, headers={'Authorization':'Bearer '+token,'Conten ...
++                                                  ~~~~~~~~~~~~~~~~
+Unexpected token ':'Bearer '+token' in expression or statement.
+At C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1:53 char:133
++ ... ost', data=payload, headers={'Authorization':'Bearer '+token,'Content ...
++                                                                 ~
+Missing argument in parameter list.
+At C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1:47 char:7
++   try {
++       ~
+Missing closing '}' in statement block or type definition.
+Not all parse errors were reported.  Correct the reported errors and try again.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : UnexpectedToken
+ 
+
+
+# EXIT_CODE=1
+# SHA256=716C51831E5CE345D943D2F0B5D7AB2D3B9238CE49C3FEC930E7AB332616A843

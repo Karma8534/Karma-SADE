@@ -1,0 +1,8 @@
+﻿{
+    "session_id":  "0f84fd6d-a6a4-446e-9720-7908c097559b",
+    "cdp_port":  9222,
+    "data_hydration_state":  "ready",
+    "data_session_id":  "0f84fd6d-a6a4-446e-9720-7908c097559b",
+    "error":  null,
+    "cdp_boot_metrics_raw":  "{\"timestamp\":\"2026-04-24T17:06:40.171Z\",\"session_id\":\"b3763079-3b48-4960-999d-7b82c7c0f5d8\",\"persona_block_preview\":\"**KARMA BOOT**\\nIdentity: Karma\\n\\nAAAK WAKEUP | Nexus continuity\\n* [ARCHON] CC state OK | ge:2min | 2026-04-24T16:52:05Z: CC ARCHON CHECKPOINT [2026-04-24T16:52:05Z] State: OK | Snapshot ge: 2min (ts: 2\",\"persona_block_length\":243,\"history_turn_count\":3,\"history_turns\":[{\"role\":\"karma\",\"content_preview\":\"I’ll run live probes directly via available Nexus routes/tools and report exact blockers with command-level errors if an\"},{\"role\":\"user\",\"content_preview\":\"begin #1 now\"},{\"role\":\"karma\",\"content_preview\":\"I’ll run live probes directly via available Nexus routes/tools and report exact blockers with command-level errors if an\"}],\"timing\":{\"window_visible_ms\":0,\"boot_fetch_start_ms\":0,\"boot_fetch_end_ms\":436,\"persona_paint_ms\":436},\"hydration_state\":\"ready\",\"degraded_reason\":null,\"canonical_endpoints_called\":[\"/memory/session\",\"/memory/wakeup\",\"/v1/session/b3763079-3b48-4960-999d-7b82c7c0f5d8\"]}"
+}

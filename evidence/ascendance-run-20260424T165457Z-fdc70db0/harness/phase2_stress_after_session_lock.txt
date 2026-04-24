@@ -1,0 +1,10 @@
+# RUN_ID=ascendance-run-20260424T165457Z-fdc70db0
+# PROBE_ID=PHASE2_STRESS_HARNESS_AFTER_SESSION_LOCK
+# TIMESTAMP_UTC=2026-04-24T17:09:56.5431050Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\phase2-stress-harness.ps1 -RunDir C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T165457Z-fdc70db0 -SettleSeconds 10
+
+phase2-stress: sid=0f84fd6d-a6a4-446e-9720-7908c097559b ok=40/40 match=True cite=cc_server_p1.py:1148
+
+
+# EXIT_CODE=0
+# SHA256=6296C032491F04BC87DC4CA05AA2BF8503C1A5A967ACDB8E53AE6119735089DF

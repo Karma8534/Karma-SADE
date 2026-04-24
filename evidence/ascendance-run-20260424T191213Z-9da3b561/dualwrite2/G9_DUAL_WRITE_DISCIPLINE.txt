@@ -1,0 +1,16 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# PROBE_ID=DUALWRITE2_G9_DUAL_WRITE_DISCIPLINE
+# TIMESTAMP_UTC=2026-04-24T19:21:55.9933134Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1 -Type PROOF -Title 'G9_DUAL_WRITE_DISCIPLINE fresh proof' -Text 'RUN_ID=ascendance-run-20260424T191213Z-9da3b561 SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49 G9_DUAL_WRITE_DISCIPLINE live evidence recorded in fresh run artifacts' -Gate G9_DUAL_WRITE_DISCIPLINE -RunDir C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T191213Z-9da3b561
+
+obs_id= bus_id= state=pending
+C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1 : The term 'if' is not recognized as the name of 
+a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, 
+verify that the path is correct and try again.
+    + CategoryInfo          : ObjectNotFound: (if:String) [ascendance-dual-write.ps1], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException,ascendance-dual-write.ps1
+ 
+
+
+# EXIT_CODE=1
+# SHA256=F793BA803DF11B12976347C47FD22B158EDE4CB559EE84EF9CBF7D1050D116CE

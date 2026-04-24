@@ -1,0 +1,15 @@
+# RUN_ID=ascendance-run-20260424T165457Z-fdc70db0
+# PROBE_ID=CC_SERVER_HEALTH_AFTER_RESTART_DELAY
+# TIMESTAMP_UTC=2026-04-24T17:11:26.4626515Z
+# COMMAND=Invoke-WebRequest -UseBasicParsing -TimeoutSec 10 http://127.0.0.1:7891/health | Select-Object StatusCode,Content
+
+
+StatusCode Content                                                                                                     
+---------- -------                                                                                                     
+       200 {"ok": true, "service": "cc-server-p1", "gmail": true, "emergency_independent": false, "disable_anthropic...
+
+
+
+
+# EXIT_CODE=0
+# SHA256=D197F6EC2846E1781F6A581D1B6EB94F1299CC3414D2B8BCFEEFD35D94C8C780

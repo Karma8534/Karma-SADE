@@ -1,0 +1,10 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# PROBE_ID=DUALWRITE4_G9_DUAL_WRITE_DISCIPLINE
+# TIMESTAMP_UTC=2026-04-24T19:25:29.2347050Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1 -Type PROOF -Title 'G9_DUAL_WRITE_DISCIPLINE fresh proof' -Text 'RUN_ID=ascendance-run-20260424T191213Z-9da3b561 SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49 G9_DUAL_WRITE_DISCIPLINE live evidence recorded in fresh run artifacts' -Gate G9_DUAL_WRITE_DISCIPLINE -RunDir C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T191213Z-9da3b561
+
+obs_id=31265 bus_id=coord_1777058731078_ar9v state=confirmed
+
+
+# EXIT_CODE=0
+# SHA256=6D64F883A5095D91283402AFAD412DB776DC2C2D187D341152AF31D8DF90589B

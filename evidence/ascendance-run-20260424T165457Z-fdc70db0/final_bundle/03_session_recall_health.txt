@@ -1,0 +1,83 @@
+# RUN_ID=ascendance-run-20260424T165457Z-fdc70db0
+# PROBE_ID=FINAL_BUNDLE_HEALTH
+# TIMESTAMP_UTC=2026-04-24T16:59:16.5112146Z
+# COMMAND=python -m session_recall health --json
+
+{
+  "overall_score": 7.8,
+  "dims": [
+    {
+      "score": 10.0,
+      "zone": "GREEN",
+      "name": "DB Freshness",
+      "detail": "0.0h old",
+      "hint": "Use Copilot CLI \u2014 DB only updates from active sessions"
+    },
+    {
+      "name": "Schema Integrity",
+      "score": 10,
+      "zone": "GREEN",
+      "detail": "All tables/columns OK",
+      "hint": ""
+    },
+    {
+      "score": 9.9,
+      "zone": "GREEN",
+      "name": "Query Latency",
+      "detail": "7ms",
+      "hint": "Check DB size or run PRAGMA integrity_check"
+    },
+    {
+      "score": 10,
+      "zone": "GREEN",
+      "name": "Corpus Size",
+      "detail": "112 sessions",
+      "hint": "Cold start \u2014 will improve with usage"
+    },
+    {
+      "score": 7.8,
+      "zone": "GREEN",
+      "name": "Summary Coverage",
+      "detail": "100% (112/112)",
+      "hint": "Summaries fill post-session; ghost sessions (0 turns) are excluded"
+    },
+    {
+      "name": "Repo Coverage",
+      "score": 10,
+      "zone": "GREEN",
+      "detail": "112 sessions for Karma8534/Karma-SADE",
+      "hint": ""
+    },
+    {
+      "score": 10,
+      "zone": "GREEN",
+      "name": "Concurrency",
+      "detail": "busy=0.0%, avg_attempts=1.00, p95=216ms, n=10",
+      "hint": "Increase busy_timeout or reduce concurrent use"
+    },
+    {
+      "name": "E2E Probe",
+      "score": 10,
+      "zone": "GREEN",
+      "detail": "list\u2192show OK (session reshp-ch, 1 turns sampled)",
+      "hint": ""
+    },
+    {
+      "name": "Progressive Disclosure",
+      "unknown_entries": 0,
+      "meta_entries": 5,
+      "scored_entries": 5,
+      "score": null,
+      "zone": "CALIBRATING",
+      "detail": "5/200 non-meta entries, 0d since first",
+      "hint": "Collecting baseline. Score activates at 200 entries or 7 days."
+    }
+  ],
+  "top_hints": [
+    "Collecting baseline. Score activates at 200 entries or 7 days."
+  ]
+}
+
+
+# EXIT_CODE=0
+# SHA256=9DC7F160C23D7285FF552307FB3086FFDEA44506F82F68D4C922F93BB3161776

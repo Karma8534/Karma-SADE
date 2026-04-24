@@ -1,0 +1,10 @@
+# RUN_ID=ascendance-run-20260424T165457Z-fdc70db0
+# PROBE_ID=FINAL_STATUS_RESHIP_AUDIT
+# TIMESTAMP_UTC=2026-04-24T17:12:51.5215667Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-reship-audit.ps1 -RunDir C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T165457Z-fdc70db0
+
+re-ship-audit ok=False json=C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T165457Z-fdc70db0\re-ship-checklist.json
+
+
+# EXIT_CODE=1
+# SHA256=F624BFAD5A3220D8985F512973805B53699CFCDA18AFA7AEBF34D3B69CAA9405

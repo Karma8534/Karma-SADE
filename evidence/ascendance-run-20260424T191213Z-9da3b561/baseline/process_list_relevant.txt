@@ -1,0 +1,2385 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49
+# PROBE_ID=PROCESS_LIST_RELEVANT
+# TIMESTAMP_UTC=2026-04-24T19:12:15.3760258Z
+# COMMAND=Get-Process | Where-Object { $_.ProcessName -match "cc_server|Arknexus|Nexus|watchdog|claude|node|python|tauri" } | Select-Object Id,ProcessName,Path,MainWindowTitle,StartTime | Format-List
+
+
+
+Id              : 148388
+ProcessName     : arknexusv6
+Path            : C:\Users\raest\Documents\Karma_SADE\nexus-tauri\src-tauri\target\release\arknexusv6.exe
+MainWindowTitle : ArknexusV6
+StartTime       : 4/24/2026 3:12:12 PM
+
+Id              : 15084
+ProcessName     : claude
+Path            : C:\Program Files\WindowsApps\Claude_1.3883.0.0_x64__pzs8sxrjxfjjc\app\Claude.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:19 PM
+
+Id              : 25800
+ProcessName     : claude
+Path            : C:\Program Files\WindowsApps\Claude_1.3883.0.0_x64__pzs8sxrjxfjjc\app\Claude.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:20 PM
+
+Id              : 67900
+ProcessName     : claude
+Path            : C:\Program Files\WindowsApps\Claude_1.3883.0.0_x64__pzs8sxrjxfjjc\app\Claude.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:20 PM
+
+Id              : 68888
+ProcessName     : claude
+Path            : C:\Program Files\WindowsApps\Claude_1.3883.0.0_x64__pzs8sxrjxfjjc\app\Claude.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:20 PM
+
+Id              : 69012
+ProcessName     : claude
+Path            : C:\Program Files\WindowsApps\Claude_1.3883.0.0_x64__pzs8sxrjxfjjc\app\Claude.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:20 PM
+
+Id              : 69608
+ProcessName     : claude
+Path            : C:\Program Files\WindowsApps\Claude_1.3883.0.0_x64__pzs8sxrjxfjjc\app\Claude.exe
+MainWindowTitle : Claude
+StartTime       : 4/23/2026 6:02:19 PM
+
+Id              : 70140
+ProcessName     : claude
+Path            : C:\Users\raest\AppData\Roaming\Claude\claude-code\2.1.111\claude.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:36 PM
+
+Id              : 70488
+ProcessName     : claude
+Path            : C:\Program Files\WindowsApps\Claude_1.3883.0.0_x64__pzs8sxrjxfjjc\app\Claude.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:20 PM
+
+Id              : 70912
+ProcessName     : claude
+Path            : C:\Users\raest\AppData\Roaming\Claude\claude-code\2.1.111\claude.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:29 PM
+
+Id              : 71024
+ProcessName     : claude
+Path            : C:\Program Files\WindowsApps\Claude_1.3883.0.0_x64__pzs8sxrjxfjjc\app\Claude.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:24 PM
+
+Id              : 71376
+ProcessName     : claude
+Path            : C:\Program Files\WindowsApps\Claude_1.3883.0.0_x64__pzs8sxrjxfjjc\app\Claude.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:24 PM
+
+Id              : 4352
+ProcessName     : node
+Path            : 
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:27:27 AM
+
+Id              : 67872
+ProcessName     : node
+Path            : C:\Program Files\nodejs\node.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:37 PM
+
+Id              : 70056
+ProcessName     : node
+Path            : C:\Program Files\nodejs\node.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:31 PM
+
+Id              : 70160
+ProcessName     : node
+Path            : C:\Program Files\nodejs\node.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:38 PM
+
+Id              : 70420
+ProcessName     : node
+Path            : C:\Program Files\nodejs\node.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:33 PM
+
+Id              : 70520
+ProcessName     : node
+Path            : C:\Program Files\nodejs\node.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:33 PM
+
+Id              : 70836
+ProcessName     : node
+Path            : C:\Program Files\nodejs\node.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:31 PM
+
+Id              : 70876
+ProcessName     : node
+Path            : C:\Program Files\nodejs\node.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:32 PM
+
+Id              : 71184
+ProcessName     : node
+Path            : C:\Program Files\nodejs\node.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:30 PM
+
+Id              : 72068
+ProcessName     : node
+Path            : C:\Program Files\nodejs\node.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:39 PM
+
+Id              : 72164
+ProcessName     : node
+Path            : C:\Program Files\nodejs\node.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:39 PM
+
+Id              : 72328
+ProcessName     : node
+Path            : C:\Program Files\nodejs\node.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:40 PM
+
+Id              : 72424
+ProcessName     : node
+Path            : C:\Program Files\nodejs\node.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:40 PM
+
+Id              : 168076
+ProcessName     : node
+Path            : C:\Program Files\nodejs\node.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:58:30 PM
+
+Id              : 109220
+ProcessName     : node_repl
+Path            : C:\Users\raest\AppData\Local\OpenAI\Codex\bin\node_repl.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:52:02 PM
+
+Id              : 165956
+ProcessName     : node_repl
+Path            : C:\Users\raest\AppData\Local\OpenAI\Codex\bin\node_repl.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:34:51 PM
+
+Id              : 344
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:11:18 PM
+
+Id              : 2368
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 1:21:18 PM
+
+Id              : 2640
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:26:18 PM
+
+Id              : 2752
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 1:41:18 PM
+
+Id              : 3104
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 1:16:18 PM
+
+Id              : 3188
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 4:36:18 PM
+
+Id              : 4544
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:36:18 PM
+
+Id              : 6124
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 3:56:18 PM
+
+Id              : 6444
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 2:41:18 PM
+
+Id              : 7140
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:41:18 AM
+
+Id              : 7580
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:36:18 AM
+
+Id              : 8000
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:36:18 AM
+
+Id              : 8136
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:21:18 PM
+
+Id              : 8912
+ProcessName     : python
+Path            : C:\Program 
+                  Files\WindowsApps\PythonSoftwareFoundation.PythonManager_26.1.240.0_x64__qbz5n2kfra8p0\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:30:27 AM
+
+Id              : 9764
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:01:18 AM
+
+Id              : 13036
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:56:22 PM
+
+Id              : 13136
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:16:23 AM
+
+Id              : 13588
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 2:21:19 PM
+
+Id              : 13860
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 1:01:18 PM
+
+Id              : 14444
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 3:36:18 PM
+
+Id              : 16340
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 2:46:18 PM
+
+Id              : 17288
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 4:51:18 PM
+
+Id              : 18004
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 4:06:18 PM
+
+Id              : 18248
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:51:18 AM
+
+Id              : 18684
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:51:18 AM
+
+Id              : 19464
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 2:56:18 PM
+
+Id              : 19700
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 3:16:18 PM
+
+Id              : 19972
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:26:18 AM
+
+Id              : 20984
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 1:26:18 PM
+
+Id              : 21264
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:01:18 PM
+
+Id              : 21788
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:30:27 AM
+
+Id              : 21792
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 12:16:18 PM
+
+Id              : 22040
+ProcessName     : python
+Path            : 
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:28:29 AM
+
+Id              : 22104
+ProcessName     : python
+Path            : 
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:36:32 AM
+
+Id              : 22468
+ProcessName     : python
+Path            : 
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:28:29 AM
+
+Id              : 22724
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 5:01:18 PM
+
+Id              : 22764
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 1:46:19 PM
+
+Id              : 22828
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 4:26:18 PM
+
+Id              : 22900
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:21:17 AM
+
+Id              : 23716
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 3:41:18 PM
+
+Id              : 24956
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 2:16:19 PM
+
+Id              : 25844
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:46:18 PM
+
+Id              : 26384
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 4:31:18 PM
+
+Id              : 26756
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 12:26:18 PM
+
+Id              : 26860
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 3:21:18 PM
+
+Id              : 27364
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 1:36:18 PM
+
+Id              : 27920
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:06:20 AM
+
+Id              : 28044
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:31:19 AM
+
+Id              : 28616
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:46:17 AM
+
+Id              : 29412
+ProcessName     : python
+Path            : 
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:36:33 AM
+
+Id              : 29780
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 2:06:18 PM
+
+Id              : 30660
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 4:41:18 PM
+
+Id              : 30824
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 11:16:18 AM
+
+Id              : 31416
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 12:21:18 PM
+
+Id              : 31908
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 4:01:18 PM
+
+Id              : 32656
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 3:06:18 PM
+
+Id              : 33468
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 12:11:18 PM
+
+Id              : 34360
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:16:19 PM
+
+Id              : 34812
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:06:18 AM
+
+Id              : 35348
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:51:18 AM
+
+Id              : 35804
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 1:31:18 PM
+
+Id              : 36204
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 5:51:18 PM
+
+Id              : 36352
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:37 PM
+
+Id              : 36528
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 5:06:18 PM
+
+Id              : 36936
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:41:18 AM
+
+Id              : 37744
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 12:51:18 PM
+
+Id              : 37812
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 3:11:18 PM
+
+Id              : 38620
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 7:31:18 PM
+
+Id              : 38832
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 2:51:18 PM
+
+Id              : 39248
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 8:11:18 PM
+
+Id              : 39304
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:06:18 AM
+
+Id              : 40624
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 4:16:18 PM
+
+Id              : 40688
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:11:23 AM
+
+Id              : 41216
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:31:18 PM
+
+Id              : 41660
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:56:18 AM
+
+Id              : 41784
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:11:18 PM
+
+Id              : 41792
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 12:41:18 PM
+
+Id              : 42284
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:46:18 AM
+
+Id              : 42668
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 5:31:18 PM
+
+Id              : 44516
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:31:18 AM
+
+Id              : 44704
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:51:18 PM
+
+Id              : 45096
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 2:26:19 PM
+
+Id              : 45260
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 2:11:19 PM
+
+Id              : 46356
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 2:31:19 PM
+
+Id              : 46404
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:21:18 AM
+
+Id              : 47216
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 3:46:18 PM
+
+Id              : 47324
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 3:51:18 PM
+
+Id              : 49252
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 3:31:18 PM
+
+Id              : 50296
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 12:06:18 PM
+
+Id              : 51468
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:56:18 AM
+
+Id              : 52300
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 7:41:18 PM
+
+Id              : 52432
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:46:18 PM
+
+Id              : 52800
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:31:18 AM
+
+Id              : 52812
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 2:01:18 PM
+
+Id              : 52976
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 1:11:22 PM
+
+Id              : 53028
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 12:01:19 PM
+
+Id              : 53168
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:06:18 PM
+
+Id              : 53344
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 3:01:18 PM
+
+Id              : 53820
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 1:06:18 PM
+
+Id              : 53992
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 12:36:18 PM
+
+Id              : 54780
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:01:18 AM
+
+Id              : 54888
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 1:56:18 PM
+
+Id              : 54924
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:46:18 AM
+
+Id              : 55352
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:01:19 PM
+
+Id              : 55864
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 4:21:18 PM
+
+Id              : 55888
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 3:26:18 PM
+
+Id              : 56084
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 12:56:19 PM
+
+Id              : 57040
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 12:46:34 PM
+
+Id              : 57948
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:11:18 AM
+
+Id              : 57952
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:26:18 AM
+
+Id              : 58516
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:41:18 AM
+
+Id              : 58888
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:16:18 AM
+
+Id              : 59812
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 12:31:26 PM
+
+Id              : 59920
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 7:01:18 PM
+
+Id              : 60012
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:36:18 AM
+
+Id              : 61376
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 4:56:18 PM
+
+Id              : 61764
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 1:51:19 PM
+
+Id              : 61820
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:56:18 AM
+
+Id              : 61876
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 2:36:19 PM
+
+Id              : 63076
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 4:11:18 PM
+
+Id              : 63584
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 4:46:18 PM
+
+Id              : 63884
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 5:11:18 PM
+
+Id              : 63896
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 5:36:18 PM
+
+Id              : 64424
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:26:18 PM
+
+Id              : 65664
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 5:16:18 PM
+
+Id              : 65940
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 5:21:18 PM
+
+Id              : 66240
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:21:18 PM
+
+Id              : 66360
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 5:26:18 PM
+
+Id              : 66620
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 5:46:18 PM
+
+Id              : 67472
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 5:41:18 PM
+
+Id              : 67784
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 7:16:18 PM
+
+Id              : 68912
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 5:56:19 PM
+
+Id              : 69384
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 7:46:18 PM
+
+Id              : 69476
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:16:18 PM
+
+Id              : 69540
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:41:18 PM
+
+Id              : 71444
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:02:30 PM
+
+Id              : 72776
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:06:18 PM
+
+Id              : 73032
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 8:06:18 PM
+
+Id              : 73128
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 6:56:18 PM
+
+Id              : 74164
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:36:18 PM
+
+Id              : 74192
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 7:06:18 PM
+
+Id              : 74980
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:11:18 PM
+
+Id              : 75324
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 8:51:18 PM
+
+Id              : 75360
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 7:11:18 PM
+
+Id              : 75520
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 7:36:18 PM
+
+Id              : 75828
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 8:36:18 PM
+
+Id              : 76488
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 7:26:18 PM
+
+Id              : 76552
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 7:21:18 PM
+
+Id              : 77788
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:31:18 PM
+
+Id              : 77896
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 8:16:18 PM
+
+Id              : 78372
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 7:51:18 PM
+
+Id              : 78384
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 8:56:18 PM
+
+Id              : 78908
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:01:18 PM
+
+Id              : 79124
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 8:21:18 PM
+
+Id              : 79232
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 8:01:18 PM
+
+Id              : 79272
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 7:56:18 PM
+
+Id              : 80180
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:51:18 PM
+
+Id              : 80216
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:46:17 PM
+
+Id              : 80240
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 8:31:18 PM
+
+Id              : 80856
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 8:26:18 PM
+
+Id              : 80928
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:31:18 AM
+
+Id              : 81108
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 3:51:18 AM
+
+Id              : 81148
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:51:19 PM
+
+Id              : 81324
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 8:41:20 PM
+
+Id              : 82656
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 8:46:18 PM
+
+Id              : 83272
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:31:18 PM
+
+Id              : 83532
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:16:18 PM
+
+Id              : 84236
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:46:18 AM
+
+Id              : 84340
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:26:18 PM
+
+Id              : 84440
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:46:18 PM
+
+Id              : 84616
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:21:18 PM
+
+Id              : 84620
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:21:18 PM
+
+Id              : 86024
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:56:18 PM
+
+Id              : 86532
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:41:18 PM
+
+Id              : 86716
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:01:18 AM
+
+Id              : 87016
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:06:18 PM
+
+Id              : 87320
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:51:18 PM
+
+Id              : 87736
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:16:18 PM
+
+Id              : 88532
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:46:18 PM
+
+Id              : 88940
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:36:18 PM
+
+Id              : 89228
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:11:17 AM
+
+Id              : 89528
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:01:19 PM
+
+Id              : 89584
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 9:56:18 PM
+
+Id              : 89740
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:41:18 PM
+
+Id              : 91496
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:21:18 PM
+
+Id              : 94252
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:26:18 PM
+
+Id              : 94320
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 10:46:18 PM
+
+Id              : 94632
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:16:18 PM
+
+Id              : 94820
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:01:18 PM
+
+Id              : 94892
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:06:18 PM
+
+Id              : 95264
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:56:18 PM
+
+Id              : 95444
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:11:18 PM
+
+Id              : 96364
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:41:17 PM
+
+Id              : 96656
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:01:17 AM
+
+Id              : 96780
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:31:18 PM
+
+Id              : 97220
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:06:18 AM
+
+Id              : 97316
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:41:18 AM
+
+Id              : 97620
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:51:18 AM
+
+Id              : 98084
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:36:17 PM
+
+Id              : 98728
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:06:18 AM
+
+Id              : 98772
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:26:18 AM
+
+Id              : 98856
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/23/2026 11:51:17 PM
+
+Id              : 98976
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:36:18 AM
+
+Id              : 101216
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:16:18 AM
+
+Id              : 101620
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:11:18 AM
+
+Id              : 101680
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:01:17 AM
+
+Id              : 101868
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:21:17 AM
+
+Id              : 101932
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:36:18 AM
+
+Id              : 102212
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:21:18 AM
+
+Id              : 102404
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:51:17 AM
+
+Id              : 102588
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:31:17 AM
+
+Id              : 104352
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:46:18 AM
+
+Id              : 105340
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:16:18 AM
+
+Id              : 105384
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:56:18 AM
+
+Id              : 106280
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 4:11:18 AM
+
+Id              : 107308
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:26:18 AM
+
+Id              : 108092
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:56:18 AM
+
+Id              : 108452
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:41:18 AM
+
+Id              : 108880
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:36:18 AM
+
+Id              : 109100
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 3:56:18 AM
+
+Id              : 109452
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 5:56:18 AM
+
+Id              : 109852
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:11:18 AM
+
+Id              : 110800
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:26:18 AM
+
+Id              : 111628
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:16:18 AM
+
+Id              : 112336
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 3:21:18 AM
+
+Id              : 112508
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:21:18 AM
+
+Id              : 112744
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 3:46:18 AM
+
+Id              : 113024
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:31:18 AM
+
+Id              : 113992
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 3:11:18 AM
+
+Id              : 114096
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:41:18 AM
+
+Id              : 114724
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 3:06:18 AM
+
+Id              : 114772
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 3:01:18 AM
+
+Id              : 114816
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:46:18 AM
+
+Id              : 115184
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:51:18 AM
+
+Id              : 115728
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 3:41:18 AM
+
+Id              : 116460
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:56:18 AM
+
+Id              : 117020
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 4:21:18 AM
+
+Id              : 117112
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 3:16:18 AM
+
+Id              : 117552
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 3:36:18 AM
+
+Id              : 118128
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 3:26:18 AM
+
+Id              : 118392
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 4:01:18 AM
+
+Id              : 118768
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 3:31:18 AM
+
+Id              : 120392
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 4:46:18 AM
+
+Id              : 120448
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 5:16:18 AM
+
+Id              : 120828
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 4:16:18 AM
+
+Id              : 121228
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 5:36:18 AM
+
+Id              : 121356
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 6:06:18 AM
+
+Id              : 122032
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 4:36:18 AM
+
+Id              : 122304
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 4:06:18 AM
+
+Id              : 122952
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 4:51:18 AM
+
+Id              : 123040
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 4:26:18 AM
+
+Id              : 123224
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 4:41:18 AM
+
+Id              : 123388
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 5:26:18 AM
+
+Id              : 124292
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 4:31:18 AM
+
+Id              : 124620
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 5:11:18 AM
+
+Id              : 125188
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 5:46:18 AM
+
+Id              : 125356
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 7:36:18 AM
+
+Id              : 125460
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 5:06:18 AM
+
+Id              : 126180
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 5:01:18 AM
+
+Id              : 126540
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 8:56:18 AM
+
+Id              : 127932
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 4:56:18 AM
+
+Id              : 128416
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 5:21:18 AM
+
+Id              : 128528
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 6:11:18 AM
+
+Id              : 128660
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 5:41:18 AM
+
+Id              : 129668
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 6:01:18 AM
+
+Id              : 129840
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 5:31:18 AM
+
+Id              : 130588
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 6:56:18 AM
+
+Id              : 130792
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 6:51:18 AM
+
+Id              : 131292
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 5:51:18 AM
+
+Id              : 131528
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 6:31:18 AM
+
+Id              : 131788
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 6:21:18 AM
+
+Id              : 132124
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 8:31:18 AM
+
+Id              : 132316
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 6:16:18 AM
+
+Id              : 132844
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 6:41:18 AM
+
+Id              : 132920
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 8:36:18 AM
+
+Id              : 132964
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 6:36:18 AM
+
+Id              : 133076
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 7:31:18 AM
+
+Id              : 133628
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 6:26:18 AM
+
+Id              : 133752
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 6:46:18 AM
+
+Id              : 134280
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 7:06:18 AM
+
+Id              : 136372
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 7:21:18 AM
+
+Id              : 136720
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 7:01:18 AM
+
+Id              : 137200
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 8:51:18 AM
+
+Id              : 137232
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:26:18 PM
+
+Id              : 137536
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 8:21:18 AM
+
+Id              : 137780
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 7:11:18 AM
+
+Id              : 138336
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 7:16:18 AM
+
+Id              : 138444
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 7:41:18 AM
+
+Id              : 138960
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 7:26:18 AM
+
+Id              : 139432
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 8:41:18 AM
+
+Id              : 139512
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 8:26:18 AM
+
+Id              : 140600
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 8:16:18 AM
+
+Id              : 141028
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 7:51:18 AM
+
+Id              : 141260
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 7:46:18 AM
+
+Id              : 141352
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 8:01:18 AM
+
+Id              : 141820
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 9:41:19 AM
+
+Id              : 142168
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 8:11:18 AM
+
+Id              : 142284
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 8:06:18 AM
+
+Id              : 142780
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 10:51:18 AM
+
+Id              : 143008
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 7:56:18 AM
+
+Id              : 143020
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 10:26:18 AM
+
+Id              : 143296
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 9:21:18 AM
+
+Id              : 143800
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 9:16:18 AM
+
+Id              : 144816
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 8:46:18 AM
+
+Id              : 144868
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 10:46:19 AM
+
+Id              : 146700
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 9:06:18 AM
+
+Id              : 147200
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 9:11:18 AM
+
+Id              : 147324
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 9:01:18 AM
+
+Id              : 147800
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 9:51:18 AM
+
+Id              : 147828
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 9:26:18 AM
+
+Id              : 148976
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 10:21:18 AM
+
+Id              : 149100
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 10:41:18 AM
+
+Id              : 149112
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 10:16:18 AM
+
+Id              : 149728
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 10:06:18 AM
+
+Id              : 149792
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 9:36:18 AM
+
+Id              : 150176
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 9:46:18 AM
+
+Id              : 150216
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 10:01:18 AM
+
+Id              : 150952
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 11:01:18 AM
+
+Id              : 150984
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 10:11:18 AM
+
+Id              : 152348
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 11:51:18 AM
+
+Id              : 152484
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 9:56:18 AM
+
+Id              : 152584
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:06:18 PM
+
+Id              : 152824
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 10:31:18 AM
+
+Id              : 153024
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 11:06:18 AM
+
+Id              : 153220
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 9:31:18 AM
+
+Id              : 153624
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 11:11:18 AM
+
+Id              : 153860
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:31:18 PM
+
+Id              : 154568
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 10:36:18 AM
+
+Id              : 155164
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 11:21:18 AM
+
+Id              : 155216
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 11:31:18 AM
+
+Id              : 155320
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 11:26:18 AM
+
+Id              : 155972
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 10:56:18 AM
+
+Id              : 156004
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 11:56:18 AM
+
+Id              : 157124
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:31:18 PM
+
+Id              : 157136
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:06:18 PM
+
+Id              : 157176
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 11:41:18 AM
+
+Id              : 157320
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 3:11:18 PM
+
+Id              : 158944
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 11:36:18 AM
+
+Id              : 159596
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:11:18 PM
+
+Id              : 159824
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 11:46:19 AM
+
+Id              : 160536
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:31:18 PM
+
+Id              : 160716
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:41:18 PM
+
+Id              : 160740
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:36:18 PM
+
+Id              : 160988
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:01:18 PM
+
+Id              : 161156
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:36:18 PM
+
+Id              : 161820
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:41:19 PM
+
+Id              : 161948
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:21:18 PM
+
+Id              : 162180
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:26:18 PM
+
+Id              : 162244
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:16:19 PM
+
+Id              : 163256
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 12:36:20 PM
+
+Id              : 163468
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:46:17 PM
+
+Id              : 163912
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:06:18 PM
+
+Id              : 164080
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:01:18 PM
+
+Id              : 165532
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:56:19 PM
+
+Id              : 165844
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:16:18 PM
+
+Id              : 167872
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:26:18 PM
+
+Id              : 167952
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:41:18 PM
+
+Id              : 168716
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:16:00 PM
+
+Id              : 169148
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:11:18 PM
+
+Id              : 169652
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:51:18 PM
+
+Id              : 170252
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:11:18 PM
+
+Id              : 170488
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 1:21:18 PM
+
+Id              : 172168
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:44:20 PM
+
+Id              : 172580
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 3:06:18 PM
+
+Id              : 172872
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:51:17 PM
+
+Id              : 173112
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 2:56:18 PM
+
+Id              : 175704
+ProcessName     : python
+Path            : C:\Python314\python.exe
+MainWindowTitle : 
+StartTime       : 4/24/2026 3:01:18 PM
+
+
+
+
+
+# EXIT_CODE=0
+# SHA256=E10F280A4DE4048032E1E2BB5ADEE5B4FA7C70A39B55570ACE60511201296DBD

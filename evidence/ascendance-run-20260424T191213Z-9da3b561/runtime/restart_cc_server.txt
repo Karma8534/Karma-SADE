@@ -1,0 +1,16 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49
+# PROBE_ID=RESTART_CC_SERVER
+# TIMESTAMP_UTC=2026-04-24T19:15:43.3219637Z
+# COMMAND=Get-CimInstance Win32_Process -Filter "Name='python.exe'" | Where-Object { $_.CommandLine -match "cc_server_p1.py" } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }; Start-Sleep -Seconds 2; Start-Process powershell -ArgumentList "-NoProfile","-ExecutionPolicy","Bypass","-File","C:\Users\raest\Documents\Karma_SADE\Scripts\Start-CCServer.ps1" -WindowStyle Hidden; Start-Sleep -Seconds 10; Invoke-WebRequest -UseBasicParsing -TimeoutSec 10 http://127.0.0.1:7891/health | Select-Object StatusCode,Content
+
+
+StatusCode Content                                                                                                     
+---------- -------                                                                                                     
+       200 {"ok": true, "service": "cc-server-p1", "gmail": true, "emergency_independent": false, "disable_anthropic...
+
+
+
+
+# EXIT_CODE=0
+# SHA256=9F874713D2BCC4CADFF6C2FBE68A2871063E2CCAF1DD254D32151C8EF3478731

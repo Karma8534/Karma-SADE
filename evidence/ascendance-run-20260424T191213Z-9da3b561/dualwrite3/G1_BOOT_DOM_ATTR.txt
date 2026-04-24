@@ -1,0 +1,10 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# PROBE_ID=DUALWRITE3_G1_BOOT_DOM_ATTR
+# TIMESTAMP_UTC=2026-04-24T19:23:36.8472966Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1 -Type PROOF -Title 'G1_BOOT_DOM_ATTR fresh proof' -Text 'RUN_ID=ascendance-run-20260424T191213Z-9da3b561 SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49 G1_BOOT_DOM_ATTR live evidence recorded in fresh run artifacts' -Gate G1_BOOT_DOM_ATTR -RunDir C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T191213Z-9da3b561
+
+obs_id=31241 bus_id= state=pending
+
+
+# EXIT_CODE=1
+# SHA256=5C9D022193DAEEE15ECBE367B3F52833701FE6569B008A7458049900C446EEE6

@@ -1,0 +1,10 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# PROBE_ID=DUALWRITE3_G4_PARITY_STRESS
+# TIMESTAMP_UTC=2026-04-24T19:23:40.7981005Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1 -Type PROOF -Title 'G4_PARITY_STRESS fresh proof' -Text 'RUN_ID=ascendance-run-20260424T191213Z-9da3b561 SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49 G4_PARITY_STRESS live evidence recorded in fresh run artifacts' -Gate G4_PARITY_STRESS -RunDir C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T191213Z-9da3b561
+
+obs_id=31244 bus_id= state=pending
+
+
+# EXIT_CODE=1
+# SHA256=9ECE4B169DACFAE5481A7D3BE2723BA87C038C368916EDA8CE03F6BB9CEA8778

@@ -1,0 +1,29 @@
+# RUN_ID=ascendance-run-20260424T165457Z-fdc70db0
+# PROBE_ID=PORT_7891
+# TIMESTAMP_UTC=2026-04-24T16:55:00.6075609Z
+# COMMAND=Test-NetConnection 127.0.0.1 -Port 7891; try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 10 http://127.0.0.1:7891/health | Select-Object StatusCode,Content } catch { $_; exit 1 }
+
+
+
+ComputerName     : 127.0.0.1
+RemoteAddress    : 127.0.0.1
+RemotePort       : 7891
+InterfaceAlias   : Loopback Pseudo-Interface 1
+SourceAddress    : 127.0.0.1
+TcpTestSucceeded : True
+
+
+StatusCode : 200
+Content    : {"ok": true, "service": "cc-server-p1", "gmail": true, "emergency_independent": false, 
+             "disable_anthropic": false, "latency": {"first_token_ms": null, "cancel_ms": null, "total_ms": null}, 
+             "lock_held": false, "current_proc_pid": null, "queue_enabled": true, "queue_wait_seconds": 45.0, 
+             "auto_memory": {"enabled": true, "db_path": "C:\\Users\\raest\\.copilot\\session-store.db", 
+             "last_sync_at": "2026-04-24T16:54:08.086283Z", "last_ok": true, "error": "", "sessions": 110, "turns": 
+             1732, "search_rows": 3432, "last_reason": "interval"}}
+
+
+
+
+
+# EXIT_CODE=0
+# SHA256=CEB814B02DC73C54EA2BB42FB2963B834F05ACA7D687B509DD76E7D5D43D3A38

@@ -1,0 +1,66 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49
+# PROBE_ID=VERIFIER_HARNESS_HASHES
+# TIMESTAMP_UTC=2026-04-24T19:12:32.1217073Z
+# COMMAND=@("Scripts\ascendance-final-gate.ps1","Scripts\ascendance-reship-audit.ps1","Scripts\phase1-cold-boot-harness.ps1","Scripts\phase2-parity-harness.ps1","Scripts\phase2-stress-harness.ps1","Scripts\phase3-family-harness.ps1","Scripts\ascendance-ritual-harness.ps1") | ForEach-Object { if(Test-Path $_){ Get-FileHash -Algorithm SHA256 $_ | Format-List } else { "MISSING $_"; exit 1 } }
+
+
+
+Algorithm : SHA256
+Hash      : 29A4CE8861F3383B4965F1C7859DA078CA34D7CB6684E5705F2B17FB9EA8306A
+Path      : C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-final-gate.ps1
+
+
+
+
+
+Algorithm : SHA256
+Hash      : 8EB4056F590763CC0C96F8694693067BD2A8FE13640F7E2CC34F98ACACF6EA71
+Path      : C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-reship-audit.ps1
+
+
+
+
+
+Algorithm : SHA256
+Hash      : 12011AD6B26CBB83B7EBCAB0B046222357626B41D84F564A6BA5AB137C95B389
+Path      : C:\Users\raest\Documents\Karma_SADE\Scripts\phase1-cold-boot-harness.ps1
+
+
+
+
+
+Algorithm : SHA256
+Hash      : E5DC5944F9C4D2A75776DE18B098D84EAA4F491A74130F48DC76EADC6175A6E3
+Path      : C:\Users\raest\Documents\Karma_SADE\Scripts\phase2-parity-harness.ps1
+
+
+
+
+
+Algorithm : SHA256
+Hash      : DB9A4428E619354FADC291561FBB2072C482C9FD06F46677662A54775882DF9C
+Path      : C:\Users\raest\Documents\Karma_SADE\Scripts\phase2-stress-harness.ps1
+
+
+
+
+
+Algorithm : SHA256
+Hash      : CD0641F8A36A8E1B8BCF90EB981731F4E6A88C16848DAAD21028BD4F5DE5C97A
+Path      : C:\Users\raest\Documents\Karma_SADE\Scripts\phase3-family-harness.ps1
+
+
+
+
+
+Algorithm : SHA256
+Hash      : 5B46519D2F31FBD67231637B794928F4AB37049788811CEF791C3AA2B8491FF1
+Path      : C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-ritual-harness.ps1
+
+
+
+
+
+# EXIT_CODE=0
+# SHA256=F7C699CFA20233D865B63DC94D73CE7DF31089C168D62EDADBE7464D81D2C95B

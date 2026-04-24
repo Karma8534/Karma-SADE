@@ -29,14 +29,14 @@ $entry = @{
   state = 'pending'
 }
 $jsonLine = $entry | ConvertTo-Json -Compress -Depth 3
-Add-Content -Path $queuePath -Value $jsonLine -Encoding utf8NoBOM
+Add-Content -Path $queuePath -Value $jsonLine -Encoding UTF8
 
 # Attempt MCP claude-mem via python (requires claude-mem worker on 37782)
 $obsOk = $false; $obsId = $null
 if (-not $QueueOnly) {
   try {
     $body = @{ text = $Text; title = "[$Type] $Title"; project = 'Karma_SADE' } | ConvertTo-Json -Compress
-    $resp = Invoke-RestMethod -Uri 'http://127.0.0.1:37782/api/save_observation' -Method POST -Body $body -ContentType 'application/json' -TimeoutSec 10
+    $resp = Invoke-RestMethod -Uri 'http://127.0.0.1:37782/api/memory/save' -Method POST -Body $body -ContentType 'application/json' -TimeoutSec 10
     if ($resp.success) { $obsOk = $true; $obsId = $resp.id }
   } catch { $obsOk = $false }
 }
@@ -45,17 +45,11 @@ if (-not $QueueOnly) {
 $busOk = $false; $busId = $null
 if (-not $QueueOnly) {
   try {
-    $msg = "[$Type][$Gate] $Title — $Text"
-    $pyCmd = @"
-import json, urllib.request
-token = open('/opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt').read().strip()
-payload = json.dumps({'from':'cc','to':'all','type':'inform','urgency':'informational','content': $(ConvertTo-Json $msg -Compress) }).encode()
-req = urllib.request.Request('https://hub.arknexus.net/v1/coordination/post', data=payload, headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'}, method='POST')
-with urllib.request.urlopen(req, timeout=10) as r:
-    d = json.loads(r.read())
-    print(d.get('id',''))
-"@
-    $busId = (ssh vault-neo "python3 -c `"$($pyCmd -replace '`','\\`' -replace '"','\"')`"") 2>$null
+    $msg = "[$Type][$Gate] $Title - $Text"
+    $token = ((ssh vault-neo 'cat /opt/seed-vault/memory_v1/hub_auth/hub.chat.token.txt') 2>$null | Out-String).Trim()
+    $payload = @{ from = 'cc'; to = 'all'; type = 'inform'; urgency = 'informational'; content = $msg } | ConvertTo-Json -Compress
+    $busResp = Invoke-RestMethod -Uri 'https://hub.arknexus.net/v1/coordination/post' -Method POST -Headers @{ Authorization = "Bearer $token" } -Body $payload -ContentType 'application/json' -TimeoutSec 10
+    $busId = [string]$busResp.id
     if ($busId -and $busId -match '^coord_') { $busOk = $true }
   } catch { $busOk = $false }
 }
@@ -67,10 +61,11 @@ $entry.obs_id = $obsId
 $entry.bus_id = $busId
 $entry.state = if ($obsOk -and $busOk) { 'confirmed' } else { 'pending' }
 $lines[$idx] = ($entry | ConvertTo-Json -Compress -Depth 3)
-Set-Content -Path $queuePath -Value $lines -Encoding utf8NoBOM
+Set-Content -Path $queuePath -Value $lines -Encoding UTF8
 
 # Append PROBE_LOG
-Add-Content -Path $probePath -Value "$utc | $Type | $Gate | obs=$($obsId) | bus=$($busId) | $Title | art_sha=none" -Encoding utf8NoBOM
+Add-Content -Path $probePath -Value "$utc | $Type | $Gate | obs=$($obsId) | bus=$($busId) | $Title | art_sha=none" -Encoding UTF8
 
 Write-Host "obs_id=$obsId bus_id=$busId state=$($entry.state)"
-exit (if ($obsOk -and $busOk) { 0 } else { 3 })
+if ($obsOk -and $busOk) { exit 0 }
+exit 3

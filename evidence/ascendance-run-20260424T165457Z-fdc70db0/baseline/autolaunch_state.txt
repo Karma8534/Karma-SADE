@@ -1,0 +1,47 @@
+# RUN_ID=ascendance-run-20260424T165457Z-fdc70db0
+# PROBE_ID=AUTOLAUNCH_STATE
+# TIMESTAMP_UTC=2026-04-24T16:55:15.5535847Z
+# COMMAND=Get-CimInstance Win32_StartupCommand | Where-Object { $_.Name -match "Arknexus|Nexus|watchdog|Karma|cc" -or $_.Command -match "Arknexus|Nexus|watchdog|Karma|cc" } | Select-Object Name,Command,Location,User | Format-List
+
+
+
+Name     : KarmaCCServer
+Command  : KarmaCCServer.vbs
+Location : Startup
+User     : PAYBACK\raest
+
+Name     : KarmaClaudeMemWorker
+Command  : KarmaClaudeMemWorker.cmd
+Location : Startup
+User     : PAYBACK\raest
+
+Name     : karma_startup
+Command  : karma_startup.vbs
+Location : Startup
+User     : PAYBACK\raest
+
+Name     : NexusCCServer
+Command  : "C:\WINDOWS\System32\wscript.exe" //B //nologo 
+           "C:\Users\raest\Documents\Karma_SADE\Scripts\RunHiddenPowerShell.vbs" 
+           "C:\Users\raest\Documents\Karma_SADE\Scripts\start_cc_server.ps1"
+Location : HKU\S-1-5-21-508130632-4089755708-2361934854-1001\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+User     : PAYBACK\raest
+
+Name     : NexusKarmaPersistent
+Command  : "C:\WINDOWS\System32\wscript.exe" //B //nologo 
+           "C:\Users\raest\Documents\Karma_SADE\Scripts\RunHiddenPowerShell.vbs" 
+           "C:\Users\raest\Documents\Karma_SADE\Scripts\Start-KarmaPersistent.ps1"
+Location : HKU\S-1-5-21-508130632-4089755708-2361934854-1001\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+User     : PAYBACK\raest
+
+Name     : AdobeGCInvoker-1.0
+Command  : "C:\Program Files (x86)\Common Files\Adobe\AdobeGCClient\AGCInvokerUtility.exe"
+Location : HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+User     : Public
+
+
+
+
+
+# EXIT_CODE=0
+# SHA256=B4E96BF4A4AD54D9334B739E701A31DF1EE4464838CB343DF360A4E35AB9745F

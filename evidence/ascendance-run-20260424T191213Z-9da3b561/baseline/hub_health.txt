@@ -1,0 +1,16 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49
+# PROBE_ID=HUB_HEALTH
+# TIMESTAMP_UTC=2026-04-24T19:12:31.0532612Z
+# COMMAND=Invoke-WebRequest -UseBasicParsing -TimeoutSec 20 https://hub.arknexus.net/health | Select-Object StatusCode,Content
+
+
+StatusCode Content                                                                
+---------- -------                                                                
+       200 {"ok":true,"service":"sovereign-proxy","ts":"2026-04-24T19:12:32.518Z"}
+
+
+
+
+# EXIT_CODE=0
+# SHA256=1EB23DD872067CC19DF955371A1016E3B5F534E99DE1A1271DAB970586B6771E

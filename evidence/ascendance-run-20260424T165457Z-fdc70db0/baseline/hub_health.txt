@@ -1,0 +1,15 @@
+# RUN_ID=ascendance-run-20260424T165457Z-fdc70db0
+# PROBE_ID=HUB_HEALTH
+# TIMESTAMP_UTC=2026-04-24T16:55:15.1096176Z
+# COMMAND=try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 20 https://hub.arknexus.net/health | Select-Object StatusCode,Content } catch { $_; exit 1 }
+
+
+StatusCode Content                                                                
+---------- -------                                                                
+       200 {"ok":true,"service":"sovereign-proxy","ts":"2026-04-24T16:55:15.894Z"}
+
+
+
+
+# EXIT_CODE=0
+# SHA256=A701C43C3ACDCF0C973362DEB5F60E238D18989FD1733AF697C04399B1B470AA

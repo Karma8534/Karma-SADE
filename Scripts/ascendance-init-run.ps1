@@ -71,12 +71,13 @@ $sessionJson = @{
   operator = 'CC (Ascendant)'
   snapshots = $snapshots
 }
-$sessionJson | ConvertTo-Json -Depth 5 | Out-File -LiteralPath (Join-Path $runDir 'session.json') -Encoding utf8NoBOM
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[IO.File]::WriteAllText((Join-Path $runDir 'session.json'), ($sessionJson | ConvertTo-Json -Depth 5), $utf8NoBom)
 
-'[]' | Out-File -LiteralPath (Join-Path $runDir 'EVIDENCE_INDEX.json') -Encoding utf8NoBOM
-"# GAP_MATRIX - $RunId`n`n| gate_id | status | attempt_n | verified_utc | artifact |`n|---|---|---|---|---|`n" | Out-File -LiteralPath (Join-Path $runDir 'GAP_MATRIX.md') -Encoding utf8NoBOM
-"# PROBE_LOG - $RunId`n`nstarted_utc: $sessionStartUtc`nSESSION_ID: $sessionId`n`n## Log`n`n$sessionStartUtc | DIRECTION | init | obs=pending | bus=pending | run initialized | art_sha=none`n" | Out-File -LiteralPath (Join-Path $runDir 'PROBE_LOG.md') -Encoding utf8NoBOM
-'' | Out-File -LiteralPath (Join-Path $runDir 'dual-write-queue.jsonl') -Encoding utf8NoBOM
+[IO.File]::WriteAllText((Join-Path $runDir 'EVIDENCE_INDEX.json'), '[]', $utf8NoBom)
+[IO.File]::WriteAllText((Join-Path $runDir 'GAP_MATRIX.md'), "# GAP_MATRIX - $RunId`n`n| gate_id | status | attempt_n | verified_utc | artifact |`n|---|---|---|---|---|`n", $utf8NoBom)
+[IO.File]::WriteAllText((Join-Path $runDir 'PROBE_LOG.md'), "# PROBE_LOG - $RunId`n`nstarted_utc: $sessionStartUtc`nSESSION_ID: $sessionId`n`n## Log`n`n$sessionStartUtc | DIRECTION | init | obs=pending | bus=pending | run initialized | art_sha=none`n", $utf8NoBom)
+[IO.File]::WriteAllText((Join-Path $runDir 'dual-write-queue.jsonl'), '', $utf8NoBom)
 
 Write-Host "run_dir: $runDir"
 Write-Host "SESSION_ID: $sessionId"

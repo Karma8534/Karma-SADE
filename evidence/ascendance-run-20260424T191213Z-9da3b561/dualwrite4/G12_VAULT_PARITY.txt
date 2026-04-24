@@ -1,0 +1,10 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# PROBE_ID=DUALWRITE4_G12_VAULT_PARITY
+# TIMESTAMP_UTC=2026-04-24T19:25:33.5165524Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1 -Type PROOF -Title 'G12_VAULT_PARITY fresh proof' -Text 'RUN_ID=ascendance-run-20260424T191213Z-9da3b561 SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49 G12_VAULT_PARITY live evidence recorded in fresh run artifacts' -Gate G12_VAULT_PARITY -RunDir C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T191213Z-9da3b561
+
+obs_id=31268 bus_id=coord_1777058735432_ftzz state=confirmed
+
+
+# EXIT_CODE=0
+# SHA256=964AA04C119E3E80600C20A34DCBECE410D129ED19A78FD7E99CCE3E7B5587FF

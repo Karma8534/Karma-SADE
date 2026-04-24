@@ -1,0 +1,68 @@
+[
+  {
+    "id": "ENVIRONMENT",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\baseline\\environment.txt",
+    "sha256": "56B51D5CDAF2ADE79A744B0F07E4798DE8D27E5A6B6FE530C72604229C31EA01"
+  },
+  {
+    "id": "GIT_BRANCH_REMOTES_HEADS",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\baseline\\git_branch_remotes_heads.txt",
+    "sha256": "AEE2162AD5D65C5DBFC47B84942C60724A75AAF5DAC8D125CAD6F06C58B1850F"
+  },
+  {
+    "id": "GIT_STATUS_FULL",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\baseline\\git_status_short_untracked_all.txt",
+    "sha256": "754D21956CD060C29F4054173648073F843424AFB2E8A42219E358F0243EAD3A"
+  },
+  {
+    "id": "IGNORED_RELEVANT_INVENTORY",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\baseline\\ignored_relevant_inventory.txt",
+    "sha256": "94923DBEA8AA5DC0D3241AA55CB6464FBB6E5E92A1923543E0AD3BE2A8D6306A"
+  },
+  {
+    "id": "PROCESS_LIST_RELEVANT",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\baseline\\process_list_relevant.txt",
+    "sha256": "E10F280A4DE4048032E1E2BB5ADEE5B4FA7C70A39B55570ACE60511201296DBD"
+  },
+  {
+    "id": "PORT_7891_HEALTH",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\baseline\\port_7891_health.txt",
+    "sha256": "5C4FD7E1E7B108A484BC6DE748511B5B4555AF0F41F17C0DF90FD60C5EBAAB18"
+  },
+  {
+    "id": "PORT_37782_HEALTH",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\baseline\\port_37782_health.txt",
+    "sha256": "BD2914D108397706B5F5DFF768E52825C236C9562DA9C1224ED07B5F9E529382"
+  },
+  {
+    "id": "HUB_HEALTH",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\baseline\\hub_health.txt",
+    "sha256": "1EB23DD872067CC19DF955371A1016E3B5F534E99DE1A1271DAB970586B6771E"
+  },
+  {
+    "id": "VERIFIER_HARNESS_HASHES",
+    "exit": 0,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\baseline\\verifier_harness_hashes.txt",
+    "sha256": "F7C699CFA20233D865B63DC94D73CE7DF31089C168D62EDADBE7464D81D2C95B"
+  },
+  {
+    "id": "CURRENT_FINAL_GATE_BASELINE",
+    "exit": 1,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\baseline\\current_final_gate_baseline.txt",
+    "sha256": "4618B4B1FF2B9D9DA6BDD9133BF12757EED2BF9EFA54588F905F23E3CFD34133"
+  },
+  {
+    "id": "CURRENT_RESHIP_AUDIT_BASELINE",
+    "exit": 1,
+    "path": "C:\\Users\\raest\\Documents\\Karma_SADE\\evidence\\ascendance-run-20260424T191213Z-9da3b561\\baseline\\current_reship_audit_baseline.txt",
+    "sha256": "DBC7AFCCF14CAEC9D82BFF5FBEC2C2B9EF17BA2FDC7F81E9CB961495B966DDD1"
+  }
+]

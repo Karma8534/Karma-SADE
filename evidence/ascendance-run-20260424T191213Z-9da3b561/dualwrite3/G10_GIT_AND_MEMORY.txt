@@ -1,0 +1,10 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# PROBE_ID=DUALWRITE3_G10_GIT_AND_MEMORY
+# TIMESTAMP_UTC=2026-04-24T19:23:49.2323933Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-dual-write.ps1 -Type PROOF -Title 'G10_GIT_AND_MEMORY fresh proof' -Text 'RUN_ID=ascendance-run-20260424T191213Z-9da3b561 SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49 G10_GIT_AND_MEMORY live evidence recorded in fresh run artifacts' -Gate G10_GIT_AND_MEMORY -RunDir C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T191213Z-9da3b561
+
+obs_id=31250 bus_id= state=pending
+
+
+# EXIT_CODE=1
+# SHA256=E7F6CDCC176B366FA783B2A1D9EB276B1199CAC0B856814B338AE00EA7865719

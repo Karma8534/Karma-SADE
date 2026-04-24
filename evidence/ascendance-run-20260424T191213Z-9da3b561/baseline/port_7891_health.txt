@@ -1,0 +1,30 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49
+# PROBE_ID=PORT_7891_HEALTH
+# TIMESTAMP_UTC=2026-04-24T19:12:16.1605237Z
+# COMMAND=Test-NetConnection 127.0.0.1 -Port 7891; Invoke-WebRequest -UseBasicParsing -TimeoutSec 10 http://127.0.0.1:7891/health | Select-Object StatusCode,Content
+
+
+
+ComputerName     : 127.0.0.1
+RemoteAddress    : 127.0.0.1
+RemotePort       : 7891
+InterfaceAlias   : Loopback Pseudo-Interface 1
+SourceAddress    : 127.0.0.1
+TcpTestSucceeded : True
+
+
+StatusCode : 200
+Content    : {"ok": true, "service": "cc-server-p1", "gmail": true, "emergency_independent": false, 
+             "disable_anthropic": false, "latency": {"first_token_ms": null, "cancel_ms": null, "total_ms": null}, 
+             "lock_held": false, "current_proc_pid": null, "queue_enabled": true, "queue_wait_seconds": 45.0, 
+             "auto_memory": {"enabled": true, "db_path": "C:\\Users\\raest\\.copilot\\session-store.db", 
+             "last_sync_at": "2026-04-24T19:12:18.620409Z", "last_ok": true, "error": "", "sessions": 118, "turns": 
+             1746, "search_rows": 3473, "last_reason": "interval"}}
+
+
+
+
+
+# EXIT_CODE=0
+# SHA256=5C4FD7E1E7B108A484BC6DE748511B5B4555AF0F41F17C0DF90FD60C5EBAAB18

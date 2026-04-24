@@ -1,0 +1,13 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49
+# PROBE_ID=ASCENDANCE_INIT_RUN_DRY_COMPAT
+# TIMESTAMP_UTC=2026-04-24T19:15:42.7101868Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-init-run.ps1 -Dry
+
+run_dir: C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-dry-run-20260424T191543Z-31fdd2cf
+SESSION_ID: 31fdd2cf-781c-49dc-8053-22a6703e902e
+run_id: 20260424T191543Z-31fdd2cf
+
+
+# EXIT_CODE=0
+# SHA256=2F33A53AC32737AD9A6FC11EFA84502B7F28D3FA4EAFB85504B01245B11C0D81

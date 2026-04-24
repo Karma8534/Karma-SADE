@@ -1,0 +1,25 @@
+# RUN_ID=ascendance-run-20260424T191213Z-9da3b561
+# SESSION_ID=9da3b561-d4a5-4882-9656-09cda8936e49
+# PROBE_ID=ASCENDANCE_RITUAL_HARNESS
+# TIMESTAMP_UTC=2026-04-24T19:18:42.0319679Z
+# COMMAND=powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\raest\Documents\Karma_SADE\Scripts\ascendance-ritual-harness.ps1 -RunDir C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T191213Z-9da3b561 -RecorderMode pngseq -WaitSeconds 10
+
+ritual-recorder: start mode=pngseq sid=9da3b561-d4a5-4882-9656-09cda8936e49
+ritual-recorder: mark step=1 utc=2026-04-24T19:19:10.9847432Z
+ritual-recorder: mark step=2 utc=2026-04-24T19:19:11.1265022Z
+ritual-recorder: mark step=3 utc=2026-04-24T19:19:11.9268071Z
+ritual-recorder: mark step=4 utc=2026-04-24T19:19:15.0616112Z
+ritual-recorder: mark step=5 utc=2026-04-24T19:19:30.9320418Z
+ritual-recorder: mark step=6 utc=2026-04-24T19:19:30.9891449Z
+ritual-recorder: mark step=7 utc=2026-04-24T19:19:33.2801230Z
+ritual-recorder: mark step=8 utc=2026-04-24T19:19:43.3457254Z
+ritual-recorder: mark step=9 utc=2026-04-24T19:19:47.4350769Z
+ritual-recorder: mark step=10 utc=2026-04-24T19:19:47.7132832Z
+ritual-recorder: mark step=11 utc=2026-04-24T19:20:06.1284935Z
+ritual-recorder: mark step=12 utc=2026-04-24T19:20:06.2306983Z
+ritual-recorder: stop mode=pngseq max_gap=18.4152103 monotonic=True within=True g8=True
+ascendance-ritual: sid=9da3b561-d4a5-4882-9656-09cda8936e49 g7=True uuid6=True uuid12=True dir_deleted=True
+
+
+# EXIT_CODE=0
+# SHA256=0FBC8A2026E9614022074109D93B23A8B118BE01A4B01C8A98D82898334CC8B0

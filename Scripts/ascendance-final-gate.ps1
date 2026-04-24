@@ -268,7 +268,14 @@ if ($trackerState) {
   try {
     $lastRunUtc = [datetime]::Parse([string]$trackerState.last_run).ToUniversalTime()
     $recent = (($now - $lastRunUtc).TotalSeconds -le 600)
-    if ([string]$trackerState.overall -match 'ASCENDANCE = 100 \(SHIPPED\)' -and $recent) { $trackerShipped = $true }
+    $trackerRunMatches = ([string]$trackerState.run_dir -eq [string]$RunDir)
+    $trackerAllVerified = (
+      [int]$trackerState.gates_verified -eq 14 -and
+      [int]$trackerState.gates_fail -eq 0 -and
+      [int]$trackerState.gates_blocked -eq 0 -and
+      [int]$trackerState.gates_missing -eq 0
+    )
+    if ($recent -and $trackerRunMatches -and $trackerAllVerified) { $trackerShipped = $true }
   } catch {}
 }
 

@@ -12,6 +12,25 @@ from http.server import HTTPServer, ThreadingHTTPServer, BaseHTTPRequestHandler
 from collections import defaultdict
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
+
+def _configure_utf8_runtime():
+    """Force UTF-8 text boundaries so Unicode memory/tool output cannot crash on cp1252 hosts."""
+    try:
+        os.environ.setdefault("PYTHONUTF8", "1")
+        os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+    except Exception:
+        pass
+    for stream_name in ("stdout", "stderr"):
+        try:
+            stream = getattr(sys, stream_name, None)
+            if stream and hasattr(stream, "reconfigure"):
+                stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
+
+_configure_utf8_runtime()
 try:
     from cc_gmail import send_to_colby, check_inbox
     GMAIL_AVAILABLE = True
@@ -107,6 +126,7 @@ _TRUSTED_CLIENT_NETWORKS = (
     ipaddress.ip_network("fc00::/7"),
 )
 _RISKY_ROUTE_AUDIT_FILE = pathlib.Path(r"C:\Users\raest\Documents\Karma_SADE\Logs\cc_risky_routes.jsonl")
+_session_store_locks = defaultdict(threading.RLock)
 
 
 def _is_trusted_client_ip(ip):
@@ -289,6 +309,22 @@ MODEL_POLICY_FALLBACKS = [
 ]
 HUB_BASE_URL = os.environ.get("KARMA_HUB_BASE_URL", "https://hub.arknexus.net").strip().rstrip("/")
 CLAUDEMEM_DB   = pathlib.Path.home() / ".claude-mem" / "claude-mem.db"
+AUTO_MEMORY_BRIDGE_SCRIPT = os.path.join(WORK_DIR, "Scripts", "auto_memory_bridge.py")
+AUTO_MEMORY_DB = pathlib.Path(os.environ.get("SESSION_RECALL_DB", str(pathlib.Path.home() / ".copilot" / "session-store.db"))).expanduser()
+AUTO_MEMORY_SYNC_ENABLED = os.environ.get("KARMA_AUTO_MEMORY_SYNC", "1").strip().lower() in ("1", "true", "yes", "on")
+AUTO_MEMORY_SYNC_INTERVAL = max(30, int(os.environ.get("KARMA_AUTO_MEMORY_INTERVAL", "120") or "120"))
+AUTO_MEMORY_CONTEXT_ENABLED = os.environ.get("KARMA_AUTO_MEMORY_CONTEXT", "1").strip().lower() in ("1", "true", "yes", "on")
+_auto_memory_status_lock = threading.Lock()
+_auto_memory_status = {
+    "enabled": AUTO_MEMORY_SYNC_ENABLED,
+    "db_path": str(AUTO_MEMORY_DB),
+    "last_sync_at": "",
+    "last_ok": False,
+    "error": "",
+    "sessions": 0,
+    "turns": 0,
+    "search_rows": 0,
+}
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama-3.3-70b-versatile"
 TOOL_LOOP_LIMIT = 6
@@ -315,6 +351,8 @@ TOOL_PROMPT = "\n".join([
     "You are Karma in the Nexus runtime.",
     "Stay grounded to live state and concrete tool output.",
     "Use the tools available in your runtime directly; do not invent fake tool protocols.",
+    "Never ask the user for SSH access, credentials, or manual file dumps for K2/P1/vault; use available runtime tools/endpoints yourself.",
+    "If a route/tool is unavailable, report exact failing command+error and continue with remaining probes.",
     "Answer in plain text.",
     "Do not emit identity/platform disclaimers unless the user explicitly asks.",
 ])
@@ -707,8 +745,213 @@ def _fetch_recent_memories(query="", limit=20, raw=False):
     return [] if raw else ""
 
 
+def _auto_memory_subprocess_env():
+    env = os.environ.copy()
+    env.setdefault("PYTHONUTF8", "1")
+    env.setdefault("PYTHONIOENCODING", "utf-8")
+    env.setdefault("SESSION_RECALL_DB", str(AUTO_MEMORY_DB))
+    return env
+
+
+def _set_auto_memory_status(**updates):
+    with _auto_memory_status_lock:
+        _auto_memory_status.update(updates)
+
+
+def _get_auto_memory_status():
+    with _auto_memory_status_lock:
+        return dict(_auto_memory_status)
+
+
+def _run_auto_memory_bridge_once(reason="manual"):
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+    if not AUTO_MEMORY_SYNC_ENABLED:
+        _set_auto_memory_status(last_sync_at=now_iso, last_ok=False, error="disabled")
+        return {"ok": False, "error": "auto-memory sync disabled"}
+    if not os.path.isfile(AUTO_MEMORY_BRIDGE_SCRIPT):
+        msg = f"bridge script missing: {AUTO_MEMORY_BRIDGE_SCRIPT}"
+        _set_auto_memory_status(last_sync_at=now_iso, last_ok=False, error=msg)
+        return {"ok": False, "error": msg}
+    try:
+        proc = subprocess.run(
+            [sys.executable, AUTO_MEMORY_BRIDGE_SCRIPT, "--db", str(AUTO_MEMORY_DB)],
+            cwd=WORK_DIR,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=180,
+            env=_auto_memory_subprocess_env(),
+        )
+        if proc.returncode != 0:
+            err = (proc.stderr or proc.stdout or "auto_memory_bridge failed").strip()[:1200]
+            _set_auto_memory_status(last_sync_at=now_iso, last_ok=False, error=err)
+            return {"ok": False, "error": err, "exit_code": proc.returncode}
+        payload = {}
+        raw = (proc.stdout or "").strip()
+        if raw:
+            try:
+                payload = json.loads(raw)
+            except Exception:
+                payload = {"raw": raw[:1000]}
+        _set_auto_memory_status(
+            last_sync_at=now_iso,
+            last_ok=True,
+            error="",
+            sessions=int(payload.get("sessions", 0) or 0),
+            turns=int(payload.get("turns", 0) or 0),
+            search_rows=int(payload.get("search_rows", 0) or 0),
+            last_reason=str(reason or ""),
+        )
+        return {"ok": True, **payload}
+    except Exception as e:
+        msg = str(e)
+        _set_auto_memory_status(last_sync_at=now_iso, last_ok=False, error=msg, last_reason=str(reason or ""))
+        return {"ok": False, "error": msg}
+
+
+def _auto_memory_sync_loop():
+    # Prime immediately on boot, then run periodic refreshes.
+    _run_auto_memory_bridge_once(reason="startup")
+    while True:
+        time.sleep(AUTO_MEMORY_SYNC_INTERVAL)
+        _run_auto_memory_bridge_once(reason="interval")
+
+
+def _start_auto_memory_sync_daemon():
+    if not AUTO_MEMORY_SYNC_ENABLED:
+        print("[cc-server] auto-memory sync: DISABLED")
+        return
+    try:
+        thread = threading.Thread(target=_auto_memory_sync_loop, daemon=True, name="auto-memory-sync")
+        thread.start()
+        print(f"[cc-server] auto-memory sync: STARTED ({AUTO_MEMORY_SYNC_INTERVAL}s interval)")
+    except Exception as e:
+        print(f"[cc-server] auto-memory sync: FAILED ({e})")
+
+
+def _fetch_auto_memory_context(max_sessions=2, max_files=5):
+    if not AUTO_MEMORY_CONTEXT_ENABLED:
+        return ""
+    db_path = AUTO_MEMORY_DB
+    if not db_path.exists():
+        return ""
+    try:
+        conn = sqlite3.connect(str(db_path), timeout=3)
+        conn.row_factory = sqlite3.Row
+        sessions = conn.execute(
+            """
+            SELECT id, summary, updated_at
+            FROM sessions
+            ORDER BY COALESCE(updated_at, created_at) DESC
+            LIMIT ?
+            """,
+            (max(1, int(max_sessions)),),
+        ).fetchall()
+        files = conn.execute(
+            """
+            SELECT file_path, first_seen_at
+            FROM session_files
+            ORDER BY first_seen_at DESC
+            LIMIT ?
+            """,
+            (max(1, int(max_files)),),
+        ).fetchall()
+        conn.close()
+        lines = []
+        for row in sessions:
+            sid = str(row["id"] or "")[:12]
+            summary = re.sub(r"\s+", " ", str(row["summary"] or "")).strip()
+            updated = str(row["updated_at"] or "")[:19]
+            if summary:
+                lines.append(f"- session {sid} ({updated}): {summary[:220]}")
+        if files:
+            lines.append("- recent files: " + ", ".join(str(r["file_path"] or "") for r in files[:max_files]))
+        return "\n".join(lines[:8]).strip()
+    except Exception:
+        return ""
+
+
+def _auto_memory_search(query="recent", limit=20):
+    db_path = AUTO_MEMORY_DB
+    if not db_path.exists():
+        return []
+    try:
+        limit = max(1, min(int(limit), 200))
+    except Exception:
+        limit = 20
+    q_norm = str(query or "").strip().lower()
+    try:
+        conn = sqlite3.connect(str(db_path), timeout=3)
+        conn.row_factory = sqlite3.Row
+        if q_norm in {"", "recent", "latest", "now", "current", "newest"}:
+            rows = conn.execute(
+                """
+                SELECT id, summary, updated_at
+                FROM sessions
+                ORDER BY COALESCE(updated_at, created_at) DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+            conn.close()
+            return [
+                {
+                    "id": str(r["id"] or ""),
+                    "title": f"session {str(r['id'] or '')[:12]}",
+                    "text": str(r["summary"] or ""),
+                    "created_at": str(r["updated_at"] or ""),
+                    "type": "auto-memory",
+                    "project": "Karma_SADE",
+                }
+                for r in rows
+            ]
+        rows = conn.execute(
+            """
+            SELECT si.session_id, si.content, si.source_type, s.updated_at
+            FROM search_index si
+            LEFT JOIN sessions s ON s.id = si.session_id
+            WHERE LOWER(si.content) LIKE '%' || LOWER(?) || '%'
+            ORDER BY COALESCE(s.updated_at, s.created_at) DESC
+            LIMIT ?
+            """,
+            (str(query or ""), limit),
+        ).fetchall()
+        conn.close()
+        out = []
+        for r in rows:
+            sid = str(r["session_id"] or "")
+            out.append(
+                {
+                    "id": sid,
+                    "title": f"{str(r['source_type'] or 'entry')} {sid[:12]}",
+                    "text": str(r["content"] or "")[:1200],
+                    "created_at": str(r["updated_at"] or ""),
+                    "type": "auto-memory",
+                    "project": "Karma_SADE",
+                }
+            )
+        return out
+    except Exception:
+        return []
+
+
 def _build_wakeup_summary():
     """Generate AAAK wake-up block from recent memories."""
+    def _is_test_noise(text):
+        t = str(text or "").lower()
+        noise_tokens = (
+            "reship-",
+            "parity-probe",
+            "stress-probe",
+            "ascendance-ritual-",
+            "test-v1chat",
+            "[session_store]",
+            "session_store_v1",
+            "payload_base64=",
+        )
+        return any(tok in t for tok in noise_tokens)
+
     memories = []
     try:
         _ensure_palace_columns()
@@ -738,9 +981,16 @@ def _build_wakeup_summary():
         if isinstance(m, dict):
             text = m.get("text") or m.get("content") or ""
             title = m.get("title") or ""
-            facts.append(f"{title}: {text}" if title else text)
+            if str(title).strip().lower().startswith("nexus chat"):
+                continue
+            if "[nexus chat]" in str(text).lower():
+                continue
+            fact = f"{title}: {text}" if title else text
+            if not _is_test_noise(fact):
+                facts.append(fact)
         elif isinstance(m, str):
-            facts.append(m)
+            if not _is_test_noise(m):
+                facts.append(m)
     if not facts:
         facts.append("memory empty")
     try:
@@ -1164,30 +1414,31 @@ def _append_session_turn(session_id, role, content, source="v1_chat"):
     text = str(content or "").strip()
     if not sid or not text:
         return None
-    payload = _load_session_store(sid) or {"session_id": sid, "values": {}, "history": []}
-    if not isinstance(payload, dict):
-        payload = {"session_id": sid, "values": {}, "history": []}
-    values = payload.get("values")
-    if not isinstance(values, dict):
-        values = {}
-    payload["values"] = values
-    history = payload.get("history")
-    if not isinstance(history, list):
-        history = []
-    history.append({
-        "ts": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
-        "text": text,
-        "body": {
-            "role": str(role or "user"),
-            "content": text,
-            "turn": text,
-            "source": source,
-            "session_id": sid,
-        },
-    })
-    payload["history"] = history
-    payload["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
-    return _save_session_store(sid, payload)
+    with _session_store_locks[sid]:
+        payload = _load_session_store(sid) or {"session_id": sid, "values": {}, "history": []}
+        if not isinstance(payload, dict):
+            payload = {"session_id": sid, "values": {}, "history": []}
+        values = payload.get("values")
+        if not isinstance(values, dict):
+            values = {}
+        payload["values"] = values
+        history = payload.get("history")
+        if not isinstance(history, list):
+            history = []
+        history.append({
+            "ts": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
+            "text": text,
+            "body": {
+                "role": str(role or "user"),
+                "content": text,
+                "turn": text,
+                "source": source,
+                "session_id": sid,
+            },
+        })
+        payload["history"] = history
+        payload["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+        return _save_session_store(sid, payload)
 
 
 def _build_session_summary():
@@ -1448,6 +1699,9 @@ def build_context_prefix(user_message):
     cortex_ctx = _fetch_cortex_context(user_message[:200])
     if cortex_ctx:
         parts.append(f"[CORTEX — K2 working memory summary]\n{cortex_ctx}\n\n")
+    auto_recall = _fetch_auto_memory_context(max_sessions=2, max_files=5)
+    if auto_recall:
+        parts.append(f"[AUTO-MEMORY RECALL — recent sessions/files]\n{auto_recall}\n\n")
     memories = _fetch_recent_memories(user_message[:200])
     if memories:
         parts.append(f"[RELEVANT MEMORIES — from claude-mem spine]\n{memories}\n\n")
@@ -1792,6 +2046,10 @@ def _run_memory_search(query="recent", limit=20, wing=None, room=None, hall=None
         sqlite_rows = _normalize_memory_search_results(sqlite_payload)
         if sqlite_rows:
             rows = sqlite_rows
+    if not rows:
+        auto_rows = _auto_memory_search(query=query, limit=limit)
+        if auto_rows:
+            return 200, {"ok": True, "results": auto_rows, "count": len(auto_rows), "source": "auto-memory"}
 
     if rows:
         return 200, {"ok": True, "results": rows, "count": len(rows)}
@@ -1981,14 +2239,14 @@ def _execute_tool_locally(tool_name, tool_input):
             if not command:
                 result = {"ok": False, "error": "command required"}
             else:
-                proc = subprocess.run(command, shell=True, capture_output=True, text=True, cwd=WORK_DIR, timeout=30, encoding="utf-8", errors="replace")
+                proc = subprocess.run(command, shell=True, capture_output=True, text=True, cwd=WORK_DIR, timeout=30, encoding="utf-8", errors="replace", env=_sanitized_subprocess_env())
                 result = {"ok": proc.returncode == 0, "stdout": proc.stdout[:8000], "stderr": proc.stderr[:2000], "exit_code": proc.returncode}
         elif tool_name == "git":
             command = tool_input.get("command", "").strip()
             if not command:
                 result = {"ok": False, "error": "command required"}
             else:
-                proc = subprocess.run(["git"] + command.split(), capture_output=True, text=True, cwd=WORK_DIR, timeout=30, encoding="utf-8", errors="replace")
+                proc = subprocess.run(["git"] + command.split(), capture_output=True, text=True, cwd=WORK_DIR, timeout=30, encoding="utf-8", errors="replace", env=_sanitized_subprocess_env())
                 result = {"ok": proc.returncode == 0, "stdout": proc.stdout[:8000], "stderr": proc.stderr[:2000], "exit_code": proc.returncode}
         elif tool_name == "glob":
             pattern = tool_input.get("pattern", "")
@@ -2031,6 +2289,10 @@ def _sanitized_subprocess_env():
     # Claude Max/OAuth should not be shadowed by stale Console API keys.
     env.pop("ANTHROPIC_API_KEY", None)
     env.pop("CLAUDE_API_KEY", None)
+    # Prevent cp1252 charmap crashes when Python subprocesses print Unicode.
+    env.setdefault("PYTHONUTF8", "1")
+    env.setdefault("PYTHONIOENCODING", "utf-8")
+    env.setdefault("SESSION_RECALL_DB", str(AUTO_MEMORY_DB))
     return env
 
 def _build_cc_cmd(message, effort=None, model=None, budget=None, stream=False, resume=True, conversation_id=None):
@@ -2216,6 +2478,9 @@ def _normalize_karma_voice(user_message, assistant_text):
     text = str(assistant_text or "").strip()
     if not text:
         return text
+    # Never offload runtime access to the user. Karma must use live tools/endpoints.
+    if re.search(r"\bssh\b", text, re.IGNORECASE) or re.search(r"\bcredentials?\b", text, re.IGNORECASE) or re.search(r"\b(you\s+provide\s+file\s+contents|give\s+me\s+the\s+paths?)\b", text, re.IGNORECASE):
+        return "I’ll run live probes directly via available Nexus routes/tools and report exact blockers with command-level errors if any path is unavailable."
     if not _contains_karma_disclaimer(text):
         return text
     user = str(user_message or "")
@@ -2383,7 +2648,7 @@ def _groq_fallback(message, transcript_context="", event_sink=None):
     messages = [
         {
             "role": "system",
-            "content": "You are Karma inside the Nexus harness. Use the provided tools when you need grounded file, git, or shell data. Do not guess about workspace state. After tool results are returned, continue. When done, answer in plain text only.",
+            "content": "You are Karma inside the Nexus harness. Use the provided tools when you need grounded file, git, or shell data. Do not guess about workspace state. Never ask the user for SSH access, credentials, or manual file contents; use runtime tools/endpoints directly. If one probe fails, report exact command+error and continue with remaining probes. After tool results are returned, continue. When done, answer in plain text only.",
         },
         {"role": "user", "content": contextual_message},
     ]
@@ -2439,7 +2704,7 @@ def _local_ollama_fallback(message, transcript_context="", event_sink=None):
     messages = [
         {
             "role": "system",
-            "content": "You are Karma inside the Nexus harness. Use the provided tools when you need grounded file, git, or shell data. Do not guess about workspace state. After tool results are returned, continue. When done, answer in plain text only.",
+            "content": "You are Karma inside the Nexus harness. Use the provided tools when you need grounded file, git, or shell data. Do not guess about workspace state. Never ask the user for SSH access, credentials, or manual file contents; use runtime tools/endpoints directly. If one probe fails, report exact command+error and continue with remaining probes. After tool results are returned, continue. When done, answer in plain text only.",
         },
         {"role": "user", "content": contextual_message},
     ]
@@ -2999,9 +3264,14 @@ class CCHandler(BaseHTTPRequestHandler):
                              "lock_held": _proc_lock.locked(),
                              "current_proc_pid": getattr(_current_proc, "pid", None) if _current_proc else None,
                              "queue_enabled": CC_QUEUE_ENABLED,
-                             "queue_wait_seconds": CC_QUEUE_WAIT_SECONDS})  # H2: expose latency measurements
+                             "queue_wait_seconds": CC_QUEUE_WAIT_SECONDS,
+                             "auto_memory": _get_auto_memory_status()})  # H2: expose latency measurements
         elif request_path == "/memory/health":
             self._json(200, {"ok": True, "service": "cc-server-p1", "claudemem_url": CLAUDEMEM_URL})
+        elif request_path == "/v1/auto-memory/status":
+            preview = _fetch_auto_memory_context(max_sessions=2, max_files=5)
+            self._json(200, {"ok": True, "status": _get_auto_memory_status(), "context_preview": preview})
+            return
         elif request_path == "/v1/runtime/truth":
             self._json(200, _build_runtime_truth())
         elif request_path == "/v1/model-policy":
@@ -3371,7 +3641,7 @@ class CCHandler(BaseHTTPRequestHandler):
                 surface["hooks"] = {"count": len(hooks_list), "active": HOOKS_AVAILABLE, "list": hooks_list}
                 # Memory
                 mem_text = _read_cached_file(MEMORY_FILE, 1500)
-                surface["memory"] = {"tail": mem_text or "", "file": str(MEMORY_FILE)}
+                surface["memory"] = {"tail": mem_text or "", "file": str(MEMORY_FILE), "auto_memory": _get_auto_memory_status()}
                 # State
                 state_text = _read_cached_file(STATE_FILE, 500)
                 surface["state"] = {"text": state_text or ""}
@@ -3555,6 +3825,12 @@ class CCHandler(BaseHTTPRequestHandler):
             self._json(413, {"ok": False, "error": "Request body too large (max 30MB)"})
             return
         body = json.loads(self.rfile.read(length)) if length else {}
+
+        if request_path == "/v1/auto-memory/sync":
+            result = _run_auto_memory_bridge_once(reason="api")
+            code = 200 if result.get("ok") else 500
+            self._json(code, {"ok": result.get("ok", False), "result": result, "status": _get_auto_memory_status()})
+            return
 
         if request_path == "/v1/permissions/toggle":
             if not PERMISSION_ENGINE_AVAILABLE or not _permission_engine:
@@ -3800,37 +4076,38 @@ class CCHandler(BaseHTTPRequestHandler):
             if not session_id:
                 self._json(400, {"ok": False, "error": "session_id required"})
                 return
-            payload = _load_session_store(session_id) or {"session_id": session_id, "values": {}, "history": []}
-            if not isinstance(payload, dict):
-                payload = {"session_id": session_id, "values": {}, "history": []}
-            values = payload.get("values")
-            if not isinstance(values, dict):
-                values = {}
-            payload["values"] = values
-            key = str(body.get("key", "") or "").strip()
-            if key:
-                values[key] = body.get("value")
-                payload["key"] = key
-                payload["value"] = body.get("value")
-            elif "value" in body:
-                payload["value"] = body.get("value")
-            if isinstance(body.get("values"), dict):
-                values.update(body["values"])
-                if "value" not in body and body["values"]:
-                    payload["value"] = next(iter(body["values"].values()))
-            history = payload.get("history")
-            if not isinstance(history, list):
-                history = []
-            turn_text = body.get("turn") or body.get("message") or body.get("content") or body.get("text")
-            if turn_text:
-                history.append({
-                    "ts": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
-                    "text": str(turn_text),
-                    "body": {k: v for k, v in body.items() if k != "password"},
-                })
-            payload["history"] = history
-            payload["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
-            saved = _save_session_store(session_id, payload)
+            with _session_store_locks[session_id]:
+                payload = _load_session_store(session_id) or {"session_id": session_id, "values": {}, "history": []}
+                if not isinstance(payload, dict):
+                    payload = {"session_id": session_id, "values": {}, "history": []}
+                values = payload.get("values")
+                if not isinstance(values, dict):
+                    values = {}
+                payload["values"] = values
+                key = str(body.get("key", "") or "").strip()
+                if key:
+                    values[key] = body.get("value")
+                    payload["key"] = key
+                    payload["value"] = body.get("value")
+                elif "value" in body:
+                    payload["value"] = body.get("value")
+                if isinstance(body.get("values"), dict):
+                    values.update(body["values"])
+                    if "value" not in body and body["values"]:
+                        payload["value"] = next(iter(body["values"].values()))
+                history = payload.get("history")
+                if not isinstance(history, list):
+                    history = []
+                turn_text = body.get("turn") or body.get("message") or body.get("content") or body.get("text")
+                if turn_text:
+                    history.append({
+                        "ts": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
+                        "text": str(turn_text),
+                        "body": {k: v for k, v in body.items() if k != "password"},
+                    })
+                payload["history"] = history
+                payload["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+                saved = _save_session_store(session_id, payload)
             self._json(200, {"ok": True, **saved})
             return
 
@@ -4387,6 +4664,7 @@ if __name__ == "__main__":
         print("[cc-server] Heartbeat: STARTED (10 min interval)")
     except Exception as e:
         print(f"[cc-server] Heartbeat: FAILED ({e})")
+    _start_auto_memory_sync_daemon()
     bind_all = str(os.environ.get("CC_BIND_ALL", "")).strip().lower() in ("1", "true", "yes", "y")
     host = "0.0.0.0" if bind_all else "127.0.0.1"
     print(f"[cc-server] Bind: {host} (set CC_BIND_ALL=1 to listen on all interfaces)")
