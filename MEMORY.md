@@ -78,6 +78,7 @@ Ephemeral scratchpad for S183. Purged at session-end.
 - dual_writes: confirmed
 - vault_parity_sha: 1305b17a56d4f744704d93544bf4a052d3b1bf79f29c9201bcba249f4c0e5b59
 - ritual_recording: ordered png sequence step-01 through step-12
+- evidence_redaction_hash_refresh: C:\Users\raest\Documents\Karma_SADE\evidence\ascendance-run-20260424T191213Z-9da3b561\EVIDENCE_INDEX.json updated after hub token redaction in phase3-cdp-network.jsonl
 
 ## Ascendance Run 20260423T144400Z-26edc43d
 
