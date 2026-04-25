@@ -32,21 +32,37 @@ if (fs.existsSync(appChunksRoot)) {
     replacements.push([path.basename(file), nextName])
   }
 
-  if (replacements.length > 0) {
-    for (const file of listFiles(root)) {
-      const ext = path.extname(file).toLowerCase()
-      if (!['.html', '.js', '.txt'].includes(ext)) continue
-      let raw = fs.readFileSync(file, 'utf8')
-      let changed = false
-      for (const [from, to] of replacements) {
-        if (raw.includes(from)) {
-          raw = raw.split(from).join(to)
-          changed = true
-        }
+  for (const file of listFiles(root)) {
+    const ext = path.extname(file).toLowerCase()
+    if (!['.html', '.js', '.txt'].includes(ext)) continue
+    let raw = fs.readFileSync(file, 'utf8')
+    let changed = false
+
+    for (const [from, to] of replacements) {
+      if (raw.includes(from)) {
+        raw = raw.split(from).join(to)
+        changed = true
       }
-      if (changed) {
-        fs.writeFileSync(file, raw, 'utf8')
+    }
+
+    if (ext === '.js') {
+      const normalized = raw.replace(/push\(\[\[([0-9,]+)\]/g, (_, ids) => {
+        const sorted = ids
+          .split(',')
+          .map((value) => value.trim())
+          .filter(Boolean)
+          .sort((a, b) => Number(a) - Number(b))
+          .join(',')
+        return `push([[${sorted}]`
+      })
+      if (normalized !== raw) {
+        raw = normalized
+        changed = true
       }
+    }
+
+    if (changed) {
+      fs.writeFileSync(file, raw, 'utf8')
     }
   }
 }
