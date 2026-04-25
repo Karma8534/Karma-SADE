@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useKarmaStore, type FileNode } from '@/store/karma';
+import { apiFetch } from '@/lib/api';
 
 type Tab = 'files' | 'memory' | 'agents' | 'preview';
 
@@ -145,10 +146,10 @@ function MemoryTab() {
   const doSearch = useCallback(async (query: string) => {
     setLoading(true);
     try {
-      const res = await fetch('/v1/memory/search', {
+      const res = await apiFetch('/v1/memory/search', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ query: query || 'recent', limit: 20 }),
+        token,
+        json: { query: query || 'recent', limit: 20 },
       });
       const data = await res.json();
       setMemories(data.results || data.observations || []);
@@ -195,7 +196,7 @@ function AgentTab() {
   useEffect(() => {
     async function loadSpine() {
       try {
-        const spineRes = await fetch('/v1/spine').catch(() => null);
+        const spineRes = await apiFetch('/v1/spine').catch(() => null);
         if (spineRes?.ok) setSpine(await spineRes.json());
       } catch { /* ignore */ }
       setSpineLoading(false);

@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Karma',
-  description: 'The Nexus — Sovereign AI Peer',
+  title: 'ArknexusV6',
+  description: 'Nexus — Sovereign AI Peer',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

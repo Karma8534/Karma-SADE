@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useKarmaStore } from '@/store/karma';
+import { apiFetch } from '@/lib/api';
 
 interface PendingEdit {
   id: number;
@@ -23,9 +24,7 @@ export function SelfEditBanner() {
   useEffect(() => {
     async function fetchPending() {
       try {
-        const res = await fetch('/v1/self-edit/pending', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await apiFetch('/v1/self-edit/pending', { token });
         const data = await res.json();
         if (data.ok) setPendingEdits(data.proposals || []);
       } catch {
@@ -66,9 +65,9 @@ export function SelfEditBanner() {
 
   async function handleApprove(id: number) {
     try {
-      await fetch(`/v1/self-edit/approve/${id}`, {
+      await apiFetch(`/v1/self-edit/approve/${id}`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        token,
       });
       setPendingEdits((prev) => prev.filter((e) => e.id !== id));
     } catch {
@@ -78,9 +77,9 @@ export function SelfEditBanner() {
 
   async function handleReject(id: number) {
     try {
-      await fetch(`/v1/self-edit/reject/${id}`, {
+      await apiFetch(`/v1/self-edit/reject/${id}`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        token,
       });
       setPendingEdits((prev) => prev.filter((e) => e.id !== id));
     } catch {

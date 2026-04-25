@@ -32,9 +32,9 @@ export function Header() {
     <div className="flex items-center gap-3.5 px-5 py-2.5 bg-karma-bg border-b border-karma-border flex-shrink-0">
       {/* Title */}
       <div className="flex flex-col gap-px">
-        <div className="text-karma-accent text-lg tracking-[6px] font-light">KARMA</div>
+        <div className="text-karma-accent text-lg tracking-[4px] font-light">ARKNEXUSV6</div>
         <div className="text-karma-muted text-[10px] tracking-[3px]">
-          SovereignPeer . Ascendant . Always Present
+          Nexus . Sovereign Peer . Always Present
         </div>
       </div>
 

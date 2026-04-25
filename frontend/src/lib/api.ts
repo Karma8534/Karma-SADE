@@ -1,10 +1,8 @@
 // Centralized API base + fetch helper.
 //
-// In `next dev` (CSR over http://localhost:3000) the relative `/v1/...` paths
-// 404 because nothing serves them. In the Tauri build (`output: 'export'`,
-// loaded via tauri:// or http://tauri.localhost) relative URLs resolve to the
-// webview origin, which also has no backend. Both cases need an absolute URL
-// pointing at the local cc_server_p1 bridge on 127.0.0.1:7891.
+// Local desktop and `next dev` need the local bridge on 127.0.0.1:7891.
+// Deployed web origins such as https://hub.arknexus.net must stay same-origin
+// so browser requests go through the hub proxy rather than loopback.
 
 const FALLBACK_BRIDGE = 'http://127.0.0.1:7891';
 
@@ -55,7 +53,8 @@ export function apiBase(): string {
     }
   }
 
-  cachedBase = FALLBACK_BRIDGE;
+  // 5. Remote/browser deployments should use same-origin `/v1/...` routes.
+  cachedBase = '';
   return cachedBase;
 }
 

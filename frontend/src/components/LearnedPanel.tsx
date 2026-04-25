@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useKarmaStore } from '@/store/karma';
+import { apiFetch } from '@/lib/api';
 
 interface Learning {
   id: number;
@@ -22,9 +23,7 @@ export function LearnedPanel({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch('/v1/learnings', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await apiFetch('/v1/learnings', { token });
         const data = await res.json();
         setLearnings(data.entries || data.learnings || []);
       } catch {
@@ -39,19 +38,16 @@ export function LearnedPanel({ onClose }: { onClose: () => void }) {
     if (!input.trim()) return;
     setSending(true);
     try {
-      await fetch('/v1/coordination/post', {
+      await apiFetch('/v1/coordination/post', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+        token,
+        json: {
           from: 'colby',
           to: 'karma',
           type: 'directive',
           urgency: 'normal',
           content: input.trim(),
-        }),
+        },
       });
       setInput('');
       setSent(true);

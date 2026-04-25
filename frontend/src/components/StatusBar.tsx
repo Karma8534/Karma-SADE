@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useKarmaStore } from '@/store/karma';
+import { apiFetch } from '@/lib/api';
 
 interface SystemHealth {
   p1: boolean;
@@ -22,9 +23,7 @@ export function StatusBar() {
   useEffect(() => {
     async function checkHealth() {
       try {
-        const res = await fetch('/v1/status', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await apiFetch('/v1/status', { token });
         if (res.ok) {
           const data = await res.json();
           setHealth({

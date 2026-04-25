@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useKarmaStore } from '@/store/karma';
+import { apiFetch } from '@/lib/api';
 
 export function Gate() {
   const [input, setInput] = useState('');
@@ -35,13 +36,10 @@ export function Gate() {
     if (!input.trim()) return;
     // Validate token by hitting the API
     try {
-      const res = await fetch('/v1/chat', {
+      const res = await apiFetch('/v1/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${input.trim()}`,
-        },
-        body: JSON.stringify({ message: 'ping', stream: false }),
+        token: input.trim(),
+        json: { message: 'ping', stream: false },
       });
       if (res.status === 401) {
         setError('Token rejected.');
@@ -59,9 +57,9 @@ export function Gate() {
       <div className="text-[11px] tracking-[6px] text-karma-accent uppercase mb-1">
         SovereignPeer
       </div>
-      <h1 className="text-[28px] text-karma-accent tracking-[8px] font-light">KARMA</h1>
+      <h1 className="text-[28px] text-karma-accent tracking-[6px] font-light">ARKNEXUSV6</h1>
       <div className="text-karma-muted text-[11px] tracking-[2px]">
-        Ascendant . Always Present
+        Nexus . Always Present
       </div>
       <input
         className="bg-karma-surface border border-karma-border text-karma-text

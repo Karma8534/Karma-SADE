@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useKarmaStore } from '@/store/karma';
+import { apiFetch } from '@/lib/api';
 
 interface MemoryItem {
   id: number;
@@ -24,11 +25,11 @@ export function MemoryPanel({ onClose }: { onClose: () => void }) {
   const doSearch = useCallback(async (query: string) => {
     setLoading(true);
     try {
-      const res = await fetch('/v1/memory/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ query: query || 'recent', limit: 20 }),
+      const params = new URLSearchParams({
+        q: query || 'recent',
+        limit: '20',
       });
+      const res = await apiFetch(`/v1/memory/search?${params.toString()}`, { token });
       const data = await res.json();
       setMemories(data.results || data.observations || []);
     } catch {}
@@ -39,20 +40,21 @@ export function MemoryPanel({ onClose }: { onClose: () => void }) {
     if (!saveText.trim()) return;
     setSaving(true);
     try {
-      await fetch('/v1/memory/search', {
+      const res = await apiFetch('/v1/memory/save', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          action: 'save',
+        token,
+        json: {
           text: saveText,
           title: saveTitle || 'Sovereign note',
           project: 'Karma_SADE',
-        }),
+        },
       });
-      setSaved(true);
-      setSaveText('');
-      setSaveTitle('');
-      setTimeout(() => setSaved(false), 2000);
+      if (res.ok) {
+        setSaved(true);
+        setSaveText('');
+        setSaveTitle('');
+        setTimeout(() => setSaved(false), 2000);
+      }
     } catch {}
     setSaving(false);
   }, [saveText, saveTitle, token]);
