@@ -993,5 +993,6 @@ next: verify running process/window title and continuity behavior remain stable
 - vault_parity_sha: 1305b17a56d4f744704d93544bf4a052d3b1bf79f29c9201bcba249f4c0e5b59
 - 2026-04-25T01:09:00Z: Refreshed live UI proofs for local app and hub; fixed deployed hub same-origin API routing by shipping the rebuilt `hub-bridge\app\public\nexus\` bundle and corrected Tauri-host API resolution in frontend panels.
 - 2026-04-25T02:03:00Z: Stabilized Next export artifacts with a content-hash `generateBuildId`, then rebuilt `frontend\out\` and mirrored the deterministic bundle into `hub-bridge\app\public\nexus\` to unblock clean post-build verification.
+- 2026-04-25T02:15:00Z: Hardened `npm run build` to delete `.next` and `out` before `next build`; the clean build converged on the stable export bundle now tracked under `frontend\out\` and mirrored under `hub-bridge\app\public\nexus\`.
 - ritual_recording: ordered png sequence step-01 through step-12
 - 2026-04-24T21:48:00Z: refreshed tracked frontend static export after `npm run build` so clean-tree checks reflect current built output.
