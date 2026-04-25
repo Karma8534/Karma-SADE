@@ -994,5 +994,6 @@ next: verify running process/window title and continuity behavior remain stable
 - 2026-04-25T01:09:00Z: Refreshed live UI proofs for local app and hub; fixed deployed hub same-origin API routing by shipping the rebuilt `hub-bridge\app\public\nexus\` bundle and corrected Tauri-host API resolution in frontend panels.
 - 2026-04-25T02:03:00Z: Stabilized Next export artifacts with a content-hash `generateBuildId`, then rebuilt `frontend\out\` and mirrored the deterministic bundle into `hub-bridge\app\public\nexus\` to unblock clean post-build verification.
 - 2026-04-25T02:15:00Z: Hardened `npm run build` to delete `.next` and `out` before `next build`; the clean build converged on the stable export bundle now tracked under `frontend\out\` and mirrored under `hub-bridge\app\public\nexus\`.
+- 2026-04-25T02:24:00Z: Added `frontend\scripts\stabilize-export.mjs` so `npm run build` rewrites generated `app/**/page-*.js` and `layout-*.js` exports to canonical stable filenames (`page.js`, `layout.js`) before artifacts are tracked or deployed.
 - ritual_recording: ordered png sequence step-01 through step-12
 - 2026-04-24T21:48:00Z: refreshed tracked frontend static export after `npm run build` so clean-tree checks reflect current built output.
